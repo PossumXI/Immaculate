@@ -136,6 +136,37 @@ function HistoryRow({ point }: { point: SnapshotHistoryPoint }) {
   );
 }
 
+function summarizeRoutingDecision(
+  decision?: PhaseSnapshot["routingDecisions"][number]
+): string {
+  if (!decision) {
+    return "No route decision yet.";
+  }
+
+  const transportBits = [decision.transportKind, decision.transportHealth].filter(Boolean).join(" / ");
+  const scoreBits = [
+    typeof decision.transportPreferenceRank === "number" ? `#${decision.transportPreferenceRank}` : "",
+    typeof decision.transportPreferenceScore === "number"
+      ? decision.transportPreferenceScore.toFixed(1)
+      : ""
+  ]
+    .filter(Boolean)
+    .join(" / ");
+  const rationale = decision.rationale.length > 92 ? `${decision.rationale.slice(0, 92)}…` : decision.rationale;
+
+  return [
+    decision.mode,
+    decision.channel,
+    decision.targetNodeId,
+    transportBits,
+    scoreBits,
+    decision.governancePressure,
+    rationale
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 type PersistenceState = {
   recovered: boolean;
   recoveryMode: "fresh" | "checkpoint" | "checkpoint-replay" | "snapshot" | "replay";
@@ -2004,6 +2035,19 @@ export function DashboardClient() {
             )) ?? <div className="log-line">No concrete actuation transports registered.</div>}
           </div>
         </div>
+        <div className="panel benchmark-subpanel">
+          <div className="panel-header">
+            <div>
+              <p className="eyebrow">Routing</p>
+              <h2>Latest route decision</h2>
+            </div>
+          </div>
+          <div className="log-stack">
+            <div className="log-line">
+              {summarizeRoutingDecision(deferredSnapshot?.routingDecisions?.[0])}
+            </div>
+          </div>
+        </div>
       </section>
 
       <section className="content-grid">
@@ -2042,6 +2086,11 @@ export function DashboardClient() {
           <p className="body-copy">
             Actuation outputs: <strong>{visibleActuationOutputs.length}</strong> / latest command:{" "}
             <strong>{visibleActuationOutputs[0]?.command ?? "none"}</strong>
+          </p>
+          <p className="body-copy">
+            Route decision: <strong>{deferredSnapshot?.routingDecisions?.[0]?.mode ?? "none"}</strong> /{" "}
+            <strong>{deferredSnapshot?.routingDecisions?.[0]?.channel ?? "--"}</strong> /{" "}
+            <strong>{deferredSnapshot?.routingDecisions?.[0]?.targetNodeId ?? "--"}</strong>
           </p>
           <p className="body-copy">
             Integrity: <strong>{persistence?.integrityStatus ?? "unchecked"}</strong> / findings:{" "}
@@ -2114,6 +2163,12 @@ export function DashboardClient() {
             <span>{checkpoints.length}</span>
             <span>{checkpoints[0]?.id ?? "none"}</span>
             <span>/api/checkpoints</span>
+          </div>
+          <div className="data-row">
+            <span>Routing</span>
+            <span>{deferredSnapshot?.routingDecisions?.[0]?.mode ?? "none"}</span>
+            <span>{summarizeRoutingDecision(deferredSnapshot?.routingDecisions?.[0])}</span>
+            <span>/ snapshot.routingDecisions[0]</span>
           </div>
           <div className="data-row">
             <span>Raw events</span>

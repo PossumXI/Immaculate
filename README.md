@@ -141,6 +141,8 @@ Benchmark packs currently include:
 - supervised serial vendor transports now support heartbeat health, capability health, stale-device isolation, and controlled recovery
 - HTTP/2 direct device transports now provide typed RPC-class delivery with response telemetry and durable operator visibility
 - transport selection now ranks concrete actuation lanes by health, latency, and capability fitness instead of registry order
+- route selection now persists explicit cross-plane decisions that combine transport health, decode confidence, and governance pressure
+- dashboard and TUI now expose the latest routing decision so operators can see why the system chose a lane instead of inferring it from side effects
 - dashboard and TUI websocket reconnection with backoff
 - operator-facing dashboard surfaces for the previously hidden backend control plane
 
@@ -148,6 +150,7 @@ Benchmark packs currently include:
 
 - direct device adapters beyond the first live socket neurophysiology ingress path
 - additional vendor-specific transports beyond serial and HTTP/2 direct lanes, including MIDI and richer gRPC-class adapters
+- routing that feeds live device health, decode confidence, and governance pressure deeper into multi-agent planning and future actuation policy
 - additional multi-agent and tool execution backends beyond the first Ollama layer
 - domain benchmark packs against published neuro/BCI workloads
 - multi-node deployment, locality routing, and long-horizon benchmark trending
@@ -210,3 +213,4 @@ Sensitive read surfaces now split into two modes:
 - UDP/OSC actuation endpoints can be registered through `POST /api/actuation/transports/udp/register`; when present, dispatch prefers that concrete transport before bridge or file fallback
 - serial vendor transports can be registered through `POST /api/actuation/transports/serial/register`; they require heartbeats on `POST /api/actuation/transports/:transportId/heartbeat`, isolate on stale liveness, and can be cleared through `POST /api/actuation/transports/:transportId/reset`
 - HTTP/2 direct device transports can be registered through `POST /api/actuation/transports/http2/register`; successful responses feed liveness and capability telemetry back into transport health and routing preference
+- every governed actuation dispatch now emits a durable routing decision into the snapshot and event spine, including mode, target node, transport rank, governance pressure, and rationale

@@ -26,10 +26,15 @@ import {
 import { createActuationManager } from "./actuation.js";
 import { getBenchmarkPack } from "./benchmark-packs.js";
 import { scanBidsDataset } from "./bids.js";
-import { evaluateGovernance } from "./governance.js";
+import {
+  evaluateGovernance,
+  type GovernanceDecision,
+  type GovernanceStatus
+} from "./governance.js";
 import { buildLiveNeuroFrame } from "./live-neuro.js";
 import { buildNwbReplayFrames, scanNwbFile } from "./nwb.js";
 import { createPersistence } from "./persistence.js";
+import { buildRoutingDecision, planAdaptiveRoute } from "./routing.js";
 import { safeUnlink } from "./utils.js";
 import {
   projectActuationOutput,
@@ -1073,6 +1078,23 @@ export async function runPublishedBenchmark(
     capabilities: serialCapabilities,
     firmwareVersion: "fw-http2-0.9.0"
   });
+  const preferredRouteGovernanceStatus: GovernanceStatus = {
+    mode: "enforced",
+    policyCount: 0,
+    decisionCount: 0,
+    deniedCount: 0
+  };
+  const preferredRouteGovernanceDecisions: GovernanceDecision[] = [];
+  const preferredRoutePlan = planAdaptiveRoute({
+    snapshot: engine.getSnapshot(),
+    frame: liveIngressResult.frame,
+    execution: syntheticExecution,
+    adapters: actuationManager.listAdapters(),
+    transports: actuationManager.listTransports(),
+    governanceStatus: preferredRouteGovernanceStatus,
+    governanceDecisions: preferredRouteGovernanceDecisions,
+    consentScope: "system:benchmark"
+  });
   const preferredHttp2Actuation: ActuationOutput = {
     id: `act-${suiteId}-http2-preferred`,
     sessionId: nwbFixture.summary.id,
@@ -1080,9 +1102,9 @@ export async function runPublishedBenchmark(
     sourceExecutionId: syntheticExecution.id,
     sourceFrameId: liveIngressResult.frame.id,
     targetNodeId: "actuator-grid",
-    channel: "haptic",
+    channel: preferredRoutePlan.channel,
     command: "benchmark:http2-preferred",
-    intensity: 0.43,
+    intensity: preferredRoutePlan.recommendedIntensity,
     status: "dispatched",
     summary:
       "Dispatch benchmark actuation through the preferred HTTP/2 direct transport.",
@@ -1092,11 +1114,97 @@ export async function runPublishedBenchmark(
   const preferredHttp2DispatchResult = await actuationManager.dispatch(
     preferredHttp2Actuation,
     {
-      adapterId: "haptic-rig"
+      adapterId: preferredRoutePlan.recommendedAdapterId
     }
   );
   engine.dispatchActuationOutput(preferredHttp2DispatchResult.output);
+  const preferredRouteDecision = buildRoutingDecision({
+    output: preferredHttp2DispatchResult.output,
+    delivery: preferredHttp2DispatchResult.delivery,
+    plan: preferredRoutePlan,
+    frame: liveIngressResult.frame,
+    execution: syntheticExecution
+  });
+  engine.recordRoutingDecision(preferredRouteDecision);
   http2Server.close();
+  const guardedRouteDecisionTime = new Date().toISOString();
+  const guardedRouteGovernanceDecisions: GovernanceDecision[] = [
+    {
+      id: `gdn-${suiteId}-01`,
+      timestamp: guardedRouteDecisionTime,
+      allowed: false,
+      mode: "enforced",
+      action: "actuation-dispatch",
+      route: "/api/actuation/dispatch",
+      policyId: "actuation-dispatch-default",
+      purpose: ["actuation-dispatch"],
+      consentScope: `subject:${bidsFixture.summary.id}`,
+      actor: "benchmark",
+      reason: "manual_guardrail_trip"
+    },
+    {
+      id: `gdn-${suiteId}-02`,
+      timestamp: guardedRouteDecisionTime,
+      allowed: false,
+      mode: "enforced",
+      action: "actuation-dispatch",
+      route: "/api/actuation/dispatch",
+      policyId: "actuation-dispatch-default",
+      purpose: ["actuation-dispatch"],
+      consentScope: `subject:${bidsFixture.summary.id}`,
+      actor: "benchmark",
+      reason: "manual_guardrail_trip"
+    }
+  ];
+  const guardedRouteGovernanceStatus: GovernanceStatus = {
+    mode: "enforced",
+    policyCount: 0,
+    decisionCount: guardedRouteGovernanceDecisions.length,
+    deniedCount: 4,
+    lastDecisionAt: guardedRouteDecisionTime,
+    lastDecisionId: guardedRouteGovernanceDecisions.at(-1)?.id
+  };
+  const guardedFallbackPlan = planAdaptiveRoute({
+    snapshot: engine.getSnapshot(),
+    frame: liveIngressResult.frame,
+    execution: syntheticExecution,
+    adapters: actuationManager.listAdapters(),
+    transports: actuationManager.listTransports(),
+    governanceStatus: guardedRouteGovernanceStatus,
+    governanceDecisions: guardedRouteGovernanceDecisions,
+    consentScope: `subject:${bidsFixture.summary.id}`
+  });
+  const guardedFallbackActuation: ActuationOutput = {
+    id: `act-${suiteId}-guarded-fallback`,
+    sessionId: nwbFixture.summary.id,
+    source: "benchmark",
+    sourceExecutionId: syntheticExecution.id,
+    sourceFrameId: liveIngressResult.frame.id,
+    targetNodeId: "actuator-grid",
+    channel: guardedFallbackPlan.channel,
+    command: "benchmark:guarded-fallback",
+    intensity: guardedFallbackPlan.recommendedIntensity,
+    status: "dispatched",
+    summary:
+      "Dispatch benchmark actuation through the guarded fallback lane under critical governance pressure.",
+    generatedAt: new Date().toISOString(),
+    dispatchedAt: new Date().toISOString()
+  };
+  const guardedFallbackDispatchResult = await actuationManager.dispatch(
+    guardedFallbackActuation,
+    {
+      adapterId: guardedFallbackPlan.recommendedAdapterId
+    }
+  );
+  engine.dispatchActuationOutput(guardedFallbackDispatchResult.output);
+  const guardedFallbackDecision = buildRoutingDecision({
+    output: guardedFallbackDispatchResult.output,
+    delivery: guardedFallbackDispatchResult.delivery,
+    plan: guardedFallbackPlan,
+    frame: liveIngressResult.frame,
+    execution: syntheticExecution
+  });
+  engine.recordRoutingDecision(guardedFallbackDecision);
   await persistence.persist(engine.getDurableState());
   const governanceControlAllow = evaluateGovernance({
     action: "operator-control",
@@ -1181,6 +1289,10 @@ export async function runPublishedBenchmark(
   const actuationAdapters = actuationManager.listAdapters();
   const actuationTransports = actuationManager.listTransports();
   const actuationDeliveries = actuationManager.listDeliveries(8);
+  const routingDecisions = engine.getSnapshot().routingDecisions;
+  const routingEvents = engine
+    .getEvents()
+    .filter((event) => event.schema.name === "immaculate.routing.decision");
   const redactedSnapshot = redactPhaseSnapshot(engine.getSnapshot());
   const datasetScopedRecord = projectDatasetRecord(
     bidsFixture,
@@ -1723,24 +1835,28 @@ export async function runPublishedBenchmark(
     createAssertion(
       "actuation-transport-ranking",
       "Transport registry surfaces ranked preference so operators can inspect why a lane wins",
-      actuationTransports
-        .filter((transport) => transport.adapterId === "haptic-rig")
-        .some(
-          (transport) =>
-            transport.id === http2Transport.id &&
-            transport.preferenceRank === 1 &&
-            typeof transport.preferenceScore === "number"
-        ) &&
-        actuationTransports
-          .filter((transport) => transport.adapterId === "haptic-rig")
-          .some(
-            (transport) =>
-              transport.id === serialTransport.id &&
-              typeof transport.preferenceRank === "number" &&
-              typeof transport.preferenceScore === "number" &&
-              (transport.preferenceRank ?? 99) > 1
-          ),
-      "ranked haptic transports with HTTP/2 preference at rank 1",
+      (() => {
+        const rankedHapticTransports = actuationTransports.filter(
+          (transport) => transport.adapterId === "haptic-rig"
+        );
+        const rankedHttp2Transport = rankedHapticTransports.find(
+          (transport) => transport.id === http2Transport.id
+        );
+        const rankedSerialTransport = rankedHapticTransports.find(
+          (transport) => transport.id === serialTransport.id
+        );
+        return Boolean(
+          rankedHttp2Transport &&
+            rankedSerialTransport &&
+            typeof rankedHttp2Transport.preferenceRank === "number" &&
+            typeof rankedSerialTransport.preferenceRank === "number" &&
+            typeof rankedHttp2Transport.preferenceScore === "number" &&
+            typeof rankedSerialTransport.preferenceScore === "number" &&
+            rankedHttp2Transport.preferenceRank < rankedSerialTransport.preferenceRank &&
+            rankedHttp2Transport.preferenceScore > rankedSerialTransport.preferenceScore
+        );
+      })(),
+      "ranked haptic transports with HTTP/2 ahead of serial by score and rank",
       actuationTransports
         .filter((transport) => transport.adapterId === "haptic-rig")
         .map(
@@ -1749,6 +1865,48 @@ export async function runPublishedBenchmark(
         )
         .join(", "),
       "operators should be able to inspect why orchestration selected one concrete lane over another"
+    ),
+    createAssertion(
+      "routing-reflex-direct",
+      "Adaptive routing selects the healthy low-latency haptic lane for reflex-direct delivery",
+      preferredRoutePlan.mode === "reflex-direct" &&
+        preferredRoutePlan.channel === "haptic" &&
+        preferredRoutePlan.selectedTransport?.id === http2Transport.id &&
+        preferredRouteDecision.mode === "reflex-direct" &&
+        preferredRouteDecision.transportId === http2Transport.id &&
+        preferredRouteDecision.transportKind === "http2-json" &&
+        preferredRouteDecision.transportPreferenceRank === 1 &&
+        preferredRouteDecision.governancePressure === "clear",
+      "reflex-direct / haptic / http2-json / rank 1 / governance clear",
+      `${preferredRouteDecision.mode} / ${preferredRouteDecision.channel} / ${preferredRouteDecision.transportKind ?? "none"} / ${preferredRouteDecision.governancePressure}`,
+      "route choice should become a first-class orchestration decision that explicitly favors the healthiest lowest-latency reflex lane"
+    ),
+    createAssertion(
+      "routing-guarded-fallback",
+      "Adaptive routing flips to the guarded visual lane under critical governance pressure",
+      guardedFallbackPlan.mode === "guarded-fallback" &&
+        guardedFallbackPlan.channel === "visual" &&
+        guardedFallbackPlan.targetNodeId === "integrity-gate" &&
+        guardedFallbackPlan.selectedTransport?.kind === "udp-osc" &&
+        guardedFallbackDecision.mode === "guarded-fallback" &&
+        guardedFallbackDecision.transportKind === "udp-osc" &&
+        guardedFallbackDecision.governancePressure === "critical" &&
+        guardedFallbackDispatchResult.delivery.transport === "udp-osc",
+      "guarded-fallback / visual / integrity-gate / udp-osc / governance critical",
+      `${guardedFallbackDecision.mode} / ${guardedFallbackDecision.channel} / ${guardedFallbackDecision.transportKind ?? "none"} / ${guardedFallbackDecision.governancePressure}`,
+      "route selection should react to governance pressure and deliberately fall back to a safer outward lane rather than pretending transport health is the only signal"
+    ),
+    createAssertion(
+      "routing-ledger",
+      "Routing decisions persist as auditable snapshot and event lineage",
+      routingDecisions.length >= 2 &&
+        routingDecisions[0]?.id === guardedFallbackDecision.id &&
+        routingDecisions.some((decision) => decision.id === preferredRouteDecision.id) &&
+        routingEvents.length >= 2 &&
+        routingEvents.at(-1)?.schema.name === "immaculate.routing.decision",
+      ">= 2 routing decisions in snapshot and event ledger",
+      `${routingDecisions.length} snapshot decisions / ${routingEvents.length} routing events / latest ${routingDecisions[0]?.mode ?? "missing"}`,
+      "route choice must be durable and replayable, not an invisible side effect buried inside the dispatch path"
     ),
     createAssertion(
       "actuation-device-clamp",
@@ -1962,7 +2120,7 @@ export async function runPublishedBenchmark(
     packLabel: pack.label,
     profile: engine.getSnapshot().profile,
     summary:
-      "This publication benchmarks the real orchestration substrate that exists today: phase execution, verify gating, persistence, checkpoint recovery, integrity validation, replayed NWB windows, live socket neuro ingress, protocol-aware actuation, supervised serial and HTTP/2 direct device transports, and transport selection that reacts to health and latency. It does not yet claim external neurodata or BCI decoding performance.",
+      "This publication benchmarks the real orchestration substrate that exists today: phase execution, verify gating, persistence, checkpoint recovery, integrity validation, replayed NWB windows, live socket neuro ingress, protocol-aware actuation, supervised serial and HTTP/2 direct device transports, and explicit routing decisions that react to transport health, decode confidence, and governance pressure. It does not yet claim external neurodata or BCI decoding performance.",
     tickIntervalMs,
     totalTicks,
     totalDurationMs: totalTicks * tickIntervalMs,

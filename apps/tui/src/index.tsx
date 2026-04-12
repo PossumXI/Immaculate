@@ -96,6 +96,37 @@ function withOperatorWsUrl(urlValue: string, governance?: GovernanceRequest): st
   return nextUrl.toString();
 }
 
+function summarizeRoutingDecision(
+  decision?: PhaseSnapshot["routingDecisions"][number]
+): string {
+  if (!decision) {
+    return "none";
+  }
+
+  const transportBits = [decision.transportKind, decision.transportHealth].filter(Boolean).join("/");
+  const scoreBits = [
+    typeof decision.transportPreferenceRank === "number" ? `#${decision.transportPreferenceRank}` : "",
+    typeof decision.transportPreferenceScore === "number"
+      ? decision.transportPreferenceScore.toFixed(1)
+      : ""
+  ]
+    .filter(Boolean)
+    .join("/");
+  const rationale = decision.rationale.length > 74 ? `${decision.rationale.slice(0, 74)}…` : decision.rationale;
+
+  return [
+    decision.mode,
+    decision.channel,
+    decision.targetNodeId,
+    transportBits,
+    scoreBits,
+    decision.governancePressure,
+    rationale
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 async function harnessFetch(
   input: string,
   init?: RequestInit,
@@ -784,6 +815,12 @@ function App() {
               {snapshot.actuationOutputs[0]
                 ? `${snapshot.actuationOutputs[0].channel} ${snapshot.actuationOutputs[0].status}`
                 : "none"}
+            </Text>
+          ) : null}
+          {snapshot ? (
+            <Text>
+              Route {snapshot.routingDecisions?.[0] ? snapshot.routingDecisions[0].mode : "none"} /{" "}
+              {summarizeRoutingDecision(snapshot.routingDecisions?.[0])}
             </Text>
           ) : null}
           {snapshot ? (

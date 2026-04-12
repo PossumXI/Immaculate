@@ -68,6 +68,30 @@ What this unlocks next:
 
 ### 2026-04-12
 
+#### Route choice becomes a first-class orchestration object
+
+What changed:
+- Immaculate now records durable routing decisions in the shared snapshot and event spine instead of leaving route choice implicit inside the actuation path
+- route selection now combines transport health, transport rank, decode confidence, cognitive state, and governance pressure into an explicit decision record
+- the benchmark now proves two route modes: reflex-direct over the healthiest haptic lane and guarded-fallback over the visual safety lane under critical governance pressure
+- the dashboard and TUI now surface the latest route decision directly so operators can inspect the system's current choice without reverse-engineering it from downstream effects
+
+Why it matters:
+- this crosses a real systems boundary: orchestration is no longer only about whether delivery succeeded, but why a lane was selected in the first place
+- route reasoning becomes replayable, inspectable, and benchmarkable, which is necessary if Immaculate is going to evolve from a transport controller into a control system for intelligence itself
+
+Evidence:
+- benchmark gate passed with zero violations after adding routing-decision persistence and assertions
+- the benchmark now proves reflex-direct HTTP/2 haptic routing when governance is clear and guarded-fallback UDP/OSC visual routing when governance pressure is critical
+- live operator surfaces now expose `snapshot.routingDecisions[0]`
+
+What this unlocks next:
+- routing that feeds device health and governance pressure back into higher-level agent planning
+- richer policy-aware outward actuation control instead of transport-only selection
+- future multi-node orchestration where route choice is treated as a durable control-plane primitive
+
+### 2026-04-12
+
 #### Direct device routing stops being order-based and starts being health-based
 
 What changed:

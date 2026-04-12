@@ -395,6 +395,21 @@ export type ActuationOutputSource = (typeof actuationOutputSources)[number];
 export const actuationOutputStatuses = ["dispatched", "suppressed"] as const;
 export type ActuationOutputStatus = (typeof actuationOutputStatuses)[number];
 
+export const routingDecisionSources = ["operator", "neuro", "cognitive", "benchmark"] as const;
+export type RoutingDecisionSource = (typeof routingDecisionSources)[number];
+
+export const routingDecisionModes = [
+  "reflex-direct",
+  "cognitive-assisted",
+  "guarded-fallback",
+  "operator-override",
+  "suppressed"
+] as const;
+export type RoutingDecisionMode = (typeof routingDecisionModes)[number];
+
+export const governancePressureLevels = ["clear", "elevated", "critical"] as const;
+export type GovernancePressureLevel = (typeof governancePressureLevels)[number];
+
 export type ActuationOutput = {
   id: string;
   sessionId?: string;
@@ -413,6 +428,26 @@ export type ActuationOutput = {
   summary: string;
   generatedAt: string;
   dispatchedAt?: string;
+};
+
+export type RoutingDecision = {
+  id: string;
+  sessionId?: string;
+  source: RoutingDecisionSource;
+  mode: RoutingDecisionMode;
+  targetNodeId: string;
+  channel: ActuationChannel;
+  adapterId?: string;
+  transportId?: string;
+  transportKind?: string;
+  transportHealth?: string;
+  transportPreferenceScore?: number;
+  transportPreferenceRank?: number;
+  decodeConfidence: number;
+  cognitiveLatencyMs?: number;
+  governancePressure: GovernancePressureLevel;
+  rationale: string;
+  selectedAt: string;
 };
 
 export type PhaseSnapshot = {
@@ -434,6 +469,7 @@ export type PhaseSnapshot = {
   neuroFrames: NeuroFrameWindow[];
   intelligenceLayers: IntelligenceLayer[];
   cognitiveExecutions: CognitiveExecution[];
+  routingDecisions: RoutingDecision[];
   actuationOutputs: ActuationOutput[];
   logTail: string[];
   lastEventId?: string;
@@ -796,6 +832,26 @@ export const actuationOutputSchema = z.object({
   dispatchedAt: z.string().optional()
 });
 
+export const routingDecisionSchema = z.object({
+  id: z.string(),
+  sessionId: z.string().optional(),
+  source: z.enum(routingDecisionSources),
+  mode: z.enum(routingDecisionModes),
+  targetNodeId: z.string(),
+  channel: z.enum(actuationChannels),
+  adapterId: z.string().optional(),
+  transportId: z.string().optional(),
+  transportKind: z.string().optional(),
+  transportHealth: z.string().optional(),
+  transportPreferenceScore: z.number().optional(),
+  transportPreferenceRank: z.number().int().positive().optional(),
+  decodeConfidence: z.number().nonnegative(),
+  cognitiveLatencyMs: z.number().nonnegative().optional(),
+  governancePressure: z.enum(governancePressureLevels),
+  rationale: z.string(),
+  selectedAt: z.string()
+});
+
 export const phaseSnapshotSchema = z.object({
   epoch: z.number().int().nonnegative(),
   cycle: z.number().int().positive(),
@@ -815,6 +871,7 @@ export const phaseSnapshotSchema = z.object({
   neuroFrames: z.array(neuroFrameWindowSchema).default([]),
   intelligenceLayers: z.array(intelligenceLayerSchema).default([]),
   cognitiveExecutions: z.array(cognitiveExecutionSchema).default([]),
+  routingDecisions: z.array(routingDecisionSchema).default([]),
   actuationOutputs: z.array(actuationOutputSchema).default([]),
   logTail: z.array(z.string()),
   lastEventId: z.string().optional()
@@ -1233,6 +1290,7 @@ function createInitialSnapshot(): PhaseSnapshot {
     neuroFrames: [],
     intelligenceLayers: [],
     cognitiveExecutions: [],
+    routingDecisions: [],
     actuationOutputs: [],
     logTail: []
   };
@@ -1782,6 +1840,132 @@ function mergeCognitiveExecutionIntoSnapshot(
     cognitiveExecutions: nextExecutions,
     highlightedNodeId: nodes.some((node) => node.id === nodeId) ? nodeId : snapshot.highlightedNodeId,
     objective: `Cognitive execution ${execution.id} ${execution.status} on ${execution.model} in ${execution.latencyMs.toFixed(1)} ms.`
+  };
+}
+
+function mergeRoutingDecisionIntoSnapshot(
+  snapshot: PhaseSnapshot,
+  decision: RoutingDecision
+): PhaseSnapshot {
+  const nextDecisions = [
+    decision,
+    ...snapshot.routingDecisions.filter((candidate) => candidate.id !== decision.id)
+  ].slice(0, 24);
+  const decodeFactor = clamp(decision.decodeConfidence, 0, 1);
+  const governanceDrag =
+    decision.governancePressure === "critical"
+      ? 0.22
+      : decision.governancePressure === "elevated"
+        ? 0.1
+        : 0.02;
+  const transportConfidence =
+    decision.transportHealth === "healthy"
+      ? 0.18
+      : decision.transportHealth === "degraded"
+        ? 0.08
+        : decision.transportHealth === "faulted" || decision.transportHealth === "isolated"
+          ? -0.12
+          : 0.02;
+  const routeBias =
+    decision.mode === "reflex-direct"
+      ? 0.18
+      : decision.mode === "cognitive-assisted"
+        ? 0.12
+        : decision.mode === "guarded-fallback"
+          ? -0.04
+          : decision.mode === "operator-override"
+            ? 0.06
+            : -0.14;
+
+  const nodes = snapshot.nodes.map((node) => {
+    if (node.id === "router-core") {
+      return {
+        ...node,
+        activation: clamp(node.activation * 0.58 + decodeFactor * 0.18 + transportConfidence + 0.08),
+        load: clamp(node.load * 0.62 + governanceDrag * 0.22 + (1 - decodeFactor) * 0.08 + 0.06),
+        throughput: clamp(node.throughput * 0.68 + transportConfidence * 0.4 + decodeFactor * 0.12 + 0.06),
+        trust: clamp(node.trust * 0.84 + (decision.governancePressure === "clear" ? 0.08 : -0.04), 0.32, 0.99),
+        tags: [
+          ...node.tags.filter(
+            (tag) =>
+              !tag.startsWith("route-mode:") &&
+              !tag.startsWith("route-channel:") &&
+              !tag.startsWith("route-governance:")
+          ),
+          `route-mode:${decision.mode}`,
+          `route-channel:${decision.channel}`,
+          `route-governance:${decision.governancePressure}`
+        ]
+      };
+    }
+
+    if (node.id === "planner-swarm") {
+      const plannerBias = decision.mode === "cognitive-assisted" ? 0.18 : decision.mode === "guarded-fallback" ? 0.08 : 0.02;
+      return {
+        ...node,
+        activation: clamp(node.activation * 0.66 + plannerBias + 0.04),
+        load: clamp(node.load * 0.72 + plannerBias * 0.4),
+        throughput: clamp(node.throughput * 0.74 + plannerBias * 0.32)
+      };
+    }
+
+    if (node.id === "integrity-gate") {
+      return {
+        ...node,
+        activation: clamp(node.activation * 0.74 + governanceDrag * 0.42 + 0.04),
+        load: clamp(node.load * 0.78 + governanceDrag * 0.24)
+      };
+    }
+
+    if (node.id === decision.targetNodeId) {
+      return {
+        ...node,
+        activation: clamp(node.activation * 0.52 + Math.max(routeBias, 0) * 0.44 + 0.12),
+        throughput: clamp(node.throughput * 0.6 + Math.max(routeBias, 0) * 0.3 + 0.08),
+        trust: clamp(node.trust * 0.9 + transportConfidence * 0.3, 0.28, 0.99)
+      };
+    }
+
+    return node;
+  });
+
+  const passes = snapshot.passes.map((pass) => {
+    if (pass.phase !== "route" && pass.phase !== "feedback") {
+      return pass;
+    }
+
+    const routePhase = pass.phase === "route";
+    const latencyAdjustment = routePhase
+      ? (1 - decodeFactor) * 11 + governanceDrag * 18 - transportConfidence * 8
+      : governanceDrag * 16 + (decision.mode === "suppressed" ? 18 : 0) - transportConfidence * 10;
+    const loadAdjustment = routePhase
+      ? governanceDrag * 0.28 + (decision.mode === "cognitive-assisted" ? 0.1 : 0.04)
+      : governanceDrag * 0.22 + (decision.mode === "guarded-fallback" ? 0.08 : 0.02);
+    const progressAdjustment = routePhase
+      ? decodeFactor * 0.06 + Math.max(transportConfidence, 0) * 0.1
+      : decision.mode === "suppressed"
+        ? -0.08
+        : decodeFactor * 0.04 + Math.max(transportConfidence, 0) * 0.08;
+
+    return {
+      ...pass,
+      targetNodeId: routePhase ? "router-core" : decision.targetNodeId,
+      latencyMs: Number(Math.max(1, pass.latencyMs * 0.72 + latencyAdjustment + 4).toFixed(2)),
+      load: clamp(pass.load * 0.68 + loadAdjustment),
+      progress: clamp(pass.progress + progressAdjustment, 0, 1),
+      updatedAt: decision.selectedAt
+    };
+  });
+
+  return {
+    ...snapshot,
+    nodes,
+    passes,
+    routingDecisions: nextDecisions,
+    highlightedNodeId: nodes.some((node) => node.id === decision.targetNodeId)
+      ? decision.targetNodeId
+      : "router-core",
+    objective: `Route ${decision.mode} selected for ${decision.channel} feedback toward ${decision.targetNodeId} with ${decision.governancePressure} governance pressure and ${(decision.decodeConfidence * 100).toFixed(1)}% decode confidence.`
   };
 }
 
@@ -2529,6 +2713,7 @@ function resetState(
   const retainedNeuroFrames = clearEvents ? [] : state.snapshot.neuroFrames;
   const retainedIntelligenceLayers = clearEvents ? [] : state.snapshot.intelligenceLayers;
   const retainedCognitiveExecutions = clearEvents ? [] : state.snapshot.cognitiveExecutions;
+  const retainedRoutingDecisions = clearEvents ? [] : state.snapshot.routingDecisions;
   const retainedActuationOutputs = clearEvents ? [] : state.snapshot.actuationOutputs;
 
   state.snapshot = createInitialSnapshot();
@@ -2549,6 +2734,9 @@ function resetState(
   }
   for (const execution of retainedCognitiveExecutions) {
     state.snapshot = mergeCognitiveExecutionIntoSnapshot(state.snapshot, execution);
+  }
+  for (const decision of retainedRoutingDecisions) {
+    state.snapshot = mergeRoutingDecisionIntoSnapshot(state.snapshot, decision);
   }
   for (const output of retainedActuationOutputs) {
     state.snapshot = mergeActuationOutputIntoSnapshot(state.snapshot, output);
@@ -2603,6 +2791,7 @@ export function createEngine(options?: {
   ingestNeuroFrame: (frame: NeuroFrameWindow) => PhaseSnapshot;
   registerIntelligenceLayer: (layer: IntelligenceLayer) => PhaseSnapshot;
   commitCognitiveExecution: (execution: CognitiveExecution) => PhaseSnapshot;
+  recordRoutingDecision: (decision: RoutingDecision) => PhaseSnapshot;
   dispatchActuationOutput: (output: ActuationOutput) => PhaseSnapshot;
 } {
   const restored = options?.durableState
@@ -2873,6 +3062,29 @@ export function createEngine(options?: {
     return state.snapshot;
   }
 
+  function recordRoutingDecision(decision: RoutingDecision): PhaseSnapshot {
+    const parsed = routingDecisionSchema.parse(decision) as RoutingDecision;
+    state.snapshot = mergeRoutingDecisionIntoSnapshot(state.snapshot, parsed);
+    state.snapshot = {
+      ...state.snapshot,
+      metrics: computeMetrics(state.snapshot.nodes, state.snapshot.edges, state.snapshot.passes)
+    };
+
+    pushEvent(state, {
+      schemaName: "immaculate.routing.decision",
+      subject: { type: "agent", id: "router-core" },
+      purpose: ["route", "feedback", parsed.mode, parsed.channel],
+      payload: {
+        routingDecision: parsed
+      },
+      summary: `routing decision ${parsed.id} ${parsed.mode} selected ${parsed.channel} toward ${parsed.targetNodeId}`
+    });
+
+    refreshLogTail(state);
+    materializeHistory(state);
+    return state.snapshot;
+  }
+
   function dispatchActuationOutput(output: ActuationOutput): PhaseSnapshot {
     const parsed = actuationOutputSchema.parse(output) as ActuationOutput;
     state.snapshot = mergeActuationOutputIntoSnapshot(state.snapshot, parsed);
@@ -2915,6 +3127,7 @@ export function createEngine(options?: {
     ingestNeuroFrame,
     registerIntelligenceLayer,
     commitCognitiveExecution,
+    recordRoutingDecision,
     dispatchActuationOutput
   };
 }
@@ -2993,6 +3206,14 @@ export function rebuildDurableStateFromEvents(
       const parsed = cognitiveExecutionSchema.safeParse(event.payload.execution);
       if (parsed.success) {
         engine.commitCognitiveExecution(parsed.data);
+      }
+      continue;
+    }
+
+    if (event.schema.name === "immaculate.routing.decision") {
+      const parsed = routingDecisionSchema.safeParse(event.payload.routingDecision);
+      if (parsed.success) {
+        engine.recordRoutingDecision(parsed.data);
       }
       continue;
     }

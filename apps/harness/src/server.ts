@@ -43,6 +43,7 @@ import {
   type GovernanceBinding
 } from "./governance.js";
 import { createPersistence } from "./persistence.js";
+import { buildRoutingDecision, planAdaptiveRoute } from "./routing.js";
 import { resolvePathWithinAllowedRoot } from "./utils.js";
 import {
   deriveVisibilityScope,
@@ -1155,10 +1156,23 @@ app.post("/api/actuation/dispatch", async (request, reply) => {
     };
   }
 
-  const channel =
-    body.channel ??
-    (frame?.decodeReady ? "stim" : execution ? "visual" : "haptic");
   const status: ActuationOutput["status"] = body.suppressed ? "suppressed" : "dispatched";
+  const routePlan = planAdaptiveRoute({
+    snapshot,
+    frame,
+    execution,
+    adapters: actuationManager.listAdapters(),
+    transports: actuationManager.listTransports(),
+    governanceStatus: governance.getStatus(),
+    governanceDecisions: governance.listDecisions(),
+    consentScope,
+    requestedAdapterId: body.adapterId?.trim() || undefined,
+    requestedChannel: body.channel,
+    requestedTargetNodeId: body.targetNodeId?.trim() || undefined,
+    requestedIntensity:
+      typeof body.intensity === "number" ? Number(body.intensity) : undefined,
+    suppressed: body.suppressed
+  });
   const command =
     body.command?.trim() ||
     (execution
@@ -1168,7 +1182,7 @@ app.post("/api/actuation/dispatch", async (request, reply) => {
         : "operator:manual-feedback");
   const intensity = clampActuationIntensity(
     body.intensity,
-    frame?.decodeConfidence ?? (execution ? 0.42 : 0.28)
+    routePlan.recommendedIntensity
   );
   const targetNodeId = body.targetNodeId?.trim() || "actuator-grid";
   const output: ActuationOutput = {
@@ -1185,11 +1199,11 @@ app.post("/api/actuation/dispatch", async (request, reply) => {
     sourceExecutionId: execution?.id,
     sourceFrameId: frame?.id,
     targetNodeId,
-    channel,
+    channel: routePlan.channel,
     command,
     intensity,
     status,
-    summary: `Dispatch ${channel} ${status} to ${targetNodeId} at ${(intensity * 100).toFixed(1)}% intensity.`,
+    summary: `Dispatch ${routePlan.channel} ${status} to ${targetNodeId} at ${(intensity * 100).toFixed(1)}% intensity.`,
     generatedAt: new Date().toISOString(),
     dispatchedAt: status === "dispatched" ? new Date().toISOString() : undefined
   };
@@ -1197,7 +1211,7 @@ app.post("/api/actuation/dispatch", async (request, reply) => {
   let dispatched;
   try {
     dispatched = await actuationManager.dispatch(output, {
-      adapterId: body.adapterId?.trim() || undefined
+      adapterId: routePlan.recommendedAdapterId
     });
   } catch (error) {
     reply.code(400);
@@ -1207,14 +1221,23 @@ app.post("/api/actuation/dispatch", async (request, reply) => {
     };
   }
 
+  engine.dispatchActuationOutput(dispatched.output);
+  const routeDecision = buildRoutingDecision({
+    output: dispatched.output,
+    delivery: dispatched.delivery,
+    plan: routePlan,
+    frame,
+    execution
+  });
   const nextSnapshot = phaseSnapshotSchema.parse(
-    projectPhaseSnapshot(engine.dispatchActuationOutput(dispatched.output))
+    projectPhaseSnapshot(engine.recordRoutingDecision(routeDecision))
   );
   await persistence.persist(engine.getDurableState());
   emitSnapshot();
 
   return {
     accepted: true,
+    routeDecision,
     adapter: dispatched.adapter,
     delivery: dispatched.delivery,
     output: projectActuationOutput(dispatched.output, consentScope),

@@ -1267,6 +1267,8 @@ export async function createActuationManager(rootDir: string): Promise<{
     delivery: ActuationDelivery,
     output: ActuationOutput
   ): Promise<void> {
+    await mkdir(path.dirname(deliveriesPath), { recursive: true });
+    await mkdir(path.dirname(adapter.deliveryPath), { recursive: true });
     const serialized = `${JSON.stringify(delivery)}\n`;
     await appendFile(deliveriesPath, serialized, "utf8");
     if (delivery.status === "delivered") {
