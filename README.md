@@ -32,6 +32,7 @@ Immaculate is a greenfield orchestration substrate for:
 - Code of conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
 - Security policy: [SECURITY.md](SECURITY.md)
 - Support guide: [SUPPORT.md](SUPPORT.md)
+- GitHub publication script: `scripts/publish-github.ps1`
 
 Generated runtime state, benchmark run dumps, local tooling environments, and local machine paths are intentionally kept out of git.
 
