@@ -3,6 +3,7 @@ import type {
   ActuationOutput,
   CognitiveExecution,
   NeuroFrameWindow,
+  NeuralCouplingState,
   PhaseSnapshot,
   RoutingDecision,
   RoutingDecisionMode,
@@ -22,6 +23,7 @@ type AdaptiveRoutePlanInput = {
   execution?: CognitiveExecution;
   cognitiveRouteSuggestion?: string;
   neuralBandPower?: NeuroFrameWindow["bandPower"];
+  neuralCoupling?: NeuralCouplingState;
   adapters: ActuationAdapterState[];
   transports: ActuationTransportState[];
   governanceStatus: GovernanceStatus;
@@ -114,7 +116,17 @@ function preferredTransport(
 ): ActuationTransportState | undefined {
   const candidates = filterChannelTransports(channel, transports, adapterLookup).filter(
     (transport) => !transportBlocked(transport)
-  );
+  ).sort((left, right) => {
+    const scoreDelta = (right.preferenceScore ?? 0) - (left.preferenceScore ?? 0);
+    if (scoreDelta !== 0) {
+      return scoreDelta;
+    }
+    const rankDelta = (left.preferenceRank ?? Number.MAX_SAFE_INTEGER) - (right.preferenceRank ?? Number.MAX_SAFE_INTEGER);
+    if (rankDelta !== 0) {
+      return rankDelta;
+    }
+    return left.id.localeCompare(right.id);
+  });
   if (requestedAdapterId) {
     return candidates.find((transport) => transport.adapterId === requestedAdapterId) ?? candidates[0];
   }
@@ -153,7 +165,9 @@ function recommendedIntensity(
   execution: CognitiveExecution | undefined,
   requestedIntensity?: number,
   cognitiveRouteSuggestion?: string,
-  neuralBandPower?: NeuroFrameWindow["bandPower"]
+  neuralBandPower?: NeuroFrameWindow["bandPower"],
+  neuralSignalQuality = 0,
+  dominantBand?: string
 ): number {
   if (typeof requestedIntensity === "number" && Number.isFinite(requestedIntensity)) {
     return clamp(requestedIntensity);
@@ -178,22 +192,96 @@ function recommendedIntensity(
     const bandPower = neuralBandPower ?? frame?.bandPower;
     const motorActivation = bandPower ? bandPower.gamma / (bandPower.beta + 0.001) : 0;
     const bandIntensity = clamp(motorActivation * 0.4, 0, 0.3);
-    return clamp((frame?.decodeConfidence ?? 0.72) * 0.78 + bandIntensity + suggestionBias, 0.18, 0.88);
+    const couplingBias = neuralSignalQuality > 0 ? clamp(neuralSignalQuality * 0.12, 0, 0.12) : 0;
+    const dominantBandBias =
+      dominantBand === "beta" || bandPower?.dominantBand === "beta"
+        ? 0.08
+        : dominantBand === "gamma" || bandPower?.dominantBand === "gamma"
+          ? 0.04
+          : 0;
+    return clamp(
+      (frame?.decodeConfidence ?? 0.72) * 0.78 + bandIntensity + couplingBias + dominantBandBias + suggestionBias,
+      0.18,
+      0.88
+    );
   }
   if (mode === "cognitive-assisted") {
     const latencyBias = execution ? Math.min(execution.latencyMs / 5000, 1) * 0.08 : 0;
-    return clamp(0.32 + latencyBias + suggestionBias, 0.24, 0.56);
+    const couplingBias = neuralSignalQuality > 0 ? clamp(neuralSignalQuality * 0.03, 0, 0.03) : 0;
+    return clamp(0.32 + latencyBias + couplingBias + suggestionBias, 0.24, 0.56);
   }
   if (mode === "operator-override") {
-    return clamp((frame?.decodeConfidence ?? 0.36) + suggestionBias, 0.18, 0.64);
+    const couplingBias = neuralSignalQuality > 0 ? clamp(neuralSignalQuality * 0.04, 0, 0.04) : 0;
+    return clamp((frame?.decodeConfidence ?? 0.36) + couplingBias + suggestionBias, 0.18, 0.64);
   }
   return clamp(0.24 + suggestionBias, 0.18, 0.36);
+}
+
+function resolveSpectralSignalQuality(
+  neuralCoupling: NeuralCouplingState,
+  frame: NeuroFrameWindow | undefined,
+  neuralBandPower?: NeuroFrameWindow["bandPower"]
+): {
+  signalQuality: number;
+  dominantBand: string;
+  dominantRatio: number;
+  artifactRatio: number;
+  directBandSignal: boolean;
+} {
+  const bandPower = neuralBandPower ?? frame?.bandPower;
+  const totalPower = bandPower?.totalPower ?? 0;
+  const artifactRatio =
+    totalPower > 0 ? clamp((bandPower?.artifactPower ?? 0) / totalPower, 0, 1) : clamp(neuralCoupling.artifactRatio ?? 0, 0, 1);
+  const directBandSignal = Boolean(bandPower);
+  const bandSignalQuality = bandPower
+    ? clamp(
+        bandPower.dominantRatio * 0.38 +
+          (1 - artifactRatio) * 0.34 +
+          (frame?.decodeConfidence ?? neuralCoupling.decodeConfidence ?? 0) * 0.28 -
+          artifactRatio * 0.78,
+        0,
+        1
+      )
+    : 0;
+  const couplingSignalQuality = clamp(neuralCoupling.signalQuality ?? 0, 0, 1);
+  const directSignalQuality = directBandSignal
+    ? clamp(
+        bandSignalQuality * 0.82 +
+          couplingSignalQuality * 0.18 -
+          artifactRatio * 0.18,
+        0,
+        1
+      )
+    : couplingSignalQuality;
+
+  return {
+    signalQuality: directSignalQuality,
+    dominantBand: bandPower?.dominantBand ?? neuralCoupling.dominantBand ?? "none",
+    dominantRatio: bandPower?.dominantRatio ?? neuralCoupling.dominantRatio ?? 0,
+    artifactRatio,
+    directBandSignal
+  };
 }
 
 export function planAdaptiveRoute(input: AdaptiveRoutePlanInput): AdaptiveRoutePlan {
   const adapterLookup = adaptersById(input.adapters);
   const frame = input.frame ?? input.snapshot.neuroFrames[0];
   const execution = input.execution ?? input.snapshot.cognitiveExecutions[0];
+  const neuralCoupling = input.neuralCoupling ?? input.snapshot.neuralCoupling;
+  const spectralSignal = resolveSpectralSignalQuality(
+    neuralCoupling,
+    frame,
+    input.neuralBandPower
+  );
+  const spectralConfidence = spectralSignal.signalQuality;
+  const hasSpectralCoupling = spectralSignal.directBandSignal || spectralConfidence > 0;
+  const dominantBand = spectralSignal.dominantBand;
+  const strongSpectralReflexSignal =
+    Boolean(frame?.decodeReady) &&
+    hasSpectralCoupling &&
+    spectralConfidence >= 0.78 &&
+    spectralSignal.artifactRatio <= 0.18 &&
+    (dominantBand === "beta" || dominantBand === "gamma");
   const governancePressure = deriveGovernancePressure(
     input.consentScope,
     input.governanceStatus,
@@ -220,8 +308,15 @@ export function planAdaptiveRoute(input: AdaptiveRoutePlanInput): AdaptiveRouteP
     mode = "suppressed";
     channel = input.requestedChannel ?? "visual";
   } else if (
-    frame?.decodeReady &&
-    frame.decodeConfidence >= 0.82 &&
+    hasSpectralCoupling &&
+    spectralConfidence < 0.18 &&
+    governancePressure !== "critical"
+  ) {
+    mode = "guarded-fallback";
+    channel = "visual";
+  } else if (
+    (strongSpectralReflexSignal ||
+      (frame?.decodeReady && frame.decodeConfidence >= 0.82)) &&
     hapticTransport &&
     hapticTransport.health === "healthy" &&
     governancePressure === "clear"
@@ -271,10 +366,12 @@ export function planAdaptiveRoute(input: AdaptiveRoutePlanInput): AdaptiveRouteP
     execution,
     input.requestedIntensity,
     input.cognitiveRouteSuggestion ?? execution?.routeSuggestion,
-    input.neuralBandPower ?? frame?.bandPower
+    input.neuralBandPower ?? frame?.bandPower,
+    spectralConfidence,
+    dominantBand
   );
-  const dominantBand = input.neuralBandPower?.dominantBand ?? frame?.bandPower?.dominantBand ?? "none";
-  const dominantRatio = input.neuralBandPower?.dominantRatio ?? frame?.bandPower?.dominantRatio ?? 0;
+  const dominantRatio =
+    spectralSignal.dominantRatio;
   const selectedAdapterId =
     requestedAdapterId && adapterLookup.has(requestedAdapterId)
       ? requestedAdapterId
@@ -284,6 +381,8 @@ export function planAdaptiveRoute(input: AdaptiveRoutePlanInput): AdaptiveRouteP
     `channel=${selectedChannel}`,
     `decode=${(frame?.decodeConfidence ?? 0).toFixed(2)}`,
     `band=${dominantBand}:${dominantRatio.toFixed(2)}`,
+    `signal=${hasSpectralCoupling ? spectralConfidence.toFixed(2) : "none"}`,
+    `artifact=${hasSpectralCoupling ? spectralSignal.artifactRatio.toFixed(2) : "none"}`,
     `governance=${governancePressure}`,
     `cognitive=${input.cognitiveRouteSuggestion ?? execution?.routeSuggestion ?? "none"}`,
     `transport=${selectedTransport?.kind ?? "none"}`,

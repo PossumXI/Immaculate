@@ -62,6 +62,7 @@ import {
   projectPhaseSnapshot,
   redactPhaseSnapshot
 } from "./visibility.js";
+import { collapseSampleRows, extractBandPower } from "./neuro-bands.js";
 
 type BenchmarkRunOptions = {
   packId?: BenchmarkPackId;
@@ -177,9 +178,10 @@ function createProgress(): BenchmarkProgress {
       "First live local cognition backend through Ollama/Gemma wired into route/reason/commit",
       "Purpose-bound governance enforcement across mutable control, ingest, cognition, streaming, and benchmark routes",
       "Sensitive snapshot dataset and neuro-session reads redacted by default, with governed detail routes for full inspection",
-      "Field-level consent projections over derived neuro features and cognitive trace previews",
-      "Tier 2 neural-coupling benchmark coverage for band dominance, route phase bias, and coupled routing strength",
-      "Governed actuation dispatch and actuation output readback across the feedback plane",
+    "Field-level consent projections over derived neuro features and cognitive trace previews",
+    "Tier 2 neural-coupling benchmark coverage for band dominance, route phase bias, and coupled routing strength",
+    "Tier 2 spectral-confidence coverage for artifact-band penalty and backward-compatible amplitude fallback",
+    "Governed actuation dispatch and actuation output readback across the feedback plane",
       "Adapter-backed visual, haptic, and stim delivery lanes with durable actuation delivery logs",
       "Governed websocket actuation device links with acked bridge delivery and file fallback",
       "Concrete UDP/OSC actuation transport registration and delivery over protocol-aware visual lanes",
@@ -1466,6 +1468,74 @@ export async function runPublishedBenchmark(
     );
     tier2RouteModes.push(tier2RoutePlan.mode);
   }
+  const tier2ArtifactSamples = createTier2BandDominantSamples({
+    frequencyHz: 60,
+    sampleCount: 256,
+    channelCount: 12,
+    rateHz: 128,
+    amplitude: 0.82,
+    phaseShift: 0.14,
+    harmonicScale: 0,
+    noiseScale: 0.004
+  });
+  const tier2AlphaSamples = createTier2BandDominantSamples({
+    frequencyHz: 10,
+    sampleCount: 256,
+    channelCount: 12,
+    rateHz: 128,
+    amplitude: 0.64,
+    phaseShift: 0.28,
+    harmonicScale: 0.05,
+    noiseScale: 0.003
+  });
+  const tier2ArtifactBands = extractBandPower(collapseSampleRows(tier2ArtifactSamples), 128);
+  const tier2AlphaBands = extractBandPower(collapseSampleRows(tier2AlphaSamples), 128);
+  const tier2ArtifactFrame = buildLiveNeuroFrame(
+    {
+      sourceId: `tier2-spectral-artifact-${suiteId}`,
+      label: "Tier 2 spectral artifact window",
+      sessionId: nwbFixture.summary.id,
+      kind: "electrical-series",
+      rateHz: 128,
+      syncJitterMs: 0.18,
+      channels: 12,
+      samples: tier2ArtifactSamples
+    },
+    tier2ReplayState
+  ).frame;
+  const tier2AlphaFrame = buildLiveNeuroFrame(
+    {
+      sourceId: `tier2-spectral-alpha-${suiteId}`,
+      label: "Tier 2 spectral alpha window",
+      sessionId: nwbFixture.summary.id,
+      kind: "electrical-series",
+      rateHz: 128,
+      syncJitterMs: 0.18,
+      channels: 12,
+      samples: tier2AlphaSamples
+    },
+    tier2ReplayState
+  ).frame;
+  const tier2ArtifactRoutePlan = planAdaptiveRoute({
+    snapshot: engine.getSnapshot(),
+    frame: tier2ArtifactFrame,
+    execution: syntheticExecution,
+    adapters: actuationManager.listAdapters(),
+    transports: actuationManager.listTransports(),
+    governanceStatus: preferredRouteGovernanceStatus,
+    governanceDecisions: preferredRouteGovernanceDecisions,
+    consentScope: "system:benchmark"
+  });
+  const tier2AlphaRoutePlan = planAdaptiveRoute({
+    snapshot: engine.getSnapshot(),
+    frame: tier2AlphaFrame,
+    execution: syntheticExecution,
+    adapters: actuationManager.listAdapters(),
+    transports: actuationManager.listTransports(),
+    governanceStatus: preferredRouteGovernanceStatus,
+    governanceDecisions: preferredRouteGovernanceDecisions,
+    consentScope: "system:benchmark"
+  });
   const preferredRouteFrame = tier2PreferredFrame ?? liveIngressResult.frame;
   const preferredRoutePlan = planAdaptiveRoute({
     snapshot: engine.getSnapshot(),
@@ -1967,6 +2037,57 @@ export async function runPublishedBenchmark(
     plan: guardedSchedulePlan
   });
   engine.recordExecutionSchedule(guardedScheduleDecision);
+  const spectralReflexSnapshot = engine.ingestNeuroFrame(preferredRouteFrame);
+  const spectralReflexArbitrationPlan = planExecutionArbitration({
+    snapshot: spectralReflexSnapshot,
+    frame: preferredRouteFrame,
+    execution: syntheticExecution,
+    governanceStatus: {
+      mode: "enforced",
+      policyCount: 0,
+      decisionCount: 0,
+      deniedCount: 0
+    },
+    governanceDecisions: [],
+    consentScope: "system:benchmark"
+  });
+  const spectralReflexArbitrationDecision = buildExecutionArbitrationDecision({
+    plan: spectralReflexArbitrationPlan,
+    consentScope: "system:benchmark",
+    frame: preferredRouteFrame,
+    execution: syntheticExecution
+  });
+  engine.recordExecutionArbitration(spectralReflexArbitrationDecision);
+  const spectralArtifactSnapshot = engine.ingestNeuroFrame(tier2ArtifactFrame);
+  const spectralArtifactArbitrationPlan = planExecutionArbitration({
+    snapshot: spectralArtifactSnapshot,
+    frame: tier2ArtifactFrame,
+    execution: syntheticExecution,
+    governanceStatus: {
+      mode: "enforced",
+      policyCount: 0,
+      decisionCount: 0,
+      deniedCount: 0
+    },
+    governanceDecisions: [],
+    consentScope: "system:benchmark"
+  });
+  const spectralArtifactArbitrationDecision = buildExecutionArbitrationDecision({
+    plan: spectralArtifactArbitrationPlan,
+    consentScope: "system:benchmark",
+    frame: tier2ArtifactFrame,
+    execution: syntheticExecution
+  });
+  engine.recordExecutionArbitration(spectralArtifactArbitrationDecision);
+  const spectralArtifactSchedulePlan = planExecutionSchedule({
+    snapshot: spectralArtifactSnapshot,
+    arbitration: spectralArtifactArbitrationDecision
+  });
+  const spectralArtifactScheduleDecision = buildExecutionScheduleDecision({
+    arbitration: spectralArtifactArbitrationDecision,
+    plan: spectralArtifactSchedulePlan
+  });
+  engine.recordExecutionSchedule(spectralArtifactScheduleDecision);
 
   const finalSnapshot = engine.getSnapshot() as PhaseSnapshot;
   const eventLog = engine.getEvents() as EventEnvelope[];
@@ -1994,16 +2115,17 @@ export async function runPublishedBenchmark(
     representativeEvent,
     "system:benchmark"
   );
+  const visibilityFrame = preferredRouteFrame;
   const sessionScopedFrame = projectNeuroFrameWindow(
-    liveIngressResult.frame,
+    visibilityFrame,
     `session:${nwbFixture.summary.id}`
   );
   const benchmarkScopedFrame = projectNeuroFrameWindow(
-    liveIngressResult.frame,
+    visibilityFrame,
     "system:benchmark"
   );
   const auditScopedFrame = projectNeuroFrameWindow(
-    liveIngressResult.frame,
+    visibilityFrame,
     "system:audit"
   );
   const intelligenceScopedExecution = projectCognitiveExecution(
@@ -2703,14 +2825,37 @@ export async function runPublishedBenchmark(
       "critical governance pressure should be able to hold outward action while still allowing bounded internal review"
     ),
     createAssertion(
+      "execution-arbitration-spectral-reflex",
+      "Execution arbitration stays reflex-local when a strong beta-dominant signal is present",
+      spectralReflexArbitrationPlan.mode === "reflex-local" &&
+        !spectralReflexArbitrationPlan.shouldRunCognition &&
+        spectralReflexArbitrationPlan.shouldDispatchActuation &&
+        spectralReflexArbitrationPlan.routeModeHint === "reflex-direct",
+      "reflex-local / cognition skipped / dispatch allowed / reflex-direct",
+      `${spectralReflexArbitrationPlan.mode} / ${spectralReflexArbitrationPlan.rationale}`,
+      "strong clean beta or gamma coupling should keep the decision path local instead of forcing unnecessary cognition"
+    ),
+    createAssertion(
+      "execution-arbitration-spectral-guard",
+      "Execution arbitration escalates contaminated spectral windows into guarded review before action",
+      spectralArtifactArbitrationPlan.mode === "guarded-review" &&
+        spectralArtifactArbitrationPlan.shouldRunCognition &&
+        !spectralArtifactArbitrationPlan.shouldDispatchActuation &&
+        spectralArtifactArbitrationPlan.routeModeHint === "suppressed",
+      "guarded-review / cognition allowed / dispatch held / suppressed",
+      `${spectralArtifactArbitrationPlan.mode} / ${spectralArtifactArbitrationPlan.rationale}`,
+      "contaminated live windows should move the system into review before outward action is considered"
+    ),
+    createAssertion(
       "execution-arbitration-ledger",
       "Execution arbitration persists as a durable snapshot ledger",
-      executionArbitrations.length >= 3 &&
-        executionArbitrations[0]?.id === mediationBlockedDecision.id &&
+      executionArbitrations.length >= 5 &&
         executionArbitrations.some((decision) => decision.id === mediationAllowedDecision.id) &&
         executionArbitrations.some((decision) => decision.id === cognitiveArbitrationDecision.id) &&
-        executionArbitrations.some((decision) => decision.id === reflexArbitrationDecision.id),
-      ">= 3 execution arbitrations in snapshot ledger",
+        executionArbitrations.some((decision) => decision.id === reflexArbitrationDecision.id) &&
+        executionArbitrations.some((decision) => decision.id === spectralArtifactArbitrationDecision.id) &&
+        executionArbitrations.some((decision) => decision.id === spectralReflexArbitrationDecision.id),
+      ">= 5 execution arbitrations in snapshot ledger",
       `${executionArbitrations.length} arbitrations / latest ${executionArbitrations[0]?.mode ?? "missing"}`,
       "the decision to think, act, or hold has to be durable and replayable if it is going to shape future orchestration"
     ),
@@ -2758,13 +2903,25 @@ export async function runPublishedBenchmark(
       "critical governance pressure should shape which internal formation runs, not just whether outward dispatch is allowed"
     ),
     createAssertion(
+      "execution-schedule-spectral-guard",
+      "Execution scheduling widens contaminated spectral review into a guarded swarm",
+      spectralArtifactSchedulePlan.mode === "guarded-swarm" &&
+        spectralArtifactSchedulePlan.layerIds.length >= 2 &&
+        spectralArtifactSchedulePlan.layerRoles.includes("guard") &&
+        !spectralArtifactSchedulePlan.shouldDispatchActuation,
+      "guarded-swarm / width >= 2 / includes guard / dispatch held",
+      `${spectralArtifactSchedulePlan.mode} / roles=${spectralArtifactSchedulePlan.layerRoles.join(">")} / dispatch=${spectralArtifactSchedulePlan.shouldDispatchActuation}`,
+      "once spectral contamination forces review, the cognitive formation should widen into a guarded internal path instead of a narrow direct lane"
+    ),
+    createAssertion(
       "execution-schedule-ledger",
       "Execution scheduling persists as a durable snapshot ledger",
-      executionSchedules.length >= 3 &&
-        executionSchedules[0]?.id === guardedScheduleDecision.id &&
+      executionSchedules.length >= 4 &&
         executionSchedules.some((schedule) => schedule.id === cognitiveScheduleDecision.id) &&
-        executionSchedules.some((schedule) => schedule.id === reflexScheduleDecision.id),
-      ">= 3 execution schedules in snapshot ledger",
+        executionSchedules.some((schedule) => schedule.id === reflexScheduleDecision.id) &&
+        executionSchedules.some((schedule) => schedule.id === guardedScheduleDecision.id) &&
+        executionSchedules.some((schedule) => schedule.id === spectralArtifactScheduleDecision.id),
+      ">= 4 execution schedules in snapshot ledger",
       `${executionSchedules.length} schedules / latest ${executionSchedules[0]?.mode ?? "missing"}`,
       "agent formation has to be durable and replayable if it is going to shape reasoning before action"
     ),
@@ -2941,6 +3098,41 @@ export async function runPublishedBenchmark(
       "the coupled route should reflect the live neural coupling state rather than only the transport registry"
     ),
     createAssertion(
+      "tier2-spectral-fallback",
+      "Tier 2 live neuro ingest falls back to amplitude confidence when spectral bands are unavailable",
+      liveIngressResult.frame.bandPower === undefined &&
+        liveIngressResult.frame.decodeConfidence >= 0.55 &&
+        liveIngressResult.frame.decodeReady,
+      "fallback decode confidence remains available without band power",
+      `${liveIngressResult.frame.bandPower === undefined ? "no bandPower" : "bandPower"} / ${liveIngressResult.frame.decodeConfidence.toFixed(2)}`,
+      "small or undersampled windows should preserve the legacy amplitude path so live ingest remains backward compatible"
+    ),
+    createAssertion(
+      "tier2-spectral-confidence",
+      "Tier 2 spectral confidence suppresses 60Hz artifact windows and preserves clean alpha windows",
+      tier2ArtifactBands.totalPower > 0 &&
+        tier2ArtifactBands.artifactPower / tier2ArtifactBands.totalPower >= 0.75 &&
+        tier2ArtifactBands.gamma <= 0.05 &&
+        tier2ArtifactFrame.decodeConfidence < 0.4 &&
+        tier2AlphaBands.alpha >= 0.5 &&
+        tier2AlphaFrame.decodeConfidence > 0.65 &&
+        tier2AlphaFrame.decodeConfidence > tier2ArtifactFrame.decodeConfidence,
+      "artifact-dominant frame suppressed, alpha frame preserved",
+      `${(tier2ArtifactBands.artifactPower / Math.max(tier2ArtifactBands.totalPower, 1)).toFixed(2)} artifact / ${tier2ArtifactFrame.decodeConfidence.toFixed(2)} artifact confidence / ${tier2AlphaFrame.decodeConfidence.toFixed(2)} alpha confidence`,
+      "spectral confidence should penalize artifact-heavy windows while still admitting clean neural rhythm windows"
+    ),
+    createAssertion(
+      "tier2-spectral-routing-pressure",
+      "Tier 2 spectral confidence pushes artifact windows onto safer routes while preserving stronger alpha routing",
+      tier2ArtifactRoutePlan.mode === "guarded-fallback" &&
+        tier2ArtifactRoutePlan.channel === "visual" &&
+        tier2ArtifactRoutePlan.recommendedIntensity < tier2AlphaRoutePlan.recommendedIntensity &&
+        tier2AlphaRoutePlan.mode !== "suppressed",
+      "artifact guarded-fallback with weaker intensity than alpha",
+      `${tier2ArtifactRoutePlan.mode}/${tier2ArtifactRoutePlan.channel}/${tier2ArtifactRoutePlan.recommendedIntensity.toFixed(2)} vs ${tier2AlphaRoutePlan.mode}/${tier2AlphaRoutePlan.channel}/${tier2AlphaRoutePlan.recommendedIntensity.toFixed(2)}`,
+      "spectral quality should influence route pressure directly so contaminated windows de-escalate before outward action"
+    ),
+    createAssertion(
       "actuation-device-clamp",
       "Device negotiation can further clamp actuation intensity below the adapter ceiling",
       bridgeDispatchResult.output.intensity === 0.5 &&
@@ -3013,17 +3205,19 @@ export async function runPublishedBenchmark(
     createAssertion(
       "neuro-feature-visibility",
       "Session-scoped neuro feature reads retain full derived metrics while benchmark and audit scopes expose bounded and full views respectively",
-      sessionScopedFrame.decodeConfidence === liveIngressResult.frame.decodeConfidence &&
-        sessionScopedFrame.bandPower?.dominantBand === liveIngressResult.frame.bandPower?.dominantBand &&
-        auditScopedFrame.decodeConfidence === liveIngressResult.frame.decodeConfidence &&
-        auditScopedFrame.bandPower?.dominantBand === liveIngressResult.frame.bandPower?.dominantBand &&
-        benchmarkScopedFrame.decodeConfidence === liveIngressResult.frame.decodeConfidence &&
+      sessionScopedFrame.decodeConfidence === visibilityFrame.decodeConfidence &&
+        sessionScopedFrame.bandPower?.dominantBand === visibilityFrame.bandPower?.dominantBand &&
+        auditScopedFrame.decodeConfidence === visibilityFrame.decodeConfidence &&
+        auditScopedFrame.bandPower?.dominantBand === visibilityFrame.bandPower?.dominantBand &&
+        benchmarkScopedFrame.decodeConfidence === visibilityFrame.decodeConfidence &&
         benchmarkScopedFrame.meanAbs === 0 &&
         benchmarkScopedFrame.rms === 0 &&
         benchmarkScopedFrame.peak === 0 &&
-        benchmarkScopedFrame.bandPower?.dominantBand === liveIngressResult.frame.bandPower?.dominantBand &&
+        benchmarkScopedFrame.bandPower?.dominantBand === visibilityFrame.bandPower?.dominantBand &&
         benchmarkScopedFrame.bandPower?.delta === 0 &&
-        benchmarkScopedFrame.bandPower?.dominantRatio === liveIngressResult.frame.bandPower?.dominantRatio,
+        benchmarkScopedFrame.bandPower?.artifactPower === 0 &&
+        benchmarkScopedFrame.bandPower?.totalPower === 0 &&
+        benchmarkScopedFrame.bandPower?.dominantRatio === visibilityFrame.bandPower?.dominantRatio,
       "session and audit scope full, benchmark scope bounded",
       `${sessionScopedFrame.decodeConfidence.toFixed(2)} full / ${benchmarkScopedFrame.bandPower?.dominantBand ?? "missing"} bounded / ${auditScopedFrame.bandPower?.dominantBand ?? "missing"} audit`,
       "derived neuro features should only fully surface under session or subject consent, while benchmark scope retains bounded band-dominance data"

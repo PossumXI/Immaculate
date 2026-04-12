@@ -31,6 +31,10 @@ export type ExecutionSchedulePlan = {
   rationale: string;
 };
 
+function clamp(value: number, min = 0, max = 1): number {
+  return Math.min(max, Math.max(min, value));
+}
+
 function layerStatusRank(layer: IntelligenceLayer): number {
   return layer.status === "ready"
     ? 0
@@ -155,12 +159,33 @@ function estimateCost(selected: IntelligenceLayer[]): number {
 }
 
 export function planExecutionSchedule(input: ExecutionSchedulePlanInput): ExecutionSchedulePlan {
-  const preferredRoles = preferredScheduleRoles(input.arbitration);
+  let preferredRoles = preferredScheduleRoles(input.arbitration);
+  const signalQuality = clamp(input.snapshot.neuralCoupling.signalQuality);
+  const dominantBand = input.snapshot.neuralCoupling.dominantBand;
+  const strongFastSignal =
+    signalQuality >= 0.78 && (dominantBand === "beta" || dominantBand === "gamma");
+  const weakSignal = signalQuality > 0 && signalQuality < 0.18;
+  if (input.arbitration.shouldRunCognition && input.arbitration.mode !== "operator-override") {
+    if (weakSignal) {
+      preferredRoles = uniqueRoles([...preferredRoles, "guard"]);
+    } else if (strongFastSignal && input.arbitration.governancePressure === "clear") {
+      preferredRoles = preferredRoles.slice(0, Math.max(1, Math.min(2, preferredRoles.length)));
+    }
+  }
+  const adaptiveMaxWidth =
+    input.maxWidth ??
+    (input.arbitration.mode === "operator-override"
+      ? Math.max(3, preferredRoles.length)
+      : weakSignal
+        ? Math.max(2, preferredRoles.length)
+        : strongFastSignal && input.arbitration.governancePressure === "clear"
+          ? Math.max(1, Math.min(2, preferredRoles.length))
+          : Math.max(3, preferredRoles.length));
   const selectedLayers = selectLayers(
     input.snapshot.intelligenceLayers,
     preferredRoles,
     input.requestedLayerId,
-    input.maxWidth ?? Math.max(3, preferredRoles.length)
+    adaptiveMaxWidth
   );
   const mode = scheduleModeForSelection(input.arbitration, selectedLayers);
   const primaryLayer = selectedLayers.at(-1);
@@ -175,6 +200,8 @@ export function planExecutionSchedule(input: ExecutionSchedulePlanInput): Execut
     `width=${selectedLayers.length}`,
     `primary=${primaryLayer?.role ?? "none"}`,
     `roles=${layerRoles.join(">") || "none"}`,
+    `signal=${signalQuality.toFixed(2)}`,
+    `band=${dominantBand}`,
     `governance=${input.arbitration.governancePressure}`,
     `dispatch=${input.arbitration.shouldDispatchActuation ? "allow" : "hold"}`
   ].join(" / ");

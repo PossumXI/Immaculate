@@ -7,6 +7,12 @@ const BAND_LIMITS: Array<{ band: NeuroBand; lowHz: number; highHz: number }> = [
   { band: "beta", lowHz: 13, highHz: 30 },
   { band: "gamma", lowHz: 30, highHz: 100 }
 ];
+const ARTIFACT_LIMITS = { lowHz: 45, highHz: 65 };
+
+export type SpectralBandPower = NeuroBandPower & {
+  artifactPower: number;
+  totalPower: number;
+};
 
 function clamp(value: number, min = 0, max = 1): number {
   return Math.min(max, Math.max(min, value));
@@ -22,7 +28,7 @@ export function collapseSampleRows(rows: number[][]): number[] {
   });
 }
 
-export function extractBandPower(samples: number[], rateHz: number): NeuroBandPower {
+export function extractBandPower(samples: number[], rateHz: number): SpectralBandPower {
   const safeSamples = samples.map((sample) => Number.isFinite(sample) ? Number(sample) : 0);
   const sampleCount = safeSamples.length;
   if (!Number.isFinite(rateHz) || rateHz <= 0 || sampleCount < 8) {
@@ -33,7 +39,9 @@ export function extractBandPower(samples: number[], rateHz: number): NeuroBandPo
       beta: 0,
       gamma: 0,
       dominantBand: "alpha",
-      dominantRatio: 0
+      dominantRatio: 0,
+      artifactPower: 0,
+      totalPower: 0
     };
   }
 
@@ -48,8 +56,22 @@ export function extractBandPower(samples: number[], rateHz: number): NeuroBandPo
   };
 
   const upperBin = Math.floor(sampleCount / 2);
+  let artifactPower = 0;
   for (let bin = 1; bin <= upperBin; bin += 1) {
     const frequencyHz = (bin * rateHz) / sampleCount;
+    if (frequencyHz >= ARTIFACT_LIMITS.lowHz && frequencyHz < ARTIFACT_LIMITS.highHz) {
+      let real = 0;
+      let imaginary = 0;
+      for (let index = 0; index < sampleCount; index += 1) {
+        const angle = (2 * Math.PI * bin * index) / sampleCount;
+        real += centered[index] * Math.cos(angle);
+        imaginary -= centered[index] * Math.sin(angle);
+      }
+
+      artifactPower += real * real + imaginary * imaginary;
+      continue;
+    }
+
     const band = BAND_LIMITS.find(
       (candidate) => frequencyHz >= candidate.lowHz && frequencyHz < candidate.highHz
     )?.band;
@@ -69,6 +91,7 @@ export function extractBandPower(samples: number[], rateHz: number): NeuroBandPo
   }
 
   const totalBandPower = Object.values(bucketedPower).reduce((sum, value) => sum + value, 0);
+  const totalPower = totalBandPower + artifactPower;
   if (totalBandPower <= 0) {
     return {
       delta: 0,
@@ -77,7 +100,9 @@ export function extractBandPower(samples: number[], rateHz: number): NeuroBandPo
       beta: 0,
       gamma: 0,
       dominantBand: "alpha",
-      dominantRatio: 0
+      dominantRatio: 0,
+      artifactPower: Number(artifactPower.toFixed(6)),
+      totalPower: Number(totalPower.toFixed(6))
     };
   }
 
@@ -96,6 +121,8 @@ export function extractBandPower(samples: number[], rateHz: number): NeuroBandPo
   return {
     ...relativePower,
     dominantBand: dominant[0],
-    dominantRatio: Number(clamp(dominant[1]).toFixed(6))
+    dominantRatio: Number(clamp(dominant[1]).toFixed(6)),
+    artifactPower: Number(artifactPower.toFixed(6)),
+    totalPower: Number(totalPower.toFixed(6))
   };
 }

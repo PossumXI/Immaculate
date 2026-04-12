@@ -21,6 +21,32 @@ For each breakthrough, record:
 
 ### 2026-04-12
 
+#### Spectral confidence became a real control signal instead of a decorative neuro metric
+
+What changed:
+- live neuro ingest now computes confidence from band structure when band power is available, with explicit `45-65 Hz` artifact detection and a clean fallback to the legacy amplitude path when spectral bands are unavailable
+- contamination is now represented directly in the core neuro schema and neural-coupling state through artifact power, total power, and artifact ratio
+- routing now reads spectral pressure directly from the incoming frame or the persisted coupling state, so contaminated windows de-escalate before outward action instead of merely being tagged after the fact
+- the benchmark now proves three cases: backward-compatible amplitude fallback, artifact-window suppression, and spectral routing pressure that pushes contaminated windows onto safer lanes
+
+Why it matters:
+- this closes a hidden but serious systems bug: a neuro-orchestration controller that rewards amplitude before it recognizes contamination can treat noise as agency
+- the system now uses spectral quality as a control input, not just as operator-visible telemetry
+- it is the first pass where neuro contamination changes outward route choice before dispatch
+
+Evidence:
+- `npm run typecheck`, `npm run build`, and `npm run benchmark:gate:all` all passed after the spectral pass
+- the benchmark gate now includes artifact suppression and spectral route-pressure assertions
+- live harness smoke on an isolated runtime showed a `60 Hz` artifact window ingest at `decodeConfidence: 0` and dispatch through `guarded-fallback / visual / file`
+- W&B offline publication captured the new benchmark surface in `wandb/offline-run-20260412_084945-s0i1clym/files`
+
+What this unlocks next:
+- arbitration and scheduling that react to neural coupling before route/dispatch
+- better BCI-quality gating where contamination can suppress or defer cognition/actuation earlier in the control loop
+- richer spectral models that separate neural rhythm quality from environmental artifact without weakening the governed harness
+
+### 2026-04-12
+
 #### Mediation now closes the loop with approval-gated dispatch
 
 What changed:

@@ -7,7 +7,7 @@ import {
   type NeuroReplayState,
   type NeuroStreamKind
 } from "@immaculate/core";
-import { collapseSampleRows, extractBandPower } from "./neuro-bands.js";
+import { collapseSampleRows, extractBandPower, type SpectralBandPower } from "./neuro-bands.js";
 import { hashValue } from "./utils.js";
 
 type LiveNeuroManagerCallbacks = {
@@ -55,8 +55,52 @@ function normalizeSamples(samples: LiveNeuroPayload["samples"], channels?: numbe
   return rows;
 }
 
-function deriveConfidence(meanAbs: number, rms: number, peak: number, syncJitterMs: number): number {
+function deriveAmplitudeConfidence(
+  meanAbs: number,
+  rms: number,
+  peak: number,
+  syncJitterMs: number
+): number {
   return clamp(0.32 + meanAbs * 3.4 + rms * 2 + peak * 0.6 - syncJitterMs * 0.03);
+}
+
+function deriveSpectralConfidence(
+  bandPower: SpectralBandPower,
+  syncJitterMs: number
+): number {
+  const neuralBandSignal =
+    bandPower.delta * 0.04 +
+    bandPower.theta * 0.1 +
+    bandPower.alpha * 0.42 +
+    bandPower.beta * 0.22 +
+    bandPower.gamma * 0.24;
+  const artifactRatio = bandPower.totalPower > 0 ? bandPower.artifactPower / bandPower.totalPower : 0;
+  return clamp(
+    0.26 +
+      neuralBandSignal +
+      bandPower.dominantRatio * 0.12 -
+      artifactRatio * 0.88 -
+      syncJitterMs * 0.03
+  );
+}
+
+function deriveConfidence(options: {
+  meanAbs: number;
+  rms: number;
+  peak: number;
+  syncJitterMs: number;
+  bandPower?: SpectralBandPower;
+}): number {
+  if (options.bandPower) {
+    return deriveSpectralConfidence(options.bandPower, options.syncJitterMs);
+  }
+
+  return deriveAmplitudeConfidence(
+    options.meanAbs,
+    options.rms,
+    options.peak,
+    options.syncJitterMs
+  );
 }
 
 function buildInitialIngress(sourceId: string, payload: LiveNeuroPayload, timestamp: string): NeuroReplayState {
@@ -103,13 +147,19 @@ export function buildLiveNeuroFrame(
   const meanAbs = Number((sumAbs / observationCount).toFixed(6));
   const rms = Number(Math.sqrt(sumSquares / observationCount).toFixed(6));
   const syncJitterMs = Number((payload.syncJitterMs ?? 0).toFixed(3));
-  const decodeConfidence = Number(
-    deriveConfidence(meanAbs, rms, peak, syncJitterMs).toFixed(6)
-  );
   const bandPower =
-    payload.rateHz && monoSamples.length > 0
+    payload.rateHz && monoSamples.length >= 8
       ? extractBandPower(monoSamples, payload.rateHz)
       : undefined;
+  const decodeConfidence = Number(
+    deriveConfidence({
+      meanAbs,
+      rms,
+      peak,
+      syncJitterMs,
+      bandPower
+    }).toFixed(6)
+  );
   const sourceId = payload.sourceId;
   const prior = priorState ?? buildInitialIngress(sourceId, payload, capturedAt);
   const nextWindowIndex = prior.completedWindows;

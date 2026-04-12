@@ -119,6 +119,13 @@ Tier 1 cognitive-loop closure is also benchmarked in the publication report itse
 
 Because these live in the benchmark report, they are carried automatically into W&B publication.
 
+Tier 2 spectral confidence is now benchmarked directly:
+
+- artifact-band detection on `45-65 Hz` contamination windows
+- spectral-confidence suppression for artifact-heavy live frames
+- backward-compatible amplitude fallback when spectral bands are unavailable
+- routing-pressure assertions that prove contaminated windows de-escalate before outward action
+
 Benchmark packs currently include:
 
 - `substrate-readiness`
@@ -145,6 +152,7 @@ Benchmark packs currently include:
 - decoded neuro frame features, cognitive trace previews, and actuation commands now follow field-level consent instead of leaking through default snapshots
 - Tier 2 neural coupling now has benchmark and visibility coverage for band dominance, route phase bias, and coupled routing strength
 - Tier 2 routing now prefers the live neuro-coupling lane when decode readiness, transport health, and governance align
+- Tier 2 spectral confidence now treats `45-65 Hz` contamination as explicit artifact power, penalizes contaminated live windows, and pushes artifact-heavy frames onto safer routes before dispatch
 - governed actuation dispatch and actuation output readback now make the feedback plane an explicit durable surface
 - adapter-backed actuation delivery now routes visual, haptic, and stim outputs through channel-specific policy lanes with durable delivery logs
 - governed websocket actuation device links now negotiate protocol/capabilities and provide acked bridge delivery with file fallback when no live transport is attached
@@ -165,7 +173,7 @@ Benchmark packs currently include:
 
 - direct device adapters beyond the first live socket neurophysiology ingress path
 - additional vendor-specific transports beyond serial and HTTP/2 direct lanes, including MIDI and richer gRPC-class adapters
-- routing that feeds live device health, decode confidence, and governance pressure deeper into multi-agent planning and future actuation policy
+- arbitration and scheduling that feed live neural coupling, device health, decode confidence, and governance pressure deeper into multi-agent planning before route/dispatch
 - additional multi-agent and tool execution backends beyond the first Ollama layer
 - domain benchmark packs against published neuro/BCI workloads
 - multi-node deployment, locality routing, and long-horizon benchmark trending

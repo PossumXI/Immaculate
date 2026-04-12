@@ -72,6 +72,8 @@ function redactNeuralCouplingState(coupling: NeuralCouplingState): NeuralCouplin
   return {
     dominantBand: "alpha",
     dominantRatio: 0,
+    artifactRatio: 0,
+    signalQuality: 0,
     phaseBias: zeroPhaseBias(),
     decodeConfidence: 0,
     decodeReadyRatio: 0,
@@ -93,6 +95,8 @@ function projectNeuralCouplingState(
       ...coupling,
       sourceFrameId: undefined,
       dominantRatio: Number(coupling.dominantRatio.toFixed(6)),
+      artifactRatio: Number(coupling.artifactRatio.toFixed(6)),
+      signalQuality: Number(coupling.signalQuality.toFixed(6)),
       decodeConfidence: Number(coupling.decodeConfidence.toFixed(6)),
       decodeReadyRatio: Number(coupling.decodeReadyRatio.toFixed(6)),
       phaseBias: {
@@ -128,6 +132,8 @@ function projectNeuroBandPower(
       alpha: 0,
       beta: 0,
       gamma: 0,
+      artifactPower: 0,
+      totalPower: 0,
       dominantBand: bandPower.dominantBand,
       dominantRatio: Number(bandPower.dominantRatio.toFixed(6))
     };

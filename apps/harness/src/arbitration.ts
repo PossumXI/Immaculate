@@ -43,6 +43,10 @@ export type ExecutionArbitrationPlan = {
   rationale: string;
 };
 
+function clamp(value: number, min = 0, max = 1): number {
+  return Math.min(max, Math.max(min, value));
+}
+
 function layerStatusRank(layer: IntelligenceLayer): number {
   return layer.status === "ready" ? 0 : layer.status === "busy" ? 1 : 2;
 }
@@ -109,6 +113,49 @@ function inferArbitrationSource(
   return "operator";
 }
 
+function resolveArbitrationSignal(snapshot: PhaseSnapshot, frame?: NeuroFrameWindow): {
+  signalQuality: number;
+  dominantBand: string;
+  artifactRatio: number;
+  directBandSignal: boolean;
+  currentFrameCoupling: boolean;
+} {
+  const bandPower = frame?.bandPower;
+  const totalPower = bandPower?.totalPower ?? 0;
+  const artifactRatio =
+    totalPower > 0
+      ? clamp((bandPower?.artifactPower ?? 0) / totalPower, 0, 1)
+      : clamp(snapshot.neuralCoupling.artifactRatio, 0, 1);
+  const directBandSignal = Boolean(bandPower);
+  const currentFrameCoupling = snapshot.neuralCoupling.sourceFrameId === frame?.id;
+  const directSignalQuality = bandPower
+    ? clamp(
+        bandPower.dominantRatio * 0.42 +
+          (frame?.decodeConfidence ?? snapshot.neuralCoupling.decodeConfidence) * 0.28 +
+          (1 - artifactRatio) * 0.2 -
+          artifactRatio * 0.48,
+        0,
+        1
+      )
+    : snapshot.neuralCoupling.signalQuality;
+
+  return {
+    signalQuality: bandPower
+      ? clamp(
+          directSignalQuality * 0.82 +
+            snapshot.neuralCoupling.signalQuality * 0.18 -
+            artifactRatio * 0.16,
+          0,
+          1
+        )
+      : snapshot.neuralCoupling.signalQuality,
+    dominantBand: bandPower?.dominantBand ?? snapshot.neuralCoupling.dominantBand,
+    artifactRatio,
+    directBandSignal,
+    currentFrameCoupling
+  };
+}
+
 export function planExecutionArbitration(
   input: ExecutionArbitrationPlanInput
 ): ExecutionArbitrationPlan {
@@ -120,6 +167,18 @@ export function planExecutionArbitration(
     input.governanceDecisions
   );
   const decodeConfidence = frame?.decodeConfidence ?? 0;
+  const spectralSignal = resolveArbitrationSignal(input.snapshot, frame);
+  const activeSpectralSignal =
+    spectralSignal.directBandSignal || spectralSignal.currentFrameCoupling;
+  const strongSpectralReflexSignal =
+    Boolean(frame?.decodeReady) &&
+    activeSpectralSignal &&
+    governancePressure === "clear" &&
+    spectralSignal.signalQuality >= 0.78 &&
+    spectralSignal.artifactRatio <= 0.18 &&
+    (spectralSignal.dominantBand === "beta" || spectralSignal.dominantBand === "gamma");
+  const weakSpectralSignal =
+    activeSpectralSignal && spectralSignal.signalQuality < 0.18;
   const explicitRequestedLayer = input.requestedLayerId
     ? selectLayer(
     input.snapshot.intelligenceLayers,
@@ -163,6 +222,20 @@ export function planExecutionArbitration(
     shouldRunCognition = Boolean(preferredLayer);
     shouldDispatchActuation = false;
     routeModeHint = "suppressed";
+  } else if (weakSpectralSignal) {
+    mode = "guarded-review";
+    targetNodeId = "integrity-gate";
+    targetPlane = "cognitive";
+    shouldRunCognition = Boolean(preferredLayer);
+    shouldDispatchActuation = false;
+    routeModeHint = "suppressed";
+  } else if (strongSpectralReflexSignal) {
+    mode = "reflex-local";
+    targetNodeId = "router-core";
+    targetPlane = "reflex";
+    shouldRunCognition = false;
+    shouldDispatchActuation = true;
+    routeModeHint = "reflex-direct";
   } else if (
     !frame?.decodeReady ||
     decodeConfidence < 0.82 ||
@@ -197,6 +270,9 @@ export function planExecutionArbitration(
   const rationale = [
     `mode=${mode}`,
     `decode=${decodeConfidence.toFixed(2)}`,
+    `signal=${spectralSignal.signalQuality.toFixed(2)}`,
+    `band=${spectralSignal.dominantBand}`,
+    `artifact=${spectralSignal.artifactRatio.toFixed(2)}`,
     `governance=${governancePressure}`,
     `cognition=${shouldRunCognition ? "run" : "skip"}`,
     `dispatch=${shouldDispatchActuation ? "allow" : "hold"}`,

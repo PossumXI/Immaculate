@@ -361,6 +361,8 @@ export type NeuroBandPower = {
   alpha: number;
   beta: number;
   gamma: number;
+  artifactPower: number;
+  totalPower: number;
   dominantBand: NeuroBand;
   dominantRatio: number;
 };
@@ -368,6 +370,8 @@ export type NeuroBandPower = {
 export type NeuralCouplingState = {
   dominantBand: NeuroBand;
   dominantRatio: number;
+  artifactRatio: number;
+  signalQuality: number;
   phaseBias: Record<PhaseId, number>;
   decodeConfidence: number;
   decodeReadyRatio: number;
@@ -911,6 +915,8 @@ export const neuroBandPowerSchema = z.object({
   alpha: z.number().nonnegative(),
   beta: z.number().nonnegative(),
   gamma: z.number().nonnegative(),
+  artifactPower: z.number().nonnegative().default(0),
+  totalPower: z.number().nonnegative().default(0),
   dominantBand: z.enum(neuroBands),
   dominantRatio: z.number().nonnegative()
 });
@@ -940,6 +946,8 @@ export const neuroFrameWindowSchema = z.object({
 export const neuralCouplingStateSchema = z.object({
   dominantBand: z.enum(neuroBands),
   dominantRatio: z.number().nonnegative(),
+  artifactRatio: z.number().nonnegative().default(0),
+  signalQuality: z.number().nonnegative().default(0),
   phaseBias: z.object({
     ingest: z.number().nonnegative(),
     synchronize: z.number().nonnegative(),
@@ -1451,10 +1459,15 @@ function defaultPhaseBias(): Record<PhaseId, number> {
   };
 }
 
-function defaultNeuralCouplingState(): NeuralCouplingState {
+function defaultNeuralCouplingState(): NeuralCouplingState & {
+  artifactRatio: number;
+  signalQuality: number;
+} {
   return {
     dominantBand: "alpha",
     dominantRatio: 0,
+    artifactRatio: 0,
+    signalQuality: 0,
     phaseBias: defaultPhaseBias(),
     decodeConfidence: 0,
     decodeReadyRatio: 0,
@@ -1556,7 +1569,8 @@ function createPasses(cycle: number, timestamp: string): PhasePass[] {
 function computeMetrics(
   nodes: ConnectomeNode[],
   edges: ConnectomeEdge[],
-  passes: PhasePass[]
+  passes: PhasePass[],
+  neuralCoupling: NeuralCouplingState = defaultNeuralCouplingState()
 ): PhaseMetrics {
   const reflexPasses = passes.filter((pass) => pass.plane === "reflex");
   const cognitivePasses = passes.filter((pass) => pass.plane === "cognitive");
@@ -1565,6 +1579,10 @@ function computeMetrics(
     items.length > 0 ? items.reduce((sum, item) => sum + item.latencyMs, 0) / items.length : 0;
   const loadAverage = (items: PhasePass[]) =>
     items.length > 0 ? items.reduce((sum, item) => sum + item.load, 0) / items.length : 0;
+  const couplingSignalQuality = neuralCoupling.signalQuality ?? 0;
+  const couplingActive = couplingSignalQuality > 0;
+  const couplingFactor = couplingActive ? clamp(1 + couplingSignalQuality * 0.01, 1, 1.02) : 1;
+  const throughputFactor = couplingActive ? clamp(1 + couplingSignalQuality * 0.005, 1, 1.01) : 1;
 
   return {
     reflexLatencyMs: Number(average(reflexPasses).toFixed(2)),
@@ -1577,11 +1595,16 @@ function computeMetrics(
       (nodes.reduce((sum, node) => sum + node.trust - node.drift * 0.82, 0) / nodes.length).toFixed(3)
     ),
     coherence: Number(
-      (nodes.reduce((sum, node) => sum + node.activation * (1 - node.drift), 0) / nodes.length).toFixed(3)
+      (
+        (nodes.reduce((sum, node) => sum + node.activation * (1 - node.drift), 0) /
+          nodes.length) * couplingFactor
+      ).toFixed(3)
     ),
     throughput: Number(
       (
-        nodes.reduce((sum, node) => sum + node.throughput * (1 - node.saturation * 0.18), 0) * 205
+        nodes.reduce((sum, node) => sum + node.throughput * (1 - node.saturation * 0.18), 0) *
+        205 *
+        throughputFactor
       ).toFixed(2)
     ),
     activeAgents: nodes.filter((node) => node.kind === "agent").length * 12
@@ -1595,7 +1618,7 @@ function createInitialSnapshot(): PhaseSnapshot {
     ...edge,
     propagation: clamp(0.44 + index * 0.04)
   }));
-  const metrics = computeMetrics(initialNodes, edges, passes);
+  const metrics = computeMetrics(initialNodes, edges, passes, defaultNeuralCouplingState());
 
   return {
     epoch: 0,
@@ -1897,10 +1920,38 @@ function deriveNeuralCoupling(
     };
   }
 
+  const artifactRatio =
+    bandPower.totalPower && bandPower.totalPower > 0
+      ? clamp((bandPower.artifactPower ?? 0) / bandPower.totalPower, 0, 1)
+      : 0;
+  const signalDrive = clamp(frame.decodeConfidence * (1 - artifactRatio * 0.75), 0, 1);
+  const signalQuality = clamp(
+    bandPower.dominantRatio * 0.46 +
+      signalDrive * 0.28 +
+      decodeReadyRatio * 0.14 +
+      (1 - artifactRatio) * 0.12,
+    0,
+    1
+  );
   const phaseBias = phaseIds.reduce(
     (accumulator, phase) => {
+      const bandWeight = bandPower[phaseToNeuroBand[phase]];
+      const phaseLift =
+        phase === "route"
+          ? signalQuality * 0.08
+          : phase === "decode"
+            ? signalQuality * 0.04
+            : 0;
       accumulator[phase] = Number(
-        clamp(prior.phaseBias[phase] * 0.55 + bandPower[phaseToNeuroBand[phase]] * 0.45, 0.05, 0.95).toFixed(6)
+        clamp(
+          prior.phaseBias[phase] * 0.42 +
+            bandWeight * 0.38 +
+            signalQuality * 0.16 +
+            phaseLift -
+            artifactRatio * 0.08,
+          0.05,
+          0.95
+        ).toFixed(6)
       );
       return accumulator;
     },
@@ -1910,6 +1961,8 @@ function deriveNeuralCoupling(
   return {
     dominantBand: bandPower.dominantBand,
     dominantRatio: bandPower.dominantRatio,
+    artifactRatio: Number(artifactRatio.toFixed(6)),
+    signalQuality: Number(signalQuality.toFixed(6)),
     phaseBias,
     decodeConfidence: Number((prior.decodeConfidence * 0.58 + frame.decodeConfidence * 0.42).toFixed(6)),
     decodeReadyRatio: Number((prior.decodeReadyRatio * 0.62 + decodeReadyRatio * 0.38).toFixed(6)),
@@ -1988,10 +2041,11 @@ function mergeNeuroFrameIntoSnapshot(
     }
 
     if (node.id === "router-core" && frame.decodeReady) {
+      const spectralLift = neuralCoupling.signalQuality ?? 0;
       return {
         ...node,
-        activation: clamp(node.activation * 0.82 + frame.decodeConfidence * 0.12),
-        throughput: clamp(node.throughput * 0.86 + frame.decodeConfidence * 0.08)
+        activation: clamp(node.activation * 0.78 + frame.decodeConfidence * 0.1 + spectralLift * 0.08),
+        throughput: clamp(node.throughput * 0.82 + frame.decodeConfidence * 0.06 + spectralLift * 0.08)
       };
     }
 
@@ -2004,15 +2058,16 @@ function mergeNeuroFrameIntoSnapshot(
     }
 
     const isSynchronize = pass.phase === "synchronize";
+    const couplingLift = neuralCoupling.signalQuality ?? 0;
     const latencyMs = isSynchronize
-      ? Number((pass.latencyMs * 0.62 + frame.syncJitterMs * 1.8 + 3.5).toFixed(2))
-      : Number((pass.latencyMs * 0.58 + (1 - frame.decodeConfidence) * 24 + 6).toFixed(2));
+      ? Number((pass.latencyMs * 0.62 + frame.syncJitterMs * 1.8 + 3.5 - couplingLift * 0.9).toFixed(2))
+      : Number((pass.latencyMs * 0.58 + (1 - frame.decodeConfidence) * 24 + 6 - couplingLift * 0.75).toFixed(2));
     const load = isSynchronize
-      ? clamp(pass.load * 0.6 + channelFactor * 0.2 + syncHealth * 0.12)
-      : clamp(pass.load * 0.58 + frame.decodeConfidence * 0.22 + channelFactor * 0.08);
+      ? clamp(pass.load * 0.6 + channelFactor * 0.2 + syncHealth * 0.12 - couplingLift * 0.04)
+      : clamp(pass.load * 0.58 + frame.decodeConfidence * 0.22 + channelFactor * 0.08 - couplingLift * 0.03);
     const progressBoost = isSynchronize
-      ? 0.04 + syncHealth * 0.05
-      : 0.05 + frame.decodeConfidence * 0.08;
+      ? 0.04 + syncHealth * 0.05 + couplingLift * 0.03
+      : 0.05 + frame.decodeConfidence * 0.08 + couplingLift * 0.03;
     const progress = passIsActive(pass) ? clamp(Math.min(pass.progress + progressBoost, 0.95), 0, 0.95) : pass.progress;
 
     return {
@@ -3338,14 +3393,40 @@ function evolveEdges(
   });
 }
 
-function recomputeLatency(pass: PhasePass, targetNode: ConnectomeNode, epoch: number, pulse: number): number {
-  const base = baselineLatency[pass.phase] * planeBias[pass.plane];
-  const modulation = 1 + targetNode.load * 0.34 + targetNode.drift * 0.42 + wave(epoch, pass.sequence * 0.46, 0.28) * 0.18 + pulse * 0.08;
-  return Number((base * modulation).toFixed(2));
+function couplingMultiplier(neuralCoupling: NeuralCouplingState): number {
+  const signalQuality = neuralCoupling.signalQuality ?? 0;
+  return signalQuality > 0 ? clamp(1 - signalQuality * 0.05, 0.92, 1) : 1;
 }
 
-function recomputeLoad(pass: PhasePass, targetNode: ConnectomeNode, epoch: number): number {
-  return clamp(0.24 + targetNode.load * 0.55 + wave(epoch, pass.sequence * 0.74, 0.2) * 0.18);
+function recomputeLatency(
+  pass: PhasePass,
+  targetNode: ConnectomeNode,
+  epoch: number,
+  pulse: number,
+  neuralCoupling: NeuralCouplingState
+): number {
+  const signalQuality = neuralCoupling.signalQuality ?? 0;
+  const base = baselineLatency[pass.phase] * planeBias[pass.plane];
+  const modulation =
+    1 +
+    targetNode.load * 0.34 +
+    targetNode.drift * 0.42 +
+    wave(epoch, pass.sequence * 0.46, 0.28) * 0.18 +
+    pulse * 0.08;
+  return Number((base * modulation * couplingMultiplier({ ...neuralCoupling, signalQuality })).toFixed(2));
+}
+
+function recomputeLoad(
+  pass: PhasePass,
+  targetNode: ConnectomeNode,
+  epoch: number,
+  neuralCoupling: NeuralCouplingState
+): number {
+  const signalQuality = neuralCoupling.signalQuality ?? 0;
+  return clamp(
+    (0.24 + targetNode.load * 0.55 + wave(epoch, pass.sequence * 0.74, 0.2) * 0.18) *
+      couplingMultiplier({ ...neuralCoupling, signalQuality })
+  );
 }
 
 function advanceSnapshot(state: EngineState, force = false): PhaseSnapshot {
@@ -3376,13 +3457,16 @@ function advanceSnapshot(state: EngineState, force = false): PhaseSnapshot {
   const runningBefore = passes.find((pass) => passIsActive(pass));
   let nodes = evolveNodes(previous, epoch, state.pulse, runningBefore);
   let targetLookup = new Map(nodes.map((node) => [node.id, node]));
+  const spectralSignalQuality = previous.neuralCoupling.signalQuality ?? 0;
+  const spectralActive = spectralSignalQuality > 0;
+  const spectralMultiplier = spectralActive ? clamp(1 + spectralSignalQuality * 0.14, 1, 1.16) : 1;
 
   const completedThisTick: PhasePass[] = [];
   if (canProgress) {
     passes = passes.map((pass) => {
       const targetNode = targetLookup.get(pass.targetNodeId) ?? nodes[0];
-      const latencyMs = recomputeLatency(pass, targetNode, epoch, state.pulse);
-      const load = recomputeLoad(pass, targetNode, epoch);
+      const latencyMs = recomputeLatency(pass, targetNode, epoch, state.pulse, previous.neuralCoupling);
+      const load = recomputeLoad(pass, targetNode, epoch, previous.neuralCoupling);
 
       if (!passIsActive(pass)) {
         return {
@@ -3395,9 +3479,10 @@ function advanceSnapshot(state: EngineState, force = false): PhaseSnapshot {
 
       const bandBias = previous.neuralCoupling.phaseBias[pass.phase] ?? 0.5;
       const increment =
-        phaseIncrement[pass.phase] * (0.7 + bandBias * 0.6) +
+        (phaseIncrement[pass.phase] * (0.7 + bandBias * 0.6) +
         targetNode.activation * 0.06 +
-        state.pulse * 0.04;
+        state.pulse * 0.04) *
+        spectralMultiplier;
       const progress = clamp(pass.progress + increment, 0, 1);
       const nextState: PassState = progress >= 1 ? "completed" : progress >= 0.82 ? "degraded" : "running";
       const updated: PhasePass = {
@@ -3452,13 +3537,13 @@ function advanceSnapshot(state: EngineState, force = false): PhaseSnapshot {
     const targetNode = targetLookup.get(pass.targetNodeId) ?? nodes[0];
     return {
       ...pass,
-      latencyMs: recomputeLatency(pass, targetNode, epoch, state.pulse),
-      load: recomputeLoad(pass, targetNode, epoch)
+      latencyMs: recomputeLatency(pass, targetNode, epoch, state.pulse, previous.neuralCoupling),
+      load: recomputeLoad(pass, targetNode, epoch, previous.neuralCoupling)
     };
   });
 
   const edges = evolveEdges(previous, epoch, state.pulse, runningAfter);
-  const metrics = computeMetrics(nodes, edges, passes);
+  const metrics = computeMetrics(nodes, edges, passes, previous.neuralCoupling);
   const highlightedNode =
     (runningAfter && nodes.find((node) => node.id === runningAfter.targetNodeId)) ??
     nodes.reduce((best, node) => (node.activation > best.activation ? node : best));
@@ -3743,7 +3828,12 @@ export function createEngine(options?: {
     state.snapshot = mergeDatasetIntoSnapshot(state.snapshot, parsed);
     state.snapshot = {
       ...state.snapshot,
-      metrics: computeMetrics(state.snapshot.nodes, state.snapshot.edges, state.snapshot.passes)
+    metrics: computeMetrics(
+      state.snapshot.nodes,
+      state.snapshot.edges,
+      state.snapshot.passes,
+      state.snapshot.neuralCoupling
+    )
     };
 
     pushEvent(state, {
@@ -3766,7 +3856,12 @@ export function createEngine(options?: {
     state.snapshot = mergeNeuroSessionIntoSnapshot(state.snapshot, parsed);
     state.snapshot = {
       ...state.snapshot,
-      metrics: computeMetrics(state.snapshot.nodes, state.snapshot.edges, state.snapshot.passes)
+      metrics: computeMetrics(
+        state.snapshot.nodes,
+        state.snapshot.edges,
+        state.snapshot.passes,
+        state.snapshot.neuralCoupling
+      )
     };
 
     pushEvent(state, {
@@ -3789,7 +3884,12 @@ export function createEngine(options?: {
     state.snapshot = mergeNeuroReplayIntoSnapshot(state.snapshot, parsed);
     state.snapshot = {
       ...state.snapshot,
-      metrics: computeMetrics(state.snapshot.nodes, state.snapshot.edges, state.snapshot.passes)
+      metrics: computeMetrics(
+        state.snapshot.nodes,
+        state.snapshot.edges,
+        state.snapshot.passes,
+        state.snapshot.neuralCoupling
+      )
     };
 
     pushEvent(state, {
@@ -3812,7 +3912,12 @@ export function createEngine(options?: {
     state.snapshot = mergeNeuroFrameIntoSnapshot(state.snapshot, parsed);
     state.snapshot = {
       ...state.snapshot,
-      metrics: computeMetrics(state.snapshot.nodes, state.snapshot.edges, state.snapshot.passes)
+      metrics: computeMetrics(
+        state.snapshot.nodes,
+        state.snapshot.edges,
+        state.snapshot.passes,
+        state.snapshot.neuralCoupling
+      )
     };
 
     pushEvent(state, {
@@ -3835,7 +3940,12 @@ export function createEngine(options?: {
     state.snapshot = mergeIntelligenceLayerIntoSnapshot(state.snapshot, parsed);
     state.snapshot = {
       ...state.snapshot,
-      metrics: computeMetrics(state.snapshot.nodes, state.snapshot.edges, state.snapshot.passes)
+      metrics: computeMetrics(
+        state.snapshot.nodes,
+        state.snapshot.edges,
+        state.snapshot.passes,
+        state.snapshot.neuralCoupling
+      )
     };
 
     pushEvent(state, {
@@ -3858,7 +3968,12 @@ export function createEngine(options?: {
     state.snapshot = mergeCognitiveExecutionIntoSnapshot(state.snapshot, parsed);
     state.snapshot = {
       ...state.snapshot,
-      metrics: computeMetrics(state.snapshot.nodes, state.snapshot.edges, state.snapshot.passes)
+      metrics: computeMetrics(
+        state.snapshot.nodes,
+        state.snapshot.edges,
+        state.snapshot.passes,
+        state.snapshot.neuralCoupling
+      )
     };
 
     pushEvent(state, {
@@ -3881,7 +3996,12 @@ export function createEngine(options?: {
     state.snapshot = mergeConversationIntoSnapshot(state.snapshot, parsed);
     state.snapshot = {
       ...state.snapshot,
-      metrics: computeMetrics(state.snapshot.nodes, state.snapshot.edges, state.snapshot.passes)
+      metrics: computeMetrics(
+        state.snapshot.nodes,
+        state.snapshot.edges,
+        state.snapshot.passes,
+        state.snapshot.neuralCoupling
+      )
     };
 
     pushEvent(state, {
@@ -3904,7 +4024,12 @@ export function createEngine(options?: {
     state.snapshot = mergeExecutionArbitrationIntoSnapshot(state.snapshot, parsed);
     state.snapshot = {
       ...state.snapshot,
-      metrics: computeMetrics(state.snapshot.nodes, state.snapshot.edges, state.snapshot.passes)
+      metrics: computeMetrics(
+        state.snapshot.nodes,
+        state.snapshot.edges,
+        state.snapshot.passes,
+        state.snapshot.neuralCoupling
+      )
     };
 
     pushEvent(state, {
@@ -3927,7 +4052,12 @@ export function createEngine(options?: {
     state.snapshot = mergeExecutionScheduleIntoSnapshot(state.snapshot, parsed);
     state.snapshot = {
       ...state.snapshot,
-      metrics: computeMetrics(state.snapshot.nodes, state.snapshot.edges, state.snapshot.passes)
+      metrics: computeMetrics(
+        state.snapshot.nodes,
+        state.snapshot.edges,
+        state.snapshot.passes,
+        state.snapshot.neuralCoupling
+      )
     };
 
     pushEvent(state, {
@@ -3950,7 +4080,12 @@ export function createEngine(options?: {
     state.snapshot = mergeRoutingDecisionIntoSnapshot(state.snapshot, parsed);
     state.snapshot = {
       ...state.snapshot,
-      metrics: computeMetrics(state.snapshot.nodes, state.snapshot.edges, state.snapshot.passes)
+      metrics: computeMetrics(
+        state.snapshot.nodes,
+        state.snapshot.edges,
+        state.snapshot.passes,
+        state.snapshot.neuralCoupling
+      )
     };
 
     pushEvent(state, {
@@ -3973,7 +4108,12 @@ export function createEngine(options?: {
     state.snapshot = mergeActuationOutputIntoSnapshot(state.snapshot, parsed);
     state.snapshot = {
       ...state.snapshot,
-      metrics: computeMetrics(state.snapshot.nodes, state.snapshot.edges, state.snapshot.passes)
+      metrics: computeMetrics(
+        state.snapshot.nodes,
+        state.snapshot.edges,
+        state.snapshot.passes,
+        state.snapshot.neuralCoupling
+      )
     };
 
     pushEvent(state, {
