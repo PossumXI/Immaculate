@@ -25,8 +25,19 @@ function Invoke-Gh {
 }
 
 function Test-GhAuth {
-  & gh auth status *> $null
-  return $LASTEXITCODE -eq 0
+  $previous = $global:PSNativeCommandUseErrorActionPreference
+  $global:PSNativeCommandUseErrorActionPreference = $false
+  try {
+    & gh auth status *> $null
+    return $LASTEXITCODE -eq 0
+  } finally {
+    $global:PSNativeCommandUseErrorActionPreference = $previous
+  }
+}
+
+function Start-GhAuthWindow {
+  $command = "$env:Path += ';$ghPath'; gh auth login --hostname github.com --git-protocol https --web --clipboard"
+  Start-Process powershell -ArgumentList "-NoExit", "-Command", $command | Out-Null
 }
 
 if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
@@ -38,7 +49,8 @@ if (-not (Test-Path ".git")) {
 }
 
 if (-not (Test-GhAuth)) {
-  throw "GitHub CLI is not authenticated. Run: gh auth login --hostname github.com --git-protocol https --web"
+  Start-GhAuthWindow
+  throw "GitHub CLI is not authenticated. A browser login window was opened. Complete the GitHub login for PossumXI, then rerun this script."
 }
 
 $repoRef = "$Owner/$Repo"
