@@ -1,0 +1,137 @@
+{
+  "exportedAt": "2026-04-12T17:34:00.534401+00:00",
+  "entity": "arobi-arobi-technology-alliance",
+  "project": "immaculate",
+  "projectUrl": "https://wandb.ai/arobi-arobi-technology-alliance/immaculate",
+  "owner": "Gaetano Comparcola (PossumX)",
+  "role": "Program Originator, Systems Architect, and Engineering Lead",
+  "website": "https://PossumX.dev",
+  "packs": [
+    {
+      "packId": "latency-soak",
+      "packLabel": "Latency Soak",
+      "suiteId": "immaculate-benchmark-2026-04-12T14-51-49-616Z",
+      "generatedAt": "2026-04-12T14:51:49.616Z",
+      "publishedAt": "2026-04-12T14:53:40.266198+00:00",
+      "runId": "cikyouit",
+      "runName": "immaculate-benchmark-2026-04-12T14-51-49-616Z",
+      "runUrl": "https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/cikyouit",
+      "runState": "finished",
+      "summary": {
+        "benchmark/current_stage": "integration-ready substrate for internal functional testing",
+        "benchmark/failed_assertions": 0,
+        "benchmark/integrity_status": "verified",
+        "benchmark/owner": "Gaetano Comparcola (PossumX)",
+        "benchmark/role": "Program Originator, Systems Architect, and Engineering Lead",
+        "benchmark/website": "https://PossumX.dev"
+      },
+      "artifact": {
+        "name": "immaculate-immaculate-benchmark-2026-04-12T14-51-49-616Z:v0",
+        "type": "benchmark-report",
+        "aliases": [
+          "latest"
+        ],
+        "metadata": {
+          "role": "Program Originator, Systems Architect, and Engineering Lead",
+          "owner": "Gaetano Comparcola (PossumX)",
+          "pack_id": "latency-soak",
+          "website": "https://PossumX.dev",
+          "suite_id": "immaculate-benchmark-2026-04-12T14-51-49-616Z",
+          "pack_label": "Latency Soak",
+          "generated_at": "2026-04-12T14:51:49.616Z",
+          "contributions": [
+            "Defined the three-plane orchestration model across reflex, cognitive, and offline execution.",
+            "Set the requirement that Immaculate be observable, replayable, benchmarked, and durable before it scales outward.",
+            "Architected the synthetic connectome substrate, live harness control surfaces, and phased execution model used in this build."
+          ],
+          "recovery_mode": "checkpoint",
+          "integrity_status": "verified"
+        }
+      }
+    },
+    {
+      "packId": "durability-recovery",
+      "packLabel": "Durability Recovery",
+      "suiteId": "immaculate-benchmark-2026-04-12T14-51-48-050Z",
+      "generatedAt": "2026-04-12T14:51:48.050Z",
+      "publishedAt": "2026-04-12T14:53:19.430171+00:00",
+      "runId": "furmmems",
+      "runName": "immaculate-benchmark-2026-04-12T14-51-48-050Z",
+      "runUrl": "https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/furmmems",
+      "runState": "finished",
+      "summary": {
+        "benchmark/current_stage": "integration-ready substrate for internal functional testing",
+        "benchmark/failed_assertions": 0,
+        "benchmark/integrity_status": "verified",
+        "benchmark/owner": "Gaetano Comparcola (PossumX)",
+        "benchmark/role": "Program Originator, Systems Architect, and Engineering Lead",
+        "benchmark/website": "https://PossumX.dev"
+      },
+      "artifact": {
+        "name": "immaculate-immaculate-benchmark-2026-04-12T14-51-48-050Z:v0",
+        "type": "benchmark-report",
+        "aliases": [
+          "latest"
+        ],
+        "metadata": {
+          "role": "Program Originator, Systems Architect, and Engineering Lead",
+          "owner": "Gaetano Comparcola (PossumX)",
+          "pack_id": "durability-recovery",
+          "website": "https://PossumX.dev",
+          "suite_id": "immaculate-benchmark-2026-04-12T14-51-48-050Z",
+          "pack_label": "Durability Recovery",
+          "generated_at": "2026-04-12T14:51:48.050Z",
+          "contributions": [
+            "Defined the three-plane orchestration model across reflex, cognitive, and offline execution.",
+            "Set the requirement that Immaculate be observable, replayable, benchmarked, and durable before it scales outward.",
+            "Architected the synthetic connectome substrate, live harness control surfaces, and phased execution model used in this build."
+          ],
+          "recovery_mode": "checkpoint",
+          "integrity_status": "verified"
+        }
+      }
+    },
+    {
+      "packId": "substrate-readiness",
+      "packLabel": "Substrate Readiness",
+      "suiteId": "immaculate-benchmark-2026-04-12T14-51-46-216Z",
+      "generatedAt": "2026-04-12T14:51:46.216Z",
+      "publishedAt": "2026-04-12T14:52:56.493120+00:00",
+      "runId": "bnn7r2yp",
+      "runName": "immaculate-benchmark-2026-04-12T14-51-46-216Z",
+      "runUrl": "https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/bnn7r2yp",
+      "runState": "finished",
+      "summary": {
+        "benchmark/current_stage": "integration-ready substrate for internal functional testing",
+        "benchmark/failed_assertions": 0,
+        "benchmark/integrity_status": "verified",
+        "benchmark/owner": "Gaetano Comparcola (PossumX)",
+        "benchmark/role": "Program Originator, Systems Architect, and Engineering Lead",
+        "benchmark/website": "https://PossumX.dev"
+      },
+      "artifact": {
+        "name": "immaculate-immaculate-benchmark-2026-04-12T14-51-46-216Z:v0",
+        "type": "benchmark-report",
+        "aliases": [
+          "latest"
+        ],
+        "metadata": {
+          "role": "Program Originator, Systems Architect, and Engineering Lead",
+          "owner": "Gaetano Comparcola (PossumX)",
+          "pack_id": "substrate-readiness",
+          "website": "https://PossumX.dev",
+          "suite_id": "immaculate-benchmark-2026-04-12T14-51-46-216Z",
+          "pack_label": "Substrate Readiness",
+          "generated_at": "2026-04-12T14:51:46.216Z",
+          "contributions": [
+            "Defined the three-plane orchestration model across reflex, cognitive, and offline execution.",
+            "Set the requirement that Immaculate be observable, replayable, benchmarked, and durable before it scales outward.",
+            "Architected the synthetic connectome substrate, live harness control surfaces, and phased execution model used in this build."
+          ],
+          "recovery_mode": "checkpoint",
+          "integrity_status": "verified"
+        }
+      }
+    }
+  ]
+}

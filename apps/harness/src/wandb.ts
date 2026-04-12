@@ -39,11 +39,19 @@ export type WandbPublicationResult = {
   localRunDir?: string;
 };
 
+export type WandbBenchmarkExportResult = {
+  exportJsonPath: string;
+  exportMarkdownPath: string;
+  projectUrl?: string;
+  packCount: number;
+};
+
 const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const HARNESS_ROOT = path.resolve(MODULE_ROOT, "..");
 const REPO_ROOT = path.resolve(HARNESS_ROOT, "../..");
 const LOCAL_VENV_PYTHON = getLocalVenvPythonPath(REPO_ROOT);
 const PUBLISHER_SCRIPT_PATH = path.join(HARNESS_ROOT, "scripts", "publish_wandb.py");
+const EXPORTER_SCRIPT_PATH = path.join(HARNESS_ROOT, "scripts", "export_wandb_benchmarks.py");
 const CONFIGURED_ENTITY =
   process.env.IMMACULATE_WANDB_ENTITY?.trim() || process.env.WANDB_ENTITY?.trim() || undefined;
 const DEFAULT_PROJECT =
@@ -271,4 +279,27 @@ export async function publishBenchmarkToWandb(report: BenchmarkReport): Promise<
   );
 
   return JSON.parse(execution.stdout) as WandbPublicationResult;
+}
+
+export async function exportBenchmarkResultsFromWandb(): Promise<WandbBenchmarkExportResult> {
+  const status = await inspectWandbStatus();
+  if (!status.ready) {
+    throw new Error(status.note);
+  }
+
+  const env = {
+    ...process.env,
+    WANDB_MODE: status.mode,
+    WANDB_ENTITY: status.entity,
+    WANDB_PROJECT: status.project,
+    IMMACULATE_WANDB_ENTITY: status.entity,
+    IMMACULATE_WANDB_PROJECT: status.project
+  } as NodeJS.ProcessEnv;
+  const apiKey = resolveApiKey();
+  if (apiKey) {
+    env.WANDB_API_KEY = apiKey;
+  }
+
+  const execution = await runPython([EXPORTER_SCRIPT_PATH], env, 120000);
+  return JSON.parse(execution.stdout) as WandbBenchmarkExportResult;
 }

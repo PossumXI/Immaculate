@@ -89,6 +89,12 @@ Publish the latest benchmark to W&B:
 npm run benchmark:publish:wandb
 ```
 
+Export the live W&B benchmark results back into the tracked wiki:
+
+```powershell
+npm run benchmark:export:wandb
+```
+
 Defaults:
 
 - entity: authenticated W&B workspace attached to the API key, unless `WANDB_ENTITY` or `IMMACULATE_WANDB_ENTITY` overrides it
@@ -99,6 +105,7 @@ Current live public benchmark pages:
 
 - W&B project: https://wandb.ai/arobi-arobi-technology-alliance/immaculate
 - tracked repo/wiki status: [docs/wiki/Benchmark-Status.md](docs/wiki/Benchmark-Status.md)
+- tracked repo/wiki W&B export: [docs/wiki/Benchmark-Wandb-Export.md](docs/wiki/Benchmark-Wandb-Export.md)
 
 Optional environment variables:
 
@@ -114,7 +121,7 @@ Published artifacts are written to:
 - `benchmarks/index.json`
 
 The published benchmark now carries explicit authorship and role attribution plus architecture contribution notes.
-These raw benchmark publication files are treated as generated artifacts and are produced locally or in CI rather than stored as permanent source files. The tracked public summary lives in `docs/wiki/Benchmark-Status.md` and points at the live W&B project and latest published runs by pack.
+These raw benchmark publication files are treated as generated artifacts and are produced locally or in CI rather than stored as permanent source files. The tracked public summary lives in `docs/wiki/Benchmark-Status.md`, and the pulled export from live W&B runs lives in `docs/wiki/Benchmark-Wandb-Export.md`.
 
 Tier 1 cognitive-loop closure is also benchmarked in the publication report itself:
 

@@ -35,6 +35,7 @@ observable, governed control system for intelligence at scale.
 - [[Breakthrough-Log]] tracks major leaps, missed-but-real insights, and hard system milestones as they land
 - [[Engineering-Doctrine]] defines the standing build philosophy and what qualifies as a real leap
 - [[Benchmark-Status]] points to the live public W&B project plus the latest published benchmark runs by pack
+- [[Benchmark-Wandb-Export]] is the committed pull-back from W&B itself, so benchmark results live in git wiki even when the W&B project stays private
 
 ## Operator Motto
 

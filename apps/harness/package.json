@@ -8,6 +8,7 @@
     "benchmark:gate": "tsx src/benchmark-gate-cli.ts",
     "benchmark:gate:all": "tsx src/benchmark-gate-cli.ts --all",
     "benchmark:publish:wandb": "tsx src/wandb-publish-cli.ts",
+    "benchmark:export:wandb": "tsx src/wandb-export-cli.ts",
     "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",

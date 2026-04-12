@@ -12,6 +12,7 @@
     "benchmark:gate": "npm run benchmark:gate -w @immaculate/harness",
     "benchmark:gate:all": "npm run benchmark:gate:all -w @immaculate/harness",
     "benchmark:publish:wandb": "npm run benchmark:publish:wandb -w @immaculate/harness",
+    "benchmark:export:wandb": "npm run benchmark:export:wandb -w @immaculate/harness",
     "build": "npm run build -w @immaculate/core && npm run build -w @immaculate/harness && npm run build -w @immaculate/tui && npm run build -w @immaculate/dashboard",
     "dev:dashboard": "npm run dev -w @immaculate/dashboard",
     "dev:harness": "npm run dev -w @immaculate/harness",

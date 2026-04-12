@@ -64,6 +64,25 @@ What this unlocks next:
 - clearer operator and community visibility into what has actually been validated recently
 - richer future benchmark trend pages that can stay public without exposing internal run-state noise
 
+#### W&B benchmark results now get pulled back into git wiki as an export surface
+
+What changed:
+- the repo now has a W&B export path that reads the live published benchmark runs back from W&B and writes a committed wiki export
+- `docs/wiki/Benchmark-Wandb-Export.md` and `docs/wiki/Benchmark-Wandb-Export.json` now record run IDs, run URLs, states, summary fields, and benchmark-report artifact identity pulled from W&B itself
+- this gives Immaculate a git-tracked benchmark memory even when the W&B workspace visibility is not fully public
+
+Why it matters:
+- this closes the last visibility gap between published experiment tracking and repo-held benchmark memory
+- the project no longer depends on W&B privacy settings alone for community-visible benchmark results
+
+Evidence:
+- the export is generated from the live W&B runs rather than from the local benchmark runtime ledger
+- the new wiki export page sits alongside the benchmark status page as a committed source artifact
+
+What this unlocks next:
+- periodic W&B export refreshes without exposing raw local benchmark ledgers
+- benchmark diffs in git history that reflect what W&B actually stored, not just what the local publisher intended to send
+
 #### The controller stopped pretending its timing math was static
 
 What changed:
