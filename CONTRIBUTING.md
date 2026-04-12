@@ -26,6 +26,7 @@ npm run benchmark:gate:all
 - Describe the problem, the architectural reason for the change, and the risk.
 - Add or update benchmark coverage when changing runtime behavior.
 - Update docs when changing operator APIs, governance rules, or transport behavior.
+- If a change creates a major breakthrough, hidden systems insight, or hard capability leap, update `docs/wiki/Breakthrough-Log.md`.
 - Keep patches surgical. Large refactors need a clear rationale and rollback plan.
 
 ## Areas Where Help Is Useful

@@ -30,6 +30,11 @@ observable, governed control system for intelligence at scale.
 - Safer governance and redaction policy models
 - Neurodata adapters that respect real-world constraints
 
+## Living Record
+
+- [[Breakthrough-Log]] tracks major leaps, missed-but-real insights, and hard system milestones as they land
+- [[Engineering-Doctrine]] defines the standing build philosophy and what qualifies as a real leap
+
 ## Operator Motto
 
 Build it like a power grid.

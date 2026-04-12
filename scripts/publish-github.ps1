@@ -152,7 +152,9 @@ if (Test-Path $wikiSource) {
       "# Immaculate Wiki",
       "",
       "- [[Home]]",
-      "- [[Operator-Field-Guide]]"
+      "- [[Operator-Field-Guide]]",
+      "- [[Breakthrough-Log]]",
+      "- [[Engineering-Doctrine]]"
     ) | Set-Content -Path $sidebarPath -Encoding utf8
 
     & git -C $tempRoot config user.name "$(git config user.name)"

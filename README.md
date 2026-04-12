@@ -35,6 +35,7 @@ Immaculate is a greenfield orchestration substrate for:
 - GitHub publication script: `scripts/publish-github.ps1`
 
 Generated runtime state, benchmark run dumps, local tooling environments, and local machine paths are intentionally kept out of git.
+Major breakthroughs and materially new system discoveries are tracked in the wiki source at `docs/wiki/Breakthrough-Log.md`.
 
 ## Security Monitoring
 
