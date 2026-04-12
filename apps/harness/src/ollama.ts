@@ -189,6 +189,20 @@ function formatRecentExecutionSection(snapshot: PhaseSnapshot): string {
     .join("\n");
 }
 
+function formatScheduleSection(snapshot: PhaseSnapshot): string {
+  if (snapshot.executionSchedules.length === 0) {
+    return "none";
+  }
+
+  return snapshot.executionSchedules
+    .slice(0, 3)
+    .map(
+      (schedule) =>
+        `${schedule.mode} | width=${schedule.layerIds.length} | primary=${schedule.primaryLayerId ?? "none"} | ${schedule.estimatedLatencyMs.toFixed(1)}ms`
+    )
+    .join("\n");
+}
+
 export function buildImmaculatePrompt(snapshot: PhaseSnapshot, objective?: string): string {
   const activeObjective = objective?.trim() || snapshot.objective;
   return `Immaculate live cognition pass.
@@ -208,6 +222,7 @@ passes=${formatPassSection(snapshot)}
 datasets=${formatDatasetSection(snapshot)}
 neuro=${formatNeuroSection(snapshot)}
 recent=${formatRecentExecutionSection(snapshot)}
+schedules=${formatScheduleSection(snapshot)}
 events=${snapshot.logTail.slice(0, 4).join(" | ") || "none"}`;
 }
 

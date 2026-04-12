@@ -194,6 +194,35 @@ function summarizeExecutionArbitration(
     .join(" · ");
 }
 
+function summarizeExecutionSchedule(
+  schedule?: PhaseSnapshot["executionSchedules"][number]
+): string {
+  if (!schedule) {
+    return "No execution schedule yet.";
+  }
+
+  const layerBits = [
+    schedule.layerRoles.join(">"),
+    schedule.primaryLayerId,
+    `${schedule.layerIds.length} layer${schedule.layerIds.length === 1 ? "" : "s"}`
+  ]
+    .filter(Boolean)
+    .join(" / ");
+  const rationale =
+    schedule.rationale.length > 92 ? `${schedule.rationale.slice(0, 92)}…` : schedule.rationale;
+
+  return [
+    schedule.mode,
+    layerBits,
+    `cognition ${schedule.shouldRunCognition ? "yes" : "no"}`,
+    `dispatch ${schedule.shouldDispatchActuation ? "yes" : "no"}`,
+    schedule.governancePressure,
+    rationale
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 type PersistenceState = {
   recovered: boolean;
   recoveryMode: "fresh" | "checkpoint" | "checkpoint-replay" | "snapshot" | "replay";
@@ -2076,6 +2105,9 @@ export function DashboardClient() {
             <div className="log-line">
               {summarizeExecutionArbitration(deferredSnapshot?.executionArbitrations?.[0])}
             </div>
+            <div className="log-line">
+              {summarizeExecutionSchedule(deferredSnapshot?.executionSchedules?.[0])}
+            </div>
           </div>
         </div>
       </section>
@@ -2126,6 +2158,11 @@ export function DashboardClient() {
             Execution arbitration: <strong>{deferredSnapshot?.executionArbitrations?.[0]?.mode ?? "none"}</strong> /{" "}
             <strong>{deferredSnapshot?.executionArbitrations?.[0]?.targetPlane ?? "--"}</strong> /{" "}
             <strong>{deferredSnapshot?.executionArbitrations?.[0]?.targetNodeId ?? "--"}</strong>
+          </p>
+          <p className="body-copy">
+            Execution schedule: <strong>{deferredSnapshot?.executionSchedules?.[0]?.mode ?? "none"}</strong> /{" "}
+            <strong>{deferredSnapshot?.executionSchedules?.[0]?.layerIds.length ?? 0} layer(s)</strong> /{" "}
+            <strong>{deferredSnapshot?.executionSchedules?.[0]?.primaryLayerId ?? "--"}</strong>
           </p>
           <p className="body-copy">
             Integrity: <strong>{persistence?.integrityStatus ?? "unchecked"}</strong> / findings:{" "}
@@ -2204,6 +2241,12 @@ export function DashboardClient() {
             <span>{deferredSnapshot?.routingDecisions?.[0]?.mode ?? "none"}</span>
             <span>{summarizeRoutingDecision(deferredSnapshot?.routingDecisions?.[0])}</span>
             <span>/ snapshot.routingDecisions[0]</span>
+          </div>
+          <div className="data-row">
+            <span>Scheduling</span>
+            <span>{deferredSnapshot?.executionSchedules?.[0]?.mode ?? "none"}</span>
+            <span>{summarizeExecutionSchedule(deferredSnapshot?.executionSchedules?.[0])}</span>
+            <span>/ snapshot.executionSchedules[0]</span>
           </div>
           <div className="data-row">
             <span>Raw events</span>

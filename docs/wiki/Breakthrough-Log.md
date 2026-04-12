@@ -21,6 +21,32 @@ For each breakthrough, record:
 
 ### 2026-04-12
 
+#### Mediated orchestration learns to choose an intelligence formation
+
+What changed:
+- Immaculate now records a durable execution schedule between execution arbitration and cognition execution
+- the system can now choose whether cognition should run as `single-layer`, `swarm-sequential`, `guarded-swarm`, `reflex-bypass`, or `held`
+- `POST /api/orchestration/mediate` now emits both an arbitration decision and a scheduling decision before cognition runs
+- `GET /api/intelligence/schedules` exposes that scheduling ledger to operators
+- the benchmark now proves schedule width, swarm share, guarded scheduling, and schedule-ledger durability
+
+Why it matters:
+- this is the missing control seam between “decide whether to think” and “run one model”
+- the system no longer treats cognition as a monolith; it can select a formation
+- that is the first real step from a single-agent harness toward a programmable intelligence topology
+
+Evidence:
+- benchmark gate passed with zero violations after adding execution scheduling
+- live mediation smoke formed a three-layer cognition schedule (`mid>reasoner>soul`) before dispatch
+- the dashboard and TUI now surface `snapshot.executionSchedules[0]`
+
+What this unlocks next:
+- schedule-aware multi-agent execution across heterogeneous backends instead of a single Ollama family
+- schedule pressure feeding back into route, reason, and future locality-aware orchestration
+- richer experiments where cognition width becomes a controlled systems variable instead of an accident of implementation
+
+### 2026-04-12
+
 #### Mediated orchestration becomes a first-class decision pass
 
 What changed:

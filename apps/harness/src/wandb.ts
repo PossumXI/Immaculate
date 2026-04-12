@@ -47,6 +47,9 @@ const DEFAULT_MODE = (
   process.env.IMMACULATE_WANDB_MODE ?? process.env.WANDB_MODE ?? "online"
 ) as WandbMode;
 const STATUS_CACHE_TTL_MS = 15000;
+const DEFAULT_PUBLISH_TIMEOUT_MS = Number(
+  process.env.IMMACULATE_WANDB_PUBLISH_TIMEOUT_MS ?? 420000
+);
 let cachedStatus: { value: WandbStatus; cachedAt: number } | null = null;
 
 function resolvePythonPath(): string {
@@ -224,7 +227,7 @@ export async function publishBenchmarkToWandb(report: BenchmarkReport): Promise<
       status.mode
     ],
     env,
-    180000
+    DEFAULT_PUBLISH_TIMEOUT_MS
   );
 
   return JSON.parse(execution.stdout) as WandbPublicationResult;

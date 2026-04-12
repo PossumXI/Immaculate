@@ -419,6 +419,15 @@ export const executionArbitrationModes = [
 ] as const;
 export type ExecutionArbitrationMode = (typeof executionArbitrationModes)[number];
 
+export const executionScheduleModes = [
+  "reflex-bypass",
+  "single-layer",
+  "swarm-sequential",
+  "guarded-swarm",
+  "held"
+] as const;
+export type ExecutionScheduleMode = (typeof executionScheduleModes)[number];
+
 export type ActuationOutput = {
   id: string;
   sessionId?: string;
@@ -478,6 +487,26 @@ export type ExecutionArbitration = {
   selectedAt: string;
 };
 
+export type ExecutionSchedule = {
+  id: string;
+  sessionId?: string;
+  source: RoutingDecisionSource;
+  arbitrationId?: string;
+  mode: ExecutionScheduleMode;
+  primaryLayerId?: string;
+  layerIds: string[];
+  layerRoles: IntelligenceLayerRole[];
+  shouldRunCognition: boolean;
+  shouldDispatchActuation: boolean;
+  decodeConfidence: number;
+  governancePressure: GovernancePressureLevel;
+  estimatedLatencyMs: number;
+  estimatedCost: number;
+  objective: string;
+  rationale: string;
+  selectedAt: string;
+};
+
 export type PhaseSnapshot = {
   epoch: number;
   cycle: number;
@@ -498,6 +527,7 @@ export type PhaseSnapshot = {
   intelligenceLayers: IntelligenceLayer[];
   cognitiveExecutions: CognitiveExecution[];
   executionArbitrations: ExecutionArbitration[];
+  executionSchedules: ExecutionSchedule[];
   routingDecisions: RoutingDecision[];
   actuationOutputs: ActuationOutput[];
   logTail: string[];
@@ -900,6 +930,26 @@ export const executionArbitrationSchema = z.object({
   selectedAt: z.string()
 });
 
+export const executionScheduleSchema = z.object({
+  id: z.string(),
+  sessionId: z.string().optional(),
+  source: z.enum(routingDecisionSources),
+  arbitrationId: z.string().optional(),
+  mode: z.enum(executionScheduleModes),
+  primaryLayerId: z.string().optional(),
+  layerIds: z.array(z.string()),
+  layerRoles: z.array(z.enum(intelligenceLayerRoles)),
+  shouldRunCognition: z.boolean(),
+  shouldDispatchActuation: z.boolean(),
+  decodeConfidence: z.number().nonnegative(),
+  governancePressure: z.enum(governancePressureLevels),
+  estimatedLatencyMs: z.number().nonnegative(),
+  estimatedCost: z.number().nonnegative(),
+  objective: z.string(),
+  rationale: z.string(),
+  selectedAt: z.string()
+});
+
 export const phaseSnapshotSchema = z.object({
   epoch: z.number().int().nonnegative(),
   cycle: z.number().int().positive(),
@@ -920,6 +970,7 @@ export const phaseSnapshotSchema = z.object({
   intelligenceLayers: z.array(intelligenceLayerSchema).default([]),
   cognitiveExecutions: z.array(cognitiveExecutionSchema).default([]),
   executionArbitrations: z.array(executionArbitrationSchema).default([]),
+  executionSchedules: z.array(executionScheduleSchema).default([]),
   routingDecisions: z.array(routingDecisionSchema).default([]),
   actuationOutputs: z.array(actuationOutputSchema).default([]),
   logTail: z.array(z.string()),
@@ -1340,6 +1391,7 @@ function createInitialSnapshot(): PhaseSnapshot {
     intelligenceLayers: [],
     cognitiveExecutions: [],
     executionArbitrations: [],
+    executionSchedules: [],
     routingDecisions: [],
     actuationOutputs: [],
     logTail: []
@@ -2032,6 +2084,157 @@ function mergeExecutionArbitrationIntoSnapshot(
       ? arbitration.targetNodeId
       : "router-core",
     objective: `Execution arbitration ${arbitration.mode} selected toward ${arbitration.targetNodeId} with ${arbitration.governancePressure} governance pressure and ${(arbitration.decodeConfidence * 100).toFixed(1)}% decode confidence.`
+  };
+}
+
+function mergeExecutionScheduleIntoSnapshot(
+  snapshot: PhaseSnapshot,
+  schedule: ExecutionSchedule
+): PhaseSnapshot {
+  const nextSchedules = [
+    schedule,
+    ...snapshot.executionSchedules.filter((candidate) => candidate.id !== schedule.id)
+  ].slice(0, 24);
+  const scheduleWidth = Math.max(1, schedule.layerIds.length);
+  const scheduleBias =
+    schedule.mode === "swarm-sequential"
+      ? 0.18
+      : schedule.mode === "guarded-swarm"
+        ? 0.12
+        : schedule.mode === "single-layer"
+          ? 0.08
+          : schedule.mode === "reflex-bypass"
+            ? 0.02
+            : -0.06;
+  const governanceDrag =
+    schedule.governancePressure === "critical"
+      ? 0.22
+      : schedule.governancePressure === "elevated"
+        ? 0.1
+        : 0.02;
+  const cognitionBias = schedule.shouldRunCognition ? 0.2 : 0.03;
+
+  const nodes = snapshot.nodes.map((node) => {
+    if (node.id === "planner-swarm") {
+      return {
+        ...node,
+        activation: clamp(node.activation * 0.56 + cognitionBias * 0.5 + scheduleWidth * 0.04),
+        load: clamp(node.load * 0.64 + cognitionBias * 0.28 + scheduleWidth * 0.05),
+        throughput: clamp(node.throughput * 0.72 + scheduleBias * 0.26 + 0.06),
+        tags: [
+          ...node.tags.filter(
+            (tag) =>
+              !tag.startsWith("schedule-mode:") &&
+              !tag.startsWith("schedule-width:") &&
+              !tag.startsWith("schedule-primary:")
+          ),
+          `schedule-mode:${schedule.mode}`,
+          `schedule-width:${scheduleWidth}`,
+          `schedule-primary:${schedule.primaryLayerId ?? "none"}`
+        ]
+      };
+    }
+
+    if (node.id === "router-core") {
+      return {
+        ...node,
+        activation: clamp(node.activation * 0.68 + cognitionBias * 0.18 + scheduleBias * 0.14),
+        load: clamp(node.load * 0.7 + governanceDrag * 0.14 + scheduleWidth * 0.03),
+        throughput: clamp(node.throughput * 0.72 + scheduleBias * 0.16 + 0.04)
+      };
+    }
+
+    if (node.id === "integrity-gate") {
+      return {
+        ...node,
+        activation: clamp(
+          node.activation * 0.74 +
+            governanceDrag * 0.4 +
+            (schedule.mode === "guarded-swarm" || schedule.mode === "held" ? 0.08 : 0.02)
+        ),
+        load: clamp(node.load * 0.8 + governanceDrag * 0.2)
+      };
+    }
+
+    const scheduledIndex = schedule.layerIds.findIndex(
+      (layerId) => node.id === intelligenceNodeId(layerId)
+    );
+    if (scheduledIndex >= 0) {
+      return {
+        ...node,
+        activation: clamp(node.activation * 0.54 + 0.16 + cognitionBias * 0.22),
+        load: clamp(node.load * 0.64 + 0.1 + scheduledIndex * 0.04),
+        throughput: clamp(node.throughput * 0.74 + scheduleBias * 0.18),
+        tags: [
+          ...node.tags.filter((tag) => !tag.startsWith("schedule-slot:")),
+          `schedule-slot:${scheduledIndex + 1}`
+        ]
+      };
+    }
+
+    return node;
+  });
+
+  const passes = snapshot.passes.map((pass) => {
+    if (pass.phase !== "route" && pass.phase !== "reason" && pass.phase !== "commit") {
+      return pass;
+    }
+
+    const latencyAdjustment =
+      pass.phase === "reason"
+        ? schedule.estimatedLatencyMs * 0.22 + governanceDrag * 10 + 4
+        : pass.phase === "commit"
+          ? scheduleWidth * 6 + (schedule.shouldDispatchActuation ? 4 : 14)
+          : governanceDrag * 12 + scheduleWidth * 2 + 4;
+    const loadAdjustment =
+      pass.phase === "reason"
+        ? cognitionBias * 0.34 + scheduleWidth * 0.04
+        : pass.phase === "commit"
+          ? scheduleWidth * 0.04 + (schedule.shouldDispatchActuation ? 0.02 : 0.08)
+          : governanceDrag * 0.18 + scheduleWidth * 0.02;
+    const progressAdjustment =
+      pass.phase === "reason"
+        ? schedule.shouldRunCognition
+          ? 0.1 + scheduleWidth * 0.03
+          : -0.04
+        : pass.phase === "commit"
+          ? schedule.shouldDispatchActuation
+            ? 0.06
+            : -0.06
+          : 0.04 + scheduleBias * 0.08;
+
+    return {
+      ...pass,
+      targetNodeId:
+        pass.phase === "reason"
+          ? schedule.primaryLayerId
+            ? intelligenceNodeId(schedule.primaryLayerId)
+            : "planner-swarm"
+          : pass.phase === "commit"
+            ? schedule.shouldDispatchActuation
+              ? "actuator-grid"
+              : "integrity-gate"
+            : "planner-swarm",
+      latencyMs: Number(Math.max(1, pass.latencyMs * 0.72 + latencyAdjustment).toFixed(2)),
+      load: clamp(pass.load * 0.7 + loadAdjustment),
+      progress: clamp(pass.progress + progressAdjustment, 0, 1),
+      updatedAt: schedule.selectedAt
+    };
+  });
+  const highlightedScheduleNodeId = schedule.primaryLayerId
+    ? intelligenceNodeId(schedule.primaryLayerId)
+    : undefined;
+
+  return {
+    ...snapshot,
+    nodes,
+    passes,
+    executionSchedules: nextSchedules,
+    highlightedNodeId:
+      highlightedScheduleNodeId && nodes.some((node) => node.id === highlightedScheduleNodeId)
+        ? highlightedScheduleNodeId
+        : "planner-swarm",
+    objective: `Execution schedule ${schedule.mode} selected ${schedule.layerIds.length} layer(s) with ${schedule.governancePressure} governance pressure and ${schedule.estimatedLatencyMs.toFixed(1)} ms estimated cognition latency.`
   };
 }
 
@@ -2906,6 +3109,7 @@ function resetState(
   const retainedIntelligenceLayers = clearEvents ? [] : state.snapshot.intelligenceLayers;
   const retainedCognitiveExecutions = clearEvents ? [] : state.snapshot.cognitiveExecutions;
   const retainedExecutionArbitrations = clearEvents ? [] : state.snapshot.executionArbitrations;
+  const retainedExecutionSchedules = clearEvents ? [] : state.snapshot.executionSchedules;
   const retainedRoutingDecisions = clearEvents ? [] : state.snapshot.routingDecisions;
   const retainedActuationOutputs = clearEvents ? [] : state.snapshot.actuationOutputs;
 
@@ -2930,6 +3134,9 @@ function resetState(
   }
   for (const arbitration of retainedExecutionArbitrations) {
     state.snapshot = mergeExecutionArbitrationIntoSnapshot(state.snapshot, arbitration);
+  }
+  for (const schedule of retainedExecutionSchedules) {
+    state.snapshot = mergeExecutionScheduleIntoSnapshot(state.snapshot, schedule);
   }
   for (const decision of retainedRoutingDecisions) {
     state.snapshot = mergeRoutingDecisionIntoSnapshot(state.snapshot, decision);
@@ -2988,6 +3195,7 @@ export function createEngine(options?: {
   registerIntelligenceLayer: (layer: IntelligenceLayer) => PhaseSnapshot;
   commitCognitiveExecution: (execution: CognitiveExecution) => PhaseSnapshot;
   recordExecutionArbitration: (arbitration: ExecutionArbitration) => PhaseSnapshot;
+  recordExecutionSchedule: (schedule: ExecutionSchedule) => PhaseSnapshot;
   recordRoutingDecision: (decision: RoutingDecision) => PhaseSnapshot;
   dispatchActuationOutput: (output: ActuationOutput) => PhaseSnapshot;
 } {
@@ -3282,6 +3490,29 @@ export function createEngine(options?: {
     return state.snapshot;
   }
 
+  function recordExecutionSchedule(schedule: ExecutionSchedule): PhaseSnapshot {
+    const parsed = executionScheduleSchema.parse(schedule) as ExecutionSchedule;
+    state.snapshot = mergeExecutionScheduleIntoSnapshot(state.snapshot, parsed);
+    state.snapshot = {
+      ...state.snapshot,
+      metrics: computeMetrics(state.snapshot.nodes, state.snapshot.edges, state.snapshot.passes)
+    };
+
+    pushEvent(state, {
+      schemaName: "immaculate.execution-schedule.decision",
+      subject: { type: "agent", id: parsed.primaryLayerId ?? "planner-swarm" },
+      purpose: ["schedule", parsed.mode, parsed.shouldRunCognition ? "cognitive" : "reflex"],
+      payload: {
+        executionSchedule: parsed
+      },
+      summary: `execution schedule ${parsed.id} ${parsed.mode} selected ${parsed.layerIds.length} layer(s)`
+    });
+
+    refreshLogTail(state);
+    materializeHistory(state);
+    return state.snapshot;
+  }
+
   function recordRoutingDecision(decision: RoutingDecision): PhaseSnapshot {
     const parsed = routingDecisionSchema.parse(decision) as RoutingDecision;
     state.snapshot = mergeRoutingDecisionIntoSnapshot(state.snapshot, parsed);
@@ -3348,6 +3579,7 @@ export function createEngine(options?: {
     registerIntelligenceLayer,
     commitCognitiveExecution,
     recordExecutionArbitration,
+    recordExecutionSchedule,
     recordRoutingDecision,
     dispatchActuationOutput
   };
@@ -3423,26 +3655,34 @@ export function rebuildDurableStateFromEvents(
       continue;
     }
 
-      if (event.schema.name === "immaculate.cognitive-execution.committed") {
-        const parsed = cognitiveExecutionSchema.safeParse(event.payload.execution);
-        if (parsed.success) {
-          engine.commitCognitiveExecution(parsed.data);
-        }
-        continue;
+    if (event.schema.name === "immaculate.cognitive-execution.committed") {
+      const parsed = cognitiveExecutionSchema.safeParse(event.payload.execution);
+      if (parsed.success) {
+        engine.commitCognitiveExecution(parsed.data);
       }
+      continue;
+    }
 
-      if (event.schema.name === "immaculate.execution-arbitration.decision") {
-        const parsed = executionArbitrationSchema.safeParse(event.payload.executionArbitration);
-        if (parsed.success) {
-          engine.recordExecutionArbitration(parsed.data);
-        }
-        continue;
+    if (event.schema.name === "immaculate.execution-arbitration.decision") {
+      const parsed = executionArbitrationSchema.safeParse(event.payload.executionArbitration);
+      if (parsed.success) {
+        engine.recordExecutionArbitration(parsed.data);
       }
+      continue;
+    }
 
-      if (event.schema.name === "immaculate.routing.decision") {
-        const parsed = routingDecisionSchema.safeParse(event.payload.routingDecision);
-        if (parsed.success) {
-          engine.recordRoutingDecision(parsed.data);
+    if (event.schema.name === "immaculate.execution-schedule.decision") {
+      const parsed = executionScheduleSchema.safeParse(event.payload.executionSchedule);
+      if (parsed.success) {
+        engine.recordExecutionSchedule(parsed.data);
+      }
+      continue;
+    }
+
+    if (event.schema.name === "immaculate.routing.decision") {
+      const parsed = routingDecisionSchema.safeParse(event.payload.routingDecision);
+      if (parsed.success) {
+        engine.recordRoutingDecision(parsed.data);
       }
       continue;
     }

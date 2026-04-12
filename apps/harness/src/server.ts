@@ -23,6 +23,11 @@ import {
   planExecutionArbitration
 } from "./arbitration.js";
 import {
+  buildExecutionScheduleDecision,
+  planExecutionSchedule,
+  preferredScheduleRoles
+} from "./scheduling.js";
+import {
   loadPublishedBenchmarkIndex,
   loadPublishedBenchmarkReport,
   loadPublishedBenchmarkReportBySuiteId
@@ -53,6 +58,7 @@ import {
   deriveVisibilityScope,
   projectActuationOutput,
   projectCognitiveExecution,
+  projectExecutionSchedule,
   projectDatasetRecord,
   projectEventEnvelope,
   projectNeuroFrameWindow,
@@ -552,6 +558,41 @@ function selectPreferredLayer(preferredRoles?: IntelligenceLayer["role"][]): Int
   );
 }
 
+function selectPreferredLayers(
+  preferredRoles?: IntelligenceLayer["role"][],
+  maxCount = 3
+): IntelligenceLayer[] {
+  const snapshot = phaseSnapshotSchema.parse(engine.getSnapshot());
+  const rolePriority = new Map([
+    ["mid", 0],
+    ["reasoner", 1],
+    ["soul", 2],
+    ["guard", 3]
+  ]);
+
+  const roleRank = (role: IntelligenceLayer["role"]): number => {
+    if (!preferredRoles || preferredRoles.length === 0) {
+      return rolePriority.get(role) ?? 9;
+    }
+    const index = preferredRoles.indexOf(role);
+    return index >= 0 ? index : preferredRoles.length + (rolePriority.get(role) ?? 9);
+  };
+
+  return [...snapshot.intelligenceLayers]
+    .filter((layer) => layer.status !== "offline")
+    .sort((left, right) => {
+      const leftStatus =
+        left.status === "ready" ? 0 : left.status === "busy" ? 1 : left.status === "degraded" ? 2 : 3;
+      const rightStatus =
+        right.status === "ready" ? 0 : right.status === "busy" ? 1 : right.status === "degraded" ? 2 : 3;
+      if (leftStatus !== rightStatus) {
+        return leftStatus - rightStatus;
+      }
+      return roleRank(left.role) - roleRank(right.role);
+    })
+    .slice(0, maxCount);
+}
+
 function getPreferredLayer(layerId?: string): IntelligenceLayer | null {
   const snapshot = phaseSnapshotSchema.parse(engine.getSnapshot());
   if (layerId) {
@@ -565,7 +606,17 @@ async function ensurePreferredIntelligenceLayer(
   role: IntelligenceLayer["role"] = "mid"
 ): Promise<IntelligenceLayer | null> {
   const snapshot = phaseSnapshotSchema.parse(engine.getSnapshot());
-  const existing = selectPreferredLayer([role]);
+  const existing =
+    [...snapshot.intelligenceLayers]
+      .filter((layer) => layer.role === role)
+      .sort((left, right) => {
+        const leftStatus =
+          left.status === "ready" ? 0 : left.status === "busy" ? 1 : left.status === "degraded" ? 2 : 3;
+        const rightStatus =
+          right.status === "ready" ? 0 : right.status === "busy" ? 1 : right.status === "degraded" ? 2 : 3;
+        return leftStatus - rightStatus;
+      })
+      .at(0) ?? null;
   if (existing) {
     return existing;
   }
@@ -597,6 +648,21 @@ async function ensurePreferredIntelligenceLayer(
     );
     return null;
   }
+}
+
+async function ensurePreferredIntelligenceLayers(
+  roles: IntelligenceLayer["role"][]
+): Promise<IntelligenceLayer[]> {
+  const ensured: IntelligenceLayer[] = [];
+
+  for (const role of roles) {
+    const layer = await ensurePreferredIntelligenceLayer(role);
+    if (layer && !ensured.some((candidate) => candidate.id === layer.id)) {
+      ensured.push(layer);
+    }
+  }
+
+  return ensured;
 }
 
 function createActuationOutputId(): string {
@@ -655,6 +721,50 @@ async function executeCognitivePass(options: {
     emitSnapshot();
     throw error;
   }
+}
+
+async function executeCognitiveSchedule(options: {
+  schedule: ReturnType<typeof engine.getSnapshot>["executionSchedules"][number];
+  objective?: string;
+}) {
+  const executions: ReturnType<typeof engine.getSnapshot>["cognitiveExecutions"] = [];
+  const layers: IntelligenceLayer[] = [];
+  const responses: string[] = [];
+  let currentObjective = options.objective?.trim() || options.schedule.objective;
+  let latestSnapshot = phaseSnapshotSchema.parse(engine.getSnapshot());
+
+  for (const layerId of options.schedule.layerIds) {
+    const layer = getPreferredLayer(layerId);
+    if (!layer) {
+      continue;
+    }
+
+    const layerObjective =
+      responses.length === 0
+        ? currentObjective
+        : `${currentObjective}\nPrior synthesis: ${responses.at(-1)?.slice(0, 240) ?? "none"}`;
+    const result = await executeCognitivePass({
+      layer,
+      objective: layerObjective
+    });
+
+    layers.push(result.layer);
+    executions.push(result.execution);
+    responses.push(result.response);
+    latestSnapshot = result.snapshot;
+    currentObjective = layerObjective;
+  }
+
+  return {
+    layers,
+    executions,
+    primaryLayer:
+      layers.find((layer) => layer.id === options.schedule.primaryLayerId) ?? layers.at(-1),
+    primaryExecution:
+      executions.find((execution) => execution.layerId === options.schedule.primaryLayerId) ?? executions.at(-1),
+    combinedResponse: responses.join("\n"),
+    snapshot: latestSnapshot
+  };
 }
 
 async function dispatchWithRoute(options: {
@@ -1082,6 +1192,7 @@ app.get("/api/intelligence", async () => {
   return {
     layers: snapshot.intelligenceLayers,
     executions: snapshot.cognitiveExecutions,
+    schedules: snapshot.executionSchedules,
     recommendedLayerId: getPreferredLayer()?.id,
     visibility: "redacted"
   };
@@ -1136,6 +1247,31 @@ app.get("/api/intelligence/arbitrations", async (request, reply) => {
   ).consentScope;
   return {
     arbitrations: engine.getSnapshot().executionArbitrations,
+    visibility: deriveVisibilityScope(consentScope)
+  };
+});
+
+app.get("/api/intelligence/schedules", async (request, reply) => {
+  if (
+    !authorizeGovernedAction(
+      "cognitive-trace-read",
+      "/api/intelligence/schedules",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  const consentScope = getGovernanceBinding(
+    "cognitive-trace-read",
+    "/api/intelligence/schedules",
+    request
+  ).consentScope;
+  return {
+    schedules: engine
+      .getSnapshot()
+      .executionSchedules.map((schedule) => projectExecutionSchedule(schedule, consentScope)),
     visibility: deriveVisibilityScope(consentScope)
   };
 });
@@ -1827,11 +1963,6 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
   await persistence.persist(engine.getDurableState());
   emitSnapshot();
 
-  let mediationLayer: IntelligenceLayer | undefined;
-  let mediationExecution = execution;
-  let mediationResponse: string | undefined;
-  let cognitionSnapshot = arbitrationSnapshot;
-
   if (arbitrationPlan.shouldRunCognition) {
     if (
       !authorizeGovernedAction(
@@ -1847,43 +1978,64 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
       return;
     }
 
-    const preferredRoles = arbitrationPlan.preferredLayerRole
-      ? [arbitrationPlan.preferredLayerRole]
-      : undefined;
-    const layer =
-      (body.layerId ? getPreferredLayer(body.layerId) : null) ??
-      (preferredRoles ? selectPreferredLayer(preferredRoles) : null) ??
-      (arbitrationPlan.preferredLayerRole
-        ? await ensurePreferredIntelligenceLayer(arbitrationPlan.preferredLayerRole)
-        : await ensurePreferredIntelligenceLayer());
+    const rolesToEnsure = preferredScheduleRoles(arbitrationDecision);
+    if (rolesToEnsure.length > 0) {
+      await ensurePreferredIntelligenceLayers(rolesToEnsure);
+    }
+  }
 
-    if (!layer) {
+  const schedulePlan = planExecutionSchedule({
+    snapshot: engine.getSnapshot(),
+    arbitration: arbitrationDecision,
+    requestedLayerId: body.layerId?.trim() || undefined
+  });
+  const scheduleDecision = buildExecutionScheduleDecision({
+    arbitration: arbitrationDecision,
+    plan: schedulePlan
+  });
+  const scheduleSnapshot = phaseSnapshotSchema.parse(
+    projectPhaseSnapshot(engine.recordExecutionSchedule(scheduleDecision))
+  );
+  await persistence.persist(engine.getDurableState());
+  emitSnapshot();
+
+  let mediationLayer: IntelligenceLayer | undefined;
+  let mediationExecution = execution;
+  let mediationResponse: string | undefined;
+  let cognitionSnapshot = scheduleSnapshot;
+
+  if (scheduleDecision.shouldRunCognition) {
+    if (scheduleDecision.layerIds.length === 0) {
       reply.code(404);
       return {
         error: "no_intelligence_layer",
-        message: "Register an Ollama layer before running the mediated cognitive pass.",
+        message: "Register an Ollama layer before running the mediated cognitive schedule.",
         arbitrationDecision,
         arbitrationPlan,
-        snapshot: arbitrationSnapshot
+        scheduleDecision,
+        schedulePlan,
+        snapshot: scheduleSnapshot
       };
     }
 
     try {
-      const cognition = await executeCognitivePass({
-        layer,
-        objective: arbitrationPlan.objective
+      const cognition = await executeCognitiveSchedule({
+        schedule: scheduleDecision,
+        objective: scheduleDecision.objective
       });
-      mediationLayer = cognition.layer;
-      mediationExecution = cognition.execution;
-      mediationResponse = cognition.response;
+      mediationLayer = cognition.primaryLayer;
+      mediationExecution = cognition.primaryExecution;
+      mediationResponse = cognition.combinedResponse;
       cognitionSnapshot = cognition.snapshot;
     } catch (error) {
       reply.code(503);
       return {
         error: "cognitive_execution_failed",
-        message: error instanceof Error ? error.message : "Unable to run the mediated cognitive pass.",
+        message: error instanceof Error ? error.message : "Unable to run the mediated cognitive schedule.",
         arbitrationDecision,
         arbitrationPlan,
+        scheduleDecision,
+        schedulePlan,
         snapshot: cognitionSnapshot
       };
     }
@@ -1911,6 +2063,8 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
       accepted: true,
       arbitrationDecision,
       arbitrationPlan,
+      scheduleDecision,
+      schedulePlan,
       layer: mediationLayer,
       execution: mediationExecution,
       response: mediationResponse,
@@ -1927,6 +2081,8 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
       message: error instanceof Error ? error.message : "Unable to complete the mediated orchestration pass.",
       arbitrationDecision,
       arbitrationPlan,
+      scheduleDecision,
+      schedulePlan,
       snapshot: cognitionSnapshot
     };
   }

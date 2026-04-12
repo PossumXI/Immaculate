@@ -30,6 +30,10 @@ import {
   buildExecutionArbitrationDecision,
   planExecutionArbitration
 } from "./arbitration.js";
+import {
+  buildExecutionScheduleDecision,
+  planExecutionSchedule
+} from "./scheduling.js";
 import { getBenchmarkPack } from "./benchmark-packs.js";
 import { scanBidsDataset } from "./bids.js";
 import {
@@ -45,6 +49,7 @@ import { safeUnlink } from "./utils.js";
 import {
   projectActuationOutput,
   projectCognitiveExecution,
+  projectExecutionSchedule,
   projectDatasetRecord,
   projectEventEnvelope,
   projectNeuroFrameWindow,
@@ -174,6 +179,7 @@ function createProgress(): BenchmarkProgress {
       "HTTP/2 direct device transport with typed RPC-style delivery and response telemetry",
       "Health- and latency-aware transport preference across concrete actuation lanes",
       "Durable execution arbitration that decides when the system should think, act, or hold",
+      "Durable execution scheduling that chooses single-layer versus swarm formation before cognition runs",
       "W&B benchmark publication backend for external experiment tracking",
       "Keyboard-first TUI and Next.js overwatch dashboard with live connectome telemetry",
       "Published internal benchmark suite for repeatable functional testing"
@@ -737,7 +743,40 @@ export async function runPublishedBenchmark(
     endpoint: "http://127.0.0.1:11434",
     registeredAt: new Date().toISOString()
   };
+  const benchmarkMidLayer: IntelligenceLayer = {
+    id: "benchmark-layer-mid",
+    name: "Benchmark Mid Layer",
+    backend: "ollama",
+    model: "gemma4:e4b",
+    role: "mid",
+    status: "ready",
+    endpoint: "http://127.0.0.1:11434",
+    registeredAt: new Date().toISOString()
+  };
+  const benchmarkGuardLayer: IntelligenceLayer = {
+    id: "benchmark-layer-guard",
+    name: "Benchmark Guard Layer",
+    backend: "ollama",
+    model: "gemma4:e4b",
+    role: "guard",
+    status: "ready",
+    endpoint: "http://127.0.0.1:11434",
+    registeredAt: new Date().toISOString()
+  };
+  const benchmarkSoulLayer: IntelligenceLayer = {
+    id: "benchmark-layer-soul",
+    name: "Benchmark Soul Layer",
+    backend: "ollama",
+    model: "gemma4:e4b",
+    role: "soul",
+    status: "ready",
+    endpoint: "http://127.0.0.1:11434",
+    registeredAt: new Date().toISOString()
+  };
+  engine.registerIntelligenceLayer(benchmarkMidLayer);
   engine.registerIntelligenceLayer(benchmarkLayer);
+  engine.registerIntelligenceLayer(benchmarkGuardLayer);
+  engine.registerIntelligenceLayer(benchmarkSoulLayer);
   const syntheticExecution: CognitiveExecution = {
     id: `cog-${suiteId}-synthetic`,
     layerId: benchmarkLayer.id,
@@ -1420,7 +1459,46 @@ export async function runPublishedBenchmark(
   });
   engine.recordExecutionArbitration(guardedArbitrationDecision);
 
+  const scheduleWidthSamples: number[] = [];
+  const scheduleSwarmSamples: number[] = [];
+  const reflexSchedulePlan = planExecutionSchedule({
+    snapshot: engine.getSnapshot(),
+    arbitration: reflexArbitrationDecision
+  });
+  scheduleWidthSamples.push(reflexSchedulePlan.layerIds.length);
+  scheduleSwarmSamples.push(reflexSchedulePlan.layerIds.length > 1 ? 1 : 0);
+  const reflexScheduleDecision = buildExecutionScheduleDecision({
+    arbitration: reflexArbitrationDecision,
+    plan: reflexSchedulePlan
+  });
+  engine.recordExecutionSchedule(reflexScheduleDecision);
+
+  const cognitiveSchedulePlan = planExecutionSchedule({
+    snapshot: engine.getSnapshot(),
+    arbitration: cognitiveArbitrationDecision
+  });
+  scheduleWidthSamples.push(cognitiveSchedulePlan.layerIds.length);
+  scheduleSwarmSamples.push(cognitiveSchedulePlan.layerIds.length > 1 ? 1 : 0);
+  const cognitiveScheduleDecision = buildExecutionScheduleDecision({
+    arbitration: cognitiveArbitrationDecision,
+    plan: cognitiveSchedulePlan
+  });
+  engine.recordExecutionSchedule(cognitiveScheduleDecision);
+
+  const guardedSchedulePlan = planExecutionSchedule({
+    snapshot: engine.getSnapshot(),
+    arbitration: guardedArbitrationDecision
+  });
+  scheduleWidthSamples.push(guardedSchedulePlan.layerIds.length);
+  scheduleSwarmSamples.push(guardedSchedulePlan.layerIds.length > 1 ? 1 : 0);
+  const guardedScheduleDecision = buildExecutionScheduleDecision({
+    arbitration: guardedArbitrationDecision,
+    plan: guardedSchedulePlan
+  });
+  engine.recordExecutionSchedule(guardedScheduleDecision);
+
   const executionArbitrations = engine.getSnapshot().executionArbitrations;
+  const executionSchedules = engine.getSnapshot().executionSchedules;
   const routingDecisions = engine.getSnapshot().routingDecisions;
   const routingEvents = engine
     .getEvents()
@@ -1456,6 +1534,14 @@ export async function runPublishedBenchmark(
   );
   const benchmarkScopedExecution = projectCognitiveExecution(
     syntheticExecution,
+    "system:benchmark"
+  );
+  const intelligenceScopedSchedule = projectExecutionSchedule(
+    cognitiveScheduleDecision,
+    "system:intelligence"
+  );
+  const benchmarkScopedSchedule = projectExecutionSchedule(
+    cognitiveScheduleDecision,
     "system:benchmark"
   );
   const actuationScopedOutput = projectActuationOutput(
@@ -1561,6 +1647,18 @@ export async function runPublishedBenchmark(
     "Execution arbitration cognition share",
     "ratio",
     arbitrationCognitionSamples
+  );
+  const executionScheduleWidthSeries = createSeries(
+    "execution_schedule_width",
+    "Execution schedule width",
+    "layers",
+    scheduleWidthSamples
+  );
+  const executionScheduleSwarmSeries = createSeries(
+    "execution_schedule_swarm_ratio",
+    "Execution schedule swarm share",
+    "ratio",
+    scheduleSwarmSamples
   );
 
   const assertions: BenchmarkAssertion[] = [
@@ -2029,9 +2127,9 @@ export async function runPublishedBenchmark(
         cognitiveArbitrationPlan.shouldRunCognition &&
         cognitiveArbitrationPlan.shouldDispatchActuation &&
         cognitiveArbitrationPlan.targetNodeId === "planner-swarm" &&
-        cognitiveArbitrationDecision.preferredLayerId === benchmarkLayer.id &&
+        cognitiveArbitrationDecision.preferredLayerId === benchmarkMidLayer.id &&
         cognitiveArbitrationDecision.routeModeHint === "cognitive-assisted",
-      "cognitive-escalation / planner-swarm / benchmark-layer / cognitive-assisted",
+      "cognitive-escalation / planner-swarm / benchmark-layer-mid / cognitive-assisted",
       `${cognitiveArbitrationPlan.mode} / layer=${cognitiveArbitrationDecision.preferredLayerId ?? "none"} / route=${cognitiveArbitrationDecision.routeModeHint}`,
       "when reflex confidence weakens, the system should decide to think before it acts instead of pretending every command belongs in the reflex plane"
     ),
@@ -2066,6 +2164,62 @@ export async function runPublishedBenchmark(
       "<= 5 ms p95",
       formatSeries(executionArbitrationLatencySeries),
       "the choice to think before acting has to remain cheap enough to sit in the live orchestration path"
+    ),
+    createAssertion(
+      "execution-schedule-reflex",
+      "Execution scheduling keeps a strong clear path out of unnecessary cognition",
+      reflexSchedulePlan.mode === "reflex-bypass" &&
+        reflexSchedulePlan.layerIds.length === 0 &&
+        !reflexSchedulePlan.shouldRunCognition &&
+        reflexScheduleDecision.primaryLayerId === undefined,
+      "reflex-bypass / 0 layers / cognition skipped",
+      `${reflexSchedulePlan.mode} / width=${reflexSchedulePlan.layerIds.length} / cognition=${reflexSchedulePlan.shouldRunCognition}`,
+      "strong reflex paths should not silently expand into unnecessary agent formation"
+    ),
+    createAssertion(
+      "execution-schedule-cognitive",
+      "Execution scheduling expands low-confidence cognition into a multi-layer swarm",
+      cognitiveSchedulePlan.mode === "swarm-sequential" &&
+        cognitiveSchedulePlan.layerIds.length >= 2 &&
+        cognitiveSchedulePlan.layerRoles.includes("mid") &&
+        cognitiveSchedulePlan.layerRoles.includes("reasoner") &&
+        cognitiveScheduleDecision.primaryLayerId === benchmarkLayer.id,
+      "swarm-sequential / width >= 2 / includes mid+reasoner / reasoner primary",
+      `${cognitiveSchedulePlan.mode} / roles=${cognitiveSchedulePlan.layerRoles.join(">")} / primary=${cognitiveScheduleDecision.primaryLayerId ?? "none"}`,
+      "once mediation decides to think, the next step is choosing an intelligence formation instead of a single opaque model call"
+    ),
+    createAssertion(
+      "execution-schedule-guarded",
+      "Execution scheduling chooses a guarded swarm under critical governance pressure",
+      guardedSchedulePlan.mode === "guarded-swarm" &&
+        guardedSchedulePlan.layerIds.length >= 2 &&
+        guardedSchedulePlan.layerRoles.includes("guard") &&
+        !guardedSchedulePlan.shouldDispatchActuation &&
+        guardedScheduleDecision.primaryLayerId === benchmarkLayer.id,
+      "guarded-swarm / includes guard / dispatch held / reasoner primary",
+      `${guardedSchedulePlan.mode} / roles=${guardedSchedulePlan.layerRoles.join(">")} / dispatch=${guardedSchedulePlan.shouldDispatchActuation}`,
+      "critical governance pressure should shape which internal formation runs, not just whether outward dispatch is allowed"
+    ),
+    createAssertion(
+      "execution-schedule-ledger",
+      "Execution scheduling persists as a durable snapshot ledger",
+      executionSchedules.length >= 3 &&
+        executionSchedules[0]?.id === guardedScheduleDecision.id &&
+        executionSchedules.some((schedule) => schedule.id === cognitiveScheduleDecision.id) &&
+        executionSchedules.some((schedule) => schedule.id === reflexScheduleDecision.id),
+      ">= 3 execution schedules in snapshot ledger",
+      `${executionSchedules.length} schedules / latest ${executionSchedules[0]?.mode ?? "missing"}`,
+      "agent formation has to be durable and replayable if it is going to shape reasoning before action"
+    ),
+    createAssertion(
+      "execution-schedule-visibility",
+      "Execution schedules honor field-level visibility rules",
+      intelligenceScopedSchedule.objective === cognitiveScheduleDecision.objective &&
+        benchmarkScopedSchedule.objective === "[redacted]" &&
+        benchmarkScopedSchedule.rationale === "[redacted]",
+      "intelligence scope full / benchmark scope redacted",
+      `${intelligenceScopedSchedule.layerIds.length} full / ${benchmarkScopedSchedule.objective}`,
+      "operator-visible scheduling should still respect the same field-level consent boundaries as other derived cognition traces"
     ),
     createAssertion(
       "routing-reflex-direct",
@@ -2133,19 +2287,22 @@ export async function runPublishedBenchmark(
     ),
     createAssertion(
       "snapshot-derived-redaction",
-      "Default snapshot projection redacts derived neuro features, cognitive previews, and actuation commands",
+      "Default snapshot projection redacts derived neuro features, cognitive previews, scheduling rationale, and actuation commands",
       redactedSnapshot.neuroFrames.every((frame) => frame.decodeConfidence === 0 && frame.meanAbs === 0) &&
         redactedSnapshot.cognitiveExecutions.every(
           (execution) =>
             execution.objective === "[redacted]" &&
             execution.responsePreview === "[redacted]"
         ) &&
+        redactedSnapshot.executionSchedules.every(
+          (schedule) => schedule.objective === "[redacted]" && schedule.rationale === "[redacted]"
+        ) &&
         redactedSnapshot.actuationOutputs.every(
           (output) => output.command === "[redacted]" && output.intensity === 0
         ),
-      "derived neuro values zeroed, cognitive previews redacted, actuation commands withheld",
-      `${redactedSnapshot.neuroFrames[0]?.decodeConfidence ?? 0} neuro confidence / ${redactedSnapshot.cognitiveExecutions[0]?.responsePreview ?? "missing"} cognitive preview / ${redactedSnapshot.actuationOutputs[0]?.command ?? "missing"} actuation`,
-      "default operator snapshots should not leak derived neural metrics, model response traces, or outbound actuation commands"
+      "derived neuro values zeroed, cognitive previews redacted, schedule rationale withheld, actuation commands withheld",
+      `${redactedSnapshot.neuroFrames[0]?.decodeConfidence ?? 0} neuro confidence / ${redactedSnapshot.cognitiveExecutions[0]?.responsePreview ?? "missing"} cognitive preview / ${redactedSnapshot.executionSchedules[0]?.objective ?? "missing"} schedule / ${redactedSnapshot.actuationOutputs[0]?.command ?? "missing"} actuation`,
+      "default operator snapshots should not leak derived neural metrics, model response traces, scheduling rationale, or outbound actuation commands"
     ),
     createAssertion(
       "dataset-field-visibility",
@@ -2321,7 +2478,7 @@ export async function runPublishedBenchmark(
     packLabel: pack.label,
     profile: engine.getSnapshot().profile,
     summary:
-      "This publication benchmarks the real orchestration substrate that exists today: phase execution, verify gating, persistence, checkpoint recovery, integrity validation, replayed NWB windows, live socket neuro ingress, protocol-aware actuation, execution arbitration that decides when the system should think before acting, supervised serial and HTTP/2 direct device transports, and explicit routing decisions that react to transport health, decode confidence, and governance pressure. It does not yet claim external neurodata or BCI decoding performance.",
+      "This publication benchmarks the real orchestration substrate that exists today: phase execution, verify gating, persistence, checkpoint recovery, integrity validation, replayed NWB windows, live socket neuro ingress, protocol-aware actuation, execution arbitration that decides when the system should think before acting, execution scheduling that chooses single-layer versus swarm formation before cognition runs, supervised serial and HTTP/2 direct device transports, and explicit routing decisions that react to transport health, decode confidence, and governance pressure. It does not yet claim external neurodata or BCI decoding performance.",
     tickIntervalMs,
     totalTicks,
     totalDurationMs: totalTicks * tickIntervalMs,
@@ -2336,6 +2493,8 @@ export async function runPublishedBenchmark(
       coherenceSeries,
       executionArbitrationLatencySeries,
       executionArbitrationCognitionSeries,
+      executionScheduleWidthSeries,
+      executionScheduleSwarmSeries,
       decodeConfidenceSeries,
       syncJitterSeries
     ],
@@ -2349,6 +2508,7 @@ export async function runPublishedBenchmark(
           throughputSeries,
           coherenceSeries,
           executionArbitrationCognitionSeries,
+          executionScheduleSwarmSeries,
           decodeConfidenceSeries,
           syncJitterSeries
         ])

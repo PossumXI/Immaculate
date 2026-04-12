@@ -154,6 +154,35 @@ function summarizeExecutionArbitration(
     .join(" · ");
 }
 
+function summarizeExecutionSchedule(
+  schedule?: PhaseSnapshot["executionSchedules"][number]
+): string {
+  if (!schedule) {
+    return "none";
+  }
+
+  const layerBits = [
+    schedule.layerRoles.join(">"),
+    schedule.primaryLayerId,
+    `${schedule.layerIds.length} layer${schedule.layerIds.length === 1 ? "" : "s"}`
+  ]
+    .filter(Boolean)
+    .join("/");
+  const rationale =
+    schedule.rationale.length > 74 ? `${schedule.rationale.slice(0, 74)}…` : schedule.rationale;
+
+  return [
+    schedule.mode,
+    layerBits,
+    `cognition ${schedule.shouldRunCognition ? "yes" : "no"}`,
+    `dispatch ${schedule.shouldDispatchActuation ? "yes" : "no"}`,
+    schedule.governancePressure,
+    rationale
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 async function harnessFetch(
   input: string,
   init?: RequestInit,
@@ -854,6 +883,12 @@ function App() {
             <Text>
               Arbitration {snapshot.executionArbitrations?.[0] ? snapshot.executionArbitrations[0].mode : "none"} /{" "}
               {summarizeExecutionArbitration(snapshot.executionArbitrations?.[0])}
+            </Text>
+          ) : null}
+          {snapshot ? (
+            <Text>
+              Schedule {snapshot.executionSchedules?.[0] ? snapshot.executionSchedules[0].mode : "none"} /{" "}
+              {summarizeExecutionSchedule(snapshot.executionSchedules?.[0])}
             </Text>
           ) : null}
           {snapshot ? (

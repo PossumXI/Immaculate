@@ -1,6 +1,7 @@
 import type {
   ActuationOutput,
   CognitiveExecution,
+  ExecutionSchedule,
   EventEnvelope,
   IngestedDatasetSummary,
   NeuroFrameWindow,
@@ -181,6 +182,7 @@ export function redactPhaseSnapshot(snapshot: PhaseSnapshot): PhaseSnapshot {
     neuroSessions: snapshot.neuroSessions.map(redactNeuroSessionSummary),
     neuroFrames: snapshot.neuroFrames.map(redactNeuroFrameWindow),
     cognitiveExecutions: snapshot.cognitiveExecutions.map(redactCognitiveExecution),
+    executionSchedules: snapshot.executionSchedules.map(redactExecutionSchedule),
     actuationOutputs: snapshot.actuationOutputs.map(redactActuationOutput),
     objective: projectDerivedText(snapshot.objective),
     logTail: snapshot.logTail.map((line) => projectDerivedText(line))
@@ -304,6 +306,32 @@ export function projectActuationOutput(
   return redactActuationOutput(output);
 }
 
+export function redactExecutionSchedule(schedule: ExecutionSchedule): ExecutionSchedule {
+  return {
+    ...schedule,
+    objective: REDACTED,
+    rationale: REDACTED
+  };
+}
+
+export function projectExecutionSchedule(
+  schedule: ExecutionSchedule,
+  consentScope?: string
+): ExecutionSchedule {
+  const visibility = deriveVisibilityScope(consentScope);
+  if (visibility === "intelligence" || visibility === "audit") {
+    return schedule;
+  }
+  if (visibility === "benchmark") {
+    return {
+      ...schedule,
+      objective: REDACTED,
+      rationale: REDACTED
+    };
+  }
+  return redactExecutionSchedule(schedule);
+}
+
 export function projectPhaseSnapshot(
   snapshot: PhaseSnapshot,
   consentScope?: string
@@ -320,6 +348,9 @@ export function projectPhaseSnapshot(
       neuroFrames: snapshot.neuroFrames.map((frame) => projectNeuroFrameWindow(frame, consentScope)),
       cognitiveExecutions: snapshot.cognitiveExecutions.map((execution) =>
         projectCognitiveExecution(execution, consentScope)
+      ),
+      executionSchedules: snapshot.executionSchedules.map((schedule) =>
+        projectExecutionSchedule(schedule, consentScope)
       ),
       actuationOutputs: snapshot.actuationOutputs.map((output) =>
         projectActuationOutput(output, consentScope)
@@ -342,6 +373,7 @@ function projectDerivedText(value: string): string {
     trimmed.startsWith("neuro frame ") ||
     trimmed.includes("decode confidence") ||
     trimmed.startsWith("cognitive execution ") ||
+    trimmed.startsWith("Execution schedule ") ||
     trimmed.startsWith("actuation output ")
   ) {
     return "[redacted-derived-state]";
