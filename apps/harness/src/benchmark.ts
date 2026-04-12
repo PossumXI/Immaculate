@@ -72,6 +72,7 @@ type BenchmarkRunOptions = {
 
 const DEFAULT_TICK_INTERVAL_MS = 40;
 const DEFAULT_MAX_TICKS = 320;
+const BENCHMARK_ADAPTER_DISPATCH_CADENCE_MS = 15;
 const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(MODULE_ROOT, "../../..");
 const BENCHMARK_ROOT = path.join(REPO_ROOT, "benchmarks");
@@ -1172,6 +1173,7 @@ export async function runPublishedBenchmark(
     capabilities: serialCapabilities,
     firmwareVersion: "fw-serial-1.0.0"
   });
+  await new Promise((resolve) => setTimeout(resolve, BENCHMARK_ADAPTER_DISPATCH_CADENCE_MS));
   const serialActuation: ActuationOutput = {
     id: `act-${suiteId}-serial`,
     sessionId: nwbFixture.summary.id,
@@ -1260,6 +1262,7 @@ export async function runPublishedBenchmark(
     capabilities: serialCapabilities,
     firmwareVersion: "fw-serial-1.0.1"
   });
+  await new Promise((resolve) => setTimeout(resolve, BENCHMARK_ADAPTER_DISPATCH_CADENCE_MS));
   const recoveredSerialActuation: ActuationOutput = {
     id: `act-${suiteId}-serial-recovered`,
     sessionId: nwbFixture.summary.id,
