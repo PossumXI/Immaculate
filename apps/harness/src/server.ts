@@ -1339,6 +1339,69 @@ app.post("/api/actuation/transports/serial/register", async (request, reply) => 
   }
 });
 
+app.post("/api/actuation/transports/http2/register", async (request, reply) => {
+  if (
+    !authorizeGovernedAction(
+      "actuation-device-link",
+      "/api/actuation/transports/http2/register",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  const body =
+    (request.body as {
+      adapterId?: string;
+      endpoint?: string;
+      label?: string;
+      deviceId?: string;
+      vendorId?: string;
+      modelId?: string;
+      heartbeatIntervalMs?: number;
+      heartbeatTimeoutMs?: number;
+    } | undefined) ?? {};
+
+  if (!body.adapterId?.trim() || !body.endpoint?.trim()) {
+    reply.code(400);
+    return {
+      error: "invalid_transport_registration",
+      message: "adapterId and endpoint are required."
+    };
+  }
+
+  try {
+    const transport = await actuationManager.registerHttp2JsonTransport({
+      adapterId: body.adapterId.trim(),
+      endpoint: body.endpoint.trim(),
+      label: body.label,
+      deviceId: body.deviceId,
+      vendorId: body.vendorId,
+      modelId: body.modelId,
+      heartbeatIntervalMs:
+        typeof body.heartbeatIntervalMs === "number"
+          ? Number(body.heartbeatIntervalMs)
+          : undefined,
+      heartbeatTimeoutMs:
+        typeof body.heartbeatTimeoutMs === "number"
+          ? Number(body.heartbeatTimeoutMs)
+          : undefined
+    });
+    return {
+      accepted: true,
+      transport
+    };
+  } catch (error) {
+    reply.code(400);
+    return {
+      error: "transport_registration_failed",
+      message:
+        error instanceof Error ? error.message : "Unable to register HTTP/2 transport."
+    };
+  }
+});
+
 app.post("/api/actuation/transports/:transportId/heartbeat", async (request, reply) => {
   if (
     !authorizeGovernedAction(

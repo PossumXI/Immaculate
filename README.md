@@ -139,13 +139,15 @@ Benchmark packs currently include:
 - governed websocket actuation device links now negotiate protocol/capabilities and provide acked bridge delivery with file fallback when no live transport is attached
 - concrete UDP/OSC actuation transports can now be registered as durable protocol-aware device endpoints for visual lanes
 - supervised serial vendor transports now support heartbeat health, capability health, stale-device isolation, and controlled recovery
+- HTTP/2 direct device transports now provide typed RPC-class delivery with response telemetry and durable operator visibility
+- transport selection now ranks concrete actuation lanes by health, latency, and capability fitness instead of registry order
 - dashboard and TUI websocket reconnection with backoff
 - operator-facing dashboard surfaces for the previously hidden backend control plane
 
 ## Remaining Progression
 
 - direct device adapters beyond the first live socket neurophysiology ingress path
-- additional vendor-specific transports beyond the first supervised serial lane, including MIDI and gRPC-class adapters
+- additional vendor-specific transports beyond serial and HTTP/2 direct lanes, including MIDI and richer gRPC-class adapters
 - additional multi-agent and tool execution backends beyond the first Ollama layer
 - domain benchmark packs against published neuro/BCI workloads
 - multi-node deployment, locality routing, and long-horizon benchmark trending
@@ -183,6 +185,7 @@ The harness now exposes a deliberate operator/automation surface. These routes a
 - `POST /api/actuation/dispatch`
 - `POST /api/actuation/transports/udp/register`
 - `POST /api/actuation/transports/serial/register`
+- `POST /api/actuation/transports/http2/register`
 - `POST /api/actuation/transports/:transportId/heartbeat`
 - `POST /api/actuation/transports/:transportId/reset`
 - `POST /api/intelligence/ollama/register`
@@ -206,3 +209,4 @@ Sensitive read surfaces now split into two modes:
 - actuation device transports now open with a protocol-negotiation handshake on `WS /stream/actuation/device`; device clients send `actuation-device-hello` before dispatch starts, then acknowledge deliveries with `actuation-ack`
 - UDP/OSC actuation endpoints can be registered through `POST /api/actuation/transports/udp/register`; when present, dispatch prefers that concrete transport before bridge or file fallback
 - serial vendor transports can be registered through `POST /api/actuation/transports/serial/register`; they require heartbeats on `POST /api/actuation/transports/:transportId/heartbeat`, isolate on stale liveness, and can be cleared through `POST /api/actuation/transports/:transportId/reset`
+- HTTP/2 direct device transports can be registered through `POST /api/actuation/transports/http2/register`; successful responses feed liveness and capability telemetry back into transport health and routing preference

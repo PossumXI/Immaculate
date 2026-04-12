@@ -65,3 +65,26 @@ Evidence:
 What this unlocks next:
 - cleaner historical context for major architectural decisions
 - faster onboarding for contributors who need the real inflection points, not just the file diff
+
+### 2026-04-12
+
+#### Direct device routing stops being order-based and starts being health-based
+
+What changed:
+- Immaculate gained a supervised HTTP/2 direct device transport alongside UDP/OSC and serial lanes
+- successful HTTP/2 device responses now feed liveness, capability coverage, firmware identity, and latency back into transport state
+- actuation selection now ranks concrete transports by health, latency, capability fitness, and vendor/device readiness instead of registry insertion order
+
+Why it matters:
+- this turns actuation from a static handoff table into a real routing problem with measurable preference
+- the system can now choose the best concrete lane for a command based on the actual state of the device path, not just the fact that the path exists
+
+Evidence:
+- benchmark gate passed with zero violations after adding the new transport class
+- the benchmark now proves HTTP/2 direct delivery and preference over other healthy haptic transports
+- the operator transport surface now exposes preference rank and score
+
+What this unlocks next:
+- richer RPC-class device adapters beyond the first HTTP/2 lane
+- routing that can incorporate device health as a first-class orchestration signal
+- future actuator swarms where direct hardware lanes compete on real measured fitness instead of static priority

@@ -274,7 +274,7 @@ type ActuationCapabilityHealth = {
 
 type ActuationTransportState = {
   id: string;
-  kind: "udp-osc" | "serial-json";
+  kind: "udp-osc" | "serial-json" | "http2-json";
   label: string;
   adapterId: string;
   protocolId: string;
@@ -283,6 +283,7 @@ type ActuationTransportState = {
   remoteHost?: string;
   remotePort?: number;
   devicePath?: string;
+  endpointPath?: string;
   baudRate?: number;
   vendorId?: string;
   modelId?: string;
@@ -305,6 +306,8 @@ type ActuationTransportState = {
   isolatedAt?: string;
   lastError?: string;
   lastRecoveredAt?: string;
+  preferenceScore?: number;
+  preferenceRank?: number;
 };
 
 type ActuationDeliveryState = {
@@ -317,7 +320,7 @@ type ActuationDeliveryState = {
   channel: string;
   sessionId?: string;
   status: "delivered" | "suppressed";
-  transport: "file" | "bridge" | "udp-osc";
+  transport: "file" | "bridge" | "udp-osc" | "serial-json" | "http2-json";
   intensity: number;
   generatedAt: string;
   deliveredAt?: string;
@@ -1949,6 +1952,7 @@ export function DashboardClient() {
             <div className="data-row head">
               <span>Label</span>
               <span>Kind</span>
+              <span>Rank</span>
               <span>Adapter</span>
               <span>Health</span>
               <span>Endpoint</span>
@@ -1962,9 +1966,21 @@ export function DashboardClient() {
               <div className="data-row" key={transport.id}>
                 <span>{transport.label}</span>
                 <span>{transport.kind}</span>
+                <span>
+                  {transport.preferenceRank ? `#${transport.preferenceRank}` : "--"}
+                  {typeof transport.preferenceScore === "number"
+                    ? ` / ${transport.preferenceScore.toFixed(1)}`
+                    : ""}
+                </span>
                 <span>{transport.adapterId}</span>
                 <span>{transport.health}</span>
-                <span>{transport.kind === "serial-json" ? transport.devicePath ?? transport.endpoint : `${transport.remoteHost ?? "--"}:${transport.remotePort ?? "--"}`}</span>
+                <span>
+                  {transport.kind === "serial-json"
+                    ? transport.devicePath ?? transport.endpoint
+                    : transport.kind === "udp-osc"
+                      ? `${transport.remoteHost ?? "--"}:${transport.remotePort ?? "--"}`
+                      : transport.endpoint}
+                </span>
                 <span>{transport.deviceId ?? "--"}</span>
                 <span>
                   {transport.heartbeatRequired
@@ -2139,7 +2155,7 @@ export function DashboardClient() {
             <span>Actuation</span>
             <span>{visibleActuationOutputs.length} outputs</span>
             <span>{actuationDeliveries[0]?.adapterId ?? visibleActuationOutputs[0]?.status ?? "none"}</span>
-            <span>/api/actuation/protocols + /api/actuation/transports + /api/actuation/transports/udp/register + /api/actuation/transports/serial/register + /api/actuation/transports/:transportId/heartbeat + /api/actuation/transports/:transportId/reset + /api/actuation/adapters + /api/actuation/deliveries + /api/actuation/outputs + /api/actuation/dispatch + WS /stream/actuation/device</span>
+            <span>/api/actuation/protocols + /api/actuation/transports + /api/actuation/transports/udp/register + /api/actuation/transports/serial/register + /api/actuation/transports/http2/register + /api/actuation/transports/:transportId/heartbeat + /api/actuation/transports/:transportId/reset + /api/actuation/adapters + /api/actuation/deliveries + /api/actuation/outputs + /api/actuation/dispatch + WS /stream/actuation/device</span>
           </div>
         </div>
       </section>

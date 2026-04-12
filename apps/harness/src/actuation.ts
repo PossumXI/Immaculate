@@ -1,5 +1,6 @@
 import path from "node:path";
 import { createSocket } from "node:dgram";
+import { connect as connectHttp2 } from "node:http2";
 import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import type { ActuationChannel, ActuationOutput } from "@immaculate/core";
 import { hashValue } from "./utils.js";
@@ -15,11 +16,12 @@ export const actuationDeliveryTransports = [
   "file",
   "bridge",
   "udp-osc",
-  "serial-json"
+  "serial-json",
+  "http2-json"
 ] as const;
 export type ActuationDeliveryTransport = (typeof actuationDeliveryTransports)[number];
 
-export const actuationTransportKinds = ["udp-osc", "serial-json"] as const;
+export const actuationTransportKinds = ["udp-osc", "serial-json", "http2-json"] as const;
 export type ActuationTransportKind = (typeof actuationTransportKinds)[number];
 
 export const actuationTransportHealthStates = [
@@ -88,6 +90,7 @@ export type ActuationTransportState = {
   remoteHost?: string;
   remotePort?: number;
   devicePath?: string;
+  endpointPath?: string;
   baudRate?: number;
   vendorId?: string;
   modelId?: string;
@@ -110,6 +113,8 @@ export type ActuationTransportState = {
   isolatedAt?: string;
   lastError?: string;
   lastRecoveredAt?: string;
+  preferenceScore?: number;
+  preferenceRank?: number;
 };
 
 export type ActuationAdapterState = {
@@ -226,6 +231,7 @@ const BRIDGE_ACK_TIMEOUT_MS = 2500;
 const TRANSPORT_FAILURE_ISOLATION_THRESHOLD = 2;
 const DEFAULT_TRANSPORT_HEARTBEAT_INTERVAL_MS = 5000;
 const DEFAULT_TRANSPORT_HEARTBEAT_TIMEOUT_MS = 15000;
+const HTTP2_DISPATCH_TIMEOUT_MS = 2500;
 
 async function safeRead(filePath: string): Promise<string | null> {
   try {
@@ -547,7 +553,9 @@ function parseTransportRegistry(content: string | null): ActuationTransportState
       const value = candidate as Partial<ActuationTransportState>;
       if (
         typeof value.id !== "string" ||
-        (value.kind !== "udp-osc" && value.kind !== "serial-json") ||
+        (value.kind !== "udp-osc" &&
+          value.kind !== "serial-json" &&
+          value.kind !== "http2-json") ||
         typeof value.label !== "string" ||
         typeof value.adapterId !== "string" ||
         (value.protocolId !== "immaculate.visual.panel.v1" &&
@@ -569,10 +577,14 @@ function parseTransportRegistry(content: string | null): ActuationTransportState
         return [];
       }
 
+      if (value.kind === "http2-json" && typeof value.endpoint !== "string") {
+        return [];
+      }
+
       const heartbeatRequired =
         typeof value.heartbeatRequired === "boolean"
           ? value.heartbeatRequired
-          : value.kind === "serial-json";
+          : value.kind === "serial-json" || value.kind === "http2-json";
       const fallbackHealth =
         heartbeatRequired && typeof value.lastHeartbeatAt !== "string"
           ? "degraded"
@@ -597,6 +609,10 @@ function parseTransportRegistry(content: string | null): ActuationTransportState
           remoteHost: value.kind === "udp-osc" ? value.remoteHost : undefined,
           remotePort: value.kind === "udp-osc" ? value.remotePort : undefined,
           devicePath: value.kind === "serial-json" ? value.devicePath : undefined,
+          endpointPath:
+            value.kind === "http2-json" && typeof value.endpointPath === "string"
+              ? value.endpointPath
+              : undefined,
           baudRate:
             value.kind === "serial-json" && typeof value.baudRate === "number"
               ? value.baudRate
@@ -738,6 +754,91 @@ function refreshTransportHealth(
   }
 
   return updateTransportHealth(transport, "healthy", checkedAt);
+}
+
+function capabilityScore(transport: ActuationTransportState): number {
+  return transport.capabilityHealth.reduce((score, entry) => {
+    if (entry.status === "available") {
+      return score + 14;
+    }
+    if (entry.status === "degraded") {
+      return score - 8;
+    }
+    return score - 35;
+  }, 0);
+}
+
+function healthScore(transport: ActuationTransportState): number {
+  if (transport.health === "healthy") {
+    return 520;
+  }
+  if (transport.health === "degraded") {
+    return 220;
+  }
+  if (transport.health === "unknown") {
+    return 120;
+  }
+  if (transport.health === "faulted") {
+    return -700;
+  }
+  return -1200;
+}
+
+function kindScore(kind: ActuationTransportKind): number {
+  if (kind === "http2-json") {
+    return 320;
+  }
+  if (kind === "serial-json") {
+    return 260;
+  }
+  return 180;
+}
+
+function computeTransportPreferenceScore(transport: ActuationTransportState): number {
+  const latencyPenalty =
+    typeof transport.lastHeartbeatLatencyMs === "number"
+      ? Math.min(transport.lastHeartbeatLatencyMs, 500) / 2
+      : transport.heartbeatRequired
+        ? 40
+        : 0;
+  const vendorScore =
+    (transport.vendorId && transport.vendorId !== "generic" ? 18 : 0) +
+    (transport.modelId && transport.modelId !== "udp-osc" ? 10 : 0) +
+    (transport.deviceId ? 8 : 0) +
+    (transport.heartbeatRequired ? 16 : 0);
+  const reliabilityPenalty =
+    transport.failureCount * 20 + transport.consecutiveFailures * 45;
+  const throughputScore = Math.min(transport.deliveryCount, 12) * 2;
+
+  return Number(
+    (
+      healthScore(transport) +
+      kindScore(transport.kind) +
+      capabilityScore(transport) +
+      vendorScore +
+      throughputScore -
+      latencyPenalty -
+      reliabilityPenalty
+    ).toFixed(2)
+  );
+}
+
+function rankTransports(
+  source: readonly ActuationTransportState[]
+): Array<ActuationTransportState & { preferenceScore: number; preferenceRank: number }> {
+  const ranked = source
+    .map((transport) => ({
+      transport,
+      preferenceScore: computeTransportPreferenceScore(transport)
+    }))
+    .sort((left, right) => right.preferenceScore - left.preferenceScore);
+
+  return ranked.map((entry, index) => ({
+    ...entry.transport,
+    capabilityHealth: cloneCapabilityHealth(entry.transport.capabilityHealth),
+    preferenceScore: entry.preferenceScore,
+    preferenceRank: index + 1
+  }));
 }
 
 function normalizeCapabilities(values?: string[]): ActuationProtocolCapability[] {
@@ -909,6 +1010,129 @@ async function sendSerialJsonTransport(
   );
 }
 
+type Http2TransportResponse = {
+  acknowledgedAt?: string;
+  policyNote?: string;
+  deviceId?: string;
+  firmwareVersion?: string;
+  latencyMs?: number;
+  capabilities?: string[];
+  degradedCapabilities?: string[];
+};
+
+async function sendHttp2JsonTransport(
+  transport: ActuationTransportState,
+  adapter: ActuationAdapterConfig,
+  output: ActuationOutput,
+  encodedCommand: string
+): Promise<Http2TransportResponse> {
+  const endpointUrl = new URL(transport.endpoint);
+  if (endpointUrl.protocol !== "http:" && endpointUrl.protocol !== "https:") {
+    throw new Error(`HTTP/2 transport ${transport.id} must use http:// or https:// endpoint.`);
+  }
+
+  const requestPath = `${endpointUrl.pathname}${endpointUrl.search}`;
+  const authority = `${endpointUrl.protocol}//${endpointUrl.host}`;
+  const session = connectHttp2(authority);
+
+  return await new Promise<Http2TransportResponse>((resolve, reject) => {
+    let settled = false;
+    const timeout = setTimeout(() => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      session.destroy();
+      reject(new Error(`HTTP/2 transport ${transport.id} timed out.`));
+    }, HTTP2_DISPATCH_TIMEOUT_MS);
+
+    const finish = (callback: () => void) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      clearTimeout(timeout);
+      session.close();
+      callback();
+    };
+
+    session.once("error", (error) => {
+      finish(() => reject(error));
+    });
+
+    const request = session.request({
+      ":method": "POST",
+      ":path": requestPath,
+      "content-type": "application/json",
+      "x-immaculate-transport-id": transport.id,
+      "x-immaculate-protocol-id": adapter.protocolId,
+      "x-immaculate-device-id": transport.deviceId ?? ""
+    });
+
+    const chunks: Buffer[] = [];
+    let statusCode = 0;
+
+    request.on("response", (headers) => {
+      const statusHeader = headers[":status"];
+      statusCode = typeof statusHeader === "number" ? statusHeader : Number(statusHeader ?? 0);
+    });
+
+    request.on("data", (chunk) => {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    });
+
+    request.once("error", (error) => {
+      finish(() => reject(error));
+    });
+
+    request.once("end", () => {
+      const body = Buffer.concat(chunks).toString("utf8").trim();
+      if (statusCode < 200 || statusCode >= 300) {
+        finish(() =>
+          reject(
+            new Error(
+              `HTTP/2 transport ${transport.id} returned ${statusCode}${body ? `: ${body}` : ""}.`
+            )
+          )
+        );
+        return;
+      }
+
+      let parsed: Http2TransportResponse = {};
+      if (body.length > 0) {
+        try {
+          parsed = JSON.parse(body) as Http2TransportResponse;
+        } catch {
+          finish(() =>
+            reject(new Error(`HTTP/2 transport ${transport.id} returned invalid JSON.`))
+          );
+          return;
+        }
+      }
+
+      finish(() => resolve(parsed));
+    });
+
+    request.end(
+      JSON.stringify({
+        sentAt: new Date().toISOString(),
+        transportId: transport.id,
+        vendorId: transport.vendorId,
+        modelId: transport.modelId,
+        firmwareVersion: transport.firmwareVersion,
+        protocolId: adapter.protocolId,
+        deviceId: transport.deviceId,
+        channel: output.channel,
+        outputId: output.id,
+        targetNodeId: output.targetNodeId,
+        command: output.command,
+        intensity: Number(output.intensity.toFixed(4)),
+        encodedCommand: JSON.parse(encodedCommand)
+      })
+    );
+  });
+}
+
 export async function createActuationManager(rootDir: string): Promise<{
   listProtocols: () => ActuationProtocolProfile[];
   listAdapters: () => ActuationAdapterState[];
@@ -925,6 +1149,16 @@ export async function createActuationManager(rootDir: string): Promise<{
     adapterId: string;
     devicePath: string;
     baudRate?: number;
+    label?: string;
+    deviceId?: string;
+    vendorId?: string;
+    modelId?: string;
+    heartbeatIntervalMs?: number;
+    heartbeatTimeoutMs?: number;
+  }) => Promise<ActuationTransportState>;
+  registerHttp2JsonTransport: (options: {
+    adapterId: string;
+    endpoint: string;
     label?: string;
     deviceId?: string;
     vendorId?: string;
@@ -991,10 +1225,7 @@ export async function createActuationManager(rootDir: string): Promise<{
 
   function listTransports(): ActuationTransportState[] {
     refreshTransportRegistry();
-    return transports.map((transport) => ({
-      ...transport,
-      capabilityHealth: cloneCapabilityHealth(transport.capabilityHealth)
-    }));
+    return rankTransports(transports);
   }
 
   function summarizeAdapters(): ActuationAdapterState[] {
@@ -1234,6 +1465,96 @@ export async function createActuationManager(rootDir: string): Promise<{
     return listTransports().find((candidate) => candidate.id === id)!;
   }
 
+  async function registerHttp2JsonTransport(options: {
+    adapterId: string;
+    endpoint: string;
+    label?: string;
+    deviceId?: string;
+    vendorId?: string;
+    modelId?: string;
+    heartbeatIntervalMs?: number;
+    heartbeatTimeoutMs?: number;
+  }): Promise<ActuationTransportState> {
+    const adapter = adapters.find((candidate) => candidate.id === options.adapterId);
+    if (!adapter) {
+      throw new Error(`Unknown actuation adapter ${options.adapterId}.`);
+    }
+
+    const endpoint = options.endpoint.trim();
+    if (endpoint.length === 0) {
+      throw new Error("HTTP/2 transport requires an endpoint.");
+    }
+
+    let endpointUrl: URL;
+    try {
+      endpointUrl = new URL(endpoint);
+    } catch {
+      throw new Error(`Invalid HTTP/2 endpoint ${endpoint}.`);
+    }
+    if (endpointUrl.protocol !== "http:" && endpointUrl.protocol !== "https:") {
+      throw new Error("HTTP/2 transport endpoint must use http:// or https://.");
+    }
+
+    const heartbeatIntervalMs = coercePositiveInteger(
+      options.heartbeatIntervalMs,
+      DEFAULT_TRANSPORT_HEARTBEAT_INTERVAL_MS
+    );
+    const heartbeatTimeoutMs = Math.max(
+      heartbeatIntervalMs,
+      coercePositiveInteger(
+        options.heartbeatTimeoutMs,
+        DEFAULT_TRANSPORT_HEARTBEAT_TIMEOUT_MS
+      )
+    );
+    const id = `atx-${hashValue(`${adapter.id}:http2-json:${endpoint}`)}`;
+    const existing = transports.find((candidate) => candidate.id === id);
+    const transport: ActuationTransportState = {
+      id,
+      kind: "http2-json",
+      label: options.label?.trim() || `${adapter.label} HTTP/2 JSON`,
+      adapterId: adapter.id,
+      protocolId: adapter.protocolId,
+      deviceId: options.deviceId?.trim() || existing?.deviceId,
+      endpoint,
+      endpointPath: `${endpointUrl.pathname}${endpointUrl.search}`,
+      vendorId: options.vendorId?.trim() || existing?.vendorId || "vendor-http2",
+      modelId: options.modelId?.trim() || existing?.modelId || adapter.deviceClass,
+      firmwareVersion: existing?.firmwareVersion,
+      enabled: true,
+      deliveryCount: existing?.deliveryCount ?? 0,
+      lastDeliveredAt: existing?.lastDeliveredAt,
+      heartbeatRequired: true,
+      heartbeatIntervalMs,
+      heartbeatTimeoutMs,
+      lastHeartbeatAt: existing?.lastHeartbeatAt,
+      lastHeartbeatLatencyMs: existing?.lastHeartbeatLatencyMs,
+      lastHealthCheckAt: existing?.lastHealthCheckAt,
+      health: existing?.health ?? "degraded",
+      capabilityHealth:
+        existing?.capabilityHealth
+          ? cloneCapabilityHealth(existing.capabilityHealth)
+          : buildCapabilityHealth(adapter.protocolId, {
+              defaultStatus: "missing",
+              missingNote: "awaiting_heartbeat"
+            }),
+      failureCount: existing?.failureCount ?? 0,
+      consecutiveFailures: existing?.consecutiveFailures ?? 0,
+      isolationActive: existing?.isolationActive ?? false,
+      isolationReason: existing?.isolationReason,
+      isolatedAt: existing?.isolatedAt,
+      lastError: existing?.lastError,
+      lastRecoveredAt: existing?.lastRecoveredAt
+    };
+
+    const filtered = transports.filter((candidate) => candidate.id !== id);
+    filtered.unshift(transport);
+    transports.length = 0;
+    transports.push(...filtered);
+    refreshTransportRegistry();
+    await persistTransportRegistry();
+    return listTransports().find((candidate) => candidate.id === id)!;
+  }
+
   async function recordTransportHeartbeat(options: {
     transportId: string;
     latencyMs?: number;
@@ -1266,6 +1587,36 @@ export async function createActuationManager(rootDir: string): Promise<{
     refreshTransportRegistry();
     await persistTransportRegistry();
     return listTransports().find((candidate) => candidate.id === options.transportId)!;
+  }
+
+  async function applyTransportResponseTelemetry(
+    transport: ActuationTransportState,
+    response: Http2TransportResponse
+  ): Promise<void> {
+    const checkedAt = response.acknowledgedAt?.trim() || new Date().toISOString();
+    transport.lastHeartbeatAt = checkedAt;
+    if (typeof response.latencyMs === "number" && Number.isFinite(response.latencyMs)) {
+      transport.lastHeartbeatLatencyMs = response.latencyMs;
+    }
+    if (response.deviceId?.trim()) {
+      transport.deviceId = response.deviceId.trim();
+    }
+    if (response.firmwareVersion?.trim()) {
+      transport.firmwareVersion = response.firmwareVersion.trim();
+    }
+    if (Array.isArray(response.capabilities) || Array.isArray(response.degradedCapabilities)) {
+      transport.capabilityHealth = buildCapabilityHealth(transport.protocolId, {
+        available: normalizeCapabilities(response.capabilities),
+        degraded: normalizeCapabilities(response.degradedCapabilities),
+        defaultStatus: "missing",
+        checkedAt,
+        missingNote: "capability_not_reported"
+      });
+    }
+    transport.consecutiveFailures = 0;
+    transport.lastError = undefined;
+    refreshTransportRegistry();
+    await persistTransportRegistry();
   }
 
   async function resetTransportFault(transportId: string): Promise<ActuationTransportState> {
@@ -1337,7 +1688,9 @@ export async function createActuationManager(rootDir: string): Promise<{
     blockedReason?: string;
   } {
     refreshTransportRegistry();
-    const candidates = transports.filter((candidate) => candidate.adapterId === adapterId);
+    const candidates = rankTransports(
+      transports.filter((candidate) => candidate.adapterId === adapterId)
+    );
     let blockedReason: string | undefined;
     for (const candidate of candidates) {
       const reason = getTransportBlockReason(candidate);
@@ -1480,7 +1833,7 @@ export async function createActuationManager(rootDir: string): Promise<{
       adapterId: adapter.id,
       adapterKind: adapter.kind,
       protocolId: adapter.protocolId,
-      deviceId: bridge?.ready ? bridge.deviceId : undefined,
+      deviceId: bridge?.ready ? bridge.deviceId : transport?.deviceId,
       channel: adapter.channel,
       sessionId: normalizedOutput.sessionId,
       status: status === "dispatched" ? "delivered" : "suppressed",
@@ -1553,6 +1906,43 @@ export async function createActuationManager(rootDir: string): Promise<{
         delivery = {
           ...delivery,
           policyNote: appendPolicyNote(delivery.policyNote, "serial_json_failure")
+        };
+      }
+    } else if (status === "dispatched" && transport?.kind === "http2-json") {
+      try {
+        const response = await sendHttp2JsonTransport(
+          transport,
+          adapter,
+          normalizedOutput,
+          encodedCommand
+        );
+        await applyTransportResponseTelemetry(transport, response);
+        recordTransportSuccess(transport);
+        if (response.deviceId?.trim()) {
+          normalizedOutput.deviceId = response.deviceId.trim();
+        }
+        const deliveredAt = response.acknowledgedAt?.trim() || new Date().toISOString();
+        delivery = {
+          ...delivery,
+          transport: "http2-json",
+          deliveredAt,
+          acknowledgedAt: deliveredAt,
+          protocolId: transport.protocolId,
+          deviceId: normalizedOutput.deviceId ?? transport.deviceId,
+          policyNote: appendPolicyNote(
+            appendPolicyNote(delivery.policyNote, "http2_json_transport"),
+            response.policyNote?.trim() || "http2_device_ack"
+          )
+        };
+        delivered = true;
+      } catch (error) {
+        recordTransportFailure(
+          transport,
+          error instanceof Error ? error.message : "http2_json_failure"
+        );
+        delivery = {
+          ...delivery,
+          policyNote: appendPolicyNote(delivery.policyNote, "http2_json_failure")
         };
       }
     }
@@ -1739,6 +2129,7 @@ export async function createActuationManager(rootDir: string): Promise<{
     listDeliveries,
     registerUdpOscTransport,
     registerSerialJsonTransport,
+    registerHttp2JsonTransport,
     recordTransportHeartbeat,
     resetTransportFault,
     dispatch,

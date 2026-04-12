@@ -1,5 +1,6 @@
 import path from "node:path";
 import { createSocket } from "node:dgram";
+import { createServer as createHttp2Server, type ServerHttp2Stream } from "node:http2";
 import { fileURLToPath } from "node:url";
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import {
@@ -148,13 +149,15 @@ function createProgress(): BenchmarkProgress {
       "Governed websocket actuation device links with acked bridge delivery and file fallback",
       "Concrete UDP/OSC actuation transport registration and delivery over protocol-aware visual lanes",
       "Supervised serial vendor transport with heartbeat health, capability health, and per-device fault isolation",
+      "HTTP/2 direct device transport with typed RPC-style delivery and response telemetry",
+      "Health- and latency-aware transport preference across concrete actuation lanes",
       "W&B benchmark publication backend for external experiment tracking",
       "Keyboard-first TUI and Next.js overwatch dashboard with live connectome telemetry",
       "Published internal benchmark suite for repeatable functional testing"
     ],
     remaining: [
       "Direct device adapters beyond the first live socket neurophysiology ingress path",
-      "Additional vendor-specific transports beyond the first supervised serial lane, including MIDI and gRPC-class adapters",
+      "Additional vendor-specific transports beyond serial and HTTP/2 direct lanes, including MIDI and richer gRPC-class adapters",
       "Additional multi-agent and tool backends beyond the first local Ollama cognition layer",
       "Domain benchmark packs against published BCI and neurodata workloads",
       "Multi-node deployment, locality routing, and persisted historical benchmark trending"
@@ -990,6 +993,110 @@ export async function runPublishedBenchmark(
     command?: string;
     firmwareVersion?: string;
   };
+  const http2Dispatches: Array<{
+    transportId?: string;
+    protocolId?: string;
+    deviceId?: string;
+    command?: string;
+    intensity?: number;
+    encodedCommand?: {
+      frame?: {
+        waveform?: string;
+      };
+    };
+  }> = [];
+  const http2Server = createHttp2Server();
+  http2Server.unref();
+  http2Server.on("stream", (stream: ServerHttp2Stream, headers) => {
+    if (headers[":method"] !== "POST") {
+      stream.respond({ ":status": 405 });
+      stream.end();
+      return;
+    }
+
+    const chunks: Buffer[] = [];
+    stream.on("data", (chunk) => {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    });
+    stream.on("end", () => {
+      const body = Buffer.concat(chunks).toString("utf8");
+      const parsed = JSON.parse(body || "{}") as {
+        transportId?: string;
+        protocolId?: string;
+        deviceId?: string;
+        command?: string;
+        intensity?: number;
+        encodedCommand?: {
+          frame?: {
+            waveform?: string;
+          };
+        };
+      };
+      http2Dispatches.push(parsed);
+      stream.respond({
+        ":status": 200,
+        "content-type": "application/json"
+      });
+      stream.end(
+        JSON.stringify({
+          acknowledgedAt: new Date().toISOString(),
+          policyNote: "http2_device_ack",
+          deviceId: "bench-haptic-http2-01",
+          firmwareVersion: "fw-http2-1.0.0",
+          latencyMs: 1.7,
+          capabilities: serialCapabilities
+        })
+      );
+    });
+  });
+  await new Promise<void>((resolve, reject) => {
+    http2Server.listen(0, "127.0.0.1", () => resolve());
+    http2Server.once("error", reject);
+  });
+  const http2Address = http2Server.address();
+  if (!http2Address || typeof http2Address === "string") {
+    throw new Error("Unexpected binding for HTTP/2 transport benchmark.");
+  }
+  const http2Transport = await actuationManager.registerHttp2JsonTransport({
+    adapterId: "haptic-rig",
+    endpoint: `http://127.0.0.1:${http2Address.port}/immaculate/device/dispatch`,
+    label: "Benchmark Haptic HTTP/2",
+    deviceId: "bench-haptic-http2-01",
+    vendorId: "immaculate-labs",
+    modelId: "haptic-rpc-s2",
+    heartbeatIntervalMs: 20,
+    heartbeatTimeoutMs: 60
+  });
+  const http2Heartbeat = await actuationManager.recordTransportHeartbeat({
+    transportId: http2Transport.id,
+    latencyMs: 1.9,
+    capabilities: serialCapabilities,
+    firmwareVersion: "fw-http2-0.9.0"
+  });
+  const preferredHttp2Actuation: ActuationOutput = {
+    id: `act-${suiteId}-http2-preferred`,
+    sessionId: nwbFixture.summary.id,
+    source: "benchmark",
+    sourceExecutionId: syntheticExecution.id,
+    sourceFrameId: liveIngressResult.frame.id,
+    targetNodeId: "actuator-grid",
+    channel: "haptic",
+    command: "benchmark:http2-preferred",
+    intensity: 0.43,
+    status: "dispatched",
+    summary:
+      "Dispatch benchmark actuation through the preferred HTTP/2 direct transport.",
+    generatedAt: new Date().toISOString(),
+    dispatchedAt: new Date().toISOString()
+  };
+  const preferredHttp2DispatchResult = await actuationManager.dispatch(
+    preferredHttp2Actuation,
+    {
+      adapterId: "haptic-rig"
+    }
+  );
+  engine.dispatchActuationOutput(preferredHttp2DispatchResult.output);
+  http2Server.close();
   await persistence.persist(engine.getDurableState());
   const governanceControlAllow = evaluateGovernance({
     action: "operator-control",
@@ -1563,6 +1670,87 @@ export async function runPublishedBenchmark(
       "device supervision should allow controlled recovery after an isolated fault instead of requiring transport re-registration"
     ),
     createAssertion(
+      "actuation-http2-transport-registered",
+      "HTTP/2 direct transport registration exposes a supervised RPC-class device endpoint",
+      actuationTransports.some(
+        (transport) =>
+          transport.id === http2Transport.id &&
+          transport.kind === "http2-json" &&
+          transport.vendorId === "immaculate-labs" &&
+          transport.modelId === "haptic-rpc-s2" &&
+          transport.heartbeatRequired &&
+          transport.heartbeatIntervalMs === 20 &&
+          transport.heartbeatTimeoutMs === 60
+      ),
+      "registered http2-json transport with vendor/model and heartbeat policy",
+      actuationTransports
+        .map(
+          (transport) =>
+            `${transport.id}:${transport.kind}:${transport.vendorId ?? "unknown"}:${transport.health}`
+        )
+        .join(", "),
+      "the next direct device lane should be a typed RPC-class endpoint, not just another file or datagram bridge"
+    ),
+    createAssertion(
+      "actuation-http2-heartbeat",
+      "HTTP/2 direct transport heartbeat establishes healthy low-latency readiness",
+      http2Heartbeat.health === "healthy" &&
+        http2Heartbeat.lastHeartbeatLatencyMs === 1.9 &&
+        http2Heartbeat.firmwareVersion === "fw-http2-0.9.0" &&
+        http2Heartbeat.capabilityHealth.every((entry) => entry.status === "available"),
+      "healthy heartbeat with low latency and full capability coverage",
+      `${http2Heartbeat.health} / ${http2Heartbeat.lastHeartbeatLatencyMs?.toFixed(1) ?? "--"} ms / ${http2Heartbeat.firmwareVersion ?? "missing"}`,
+      "RPC-class direct lanes should prove liveness and capability coverage before they are eligible to outrank other transports"
+    ),
+    createAssertion(
+      "actuation-http2-preferred-delivery",
+      "Transport selection prefers the healthiest lowest-latency direct lane for haptic delivery",
+      preferredHttp2DispatchResult.delivery.transport === "http2-json" &&
+        preferredHttp2DispatchResult.delivery.protocolId === "immaculate.haptic.rig.v1" &&
+        preferredHttp2DispatchResult.delivery.deviceId === "bench-haptic-http2-01" &&
+        preferredHttp2DispatchResult.delivery.policyNote.includes("http2_json_transport") &&
+        preferredHttp2DispatchResult.delivery.policyNote.includes("http2_device_ack") &&
+        preferredHttp2DispatchResult.output.deviceId === "bench-haptic-http2-01" &&
+        http2Dispatches.length === 1 &&
+        http2Dispatches[0]?.transportId === http2Transport.id &&
+        http2Dispatches[0]?.protocolId === "immaculate.haptic.rig.v1" &&
+        http2Dispatches[0]?.command === "benchmark:http2-preferred" &&
+        http2Dispatches[0]?.encodedCommand?.frame?.waveform === "pulse-train",
+      "http2-json delivery selected over other healthy haptic transports",
+      `${preferredHttp2DispatchResult.delivery.transport} / ${http2Dispatches[0]?.command ?? "missing"} / ${preferredHttp2DispatchResult.delivery.policyNote}`,
+      "direct transport routing should use health and latency as a real preference signal instead of registry insertion order"
+    ),
+    createAssertion(
+      "actuation-transport-ranking",
+      "Transport registry surfaces ranked preference so operators can inspect why a lane wins",
+      actuationTransports
+        .filter((transport) => transport.adapterId === "haptic-rig")
+        .some(
+          (transport) =>
+            transport.id === http2Transport.id &&
+            transport.preferenceRank === 1 &&
+            typeof transport.preferenceScore === "number"
+        ) &&
+        actuationTransports
+          .filter((transport) => transport.adapterId === "haptic-rig")
+          .some(
+            (transport) =>
+              transport.id === serialTransport.id &&
+              typeof transport.preferenceRank === "number" &&
+              typeof transport.preferenceScore === "number" &&
+              (transport.preferenceRank ?? 99) > 1
+          ),
+      "ranked haptic transports with HTTP/2 preference at rank 1",
+      actuationTransports
+        .filter((transport) => transport.adapterId === "haptic-rig")
+        .map(
+          (transport) =>
+            `${transport.kind}:${transport.preferenceRank ?? 0}:${transport.preferenceScore ?? 0}`
+        )
+        .join(", "),
+      "operators should be able to inspect why orchestration selected one concrete lane over another"
+    ),
+    createAssertion(
       "actuation-device-clamp",
       "Device negotiation can further clamp actuation intensity below the adapter ceiling",
       bridgeDispatchResult.output.intensity === 0.5 &&
@@ -1774,7 +1962,7 @@ export async function runPublishedBenchmark(
     packLabel: pack.label,
     profile: engine.getSnapshot().profile,
     summary:
-      "This publication benchmarks the real orchestration substrate that exists today: phase execution, verify gating, persistence, checkpoint recovery, integrity validation, replayed NWB windows, live socket neuro ingress, protocol-aware actuation, and the first supervised serial vendor transport with heartbeat-driven fault isolation. It does not yet claim external neurodata or BCI decoding performance.",
+      "This publication benchmarks the real orchestration substrate that exists today: phase execution, verify gating, persistence, checkpoint recovery, integrity validation, replayed NWB windows, live socket neuro ingress, protocol-aware actuation, supervised serial and HTTP/2 direct device transports, and transport selection that reacts to health and latency. It does not yet claim external neurodata or BCI decoding performance.",
     tickIntervalMs,
     totalTicks,
     totalDurationMs: totalTicks * tickIntervalMs,
