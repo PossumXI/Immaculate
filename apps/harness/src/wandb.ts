@@ -61,7 +61,7 @@ const DEFAULT_MODE = (
 ) as WandbMode;
 const STATUS_CACHE_TTL_MS = 15000;
 const DEFAULT_PUBLISH_TIMEOUT_MS = Number(
-  process.env.IMMACULATE_WANDB_PUBLISH_TIMEOUT_MS ?? 420000
+  process.env.IMMACULATE_WANDB_PUBLISH_TIMEOUT_MS ?? 900000
 );
 let cachedStatus: { value: WandbStatus; cachedAt: number } | null = null;
 const STATUS_PROBE_SCRIPT = `
@@ -73,16 +73,6 @@ payload = {
     "viewer": None,
     "default_entity": None,
 }
-
-if payload["installed"]:
-    try:
-        import wandb
-
-        api = wandb.Api()
-        payload["viewer"] = getattr(getattr(api, "viewer", None), "username", None)
-        payload["default_entity"] = getattr(api, "default_entity", None)
-    except Exception:
-        pass
 
 print(json.dumps(payload))
 `.trim();

@@ -1,5 +1,6 @@
 import { type BenchmarkPackId } from "@immaculate/core";
 import { runPublishedBenchmark } from "./benchmark.js";
+import { listBenchmarkPacks } from "./benchmark-packs.js";
 import { publishBenchmarkToWandb } from "./wandb.js";
 
 type BenchmarkWorkerFlags = {
@@ -8,6 +9,7 @@ type BenchmarkWorkerFlags = {
 };
 
 function parseFlags(argv: string[]): BenchmarkWorkerFlags {
+  const knownPackIds = new Set(listBenchmarkPacks().map((pack) => pack.id));
   const flags: BenchmarkWorkerFlags = {
     publishWandb: false
   };
@@ -16,12 +18,8 @@ function parseFlags(argv: string[]): BenchmarkWorkerFlags {
     const token = argv[index];
     if (token === "--packId") {
       const value = argv[index + 1];
-      if (
-        value === "substrate-readiness" ||
-        value === "durability-recovery" ||
-        value === "latency-soak"
-      ) {
-        flags.packId = value;
+      if (value && knownPackIds.has(value as BenchmarkPackId)) {
+        flags.packId = value as BenchmarkPackId;
         index += 1;
       }
       continue;

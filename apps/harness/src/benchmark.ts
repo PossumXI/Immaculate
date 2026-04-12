@@ -4,6 +4,7 @@ import { execFileSync } from "node:child_process";
 import { createSocket } from "node:dgram";
 import { createServer as createHttp2Server, type ServerHttp2Stream } from "node:http2";
 import { performance } from "node:perf_hooks";
+import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import {
@@ -220,6 +221,24 @@ function average(values: number[]): number {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
+async function paceBenchmarkTick(
+  enabled: boolean,
+  startedAt: number,
+  tick: number,
+  tickIntervalMs: number
+): Promise<void> {
+  if (!enabled) {
+    return;
+  }
+
+  const targetElapsedMs = tick * tickIntervalMs;
+  const elapsedMs = performance.now() - startedAt;
+  const waitMs = Math.max(0, targetElapsedMs - elapsedMs);
+  if (waitMs > 0) {
+    await delay(waitMs);
+  }
+}
+
 function createSeries(id: string, label: string, unit: string, values: number[]): BenchmarkSeries {
   const sorted = [...values].sort((left, right) => left - right);
 
@@ -355,12 +374,23 @@ async function safeReadText(filePath: string): Promise<string | null> {
 function createProgress(options: {
   runKind: BenchmarkRunKind;
   hardwareContext: BenchmarkHardwareContext;
+  realTimePacing?: boolean;
+  liveFramesPerTick?: number;
 }): BenchmarkProgress {
+  const benchmarkShapeNotes = [
+    `Captured benchmark hardware context: ${formatBenchmarkHardwareContext(options.hardwareContext)}`,
+    `Classified this run as ${options.runKind} for honest publication`,
+    ...(options.realTimePacing
+      ? ["Wall-clock pacing is active for this pack, so planned duration must match observed runtime."]
+      : ["This pack is an unpaced gate/smoke lane and does not claim full wall-clock soak coverage."]),
+    ...(options.liveFramesPerTick && options.liveFramesPerTick > 0
+      ? [`High-throughput live ingress pressure is active at ${options.liveFramesPerTick} extra frames per tick.`]
+      : [])
+  ];
   return {
     stage: `${options.runKind} benchmark on ${options.hardwareContext.platform}-${options.hardwareContext.arch} (${options.hardwareContext.cpuCount} cores)`,
     completed: [
-      `Captured benchmark hardware context: ${formatBenchmarkHardwareContext(options.hardwareContext)}`,
-      `Classified this run as ${options.runKind} for honest publication`,
+      ...benchmarkShapeNotes,
       "Canonical phase/pass engine across reflex, cognitive, and offline planes",
       "Realtime harness with websocket streaming and operator controls",
       "Durable event log, materialized history, and checkpoint persistence",
@@ -696,16 +726,22 @@ ${remaining}
 `;
 }
 
+function isKnownBenchmarkPackId(value: unknown): value is BenchmarkPackId {
+  if (typeof value !== "string") {
+    return false;
+  }
+  try {
+    return getBenchmarkPack(value as BenchmarkPackId).id === value;
+  } catch {
+    return false;
+  }
+}
+
 function normalizeBenchmarkReportInput(input: unknown): BenchmarkReport {
   const candidate = input as Partial<BenchmarkReport> | undefined;
   const normalized = {
     ...candidate,
-    packId:
-      candidate?.packId === "substrate-readiness" ||
-      candidate?.packId === "durability-recovery" ||
-      candidate?.packId === "latency-soak"
-        ? candidate.packId
-        : LEGACY_DEFAULT_PACK_ID,
+    packId: isKnownBenchmarkPackId(candidate?.packId) ? candidate.packId : LEGACY_DEFAULT_PACK_ID,
     packLabel:
       typeof candidate?.packLabel === "string" && candidate.packLabel.length > 0
         ? candidate.packLabel
@@ -725,12 +761,7 @@ function normalizeBenchmarkIndexInput(input: unknown): BenchmarkIndex {
       const indexEntry = entry as Partial<BenchmarkIndexEntry>;
       return {
         ...indexEntry,
-        packId:
-          indexEntry.packId === "substrate-readiness" ||
-          indexEntry.packId === "durability-recovery" ||
-          indexEntry.packId === "latency-soak"
-            ? indexEntry.packId
-            : LEGACY_DEFAULT_PACK_ID,
+        packId: isKnownBenchmarkPackId(indexEntry.packId) ? indexEntry.packId : LEGACY_DEFAULT_PACK_ID,
         packLabel:
           typeof indexEntry.packLabel === "string" && indexEntry.packLabel.length > 0
             ? indexEntry.packLabel
@@ -1013,6 +1044,10 @@ export async function runPublishedBenchmark(
   const suiteId = `immaculate-benchmark-${generatedAt.replace(/[:.]/g, "-")}`;
   const tickIntervalMs = options.tickIntervalMs ?? pack.tickIntervalMs ?? DEFAULT_TICK_INTERVAL_MS;
   const maxTicks = options.maxTicks ?? pack.maxTicks ?? DEFAULT_MAX_TICKS;
+  const realTimePacing = pack.realTimePacing;
+  const completionStrategy = pack.completionStrategy;
+  const persistEveryTicks = Math.max(1, pack.persistEveryTicks);
+  const liveFramesPerTick = Math.max(0, pack.liveFramesPerTick);
   const plannedDurationMs = maxTicks * tickIntervalMs;
   const runKind = classifyBenchmarkRunKind(plannedDurationMs);
   const hardwareContext = captureBenchmarkHardwareContext();
@@ -1119,6 +1154,35 @@ export async function runPublishedBenchmark(
   syncJitterSamples.push(liveIngressResult.frame.syncJitterMs);
   engine.ingestNeuroFrame(liveIngressResult.frame);
   engine.upsertNeuroReplay(liveIngressResult.ingress);
+  const throughputLoadSamples =
+    liveFramesPerTick > 0
+      ? createTier2BandDominantSamples({
+          frequencyHz: 18,
+          sampleCount: 128,
+          channelCount: 8,
+          rateHz: nwbFixture.summary.primaryRateHz ?? 1000,
+          amplitude: 0.32,
+          harmonicScale: 0.06,
+          noiseScale: 0.006
+        })
+      : [];
+  let throughputIngressState: NeuroReplayState | null =
+    liveFramesPerTick > 0
+      ? {
+          ...liveIngressResult.ingress,
+          id: `live-benchmark-throughput-${suiteId}`,
+          name: "Benchmark throughput ingress",
+          completedWindows: 0,
+          totalWindows: 0,
+          decodeReadyRatio: 0,
+          startedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          lastWindowId: undefined
+        }
+      : null;
+  if (throughputIngressState) {
+    engine.upsertNeuroReplay(throughputIngressState);
+  }
   const benchmarkLayer: IntelligenceLayer = {
     id: "benchmark-layer",
     name: "Benchmark Reasoner Layer",
@@ -2430,13 +2494,134 @@ export async function runPublishedBenchmark(
   });
   engine.recordExecutionSchedule(spectralArtifactScheduleDecision);
 
+  let verifyBarrierTick: number | null = null;
+  let cycleCompletionTick: number | null = null;
+
+  for (let tick = 1; tick <= maxTicks; tick += 1) {
+    engine.tick();
+    if (liveFramesPerTick > 0 && throughputIngressState) {
+      for (let frameIndex = 0; frameIndex < liveFramesPerTick; frameIndex += 1) {
+        const throughputFrameResult = buildLiveNeuroFrame(
+          {
+            sourceId: throughputIngressState.id,
+            label: throughputIngressState.name,
+            sessionId: nwbFixture.summary.id,
+            kind: "electrical-series",
+            rateHz: nwbFixture.summary.primaryRateHz ?? 1000,
+            syncJitterMs: Number((0.2 + (frameIndex % 3) * 0.05).toFixed(3)),
+            channels: 8,
+            timestamp: new Date().toISOString(),
+            samples: throughputLoadSamples
+          },
+          throughputIngressState
+        );
+        throughputIngressState = throughputFrameResult.ingress;
+        decodeConfidenceSamples.push(throughputFrameResult.frame.decodeConfidence);
+        syncJitterSamples.push(throughputFrameResult.frame.syncJitterMs);
+        engine.ingestNeuroFrame(throughputFrameResult.frame);
+        engine.upsertNeuroReplay(throughputFrameResult.ingress);
+      }
+    }
+    const snapshot = engine.getSnapshot() as PhaseSnapshot;
+    reflexSamples.push(snapshot.metrics.reflexLatencyMs);
+    cognitiveSamples.push(snapshot.metrics.cognitiveLatencyMs);
+    throughputSamples.push(snapshot.metrics.throughput);
+    coherenceSamples.push(snapshot.metrics.coherence);
+    predictionErrorSamples.push(snapshot.metrics.predictionError);
+    freeEnergyProxySamples.push(snapshot.metrics.freeEnergyProxy);
+    if (tick % persistEveryTicks === 0 || tick === maxTicks) {
+      await persistence.persist(engine.getDurableState());
+    }
+
+    const cyclePasses = snapshot.passes.filter((pass) => pass.cycle === snapshot.cycle);
+    const verifyPass = cyclePasses.find((pass) => pass.phase === "verify");
+    const feedbackPass = cyclePasses.find((pass) => pass.phase === "feedback");
+    if (
+      verifyBarrierTick === null &&
+      verifyPass?.state === "completed" &&
+      feedbackPass?.state === "queued"
+    ) {
+      verifyBarrierTick = tick;
+    }
+
+    if (cycleCompletionTick === null && snapshot.cycle > 1) {
+      cycleCompletionTick = tick;
+    }
+
+    if (
+      completionStrategy === "checkpoint-ready" &&
+      verifyBarrierTick !== null &&
+      cycleCompletionTick !== null &&
+      persistence.getStatus().checkpointCount > 0
+    ) {
+      break;
+    }
+
+    await paceBenchmarkTick(realTimePacing, benchmarkStartedAt, tick, tickIntervalMs);
+  }
+
+  await persistence.flush();
+  const cleanIntegrity = inspectDurableState(engine.getDurableState());
+  const cleanStatus = persistence.getStatus();
+
+  await safeUnlink(path.join(runtimeDir, "snapshot.json"));
+  const recoveryPersistence = createPersistence(runtimeDir);
+  const recoveredState = await recoveryPersistence.load();
+  const recoveryStatus = recoveryPersistence.getStatus();
+  const recoveredIntegrity = recoveredState
+    ? inspectDurableState(recoveredState)
+    : cleanIntegrity;
+  const actualWallClockDurationMs = Number((performance.now() - benchmarkStartedAt).toFixed(2));
+  const measuredEventCount = engine.getDurableState().serial;
+  const measuredEventThroughput =
+    actualWallClockDurationMs > 0
+      ? Number((measuredEventCount / (actualWallClockDurationMs / 1000)).toFixed(2))
+      : 0;
+  const wallClockTruthRatio =
+    plannedDurationMs > 0
+      ? Number((actualWallClockDurationMs / plannedDurationMs).toFixed(4))
+      : 0;
+  const persistedEventLog = (((await safeReadText(path.join(runtimeDir, "events.ndjson"))) ?? "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .map((line) => JSON.parse(line) as EventEnvelope));
   const finalSnapshot = engine.getSnapshot() as PhaseSnapshot;
   const eventLog = engine.getEvents() as EventEnvelope[];
   const executionArbitrations = finalSnapshot.executionArbitrations;
   const executionSchedules = finalSnapshot.executionSchedules;
   const routingDecisions = finalSnapshot.routingDecisions;
-  const routingEvents = eventLog
-    .filter((event) => event.schema.name === "immaculate.routing.decision");
+  const routingEvents = eventLog.filter((event) => event.schema.name === "immaculate.routing.decision");
+  const persistedRoutingEvents = persistedEventLog.filter(
+    (event) => event.schema.name === "immaculate.routing.decision"
+  );
+  const persistedReplayFrameCount = persistedEventLog.filter((event) => {
+    if (event.schema.name !== "immaculate.neuro-frame.ingested") {
+      return false;
+    }
+    return (event.payload as { frame?: NeuroFrameWindow }).frame?.replayId === replayId;
+  }).length;
+  const persistedReplayCompleted = persistedEventLog.some((event) => {
+    if (event.schema.name !== "immaculate.neuro-replay.upserted") {
+      return false;
+    }
+    const replay = (event.payload as { replay?: NeuroReplayState }).replay;
+    return replay?.id === replayId && replay.status === "completed";
+  });
+  const persistedInitialLiveSocketFrameCount = persistedEventLog.filter((event) => {
+    if (event.schema.name !== "immaculate.neuro-frame.ingested") {
+      return false;
+    }
+    const frame = (event.payload as { frame?: NeuroFrameWindow }).frame;
+    return frame?.replayId === liveIngressResult.ingress.id && frame.source === "live-socket";
+  }).length;
+  const persistedInitialLiveSocketReplaySeen = persistedEventLog.some((event) => {
+    if (event.schema.name !== "immaculate.neuro-replay.upserted") {
+      return false;
+    }
+    const replay = (event.payload as { replay?: NeuroReplayState }).replay;
+    return replay?.id === liveIngressResult.ingress.id && replay.source === "live-socket";
+  });
   const redactedSnapshot = redactPhaseSnapshot(finalSnapshot);
   const auditScopedSnapshot = projectPhaseSnapshot(finalSnapshot, "system:audit");
   const benchmarkScopedSnapshot = projectPhaseSnapshot(finalSnapshot, "system:benchmark");
@@ -2493,61 +2678,7 @@ export async function runPublishedBenchmark(
     actuationDispatchResult.output,
     "system:benchmark"
   );
-  let verifyBarrierTick: number | null = null;
-  let cycleCompletionTick: number | null = null;
-
-  for (let tick = 1; tick <= maxTicks; tick += 1) {
-    engine.tick();
-    const snapshot = engine.getSnapshot() as PhaseSnapshot;
-    reflexSamples.push(snapshot.metrics.reflexLatencyMs);
-    cognitiveSamples.push(snapshot.metrics.cognitiveLatencyMs);
-    throughputSamples.push(snapshot.metrics.throughput);
-    coherenceSamples.push(snapshot.metrics.coherence);
-    predictionErrorSamples.push(snapshot.metrics.predictionError);
-    freeEnergyProxySamples.push(snapshot.metrics.freeEnergyProxy);
-    await persistence.persist(engine.getDurableState());
-
-    const cyclePasses = snapshot.passes.filter((pass) => pass.cycle === snapshot.cycle);
-    const verifyPass = cyclePasses.find((pass) => pass.phase === "verify");
-    const feedbackPass = cyclePasses.find((pass) => pass.phase === "feedback");
-    if (
-      verifyBarrierTick === null &&
-      verifyPass?.state === "completed" &&
-      feedbackPass?.state === "queued"
-    ) {
-      verifyBarrierTick = tick;
-    }
-
-    if (cycleCompletionTick === null && snapshot.cycle > 1) {
-      cycleCompletionTick = tick;
-    }
-
-    if (
-      verifyBarrierTick !== null &&
-      cycleCompletionTick !== null &&
-      persistence.getStatus().checkpointCount > 0
-    ) {
-      break;
-    }
-  }
-
-  await persistence.flush();
-  const cleanIntegrity = inspectDurableState(engine.getDurableState());
-  const cleanStatus = persistence.getStatus();
-
-  await safeUnlink(path.join(runtimeDir, "snapshot.json"));
-  const recoveryPersistence = createPersistence(runtimeDir);
-  const recoveredState = await recoveryPersistence.load();
-  const recoveryStatus = recoveryPersistence.getStatus();
-  const recoveredIntegrity = recoveredState
-    ? inspectDurableState(recoveredState)
-    : cleanIntegrity;
-  const actualWallClockDurationMs = Number((performance.now() - benchmarkStartedAt).toFixed(2));
-  const measuredEventCount = (engine.getEvents() as EventEnvelope[]).length;
-  const measuredEventThroughput =
-    actualWallClockDurationMs > 0
-      ? Number((measuredEventCount / (actualWallClockDurationMs / 1000)).toFixed(2))
-      : 0;
+  const longRunCompactionActive = runKind === "soak" && cleanStatus.compacted > 0;
 
   const reflexSeries = createSeries(
     "reflex_latency_ms",
@@ -2572,6 +2703,12 @@ export async function runPublishedBenchmark(
     "Measured event throughput",
     "events/s",
     [measuredEventThroughput]
+  );
+  const wallClockTruthSeries = createSeries(
+    "wall_clock_truth_ratio",
+    "Wall-clock truth ratio",
+    "ratio",
+    [wallClockTruthRatio]
   );
   const coherenceSeries = createSeries(
     "coherence_ratio",
@@ -2759,32 +2896,46 @@ export async function runPublishedBenchmark(
     createAssertion(
       "nwb-replay-ingest",
       "Live NWB replay ingests frame windows into synchronize/decode state",
-      finalSnapshot.neuroFrames.some((frame) => frame.replayId === replayId) &&
-        finalSnapshot.neuroReplays.some(
-          (replay) => replay.id === replayId && replay.status === "completed"
-        ),
-      "replay frames present and replay marked completed",
-      `${finalSnapshot.neuroFrames.filter((frame) => frame.replayId === replayId).length} frames / ${
-        finalSnapshot.neuroReplays.find((replay) => replay.id === replayId)?.status ?? "missing"
-      }`,
-      "replayed sample windows should persist in the live snapshot and replay ledger"
+      (longRunCompactionActive
+        ? finalSnapshot.neuroReplays.some(
+            (replay) => replay.source === "nwb-replay" && replay.status === "completed"
+          )
+        : persistedReplayFrameCount > 0 &&
+          persistedReplayCompleted &&
+          finalSnapshot.neuroReplays.some(
+            (replay) => replay.source === "nwb-replay" && replay.status === "completed"
+          )),
+      longRunCompactionActive
+        ? "completed replay retained in bounded soak ledger"
+        : "persisted replay frames and a completed replay ledger entry",
+      `${persistedReplayFrameCount} persisted frames / ${
+        finalSnapshot.neuroReplays.find((replay) => replay.id === replayId)?.status ?? "evicted"
+      } live replay state / ${finalSnapshot.neuroReplays.filter((replay) => replay.source === "nwb-replay" && replay.status === "completed").length} completed replays in bounded snapshot`,
+      longRunCompactionActive
+        ? "hour-class soak runs compact high-volume ingress lineage, so the soak check proves replay completion from the retained bounded ledger rather than the first persisted frame window"
+        : "long paced runs can evict early replay windows from bounded live caches, so this check uses durable event lineage plus the bounded replay ledger"
     ),
     createAssertion(
       "live-socket-ingest",
       "Live socket ingress injects a real frame into synchronize/decode",
-      finalSnapshot.neuroFrames.some(
-        (frame) =>
-          frame.replayId === liveIngressResult.ingress.id && frame.source === "live-socket"
-      ) &&
-        finalSnapshot.neuroReplays.some(
-          (replay) =>
-            replay.id === liveIngressResult.ingress.id && replay.source === "live-socket"
-        ),
-      "live-socket frame and source present in snapshot",
-      `${finalSnapshot.neuroFrames.filter((frame) => frame.source === "live-socket").length} frames / ${
+      (longRunCompactionActive
+        ? finalSnapshot.neuroFrames.some((frame) => frame.source === "live-socket") &&
+          finalSnapshot.neuroReplays.some((replay) => replay.source === "live-socket")
+        : persistedInitialLiveSocketFrameCount > 0 &&
+          persistedInitialLiveSocketReplaySeen &&
+          finalSnapshot.neuroFrames.some((frame) => frame.source === "live-socket") &&
+          finalSnapshot.neuroReplays.some((replay) => replay.source === "live-socket")),
+      longRunCompactionActive
+        ? "bounded live-socket state present during soak"
+        : "persisted live-socket lineage and bounded live-socket state present",
+      `${persistedInitialLiveSocketFrameCount} persisted initial frames / ${
+        persistedInitialLiveSocketReplaySeen ? "initial replay recorded" : "initial replay missing"
+      } / ${finalSnapshot.neuroFrames.filter((frame) => frame.source === "live-socket").length} live frames / ${
         finalSnapshot.neuroReplays.filter((replay) => replay.source === "live-socket").length
-      } sources`,
-      "socket ingress should drive the same durable synchronize/decode spine as replayed NWB windows"
+      } live sources`,
+      longRunCompactionActive
+        ? "soak compaction keeps the active live-socket state hot while allowing the first high-volume ingress events to age out of the retained event window"
+        : "socket ingress should write durable lineage for the original live source while the bounded snapshot still reflects ongoing live-socket activity"
     ),
     createAssertion(
       "governance-operator-allow",
@@ -3539,11 +3690,11 @@ export async function runPublishedBenchmark(
         routingDecisions.some((decision) => decision.id === preferredRouteDecision.id) &&
         routingDecisions.some((decision) => decision.id === mediationAllowedPlanOnly.routeDecision.id) &&
         routingDecisions.some((decision) => decision.id === guardedFallbackDecision.id) &&
-        routingEvents.length >= 3 &&
-        routingEvents.at(-1)?.schema.name === "immaculate.routing.decision",
-      ">= 3 routing decisions in snapshot and event ledger",
-      `${routingDecisions.length} snapshot decisions / ${routingEvents.length} routing events / latest ${routingDecisions[0]?.mode ?? "missing"}`,
-      "route choice must be durable and replayable, including review-only mediated decisions that stop before outward dispatch"
+        persistedRoutingEvents.length >= 3 &&
+        persistedRoutingEvents.at(-1)?.schema.name === "immaculate.routing.decision",
+      ">= 3 routing decisions in snapshot and persisted event ledger",
+      `${routingDecisions.length} snapshot decisions / ${routingEvents.length} in-memory events / ${persistedRoutingEvents.length} persisted routing events / latest ${routingDecisions[0]?.mode ?? "missing"}`,
+      "long paced runs can roll routing events out of the bounded in-memory tail, so durability must be proven against the persisted lineage rather than the hot cache alone"
     ),
     createAssertion(
       "tier2-band-dominance",
@@ -3855,8 +4006,31 @@ export async function runPublishedBenchmark(
       "Measured event throughput is reported from actual wall-clock runtime",
       measuredEventThroughputSeries.p50 > 0 && actualWallClockDurationMs > 0,
       "> 0 events/s from wall-clock duration",
-      `${measuredEventThroughputSeries.p50.toFixed(2)} events/s over ${actualWallClockDurationMs.toFixed(2)} ms`,
-      "benchmark credibility depends on reporting observed event throughput from real elapsed time, not only synthetic control-loop estimates"
+      `${measuredEventThroughputSeries.p50.toFixed(2)} events/s over ${actualWallClockDurationMs.toFixed(2)} ms from ${measuredEventCount} cumulative events`,
+      "benchmark credibility depends on reporting observed event throughput from the cumulative durable event count, not only a capped in-memory tail"
+    ),
+    createAssertion(
+      "wall-clock-duration-truth",
+      "Paced benchmark packs honor their planned wall-clock duration",
+      !realTimePacing || wallClockTruthSeries.p50 >= 0.95,
+      realTimePacing ? ">= 0.95 planned-duration ratio" : "not required for unpaced smoke/gate packs",
+      `${wallClockTruthSeries.p50.toFixed(4)} ratio`,
+      realTimePacing
+        ? "benchmark and soak lanes must actually spend the wall-clock time they claim to spend"
+        : "smoke/gate lanes are allowed to finish early because they do not claim full-duration soak coverage"
+    ),
+    createAssertion(
+      "measured-event-throughput-floor",
+      "High-throughput benchmark lanes sustain their configured event-rate floor",
+      !pack.targetMeasuredEventThroughput ||
+        measuredEventThroughputSeries.p50 >= pack.targetMeasuredEventThroughput,
+      pack.targetMeasuredEventThroughput
+        ? `>= ${pack.targetMeasuredEventThroughput} events/s`
+        : "not configured for this pack",
+      `${measuredEventThroughputSeries.p50.toFixed(2)} events/s`,
+      pack.targetMeasuredEventThroughput
+        ? "paced benchmark and soak lanes should sustain a real measured event rate floor, not only a control-loop throughput estimate"
+        : "this pack does not claim a sustained event-throughput floor"
     ),
     createAssertion(
       "coherence-stable",
@@ -3890,7 +4064,7 @@ export async function runPublishedBenchmark(
     runKind,
     profile: `${engine.getSnapshot().profile} / ${runKind} / ${hardwareContext.platform}-${hardwareContext.arch}`,
     summary:
-      `This ${runKind} publication benchmarks the real orchestration substrate that exists today: phase execution, verify gating, persistence, checkpoint recovery, integrity validation, replayed NWB windows, live socket neuro ingress, protocol-aware actuation, execution arbitration that decides when the system should think before acting, execution scheduling that chooses single-layer versus swarm formation before cognition runs, Tier 1 cognitive-loop closure coverage for parsed ROUTE/REASON/COMMIT structure, Tier 2 neural-coupling coverage for band dominance, phase bias, and coupled routing strength, governance-aware cognition, routing soft priors, and multi-role conversation verdicts, authoritative worker-assignment coverage with lease visibility, supervised serial and HTTP/2 direct device transports, and explicit session-bound source safety for mediated dispatch decisions that react to transport health, decode confidence, governance pressure, and consent scope. Hardware context: ${formatBenchmarkHardwareContext(hardwareContext)}. It does not yet claim external neurodata or BCI decoding performance.`,
+      `This ${runKind} publication benchmarks the real orchestration substrate that exists today: phase execution, verify gating, persistence, checkpoint recovery, integrity validation, replayed NWB windows, live socket neuro ingress, protocol-aware actuation, execution arbitration that decides when the system should think before acting, execution scheduling that chooses single-layer versus swarm formation before cognition runs, Tier 1 cognitive-loop closure coverage for parsed ROUTE/REASON/COMMIT structure, Tier 2 neural-coupling coverage for band dominance, phase bias, and coupled routing strength, governance-aware cognition, routing soft priors, and multi-role conversation verdicts, authoritative worker-assignment coverage with lease visibility, supervised serial and HTTP/2 direct device transports, and explicit session-bound source safety for mediated dispatch decisions that react to transport health, decode confidence, governance pressure, and consent scope. ${realTimePacing ? "This pack is wall-clock paced and claims its planned runtime honestly." : "This pack is an unpaced smoke/gate lane and does not claim long-horizon soak duration."} ${liveFramesPerTick > 0 ? `It injected ${liveFramesPerTick} extra live frames per tick to sustain measurable event pressure.` : ""} Hardware context: ${formatBenchmarkHardwareContext(hardwareContext)}. It does not yet claim external neurodata or BCI decoding performance.`,
     tickIntervalMs,
     totalTicks,
     plannedDurationMs,
@@ -3905,6 +4079,7 @@ export async function runPublishedBenchmark(
       cognitiveSeries,
       throughputSeries,
       measuredEventThroughputSeries,
+      wallClockTruthSeries,
       coherenceSeries,
       predictionErrorSeries,
       freeEnergyProxySeries,
@@ -3926,31 +4101,40 @@ export async function runPublishedBenchmark(
       tier2NeuroCoupledRoutingSeries
     ],
     assertions,
-    progress: createProgress({ runKind, hardwareContext }),
+    progress: createProgress({
+      runKind,
+      hardwareContext,
+      realTimePacing,
+      liveFramesPerTick
+    }),
     attribution: BENCHMARK_ATTRIBUTION,
     comparison: previousReport
-      ? compareBenchmarkReports(previousReport, [
-          reflexSeries,
-          cognitiveSeries,
-          throughputSeries,
-          measuredEventThroughputSeries,
-          coherenceSeries,
-          predictionErrorSeries,
-          freeEnergyProxySeries,
-          cognitiveLoopStructureSeries,
-          cognitiveGovernanceContextSeries,
-          cognitiveRouteSoftPriorSeries,
-          multiRoleConversationTurnSeries,
-          multiRoleConversationVerdictSeries,
-          executionArbitrationCognitionSeries,
-          executionScheduleWidthSeries,
-          executionScheduleSwarmSeries,
-          decodeConfidenceSeries,
-          syncJitterSeries,
-          tier2BandDominanceSeries,
-          tier2PhaseBiasSeries,
-          tier2NeuroCoupledRoutingSeries
-        ])
+      ? compareBenchmarkReports(
+          previousReport,
+          [
+            reflexSeries,
+            cognitiveSeries,
+            throughputSeries,
+            ...(realTimePacing ? [measuredEventThroughputSeries] : []),
+            ...(realTimePacing ? [wallClockTruthSeries] : []),
+            coherenceSeries,
+            predictionErrorSeries,
+            freeEnergyProxySeries,
+            cognitiveLoopStructureSeries,
+            cognitiveGovernanceContextSeries,
+            cognitiveRouteSoftPriorSeries,
+            multiRoleConversationTurnSeries,
+            multiRoleConversationVerdictSeries,
+            executionArbitrationCognitionSeries,
+            executionScheduleWidthSeries,
+            executionScheduleSwarmSeries,
+            decodeConfidenceSeries,
+            syncJitterSeries,
+            tier2BandDominanceSeries,
+            tier2PhaseBiasSeries,
+            tier2NeuroCoupledRoutingSeries
+          ]
+        )
       : undefined
   };
 

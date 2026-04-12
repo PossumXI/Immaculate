@@ -1,5 +1,10 @@
 import type { BenchmarkPackId, BenchmarkReport } from "@immaculate/core";
-import { getBenchmarkPack, listBenchmarkPacks, type BenchmarkPack } from "./benchmark-packs.js";
+import {
+  getBenchmarkPack,
+  listBenchmarkGatePacks,
+  listBenchmarkPacks,
+  type BenchmarkPack
+} from "./benchmark-packs.js";
 import { runPublishedBenchmark } from "./benchmark.js";
 
 export type BenchmarkGateViolation = {
@@ -26,7 +31,7 @@ export function parseBenchmarkGatePackIds(argv: string[]): BenchmarkPackId[] {
         return argument.slice("--packs=".length).split(",");
       }
       if (argument === "--all") {
-        return listBenchmarkPacks().map((pack) => pack.id);
+        return listBenchmarkGatePacks().map((pack) => pack.id);
       }
       if (argument.startsWith("--pack=")) {
         return [argument.slice("--pack=".length)];

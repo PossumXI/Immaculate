@@ -89,6 +89,18 @@ Publish the latest benchmark to W&B:
 npm run benchmark:publish:wandb
 ```
 
+Run the paced 60-second benchmark lane:
+
+```powershell
+npm run benchmark:latency:60s -w @immaculate/harness
+```
+
+Run the paced 60-minute soak lane:
+
+```powershell
+npm run benchmark:soak:60m -w @immaculate/harness
+```
+
 Export the live W&B benchmark results back into the tracked wiki:
 
 ```powershell
@@ -106,6 +118,8 @@ Current benchmark publication surfaces:
 - W&B project: https://wandb.ai/arobi-arobi-technology-alliance/immaculate
 - tracked repo/wiki status: [docs/wiki/Benchmark-Status.md](docs/wiki/Benchmark-Status.md)
 - tracked repo/wiki W&B export: [docs/wiki/Benchmark-Wandb-Export.md](docs/wiki/Benchmark-Wandb-Export.md)
+- latest 60-second benchmark: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/p8070jlj
+- latest 60-minute soak: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/bxncy45c
 
 Optional environment variables:
 
@@ -145,7 +159,9 @@ Benchmark packs currently include:
 
 - `substrate-readiness`
 - `durability-recovery`
-- `latency-soak` (current short-run pack published as `Latency Smoke` until a true 60m+ soak lane exists)
+- `latency-soak` (legacy short-run smoke lane, published as `Latency Smoke`)
+- `latency-benchmark-60s`
+- `latency-soak-60m`
 
 ## Current Progress
 
@@ -204,7 +220,7 @@ Benchmark credibility rules now follow a stricter line:
 - short-run latency packs are published as smoke, not soak
 - wall-clock duration is reported separately from planned control-loop duration
 - hardware context is carried into benchmark reports, W&B metadata, and repo-tracked exports
-- `main` branch benchmark publication now runs through CI and pushes the refreshed W&B export/status pages back into `docs/wiki`
+- benchmark publication now runs through CI on every push, while wiki-export commits remain constrained to `main`
 
 ## Operator API
 

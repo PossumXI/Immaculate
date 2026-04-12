@@ -21,6 +21,29 @@ For each breakthrough, record:
 
 ### 2026-04-12
 
+#### Hour-class soak became real, and the persistence substrate stopped collapsing under its own event ledger
+
+What changed:
+- Immaculate now has a real wall-clock paced `latency-soak-60m` pack that ran for one full hour with sustained measured event throughput above 1,000 events per second instead of borrowing the word "soak" for a sub-second smoke lane
+- the persistence layer now compacts event and history ledgers against the latest checkpoint, retains semantically important decision events across compaction, and widens the hot recoverability window so high-throughput runs do not silently lose pre-persist lineage
+- the W&B publication path now avoids a fragile viewer probe and has enough timeout budget to publish hour-class benchmark artifacts instead of failing at the final upload edge
+
+Why it matters:
+- this is the point where the benchmark story stops being aspirational and becomes defensible under a serious review standard: the system now has a real one-hour soak with calibrated wall-clock timing, real hardware context, real recovery, and public publication
+- the missed systems pattern was straightforward but important: long-run orchestration credibility is controlled less by the scheduler than by whether the persistence substrate can survive its own event pressure without turning recovery into a multi-gigabyte replay failure
+- compacting only the noisy high-volume lineage while preserving semantic control events keeps the audit surface meaningful instead of forcing a false choice between total retention and hour-class execution
+
+Evidence:
+- `latency-soak-60m` suite `immaculate-benchmark-2026-04-12T21-48-36-880Z` completed in `3600967.49 ms` with `failedAssertions=0`, `integrity=verified`, and `recoveryMode=checkpoint`
+- measured event throughput was `1270.78 events/s` on `knightly / Windows 11 Pro / AMD Ryzen 7 7735HS / 16 cores / 23.29 GiB RAM / SSD / Node v22.13.1`
+- the published W&B soak run is `https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/bxncy45c`
+- the soak report now publishes `P50/P95/P99/P99.9` latency series plus hardware context through the same repo/wiki export surface as the shorter benchmark lanes
+
+What this unlocks next:
+- real durability torture packs and real neurodata ingest packs that can run long enough to matter without the persistence layer becoming the bottleneck
+- meaningful trend analysis over long-run behavior instead of only smoke-lane snapshots
+- future node-federated and hardware-backed orchestration where long-running ledgers remain both recoverable and auditable
+
 #### Parallel swarm execution stopped dead-ending on a single local worker lease
 
 What changed:

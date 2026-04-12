@@ -160,7 +160,9 @@ export type BenchmarkHardwareContext = {
 export const benchmarkPackIds = [
   "substrate-readiness",
   "durability-recovery",
-  "latency-soak"
+  "latency-soak",
+  "latency-benchmark-60s",
+  "latency-soak-60m"
 ] as const;
 export type BenchmarkPackId = (typeof benchmarkPackIds)[number];
 
@@ -1708,7 +1710,7 @@ function defaultNeuralCouplingState(): NeuralCouplingState & {
 const ENGINE_SERVICE = "immaculate-harness";
 const ENGINE_INSTANCE = "orchestration-core";
 const HISTORY_LIMIT = 240;
-const EVENT_LIMIT = 320;
+const EVENT_LIMIT = 2048;
 
 type EngineState = {
   snapshot: PhaseSnapshot;
@@ -3428,7 +3430,16 @@ function buildIntegrityReport(
       });
     }
 
-    if ((expectedPreviousHash ?? undefined) !== (event.integrity.prevEventHash ?? undefined)) {
+    const oldestRetainedEvent = index === durableState.events.length - 1;
+    const truncatedTailBoundary =
+      oldestRetainedEvent &&
+      durableState.events.length >= EVENT_LIMIT &&
+      typeof event.integrity.prevEventHash === "string" &&
+      event.integrity.prevEventHash.length > 0;
+    if (
+      !truncatedTailBoundary &&
+      (expectedPreviousHash ?? undefined) !== (event.integrity.prevEventHash ?? undefined)
+    ) {
       findings.push({
         code: "event_chain_mismatch",
         severity: "critical",

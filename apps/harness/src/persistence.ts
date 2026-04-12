@@ -36,6 +36,7 @@ export type PersistenceStatus = {
   integrityFindingCount: number;
   lastIntegrityCheckedAt?: string;
   invalidArtifactCount: number;
+  compacted: number;
 };
 
 type ReplayQuery = {
@@ -62,13 +63,27 @@ type PersistenceLedger = {
   lastPersistedEventId?: string;
   lastPersistedHistoryKey?: string;
   lastSnapshotAt?: string;
+  compacted?: number;
 };
 
 const MAX_CHECKPOINTS = 48;
-const RECENT_EVENT_WINDOW = 320;
+const RECENT_EVENT_WINDOW = 2048;
 const RECENT_HISTORY_WINDOW = 240;
+const MAX_PERSISTED_EVENTS_BEFORE_COMPACTION = 10_000;
+const RETAINED_PERSISTED_EVENTS = 5_000;
+const MAX_PERSISTED_HISTORY_BEFORE_COMPACTION = 10_000;
+const RETAINED_PERSISTED_HISTORY = 5_000;
 const ATOMIC_WRITE_RETRY_CODES = new Set(["EPERM", "EACCES", "EBUSY"]);
 const ATOMIC_WRITE_MAX_RETRIES = 8;
+const VOLATILE_EVENT_SCHEMAS = new Set([
+  "immaculate.engine.tick",
+  "immaculate.pass.start",
+  "immaculate.pass.complete",
+  "immaculate.cycle.start",
+  "immaculate.cycle.complete",
+  "immaculate.neuro-frame.ingested",
+  "immaculate.neuro-replay.upserted"
+]);
 
 function historyKey(point: SnapshotHistoryPoint): string {
   return `${point.timestamp}|${point.cycle}|${point.epoch}`;
@@ -214,18 +229,19 @@ function parsePersistenceLedger(content: string | null): PersistenceLedger | nul
       return null;
     }
 
-    return {
-      persistedEventCount: parsed.persistedEventCount,
-      persistedHistoryCount: parsed.persistedHistoryCount,
-      lastPersistedEventId:
-        typeof parsed.lastPersistedEventId === "string" ? parsed.lastPersistedEventId : undefined,
+      return {
+        persistedEventCount: parsed.persistedEventCount,
+        persistedHistoryCount: parsed.persistedHistoryCount,
+        lastPersistedEventId:
+          typeof parsed.lastPersistedEventId === "string" ? parsed.lastPersistedEventId : undefined,
       lastPersistedHistoryKey:
         typeof parsed.lastPersistedHistoryKey === "string"
           ? parsed.lastPersistedHistoryKey
           : undefined,
-      lastSnapshotAt:
-        typeof parsed.lastSnapshotAt === "string" ? parsed.lastSnapshotAt : undefined
-    };
+        lastSnapshotAt:
+          typeof parsed.lastSnapshotAt === "string" ? parsed.lastSnapshotAt : undefined,
+        compacted: typeof parsed.compacted === "number" ? parsed.compacted : 0
+      };
   } catch {
     return null;
   }
@@ -233,6 +249,32 @@ function parsePersistenceLedger(content: string | null): PersistenceLedger | nul
 
 function toRecentNewestFirst<T>(items: T[], limit: number): T[] {
   return items.slice(Math.max(0, items.length - limit)).reverse();
+}
+
+function historyPointAtOrAfterCheckpoint(
+  point: SnapshotHistoryPoint,
+  checkpoint?: Pick<CheckpointMetadata, "cycle" | "epoch">
+): boolean {
+  if (!checkpoint) {
+    return false;
+  }
+
+  if (point.cycle !== checkpoint.cycle) {
+    return point.cycle > checkpoint.cycle;
+  }
+
+  return point.epoch >= checkpoint.epoch;
+}
+
+function historyPointAtOrBeforeSnapshot(
+  point: SnapshotHistoryPoint,
+  snapshot: EngineDurableState["snapshot"]
+): boolean {
+  if (point.cycle !== snapshot.cycle) {
+    return point.cycle < snapshot.cycle;
+  }
+
+  return point.epoch <= snapshot.epoch;
 }
 
 function checkpointFilePath(checkpointsDir: string, checkpointId: string): string {
@@ -284,10 +326,16 @@ function applyPersistedWindows(
     persistedEvents.length > 0
       ? toRecentNewestFirst(persistedEvents, RECENT_EVENT_WINDOW)
       : nextState.events;
+  const boundedPersistedHistory = persistedHistory.filter((point) =>
+    historyPointAtOrBeforeSnapshot(point, nextState.snapshot)
+  );
+  const boundedInMemoryHistory = nextState.history.filter((point) =>
+    historyPointAtOrBeforeSnapshot(point, nextState.snapshot)
+  );
   const recentHistory =
-    persistedHistory.length > 0
-      ? toRecentNewestFirst(persistedHistory, RECENT_HISTORY_WINDOW)
-      : nextState.history;
+    boundedPersistedHistory.length > 0
+      ? toRecentNewestFirst(boundedPersistedHistory, RECENT_HISTORY_WINDOW)
+      : boundedInMemoryHistory;
 
   return {
     ...nextState,
@@ -367,7 +415,8 @@ export function createPersistence(rootDir = path.join(process.cwd(), ".runtime",
     checkpointCount: 0,
     integrityValid: false,
     integrityFindingCount: 0,
-    invalidArtifactCount: 0
+    invalidArtifactCount: 0,
+    compacted: 0
   };
 
   let checkpoints: CheckpointMetadata[] = [];
@@ -403,9 +452,66 @@ export function createPersistence(rootDir = path.join(process.cwd(), ".runtime",
       persistedHistoryCount: status.persistedHistoryCount,
       lastPersistedEventId: status.lastPersistedEventId,
       lastPersistedHistoryKey: status.lastPersistedHistoryKey,
-      lastSnapshotAt: status.lastSnapshotAt
+      lastSnapshotAt: status.lastSnapshotAt,
+      compacted: status.compacted
     };
     await atomicWrite(statusPath, JSON.stringify(ledger, null, 2));
+  }
+
+  async function compactPersistedWindows(): Promise<void> {
+    const compactEvents = status.persistedEventCount > MAX_PERSISTED_EVENTS_BEFORE_COMPACTION;
+    const compactHistory = status.persistedHistoryCount > MAX_PERSISTED_HISTORY_BEFORE_COMPACTION;
+    if (!compactEvents && !compactHistory) {
+      return;
+    }
+
+    const latestCheckpoint = checkpoints[0];
+    const [eventsContent, historyContent] = await Promise.all([
+      compactEvents ? safeRead(eventsPath) : Promise.resolve(null),
+      compactHistory ? safeRead(historyPath) : Promise.resolve(null)
+    ]);
+
+    if (compactEvents) {
+      const persistedEvents = parseNdjson(eventsContent, eventEnvelopeSchema);
+      const tailStartIndex = Math.max(0, persistedEvents.length - RETAINED_PERSISTED_EVENTS);
+      const checkpointStartIndex = latestCheckpoint?.lastEventId
+        ? persistedEvents.findIndex((event) => event.eventId === latestCheckpoint.lastEventId)
+        : -1;
+      const retainFromIndex =
+        checkpointStartIndex >= 0 ? Math.min(tailStartIndex, checkpointStartIndex) : tailStartIndex;
+      const retainedEvents = persistedEvents.filter(
+        (event, index) => index >= retainFromIndex || !VOLATILE_EVENT_SCHEMAS.has(event.schema.name)
+      );
+      const payload =
+        retainedEvents.length > 0
+          ? `${retainedEvents.map((event) => JSON.stringify(event)).join("\n")}\n`
+          : "";
+      await atomicWrite(eventsPath, payload);
+      status.persistedEventCount = retainedEvents.length;
+      status.lastPersistedEventId = retainedEvents.at(-1)?.eventId;
+    }
+
+    if (compactHistory) {
+      const persistedHistory = parseNdjson(historyContent, snapshotHistoryPointSchema);
+      const tailStartIndex = Math.max(0, persistedHistory.length - RETAINED_PERSISTED_HISTORY);
+      const checkpointStartIndex = latestCheckpoint
+        ? persistedHistory.findIndex((point) => historyPointAtOrAfterCheckpoint(point, latestCheckpoint))
+        : -1;
+      const retainFromIndex =
+        checkpointStartIndex >= 0 ? Math.min(tailStartIndex, checkpointStartIndex) : tailStartIndex;
+      const retainedHistory = persistedHistory.slice(retainFromIndex);
+      const payload =
+        retainedHistory.length > 0
+          ? `${retainedHistory.map((point) => JSON.stringify(point)).join("\n")}\n`
+          : "";
+      await atomicWrite(historyPath, payload);
+      status.persistedHistoryCount = retainedHistory.length;
+      status.lastPersistedHistoryKey = retainedHistory.at(-1)
+        ? historyKey(retainedHistory[retainedHistory.length - 1]!)
+        : undefined;
+    }
+
+    status.compacted += 1;
   }
 
   async function readCheckpointState(
@@ -554,6 +660,7 @@ export function createPersistence(rootDir = path.join(process.cwd(), ".runtime",
         status.lastPersistedEventId = ledger.lastPersistedEventId;
         status.lastPersistedHistoryKey = ledger.lastPersistedHistoryKey;
         status.lastSnapshotAt = ledger.lastSnapshotAt ?? snapshotState.snapshot.timestamp;
+        status.compacted = ledger.compacted ?? 0;
 
         const accepted = acceptCandidateState(snapshotState, [], []);
         if (accepted) {
@@ -676,6 +783,8 @@ export function createPersistence(rootDir = path.join(process.cwd(), ".runtime",
       if (integrity.valid && shouldCheckpoint(parsed, status.lastCheckpointEventId)) {
         await writeCheckpoint(parsed, integrity);
       }
+
+      await compactPersistedWindows();
 
       await writePersistenceLedger();
     });

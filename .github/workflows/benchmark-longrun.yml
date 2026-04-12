@@ -1,14 +1,21 @@
-name: Benchmark Publication
+name: Benchmark Long Run
 
 on:
-  push:
   workflow_dispatch:
-  schedule:
-    - cron: "0 13 * * 1"
+    inputs:
+      pack_id:
+        description: "Long-run benchmark pack to execute"
+        required: true
+        default: "latency-benchmark-60s"
+        type: choice
+        options:
+          - latency-benchmark-60s
+          - latency-soak-60m
 
 jobs:
-  publish-benchmarks:
+  long-run-benchmark:
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     env:
       WANDB_API_KEY: ${{ secrets.WANDB_API_KEY || secrets.IMMACULATE_WANDB_API_KEY }}
       WANDB_ENTITY: ${{ vars.WANDB_ENTITY || 'arobi-arobi-technology-alliance' }}
@@ -36,19 +43,16 @@ jobs:
       - name: Build core workspace
         run: npm run build -w @immaculate/core
 
-      - name: Run benchmark gate
-        run: npm run benchmark:gate:all
-
-      - name: Publish benchmark to W&B
-        if: ${{ env.WANDB_API_KEY != '' }}
+      - name: Run long-run benchmark
         env:
           WANDB_PROJECT: immaculate
         shell: bash
         run: |
-          mapfile -t suites < <(node -e "const fs=require('fs'); const idx=JSON.parse(fs.readFileSync('benchmarks/index.json','utf8')); const seen=new Set(); for (const entry of idx.entries) { if (!seen.has(entry.packId)) { console.log(entry.suiteId); seen.add(entry.packId); } }")
-          for suite in "${suites[@]}"; do
-            npm run benchmark:publish:wandb -- "$suite"
-          done
+          if [ -n "${WANDB_API_KEY}" ]; then
+            npm run benchmark -w @immaculate/harness -- --pack="${{ inputs.pack_id }}" --publish-wandb
+          else
+            npm run benchmark -w @immaculate/harness -- --pack="${{ inputs.pack_id }}"
+          fi
 
       - name: Export benchmark status from W&B
         if: ${{ env.WANDB_API_KEY != '' }}
@@ -66,13 +70,13 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/wiki/Benchmark-Status.md docs/wiki/Benchmark-Status.json docs/wiki/Benchmark-Wandb-Export.md docs/wiki/Benchmark-Wandb-Export.json
-          git commit -m "Update benchmark status export [skip ci]"
+          git commit -m "Update long-run benchmark status [skip ci]"
           git push
 
-      - name: Upload benchmark publications
+      - name: Upload long-run benchmark artifacts
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: immaculate-benchmark-publications
+          name: immaculate-long-run-benchmark
           path: benchmarks/
           if-no-files-found: warn
