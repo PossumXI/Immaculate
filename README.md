@@ -36,6 +36,14 @@ Immaculate is a greenfield orchestration substrate for:
 
 Generated runtime state, benchmark run dumps, local tooling environments, and local machine paths are intentionally kept out of git.
 
+## Security Monitoring
+
+- GitHub secret scanning and push protection are enabled on the public repository
+- CodeQL and dependency review workflows are configured under `.github/workflows/security.yml`
+- `gitleaks` runs in CI for repository secret detection
+- Optional GitGuardian scanning is wired in `.github/workflows/gitguardian.yml`
+  It activates when the repository secret `GITGUARDIAN_API_KEY` is configured.
+
 ## Run
 
 ```powershell
