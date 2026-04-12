@@ -167,6 +167,33 @@ function summarizeRoutingDecision(
     .join(" · ");
 }
 
+function summarizeExecutionArbitration(
+  arbitration?: PhaseSnapshot["executionArbitrations"][number]
+): string {
+  if (!arbitration) {
+    return "No execution arbitration yet.";
+  }
+
+  const layerBits = [arbitration.preferredLayerRole, arbitration.preferredLayerId]
+    .filter(Boolean)
+    .join(" / ");
+  const rationale =
+    arbitration.rationale.length > 92 ? `${arbitration.rationale.slice(0, 92)}…` : arbitration.rationale;
+
+  return [
+    arbitration.mode,
+    arbitration.targetNodeId,
+    arbitration.targetPlane,
+    `cognition ${arbitration.shouldRunCognition ? "yes" : "no"}`,
+    `dispatch ${arbitration.shouldDispatchActuation ? "yes" : "no"}`,
+    layerBits,
+    arbitration.governancePressure,
+    rationale
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 type PersistenceState = {
   recovered: boolean;
   recoveryMode: "fresh" | "checkpoint" | "checkpoint-replay" | "snapshot" | "replay";
@@ -2046,6 +2073,9 @@ export function DashboardClient() {
             <div className="log-line">
               {summarizeRoutingDecision(deferredSnapshot?.routingDecisions?.[0])}
             </div>
+            <div className="log-line">
+              {summarizeExecutionArbitration(deferredSnapshot?.executionArbitrations?.[0])}
+            </div>
           </div>
         </div>
       </section>
@@ -2091,6 +2121,11 @@ export function DashboardClient() {
             Route decision: <strong>{deferredSnapshot?.routingDecisions?.[0]?.mode ?? "none"}</strong> /{" "}
             <strong>{deferredSnapshot?.routingDecisions?.[0]?.channel ?? "--"}</strong> /{" "}
             <strong>{deferredSnapshot?.routingDecisions?.[0]?.targetNodeId ?? "--"}</strong>
+          </p>
+          <p className="body-copy">
+            Execution arbitration: <strong>{deferredSnapshot?.executionArbitrations?.[0]?.mode ?? "none"}</strong> /{" "}
+            <strong>{deferredSnapshot?.executionArbitrations?.[0]?.targetPlane ?? "--"}</strong> /{" "}
+            <strong>{deferredSnapshot?.executionArbitrations?.[0]?.targetNodeId ?? "--"}</strong>
           </p>
           <p className="body-copy">
             Integrity: <strong>{persistence?.integrityStatus ?? "unchecked"}</strong> / findings:{" "}

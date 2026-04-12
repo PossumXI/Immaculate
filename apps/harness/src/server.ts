@@ -19,6 +19,10 @@ import {
 } from "@immaculate/core";
 import { createActuationManager } from "./actuation.js";
 import {
+  buildExecutionArbitrationDecision,
+  planExecutionArbitration
+} from "./arbitration.js";
+import {
   loadPublishedBenchmarkIndex,
   loadPublishedBenchmarkReport,
   loadPublishedBenchmarkReportBySuiteId
@@ -206,7 +210,10 @@ function getGovernancePurposeValues(request: {
 function getGovernanceBinding(
   action: GovernanceAction,
   route: string,
-  request: FastifyRequest
+  request: FastifyRequest,
+  options?: {
+    policyIdOverride?: string;
+  }
 ): GovernanceBinding {
   const searchParams = getSearchParams(request.raw.url);
   const actor =
@@ -219,6 +226,7 @@ function getGovernanceBinding(
     route,
     actor,
     policyId:
+      options?.policyIdOverride ??
       getHeaderValue(request.headers["x-immaculate-policy-id"]) ??
       searchParams.get("policyId") ??
       searchParams.get("x-immaculate-policy-id") ??
@@ -236,9 +244,12 @@ function authorizeGovernedAction(
   action: GovernanceAction,
   route: string,
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
+  options?: {
+    policyIdOverride?: string;
+  }
 ): boolean {
-  const binding = getGovernanceBinding(action, route, request);
+  const binding = getGovernanceBinding(action, route, request, options);
   const preview = evaluateGovernance(binding);
   const decision = governance.record(binding, preview.allowed, preview.reason);
   if (decision.allowed) {
@@ -498,18 +509,34 @@ function applyControl(envelope: ControlEnvelope) {
   return snapshot;
 }
 
-function getPreferredLayer(layerId?: string): IntelligenceLayer | null {
-  const snapshot = phaseSnapshotSchema.parse(engine.getSnapshot());
-  if (layerId) {
-    return snapshot.intelligenceLayers.find((layer) => layer.id === layerId) ?? null;
-  }
+type DispatchBody = {
+  sessionId?: string;
+  sourceExecutionId?: string;
+  sourceFrameId?: string;
+  adapterId?: string;
+  targetNodeId?: string;
+  channel?: ActuationOutput["channel"];
+  command?: string;
+  intensity?: number;
+  suppressed?: boolean;
+};
 
+function selectPreferredLayer(preferredRoles?: IntelligenceLayer["role"][]): IntelligenceLayer | null {
+  const snapshot = phaseSnapshotSchema.parse(engine.getSnapshot());
   const rolePriority = new Map([
     ["mid", 0],
     ["reasoner", 1],
     ["soul", 2],
     ["guard", 3]
   ]);
+
+  const roleRank = (role: IntelligenceLayer["role"]): number => {
+    if (!preferredRoles || preferredRoles.length === 0) {
+      return rolePriority.get(role) ?? 9;
+    }
+    const index = preferredRoles.indexOf(role);
+    return index >= 0 ? index : preferredRoles.length + (rolePriority.get(role) ?? 9);
+  };
 
   return (
     [...snapshot.intelligenceLayers]
@@ -519,21 +546,32 @@ function getPreferredLayer(layerId?: string): IntelligenceLayer | null {
         if (leftStatus !== rightStatus) {
           return leftStatus - rightStatus;
         }
-        return (rolePriority.get(left.role) ?? 9) - (rolePriority.get(right.role) ?? 9);
+        return roleRank(left.role) - roleRank(right.role);
       })
       .at(0) ?? null
   );
 }
 
-async function ensurePreferredIntelligenceLayer(): Promise<IntelligenceLayer | null> {
+function getPreferredLayer(layerId?: string): IntelligenceLayer | null {
   const snapshot = phaseSnapshotSchema.parse(engine.getSnapshot());
-  const existing = getPreferredLayer();
+  if (layerId) {
+    return snapshot.intelligenceLayers.find((layer) => layer.id === layerId) ?? null;
+  }
+
+  return selectPreferredLayer();
+}
+
+async function ensurePreferredIntelligenceLayer(
+  role: IntelligenceLayer["role"] = "mid"
+): Promise<IntelligenceLayer | null> {
+  const snapshot = phaseSnapshotSchema.parse(engine.getSnapshot());
+  const existing = selectPreferredLayer([role]);
   if (existing) {
     return existing;
   }
 
   try {
-    const discovered = await discoverPreferredOllamaLayer();
+    const discovered = await discoverPreferredOllamaLayer(role);
     if (!discovered) {
       return null;
     }
@@ -568,6 +606,153 @@ function createActuationOutputId(): string {
 function clampActuationIntensity(value: number | undefined, fallback: number): number {
   const candidate = Number.isFinite(value) ? Number(value) : fallback;
   return Math.min(1, Math.max(0, candidate));
+}
+
+async function executeCognitivePass(options: {
+  layer: IntelligenceLayer;
+  objective?: string;
+}) {
+  const busyLayer: IntelligenceLayer = {
+    ...options.layer,
+    status: "busy"
+  };
+
+  engine.registerIntelligenceLayer(busyLayer);
+  await persistence.persist(engine.getDurableState());
+  emitSnapshot();
+
+  try {
+    const activeSnapshot = phaseSnapshotSchema.parse(engine.getSnapshot());
+    const result = await runOllamaExecution({
+      snapshot: activeSnapshot,
+      layer: busyLayer,
+      objective: options.objective
+    });
+    const settledLayer: IntelligenceLayer = {
+      ...busyLayer,
+      status: result.execution.status === "completed" ? "ready" : "degraded"
+    };
+
+    engine.registerIntelligenceLayer(settledLayer);
+    const snapshot = phaseSnapshotSchema.parse(
+      projectPhaseSnapshot(engine.commitCognitiveExecution(result.execution))
+    );
+    await persistence.persist(engine.getDurableState());
+    emitSnapshot();
+
+    return {
+      layer: settledLayer,
+      execution: result.execution,
+      response: result.response,
+      snapshot
+    };
+  } catch (error) {
+    engine.registerIntelligenceLayer({
+      ...busyLayer,
+      status: "degraded"
+    });
+    await persistence.persist(engine.getDurableState());
+    emitSnapshot();
+    throw error;
+  }
+}
+
+async function dispatchWithRoute(options: {
+  body: DispatchBody;
+  consentScope?: string;
+  execution?: ReturnType<typeof engine.getSnapshot>["cognitiveExecutions"][number];
+  frame?: ReturnType<typeof engine.getSnapshot>["neuroFrames"][number];
+}) {
+  const status: ActuationOutput["status"] = options.body.suppressed ? "suppressed" : "dispatched";
+  const routePlan = planAdaptiveRoute({
+    snapshot: engine.getSnapshot(),
+    frame: options.frame,
+    execution: options.execution,
+    adapters: actuationManager.listAdapters(),
+    transports: actuationManager.listTransports(),
+    governanceStatus: governance.getStatus(),
+    governanceDecisions: governance.listDecisions(),
+    consentScope: options.consentScope,
+    requestedAdapterId: options.body.adapterId?.trim() || undefined,
+    requestedChannel: options.body.channel,
+    requestedTargetNodeId: options.body.targetNodeId?.trim() || undefined,
+    requestedIntensity:
+      typeof options.body.intensity === "number" ? Number(options.body.intensity) : undefined,
+    suppressed: options.body.suppressed
+  });
+  const command =
+    options.body.command?.trim() ||
+    (options.execution
+      ? `execution:${options.execution.id}:guided-feedback`
+      : options.frame
+        ? `frame:${options.frame.id}:stabilize`
+        : "operator:manual-feedback");
+  const intensity = clampActuationIntensity(
+    options.body.intensity,
+    routePlan.recommendedIntensity
+  );
+  const targetNodeId = options.body.targetNodeId?.trim() || "actuator-grid";
+  const output: ActuationOutput = {
+    id: createActuationOutputId(),
+    sessionId: options.body.sessionId?.trim() || options.frame?.sessionId,
+    source:
+      options.consentScope === "system:benchmark"
+        ? "benchmark"
+        : options.execution
+          ? "cognitive"
+          : options.frame
+            ? "neuro"
+            : "operator",
+    sourceExecutionId: options.execution?.id,
+    sourceFrameId: options.frame?.id,
+    targetNodeId,
+    channel: routePlan.channel,
+    command,
+    intensity,
+    status,
+    summary: `Dispatch ${routePlan.channel} ${status} to ${targetNodeId} at ${(intensity * 100).toFixed(1)}% intensity.`,
+    generatedAt: new Date().toISOString(),
+    dispatchedAt: status === "dispatched" ? new Date().toISOString() : undefined
+  };
+
+  if (status === "suppressed") {
+    const snapshot = phaseSnapshotSchema.parse(
+      projectPhaseSnapshot(engine.dispatchActuationOutput(output))
+    );
+    await persistence.persist(engine.getDurableState());
+    emitSnapshot();
+    return {
+      routePlan,
+      output,
+      snapshot
+    };
+  }
+
+  const dispatched = await actuationManager.dispatch(output, {
+    adapterId: routePlan.recommendedAdapterId
+  });
+  engine.dispatchActuationOutput(dispatched.output);
+  const routeDecision = buildRoutingDecision({
+    output: dispatched.output,
+    delivery: dispatched.delivery,
+    plan: routePlan,
+    frame: options.frame,
+    execution: options.execution
+  });
+  const snapshot = phaseSnapshotSchema.parse(
+    projectPhaseSnapshot(engine.recordRoutingDecision(routeDecision))
+  );
+  await persistence.persist(engine.getDurableState());
+  emitSnapshot();
+
+  return {
+    routePlan,
+    routeDecision,
+    adapter: dispatched.adapter,
+    delivery: dispatched.delivery,
+    output: dispatched.output,
+    snapshot
+  };
 }
 
 await ensurePreferredIntelligenceLayer();
@@ -932,6 +1117,29 @@ app.get("/api/intelligence/executions", async (request, reply) => {
   };
 });
 
+app.get("/api/intelligence/arbitrations", async (request, reply) => {
+  if (
+    !authorizeGovernedAction(
+      "cognitive-trace-read",
+      "/api/intelligence/arbitrations",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  const consentScope = getGovernanceBinding(
+    "cognitive-trace-read",
+    "/api/intelligence/arbitrations",
+    request
+  ).consentScope;
+  return {
+    arbitrations: engine.getSnapshot().executionArbitrations,
+    visibility: deriveVisibilityScope(consentScope)
+  };
+});
+
 app.get("/api/actuation/outputs", async (request, reply) => {
   if (
     !authorizeGovernedAction(
@@ -1108,18 +1316,7 @@ app.post("/api/actuation/dispatch", async (request, reply) => {
 
   const binding = getGovernanceBinding("actuation-dispatch", "/api/actuation/dispatch", request);
   const consentScope = binding.consentScope;
-  const body =
-    (request.body as {
-      sessionId?: string;
-      sourceExecutionId?: string;
-      sourceFrameId?: string;
-      adapterId?: string;
-      targetNodeId?: string;
-      channel?: ActuationOutput["channel"];
-      command?: string;
-      intensity?: number;
-      suppressed?: boolean;
-    } | undefined) ?? {};
+  const body = (request.body as DispatchBody | undefined) ?? {};
   const snapshot = engine.getSnapshot();
   const execution = body.sourceExecutionId
     ? snapshot.cognitiveExecutions.find((candidate) => candidate.id === body.sourceExecutionId)
@@ -1156,63 +1353,25 @@ app.post("/api/actuation/dispatch", async (request, reply) => {
     };
   }
 
-  const status: ActuationOutput["status"] = body.suppressed ? "suppressed" : "dispatched";
-  const routePlan = planAdaptiveRoute({
-    snapshot,
-    frame,
-    execution,
-    adapters: actuationManager.listAdapters(),
-    transports: actuationManager.listTransports(),
-    governanceStatus: governance.getStatus(),
-    governanceDecisions: governance.listDecisions(),
-    consentScope,
-    requestedAdapterId: body.adapterId?.trim() || undefined,
-    requestedChannel: body.channel,
-    requestedTargetNodeId: body.targetNodeId?.trim() || undefined,
-    requestedIntensity:
-      typeof body.intensity === "number" ? Number(body.intensity) : undefined,
-    suppressed: body.suppressed
-  });
-  const command =
-    body.command?.trim() ||
-    (execution
-      ? `execution:${execution.id}:guided-feedback`
-      : frame
-        ? `frame:${frame.id}:stabilize`
-        : "operator:manual-feedback");
-  const intensity = clampActuationIntensity(
-    body.intensity,
-    routePlan.recommendedIntensity
-  );
-  const targetNodeId = body.targetNodeId?.trim() || "actuator-grid";
-  const output: ActuationOutput = {
-    id: createActuationOutputId(),
-    sessionId: resolvedSessionId,
-    source:
-      consentScope === "system:benchmark"
-        ? "benchmark"
-        : execution
-          ? "cognitive"
-          : frame
-            ? "neuro"
-            : "operator",
-    sourceExecutionId: execution?.id,
-    sourceFrameId: frame?.id,
-    targetNodeId,
-    channel: routePlan.channel,
-    command,
-    intensity,
-    status,
-    summary: `Dispatch ${routePlan.channel} ${status} to ${targetNodeId} at ${(intensity * 100).toFixed(1)}% intensity.`,
-    generatedAt: new Date().toISOString(),
-    dispatchedAt: status === "dispatched" ? new Date().toISOString() : undefined
-  };
-
-  let dispatched;
   try {
-    dispatched = await actuationManager.dispatch(output, {
-      adapterId: routePlan.recommendedAdapterId
+    const result = await dispatchWithRoute({
+      body: {
+        ...body,
+        sessionId: resolvedSessionId
+      },
+      consentScope,
+      execution,
+      frame
     });
+
+    return {
+      accepted: true,
+      routeDecision: result.routeDecision,
+      adapter: result.adapter,
+      delivery: result.delivery,
+      output: projectActuationOutput(result.output, consentScope),
+      snapshot: result.snapshot
+    };
   } catch (error) {
     reply.code(400);
     return {
@@ -1220,29 +1379,6 @@ app.post("/api/actuation/dispatch", async (request, reply) => {
       message: error instanceof Error ? error.message : "Unable to dispatch actuation output."
     };
   }
-
-  engine.dispatchActuationOutput(dispatched.output);
-  const routeDecision = buildRoutingDecision({
-    output: dispatched.output,
-    delivery: dispatched.delivery,
-    plan: routePlan,
-    frame,
-    execution
-  });
-  const nextSnapshot = phaseSnapshotSchema.parse(
-    projectPhaseSnapshot(engine.recordRoutingDecision(routeDecision))
-  );
-  await persistence.persist(engine.getDurableState());
-  emitSnapshot();
-
-  return {
-    accepted: true,
-    routeDecision,
-    adapter: dispatched.adapter,
-    delivery: dispatched.delivery,
-    output: projectActuationOutput(dispatched.output, consentScope),
-    snapshot: nextSnapshot
-  };
 });
 
 app.post("/api/actuation/transports/udp/register", async (request, reply) => {
@@ -1568,7 +1704,9 @@ app.post("/api/intelligence/run", async (request, reply) => {
   }
 
   const body = (request.body as { layerId?: string; objective?: string } | undefined) ?? {};
-  const requestedLayer = body.layerId ? getPreferredLayer(body.layerId) : await ensurePreferredIntelligenceLayer();
+  const requestedLayer = body.layerId
+    ? getPreferredLayer(body.layerId)
+    : await ensurePreferredIntelligenceLayer();
   if (body.layerId && !requestedLayer) {
     reply.code(404);
     return {
@@ -1586,51 +1724,210 @@ app.post("/api/intelligence/run", async (request, reply) => {
     };
   }
 
-  const busyLayer: IntelligenceLayer = {
-    ...layer,
-    status: "busy"
-  };
-
   try {
-    engine.registerIntelligenceLayer(busyLayer);
-    await persistence.persist(engine.getDurableState());
-    emitSnapshot();
-
-    const activeSnapshot = phaseSnapshotSchema.parse(engine.getSnapshot());
-    const result = await runOllamaExecution({
-      snapshot: activeSnapshot,
-      layer: busyLayer,
+    const result = await executeCognitivePass({
+      layer,
       objective: body.objective
     });
-    const settledLayer: IntelligenceLayer = {
-      ...busyLayer,
-      status: result.execution.status === "completed" ? "ready" : "degraded"
-    };
-
-    engine.registerIntelligenceLayer(settledLayer);
-    const snapshot = phaseSnapshotSchema.parse(projectPhaseSnapshot(engine.commitCognitiveExecution(result.execution)));
-    await persistence.persist(engine.getDurableState());
-    emitSnapshot();
 
     return {
       accepted: true,
-      layer: settledLayer,
+      layer: result.layer,
       execution: result.execution,
       response: result.response,
-      snapshot
+      snapshot: result.snapshot
     };
   } catch (error) {
-    engine.registerIntelligenceLayer({
-      ...busyLayer,
-      status: "degraded"
-    });
-    await persistence.persist(engine.getDurableState());
-    emitSnapshot();
-
     reply.code(503);
     return {
       error: "cognitive_execution_failed",
       message: error instanceof Error ? error.message : "Unable to run the cognitive layer."
+    };
+  }
+});
+
+app.post("/api/orchestration/mediate", async (request, reply) => {
+  if (
+    !authorizeGovernedAction(
+      "actuation-dispatch",
+      "/api/orchestration/mediate",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  const body =
+    ((request.body as DispatchBody & {
+      layerId?: string;
+      objective?: string;
+      forceCognition?: boolean;
+    } | undefined) ?? {});
+  const snapshot = engine.getSnapshot();
+  const binding = getGovernanceBinding("actuation-dispatch", "/api/orchestration/mediate", request);
+  const consentScope = binding.consentScope;
+  const execution = body.sourceExecutionId
+    ? snapshot.cognitiveExecutions.find((candidate) => candidate.id === body.sourceExecutionId)
+    : snapshot.cognitiveExecutions[0];
+  const frame = body.sourceFrameId
+    ? snapshot.neuroFrames.find((candidate) => candidate.id === body.sourceFrameId)
+    : snapshot.neuroFrames[0];
+
+  if (body.sourceExecutionId && !execution) {
+    reply.code(404);
+    return {
+      error: "cognitive_execution_not_found",
+      sourceExecutionId: body.sourceExecutionId
+    };
+  }
+
+  if (body.sourceFrameId && !frame) {
+    reply.code(404);
+    return {
+      error: "neuro_frame_not_found",
+      sourceFrameId: body.sourceFrameId
+    };
+  }
+
+  const scopedSessionId =
+    consentScope?.startsWith("session:") ? consentScope.slice("session:".length) : undefined;
+  const resolvedSessionId =
+    body.sessionId?.trim() || frame?.sessionId || scopedSessionId || undefined;
+  if (scopedSessionId && resolvedSessionId && scopedSessionId !== resolvedSessionId) {
+    reply.code(403);
+    return {
+      error: "governance_denied",
+      message: "Governance denied: resource_scope_mismatch"
+    };
+  }
+
+  const arbitrationPlan = planExecutionArbitration({
+    snapshot,
+    frame,
+    execution,
+    governanceStatus: governance.getStatus(),
+    governanceDecisions: governance.listDecisions(),
+    consentScope,
+    objective: body.objective,
+    requestedLayerId: body.layerId?.trim() || undefined,
+    forceCognition: body.forceCognition,
+    suppressed: body.suppressed
+  });
+  const arbitrationDecision = buildExecutionArbitrationDecision({
+    plan: arbitrationPlan,
+    consentScope,
+    frame,
+    execution,
+    requestedLayerId: body.layerId?.trim() || undefined
+  });
+  const arbitrationSnapshot = phaseSnapshotSchema.parse(
+    projectPhaseSnapshot(engine.recordExecutionArbitration(arbitrationDecision))
+  );
+  await persistence.persist(engine.getDurableState());
+  emitSnapshot();
+
+  let mediationLayer: IntelligenceLayer | undefined;
+  let mediationExecution = execution;
+  let mediationResponse: string | undefined;
+  let cognitionSnapshot = arbitrationSnapshot;
+
+  if (arbitrationPlan.shouldRunCognition) {
+    if (
+      !authorizeGovernedAction(
+        "cognitive-execution",
+        "/api/orchestration/mediate:cognition",
+        request,
+        reply,
+        {
+          policyIdOverride: "cognitive-run-default"
+        }
+      )
+    ) {
+      return;
+    }
+
+    const preferredRoles = arbitrationPlan.preferredLayerRole
+      ? [arbitrationPlan.preferredLayerRole]
+      : undefined;
+    const layer =
+      (body.layerId ? getPreferredLayer(body.layerId) : null) ??
+      (preferredRoles ? selectPreferredLayer(preferredRoles) : null) ??
+      (arbitrationPlan.preferredLayerRole
+        ? await ensurePreferredIntelligenceLayer(arbitrationPlan.preferredLayerRole)
+        : await ensurePreferredIntelligenceLayer());
+
+    if (!layer) {
+      reply.code(404);
+      return {
+        error: "no_intelligence_layer",
+        message: "Register an Ollama layer before running the mediated cognitive pass.",
+        arbitrationDecision,
+        arbitrationPlan,
+        snapshot: arbitrationSnapshot
+      };
+    }
+
+    try {
+      const cognition = await executeCognitivePass({
+        layer,
+        objective: arbitrationPlan.objective
+      });
+      mediationLayer = cognition.layer;
+      mediationExecution = cognition.execution;
+      mediationResponse = cognition.response;
+      cognitionSnapshot = cognition.snapshot;
+    } catch (error) {
+      reply.code(503);
+      return {
+        error: "cognitive_execution_failed",
+        message: error instanceof Error ? error.message : "Unable to run the mediated cognitive pass.",
+        arbitrationDecision,
+        arbitrationPlan,
+        snapshot: cognitionSnapshot
+      };
+    }
+  }
+
+  try {
+    const dispatchResult = await dispatchWithRoute({
+      body: {
+        sessionId: resolvedSessionId,
+        sourceExecutionId: body.sourceExecutionId,
+        sourceFrameId: body.sourceFrameId,
+        adapterId: body.adapterId,
+        targetNodeId: body.targetNodeId,
+        channel: body.channel,
+        command: body.command,
+        intensity: body.intensity,
+        suppressed: !arbitrationPlan.shouldDispatchActuation
+      },
+      consentScope,
+      execution: mediationExecution,
+      frame
+    });
+
+    return {
+      accepted: true,
+      arbitrationDecision,
+      arbitrationPlan,
+      layer: mediationLayer,
+      execution: mediationExecution,
+      response: mediationResponse,
+      routeDecision: dispatchResult.routeDecision,
+      adapter: dispatchResult.adapter,
+      delivery: dispatchResult.delivery,
+      output: projectActuationOutput(dispatchResult.output, consentScope),
+      snapshot: dispatchResult.snapshot
+    };
+  } catch (error) {
+    reply.code(400);
+    return {
+      error: "orchestration_mediation_failed",
+      message: error instanceof Error ? error.message : "Unable to complete the mediated orchestration pass.",
+      arbitrationDecision,
+      arbitrationPlan,
+      snapshot: cognitionSnapshot
     };
   }
 });

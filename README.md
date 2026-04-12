@@ -142,6 +142,8 @@ Benchmark packs currently include:
 - HTTP/2 direct device transports now provide typed RPC-class delivery with response telemetry and durable operator visibility
 - transport selection now ranks concrete actuation lanes by health, latency, and capability fitness instead of registry order
 - route selection now persists explicit cross-plane decisions that combine transport health, decode confidence, and governance pressure
+- mediated orchestration now decides whether to stay reflex-local, escalate cognition, guard-review, or suppress before any outward action is committed
+- execution arbitration is now durable and inspectable through a mediated orchestration pass and dedicated arbitration ledger
 - dashboard and TUI now expose the latest routing decision so operators can see why the system chose a lane instead of inferring it from side effects
 - dashboard and TUI websocket reconnection with backoff
 - operator-facing dashboard surfaces for the previously hidden backend control plane
@@ -179,6 +181,7 @@ The harness now exposes a deliberate operator/automation surface. These routes a
 - `POST /api/neuro/live/:sourceId/stop`
 - `GET /api/intelligence`
 - `GET /api/intelligence/executions`
+- `GET /api/intelligence/arbitrations`
 - `GET /api/actuation/adapters`
 - `GET /api/actuation/protocols`
 - `GET /api/actuation/transports`
@@ -186,6 +189,7 @@ The harness now exposes a deliberate operator/automation surface. These routes a
 - `GET /api/actuation/outputs`
 - `GET /api/intelligence/ollama/models`
 - `POST /api/actuation/dispatch`
+- `POST /api/orchestration/mediate`
 - `POST /api/actuation/transports/udp/register`
 - `POST /api/actuation/transports/serial/register`
 - `POST /api/actuation/transports/http2/register`
@@ -209,8 +213,11 @@ Sensitive read surfaces now split into two modes:
 - default operator feeds such as `/api/snapshot`, `/stream`, `/api/datasets`, and `/api/neuro/sessions` return redacted filesystem/source details
 - governed detail reads such as `/api/datasets/:datasetId`, `/api/neuro/sessions/:sessionId`, `/api/events`, and `/api/replay` require explicit read-purpose metadata
 - governed derived reads such as `/api/neuro/frames`, `/api/intelligence/executions`, `/api/actuation/outputs`, and `/api/actuation/deliveries` apply field-level consent: benchmark scope gets bounded projections, while session/intelligence/actuation scope restores full derived detail
+- mediated orchestration at `POST /api/orchestration/mediate` is the first pass that explicitly chooses whether the system should act reflex-locally, escalate into cognition, hold under guard review, or suppress the outward action entirely
+- `GET /api/intelligence/arbitrations` exposes the durable arbitration ledger so operators can inspect why a mediated pass chose a given mode
 - actuation device transports now open with a protocol-negotiation handshake on `WS /stream/actuation/device`; device clients send `actuation-device-hello` before dispatch starts, then acknowledge deliveries with `actuation-ack`
 - UDP/OSC actuation endpoints can be registered through `POST /api/actuation/transports/udp/register`; when present, dispatch prefers that concrete transport before bridge or file fallback
 - serial vendor transports can be registered through `POST /api/actuation/transports/serial/register`; they require heartbeats on `POST /api/actuation/transports/:transportId/heartbeat`, isolate on stale liveness, and can be cleared through `POST /api/actuation/transports/:transportId/reset`
 - HTTP/2 direct device transports can be registered through `POST /api/actuation/transports/http2/register`; successful responses feed liveness and capability telemetry back into transport health and routing preference
 - every governed actuation dispatch now emits a durable routing decision into the snapshot and event spine, including mode, target node, transport rank, governance pressure, and rationale
+- every mediated orchestration decision now emits a durable execution arbitration into the snapshot and event spine, including mode, target plane, preferred layer, governance pressure, and rationale

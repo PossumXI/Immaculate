@@ -54,7 +54,7 @@ function recentDeniedCount(decisions: GovernanceDecision[]): number {
   ).length;
 }
 
-function deriveGovernancePressure(
+export function deriveGovernancePressure(
   consentScope: string | undefined,
   status: GovernanceStatus,
   decisions: GovernanceDecision[]

@@ -127,6 +127,33 @@ function summarizeRoutingDecision(
     .join(" · ");
 }
 
+function summarizeExecutionArbitration(
+  arbitration?: PhaseSnapshot["executionArbitrations"][number]
+): string {
+  if (!arbitration) {
+    return "none";
+  }
+
+  const layerBits = [arbitration.preferredLayerRole, arbitration.preferredLayerId]
+    .filter(Boolean)
+    .join("/");
+  const rationale =
+    arbitration.rationale.length > 74 ? `${arbitration.rationale.slice(0, 74)}…` : arbitration.rationale;
+
+  return [
+    arbitration.mode,
+    arbitration.targetNodeId,
+    arbitration.targetPlane,
+    `cognition ${arbitration.shouldRunCognition ? "yes" : "no"}`,
+    `dispatch ${arbitration.shouldDispatchActuation ? "yes" : "no"}`,
+    layerBits,
+    arbitration.governancePressure,
+    rationale
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 async function harnessFetch(
   input: string,
   init?: RequestInit,
@@ -821,6 +848,12 @@ function App() {
             <Text>
               Route {snapshot.routingDecisions?.[0] ? snapshot.routingDecisions[0].mode : "none"} /{" "}
               {summarizeRoutingDecision(snapshot.routingDecisions?.[0])}
+            </Text>
+          ) : null}
+          {snapshot ? (
+            <Text>
+              Arbitration {snapshot.executionArbitrations?.[0] ? snapshot.executionArbitrations[0].mode : "none"} /{" "}
+              {summarizeExecutionArbitration(snapshot.executionArbitrations?.[0])}
             </Text>
           ) : null}
           {snapshot ? (

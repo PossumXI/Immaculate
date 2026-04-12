@@ -1,6 +1,7 @@
 import path from "node:path";
 import { createSocket } from "node:dgram";
 import { createServer as createHttp2Server, type ServerHttp2Stream } from "node:http2";
+import { performance } from "node:perf_hooks";
 import { fileURLToPath } from "node:url";
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import {
@@ -10,6 +11,7 @@ import {
   type BenchmarkAttribution,
   type BenchmarkPackId,
   type CognitiveExecution,
+  type IntelligenceLayer,
   createEngine,
   inspectDurableState,
   type BenchmarkAssertion,
@@ -24,6 +26,10 @@ import {
   type BenchmarkSeries
 } from "@immaculate/core";
 import { createActuationManager } from "./actuation.js";
+import {
+  buildExecutionArbitrationDecision,
+  planExecutionArbitration
+} from "./arbitration.js";
 import { getBenchmarkPack } from "./benchmark-packs.js";
 import { scanBidsDataset } from "./bids.js";
 import {
@@ -133,6 +139,17 @@ function createAssertion(
   };
 }
 
+async function safeReadText(filePath: string): Promise<string | null> {
+  try {
+    return await readFile(filePath, "utf8");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return null;
+    }
+    throw error;
+  }
+}
+
 function createProgress(): BenchmarkProgress {
   return {
     stage: "integration-ready substrate for internal functional testing",
@@ -156,6 +173,7 @@ function createProgress(): BenchmarkProgress {
       "Supervised serial vendor transport with heartbeat health, capability health, and per-device fault isolation",
       "HTTP/2 direct device transport with typed RPC-style delivery and response telemetry",
       "Health- and latency-aware transport preference across concrete actuation lanes",
+      "Durable execution arbitration that decides when the system should think, act, or hold",
       "W&B benchmark publication backend for external experiment tracking",
       "Keyboard-first TUI and Next.js overwatch dashboard with live connectome telemetry",
       "Published internal benchmark suite for repeatable functional testing"
@@ -548,7 +566,11 @@ function round(value: number): number {
 }
 
 function lowerIsBetter(seriesId: string): boolean {
-  return seriesId === "reflex_latency_ms" || seriesId === "cognitive_latency_ms";
+  return (
+    seriesId === "reflex_latency_ms" ||
+    seriesId === "cognitive_latency_ms" ||
+    seriesId === "execution_arbitration_latency_ms"
+  );
 }
 
 function compareBenchmarkReports(
@@ -705,9 +727,20 @@ export async function runPublishedBenchmark(
   syncJitterSamples.push(liveIngressResult.frame.syncJitterMs);
   engine.ingestNeuroFrame(liveIngressResult.frame);
   engine.upsertNeuroReplay(liveIngressResult.ingress);
+  const benchmarkLayer: IntelligenceLayer = {
+    id: "benchmark-layer",
+    name: "Benchmark Reasoner Layer",
+    backend: "ollama",
+    model: "gemma4:e4b",
+    role: "reasoner",
+    status: "ready",
+    endpoint: "http://127.0.0.1:11434",
+    registeredAt: new Date().toISOString()
+  };
+  engine.registerIntelligenceLayer(benchmarkLayer);
   const syntheticExecution: CognitiveExecution = {
     id: `cog-${suiteId}-synthetic`,
-    layerId: "benchmark-layer",
+    layerId: benchmarkLayer.id,
     model: "gemma4:e4b",
     objective: "Benchmark synthetic cognition trace for consent projection validation.",
     status: "completed",
@@ -919,7 +952,7 @@ export async function runPublishedBenchmark(
     adapterId: "haptic-rig"
   });
   engine.dispatchActuationOutput(serialDispatchResult.output);
-  const serialPayloadLines = (await readFile(serialDevicePath, "utf8"))
+  const serialPayloadLines = ((await safeReadText(serialDevicePath)) ?? "")
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean);
@@ -988,7 +1021,7 @@ export async function runPublishedBenchmark(
     }
   );
   engine.dispatchActuationOutput(recoveredSerialDispatchResult.output);
-  const recoveredSerialPayloadLines = (await readFile(serialDevicePath, "utf8"))
+  const recoveredSerialPayloadLines = ((await safeReadText(serialDevicePath)) ?? "")
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean);
@@ -1289,6 +1322,105 @@ export async function runPublishedBenchmark(
   const actuationAdapters = actuationManager.listAdapters();
   const actuationTransports = actuationManager.listTransports();
   const actuationDeliveries = actuationManager.listDeliveries(8);
+  const arbitrationLatencySamples: number[] = [];
+  const arbitrationCognitionSamples: number[] = [];
+  const reflexArbitrationStart = performance.now();
+  const reflexArbitrationPlan = planExecutionArbitration({
+    snapshot: engine.getSnapshot(),
+    frame: liveIngressResult.frame,
+    execution: syntheticExecution,
+    governanceStatus: {
+      mode: "enforced",
+      policyCount: 0,
+      decisionCount: 0,
+      deniedCount: 0
+    },
+    governanceDecisions: [],
+    consentScope: "system:benchmark"
+  });
+  arbitrationLatencySamples.push(Number((performance.now() - reflexArbitrationStart).toFixed(4)));
+  arbitrationCognitionSamples.push(reflexArbitrationPlan.shouldRunCognition ? 1 : 0);
+  const reflexArbitrationDecision = buildExecutionArbitrationDecision({
+    plan: reflexArbitrationPlan,
+    consentScope: "system:benchmark",
+    frame: liveIngressResult.frame,
+    execution: syntheticExecution
+  });
+  engine.recordExecutionArbitration(reflexArbitrationDecision);
+
+  const escalationFrame = {
+    ...liveIngressResult.frame,
+    id: `${liveIngressResult.frame.id}-escalation`,
+    decodeConfidence: 0.61,
+    capturedAt: new Date().toISOString()
+  };
+  const cognitiveArbitrationStart = performance.now();
+  const cognitiveArbitrationPlan = planExecutionArbitration({
+    snapshot: engine.getSnapshot(),
+    frame: escalationFrame,
+    execution: syntheticExecution,
+    governanceStatus: {
+      mode: "enforced",
+      policyCount: 0,
+      decisionCount: 0,
+      deniedCount: 0
+    },
+    governanceDecisions: [],
+    consentScope: "system:benchmark"
+  });
+  arbitrationLatencySamples.push(Number((performance.now() - cognitiveArbitrationStart).toFixed(4)));
+  arbitrationCognitionSamples.push(cognitiveArbitrationPlan.shouldRunCognition ? 1 : 0);
+  const cognitiveArbitrationDecision = buildExecutionArbitrationDecision({
+    plan: cognitiveArbitrationPlan,
+    consentScope: "system:benchmark",
+    frame: escalationFrame,
+    execution: syntheticExecution
+  });
+  engine.recordExecutionArbitration(cognitiveArbitrationDecision);
+
+  const guardedArbitrationDecisionTime = new Date().toISOString();
+  const guardedArbitrationGovernanceDecisions: GovernanceDecision[] = [
+    {
+      id: `arb-${suiteId}-critical-01`,
+      timestamp: guardedArbitrationDecisionTime,
+      allowed: false,
+      mode: "enforced",
+      action: "actuation-dispatch",
+      route: "/api/orchestration/mediate",
+      policyId: "actuation-dispatch-default",
+      purpose: ["actuation-dispatch"],
+      consentScope: `subject:${bidsFixture.summary.id}`,
+      actor: "benchmark",
+      reason: "critical_review_hold"
+    }
+  ];
+  const guardedArbitrationStart = performance.now();
+  const guardedArbitrationPlan = planExecutionArbitration({
+    snapshot: engine.getSnapshot(),
+    frame: escalationFrame,
+    execution: syntheticExecution,
+    governanceStatus: {
+      mode: "enforced",
+      policyCount: 0,
+      decisionCount: guardedArbitrationGovernanceDecisions.length,
+      deniedCount: 4,
+      lastDecisionAt: guardedArbitrationDecisionTime,
+      lastDecisionId: guardedArbitrationGovernanceDecisions[0].id
+    },
+    governanceDecisions: guardedArbitrationGovernanceDecisions,
+    consentScope: `subject:${bidsFixture.summary.id}`
+  });
+  arbitrationLatencySamples.push(Number((performance.now() - guardedArbitrationStart).toFixed(4)));
+  arbitrationCognitionSamples.push(guardedArbitrationPlan.shouldRunCognition ? 1 : 0);
+  const guardedArbitrationDecision = buildExecutionArbitrationDecision({
+    plan: guardedArbitrationPlan,
+    consentScope: `subject:${bidsFixture.summary.id}`,
+    frame: escalationFrame,
+    execution: syntheticExecution
+  });
+  engine.recordExecutionArbitration(guardedArbitrationDecision);
+
+  const executionArbitrations = engine.getSnapshot().executionArbitrations;
   const routingDecisions = engine.getSnapshot().routingDecisions;
   const routingEvents = engine
     .getEvents()
@@ -1417,6 +1549,18 @@ export async function runPublishedBenchmark(
     "Neuro sync jitter",
     "ms",
     syncJitterSamples
+  );
+  const executionArbitrationLatencySeries = createSeries(
+    "execution_arbitration_latency_ms",
+    "Execution arbitration latency",
+    "ms",
+    arbitrationLatencySamples
+  );
+  const executionArbitrationCognitionSeries = createSeries(
+    "execution_arbitration_cognition_ratio",
+    "Execution arbitration cognition share",
+    "ratio",
+    arbitrationCognitionSamples
   );
 
   const assertions: BenchmarkAssertion[] = [
@@ -1867,6 +2011,63 @@ export async function runPublishedBenchmark(
       "operators should be able to inspect why orchestration selected one concrete lane over another"
     ),
     createAssertion(
+      "execution-arbitration-reflex",
+      "Execution arbitration can keep a clear high-confidence path reflex-local",
+      reflexArbitrationPlan.mode === "reflex-local" &&
+        !reflexArbitrationPlan.shouldRunCognition &&
+        reflexArbitrationPlan.shouldDispatchActuation &&
+        reflexArbitrationPlan.routeModeHint === "reflex-direct" &&
+        reflexArbitrationDecision.targetNodeId === "router-core",
+      "reflex-local / cognition skipped / dispatch allowed / reflex-direct",
+      `${reflexArbitrationPlan.mode} / cognition=${reflexArbitrationPlan.shouldRunCognition} / dispatch=${reflexArbitrationPlan.shouldDispatchActuation}`,
+      "the system should not spend cognitive latency when a live reflex path is already strong and governance pressure is clear"
+    ),
+    createAssertion(
+      "execution-arbitration-cognitive",
+      "Execution arbitration escalates into cognition when decode confidence drops",
+      cognitiveArbitrationPlan.mode === "cognitive-escalation" &&
+        cognitiveArbitrationPlan.shouldRunCognition &&
+        cognitiveArbitrationPlan.shouldDispatchActuation &&
+        cognitiveArbitrationPlan.targetNodeId === "planner-swarm" &&
+        cognitiveArbitrationDecision.preferredLayerId === benchmarkLayer.id &&
+        cognitiveArbitrationDecision.routeModeHint === "cognitive-assisted",
+      "cognitive-escalation / planner-swarm / benchmark-layer / cognitive-assisted",
+      `${cognitiveArbitrationPlan.mode} / layer=${cognitiveArbitrationDecision.preferredLayerId ?? "none"} / route=${cognitiveArbitrationDecision.routeModeHint}`,
+      "when reflex confidence weakens, the system should decide to think before it acts instead of pretending every command belongs in the reflex plane"
+    ),
+    createAssertion(
+      "execution-arbitration-guarded",
+      "Execution arbitration can hold outward action under critical governance pressure",
+      guardedArbitrationPlan.mode === "guarded-review" &&
+        guardedArbitrationPlan.shouldRunCognition &&
+        !guardedArbitrationPlan.shouldDispatchActuation &&
+        guardedArbitrationPlan.routeModeHint === "suppressed" &&
+        guardedArbitrationDecision.targetNodeId === "integrity-gate" &&
+        guardedArbitrationDecision.governancePressure === "critical",
+      "guarded-review / cognition allowed / dispatch held / governance critical",
+      `${guardedArbitrationPlan.mode} / cognition=${guardedArbitrationPlan.shouldRunCognition} / dispatch=${guardedArbitrationPlan.shouldDispatchActuation} / governance=${guardedArbitrationDecision.governancePressure}`,
+      "critical governance pressure should be able to hold outward action while still allowing bounded internal review"
+    ),
+    createAssertion(
+      "execution-arbitration-ledger",
+      "Execution arbitration persists as a durable snapshot ledger",
+      executionArbitrations.length >= 3 &&
+        executionArbitrations[0]?.id === guardedArbitrationDecision.id &&
+        executionArbitrations.some((decision) => decision.id === cognitiveArbitrationDecision.id) &&
+        executionArbitrations.some((decision) => decision.id === reflexArbitrationDecision.id),
+      ">= 3 execution arbitrations in snapshot ledger",
+      `${executionArbitrations.length} arbitrations / latest ${executionArbitrations[0]?.mode ?? "missing"}`,
+      "the decision to think, act, or hold has to be durable and replayable if it is going to shape future orchestration"
+    ),
+    createAssertion(
+      "execution-arbitration-latency",
+      "Execution arbitration stays inside a sub-5 ms control budget",
+      executionArbitrationLatencySeries.p95 <= 5,
+      "<= 5 ms p95",
+      formatSeries(executionArbitrationLatencySeries),
+      "the choice to think before acting has to remain cheap enough to sit in the live orchestration path"
+    ),
+    createAssertion(
       "routing-reflex-direct",
       "Adaptive routing selects the healthy low-latency haptic lane for reflex-direct delivery",
       preferredRoutePlan.mode === "reflex-direct" &&
@@ -2120,7 +2321,7 @@ export async function runPublishedBenchmark(
     packLabel: pack.label,
     profile: engine.getSnapshot().profile,
     summary:
-      "This publication benchmarks the real orchestration substrate that exists today: phase execution, verify gating, persistence, checkpoint recovery, integrity validation, replayed NWB windows, live socket neuro ingress, protocol-aware actuation, supervised serial and HTTP/2 direct device transports, and explicit routing decisions that react to transport health, decode confidence, and governance pressure. It does not yet claim external neurodata or BCI decoding performance.",
+      "This publication benchmarks the real orchestration substrate that exists today: phase execution, verify gating, persistence, checkpoint recovery, integrity validation, replayed NWB windows, live socket neuro ingress, protocol-aware actuation, execution arbitration that decides when the system should think before acting, supervised serial and HTTP/2 direct device transports, and explicit routing decisions that react to transport health, decode confidence, and governance pressure. It does not yet claim external neurodata or BCI decoding performance.",
     tickIntervalMs,
     totalTicks,
     totalDurationMs: totalTicks * tickIntervalMs,
@@ -2133,6 +2334,8 @@ export async function runPublishedBenchmark(
       cognitiveSeries,
       throughputSeries,
       coherenceSeries,
+      executionArbitrationLatencySeries,
+      executionArbitrationCognitionSeries,
       decodeConfidenceSeries,
       syncJitterSeries
     ],
@@ -2145,6 +2348,7 @@ export async function runPublishedBenchmark(
           cognitiveSeries,
           throughputSeries,
           coherenceSeries,
+          executionArbitrationCognitionSeries,
           decodeConfidenceSeries,
           syncJitterSeries
         ])

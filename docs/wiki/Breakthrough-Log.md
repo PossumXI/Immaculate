@@ -21,6 +21,31 @@ For each breakthrough, record:
 
 ### 2026-04-12
 
+#### Mediated orchestration becomes a first-class decision pass
+
+What changed:
+- Immaculate now has a mediated orchestration endpoint at `POST /api/orchestration/mediate`
+- the system can now choose between `reflex-local`, `cognitive-escalation`, `guarded-review`, `suppressed`, and `operator-override` before it commits to outward action
+- the arbitration decision is durable and queryable through `GET /api/intelligence/arbitrations`
+- the mediated pass is benchmarked alongside the rest of the control plane, so the decision path is no longer implicit or ad hoc
+
+Why it matters:
+- this is a material leap from "dispatch something" to "decide whether to think, defer, or suppress before dispatching"
+- the system now exposes an explicit mediation layer between perception, cognition, governance pressure, and actuation
+- that mediation layer is the right shape for a control system that is meant to scale across agents, transports, and future human-in-the-loop pathways
+
+Evidence:
+- benchmark gate passed with zero violations after adding execution arbitration
+- live mediation smoke returned `cognitive-escalation`, ran cognition, and then produced a guarded fallback route decision
+- `GET /api/intelligence/arbitrations` exposes the durable arbitration ledger
+
+What this unlocks next:
+- routing pressure can be fed into multi-agent planning rather than only into the actuation lane
+- future reasoning passes can choose between local reflex, agentic escalation, and suppressed action using the same durable mediation record
+- more precise operator control over when Immaculate should act immediately versus when it should think first
+
+### 2026-04-12
+
 #### Public launch and live security pipeline stabilization
 
 What changed:
