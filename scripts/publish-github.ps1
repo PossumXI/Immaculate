@@ -25,14 +25,20 @@ function Invoke-Gh {
 }
 
 function Test-GhAuth {
-  $previous = $global:PSNativeCommandUseErrorActionPreference
-  $global:PSNativeCommandUseErrorActionPreference = $false
-  try {
-    & gh auth status *> $null
-    return $LASTEXITCODE -eq 0
-  } finally {
-    $global:PSNativeCommandUseErrorActionPreference = $previous
-  }
+  $startInfo = New-Object System.Diagnostics.ProcessStartInfo
+  $startInfo.FileName = "gh"
+  $startInfo.Arguments = "auth status"
+  $startInfo.UseShellExecute = $false
+  $startInfo.RedirectStandardOutput = $true
+  $startInfo.RedirectStandardError = $true
+
+  $process = New-Object System.Diagnostics.Process
+  $process.StartInfo = $startInfo
+  [void]$process.Start()
+  $null = $process.StandardOutput.ReadToEnd()
+  $null = $process.StandardError.ReadToEnd()
+  $process.WaitForExit()
+  return $process.ExitCode -eq 0
 }
 
 function Start-GhAuthWindow {
