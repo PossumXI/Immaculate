@@ -205,6 +205,30 @@ function summarizeExecutionSchedule(
     .join(" · ");
 }
 
+function summarizeNeuralCoupling(snapshot?: PhaseSnapshot | null): string {
+  if (!snapshot) {
+    return "none";
+  }
+
+  const { neuralCoupling } = snapshot;
+  return [
+    neuralCoupling.dominantBand,
+    formatPercent(neuralCoupling.dominantRatio),
+    `route ${formatPercent(neuralCoupling.phaseBias.route)}`,
+    `feedback ${formatPercent(neuralCoupling.phaseBias.feedback)}`
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+function summarizeBandPower(frame?: PhaseSnapshot["neuroFrames"][number] | null): string {
+  if (!frame?.bandPower) {
+    return "band none";
+  }
+
+  return `${frame.bandPower.dominantBand} ${formatPercent(frame.bandPower.dominantRatio)}`;
+}
+
 function summarizeCognitiveTrace(execution?: CognitiveExecutionTrace): string {
   if (!execution) {
     return "none";
@@ -920,6 +944,7 @@ function App() {
           <Text>Coherence          {snapshot ? `${metricBar(snapshot.metrics.coherence)} ${formatPercent(snapshot.metrics.coherence)}` : "-"}</Text>
           <Text>Propagation        {snapshot ? `${metricBar(snapshot.metrics.propagationRate)} ${formatPercent(snapshot.metrics.propagationRate)}` : "-"}</Text>
           <Text>Throughput         {snapshot ? `${Math.round(snapshot.metrics.throughput)} ops/s` : "-"}</Text>
+          <Text>Coupling           {snapshot ? summarizeNeuralCoupling(snapshot) : "-"}</Text>
         </Box>
 
         <Box width="50%" marginLeft={1} borderStyle="round" borderColor="gray" flexDirection="column" paddingX={1}>
@@ -972,6 +997,13 @@ function App() {
           ) : null}
           {snapshot ? (
             <Text>
+              Phase bias route {formatPercent(snapshot.neuralCoupling.phaseBias.route)} / reason{" "}
+              {formatPercent(snapshot.neuralCoupling.phaseBias.reason)} / feedback{" "}
+              {formatPercent(snapshot.neuralCoupling.phaseBias.feedback)}
+            </Text>
+          ) : null}
+          {snapshot ? (
+            <Text>
               Arbitration {snapshot.executionArbitrations?.[0] ? snapshot.executionArbitrations[0].mode : "none"} /{" "}
               {summarizeExecutionArbitration(snapshot.executionArbitrations?.[0])}
             </Text>
@@ -986,7 +1018,7 @@ function App() {
             <Text>
               Neuro ingress {snapshot.neuroReplays[0] ? `${snapshot.neuroReplays[0].source} ${snapshot.neuroReplays[0].status} ${snapshot.neuroReplays[0].completedWindows}/${snapshot.neuroReplays[0].totalWindows}` : "none"} / latest frame{" "}
               {snapshot.neuroFrames[0]
-                ? `${snapshot.neuroFrames[0].source} ${snapshot.neuroFrames[0].windowIndex + 1} ${formatPercent(snapshot.neuroFrames[0].decodeConfidence)}`
+                ? `${snapshot.neuroFrames[0].source} ${snapshot.neuroFrames[0].windowIndex + 1} ${formatPercent(snapshot.neuroFrames[0].decodeConfidence)} / ${summarizeBandPower(snapshot.neuroFrames[0])}`
                 : "none"}
             </Text>
           ) : null}

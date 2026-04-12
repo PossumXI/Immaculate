@@ -7,6 +7,7 @@ import {
   type NeuroReplayState,
   type NeuroStreamKind
 } from "@immaculate/core";
+import { collapseSampleRows, extractBandPower } from "./neuro-bands.js";
 import { hashValue } from "./utils.js";
 
 type LiveNeuroManagerCallbacks = {
@@ -94,6 +95,7 @@ export function buildLiveNeuroFrame(
   const sampleCount = samples.length;
   const channelCount = sampleCount > 0 ? Math.max(...samples.map((row) => row.length)) : payload.channels ?? 1;
   const flattened = samples.flatMap((row) => row.map((value) => Number(value)));
+  const monoSamples = collapseSampleRows(samples);
   const observationCount = Math.max(flattened.length, 1);
   const sumAbs = flattened.reduce((sum, value) => sum + Math.abs(value), 0);
   const sumSquares = flattened.reduce((sum, value) => sum + value * value, 0);
@@ -104,6 +106,10 @@ export function buildLiveNeuroFrame(
   const decodeConfidence = Number(
     deriveConfidence(meanAbs, rms, peak, syncJitterMs).toFixed(6)
   );
+  const bandPower =
+    payload.rateHz && monoSamples.length > 0
+      ? extractBandPower(monoSamples, payload.rateHz)
+      : undefined;
   const sourceId = payload.sourceId;
   const prior = priorState ?? buildInitialIngress(sourceId, payload, capturedAt);
   const nextWindowIndex = prior.completedWindows;
@@ -128,6 +134,7 @@ export function buildLiveNeuroFrame(
     syncJitterMs,
     decodeReady: decodeConfidence >= 0.55,
     decodeConfidence,
+    bandPower,
     capturedAt
   }) as NeuroFrameWindow;
 

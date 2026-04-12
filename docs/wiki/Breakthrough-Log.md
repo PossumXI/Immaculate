@@ -21,6 +21,53 @@ For each breakthrough, record:
 
 ### 2026-04-12
 
+#### Tier 2 routing now follows bounded neural coupling
+
+What changed:
+- Tier 2 benchmark coverage now proves band dominance, phase bias, and coupled routing strength
+- redacted projections still hide `bandPower` and `neuralCoupling`, while benchmark/session/audit scopes expose the right bounded values
+- route selection now prefers the live neuro-coupling lane when decode readiness, transport health, and governance align
+
+Why it matters:
+- this is the first time the system can benchmark the coupling signal and use it as an actual routing influence without leaking raw neuro detail
+- it closes the loop between neuro visibility, routing, and transport health in a measurable way
+
+Evidence:
+- `npm run benchmark:gate:all` passed after the Tier 2 pass
+- benchmark series now track band dominance, route phase bias, and coupled routing
+- benchmark and dashboard projections preserve the right bounded neuro coupling state
+
+What this unlocks next:
+- more selective coupling-aware route experiments
+- stronger future policy feedback from live neuro state into orchestration
+- richer benchmark packs for neuro-driven route choice and transport selection
+
+### 2026-04-12
+
+#### Tier 2 neural coupling became visible and measurable
+
+What changed:
+- redacted projections now hide both `bandPower` and `neuralCoupling`
+- benchmark and audit scopes now preserve bounded neuro-band and coupling views
+- the benchmark now generates long enough synthetic neuro windows to prove alpha, beta, and gamma band dominance plus route-phase bias
+- the Tier 2 benchmark now tracks coupled routing strength as a first-class series
+
+Why it matters:
+- this closes the next real visibility gap in the neuro layer: the system can now distinguish raw neural detail from bounded operator-visible coupling signals
+- route bias is now measurable against the band-dominance signal that feeds it
+
+Evidence:
+- benchmark gate remains green after the Tier 2 additions
+- redacted snapshot reads hide coupling state and band power by default
+- benchmark and audit projections now expose the correct bounded/full coupling views
+
+What this unlocks next:
+- stronger coupling-aware route selection experiments
+- better neuro/cognition correlation studies without leaking raw signal detail
+- more realistic future routing policy that can be benchmarked against band dominance and phase bias
+
+### 2026-04-12
+
 #### The schedule became the source of truth for multi-role cognition
 
 What changed:

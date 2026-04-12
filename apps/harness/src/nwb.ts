@@ -5,10 +5,12 @@ import {
   neuroFrameWindowSchema,
   neuroSessionSummarySchema,
   type NeuroFrameWindow,
+  type NeuroBandPower,
   type NeuroSessionSummary,
   type NeuroStreamKind,
   type NeuroStreamSummary
 } from "@immaculate/core";
+import { collapseSampleRows, extractBandPower } from "./neuro-bands.js";
 import { hashValue } from "./utils.js";
 
 export type NwbSessionRecord = {
@@ -18,6 +20,18 @@ export type NwbSessionRecord = {
 type NwbReplayStream = {
   summary: NeuroStreamSummary;
   values: number[];
+};
+
+type NwbReplayWindowContributor = {
+  summary: NeuroStreamSummary;
+  sampleEnd: number;
+  sampleCount: number;
+  durationMs?: number;
+  sumAbs: number;
+  sumSquares: number;
+  peak: number;
+  observationCount: number;
+  windowValues: number[];
 };
 
 export type NwbReplaySource = {
@@ -380,9 +394,10 @@ export async function buildNwbReplayFrames(
           sumAbs,
           sumSquares,
           peak,
-          observationCount: windowValues.length
+          observationCount: windowValues.length,
+          windowValues
         }
-      ];
+      ] satisfies NwbReplayWindowContributor[];
     });
 
     if (contributors.length === 0) {
@@ -411,6 +426,7 @@ export async function buildNwbReplayFrames(
     const decodeConfidence = Number(
       clampForReplay(0.34 + meanAbs * 3.1 + rms * 1.9 + peak * 0.7 - syncJitterMs * 0.025).toFixed(6)
     );
+    const bandPower = extractContributorBandPower(dominant);
     const frame = neuroFrameWindowSchema.parse({
       id: `frame-${hashValue(`${source.session.summary.id}:${windowIndex}:${windowSize}`)}`,
       replayId: options?.replayId ?? `replay-${hashValue(source.session.summary.id)}`,
@@ -429,12 +445,36 @@ export async function buildNwbReplayFrames(
       syncJitterMs,
       decodeReady: decodeConfidence >= 0.55,
       decodeConfidence,
+      bandPower,
       capturedAt: new Date().toISOString()
     }) as NeuroFrameWindow;
     frames.push(frame);
   }
 
   return frames;
+}
+
+function extractContributorBandPower(
+  contributor: NwbReplayWindowContributor
+): NeuroBandPower | undefined {
+  if (!contributor.summary.rateHz || contributor.summary.channelCount <= 0) {
+    return undefined;
+  }
+
+  const rows: number[][] = [];
+  for (
+    let offset = 0;
+    offset < contributor.windowValues.length;
+    offset += contributor.summary.channelCount
+  ) {
+    rows.push(contributor.windowValues.slice(offset, offset + contributor.summary.channelCount));
+  }
+
+  if (rows.length === 0) {
+    return undefined;
+  }
+
+  return extractBandPower(collapseSampleRows(rows), contributor.summary.rateHz);
 }
 
 function clampForReplay(value: number, min = 0, max = 0.99): number {

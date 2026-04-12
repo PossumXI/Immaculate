@@ -347,7 +347,31 @@ export type NeuroFrameWindow = {
   syncJitterMs: number;
   decodeReady: boolean;
   decodeConfidence: number;
+  bandPower?: NeuroBandPower;
   capturedAt: string;
+};
+
+export const neuroBands = ["delta", "theta", "alpha", "beta", "gamma"] as const;
+export type NeuroBand = (typeof neuroBands)[number];
+
+export type NeuroBandPower = {
+  delta: number;
+  theta: number;
+  alpha: number;
+  beta: number;
+  gamma: number;
+  dominantBand: NeuroBand;
+  dominantRatio: number;
+};
+
+export type NeuralCouplingState = {
+  dominantBand: NeuroBand;
+  dominantRatio: number;
+  phaseBias: Record<PhaseId, number>;
+  decodeConfidence: number;
+  decodeReadyRatio: number;
+  sourceFrameId?: string;
+  updatedAt: string;
 };
 
 export const intelligenceLayerBackends = ["ollama"] as const;
@@ -568,6 +592,7 @@ export type PhaseSnapshot = {
   neuroSessions: NeuroSessionSummary[];
   neuroReplays: NeuroReplayState[];
   neuroFrames: NeuroFrameWindow[];
+  neuralCoupling: NeuralCouplingState;
   intelligenceLayers: IntelligenceLayer[];
   cognitiveExecutions: CognitiveExecution[];
   conversations: MultiAgentConversation[];
@@ -879,6 +904,16 @@ export const neuroReplayStateSchema = z.object({
   lastWindowId: z.string().optional()
 });
 
+export const neuroBandPowerSchema = z.object({
+  delta: z.number().nonnegative(),
+  theta: z.number().nonnegative(),
+  alpha: z.number().nonnegative(),
+  beta: z.number().nonnegative(),
+  gamma: z.number().nonnegative(),
+  dominantBand: z.enum(neuroBands),
+  dominantRatio: z.number().nonnegative()
+});
+
 export const neuroFrameWindowSchema = z.object({
   id: z.string(),
   replayId: z.string(),
@@ -897,7 +932,28 @@ export const neuroFrameWindowSchema = z.object({
   syncJitterMs: z.number().nonnegative(),
   decodeReady: z.boolean(),
   decodeConfidence: z.number(),
+  bandPower: neuroBandPowerSchema.optional(),
   capturedAt: z.string()
+});
+
+export const neuralCouplingStateSchema = z.object({
+  dominantBand: z.enum(neuroBands),
+  dominantRatio: z.number().nonnegative(),
+  phaseBias: z.object({
+    ingest: z.number().nonnegative(),
+    synchronize: z.number().nonnegative(),
+    decode: z.number().nonnegative(),
+    route: z.number().nonnegative(),
+    reason: z.number().nonnegative(),
+    commit: z.number().nonnegative(),
+    verify: z.number().nonnegative(),
+    feedback: z.number().nonnegative(),
+    optimize: z.number().nonnegative()
+  }),
+  decodeConfidence: z.number().nonnegative(),
+  decodeReadyRatio: z.number().nonnegative(),
+  sourceFrameId: z.string().optional(),
+  updatedAt: z.string()
 });
 
 export const intelligenceLayerSchema = z.object({
@@ -1064,6 +1120,7 @@ export const phaseSnapshotSchema = z.object({
   neuroSessions: z.array(neuroSessionSummarySchema).default([]),
   neuroReplays: z.array(neuroReplayStateSchema).default([]),
   neuroFrames: z.array(neuroFrameWindowSchema).default([]),
+  neuralCoupling: neuralCouplingStateSchema.default(defaultNeuralCouplingState()),
   intelligenceLayers: z.array(intelligenceLayerSchema).default([]),
   cognitiveExecutions: z.array(cognitiveExecutionSchema).default([]),
   conversations: z.array(multiAgentConversationSchema).default([]),
@@ -1366,6 +1423,43 @@ const phaseIncrement: Record<PhaseId, number> = {
   optimize: 0.08
 };
 
+const phaseToNeuroBand: Record<PhaseId, NeuroBand> = {
+  ingest: "gamma",
+  synchronize: "gamma",
+  decode: "beta",
+  route: "beta",
+  reason: "alpha",
+  commit: "alpha",
+  verify: "alpha",
+  feedback: "theta",
+  optimize: "delta"
+};
+
+function defaultPhaseBias(): Record<PhaseId, number> {
+  return {
+    ingest: 0.5,
+    synchronize: 0.5,
+    decode: 0.5,
+    route: 0.5,
+    reason: 0.5,
+    commit: 0.5,
+    verify: 0.5,
+    feedback: 0.5,
+    optimize: 0.5
+  };
+}
+
+function defaultNeuralCouplingState(): NeuralCouplingState {
+  return {
+    dominantBand: "alpha",
+    dominantRatio: 0,
+    phaseBias: defaultPhaseBias(),
+    decodeConfidence: 0,
+    decodeReadyRatio: 0,
+    updatedAt: new Date(0).toISOString()
+  };
+}
+
 const ENGINE_SERVICE = "immaculate-harness";
 const ENGINE_INSTANCE = "orchestration-core";
 const HISTORY_LIMIT = 240;
@@ -1486,6 +1580,7 @@ function createInitialSnapshot(): PhaseSnapshot {
     neuroSessions: [],
     neuroReplays: [],
     neuroFrames: [],
+    neuralCoupling: defaultNeuralCouplingState(),
     intelligenceLayers: [],
     cognitiveExecutions: [],
     conversations: [],
@@ -1744,6 +1839,51 @@ function mergeNeuroReplayIntoSnapshot(
   };
 }
 
+function resolveDecodeReadyRatio(snapshot: PhaseSnapshot, frame: NeuroFrameWindow): number {
+  return (
+    snapshot.neuroReplays.find((candidate) => candidate.id === frame.replayId)?.decodeReadyRatio ??
+    snapshot.neuroReplays.find((candidate) => candidate.sessionId === frame.sessionId)?.decodeReadyRatio ??
+    (frame.decodeReady ? 1 : 0)
+  );
+}
+
+function deriveNeuralCoupling(
+  prior: NeuralCouplingState,
+  frame: NeuroFrameWindow,
+  decodeReadyRatio: number
+): NeuralCouplingState {
+  const bandPower = frame.bandPower;
+  if (!bandPower) {
+    return {
+      ...prior,
+      decodeConfidence: Number((prior.decodeConfidence * 0.74 + frame.decodeConfidence * 0.26).toFixed(6)),
+      decodeReadyRatio: Number((prior.decodeReadyRatio * 0.72 + decodeReadyRatio * 0.28).toFixed(6)),
+      sourceFrameId: frame.id,
+      updatedAt: frame.capturedAt
+    };
+  }
+
+  const phaseBias = phaseIds.reduce(
+    (accumulator, phase) => {
+      accumulator[phase] = Number(
+        clamp(prior.phaseBias[phase] * 0.55 + bandPower[phaseToNeuroBand[phase]] * 0.45, 0.05, 0.95).toFixed(6)
+      );
+      return accumulator;
+    },
+    {} as Record<PhaseId, number>
+  );
+
+  return {
+    dominantBand: bandPower.dominantBand,
+    dominantRatio: bandPower.dominantRatio,
+    phaseBias,
+    decodeConfidence: Number((prior.decodeConfidence * 0.58 + frame.decodeConfidence * 0.42).toFixed(6)),
+    decodeReadyRatio: Number((prior.decodeReadyRatio * 0.62 + decodeReadyRatio * 0.38).toFixed(6)),
+    sourceFrameId: frame.id,
+    updatedAt: frame.capturedAt
+  };
+}
+
 function mergeNeuroFrameIntoSnapshot(
   snapshot: PhaseSnapshot,
   frame: NeuroFrameWindow
@@ -1756,6 +1896,8 @@ function mergeNeuroFrameIntoSnapshot(
   const intensity = clamp(frame.meanAbs * 2.8 + frame.peak * 1.9, 0, 1);
   const syncHealth = clamp(1 - frame.syncJitterMs / 12, 0, 1);
   const sessionNodeId = neuroSessionNodeId(frame.sessionId);
+  const decodeReadyRatio = resolveDecodeReadyRatio(snapshot, frame);
+  const neuralCoupling = deriveNeuralCoupling(snapshot.neuralCoupling, frame, decodeReadyRatio);
 
   const nodes = snapshot.nodes.map((node) => {
     if (node.id === "sensor-array") {
@@ -1765,10 +1907,17 @@ function mergeNeuroFrameIntoSnapshot(
         load: clamp(node.load * 0.54 + channelFactor * 0.24 + 0.08),
         saturation: clamp(node.saturation * 0.64 + (1 - syncHealth) * 0.18 + 0.06),
         throughput: clamp(node.throughput * 0.62 + syncHealth * 0.16 + channelFactor * 0.12),
+        trust: clamp(node.trust * 0.85 + frame.decodeConfidence * 0.15, 0.4, 0.99),
         tags: [
-          ...node.tags.filter((tag) => !tag.startsWith("frame:") && !tag.startsWith("sync:")),
+          ...node.tags.filter(
+            (tag) =>
+              !tag.startsWith("frame:") &&
+              !tag.startsWith("sync:") &&
+              !tag.startsWith("band:")
+          ),
           `frame:${frame.windowIndex}`,
-          `sync:${frame.syncJitterMs.toFixed(2)}`
+          `sync:${frame.syncJitterMs.toFixed(2)}`,
+          `band:${neuralCoupling.dominantBand}`
         ]
       };
     }
@@ -1778,13 +1927,19 @@ function mergeNeuroFrameIntoSnapshot(
         ...node,
         activation: clamp(node.activation * 0.48 + frame.decodeConfidence * 0.38 + 0.08),
         load: clamp(node.load * 0.58 + frame.decodeConfidence * 0.22 + 0.08),
-        trust: clamp(node.trust * 0.84 + (frame.decodeReady ? 0.12 : -0.04), 0.3, 0.99),
+        trust: clamp(node.trust * 0.68 + decodeReadyRatio * 0.32, 0.3, 0.99),
         drift: clamp(node.drift * 0.78 + (frame.decodeReady ? 0.01 : 0.04), 0.01, 0.2),
         throughput: clamp(node.throughput * 0.58 + frame.decodeConfidence * 0.28 + 0.08),
         tags: [
-          ...node.tags.filter((tag) => !tag.startsWith("decode:") && !tag.startsWith("confidence:")),
+          ...node.tags.filter(
+            (tag) =>
+              !tag.startsWith("decode:") &&
+              !tag.startsWith("confidence:") &&
+              !tag.startsWith("band:")
+          ),
           `decode:${frame.decodeReady ? "ready" : "warming"}`,
-          `confidence:${frame.decodeConfidence.toFixed(2)}`
+          `confidence:${frame.decodeConfidence.toFixed(2)}`,
+          `band:${neuralCoupling.dominantBand}`
         ]
       };
     }
@@ -1840,8 +1995,9 @@ function mergeNeuroFrameIntoSnapshot(
     nodes,
     passes,
     neuroFrames: nextFrames,
+    neuralCoupling,
     highlightedNodeId: frame.decodeReady ? "decoder-stack" : "sensor-array",
-    objective: `${frame.source === "live-socket" ? "Live" : "Replay"} window ${frame.windowIndex + 1} synchronized at ${frame.syncJitterMs.toFixed(2)} ms jitter with ${(frame.decodeConfidence * 100).toFixed(1)}% decode confidence.`
+    objective: `${frame.source === "live-socket" ? "Live" : "Replay"} window ${frame.windowIndex + 1} synchronized at ${frame.syncJitterMs.toFixed(2)} ms jitter with ${(frame.decodeConfidence * 100).toFixed(1)}% decode confidence and ${neuralCoupling.dominantBand} dominance ${neuralCoupling.dominantRatio.toFixed(2)}.`
   };
 }
 
@@ -3146,7 +3302,11 @@ function advanceSnapshot(state: EngineState, force = false): PhaseSnapshot {
         };
       }
 
-      const increment = phaseIncrement[pass.phase] + targetNode.activation * 0.06 + state.pulse * 0.04;
+      const bandBias = previous.neuralCoupling.phaseBias[pass.phase] ?? 0.5;
+      const increment =
+        phaseIncrement[pass.phase] * (0.7 + bandBias * 0.6) +
+        targetNode.activation * 0.06 +
+        state.pulse * 0.04;
       const progress = clamp(pass.progress + increment, 0, 1);
       const nextState: PassState = progress >= 1 ? "completed" : progress >= 0.82 ? "degraded" : "running";
       const updated: PhasePass = {

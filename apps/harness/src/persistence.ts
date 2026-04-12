@@ -236,9 +236,14 @@ function tailAfterEventId(
 }
 
 async function atomicWrite(filePath: string, contents: string): Promise<void> {
-  const tempPath = `${filePath}.tmp`;
+  const tempPath = `${filePath}.${process.pid}.${Date.now()}-${Math.random().toString(16).slice(2)}.tmp`;
   await writeFile(tempPath, contents, "utf8");
-  await rename(tempPath, filePath);
+  try {
+    await rename(tempPath, filePath);
+  } catch (error) {
+    await safeUnlink(tempPath);
+    throw error;
+  }
 }
 
 export function createPersistence(rootDir = path.join(process.cwd(), ".runtime", "harness")) {

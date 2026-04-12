@@ -224,6 +224,28 @@ function summarizeExecutionSchedule(
     .join(" · ");
 }
 
+function summarizeNeuralCoupling(snapshot?: PhaseSnapshot | null): string {
+  if (!snapshot) {
+    return "No neural coupling yet.";
+  }
+
+  const { neuralCoupling } = snapshot;
+  return [
+    neuralCoupling.dominantBand,
+    formatPercent(neuralCoupling.dominantRatio),
+    `route ${formatPercent(neuralCoupling.phaseBias.route)}`,
+    `feedback ${formatPercent(neuralCoupling.phaseBias.feedback)}`
+  ].join(" · ");
+}
+
+function summarizeBandPower(frame?: NeuroFrameWindow | null): string {
+  if (!frame?.bandPower) {
+    return "band none";
+  }
+
+  return `${frame.bandPower.dominantBand} ${formatPercent(frame.bandPower.dominantRatio)}`;
+}
+
 function summarizeCognitiveTrace(execution?: CognitiveExecutionTrace): string {
   if (!execution) {
     return "No parsed cognitive trace yet.";
@@ -1763,6 +1785,9 @@ export function DashboardClient() {
             {snapshot?.neuroReplays.length ?? 0} sources / {activeReplayCount} active replay / {activeLiveSourceCount} active live
           </span>
         </div>
+        <p className="body-copy">
+          Neural coupling: <strong>{summarizeNeuralCoupling(snapshot)}</strong>
+        </p>
         <div className="benchmark-actions">
           <button
             className="benchmark-button"
@@ -1832,7 +1857,9 @@ export function DashboardClient() {
                   <span>{frame.channelCount}</span>
                   <span>{formatPercent(frame.decodeConfidence)}</span>
                   <span>{frame.syncJitterMs.toFixed(2)} ms</span>
-                  <span>{frame.decodeReady ? "decode-ready" : "warming"}</span>
+                  <span>
+                    {frame.decodeReady ? "decode-ready" : "warming"} / {summarizeBandPower(frame)}
+                  </span>
                 </div>
               )) ?? <div className="log-line">No live neuro frame windows ingested yet.</div>}
             </div>
@@ -2145,6 +2172,11 @@ export function DashboardClient() {
           <div className="log-stack">
             <div className="log-line">
               {summarizeRoutingDecision(deferredSnapshot?.routingDecisions?.[0])}
+            </div>
+            <div className="log-line">
+              Phase bias: route {formatPercent(deferredSnapshot?.neuralCoupling.phaseBias.route ?? 0)} / reason{" "}
+              {formatPercent(deferredSnapshot?.neuralCoupling.phaseBias.reason ?? 0)} / feedback{" "}
+              {formatPercent(deferredSnapshot?.neuralCoupling.phaseBias.feedback ?? 0)}
             </div>
             <div className="log-line">
               {summarizeExecutionArbitration(deferredSnapshot?.executionArbitrations?.[0])}

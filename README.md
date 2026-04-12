@@ -143,6 +143,8 @@ Benchmark packs currently include:
 - purpose-bound governance enforcement on mutable control, ingest, cognition, live streaming, and benchmark routes
 - sensitive snapshot, dataset, and neuro-session reads now default to redacted projections unless an explicit governed detail read is supplied
 - decoded neuro frame features, cognitive trace previews, and actuation commands now follow field-level consent instead of leaking through default snapshots
+- Tier 2 neural coupling now has benchmark and visibility coverage for band dominance, route phase bias, and coupled routing strength
+- Tier 2 routing now prefers the live neuro-coupling lane when decode readiness, transport health, and governance align
 - governed actuation dispatch and actuation output readback now make the feedback plane an explicit durable surface
 - adapter-backed actuation delivery now routes visual, haptic, and stim outputs through channel-specific policy lanes with durable delivery logs
 - governed websocket actuation device links now negotiate protocol/capabilities and provide acked bridge delivery with file fallback when no live transport is attached

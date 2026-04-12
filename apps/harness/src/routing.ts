@@ -21,6 +21,7 @@ type AdaptiveRoutePlanInput = {
   frame?: NeuroFrameWindow;
   execution?: CognitiveExecution;
   cognitiveRouteSuggestion?: string;
+  neuralBandPower?: NeuroFrameWindow["bandPower"];
   adapters: ActuationAdapterState[];
   transports: ActuationTransportState[];
   governanceStatus: GovernanceStatus;
@@ -151,7 +152,8 @@ function recommendedIntensity(
   frame: NeuroFrameWindow | undefined,
   execution: CognitiveExecution | undefined,
   requestedIntensity?: number,
-  cognitiveRouteSuggestion?: string
+  cognitiveRouteSuggestion?: string,
+  neuralBandPower?: NeuroFrameWindow["bandPower"]
 ): number {
   if (typeof requestedIntensity === "number" && Number.isFinite(requestedIntensity)) {
     return clamp(requestedIntensity);
@@ -173,7 +175,10 @@ function recommendedIntensity(
     return 0;
   }
   if (mode === "reflex-direct") {
-    return clamp((frame?.decodeConfidence ?? 0.72) * 0.78 + 0.08 + suggestionBias, 0.18, 0.72);
+    const bandPower = neuralBandPower ?? frame?.bandPower;
+    const motorActivation = bandPower ? bandPower.gamma / (bandPower.beta + 0.001) : 0;
+    const bandIntensity = clamp(motorActivation * 0.4, 0, 0.3);
+    return clamp((frame?.decodeConfidence ?? 0.72) * 0.78 + bandIntensity + suggestionBias, 0.18, 0.88);
   }
   if (mode === "cognitive-assisted") {
     const latencyBias = execution ? Math.min(execution.latencyMs / 5000, 1) * 0.08 : 0;
@@ -265,8 +270,11 @@ export function planAdaptiveRoute(input: AdaptiveRoutePlanInput): AdaptiveRouteP
     frame,
     execution,
     input.requestedIntensity,
-    input.cognitiveRouteSuggestion ?? execution?.routeSuggestion
+    input.cognitiveRouteSuggestion ?? execution?.routeSuggestion,
+    input.neuralBandPower ?? frame?.bandPower
   );
+  const dominantBand = input.neuralBandPower?.dominantBand ?? frame?.bandPower?.dominantBand ?? "none";
+  const dominantRatio = input.neuralBandPower?.dominantRatio ?? frame?.bandPower?.dominantRatio ?? 0;
   const selectedAdapterId =
     requestedAdapterId && adapterLookup.has(requestedAdapterId)
       ? requestedAdapterId
@@ -275,6 +283,7 @@ export function planAdaptiveRoute(input: AdaptiveRoutePlanInput): AdaptiveRouteP
     `mode=${mode}`,
     `channel=${selectedChannel}`,
     `decode=${(frame?.decodeConfidence ?? 0).toFixed(2)}`,
+    `band=${dominantBand}:${dominantRatio.toFixed(2)}`,
     `governance=${governancePressure}`,
     `cognitive=${input.cognitiveRouteSuggestion ?? execution?.routeSuggestion ?? "none"}`,
     `transport=${selectedTransport?.kind ?? "none"}`,

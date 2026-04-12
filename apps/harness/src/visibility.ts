@@ -5,7 +5,9 @@ import type {
   ExecutionSchedule,
   EventEnvelope,
   IngestedDatasetSummary,
+  NeuroBandPower,
   NeuroFrameWindow,
+  NeuralCouplingState,
   NeuroSessionSummary,
   NeuroStreamSummary,
   MultiAgentConversation,
@@ -50,6 +52,88 @@ function scrubDatasetFile(file: BidsDatasetFile): BidsDatasetFile {
     subject: undefined,
     session: undefined
   };
+}
+
+function zeroPhaseBias(): NeuralCouplingState["phaseBias"] {
+  return {
+    ingest: 0,
+    synchronize: 0,
+    decode: 0,
+    route: 0,
+    reason: 0,
+    commit: 0,
+    verify: 0,
+    feedback: 0,
+    optimize: 0
+  };
+}
+
+function redactNeuralCouplingState(coupling: NeuralCouplingState): NeuralCouplingState {
+  return {
+    dominantBand: "alpha",
+    dominantRatio: 0,
+    phaseBias: zeroPhaseBias(),
+    decodeConfidence: 0,
+    decodeReadyRatio: 0,
+    updatedAt: coupling.updatedAt
+  };
+}
+
+function projectNeuralCouplingState(
+  coupling: NeuralCouplingState,
+  consentScope?: string
+): NeuralCouplingState {
+  const visibility = deriveVisibilityScope(consentScope);
+  if (visibility === "audit" || visibility === "subject" || visibility === "session") {
+    return coupling;
+  }
+
+  if (visibility === "benchmark") {
+    return {
+      ...coupling,
+      sourceFrameId: undefined,
+      dominantRatio: Number(coupling.dominantRatio.toFixed(6)),
+      decodeConfidence: Number(coupling.decodeConfidence.toFixed(6)),
+      decodeReadyRatio: Number(coupling.decodeReadyRatio.toFixed(6)),
+      phaseBias: {
+        ingest: Number(coupling.phaseBias.ingest.toFixed(6)),
+        synchronize: Number(coupling.phaseBias.synchronize.toFixed(6)),
+        decode: Number(coupling.phaseBias.decode.toFixed(6)),
+        route: Number(coupling.phaseBias.route.toFixed(6)),
+        reason: Number(coupling.phaseBias.reason.toFixed(6)),
+        commit: Number(coupling.phaseBias.commit.toFixed(6)),
+        verify: Number(coupling.phaseBias.verify.toFixed(6)),
+        feedback: Number(coupling.phaseBias.feedback.toFixed(6)),
+        optimize: Number(coupling.phaseBias.optimize.toFixed(6))
+      }
+    };
+  }
+
+  return redactNeuralCouplingState(coupling);
+}
+
+function projectNeuroBandPower(
+  bandPower: NeuroBandPower,
+  consentScope?: string
+): NeuroBandPower | undefined {
+  const visibility = deriveVisibilityScope(consentScope);
+  if (visibility === "audit" || visibility === "subject" || visibility === "session") {
+    return bandPower;
+  }
+
+  if (visibility === "benchmark") {
+    return {
+      delta: 0,
+      theta: 0,
+      alpha: 0,
+      beta: 0,
+      gamma: 0,
+      dominantBand: bandPower.dominantBand,
+      dominantRatio: Number(bandPower.dominantRatio.toFixed(6))
+    };
+  }
+
+  return undefined;
 }
 
 export function deriveVisibilityScope(consentScope?: string): VisibilityScope {
@@ -195,6 +279,7 @@ export function redactPhaseSnapshot(snapshot: PhaseSnapshot): PhaseSnapshot {
     datasets: snapshot.datasets.map(redactDatasetSummary),
     neuroSessions: snapshot.neuroSessions.map(redactNeuroSessionSummary),
     neuroFrames: snapshot.neuroFrames.map(redactNeuroFrameWindow),
+    neuralCoupling: redactNeuralCouplingState(snapshot.neuralCoupling),
     cognitiveExecutions: snapshot.cognitiveExecutions.map(redactCognitiveExecution),
     conversations: snapshotWithConversations.conversations?.map(redactConversationRecord),
     executionSchedules: snapshot.executionSchedules.map(redactExecutionSchedule),
@@ -245,7 +330,8 @@ export function redactNeuroFrameWindow(frame: NeuroFrameWindow): NeuroFrameWindo
     peak: 0,
     syncJitterMs: 0,
     decodeReady: false,
-    decodeConfidence: 0
+    decodeConfidence: 0,
+    bandPower: undefined
   };
 }
 
@@ -262,7 +348,9 @@ export function projectNeuroFrameWindow(
       ...frame,
       meanAbs: 0,
       rms: 0,
-      peak: 0
+      peak: 0,
+      syncJitterMs: 0,
+      bandPower: frame.bandPower ? projectNeuroBandPower(frame.bandPower, consentScope) : undefined
     };
   }
   return redactNeuroFrameWindow(frame);
@@ -419,6 +507,7 @@ export function projectPhaseSnapshot(
       datasets: snapshot.datasets.map(redactDatasetSummary),
       neuroSessions: snapshot.neuroSessions.map(redactNeuroSessionSummary),
       neuroFrames: snapshot.neuroFrames.map((frame) => projectNeuroFrameWindow(frame, consentScope)),
+      neuralCoupling: projectNeuralCouplingState(snapshot.neuralCoupling, consentScope),
       cognitiveExecutions: snapshot.cognitiveExecutions.map((execution) =>
         projectCognitiveExecution(execution, consentScope)
       ),
