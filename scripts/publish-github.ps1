@@ -41,6 +41,28 @@ function Test-GhAuth {
   return $process.ExitCode -eq 0
 }
 
+function Test-GhRepoExists {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$RepoRef
+  )
+
+  $startInfo = New-Object System.Diagnostics.ProcessStartInfo
+  $startInfo.FileName = "gh"
+  $startInfo.Arguments = "repo view $RepoRef"
+  $startInfo.UseShellExecute = $false
+  $startInfo.RedirectStandardOutput = $true
+  $startInfo.RedirectStandardError = $true
+
+  $process = New-Object System.Diagnostics.Process
+  $process.StartInfo = $startInfo
+  [void]$process.Start()
+  $null = $process.StandardOutput.ReadToEnd()
+  $null = $process.StandardError.ReadToEnd()
+  $process.WaitForExit()
+  return $process.ExitCode -eq 0
+}
+
 function Start-GhAuthWindow {
   $command = "$env:Path += ';$ghPath'; gh auth login --hostname github.com --git-protocol https --web --clipboard"
   Start-Process powershell -ArgumentList "-NoExit", "-Command", $command | Out-Null
@@ -61,9 +83,7 @@ if (-not (Test-GhAuth)) {
 
 $repoRef = "$Owner/$Repo"
 $originUrl = "https://github.com/$repoRef.git"
-
-& gh repo view $repoRef *> $null
-$repoExists = $LASTEXITCODE -eq 0
+$repoExists = Test-GhRepoExists -RepoRef $repoRef
 
 if (-not $repoExists) {
   Invoke-Gh -Args @(
@@ -121,37 +141,37 @@ if (Test-Path $wikiSource) {
   $tempRoot = Join-Path $env:TEMP ("immaculate-wiki-" + [guid]::NewGuid().ToString("N"))
   & git clone "https://github.com/$repoRef.wiki.git" $tempRoot
   if ($LASTEXITCODE -ne 0) {
-    throw "Failed to clone wiki repository"
-  }
-
-  Get-ChildItem $wikiSource -Filter *.md | ForEach-Object {
-    Copy-Item $_.FullName (Join-Path $tempRoot $_.Name) -Force
-  }
-
-  $sidebarPath = Join-Path $tempRoot "_Sidebar.md"
-  @(
-    "# Immaculate Wiki",
-    "",
-    "- [[Home]]",
-    "- [[Operator-Field-Guide]]"
-  ) | Set-Content -Path $sidebarPath -Encoding utf8
-
-  & git -C $tempRoot config user.name "$(git config user.name)"
-  & git -C $tempRoot config user.email "$(git config user.email)"
-  & git -C $tempRoot add .
-  & git -C $tempRoot diff --cached --quiet
-  if ($LASTEXITCODE -ne 0) {
-    & git -C $tempRoot commit -m "Seed wiki from docs/wiki"
-    if ($LASTEXITCODE -ne 0) {
-      throw "Failed to commit wiki content"
+    Write-Warning "Wiki repository is not ready yet. Enable/open the wiki in GitHub and rerun this script later to seed wiki pages."
+  } else {
+    Get-ChildItem $wikiSource -Filter *.md | ForEach-Object {
+      Copy-Item $_.FullName (Join-Path $tempRoot $_.Name) -Force
     }
-    & git -C $tempRoot push
-    if ($LASTEXITCODE -ne 0) {
-      throw "Failed to push wiki content"
-    }
-  }
 
-  Remove-Item -LiteralPath $tempRoot -Recurse -Force
+    $sidebarPath = Join-Path $tempRoot "_Sidebar.md"
+    @(
+      "# Immaculate Wiki",
+      "",
+      "- [[Home]]",
+      "- [[Operator-Field-Guide]]"
+    ) | Set-Content -Path $sidebarPath -Encoding utf8
+
+    & git -C $tempRoot config user.name "$(git config user.name)"
+    & git -C $tempRoot config user.email "$(git config user.email)"
+    & git -C $tempRoot add .
+    & git -C $tempRoot diff --cached --quiet
+    if ($LASTEXITCODE -ne 0) {
+      & git -C $tempRoot commit -m "Seed wiki from docs/wiki"
+      if ($LASTEXITCODE -ne 0) {
+        throw "Failed to commit wiki content"
+      }
+      & git -C $tempRoot push
+      if ($LASTEXITCODE -ne 0) {
+        throw "Failed to push wiki content"
+      }
+    }
+
+    Remove-Item -LiteralPath $tempRoot -Recurse -Force
+  }
 }
 
 Write-Host "Published $repoRef"
