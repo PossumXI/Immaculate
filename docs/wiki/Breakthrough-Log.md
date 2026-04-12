@@ -21,6 +21,29 @@ For each breakthrough, record:
 
 ### 2026-04-12
 
+#### Spectral evidence now shapes mediation before outward action
+
+What changed:
+- execution arbitration now treats current-frame spectral evidence as a real control input instead of relying only on scalar decode confidence
+- strong clean beta/gamma windows can keep the mediated decision path reflex-local, while contaminated spectral windows are forced into guarded review before outward action
+- execution scheduling now widens contaminated review paths into guarded internal formations instead of silently preserving a narrow cognition lane
+- the benchmark now proves spectral reflex arbitration, spectral guarded review, and guarded spectral scheduling in addition to the earlier route-pressure coverage
+
+Why it matters:
+- this closes the next hidden systems gap: a controller that reacts to contamination only at the routing layer is still too late, because cognition and actuation planning have already been shaped by bad input
+- Immaculate now uses spectral evidence to decide whether it should think, widen, hold, or act before route selection commits to an outward lane
+- the mediation layer is now beginning to behave like a real control surface for intelligence rather than a thin wrapper around model execution
+
+Evidence:
+- `npm run typecheck`, `npm run build`, and `npm run benchmark:gate:all` passed after the mediation-coupling pass
+- the benchmark gate now proves spectral arbitration and guarded spectral scheduling with zero violations on the latest all-pack run
+- routing regressions introduced by stale prior coupling were fixed by making current-frame spectral evidence dominate when present
+
+What this unlocks next:
+- schedule-aware multi-agent mediation that can react to richer neural or decoder-side priors before cognition runs
+- future confidence models that combine spectral quality, artifact suppression, and decoder reliability without trusting stale state
+- domain benchmark packs where real neuro streams can prove not just route quality, but mediation quality under contamination and uncertainty
+
 #### Spectral confidence became a real control signal instead of a decorative neuro metric
 
 What changed:

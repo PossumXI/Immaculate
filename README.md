@@ -162,6 +162,7 @@ Benchmark packs currently include:
 - transport selection now ranks concrete actuation lanes by health, latency, and capability fitness instead of registry order
 - route selection now persists explicit cross-plane decisions that combine transport health, decode confidence, and governance pressure
 - mediated orchestration now decides whether to stay reflex-local, escalate cognition, guard-review, or suppress before any outward action is committed
+- mediated orchestration now treats current spectral evidence as a control signal: strong clean beta/gamma windows can stay reflex-local, while contaminated windows are pushed into guarded review before outward action
 - execution arbitration is now durable and inspectable through a mediated orchestration pass and dedicated arbitration ledger
 - execution scheduling is now durable and inspectable, choosing whether cognition runs as a single layer or a swarm formation before any mediated execution commits
 - benchmark publication now includes Tier 1 cognitive-loop closure coverage for parsed model structure, governance-aware cognition, routing soft priors, and multi-role conversation verdicts
