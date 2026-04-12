@@ -20,6 +20,7 @@ type AdaptiveRoutePlanInput = {
   snapshot: PhaseSnapshot;
   frame?: NeuroFrameWindow;
   execution?: CognitiveExecution;
+  cognitiveRouteSuggestion?: string;
   adapters: ActuationAdapterState[];
   transports: ActuationTransportState[];
   governanceStatus: GovernanceStatus;
@@ -149,26 +150,39 @@ function recommendedIntensity(
   mode: RoutingDecisionMode,
   frame: NeuroFrameWindow | undefined,
   execution: CognitiveExecution | undefined,
-  requestedIntensity?: number
+  requestedIntensity?: number,
+  cognitiveRouteSuggestion?: string
 ): number {
   if (typeof requestedIntensity === "number" && Number.isFinite(requestedIntensity)) {
     return clamp(requestedIntensity);
   }
 
+  const suggestion = cognitiveRouteSuggestion?.toLowerCase() ?? "";
+  const suggestionBias =
+    suggestion.includes("suppress")
+      ? -0.06
+      : suggestion.includes("guard")
+        ? -0.06
+        : suggestion.includes("reflex") || suggestion.includes("direct")
+          ? 0.06
+          : suggestion.includes("cognitive")
+            ? 0.03
+            : 0;
+
   if (mode === "suppressed") {
     return 0;
   }
   if (mode === "reflex-direct") {
-    return clamp((frame?.decodeConfidence ?? 0.72) * 0.78 + 0.08, 0.18, 0.72);
+    return clamp((frame?.decodeConfidence ?? 0.72) * 0.78 + 0.08 + suggestionBias, 0.18, 0.72);
   }
   if (mode === "cognitive-assisted") {
     const latencyBias = execution ? Math.min(execution.latencyMs / 5000, 1) * 0.08 : 0;
-    return clamp(0.32 + latencyBias, 0.24, 0.56);
+    return clamp(0.32 + latencyBias + suggestionBias, 0.24, 0.56);
   }
   if (mode === "operator-override") {
-    return clamp(frame?.decodeConfidence ?? 0.36, 0.18, 0.64);
+    return clamp((frame?.decodeConfidence ?? 0.36) + suggestionBias, 0.18, 0.64);
   }
-  return 0.24;
+  return clamp(0.24 + suggestionBias, 0.18, 0.36);
 }
 
 export function planAdaptiveRoute(input: AdaptiveRoutePlanInput): AdaptiveRoutePlan {
@@ -246,7 +260,13 @@ export function planAdaptiveRoute(input: AdaptiveRoutePlanInput): AdaptiveRouteP
   }
 
   const routeNodeId = input.requestedTargetNodeId?.trim() || routeTargetNodeId(mode);
-  const intensity = recommendedIntensity(mode, frame, execution, input.requestedIntensity);
+  const intensity = recommendedIntensity(
+    mode,
+    frame,
+    execution,
+    input.requestedIntensity,
+    input.cognitiveRouteSuggestion ?? execution?.routeSuggestion
+  );
   const selectedAdapterId =
     requestedAdapterId && adapterLookup.has(requestedAdapterId)
       ? requestedAdapterId
@@ -256,6 +276,7 @@ export function planAdaptiveRoute(input: AdaptiveRoutePlanInput): AdaptiveRouteP
     `channel=${selectedChannel}`,
     `decode=${(frame?.decodeConfidence ?? 0).toFixed(2)}`,
     `governance=${governancePressure}`,
+    `cognitive=${input.cognitiveRouteSuggestion ?? execution?.routeSuggestion ?? "none"}`,
     `transport=${selectedTransport?.kind ?? "none"}`,
     `health=${selectedTransport?.health ?? "none"}`
   ];

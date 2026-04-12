@@ -12,7 +12,8 @@ import {
   type ConnectomeNode,
   type PhasePass,
   type PhaseSnapshot,
-  type SnapshotHistoryPoint
+  type SnapshotHistoryPoint,
+  type MultiAgentConversation
 } from "@immaculate/core";
 import { ConnectomeScene } from "./connectome-scene";
 
@@ -223,6 +224,37 @@ function summarizeExecutionSchedule(
     .join(" · ");
 }
 
+function summarizeCognitiveTrace(execution?: CognitiveExecutionTrace): string {
+  if (!execution) {
+    return "No parsed cognitive trace yet.";
+  }
+
+  const parts = [
+    execution.routeSuggestion,
+    execution.reasonSummary,
+    execution.commitStatement,
+    execution.guardVerdict ? `guard=${execution.guardVerdict}` : ""
+  ]
+    .filter(Boolean)
+    .map((value) => String(value).trim())
+    .map((value) => (value.length > 52 ? `${value.slice(0, 52)}…` : value));
+
+  return parts.length > 0 ? parts.join(" · ") : "Trace present but not yet parsed.";
+}
+
+function summarizeConversation(conversation?: MultiAgentConversation): string {
+  if (!conversation) {
+    return "No conversation yet.";
+  }
+
+  const turnCount = conversation.turnCount ?? conversation.turns?.length ?? 0;
+  const order = conversation.turns?.length
+    ? conversation.turns.map((turn) => turn.role).filter(Boolean).join(">")
+    : conversation.roles?.join(">") ?? "none";
+  const summary = conversation.summary?.trim() || "none";
+  return `${summary} · turns=${turnCount} · order=${order}`;
+}
+
 type PersistenceState = {
   recovered: boolean;
   recoveryMode: "fresh" | "checkpoint" | "checkpoint-replay" | "snapshot" | "replay";
@@ -414,6 +446,17 @@ type ActuationDeliveryState = {
   acknowledgedAt?: string;
   encodedCommand: string;
   policyNote: string;
+};
+
+type CognitiveExecutionTrace = CognitiveExecution & {
+  routeSuggestion?: string;
+  reasonSummary?: string;
+  commitStatement?: string;
+  guardVerdict?: string;
+};
+
+type SnapshotWithConversations = PhaseSnapshot & {
+  conversations?: MultiAgentConversation[];
 };
 
 export function DashboardClient() {
@@ -1248,10 +1291,11 @@ export function DashboardClient() {
     neuroFrameDetails.length > 0 ? neuroFrameDetails : (snapshot?.neuroFrames ?? []);
   const visibleCognitiveExecutions =
     cognitiveExecutionDetails.length > 0
-      ? cognitiveExecutionDetails
-      : (snapshot?.cognitiveExecutions ?? []);
+      ? (cognitiveExecutionDetails as CognitiveExecutionTrace[])
+      : ((snapshot?.cognitiveExecutions ?? []) as CognitiveExecutionTrace[]);
   const visibleActuationOutputs =
     actuationDetails.length > 0 ? actuationDetails : (snapshot?.actuationOutputs ?? []);
+  const latestConversation = (deferredSnapshot as SnapshotWithConversations | null)?.conversations?.[0];
 
   const dispatchActuation = useEffectEvent(async () => {
     try {
@@ -2144,6 +2188,12 @@ export function DashboardClient() {
           <p className="body-copy">
             Intelligence layers: <strong>{snapshot?.intelligenceLayers.length ?? 0}</strong> / latest
             execution: <strong>{visibleCognitiveExecutions[0]?.model ?? "none"}</strong>
+          </p>
+          <p className="body-copy">
+            Cognitive trace: <strong>{summarizeCognitiveTrace(visibleCognitiveExecutions[0])}</strong>
+          </p>
+          <p className="body-copy">
+            Conversation: <strong>{summarizeConversation(latestConversation)}</strong>
           </p>
           <p className="body-copy">
             Actuation outputs: <strong>{visibleActuationOutputs.length}</strong> / latest command:{" "}

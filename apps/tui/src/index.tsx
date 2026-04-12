@@ -13,6 +13,7 @@ import {
   planeColor,
   type ConnectomeNode,
   type ControlEnvelope,
+  type MultiAgentConversation,
   type PhasePass,
   type PhaseSnapshot
 } from "@immaculate/core";
@@ -63,6 +64,27 @@ type GovernanceState = {
   deniedCount: number;
   lastDecisionAt?: string;
   lastDecisionId?: string;
+};
+
+type CognitiveExecutionTrace = {
+  id: string;
+  layerId: string;
+  model: string;
+  objective: string;
+  status: "completed" | "failed";
+  latencyMs: number;
+  startedAt: string;
+  completedAt: string;
+  promptDigest: string;
+  responsePreview: string;
+  routeSuggestion?: string;
+  reasonSummary?: string;
+  commitStatement?: string;
+  guardVerdict?: string;
+};
+
+type SnapshotWithConversations = PhaseSnapshot & {
+  conversations?: MultiAgentConversation[];
 };
 
 function useAltScreen() {
@@ -181,6 +203,37 @@ function summarizeExecutionSchedule(
   ]
     .filter(Boolean)
     .join(" · ");
+}
+
+function summarizeCognitiveTrace(execution?: CognitiveExecutionTrace): string {
+  if (!execution) {
+    return "none";
+  }
+
+  const parts = [
+    execution.routeSuggestion,
+    execution.reasonSummary,
+    execution.commitStatement,
+    execution.guardVerdict ? `guard=${execution.guardVerdict}` : ""
+  ]
+    .filter(Boolean)
+    .map((value) => String(value).trim())
+    .map((value) => (value.length > 60 ? `${value.slice(0, 60)}…` : value));
+
+  return parts.length > 0 ? parts.join(" · ") : "trace pending";
+}
+
+function summarizeConversation(conversation?: MultiAgentConversation): string {
+  if (!conversation) {
+    return "none";
+  }
+
+  const turnCount = conversation.turnCount ?? conversation.turns?.length ?? 0;
+  const order = conversation.turns?.length
+    ? conversation.turns.map((turn) => turn.role).filter(Boolean).join(">")
+    : conversation.roles?.join(">") ?? "none";
+  const summary = conversation.summary?.trim() || "none";
+  return `${summary} / turns ${turnCount} / order ${order}`;
 }
 
 async function harnessFetch(
@@ -468,6 +521,7 @@ function App() {
   const [persistence, setPersistence] = useState<PersistenceState | null>(null);
   const [wandb, setWandb] = useState<WandbState | null>(null);
   const [governance, setGovernance] = useState<GovernanceState | null>(null);
+  const [intelligenceExecutionDetails, setIntelligenceExecutionDetails] = useState<CognitiveExecutionTrace[]>([]);
 
   useEffect(() => {
     let disposed = false;
@@ -516,13 +570,38 @@ function App() {
       }
     };
 
+    const loadIntelligence = async () => {
+      try {
+        const response = await harnessFetch(`${harnessBaseUrl}/api/intelligence/executions`, {
+          headers: {
+            "content-type": "application/json"
+          }
+        }, {
+          purpose: ["cognitive-trace-read"],
+          policyId: "cognitive-trace-read-default",
+          consentScope: "system:intelligence",
+          actor: "tui"
+        });
+        const payload = (await response.json()) as { executions?: CognitiveExecutionTrace[] };
+        if (!disposed) {
+          setIntelligenceExecutionDetails(payload.executions ?? []);
+        }
+      } catch {
+        if (!disposed) {
+          setIntelligenceExecutionDetails([]);
+        }
+      }
+    };
+
     void loadPersistence();
     void loadWandb();
     void loadGovernance();
+    void loadIntelligence();
     const timer = setInterval(() => {
       void loadPersistence();
       void loadWandb();
       void loadGovernance();
+      void loadIntelligence();
     }, 2000);
 
     const loadSnapshot = async () => {
@@ -605,6 +684,8 @@ function App() {
   const selectedNode = snapshot?.nodes[nodeIndex] ?? null;
   const selectedPass = snapshot?.passes[passIndex] ?? null;
   const selectedLog = snapshot?.logTail[logIndex] ?? null;
+  const latestCognitiveExecution = intelligenceExecutionDetails[0] ?? null;
+  const latestConversation = (snapshot as SnapshotWithConversations | null)?.conversations?.[0] ?? null;
 
   const phaseLane = phaseIds
     .map((phase) => {
@@ -863,6 +944,16 @@ function App() {
               {snapshot.cognitiveExecutions[0]
                 ? `${snapshot.cognitiveExecutions[0].model} ${snapshot.cognitiveExecutions[0].latencyMs.toFixed(1)}ms`
                 : "none"}
+            </Text>
+          ) : null}
+          {latestCognitiveExecution ? (
+            <Text>
+              Cognition {latestCognitiveExecution.model} / {summarizeCognitiveTrace(latestCognitiveExecution)}
+            </Text>
+          ) : null}
+          {latestConversation ? (
+            <Text>
+              Conversation / {summarizeConversation(latestConversation)}
             </Text>
           ) : null}
           {snapshot ? (

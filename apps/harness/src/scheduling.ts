@@ -53,6 +53,8 @@ function uniqueRoles(roles: IntelligenceLayerRole[]): IntelligenceLayerRole[] {
   return roles.filter((role, index) => roles.indexOf(role) === index);
 }
 
+const MULTI_TURN_ROLE_ORDER: IntelligenceLayerRole[] = ["mid", "soul", "reasoner", "guard"];
+
 export function preferredScheduleRoles(arbitration: ExecutionArbitration): IntelligenceLayerRole[] {
   const preferred = arbitration.preferredLayerRole;
 
@@ -65,7 +67,7 @@ export function preferredScheduleRoles(arbitration: ExecutionArbitration): Intel
   }
 
   if (arbitration.mode === "operator-override") {
-    return uniqueRoles([preferred ?? "mid", "reasoner", "soul"]);
+    return uniqueRoles(MULTI_TURN_ROLE_ORDER);
   }
 
   if (arbitration.mode === "cognitive-escalation") {
@@ -158,7 +160,7 @@ export function planExecutionSchedule(input: ExecutionSchedulePlanInput): Execut
     input.snapshot.intelligenceLayers,
     preferredRoles,
     input.requestedLayerId,
-    input.maxWidth ?? 3
+    input.maxWidth ?? Math.max(3, preferredRoles.length)
   );
   const mode = scheduleModeForSelection(input.arbitration, selectedLayers);
   const primaryLayer = selectedLayers.at(-1);

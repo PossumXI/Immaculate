@@ -110,6 +110,15 @@ Published artifacts are written to:
 The published benchmark now carries explicit authorship and role attribution plus architecture contribution notes.
 These benchmark publication files are treated as generated artifacts and are produced locally or in CI rather than stored as permanent source files.
 
+Tier 1 cognitive-loop closure is also benchmarked in the publication report itself:
+
+- parsed LLM `ROUTE` / `REASON` / `COMMIT` structure
+- governance-aware cognition context
+- routing soft-prior bias from parsed model output
+- multi-role conversation order and guard verdicts
+
+Because these live in the benchmark report, they are carried automatically into W&B publication.
+
 Benchmark packs currently include:
 
 - `substrate-readiness`
@@ -145,6 +154,7 @@ Benchmark packs currently include:
 - mediated orchestration now decides whether to stay reflex-local, escalate cognition, guard-review, or suppress before any outward action is committed
 - execution arbitration is now durable and inspectable through a mediated orchestration pass and dedicated arbitration ledger
 - execution scheduling is now durable and inspectable, choosing whether cognition runs as a single layer or a swarm formation before any mediated execution commits
+- benchmark publication now includes Tier 1 cognitive-loop closure coverage for parsed model structure, governance-aware cognition, routing soft priors, and multi-role conversation verdicts
 - dashboard and TUI now expose the latest routing decision so operators can see why the system chose a lane instead of inferring it from side effects
 - dashboard and TUI websocket reconnection with backoff
 - operator-facing dashboard surfaces for the previously hidden backend control plane

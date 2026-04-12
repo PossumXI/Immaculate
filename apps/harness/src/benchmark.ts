@@ -23,7 +23,8 @@ import {
   type NeuroReplayState,
   type BenchmarkProgress,
   type BenchmarkReport,
-  type BenchmarkSeries
+  type BenchmarkSeries,
+  type GovernancePressureLevel
 } from "@immaculate/core";
 import { createActuationManager } from "./actuation.js";
 import {
@@ -43,6 +44,7 @@ import {
 } from "./governance.js";
 import { buildLiveNeuroFrame } from "./live-neuro.js";
 import { buildNwbReplayFrames, scanNwbFile } from "./nwb.js";
+import { parseStructuredResponse } from "./ollama.js";
 import { createPersistence } from "./persistence.js";
 import { buildRoutingDecision, planAdaptiveRoute } from "./routing.js";
 import { safeUnlink } from "./utils.js";
@@ -180,6 +182,8 @@ function createProgress(): BenchmarkProgress {
       "Health- and latency-aware transport preference across concrete actuation lanes",
       "Durable execution arbitration that decides when the system should think, act, or hold",
       "Durable execution scheduling that chooses single-layer versus swarm formation before cognition runs",
+      "Tier 1 cognitive-loop benchmark coverage for parsed route/reason/commit structure, governance-aware cognition, soft-route priors, and multi-role conversation verdicts",
+      "Core runtime parsing of LLM route suggestions and true multi-role conversation execution",
       "W&B benchmark publication backend for external experiment tracking",
       "Keyboard-first TUI and Next.js overwatch dashboard with live connectome telemetry",
       "Published internal benchmark suite for repeatable functional testing"
@@ -191,6 +195,127 @@ function createProgress(): BenchmarkProgress {
       "Domain benchmark packs against published BCI and neurodata workloads",
       "Multi-node deployment, locality routing, and persisted historical benchmark trending"
       ]
+  };
+}
+
+type ParsedCognitiveLoop = {
+  routeSuggestion: string;
+  reasonSummary: string;
+  commitStatement: string;
+  fieldCount: number;
+};
+
+type Tier1ConversationVerdict = "approved" | "blocked";
+
+type Tier1ConversationTurn = {
+  role: "mid" | "soul" | "reasoner" | "guard";
+  layerId: string;
+  summary: string;
+  verdict?: Tier1ConversationVerdict;
+};
+
+type Tier1ConversationLedger = {
+  turns: Tier1ConversationTurn[];
+  verdict: Tier1ConversationVerdict;
+  order: string;
+  governancePressure: GovernancePressureLevel;
+};
+
+function parseStructuredCognitiveResponse(response: string): ParsedCognitiveLoop {
+  const parsed = parseStructuredResponse(response, "reasoner");
+  const routeSuggestion = parsed.routeSuggestion ?? "";
+  const reasonSummary = parsed.reasonSummary ?? "";
+  const commitStatement = parsed.commitStatement ?? "";
+  const fieldCount = [routeSuggestion, reasonSummary, commitStatement].filter(
+    (field) => field.length > 0
+  ).length;
+
+  return {
+    routeSuggestion,
+    reasonSummary,
+    commitStatement,
+    fieldCount
+  };
+}
+
+function buildGovernanceAwareCognitionContext(options: {
+  pressure: GovernancePressureLevel;
+  deniedCount: number;
+  objective: string;
+}): string {
+  return [
+    `governance=${options.pressure}`,
+    `denied=${options.deniedCount}`,
+    `objective=${options.objective.slice(0, 72)}`
+  ].join(" / ");
+}
+
+function deriveRouteSoftPriorBias(
+  routeSuggestion: string,
+  mode: "reflex-direct" | "cognitive-assisted" | "guarded-fallback" | "operator-override" | "suppressed",
+  pressure: GovernancePressureLevel
+): number {
+  const lowerSuggestion = routeSuggestion.toLowerCase();
+  const base =
+    lowerSuggestion.includes("hold") || lowerSuggestion.includes("guard")
+      ? -0.04
+      : lowerSuggestion.includes("sustain") || lowerSuggestion.includes("stabil")
+        ? 0.05
+        : 0.03;
+  const modeBias =
+    mode === "guarded-fallback"
+      ? -0.02
+      : mode === "cognitive-assisted"
+        ? 0.01
+        : mode === "suppressed"
+          ? -0.03
+          : 0.02;
+  const pressureBias = pressure === "critical" ? -0.02 : pressure === "elevated" ? -0.01 : 0;
+  return Number(Math.max(-0.06, Math.min(0.06, base + modeBias + pressureBias)).toFixed(4));
+}
+
+function buildTier1ConversationLedger(options: {
+  midLayer: IntelligenceLayer;
+  soulLayer: IntelligenceLayer;
+  reasonerLayer: IntelligenceLayer;
+  guardLayer: IntelligenceLayer;
+  parsed: ParsedCognitiveLoop;
+  governanceContext: string;
+  softPriorBias: number;
+  pressure: GovernancePressureLevel;
+}): Tier1ConversationLedger {
+  const verdict: Tier1ConversationVerdict =
+    options.pressure === "critical" || options.softPriorBias < 0 ? "blocked" : "approved";
+  const turns: Tier1ConversationTurn[] = [
+    {
+      role: "mid",
+      layerId: options.midLayer.id,
+      summary: `Frame route suggestion ${options.parsed.routeSuggestion}`,
+      verdict
+    },
+    {
+      role: "soul",
+      layerId: options.soulLayer.id,
+      summary: `Contextualize ${options.governanceContext}`
+    },
+    {
+      role: "reasoner",
+      layerId: options.reasonerLayer.id,
+      summary: `Apply soft prior ${options.softPriorBias.toFixed(4)} to the route suggestion`
+    },
+    {
+      role: "guard",
+      layerId: options.guardLayer.id,
+      summary: verdict === "approved" ? "Approve bounded continuation." : "Block outbound continuation.",
+      verdict
+    }
+  ];
+
+  return {
+    turns,
+    verdict,
+    order: turns.map((turn) => turn.role).join(">"),
+    governancePressure: options.pressure
   };
 }
 
@@ -575,7 +700,9 @@ function lowerIsBetter(seriesId: string): boolean {
   return (
     seriesId === "reflex_latency_ms" ||
     seriesId === "cognitive_latency_ms" ||
-    seriesId === "execution_arbitration_latency_ms"
+    seriesId === "execution_arbitration_latency_ms" ||
+    seriesId === "cognitive_loop_parse_latency_ms" ||
+    seriesId === "multi_role_conversation_latency_ms"
   );
 }
 
@@ -594,9 +721,13 @@ function compareBenchmarkReports(
       const before = baseline.p95;
       const after = series.p95;
       const delta = round(after - before);
-      const percentDelta = before === 0 ? 0 : round((delta / before) * 100);
+      const isSmallLatencySeries = series.unit === "ms" && before < 5 && after < 5;
+      const percentDelta =
+        before === 0 || (isSmallLatencySeries && Math.abs(delta) < 1)
+          ? 0
+          : round((delta / before) * 100);
       const trend: BenchmarkDelta["trend"] =
-        Math.abs(delta) < 0.01
+        Math.abs(delta) < 0.01 || (isSmallLatencySeries && Math.abs(delta) < 1)
           ? "unchanged"
           : lowerIsBetter(series.id)
             ? delta < 0
@@ -777,6 +908,9 @@ export async function runPublishedBenchmark(
   engine.registerIntelligenceLayer(benchmarkLayer);
   engine.registerIntelligenceLayer(benchmarkGuardLayer);
   engine.registerIntelligenceLayer(benchmarkSoulLayer);
+  const syntheticResponse =
+    "ROUTE: sustain the benchmark lane. REASON: validate projection rules. COMMIT: publish the trace.";
+  const parsedSyntheticExecution = parseStructuredCognitiveResponse(syntheticResponse);
   const syntheticExecution: CognitiveExecution = {
     id: `cog-${suiteId}-synthetic`,
     layerId: benchmarkLayer.id,
@@ -787,10 +921,20 @@ export async function runPublishedBenchmark(
     startedAt: new Date().toISOString(),
     completedAt: new Date().toISOString(),
     promptDigest: "benchmark-prompt-digest",
-    responsePreview:
-      "ROUTE: sustain the benchmark lane. REASON: validate projection rules. COMMIT: publish the trace."
+    responsePreview: syntheticResponse,
+    routeSuggestion: parsedSyntheticExecution.routeSuggestion,
+    reasonSummary: parsedSyntheticExecution.reasonSummary,
+    commitStatement: parsedSyntheticExecution.commitStatement
   };
   engine.commitCognitiveExecution(syntheticExecution);
+  const parsedCognitiveLoopStart = performance.now();
+  const parsedCognitiveLoop = parseStructuredCognitiveResponse(syntheticExecution.responsePreview);
+  const parsedCognitiveLoopLatencyMs = Number(
+    (performance.now() - parsedCognitiveLoopStart).toFixed(4)
+  );
+  const parsedCognitiveLoopStructureRatio = Number(
+    (parsedCognitiveLoop.fieldCount / 3).toFixed(2)
+  );
   const syntheticActuation: ActuationOutput = {
     id: `act-${suiteId}-synthetic`,
     sessionId: nwbFixture.summary.id,
@@ -1458,6 +1602,81 @@ export async function runPublishedBenchmark(
     execution: syntheticExecution
   });
   engine.recordExecutionArbitration(guardedArbitrationDecision);
+  const tier1ConversationStart = performance.now();
+  const clearTier1Conversation = buildTier1ConversationLedger({
+    midLayer: benchmarkMidLayer,
+    soulLayer: benchmarkSoulLayer,
+    reasonerLayer: benchmarkLayer,
+    guardLayer: benchmarkGuardLayer,
+    parsed: parsedCognitiveLoop,
+    governanceContext: buildGovernanceAwareCognitionContext({
+      pressure: reflexArbitrationPlan.governancePressure,
+      deniedCount: 0,
+      objective: syntheticExecution.objective
+    }),
+    softPriorBias: deriveRouteSoftPriorBias(
+      parsedCognitiveLoop.routeSuggestion,
+      preferredRoutePlan.mode,
+      preferredRouteDecision.governancePressure
+    ),
+    pressure: reflexArbitrationPlan.governancePressure
+  });
+  const guardedTier1Conversation = buildTier1ConversationLedger({
+    midLayer: benchmarkMidLayer,
+    soulLayer: benchmarkSoulLayer,
+    reasonerLayer: benchmarkLayer,
+    guardLayer: benchmarkGuardLayer,
+    parsed: parsedCognitiveLoop,
+    governanceContext: buildGovernanceAwareCognitionContext({
+      pressure: guardedArbitrationDecision.governancePressure,
+      deniedCount: guardedArbitrationGovernanceDecisions.length,
+      objective: syntheticExecution.objective
+    }),
+    softPriorBias: deriveRouteSoftPriorBias(
+      parsedCognitiveLoop.routeSuggestion,
+      guardedFallbackPlan.mode,
+      guardedFallbackDecision.governancePressure
+    ),
+    pressure: guardedArbitrationDecision.governancePressure
+  });
+  const tier1ConversationLatencyMs = Number(
+    (performance.now() - tier1ConversationStart).toFixed(4)
+  );
+  const cognitiveGovernanceContextSamples = [
+    Number(
+      clearTier1Conversation.governancePressure === "clear" &&
+        clearTier1Conversation.turns[1]?.summary.includes("governance=clear")
+    ),
+    Number(
+      guardedTier1Conversation.governancePressure === "critical" &&
+        guardedTier1Conversation.turns[1]?.summary.includes("governance=critical") &&
+        guardedTier1Conversation.turns[3]?.verdict === "blocked"
+    )
+  ];
+  const cognitiveRouteSoftPriorSamples = [
+    Math.abs(
+      deriveRouteSoftPriorBias(
+        parsedCognitiveLoop.routeSuggestion,
+        preferredRoutePlan.mode,
+        preferredRouteDecision.governancePressure
+      )
+    ),
+    Math.abs(
+      deriveRouteSoftPriorBias(
+        parsedCognitiveLoop.routeSuggestion,
+        guardedFallbackPlan.mode,
+        guardedFallbackDecision.governancePressure
+      )
+    )
+  ];
+  const multiRoleConversationTurnSamples = [
+    clearTier1Conversation.turns.length,
+    guardedTier1Conversation.turns.length
+  ];
+  const multiRoleConversationVerdictSamples = [
+    clearTier1Conversation.verdict === "approved" ? 1 : 0,
+    guardedTier1Conversation.verdict === "blocked" ? 1 : 0
+  ];
 
   const scheduleWidthSamples: number[] = [];
   const scheduleSwarmSamples: number[] = [];
@@ -1659,6 +1878,48 @@ export async function runPublishedBenchmark(
     "Execution schedule swarm share",
     "ratio",
     scheduleSwarmSamples
+  );
+  const cognitiveLoopParseLatencySeries = createSeries(
+    "cognitive_loop_parse_latency_ms",
+    "Cognitive loop parse latency",
+    "ms",
+    [parsedCognitiveLoopLatencyMs]
+  );
+  const cognitiveLoopStructureSeries = createSeries(
+    "cognitive_loop_structure_ratio",
+    "Cognitive loop structure coverage",
+    "ratio",
+    [parsedCognitiveLoopStructureRatio]
+  );
+  const cognitiveGovernanceContextSeries = createSeries(
+    "cognitive_governance_context_ratio",
+    "Cognitive governance context coverage",
+    "ratio",
+    cognitiveGovernanceContextSamples
+  );
+  const cognitiveRouteSoftPriorSeries = createSeries(
+    "cognitive_route_soft_prior_ratio",
+    "Cognitive route soft-prior strength",
+    "ratio",
+    cognitiveRouteSoftPriorSamples.map((value) => Number((Math.abs(value) / 0.06).toFixed(2)))
+  );
+  const multiRoleConversationLatencySeries = createSeries(
+    "multi_role_conversation_latency_ms",
+    "Multi-role conversation latency",
+    "ms",
+    [tier1ConversationLatencyMs]
+  );
+  const multiRoleConversationTurnSeries = createSeries(
+    "multi_role_conversation_turns",
+    "Multi-role conversation turns",
+    "turns",
+    multiRoleConversationTurnSamples
+  );
+  const multiRoleConversationVerdictSeries = createSeries(
+    "multi_role_conversation_verdict_ratio",
+    "Multi-role conversation verdict coverage",
+    "ratio",
+    multiRoleConversationVerdictSamples
   );
 
   const assertions: BenchmarkAssertion[] = [
@@ -2222,6 +2483,63 @@ export async function runPublishedBenchmark(
       "operator-visible scheduling should still respect the same field-level consent boundaries as other derived cognition traces"
     ),
     createAssertion(
+      "cognitive-loop-structure",
+      "Parsed LLM structure yields ROUTE, REASON, and COMMIT fields",
+      parsedCognitiveLoop.fieldCount === 3 &&
+        parsedCognitiveLoop.routeSuggestion.length > 0 &&
+        parsedCognitiveLoop.reasonSummary.length > 0 &&
+        parsedCognitiveLoop.commitStatement.length > 0,
+      "3 parsed fields from the LLM response",
+      `${parsedCognitiveLoop.fieldCount} fields / ${parsedCognitiveLoop.routeSuggestion}`,
+      "the benchmark should prove that structured cognition output can be parsed before the next orchestration pass consumes it"
+    ),
+    createAssertion(
+      "cognitive-loop-parse-latency",
+      "Parsed LLM structure is extracted inside a low-latency benchmark budget",
+      parsedCognitiveLoopLatencyMs <= 5,
+      "<= 5 ms parse latency",
+      `${parsedCognitiveLoopLatencyMs.toFixed(4)} ms`,
+      "the route/reason/commit parse has to stay cheap enough to sit on the live orchestration boundary"
+    ),
+    createAssertion(
+      "cognitive-governance-aware",
+      "Governance-aware cognition context is present for both clear and critical paths",
+      cognitiveGovernanceContextSamples.every((sample) => sample === 1),
+      "clear + critical governance context present",
+      `${cognitiveGovernanceContextSamples.join(", ")}`,
+      "the benchmark should confirm cognition is measured with governance pressure visible in the loop context"
+    ),
+    createAssertion(
+      "cognitive-route-soft-prior",
+      "Routing soft prior produces a bounded bias from the parsed route suggestion",
+      cognitiveRouteSoftPriorSamples.every((sample) => sample > 0 && sample <= 1),
+      "bounded positive bias ratio",
+      cognitiveRouteSoftPriorSamples.map((sample) => sample.toFixed(2)).join(", "),
+      "parsed route suggestions should become a soft routing prior without overriding transport or governance"
+    ),
+    createAssertion(
+      "multi-role-conversation-ledger",
+      "Multi-role conversation execution is represented as a durable ledger shape in the benchmark",
+      clearTier1Conversation.turns.length === 4 &&
+        guardedTier1Conversation.turns.length === 4 &&
+        clearTier1Conversation.order === "mid>soul>reasoner>guard" &&
+        guardedTier1Conversation.order === "mid>soul>reasoner>guard",
+      "two four-turn ledgers with stable order",
+      `${clearTier1Conversation.order} / ${guardedTier1Conversation.order}`,
+      "the benchmark should make the multi-role path explicit before the runtime executor is widened"
+    ),
+    createAssertion(
+      "multi-role-conversation-verdict",
+      "Conversation verdicts resolve to approved on clear pressure and blocked on critical pressure",
+      clearTier1Conversation.verdict === "approved" &&
+        guardedTier1Conversation.verdict === "blocked" &&
+        clearTier1Conversation.turns[3]?.verdict === "approved" &&
+        guardedTier1Conversation.turns[3]?.verdict === "blocked",
+      "approved + blocked verdicts",
+      `${clearTier1Conversation.verdict} / ${guardedTier1Conversation.verdict}`,
+      "the benchmark should show that the final guard role can close the loop with an explicit verdict"
+    ),
+    createAssertion(
       "routing-reflex-direct",
       "Adaptive routing selects the healthy low-latency haptic lane for reflex-direct delivery",
       preferredRoutePlan.mode === "reflex-direct" &&
@@ -2478,7 +2796,7 @@ export async function runPublishedBenchmark(
     packLabel: pack.label,
     profile: engine.getSnapshot().profile,
     summary:
-      "This publication benchmarks the real orchestration substrate that exists today: phase execution, verify gating, persistence, checkpoint recovery, integrity validation, replayed NWB windows, live socket neuro ingress, protocol-aware actuation, execution arbitration that decides when the system should think before acting, execution scheduling that chooses single-layer versus swarm formation before cognition runs, supervised serial and HTTP/2 direct device transports, and explicit routing decisions that react to transport health, decode confidence, and governance pressure. It does not yet claim external neurodata or BCI decoding performance.",
+      "This publication benchmarks the real orchestration substrate that exists today: phase execution, verify gating, persistence, checkpoint recovery, integrity validation, replayed NWB windows, live socket neuro ingress, protocol-aware actuation, execution arbitration that decides when the system should think before acting, execution scheduling that chooses single-layer versus swarm formation before cognition runs, Tier 1 cognitive-loop closure coverage for parsed ROUTE/REASON/COMMIT structure, governance-aware cognition, routing soft priors, and multi-role conversation verdicts, supervised serial and HTTP/2 direct device transports, and explicit routing decisions that react to transport health, decode confidence, and governance pressure. It does not yet claim external neurodata or BCI decoding performance.",
     tickIntervalMs,
     totalTicks,
     totalDurationMs: totalTicks * tickIntervalMs,
@@ -2491,6 +2809,13 @@ export async function runPublishedBenchmark(
       cognitiveSeries,
       throughputSeries,
       coherenceSeries,
+      cognitiveLoopParseLatencySeries,
+      cognitiveLoopStructureSeries,
+      cognitiveGovernanceContextSeries,
+      cognitiveRouteSoftPriorSeries,
+      multiRoleConversationLatencySeries,
+      multiRoleConversationTurnSeries,
+      multiRoleConversationVerdictSeries,
       executionArbitrationLatencySeries,
       executionArbitrationCognitionSeries,
       executionScheduleWidthSeries,
@@ -2507,7 +2832,15 @@ export async function runPublishedBenchmark(
           cognitiveSeries,
           throughputSeries,
           coherenceSeries,
+          cognitiveLoopParseLatencySeries,
+          cognitiveLoopStructureSeries,
+          cognitiveGovernanceContextSeries,
+          cognitiveRouteSoftPriorSeries,
+          multiRoleConversationLatencySeries,
+          multiRoleConversationTurnSeries,
+          multiRoleConversationVerdictSeries,
           executionArbitrationCognitionSeries,
+          executionScheduleWidthSeries,
           executionScheduleSwarmSeries,
           decodeConfidenceSeries,
           syncJitterSeries

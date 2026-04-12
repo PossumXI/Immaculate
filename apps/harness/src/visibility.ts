@@ -1,4 +1,5 @@
 import type {
+  AgentTurn,
   ActuationOutput,
   CognitiveExecution,
   ExecutionSchedule,
@@ -7,12 +8,24 @@ import type {
   NeuroFrameWindow,
   NeuroSessionSummary,
   NeuroStreamSummary,
+  MultiAgentConversation,
   PhaseSnapshot
 } from "@immaculate/core";
 import type { BidsDatasetFile, BidsDatasetRecord } from "./bids.js";
 import type { NwbSessionRecord } from "./nwb.js";
 
 const REDACTED = "[redacted]";
+
+type CognitiveExecutionTrace = CognitiveExecution & {
+  routeSuggestion?: string;
+  reasonSummary?: string;
+  commitStatement?: string;
+  guardVerdict?: string;
+};
+
+type PhaseSnapshotWithConversations = PhaseSnapshot & {
+  conversations?: MultiAgentConversation[];
+};
 
 export type VisibilityScope =
   | "redacted"
@@ -176,12 +189,14 @@ export function projectNeuroSessionRecord(
 }
 
 export function redactPhaseSnapshot(snapshot: PhaseSnapshot): PhaseSnapshot {
+  const snapshotWithConversations = snapshot as PhaseSnapshotWithConversations;
   return {
     ...snapshot,
     datasets: snapshot.datasets.map(redactDatasetSummary),
     neuroSessions: snapshot.neuroSessions.map(redactNeuroSessionSummary),
     neuroFrames: snapshot.neuroFrames.map(redactNeuroFrameWindow),
     cognitiveExecutions: snapshot.cognitiveExecutions.map(redactCognitiveExecution),
+    conversations: snapshotWithConversations.conversations?.map(redactConversationRecord),
     executionSchedules: snapshot.executionSchedules.map(redactExecutionSchedule),
     actuationOutputs: snapshot.actuationOutputs.map(redactActuationOutput),
     objective: projectDerivedText(snapshot.objective),
@@ -255,10 +270,14 @@ export function projectNeuroFrameWindow(
 
 export function redactCognitiveExecution(execution: CognitiveExecution): CognitiveExecution {
   return {
-    ...execution,
+    ...(execution as CognitiveExecutionTrace),
     objective: REDACTED,
     promptDigest: REDACTED,
-    responsePreview: REDACTED
+    responsePreview: REDACTED,
+    routeSuggestion: REDACTED,
+    reasonSummary: REDACTED,
+    commitStatement: REDACTED,
+    guardVerdict: execution.guardVerdict ? "unknown" : undefined
   };
 }
 
@@ -269,6 +288,14 @@ export function projectCognitiveExecution(
   const visibility = deriveVisibilityScope(consentScope);
   if (visibility === "intelligence" || visibility === "audit") {
     return execution;
+  }
+  if (visibility === "benchmark") {
+    return {
+      ...execution,
+      objective: REDACTED,
+      promptDigest: REDACTED,
+      responsePreview: REDACTED
+    };
   }
   return redactCognitiveExecution(execution);
 }
@@ -314,6 +341,50 @@ export function redactExecutionSchedule(schedule: ExecutionSchedule): ExecutionS
   };
 }
 
+function redactConversationTurn(turn: AgentTurn): AgentTurn {
+  return {
+    ...turn,
+    objective: REDACTED,
+    responsePreview: REDACTED,
+    routeSuggestion: REDACTED,
+    reasonSummary: REDACTED,
+    commitStatement: REDACTED,
+    guardVerdict: turn.guardVerdict
+  };
+}
+
+function redactConversationRecord(record: MultiAgentConversation): MultiAgentConversation {
+  const safeOrder = Array.isArray(record.turns) && record.turns.length > 0
+    ? record.turns.map((turn) => turn.role).join(">")
+    : record.roles.join(">");
+  return {
+    ...record,
+    finalRouteSuggestion: REDACTED,
+    finalCommitStatement: REDACTED,
+    summary: `mode=${record.mode} status=${record.status} turns=${record.turnCount} verdict=${record.guardVerdict} order=${safeOrder || "none"}`,
+    turns: Array.isArray(record.turns) ? record.turns.map(redactConversationTurn) : [],
+  };
+}
+
+export function projectConversation(
+  record: MultiAgentConversation,
+  consentScope?: string
+): MultiAgentConversation {
+  const visibility = deriveVisibilityScope(consentScope);
+  if (visibility === "audit" || visibility === "intelligence") {
+    return record;
+  }
+
+  if (visibility === "benchmark") {
+    return {
+      ...redactConversationRecord(record),
+      turns: Array.isArray(record.turns) ? record.turns.map(redactConversationTurn) : []
+    };
+  }
+
+  return redactConversationRecord(record);
+}
+
 export function projectExecutionSchedule(
   schedule: ExecutionSchedule,
   consentScope?: string
@@ -337,10 +408,12 @@ export function projectPhaseSnapshot(
   consentScope?: string
 ): PhaseSnapshot {
   const visibility = deriveVisibilityScope(consentScope);
+  const snapshotWithConversations = snapshot as PhaseSnapshotWithConversations;
   if (visibility === "audit") {
     return snapshot;
   }
   if (visibility === "benchmark") {
+    const snapshotWithConversations = snapshot as PhaseSnapshotWithConversations;
     return {
       ...snapshot,
       datasets: snapshot.datasets.map(redactDatasetSummary),
@@ -348,6 +421,9 @@ export function projectPhaseSnapshot(
       neuroFrames: snapshot.neuroFrames.map((frame) => projectNeuroFrameWindow(frame, consentScope)),
       cognitiveExecutions: snapshot.cognitiveExecutions.map((execution) =>
         projectCognitiveExecution(execution, consentScope)
+      ),
+      conversations: snapshotWithConversations.conversations?.map((conversation) =>
+        projectConversation(conversation, consentScope)
       ),
       executionSchedules: snapshot.executionSchedules.map((schedule) =>
         projectExecutionSchedule(schedule, consentScope)
@@ -373,6 +449,7 @@ function projectDerivedText(value: string): string {
     trimmed.startsWith("neuro frame ") ||
     trimmed.includes("decode confidence") ||
     trimmed.startsWith("cognitive execution ") ||
+    trimmed.startsWith("Conversation ") ||
     trimmed.startsWith("Execution schedule ") ||
     trimmed.startsWith("actuation output ")
   ) {

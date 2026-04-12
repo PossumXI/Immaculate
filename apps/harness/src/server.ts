@@ -28,6 +28,11 @@ import {
   preferredScheduleRoles
 } from "./scheduling.js";
 import {
+  buildAgentTurn,
+  buildConversationObjective,
+  buildConversationRecord
+} from "./conversation.js";
+import {
   loadPublishedBenchmarkIndex,
   loadPublishedBenchmarkReport,
   loadPublishedBenchmarkReportBySuiteId
@@ -52,12 +57,17 @@ import {
   type GovernanceBinding
 } from "./governance.js";
 import { createPersistence } from "./persistence.js";
-import { buildRoutingDecision, planAdaptiveRoute } from "./routing.js";
+import {
+  buildRoutingDecision,
+  deriveGovernancePressure,
+  planAdaptiveRoute
+} from "./routing.js";
 import { resolvePathWithinAllowedRoot } from "./utils.js";
 import {
   deriveVisibilityScope,
   projectActuationOutput,
   projectCognitiveExecution,
+  projectConversation,
   projectExecutionSchedule,
   projectDatasetRecord,
   projectEventEnvelope,
@@ -669,6 +679,13 @@ function createActuationOutputId(): string {
   return `act-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function recentGovernanceDeniedCount(): number {
+  const windowStart = Date.now() - 5 * 60 * 1000;
+  return governance
+    .listDecisions()
+    .filter((decision) => !decision.allowed && Date.parse(decision.timestamp) >= windowStart).length;
+}
+
 function clampActuationIntensity(value: number | undefined, fallback: number): number {
   const candidate = Number.isFinite(value) ? Number(value) : fallback;
   return Math.min(1, Math.max(0, candidate));
@@ -677,6 +694,8 @@ function clampActuationIntensity(value: number | undefined, fallback: number): n
 async function executeCognitivePass(options: {
   layer: IntelligenceLayer;
   objective?: string;
+  context?: string;
+  consentScope?: string;
 }) {
   const busyLayer: IntelligenceLayer = {
     ...options.layer,
@@ -689,10 +708,28 @@ async function executeCognitivePass(options: {
 
   try {
     const activeSnapshot = phaseSnapshotSchema.parse(engine.getSnapshot());
+    const governancePressure = deriveGovernancePressure(
+      options.consentScope,
+      governance.getStatus(),
+      governance.listDecisions()
+    );
+    const deniedCount = recentGovernanceDeniedCount();
+    app.log.info(
+      {
+        layerId: busyLayer.id,
+        role: busyLayer.role,
+        governancePressure,
+        deniedCount
+      },
+      "Executing governed cognitive pass."
+    );
     const result = await runOllamaExecution({
       snapshot: activeSnapshot,
       layer: busyLayer,
-      objective: options.objective
+      objective: options.objective,
+      context: options.context,
+      governancePressure,
+      recentDeniedCount: deniedCount
     });
     const settledLayer: IntelligenceLayer = {
       ...busyLayer,
@@ -726,42 +763,85 @@ async function executeCognitivePass(options: {
 async function executeCognitiveSchedule(options: {
   schedule: ReturnType<typeof engine.getSnapshot>["executionSchedules"][number];
   objective?: string;
+  consentScope?: string;
+  sessionId?: string;
+  arbitrationId?: string;
 }) {
   const executions: ReturnType<typeof engine.getSnapshot>["cognitiveExecutions"] = [];
   const layers: IntelligenceLayer[] = [];
+  const turns: ReturnType<typeof engine.getSnapshot>["conversations"][number]["turns"] = [];
   const responses: string[] = [];
-  let currentObjective = options.objective?.trim() || options.schedule.objective;
+  const baseObjective = options.objective?.trim() || options.schedule.objective;
   let latestSnapshot = phaseSnapshotSchema.parse(engine.getSnapshot());
+  const scheduleLayerOrder = new Map(
+    options.schedule.layerIds.map((layerId, index) => [layerId, index] as const)
+  );
 
-  for (const layerId of options.schedule.layerIds) {
-    const layer = getPreferredLayer(layerId);
-    if (!layer) {
-      continue;
-    }
+  if (options.schedule.shouldRunCognition && options.schedule.layerRoles.length > 0) {
+    await ensurePreferredIntelligenceLayers(options.schedule.layerRoles);
+    latestSnapshot = phaseSnapshotSchema.parse(engine.getSnapshot());
+  }
 
-    const layerObjective =
-      responses.length === 0
-        ? currentObjective
-        : `${currentObjective}\nPrior synthesis: ${responses.at(-1)?.slice(0, 240) ?? "none"}`;
+  const scheduleLayerIds = new Set(options.schedule.layerIds);
+  const scheduledLayers = latestSnapshot.intelligenceLayers
+    .filter((layer) => layer.status !== "offline")
+    .filter((layer) => scheduleLayerIds.has(layer.id))
+    .sort(
+      (left, right) =>
+        (scheduleLayerOrder.get(left.id) ?? Number.MAX_SAFE_INTEGER) -
+        (scheduleLayerOrder.get(right.id) ?? Number.MAX_SAFE_INTEGER)
+    )
+    .slice(0, options.schedule.layerIds.length > 1 ? options.schedule.layerIds.length : 1);
+
+  for (const layer of scheduledLayers) {
+    const prompt = buildConversationObjective({
+      baseObjective,
+      role: layer.role,
+      priorTurns: turns
+    });
     const result = await executeCognitivePass({
       layer,
-      objective: layerObjective
+      objective: prompt.objective,
+      context: prompt.context,
+      consentScope: options.consentScope
     });
 
     layers.push(result.layer);
     executions.push(result.execution);
     responses.push(result.response);
+    turns.push(
+      buildAgentTurn({
+        execution: result.execution,
+        layer: result.layer
+      })
+    );
     latestSnapshot = result.snapshot;
-    currentObjective = layerObjective;
+  }
+
+  const conversation =
+    turns.length > 0
+      ? buildConversationRecord({
+          sessionId: options.sessionId,
+          arbitrationId: options.arbitrationId,
+          schedule: options.schedule,
+          turns
+        })
+      : undefined;
+
+  if (conversation) {
+    latestSnapshot = phaseSnapshotSchema.parse(
+      projectPhaseSnapshot(engine.recordConversation(conversation), options.consentScope)
+    );
+    await persistence.persist(engine.getDurableState());
+    emitSnapshot();
   }
 
   return {
     layers,
     executions,
-    primaryLayer:
-      layers.find((layer) => layer.id === options.schedule.primaryLayerId) ?? layers.at(-1),
-    primaryExecution:
-      executions.find((execution) => execution.layerId === options.schedule.primaryLayerId) ?? executions.at(-1),
+    conversation,
+    primaryLayer: layers.at(-1),
+    primaryExecution: executions.at(-1),
     combinedResponse: responses.join("\n"),
     snapshot: latestSnapshot
   };
@@ -778,6 +858,7 @@ async function dispatchWithRoute(options: {
     snapshot: engine.getSnapshot(),
     frame: options.frame,
     execution: options.execution,
+    cognitiveRouteSuggestion: options.execution?.routeSuggestion,
     adapters: actuationManager.listAdapters(),
     transports: actuationManager.listTransports(),
     governanceStatus: governance.getStatus(),
@@ -801,7 +882,7 @@ async function dispatchWithRoute(options: {
     options.body.intensity,
     routePlan.recommendedIntensity
   );
-  const targetNodeId = options.body.targetNodeId?.trim() || "actuator-grid";
+  const targetNodeId = options.body.targetNodeId?.trim() || routePlan.targetNodeId;
   const output: ActuationOutput = {
     id: createActuationOutputId(),
     sessionId: options.body.sessionId?.trim() || options.frame?.sessionId,
@@ -1192,6 +1273,7 @@ app.get("/api/intelligence", async () => {
   return {
     layers: snapshot.intelligenceLayers,
     executions: snapshot.cognitiveExecutions,
+    conversations: snapshot.conversations,
     schedules: snapshot.executionSchedules,
     recommendedLayerId: getPreferredLayer()?.id,
     visibility: "redacted"
@@ -1272,6 +1354,31 @@ app.get("/api/intelligence/schedules", async (request, reply) => {
     schedules: engine
       .getSnapshot()
       .executionSchedules.map((schedule) => projectExecutionSchedule(schedule, consentScope)),
+    visibility: deriveVisibilityScope(consentScope)
+  };
+});
+
+app.get("/api/intelligence/conversations", async (request, reply) => {
+  if (
+    !authorizeGovernedAction(
+      "cognitive-trace-read",
+      "/api/intelligence/conversations",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  const consentScope = getGovernanceBinding(
+    "cognitive-trace-read",
+    "/api/intelligence/conversations",
+    request
+  ).consentScope;
+  return {
+    conversations: engine
+      .getSnapshot()
+      .conversations.map((conversation) => projectConversation(conversation, consentScope)),
     visibility: deriveVisibilityScope(consentScope)
   };
 });
@@ -1409,10 +1516,14 @@ app.post("/api/intelligence/ollama/register", async (request, reply) => {
   }
 
   const body =
-    (request.body as { role?: IntelligenceLayer["role"] } | undefined) ?? {};
+    (request.body as { role?: IntelligenceLayer["role"]; model?: string } | undefined) ?? {};
 
   try {
-    const layer = await discoverPreferredOllamaLayer(body.role ?? "mid");
+    const layer = await discoverPreferredOllamaLayer(
+      body.role ?? "mid",
+      undefined,
+      body.model?.trim() || undefined
+    );
     if (!layer) {
       reply.code(404);
       return {
@@ -1840,6 +1951,11 @@ app.post("/api/intelligence/run", async (request, reply) => {
   }
 
   const body = (request.body as { layerId?: string; objective?: string } | undefined) ?? {};
+  const consentScope = getGovernanceBinding(
+    "cognitive-execution",
+    "/api/intelligence/run",
+    request
+  ).consentScope;
   const requestedLayer = body.layerId
     ? getPreferredLayer(body.layerId)
     : await ensurePreferredIntelligenceLayer();
@@ -1863,7 +1979,8 @@ app.post("/api/intelligence/run", async (request, reply) => {
   try {
     const result = await executeCognitivePass({
       layer,
-      objective: body.objective
+      objective: body.objective,
+      consentScope
     });
 
     return {
@@ -2002,6 +2119,9 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
   let mediationLayer: IntelligenceLayer | undefined;
   let mediationExecution = execution;
   let mediationResponse: string | undefined;
+  let mediationConversation:
+    | ReturnType<typeof engine.getSnapshot>["conversations"][number]
+    | undefined;
   let cognitionSnapshot = scheduleSnapshot;
 
   if (scheduleDecision.shouldRunCognition) {
@@ -2021,11 +2141,15 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
     try {
       const cognition = await executeCognitiveSchedule({
         schedule: scheduleDecision,
-        objective: scheduleDecision.objective
+        objective: scheduleDecision.objective,
+        consentScope,
+        sessionId: resolvedSessionId,
+        arbitrationId: arbitrationDecision.id
       });
       mediationLayer = cognition.primaryLayer;
       mediationExecution = cognition.primaryExecution;
       mediationResponse = cognition.combinedResponse;
+      mediationConversation = cognition.conversation;
       cognitionSnapshot = cognition.snapshot;
     } catch (error) {
       reply.code(503);
@@ -2052,7 +2176,9 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
         channel: body.channel,
         command: body.command,
         intensity: body.intensity,
-        suppressed: !arbitrationPlan.shouldDispatchActuation
+        suppressed:
+          !arbitrationPlan.shouldDispatchActuation ||
+          mediationConversation?.guardVerdict === "blocked"
       },
       consentScope,
       execution: mediationExecution,
@@ -2067,6 +2193,7 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
       schedulePlan,
       layer: mediationLayer,
       execution: mediationExecution,
+      conversation: mediationConversation,
       response: mediationResponse,
       routeDecision: dispatchResult.routeDecision,
       adapter: dispatchResult.adapter,

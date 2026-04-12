@@ -21,6 +21,55 @@ For each breakthrough, record:
 
 ### 2026-04-12
 
+#### The schedule became the source of truth for multi-role cognition
+
+What changed:
+- the operator-override scheduler now records the full four-role formation (`mid>soul>reasoner>guard`) instead of a truncated subset
+- the live conversation executor now follows the durable `schedule.layerIds` exactly, rather than widening the run opportunistically at execution time
+- structured cognition parsing now accepts both line-separated and compact inline `ROUTE / REASON / COMMIT / VERDICT` formats
+- the new cognitive-loop benchmark series now participate in historical comparison and W&B publication instead of being visible-only side data
+
+Why it matters:
+- this closes a subtle but serious systems gap: before this fix, the runtime conversation could outrun the schedule ledger and break replay authority
+- the scheduler is now a real contract, not just a hint
+- the parser is now resilient to a class of compact model outputs that would otherwise silently erase the structured control seam
+
+Evidence:
+- live governed mediation now returns a `guarded-swarm` schedule with `layerRoles = mid>soul>reasoner>guard` and a matching four-turn persisted conversation
+- `npm run benchmark:gate:all` passed again with zero violations after the schedule-authority and parser-hardening fixes
+- the benchmark publication now carries the Tier 1 cognitive-loop series into comparison deltas, not just the raw report payload
+
+What this unlocks next:
+- genuine schedule-aware heterogeneous execution, because the scheduler can now be trusted as the authoritative topology record
+- stronger replay, audit, and future locality routing, because runtime cognition no longer diverges from the durable plan
+- more aggressive structured-cognition experiments without brittle parser failure on compact model outputs
+
+### 2026-04-12
+
+#### The benchmark now exposes the cognitive loop as a first-class artifact
+
+What changed:
+- the benchmark publication now records parsed `ROUTE` / `REASON` / `COMMIT` structure from the cognition trace
+- governance-aware cognition context is benchmarked explicitly instead of being an implicit assumption
+- routing soft-prior bias is measured as a separate benchmark signal
+- multi-role conversation order and guard verdicts are now part of the benchmark report and W&B payload
+
+Why it matters:
+- this makes the missing cognitive seam measurable before the runtime executor is widened further
+- the project can now publish, inspect, and trend the shape of cognition, not just its downstream dispatch effects
+- the benchmark report now reflects the real control problem: parse the model, inject governance, bias routing softly, and resolve the conversation with an explicit verdict
+
+Evidence:
+- `apps/harness/src/benchmark.ts` now emits dedicated assertions and series for parsed LLM structure, governance-aware cognition, routing soft priors, and multi-role conversation coverage
+- the benchmark markdown and W&B publication automatically carry those new series and assertions
+
+What this unlocks next:
+- runtime prompt parsing and structured cognitive traces in the core execution path
+- multi-role cognition executors that can carry the conversation ledger beyond a benchmark-local artifact
+- tighter feedback between parsed model suggestions and future route selection
+
+### 2026-04-12
+
 #### Mediated orchestration learns to choose an intelligence formation
 
 What changed:

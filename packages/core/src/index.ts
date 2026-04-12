@@ -359,6 +359,9 @@ export type IntelligenceLayerRole = (typeof intelligenceLayerRoles)[number];
 export const intelligenceLayerStatuses = ["ready", "offline", "degraded", "busy"] as const;
 export type IntelligenceLayerStatus = (typeof intelligenceLayerStatuses)[number];
 
+export const guardVerdicts = ["approved", "blocked", "unknown"] as const;
+export type GuardVerdict = (typeof guardVerdicts)[number];
+
 export type IntelligenceLayer = {
   id: string;
   name: string;
@@ -384,6 +387,47 @@ export type CognitiveExecution = {
   completedAt: string;
   promptDigest: string;
   responsePreview: string;
+  routeSuggestion?: string;
+  reasonSummary?: string;
+  commitStatement?: string;
+  guardVerdict?: GuardVerdict;
+  governancePressure?: GovernancePressureLevel;
+  recentDeniedCount?: number;
+};
+
+export type AgentTurn = {
+  id: string;
+  layerId: string;
+  role: IntelligenceLayerRole;
+  model: string;
+  status: "completed" | "failed";
+  objective: string;
+  responsePreview: string;
+  routeSuggestion?: string;
+  reasonSummary?: string;
+  commitStatement?: string;
+  guardVerdict?: GuardVerdict;
+  latencyMs: number;
+  startedAt: string;
+  completedAt: string;
+};
+
+export type MultiAgentConversation = {
+  id: string;
+  sessionId?: string;
+  arbitrationId?: string;
+  scheduleId?: string;
+  mode: "single-turn" | "multi-turn";
+  status: "completed" | "failed" | "blocked";
+  roles: IntelligenceLayerRole[];
+  turnCount: number;
+  guardVerdict: GuardVerdict;
+  finalRouteSuggestion?: string;
+  finalCommitStatement?: string;
+  summary: string;
+  startedAt: string;
+  completedAt: string;
+  turns: AgentTurn[];
 };
 
 export const actuationChannels = ["visual", "haptic", "stim"] as const;
@@ -526,6 +570,7 @@ export type PhaseSnapshot = {
   neuroFrames: NeuroFrameWindow[];
   intelligenceLayers: IntelligenceLayer[];
   cognitiveExecutions: CognitiveExecution[];
+  conversations: MultiAgentConversation[];
   executionArbitrations: ExecutionArbitration[];
   executionSchedules: ExecutionSchedule[];
   routingDecisions: RoutingDecision[];
@@ -578,6 +623,17 @@ const vec3Schema = z.object({
   y: z.number(),
   z: z.number()
 });
+
+function hasAtMostWords(value: string, maxWords: number): boolean {
+  return value
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length <= maxWords;
+}
+
+const boundedPhraseSchema = z
+  .string()
+  .refine((value) => hasAtMostWords(value, 24), "Must be 24 words or fewer.");
 
 const connectomeNodeSchema = z.object({
   id: z.string(),
@@ -868,7 +924,48 @@ export const cognitiveExecutionSchema = z.object({
   startedAt: z.string(),
   completedAt: z.string(),
   promptDigest: z.string(),
-  responsePreview: z.string()
+  responsePreview: z.string(),
+  routeSuggestion: boundedPhraseSchema.optional(),
+  reasonSummary: boundedPhraseSchema.optional(),
+  commitStatement: boundedPhraseSchema.optional(),
+  guardVerdict: z.enum(guardVerdicts).optional(),
+  governancePressure: z.enum(governancePressureLevels).optional(),
+  recentDeniedCount: z.number().int().nonnegative().optional()
+});
+
+export const agentTurnSchema = z.object({
+  id: z.string(),
+  layerId: z.string(),
+  role: z.enum(intelligenceLayerRoles),
+  model: z.string(),
+  status: z.enum(["completed", "failed"]),
+  objective: z.string(),
+  responsePreview: z.string(),
+  routeSuggestion: boundedPhraseSchema.optional(),
+  reasonSummary: boundedPhraseSchema.optional(),
+  commitStatement: boundedPhraseSchema.optional(),
+  guardVerdict: z.enum(guardVerdicts).optional(),
+  latencyMs: z.number().nonnegative(),
+  startedAt: z.string(),
+  completedAt: z.string()
+});
+
+export const multiAgentConversationSchema = z.object({
+  id: z.string(),
+  sessionId: z.string().optional(),
+  arbitrationId: z.string().optional(),
+  scheduleId: z.string().optional(),
+  mode: z.enum(["single-turn", "multi-turn"]),
+  status: z.enum(["completed", "failed", "blocked"]),
+  roles: z.array(z.enum(intelligenceLayerRoles)),
+  turnCount: z.number().int().nonnegative(),
+  guardVerdict: z.enum(guardVerdicts),
+  finalRouteSuggestion: boundedPhraseSchema.optional(),
+  finalCommitStatement: boundedPhraseSchema.optional(),
+  summary: z.string(),
+  startedAt: z.string(),
+  completedAt: z.string(),
+  turns: z.array(agentTurnSchema)
 });
 
 export const actuationOutputSchema = z.object({
@@ -969,6 +1066,7 @@ export const phaseSnapshotSchema = z.object({
   neuroFrames: z.array(neuroFrameWindowSchema).default([]),
   intelligenceLayers: z.array(intelligenceLayerSchema).default([]),
   cognitiveExecutions: z.array(cognitiveExecutionSchema).default([]),
+  conversations: z.array(multiAgentConversationSchema).default([]),
   executionArbitrations: z.array(executionArbitrationSchema).default([]),
   executionSchedules: z.array(executionScheduleSchema).default([]),
   routingDecisions: z.array(routingDecisionSchema).default([]),
@@ -1390,6 +1488,7 @@ function createInitialSnapshot(): PhaseSnapshot {
     neuroFrames: [],
     intelligenceLayers: [],
     cognitiveExecutions: [],
+    conversations: [],
     executionArbitrations: [],
     executionSchedules: [],
     routingDecisions: [],
@@ -1942,6 +2041,60 @@ function mergeCognitiveExecutionIntoSnapshot(
     cognitiveExecutions: nextExecutions,
     highlightedNodeId: nodes.some((node) => node.id === nodeId) ? nodeId : snapshot.highlightedNodeId,
     objective: `Cognitive execution ${execution.id} ${execution.status} on ${execution.model} in ${execution.latencyMs.toFixed(1)} ms.`
+  };
+}
+
+function mergeConversationIntoSnapshot(
+  snapshot: PhaseSnapshot,
+  conversation: MultiAgentConversation
+): PhaseSnapshot {
+  const nextConversations = [
+    conversation,
+    ...snapshot.conversations.filter((candidate) => candidate.id !== conversation.id)
+  ].slice(0, 24);
+  const conversationBias = conversation.mode === "multi-turn" ? 0.16 : 0.08;
+  const guardBias = conversation.guardVerdict === "blocked" ? 0.22 : 0.06;
+  const nodes = snapshot.nodes.map((node) => {
+    if (node.id === "planner-swarm") {
+      return {
+        ...node,
+        activation: clamp(node.activation * 0.58 + conversationBias * 0.42 + 0.08),
+        load: clamp(node.load * 0.66 + conversation.turnCount * 0.04 + 0.06),
+        throughput: clamp(node.throughput * 0.72 + conversationBias * 0.22 + 0.04),
+        tags: [
+          ...node.tags.filter(
+            (tag) =>
+              !tag.startsWith("conversation-mode:") &&
+              !tag.startsWith("conversation-verdict:")
+          ),
+          `conversation-mode:${conversation.mode}`,
+          `conversation-verdict:${conversation.guardVerdict}`
+        ]
+      };
+    }
+
+    if (node.id === "integrity-gate") {
+      return {
+        ...node,
+        activation: clamp(node.activation * 0.74 + guardBias * 0.36 + 0.04),
+        load: clamp(node.load * 0.8 + guardBias * 0.18)
+      };
+    }
+
+    return node;
+  });
+
+  return {
+    ...snapshot,
+    nodes,
+    conversations: nextConversations,
+    highlightedNodeId:
+      conversation.guardVerdict === "blocked"
+        ? "integrity-gate"
+        : conversation.turnCount > 1
+          ? "planner-swarm"
+          : snapshot.highlightedNodeId,
+    objective: `Conversation ${conversation.id} ${conversation.status} with ${conversation.turnCount} turn(s) under ${conversation.guardVerdict} guard verdict.`
   };
 }
 
@@ -3108,6 +3261,7 @@ function resetState(
   const retainedNeuroFrames = clearEvents ? [] : state.snapshot.neuroFrames;
   const retainedIntelligenceLayers = clearEvents ? [] : state.snapshot.intelligenceLayers;
   const retainedCognitiveExecutions = clearEvents ? [] : state.snapshot.cognitiveExecutions;
+  const retainedConversations = clearEvents ? [] : state.snapshot.conversations;
   const retainedExecutionArbitrations = clearEvents ? [] : state.snapshot.executionArbitrations;
   const retainedExecutionSchedules = clearEvents ? [] : state.snapshot.executionSchedules;
   const retainedRoutingDecisions = clearEvents ? [] : state.snapshot.routingDecisions;
@@ -3131,6 +3285,9 @@ function resetState(
   }
   for (const execution of retainedCognitiveExecutions) {
     state.snapshot = mergeCognitiveExecutionIntoSnapshot(state.snapshot, execution);
+  }
+  for (const conversation of retainedConversations) {
+    state.snapshot = mergeConversationIntoSnapshot(state.snapshot, conversation);
   }
   for (const arbitration of retainedExecutionArbitrations) {
     state.snapshot = mergeExecutionArbitrationIntoSnapshot(state.snapshot, arbitration);
@@ -3194,6 +3351,7 @@ export function createEngine(options?: {
   ingestNeuroFrame: (frame: NeuroFrameWindow) => PhaseSnapshot;
   registerIntelligenceLayer: (layer: IntelligenceLayer) => PhaseSnapshot;
   commitCognitiveExecution: (execution: CognitiveExecution) => PhaseSnapshot;
+  recordConversation: (conversation: MultiAgentConversation) => PhaseSnapshot;
   recordExecutionArbitration: (arbitration: ExecutionArbitration) => PhaseSnapshot;
   recordExecutionSchedule: (schedule: ExecutionSchedule) => PhaseSnapshot;
   recordRoutingDecision: (decision: RoutingDecision) => PhaseSnapshot;
@@ -3467,6 +3625,29 @@ export function createEngine(options?: {
     return state.snapshot;
   }
 
+  function recordConversation(conversation: MultiAgentConversation): PhaseSnapshot {
+    const parsed = multiAgentConversationSchema.parse(conversation) as MultiAgentConversation;
+    state.snapshot = mergeConversationIntoSnapshot(state.snapshot, parsed);
+    state.snapshot = {
+      ...state.snapshot,
+      metrics: computeMetrics(state.snapshot.nodes, state.snapshot.edges, state.snapshot.passes)
+    };
+
+    pushEvent(state, {
+      schemaName: "immaculate.multi-agent-conversation.recorded",
+      subject: { type: "agent", id: parsed.scheduleId ?? "planner-swarm" },
+      purpose: ["cognitive-plane", "conversation", parsed.mode, parsed.guardVerdict],
+      payload: {
+        conversation: parsed
+      },
+      summary: `multi-agent conversation ${parsed.id} ${parsed.status} with ${parsed.turnCount} turn(s) under ${parsed.guardVerdict} verdict`
+    });
+
+    refreshLogTail(state);
+    materializeHistory(state);
+    return state.snapshot;
+  }
+
   function recordExecutionArbitration(arbitration: ExecutionArbitration): PhaseSnapshot {
     const parsed = executionArbitrationSchema.parse(arbitration) as ExecutionArbitration;
     state.snapshot = mergeExecutionArbitrationIntoSnapshot(state.snapshot, parsed);
@@ -3578,6 +3759,7 @@ export function createEngine(options?: {
     ingestNeuroFrame,
     registerIntelligenceLayer,
     commitCognitiveExecution,
+    recordConversation,
     recordExecutionArbitration,
     recordExecutionSchedule,
     recordRoutingDecision,
@@ -3659,6 +3841,14 @@ export function rebuildDurableStateFromEvents(
       const parsed = cognitiveExecutionSchema.safeParse(event.payload.execution);
       if (parsed.success) {
         engine.commitCognitiveExecution(parsed.data);
+      }
+      continue;
+    }
+
+    if (event.schema.name === "immaculate.multi-agent-conversation.recorded") {
+      const parsed = multiAgentConversationSchema.safeParse(event.payload.conversation);
+      if (parsed.success) {
+        engine.recordConversation(parsed.data);
       }
       continue;
     }
