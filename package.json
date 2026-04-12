@@ -1,0 +1,27 @@
+{
+  "name": "immaculate",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "benchmark": "npm run benchmark -w @immaculate/harness",
+    "benchmark:gate": "npm run benchmark:gate -w @immaculate/harness",
+    "benchmark:gate:all": "npm run benchmark:gate:all -w @immaculate/harness",
+    "benchmark:publish:wandb": "npm run benchmark:publish:wandb -w @immaculate/harness",
+    "build": "npm run build --workspaces --if-present",
+    "dev:dashboard": "npm run dev -w @immaculate/dashboard",
+    "dev:harness": "npm run dev -w @immaculate/harness",
+    "dev:tui": "npm run dev -w @immaculate/tui",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "wandb:bootstrap": "node ./scripts/bootstrap-wandb.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "typescript": "^6.0.2"
+  }
+}

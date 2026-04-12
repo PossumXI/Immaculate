@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Immaculate — Project Audit 2026-04-11</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  body { background: #06111a; color: #ebf6ff; font-family: 'IBM Plex Mono', monospace; }
+  .mermaid { background: #0d1c29; border-radius: 8px; padding: 16px; }
+  .badge-green  { background: #14532d; color: #86efac; border: 1px solid #16a34a; }
+  .badge-yellow { background: #713f12; color: #fde68a; border: 1px solid #ca8a04; }
+  .badge-red    { background: #7f1d1d; color: #fca5a5; border: 1px solid #dc2626; }
+  .card { background: rgba(10,24,36,0.78); border: 1px solid rgba(126,245,211,0.15); border-radius: 10px; }
+  .tbl th { background: #0d1c29; color: #5ecbff; font-size: 0.7rem; text-transform: uppercase; letter-spacing: .08em; }
+  .tbl td { font-size: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .tbl tr:hover td { background: rgba(255,255,255,0.03); }
+  h1 { color: #ffd166; }
+  h2 { color: #7ef5d3; }
+  h3 { color: #5ecbff; }
+  .eyebrow { color: #ffd166; font-size: 0.7rem; letter-spacing: .14em; text-transform: uppercase; }
+  code { background: #0d1c29; padding: 1px 5px; border-radius: 3px; color: #ff7b72; font-size: 0.78rem; }
+  a { color: #5ecbff; }
+  .risk-critical { border-left: 3px solid #dc2626; }
+  .risk-high     { border-left: 3px solid #f97316; }
+  .risk-medium   { border-left: 3px solid #eab308; }
+  .risk-low      { border-left: 3px solid #22c55e; }
+  .score-ring { width: 120px; height: 120px; border-radius: 50%; display:flex; align-items:center; justify-content:center; border: 6px solid #16a34a; font-size: 2rem; font-weight: 700; color: #86efac; background: #14532d; }
+</style>
+</head>
+<body class="p-4 md:p-8">
+
+<!-- ══════════════ HEADER ══════════════ -->
+<div class="mb-10">
+  <p class="eyebrow mb-2">Immaculate / Code Audit</p>
+  <h1 class="text-4xl font-bold mb-2">Full-Stack Project Audit</h1>
+  <p class="text-sm text-gray-400">Generated: 2026-04-11 &nbsp;|&nbsp; Auditor: Claude Sonnet 4.6 &nbsp;|&nbsp; Scope: entire monorepo</p>
+</div>
+
+<!-- ══════════════ EXECUTIVE SUMMARY ══════════════ -->
+<section class="card p-6 mb-8">
+  <h2 class="text-2xl font-semibold mb-4">Executive Summary</h2>
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+    <div class="flex flex-col items-center">
+      <div class="score-ring">62%</div>
+      <p class="text-xs mt-2 text-gray-400">Overall Readiness</p>
+    </div>
+    <div class="md:col-span-3 space-y-3">
+      <p class="text-sm text-gray-300">The Immaculate monorepo is a highly ambitious, well-structured neuroscience orchestration harness. The <strong>core engine</strong> (persistence, event sourcing, checkpoint recovery, Zod validation) and the <strong>backend server</strong> are production-grade in architecture. However, several hard gaps prevent shipping: zero authentication, a benchmark that blocks the server event loop, broken CI W&amp;B bootstrap (Windows-only Python path in a Linux runner), 14 orphaned API endpoints with no UI surface, and a monolithic 1 059-line client component with a critical Three.js memory leak.</p>
+      <div class="grid grid-cols-3 gap-4 mt-4 text-center text-xs">
+        <div class="card p-3">
+          <div class="text-2xl font-bold text-green-400">14</div>
+          <div class="text-gray-400">Dead / Orphaned endpoints</div>
+        </div>
+        <div class="card p-3">
+          <div class="text-2xl font-bold text-yellow-400">4</div>
+          <div class="text-gray-400">Duplicated utility fns</div>
+        </div>
+        <div class="card p-3">
+          <div class="text-2xl font-bold text-red-400">5</div>
+          <div class="text-gray-400">Critical risks</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="text-lg font-semibold mb-3">Top 5 Risks</h3>
+  <div class="space-y-2">
+    <div class="card p-3 risk-critical pl-5"><span class="text-red-400 font-bold">[CRITICAL]</span> <strong>No authentication on any endpoint.</strong> Any network-accessible client can <code>POST /api/control</code> to pause, reset, or boost the live engine. Zero barriers.</div>
+    <div class="card p-3 risk-critical pl-5"><span class="text-red-400 font-bold">[CRITICAL]</span> <strong>Benchmark run blocks the event loop.</strong> <code>POST /api/benchmarks/run</code> calls <code>runPublishedBenchmark()</code> synchronously (320–640 ticks with <code>await</code> inside a loop), freezing all WebSocket emissions and REST responses for minutes.</div>
+    <div class="card p-3 risk-high pl-5"><span class="text-orange-400 font-bold">[HIGH]</span> <strong>Three.js memory leak in ConnectomeScene.</strong> <code>EdgeLink</code> instantiates <code>new THREE.Line(...)</code> inside JSX on every render, and the <code>primitive</code> element never triggers Three.js disposal on remove.</div>
+    <div class="card p-3 risk-high pl-5"><span class="text-orange-400 font-bold">[HIGH]</span> <strong>WebSocket reconnection absent in both Dashboard and TUI.</strong> If the harness restarts or the connection drops, both UIs go permanently dark with no backoff/reconnect logic.</div>
+    <div class="card p-3 risk-medium pl-5"><span class="text-yellow-400 font-bold">[MEDIUM]</span> <strong>W&amp;B Python bootstrap is Windows-only; CI runs Linux.</strong> <code>LOCAL_VENV_PYTHON</code> resolves to <code>Scripts/python.exe</code>. The GitHub Actions job runs <code>ubuntu-latest</code>, so W&amp;B will never be available in CI.</div>
+  </div>
+</section>
+
+<!-- ══════════════ FEATURE CATALOGUE ══════════════ -->
+<section class="mb-10">
+  <h2 class="text-2xl font-semibold mb-6">Feature &amp; Page Catalogue</h2>
+  <div class="grid grid-cols-1 gap-6">
+
+    <!-- CORE ENGINE -->
+    <div class="card p-5">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <p class="eyebrow">packages/core</p>
+          <h3 class="text-lg font-semibold">Core Engine &amp; Shared Types</h3>
+        </div>
+        <span class="badge-green px-3 py-1 rounded-full text-xs font-bold">GREEN</span>
+      </div>
+      <p class="text-sm text-gray-300 mb-3"><strong>User journey:</strong> Imported by all three apps. Provides canonical types, Zod schemas, <code>createEngine()</code>, <code>inspectDurableState()</code>, <code>rebuildDurableStateFromEvents()</code>, <code>formatPercent()</code>, <code>planeColor()</code>.</p>
+      <p class="text-sm text-gray-300 mb-3"><strong>Implementation:</strong> Single <code>src/index.ts</code> (~1 000 lines). Types, schemas, and engine are co-located. Engine implements tick/control/snapshot/event system. All schemas are Zod-validated with strict shapes.</p>
+      <div class="space-y-1 text-xs text-gray-400">
+        <p>✅ All exported types match Zod schemas exactly — no runtime shape mismatches.</p>
+        <p>✅ <code>rebuildDurableStateFromEvents</code> and <code>inspectDurableState</code> are correctly exported and used.</p>
+        <p>✅ <code>formatPercent</code> and <code>planeColor</code> exported and consumed by both Dashboard and TUI.</p>
+        <p>⚠ File is ~1 000 lines — approaching the point where splitting types / schemas / engine would improve maintainability.</p>
+      </div>
+    </div>
+
+    <!-- HARNESS SERVER -->
+    <div class="card p-5">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <p class="eyebrow">apps/harness — server.ts</p>
+          <h3 class="text-lg font-semibold">REST + WebSocket Harness Server</h3>
+        </div>
+        <span class="badge-yellow px-3 py-1 rounded-full text-xs font-bold">YELLOW</span>
+      </div>
+      <p class="text-sm text-gray-300 mb-3"><strong>User journey:</strong> Starts via <code>npm run dev:harness</code>. Listens on port 8787. Dashboard and TUI connect via HTTP REST + WebSocket <code>/stream</code>. Emits live snapshots at every tick (default 180 ms).</p>
+      <p class="text-sm text-gray-300 mb-3"><strong>Implementation:</strong> Fastify + <code>@fastify/cors</code> + <code>@fastify/websocket</code>. All routes validated. Engine state is persisted after every change. Recovery is attempted on startup across 4 strategies (checkpoint, checkpoint-replay, snapshot, replay).</p>
+      <div class="space-y-1 text-xs text-yellow-300">
+        <p>🔴 <strong>No authentication</strong> — any HTTP client can control or reset the engine.</p>
+        <p>🔴 <code>POST /api/benchmarks/run</code> blocks the event loop for minutes.</p>
+        <p>🟡 <code>origin: true</code> on CORS accepts any origin.</p>
+        <p>🟡 No rate limiting on any endpoint.</p>
+        <p>🟡 No request body size limit override (Fastify default is 1 MB, adequate but undocumented).</p>
+        <p>🟡 14 endpoints exist that are never called from any UI (see Backend Audit Table).</p>
+        <p>✅ SIGINT / SIGTERM handlers cleanly flush persistence and stop replay managers.</p>
+        <p>✅ All route handlers return typed Zod-validated shapes.</p>
+      </div>
+    </div>
+
+    <!-- PERSISTENCE -->
+    <div class="card p-5">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <p class="eyebrow">apps/harness — persistence.ts</p>
+          <h3 class="text-lg font-semibold">Durable Event Log &amp; Checkpoint System</h3>
+        </div>
+        <span class="badge-green px-3 py-1 rounded-full text-xs font-bold">GREEN</span>
+      </div>
+      <p class="text-sm text-gray-300 mb-3"><strong>User journey:</strong> Called from <code>server.ts</code> on every mutation. Maintains NDJSON event log, materialized history, and up to 48 checkpoints. Recovers state on restart via 4-strategy waterfall.</p>
+      <p class="text-sm text-gray-300 mb-3"><strong>Implementation:</strong> Atomic writes via <code>rename(tmp → target)</code>. Chained write queue prevents concurrent corruption. Checkpoint pruning enforces the 48-cap. Integrity checks guard every candidate state before accepting it.</p>
+      <div class="space-y-1 text-xs text-gray-400">
+        <p>✅ Atomic writes guard against partial-write corruption.</p>
+        <p>✅ Write chain serialises all concurrent persist calls.</p>
+        <p>✅ All 4 recovery modes are clean, tested by benchmark gate.</p>
+        <p>⚠ NDJSON log grows forever — no rotation or compaction. At high tick rates this becomes unbounded.</p>
+        <p>⚠ <code>safeUnlink</code> is duplicated between <code>persistence.ts</code> and <code>benchmark.ts</code> — not shared.</p>
+      </div>
+    </div>
+
+    <!-- BENCHMARK -->
+    <div class="card p-5">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <p class="eyebrow">apps/harness — benchmark.ts + benchmark-gate.ts + packs</p>
+          <h3 class="text-lg font-semibold">Benchmark Suite &amp; CI Gate</h3>
+        </div>
+        <span class="badge-yellow px-3 py-1 rounded-full text-xs font-bold">YELLOW</span>
+      </div>
+      <p class="text-sm text-gray-300 mb-3"><strong>User journey:</strong> Run via CLI or <code>POST /api/benchmarks/run</code> from the dashboard. Runs ticks, collects series, evaluates assertions, diffs vs prior baseline, publishes JSON + Markdown. CI gate runs all packs and fails on violations.</p>
+      <div class="space-y-1 text-xs text-yellow-300">
+        <p>🔴 <code>runPublishedBenchmark()</code> called from the live server <em>blocks</em> the event loop — must be offloaded to a worker thread or child process.</p>
+        <p>🟡 NWB fixture path is hardcoded as <code>fixtures/nwb/minimal/minimal-session.nwb</code> — if missing, benchmark silently degrades (no NWB replay coverage).</p>
+        <p>🟡 <code>safeUnlink</code> duplicated from <code>persistence.ts</code>.</p>
+        <p>🟡 Progress hardcoded in <code>createProgress()</code> — not derived from actual state. It is editorial copy, not a live measurement.</p>
+        <p>✅ Comparison deltas, p50/p95 series, and CI assertions are solid.</p>
+        <p>✅ Pack definitions in <code>benchmark-packs.ts</code> are clean and well-typed.</p>
+      </div>
+    </div>
+
+    <!-- NWB / BIDS INGEST -->
+    <div class="card p-5">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <p class="eyebrow">apps/harness — nwb.ts + bids.ts</p>
+          <h3 class="text-lg font-semibold">Neuro / Dataset Ingest</h3>
+        </div>
+        <span class="badge-green px-3 py-1 rounded-full text-xs font-bold">GREEN</span>
+      </div>
+      <p class="text-sm text-gray-300 mb-3"><strong>User journey:</strong> Operator POSTs a file path to <code>/api/ingest/nwb/scan</code> or <code>/api/ingest/bids/scan</code>. Records are stored in <code>.runtime/harness/neuro/</code> and <code>.runtime/harness/datasets/</code>. Sessions appear in the snapshot immediately.</p>
+      <div class="space-y-1 text-xs text-gray-400">
+        <p>✅ <code>h5wasm</code> lazy-initialised once and reused.</p>
+        <p>✅ BIDS file-walker handles nested directories correctly.</p>
+        <p>⚠ <code>hashValue</code> (FNV-1a) is copy-pasted into <code>bids.ts</code>, <code>nwb.ts</code>, <code>live-neuro.ts</code>, and <code>neuro-replay.ts</code> — should live in a shared utility.</p>
+        <p>⚠ <code>clampForReplay</code> defined <em>after</em> first use in <code>nwb.ts</code>:448 — works due to hoisting but misleading.</p>
+        <p>⚠ File paths accepted from POST body are not sanitised against path traversal.</p>
+      </div>
+    </div>
+
+    <!-- NEURO REPLAY / LIVE -->
+    <div class="card p-5">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <p class="eyebrow">apps/harness — neuro-replay.ts + live-neuro.ts</p>
+          <h3 class="text-lg font-semibold">Neuro Replay &amp; Live Socket Ingress</h3>
+        </div>
+        <span class="badge-green px-3 py-1 rounded-full text-xs font-bold">GREEN</span>
+      </div>
+      <div class="space-y-1 text-xs text-gray-400">
+        <p>✅ <code>inflight</code> guard prevents overlapping tick callbacks.</p>
+        <p>✅ <code>stopAll()</code> is correctly awaited in server shutdown.</p>
+        <p>✅ Live socket ingress validates payload via strict Zod schema.</p>
+        <p>⚠ Multiple simultaneous replays for the same session can be started — no deduplication guard.</p>
+        <p>⚠ Dashboard can start a replay but cannot stop it — no Stop button wired to <code>POST /api/neuro/replays/:id/stop</code>.</p>
+        <p>⚠ <code>hashValue</code> duplicated (4th copy).</p>
+      </div>
+    </div>
+
+    <!-- INTELLIGENCE / OLLAMA -->
+    <div class="card p-5">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <p class="eyebrow">apps/harness — ollama.ts</p>
+          <h3 class="text-lg font-semibold">Intelligence / Ollama Layer</h3>
+        </div>
+        <span class="badge-yellow px-3 py-1 rounded-full text-xs font-bold">YELLOW</span>
+      </div>
+      <div class="space-y-1 text-xs text-yellow-300">
+        <p>✅ Model priority list (gemma4 → gemma → qwen → first) is sensible.</p>
+        <p>✅ Busy-state tracking prevents double-submission to the same layer.</p>
+        <p>🟡 No limit on concurrent <code>/api/intelligence/run</code> calls — can stack up Ollama requests.</p>
+        <p>🟡 Dashboard button label says "Run local Gemma pass" — hardcoded name not reflecting actual registered model.</p>
+        <p>🟡 <code>/api/intelligence/ollama/models</code> and <code>/api/intelligence/ollama/register</code> exist but are never surfaced in the Dashboard or TUI.</p>
+        <p>🟡 Ollama timeout env var <code>IMMACULATE_OLLAMA_TIMEOUT_MS</code> defaults to 120 000 ms — no user feedback during that wait.</p>
+      </div>
+    </div>
+
+    <!-- W&B -->
+    <div class="card p-5">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <p class="eyebrow">apps/harness — wandb.ts</p>
+          <h3 class="text-lg font-semibold">Weights &amp; Biases Publication</h3>
+        </div>
+        <span class="badge-yellow px-3 py-1 rounded-full text-xs font-bold">YELLOW</span>
+      </div>
+      <div class="space-y-1 text-xs text-yellow-300">
+        <p>🔴 <code>LOCAL_VENV_PYTHON</code> = <code>…/Scripts/python.exe</code> — Windows path. GitHub Actions CI runs Linux. W&amp;B will never be available in CI.</p>
+        <p>🟡 Status cache is a module-level variable — leaks across test runs if tests ever import this module.</p>
+        <p>🟡 W&amp;B status probe output is cast as <code>{ installed?: boolean }</code> without Zod validation.</p>
+        <p>✅ 15s TTL status cache prevents hammering Python on every Dashboard poll.</p>
+        <p>✅ API key correctly sourced from env vars.</p>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="card p-5">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <p class="eyebrow">apps/dashboard</p>
+          <h3 class="text-lg font-semibold">Next.js Overwatch Dashboard</h3>
+        </div>
+        <span class="badge-yellow px-3 py-1 rounded-full text-xs font-bold">YELLOW</span>
+      </div>
+      <p class="text-sm text-gray-300 mb-3"><strong>User journey:</strong> Browser loads <code>/</code>, <code>DashboardClient</code> opens a WebSocket to the harness, polls 5 REST endpoints every 2 s, and renders live metrics, nodes, passes, benchmarks, neuro sessions, intelligence layers, and event log.</p>
+      <div class="space-y-1 text-xs text-yellow-300">
+        <p>🔴 <strong>Memory leak</strong>: <code>EdgeLink</code> creates <code>new THREE.Line(...)</code> inside JSX on every render. New geometry is allocated but the old one is never disposed. R3F's <code>primitive</code> does not call <code>.dispose()</code> on unmount.</p>
+        <p>🔴 <code>useEffectEvent</code> is a React experimental API (hook not yet stable). Its behaviour under concurrent mode is not guaranteed.</p>
+        <p>🟡 <code>DashboardClient</code> is 1 059 lines — a single monolithic component with zero code-splitting across 10 distinct panels.</p>
+        <p>🟡 No WebSocket reconnection logic — connection drop is permanent.</p>
+        <p>🟡 5 simultaneous polling intervals at 2 s each — no React Query / SWR — potential race conditions on slow networks.</p>
+        <p>🟡 No loading skeleton — data areas are blank until first fetch resolves.</p>
+        <p>🟡 No "Stop Replay" button wired up.</p>
+        <p>🟡 Button label "Run local Gemma pass" is hardcoded, not dynamic.</p>
+        <p>🟡 Log line <code>key</code> uses <code>`${line}-${index}`</code> — index is unreliable as a key.</p>
+        <p>✅ <code>useDeferredValue</code> on snapshot correctly defers expensive 3D scene re-renders.</p>
+        <p>✅ Error display with <code>errorText</code> is visible to users.</p>
+        <p>✅ All fetch calls use <code>cache: "no-store"</code> — no stale cache issues.</p>
+      </div>
+    </div>
+
+    <!-- TUI -->
+    <div class="card p-5">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <p class="eyebrow">apps/tui</p>
+          <h3 class="text-lg font-semibold">Keyboard-First Terminal UI (Ink)</h3>
+        </div>
+        <span class="badge-yellow px-3 py-1 rounded-full text-xs font-bold">YELLOW</span>
+      </div>
+      <p class="text-sm text-gray-300 mb-3"><strong>User journey:</strong> Operator runs <code>npm run dev:tui</code>, gets an alt-screen Ink TUI. Keyboard shortcuts: Space=pause/resume, b=boost, p=pulse, x=reset, n=step, g=run Gemma, w=publish W&amp;B, v=replay, r=reroute, Tab=cycle panes, q=quit.</p>
+      <div class="space-y-1 text-xs text-yellow-300">
+        <p>🟡 No initial REST snapshot fetch — UI waits for first WebSocket message (can take up to one tick interval to show data).</p>
+        <p>🟡 No WebSocket reconnection — connection drop leaves UI permanently stale.</p>
+        <p>🟡 Persistence / W&amp;B state errors are silently swallowed (<code>catch { setPersistence(null) }</code>) — operator sees nothing.</p>
+        <p>🟡 Benchmark history and intelligence layers not shown in TUI (dashboard-only features).</p>
+        <p>✅ Alt-screen and cursor hide/show are correctly managed via useEffect cleanup.</p>
+        <p>✅ All control actions correctly POST to harness.</p>
+        <p>✅ Phase lane glyph display is clean and informative.</p>
+      </div>
+    </div>
+
+    <!-- CI -->
+    <div class="card p-5">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <p class="eyebrow">.github/workflows/benchmark-gate.yml</p>
+          <h3 class="text-lg font-semibold">CI / GitHub Actions Pipeline</h3>
+        </div>
+        <span class="badge-yellow px-3 py-1 rounded-full text-xs font-bold">YELLOW</span>
+      </div>
+      <div class="space-y-1 text-xs text-yellow-300">
+        <p>🔴 W&amp;B bootstrap won't work on Linux (Windows-only Python venv path).</p>
+        <p>🟡 No NWB fixture in CI — benchmark will run with degraded neuro coverage unless <code>fixtures/</code> is committed (it is in the repo — ✅ for this, ⚠ for size).</p>
+        <p>🟡 No lint step — typecheck is present but <code>npm run lint</code> is declared in root <code>package.json</code> without any lint tooling configured.</p>
+        <p>✅ Uploads benchmark artifacts on failure for forensic review.</p>
+        <p>✅ Node 22 matches the target runtime.</p>
+      </div>
+    </div>
+
+  </div><!-- end grid -->
+</section>
+
+<!-- ══════════════ BACKEND AUDIT TABLE ══════════════ -->
+<section class="mb-10">
+  <h2 class="text-2xl font-semibold mb-4">Backend Audit Table</h2>
+  <div class="card overflow-x-auto">
+    <table class="tbl w-full">
+      <thead>
+        <tr>
+          <th class="p-3 text-left">Endpoint / Function</th>
+          <th class="p-3 text-left">Called by UI?</th>
+          <th class="p-3 text-left">Status</th>
+          <th class="p-3 text-left">Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="p-3"><code>GET /api/health</code></td><td class="p-3 text-yellow-300">No UI (infra only)</td><td class="p-3 text-green-400">Clean</td><td class="p-3">Good smoke-test endpoint. Not surfaced in Dashboard or TUI — consider adding a status dot.</td></tr>
+        <tr><td class="p-3"><code>GET /api/snapshot</code></td><td class="p-3 text-green-400">Dashboard (boot)</td><td class="p-3 text-green-400">Clean</td><td class="p-3">Used on initial mount. Could also be polled as fallback when WS drops.</td></tr>
+        <tr><td class="p-3"><code>GET /api/history</code></td><td class="p-3 text-green-400">Dashboard (poll)</td><td class="p-3 text-green-400">Clean</td><td class="p-3">Polled every 2 s. Sliced to 8 rows in UI.</td></tr>
+        <tr><td class="p-3"><code>GET /api/persistence</code></td><td class="p-3 text-green-400">Dashboard + TUI (poll)</td><td class="p-3 text-green-400">Clean</td><td class="p-3">Polled every 2 s from both clients.</td></tr>
+        <tr><td class="p-3"><code>GET /api/events</code></td><td class="p-3 text-red-400">ORPHANED</td><td class="p-3 text-red-400">Dead</td><td class="p-3">Returns full event log. Never called from Dashboard or TUI. Potentially expensive if log is large.</td></tr>
+        <tr><td class="p-3"><code>GET /api/replay</code></td><td class="p-3 text-red-400">ORPHANED</td><td class="p-3 text-red-400">Dead</td><td class="p-3">Paginated event replay. No UI surface.</td></tr>
+        <tr><td class="p-3"><code>GET /api/integrity</code></td><td class="p-3 text-red-400">ORPHANED</td><td class="p-3 text-red-400">Dead</td><td class="p-3">Returns full integrity report. Dashboard only shows status string from <code>/api/persistence</code>.</td></tr>
+        <tr><td class="p-3"><code>GET /api/checkpoints</code></td><td class="p-3 text-red-400">ORPHANED</td><td class="p-3 text-red-400">Dead</td><td class="p-3">Returns checkpoint metadata list. No UI surface.</td></tr>
+        <tr><td class="p-3"><code>GET /api/topology</code></td><td class="p-3 text-red-400">ORPHANED</td><td class="p-3 text-red-400">Dead</td><td class="p-3">Topology summary (node/edge counts, planes). Not called from Dashboard or TUI. Useful but unused.</td></tr>
+        <tr><td class="p-3"><code>GET /api/benchmarks/latest</code></td><td class="p-3 text-green-400">Dashboard (poll)</td><td class="p-3 text-green-400">Clean</td><td class="p-3">Polled every 2 s.</td></tr>
+        <tr><td class="p-3"><code>GET /api/benchmarks/history</code></td><td class="p-3 text-green-400">Dashboard (poll)</td><td class="p-3 text-green-400">Clean</td><td class="p-3">Polled every 2 s.</td></tr>
+        <tr><td class="p-3"><code>GET /api/benchmarks/packs</code></td><td class="p-3 text-red-400">ORPHANED</td><td class="p-3 text-red-400">Dead</td><td class="p-3">Lists available pack definitions. No UI surface — could power a pack selector.</td></tr>
+        <tr><td class="p-3"><code>POST /api/benchmarks/run</code></td><td class="p-3 text-green-400">Dashboard (action)</td><td class="p-3 text-yellow-400">Blocks loop</td><td class="p-3">Called via "Run and publish benchmark" button. Blocks event loop for minutes. Must be offloaded.</td></tr>
+        <tr><td class="p-3"><code>POST /api/benchmarks/publish/wandb</code></td><td class="p-3 text-green-400">Dashboard + TUI (action)</td><td class="p-3 text-yellow-400">W&amp;B path broken on Linux</td><td class="p-3">Dashboard button + TUI <code>w</code> key. Python path is Windows-only.</td></tr>
+        <tr><td class="p-3"><code>GET /api/wandb/status</code></td><td class="p-3 text-green-400">Dashboard + TUI (poll)</td><td class="p-3 text-green-400">Clean</td><td class="p-3">Polled every 2 s. Status cached for 15 s server-side — good.</td></tr>
+        <tr><td class="p-3"><code>GET /api/datasets</code></td><td class="p-3 text-red-400">ORPHANED</td><td class="p-3 text-red-400">Dead</td><td class="p-3">Lists registered datasets from disk. Snapshot already includes dataset summaries — this is redundant unless deep detail is needed.</td></tr>
+        <tr><td class="p-3"><code>GET /api/datasets/:id</code></td><td class="p-3 text-red-400">ORPHANED</td><td class="p-3 text-red-400">Dead</td><td class="p-3">Full dataset detail including file list. No UI surface.</td></tr>
+        <tr><td class="p-3"><code>POST /api/ingest/bids/scan</code></td><td class="p-3 text-yellow-300">No UI (CLI only)</td><td class="p-3 text-yellow-400">No UI surface</td><td class="p-3">Operator must call via curl or custom script. No scan form in Dashboard.</td></tr>
+        <tr><td class="p-3"><code>GET /api/neuro/sessions</code></td><td class="p-3 text-red-400">ORPHANED</td><td class="p-3 text-red-400">Dead</td><td class="p-3">Lists all registered NWB sessions from disk. Snapshot already includes session summaries.</td></tr>
+        <tr><td class="p-3"><code>GET /api/neuro/sessions/:id</code></td><td class="p-3 text-red-400">ORPHANED</td><td class="p-3 text-red-400">Dead</td><td class="p-3">Full session detail. No UI surface.</td></tr>
+        <tr><td class="p-3"><code>GET /api/neuro/replays</code></td><td class="p-3 text-red-400">ORPHANED</td><td class="p-3 text-red-400">Dead</td><td class="p-3">Active replay list from manager. Snapshot already has <code>neuroReplays</code>.</td></tr>
+        <tr><td class="p-3"><code>POST /api/neuro/replays/start</code></td><td class="p-3 text-green-400">Dashboard + TUI (action)</td><td class="p-3 text-yellow-400">Missing stop</td><td class="p-3">Start works. No Stop button wired in Dashboard. TUI <code>v</code> starts but can't stop.</td></tr>
+        <tr><td class="p-3"><code>POST /api/neuro/replays/:id/stop</code></td><td class="p-3 text-red-400">ORPHANED (from UI)</td><td class="p-3 text-red-400">Dead from UI</td><td class="p-3">Endpoint is correct. No button calls it from Dashboard or TUI.</td></tr>
+        <tr><td class="p-3"><code>POST /api/ingest/nwb/scan</code></td><td class="p-3 text-yellow-300">No UI (CLI only)</td><td class="p-3 text-yellow-400">No UI surface</td><td class="p-3">Path traversal risk: body.filePath is not sanitised.</td></tr>
+        <tr><td class="p-3"><code>GET /api/neuro/live/sources</code></td><td class="p-3 text-red-400">ORPHANED</td><td class="p-3 text-red-400">Dead</td><td class="p-3">Active live ingress sources list. No UI surface.</td></tr>
+        <tr><td class="p-3"><code>POST /api/neuro/live/frame</code></td><td class="p-3 text-yellow-300">External devices only</td><td class="p-3 text-green-400">Clean</td><td class="p-3">Designed for external device ingress via HTTP POST. Correct.</td></tr>
+        <tr><td class="p-3"><code>POST /api/neuro/live/:id/stop</code></td><td class="p-3 text-red-400">ORPHANED (from UI)</td><td class="p-3 text-red-400">Dead from UI</td><td class="p-3">Stop live source. No UI surface.</td></tr>
+        <tr><td class="p-3"><code>GET /api/intelligence</code></td><td class="p-3 text-yellow-300">No UI (partly in snapshot)</td><td class="p-3 text-yellow-400">Partially redundant</td><td class="p-3">Returns <code>layers</code>, <code>executions</code>, <code>recommendedLayerId</code>. Snapshot already has layers and executions. <code>recommendedLayerId</code> is not surfaced in UI.</td></tr>
+        <tr><td class="p-3"><code>GET /api/intelligence/ollama/models</code></td><td class="p-3 text-red-400">ORPHANED</td><td class="p-3 text-red-400">Dead</td><td class="p-3">Lists available Ollama models. No model picker in Dashboard or TUI.</td></tr>
+        <tr><td class="p-3"><code>POST /api/intelligence/ollama/register</code></td><td class="p-3 text-red-400">ORPHANED</td><td class="p-3 text-red-400">Dead</td><td class="p-3">Registers an Ollama layer by role. No UI surface to call this.</td></tr>
+        <tr><td class="p-3"><code>POST /api/intelligence/run</code></td><td class="p-3 text-green-400">Dashboard + TUI (action)</td><td class="p-3 text-yellow-400">No concurrency guard</td><td class="p-3">Dashboard "Run local Gemma pass" + TUI <code>g</code>. No limit on concurrent calls.</td></tr>
+        <tr><td class="p-3"><code>POST /api/control</code></td><td class="p-3 text-green-400">Dashboard (WS) + TUI (HTTP)</td><td class="p-3 text-red-400">No auth</td><td class="p-3">Any client can pause/reset/boost the engine.</td></tr>
+        <tr><td class="p-3"><code>WS /stream</code></td><td class="p-3 text-green-400">Dashboard + TUI</td><td class="p-3 text-yellow-400">No reconnect</td><td class="p-3">Main live stream. Both clients don't reconnect on drop.</td></tr>
+        <tr><td class="p-3"><code>WS /stream/neuro/live</code></td><td class="p-3 text-red-400">ORPHANED</td><td class="p-3 text-red-400">Dead</td><td class="p-3">WS endpoint for live neuro frame ingress. No client connects to it in Dashboard or TUI.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══════════════ GAP & RISK ANALYSIS ══════════════ -->
+<section class="mb-10">
+  <h2 class="text-2xl font-semibold mb-4">Gap &amp; Risk Analysis (Prioritised)</h2>
+  <div class="space-y-3">
+
+    <div class="card p-4 risk-critical pl-5">
+      <div class="flex items-center gap-3 mb-1">
+        <span class="badge-red px-2 py-0.5 rounded text-xs font-bold">P0 — CRITICAL</span>
+        <strong>No authentication on any API endpoint</strong>
+      </div>
+      <p class="text-sm text-gray-300">Every REST endpoint and the WebSocket control stream is fully open. <code>POST /api/control</code> with <code>{"action":"reset"}</code> resets the live engine from any network-reachable client. Minimum fix: shared bearer token via env var + middleware.</p>
+      <p class="text-xs text-gray-500 mt-1">Affects: server.ts (all routes)</p>
+    </div>
+
+    <div class="card p-4 risk-critical pl-5">
+      <div class="flex items-center gap-3 mb-1">
+        <span class="badge-red px-2 py-0.5 rounded text-xs font-bold">P0 — CRITICAL</span>
+        <strong>Benchmark run blocks the server event loop</strong>
+      </div>
+      <p class="text-sm text-gray-300"><code>runPublishedBenchmark()</code> runs 320–640 ticks in an async loop inside the Fastify route handler. All WebSocket emissions and REST responses are blocked for the duration (up to 30 s on the latency-soak pack). Fix: run in a worker thread (<code>node:worker_threads</code>) or separate child process.</p>
+      <p class="text-xs text-gray-500 mt-1">Affects: server.ts:634, benchmark.ts</p>
+    </div>
+
+    <div class="card p-4 risk-critical pl-5">
+      <div class="flex items-center gap-3 mb-1">
+        <span class="badge-red px-2 py-0.5 rounded text-xs font-bold">P0 — CRITICAL</span>
+        <strong>Three.js memory leak in ConnectomeScene</strong>
+      </div>
+      <p class="text-sm text-gray-300"><code>EdgeLink</code> mounts <code>new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial(...))</code> as a <code>&lt;primitive&gt;</code> in JSX. React Three Fiber's <code>primitive</code> does not call <code>.dispose()</code> when the component unmounts or when edges change. Every re-render leaks geometry + material into the GPU. Fix: use <code>&lt;line&gt;</code> declarative primitive or call <code>geometry.dispose() / material.dispose()</code> in a <code>useEffect</code> cleanup.</p>
+      <p class="text-xs text-gray-500 mt-1">Affects: connectome-scene.tsx:37-52</p>
+    </div>
+
+    <div class="card p-4 risk-high pl-5">
+      <div class="flex items-center gap-3 mb-1">
+        <span class="badge-yellow px-2 py-0.5 rounded text-xs font-bold">P1 — HIGH</span>
+        <strong>No WebSocket reconnection in Dashboard or TUI</strong>
+      </div>
+      <p class="text-sm text-gray-300">Both clients open a WebSocket once and never reconnect. A harness restart or 30-second network glitch permanently silences both UIs. Fix: implement exponential backoff reconnect with a max-retries cap.</p>
+      <p class="text-xs text-gray-500 mt-1">Affects: dashboard-client.tsx:251-297, tui/src/index.tsx:193-242</p>
+    </div>
+
+    <div class="card p-4 risk-high pl-5">
+      <div class="flex items-center gap-3 mb-1">
+        <span class="badge-yellow px-2 py-0.5 rounded text-xs font-bold">P1 — HIGH</span>
+        <strong>Path traversal on NWB/BIDS scan endpoints</strong>
+      </div>
+      <p class="text-sm text-gray-300"><code>POST /api/ingest/nwb/scan</code> and <code>/api/ingest/bids/scan</code> accept a raw <code>filePath</code>/<code>rootPath</code> from the request body and pass it directly to <code>path.resolve()</code>. An operator can read any file on the server. Fix: validate that the resolved path starts within an allowed root directory.</p>
+      <p class="text-xs text-gray-500 mt-1">Affects: server.ts:380-406, server.ts:478-506, bids.ts:135, nwb.ts:252</p>
+    </div>
+
+    <div class="card p-4 risk-high pl-5">
+      <div class="flex items-center gap-3 mb-1">
+        <span class="badge-yellow px-2 py-0.5 rounded text-xs font-bold">P1 — HIGH</span>
+        <strong>W&amp;B Python path is Windows-only; CI runs Linux</strong>
+      </div>
+      <p class="text-sm text-gray-300"><code>LOCAL_VENV_PYTHON</code> = <code>…/.tools/wandb-venv/Scripts/python.exe</code>. The GitHub Actions job runs <code>ubuntu-latest</code>. The fallback (<code>"python"</code>) will fail unless <code>wandb</code> is pre-installed in the runner's system Python. The <code>wandb:bootstrap</code> script is PowerShell — it can't run on Linux. The CI step <code>npm run benchmark:gate:all</code> will fail if any benchmark tries to publish to W&amp;B.</p>
+      <p class="text-xs text-gray-500 mt-1">Affects: wandb.ts:39, .github/workflows/benchmark-gate.yml, scripts/bootstrap-wandb.ps1</p>
+    </div>
+
+    <div class="card p-4 risk-medium pl-5">
+      <div class="flex items-center gap-3 mb-1">
+        <span class="badge-yellow px-2 py-0.5 rounded text-xs font-bold">P2 — MEDIUM</span>
+        <strong><code>useEffectEvent</code> is an experimental React API</strong>
+      </div>
+      <p class="text-sm text-gray-300">Used 4 times in <code>dashboard-client.tsx</code> (handleSnapshot, runBenchmark, runCognition, publishBenchmarkToWandb, startLatestReplay). This hook is not yet in stable React and its signature may change. Consider replacing with <code>useCallback</code> + explicit dependency management or React Query mutations.</p>
+      <p class="text-xs text-gray-500 mt-1">Affects: dashboard-client.tsx:122, 300, 326, 358, 386</p>
+    </div>
+
+    <div class="card p-4 risk-medium pl-5">
+      <div class="flex items-center gap-3 mb-1">
+        <span class="badge-yellow px-2 py-0.5 rounded text-xs font-bold">P2 — MEDIUM</span>
+        <strong>14 orphaned backend endpoints with no UI surface</strong>
+      </div>
+      <p class="text-sm text-gray-300">Endpoints for checkpoints, integrity details, event log, replay pagination, dataset detail, neuro session detail, active live sources, Ollama model listing, Ollama registration, and topology summary all exist but are never called. This is dead surface area that must be maintained but delivers no user value. Either wire them to a UI panel or document them as operator-only curl APIs.</p>
+    </div>
+
+    <div class="card p-4 risk-medium pl-5">
+      <div class="flex items-center gap-3 mb-1">
+        <span class="badge-yellow px-2 py-0.5 rounded text-xs font-bold">P2 — MEDIUM</span>
+        <strong>Monolithic 1 059-line DashboardClient component</strong>
+      </div>
+      <p class="text-sm text-gray-300">All 10 dashboard panels live in a single component. This creates a massive re-render surface (any state change re-renders everything), makes testing impossible, and violates separation of concerns. Each panel should be its own component with focused state. React.memo or layout-level code splitting would reduce paint costs.</p>
+      <p class="text-xs text-gray-500 mt-1">Affects: dashboard-client.tsx (entire file)</p>
+    </div>
+
+    <div class="card p-4 risk-medium pl-5">
+      <div class="flex items-center gap-3 mb-1">
+        <span class="badge-yellow px-2 py-0.5 rounded text-xs font-bold">P2 — MEDIUM</span>
+        <strong>NDJSON event log grows unbounded</strong>
+      </div>
+      <p class="text-sm text-gray-300">Every event is appended to <code>events.ndjson</code>. At 180 ms ticks this adds ~5–10 events/second. After a week of continuous operation the file can exceed 100 MB. No rotation or compaction is implemented. Fix: add log rotation by size or age, or compact events into the checkpoint file and truncate the log after checkpoint.</p>
+      <p class="text-xs text-gray-500 mt-1">Affects: persistence.ts:503-533</p>
+    </div>
+
+    <div class="card p-4 risk-low pl-5">
+      <div class="flex items-center gap-3 mb-1">
+        <span class="badge-green px-2 py-0.5 rounded text-xs font-bold">P3 — LOW</span>
+        <strong><code>hashValue</code> (FNV-1a) duplicated 4 times</strong>
+      </div>
+      <p class="text-sm text-gray-300">Identical implementation in <code>bids.ts</code>, <code>nwb.ts</code>, <code>live-neuro.ts</code>, and <code>neuro-replay.ts</code>. Should be a shared utility in <code>packages/core</code> or a local <code>utils.ts</code> in harness/src.</p>
+    </div>
+
+    <div class="card p-4 risk-low pl-5">
+      <div class="flex items-center gap-3 mb-1">
+        <span class="badge-green px-2 py-0.5 rounded text-xs font-bold">P3 — LOW</span>
+        <strong>No "Stop Replay" control in Dashboard or TUI</strong>
+      </div>
+      <p class="text-sm text-gray-300">Operators can start an NWB replay from both UIs but cannot stop it. The <code>POST /api/neuro/replays/:id/stop</code> endpoint exists and is correct — it just needs a button wired to it.</p>
+    </div>
+
+    <div class="card p-4 risk-low pl-5">
+      <div class="flex items-center gap-3 mb-1">
+        <span class="badge-green px-2 py-0.5 rounded text-xs font-bold">P3 — LOW</span>
+        <strong>Orphaned files in project root</strong>
+      </div>
+      <p class="text-sm text-gray-300"><code>tmp-probe.h5</code>, <code>tui.md.txt</code>, <code>tui_2_readme.md.txt</code>, <code>desktop.ini</code>, and multiple <code>.runtime-smoke-*</code> directories in the project root are not in <code>.gitignore</code> and should not be tracked.</p>
+    </div>
+
+    <div class="card p-4 risk-low pl-5">
+      <div class="flex items-center gap-3 mb-1">
+        <span class="badge-green px-2 py-0.5 rounded text-xs font-bold">P3 — LOW</span>
+        <strong>No lint toolchain configured despite declared script</strong>
+      </div>
+      <p class="text-sm text-gray-300">Root <code>package.json</code> declares <code>"lint": "npm run lint --workspaces --if-present"</code> but no workspace has a lint script or ESLint config. The CI does not run lint. Add ESLint + @typescript-eslint to enforce code quality.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════ FLOW DIAGRAMS ══════════════ -->
+<section class="mb-10">
+  <h2 class="text-2xl font-semibold mb-6">Flow Diagrams</h2>
+
+  <!-- Dashboard page flow -->
+  <div class="card p-5 mb-6">
+    <h3 class="text-lg font-semibold mb-4">Dashboard — Component Interaction Flow</h3>
+    <div class="mermaid">
+flowchart TD
+    A[Browser loads /] --> B[RootLayout]
+    B --> C[Page - page.tsx]
+    C --> D[DashboardClient - 1059 lines]
+    D --> E{useEffect mount}
+    E --> |REST boot| F[GET /api/snapshot]
+    E --> |REST poll 2s| G[GET /api/history]
+    E --> |REST poll 2s| H[GET /api/persistence]
+    E --> |REST poll 2s| I[GET /api/benchmarks/latest]
+    E --> |REST poll 2s| J[GET /api/benchmarks/history]
+    E --> |REST poll 2s| K[GET /api/wandb/status]
+    E --> |WS open| L[ws://harness/stream]
+    L --> |snapshot msg| M[setSnapshot]
+    F --> M
+    D --> N[ConnectomeScene - Three.js]
+    N --> O[NodeCloud - rotates]
+    O --> P[EdgeLink x edges - LEAKS geometry]
+    D --> |button| Q[POST /api/benchmarks/run]
+    D --> |button| R[POST /api/intelligence/run]
+    D --> |button| S[POST /api/benchmarks/publish/wandb]
+    D --> |button| T[POST /api/neuro/replays/start]
+    style P fill:#7f1d1d,color:#fca5a5
+    style Q fill:#713f12,color:#fde68a
+    </div>
+  </div>
+
+  <!-- Harness server flow -->
+  <div class="card p-5 mb-6">
+    <h3 class="text-lg font-semibold mb-4">Harness Server — Request Flow</h3>
+    <div class="mermaid">
+flowchart TD
+    S[server.ts startup] --> P[createPersistence]
+    P --> |load| R{Recovery}
+    R --> |checkpoint| E1[engine from checkpoint + replay]
+    R --> |snapshot| E2[engine from snapshot]
+    R --> |replay| E3[engine rebuild from events]
+    R --> |fresh| E4[engine fresh]
+    E1 & E2 & E3 & E4 --> ENG[createEngine]
+    ENG --> TICK[setInterval 180ms tick]
+    TICK --> |engine.tick| SNAP[emitSnapshot to WS clients]
+    SNAP --> DB[(events.ndjson)]
+    SNAP --> CH[(checkpoints/)]
+
+    C1[Dashboard] --> |WS /stream| WS[WebSocket handler]
+    C2[TUI] --> |HTTP| REST[REST routes]
+    C3[External device] --> |HTTP POST| LIVE[/api/neuro/live/frame]
+    WS --> |controlEnvelope| CTRL[applyControl]
+    REST --> |POST /api/control| CTRL
+    CTRL --> ENG
+    </div>
+  </div>
+
+  <!-- User journey diagram -->
+  <div class="card p-5 mb-6">
+    <h3 class="text-lg font-semibold mb-4">Full App User Journey</h3>
+    <div class="mermaid">
+journey
+    title Immaculate Operator Session
+    section Start system
+      Start harness npm run dev harness: 5: Operator
+      Open dashboard in browser: 4: Operator
+      Open TUI in terminal: 4: Operator
+    section Observe live state
+      Watch 3D connectome scene: 5: Operator
+      Monitor phase pass telemetry: 5: Operator
+      Check reflex and cognitive latency: 5: Operator
+    section Ingest neuro data
+      curl POST /api/ingest/nwb/scan: 3: Operator
+      See session appear in snapshot: 4: Operator
+      Click Replay latest session: 4: Operator
+    section Run cognition
+      Click Run local Gemma pass: 4: Operator
+      Wait for Ollama response: 2: Operator
+      See execution in cognitive trace table: 4: Operator
+    section Run benchmark
+      Click Run and publish benchmark: 4: Operator
+      Wait server blocked for 30s: 1: Operator
+      See assertions in benchmark table: 4: Operator
+      Click Publish latest to W&B: 2: Operator
+    section Control engine
+      TUI space bar pause engine: 5: Operator
+      TUI b key boost throughput: 5: Operator
+      TUI x key reset state: 4: Operator
+    </div>
+  </div>
+
+  <!-- Broken / dead connections -->
+  <div class="card p-5 mb-6">
+    <h3 class="text-lg font-semibold mb-4">Broken &amp; Orphaned Connections</h3>
+    <div class="mermaid">
+flowchart LR
+    subgraph UI[" Dashboard / TUI"]
+      D1[Dashboard]
+      T1[TUI]
+    end
+    subgraph HARNESS["Harness API - Orphaned Endpoints"]
+      EP1[GET /api/events]:::dead
+      EP2[GET /api/replay]:::dead
+      EP3[GET /api/integrity]:::dead
+      EP4[GET /api/checkpoints]:::dead
+      EP5[GET /api/topology]:::dead
+      EP6[GET /api/benchmarks/packs]:::dead
+      EP7[GET /api/datasets]:::dead
+      EP8[GET /api/datasets/:id]:::dead
+      EP9[GET /api/neuro/sessions]:::dead
+      EP10[GET /api/neuro/sessions/:id]:::dead
+      EP11[GET /api/neuro/replays]:::dead
+      EP12[POST /api/neuro/replays/:id/stop]:::dead
+      EP13[GET /api/neuro/live/sources]:::dead
+      EP14[POST /api/neuro/live/:id/stop]:::dead
+      EP15[GET /api/intelligence/ollama/models]:::dead
+      EP16[POST /api/intelligence/ollama/register]:::dead
+      EP17[WS /stream/neuro/live]:::dead
+    end
+    subgraph MISSING["Missing UI Controls"]
+      M1[Stop Replay button]:::missing
+      M2[Model picker UI]:::missing
+      M3[Dataset scan form]:::missing
+      M4[NWB scan form]:::missing
+      M5[WS reconnect logic]:::missing
+    end
+    D1 -.->|never reaches| EP1
+    D1 -.->|never reaches| EP3
+    T1 -.->|never reaches| EP5
+    M1 -.->|should call| EP12
+    M2 -.->|should call| EP15
+    M2 -.->|should call| EP16
+    M3 -.->|should call| "POST /api/ingest/bids/scan"
+    M4 -.->|should call| "POST /api/ingest/nwb/scan"
+    classDef dead fill:#7f1d1d,color:#fca5a5,stroke:#dc2626
+    classDef missing fill:#713f12,color:#fde68a,stroke:#ca8a04
+    </div>
+  </div>
+
+</section>
+
+<!-- ══════════════ FOOTER ══════════════ -->
+<footer class="text-center text-xs text-gray-500 mt-10 pb-6">
+  Immaculate Project Audit — 2026-04-11 — Generated by Claude Sonnet 4.6
+</footer>
+
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: 'dark', themeVariables: { background: '#0d1c29', primaryColor: '#1e3a4f', primaryTextColor: '#ebf6ff', lineColor: '#5ecbff', secondaryColor: '#0d1c29' } });
+</script>
+</body>
+</html>

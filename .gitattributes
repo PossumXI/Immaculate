@@ -1,0 +1,8 @@
+* text=auto eol=lf
+
+*.nwb binary
+*.nii.gz binary
+*.pdf binary
+
+docs/wiki/** linguist-documentation
+fixtures/** linguist-generated

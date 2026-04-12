@@ -1,0 +1,6 @@
+{
+  "Name": "Immaculate Minimal BIDS Fixture",
+  "BIDSVersion": "1.9.0",
+  "DatasetType": "raw",
+  "License": "Internal evaluation fixture"
+}

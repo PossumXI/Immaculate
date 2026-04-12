@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and verify
+        run: |
+          npm run typecheck
+          npm run build
+          npm run benchmark:gate:all
+
+      - name: Create release bundle
+        shell: bash
+        run: |
+          mkdir -p release
+          cp README.md LICENSE NOTICE CONTRIBUTING.md CODE_OF_CONDUCT.md SECURITY.md SUPPORT.md deep-research-report.md release/
+          cp -R docs release/docs
+          cp -R benchmarks release/benchmarks
+          tar -czf immaculate-release-${GITHUB_REF_NAME:-manual}.tar.gz release
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            immaculate-release-*.tar.gz

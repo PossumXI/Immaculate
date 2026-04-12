@@ -1,0 +1,201 @@
+import argparse
+import json
+import os
+import sys
+from pathlib import Path
+
+
+def fail(message: str, code: int = 1) -> None:
+    print(message, file=sys.stderr)
+    raise SystemExit(code)
+
+
+try:
+    import wandb  # type: ignore
+except Exception as exc:  # pragma: no cover - import path validation
+    fail(f"Unable to import wandb: {exc}")
+
+
+def load_report(report_path: Path) -> dict:
+    try:
+        return json.loads(report_path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        fail(f"Benchmark report not found: {report_path}")
+    except json.JSONDecodeError as exc:
+        fail(f"Benchmark report is invalid JSON: {exc}")
+
+
+def coerce_mode(value: str) -> str:
+    return value if value in {"online", "offline", "disabled"} else "online"
+
+
+def build_metrics(report: dict) -> dict:
+    metrics = {
+        "benchmark/failed_assertions": sum(
+            1 for assertion in report.get("assertions", []) if assertion.get("status") == "fail"
+        ),
+        "benchmark/total_assertions": len(report.get("assertions", [])),
+        "benchmark/checkpoint_count": report.get("checkpointCount", 0),
+        "benchmark/tick_interval_ms": report.get("tickIntervalMs", 0),
+        "benchmark/total_ticks": report.get("totalTicks", 0),
+        "benchmark/total_duration_ms": report.get("totalDurationMs", 0),
+        "benchmark/recovered": 1 if report.get("recovered") else 0,
+        "benchmark/integrity_finding_count": report.get("integrity", {}).get("findingCount", 0),
+    }
+
+    for series in report.get("series", []):
+        prefix = f"series/{series.get('id', 'unknown')}"
+        metrics[f"{prefix}/min"] = series.get("min", 0)
+        metrics[f"{prefix}/p50"] = series.get("p50", 0)
+        metrics[f"{prefix}/p95"] = series.get("p95", 0)
+        metrics[f"{prefix}/average"] = series.get("average", 0)
+        metrics[f"{prefix}/max"] = series.get("max", 0)
+
+    comparison = report.get("comparison") or {}
+    metrics["benchmark/comparison_improved_count"] = comparison.get("improvedCount", 0)
+    metrics["benchmark/comparison_regressed_count"] = comparison.get("regressedCount", 0)
+    metrics["benchmark/comparison_unchanged_count"] = comparison.get("unchangedCount", 0)
+    return metrics
+
+
+def log_tables(run, report: dict) -> None:
+    assertions_table = wandb.Table(columns=["assertion", "status", "target", "actual", "detail"])
+    for assertion in report.get("assertions", []):
+        assertions_table.add_data(
+            assertion.get("label", ""),
+            assertion.get("status", ""),
+            assertion.get("target", ""),
+            assertion.get("actual", ""),
+            assertion.get("detail", ""),
+        )
+    run.log({"benchmark/assertions_table": assertions_table})
+
+    progress_table = wandb.Table(columns=["bucket", "item"])
+    for item in report.get("progress", {}).get("completed", []):
+        progress_table.add_data("completed", item)
+    for item in report.get("progress", {}).get("remaining", []):
+        progress_table.add_data("remaining", item)
+    run.log({"benchmark/progress_table": progress_table})
+
+    comparison = report.get("comparison") or {}
+    deltas = comparison.get("deltas") or []
+    if deltas:
+        delta_table = wandb.Table(columns=["series", "before", "after", "delta", "percent_delta", "trend"])
+        for delta in deltas:
+            delta_table.add_data(
+                delta.get("label", ""),
+                delta.get("before", 0),
+                delta.get("after", 0),
+                delta.get("delta", 0),
+                delta.get("percentDelta", 0),
+                delta.get("trend", ""),
+            )
+        run.log({"benchmark/comparison_table": delta_table})
+
+
+def attach_artifact(run, report: dict, report_json: Path, report_markdown: Path) -> tuple[str, str]:
+    artifact_name = f"immaculate-{report.get('suiteId', 'benchmark')}"
+    artifact_type = "benchmark-report"
+    artifact = wandb.Artifact(
+        artifact_name,
+        type=artifact_type,
+        metadata={
+            "suite_id": report.get("suiteId"),
+            "pack_id": report.get("packId"),
+            "generated_at": report.get("generatedAt"),
+            "integrity_status": report.get("integrity", {}).get("status"),
+            "recovery_mode": report.get("recoveryMode"),
+        },
+    )
+    artifact.add_file(str(report_json))
+    if report_markdown.exists():
+        artifact.add_file(str(report_markdown))
+    run.log_artifact(artifact)
+    return artifact_name, artifact_type
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Publish an Immaculate benchmark report to Weights & Biases.")
+    parser.add_argument("--report-json", required=True)
+    parser.add_argument("--report-markdown", required=True)
+    parser.add_argument("--entity", required=True)
+    parser.add_argument("--project", required=True)
+    parser.add_argument("--mode", default="online")
+    args = parser.parse_args()
+
+    mode = coerce_mode(args.mode)
+    if mode == "disabled":
+        fail("W&B mode is disabled.")
+
+    report_json = Path(args.report_json).resolve()
+    report_markdown = Path(args.report_markdown).resolve()
+    report = load_report(report_json)
+
+    run_name = report.get("suiteId") or "immaculate-benchmark"
+    tags = [
+        "immaculate",
+        "benchmark",
+        str(report.get("packId", "unknown")),
+        str(report.get("recoveryMode", "unknown")),
+        str(report.get("integrity", {}).get("status", "unknown")),
+    ]
+
+    config = {
+        "suite_id": report.get("suiteId"),
+        "pack_id": report.get("packId"),
+        "pack_label": report.get("packLabel"),
+        "generated_at": report.get("generatedAt"),
+        "recovery_mode": report.get("recoveryMode"),
+        "integrity_status": report.get("integrity", {}).get("status"),
+        "stage": report.get("progress", {}).get("stage"),
+        "owner": report.get("attribution", {}).get("owner"),
+        "role": report.get("attribution", {}).get("role"),
+        "website": report.get("attribution", {}).get("website"),
+    }
+
+    run = wandb.init(
+        entity=args.entity,
+        project=args.project,
+        name=run_name,
+        job_type="benchmark-publication",
+        tags=tags,
+        config=config,
+        mode=mode,
+    )
+    if run is None:
+        fail("wandb.init returned no run.")
+
+    run.summary["benchmark/summary_text"] = report.get("summary", "")
+    run.summary["benchmark/current_stage"] = report.get("progress", {}).get("stage", "")
+    run.summary["benchmark/integrity_status"] = report.get("integrity", {}).get("status", "")
+    run.summary["benchmark/failed_assertions"] = sum(
+        1 for assertion in report.get("assertions", []) if assertion.get("status") == "fail"
+    )
+
+    run.log(build_metrics(report))
+    log_tables(run, report)
+    artifact_name, artifact_type = attach_artifact(run, report, report_json, report_markdown)
+    local_run_dir = str(getattr(run, "dir", "")) or None
+    run_url = getattr(run, "url", None)
+    run.finish()
+
+    print(
+        json.dumps(
+            {
+                "mode": mode,
+                "entity": args.entity,
+                "project": args.project,
+                "runName": run_name,
+                "suiteId": report.get("suiteId"),
+                "packId": report.get("packId"),
+                "url": run_url,
+                "artifactName": artifact_name,
+                "artifactType": artifact_type,
+                "localRunDir": local_run_dir,
+            }
+        )
+    )
+
+
+if __name__ == "__main__":
+    main()
