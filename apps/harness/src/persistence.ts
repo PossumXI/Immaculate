@@ -1,5 +1,5 @@
 import path from "node:path";
-import { mkdir, appendFile, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, appendFile, open, readFile, rename, writeFile } from "node:fs/promises";
 import {
   engineDurableStateSchema,
   eventEnvelopeSchema,
@@ -56,9 +56,19 @@ export type CheckpointMetadata = {
   findingCount?: number;
 };
 
+type PersistenceLedger = {
+  persistedEventCount: number;
+  persistedHistoryCount: number;
+  lastPersistedEventId?: string;
+  lastPersistedHistoryKey?: string;
+  lastSnapshotAt?: string;
+};
+
 const MAX_CHECKPOINTS = 48;
 const RECENT_EVENT_WINDOW = 320;
 const RECENT_HISTORY_WINDOW = 240;
+const ATOMIC_WRITE_RETRY_CODES = new Set(["EPERM", "EACCES", "EBUSY"]);
+const ATOMIC_WRITE_MAX_RETRIES = 8;
 
 function historyKey(point: SnapshotHistoryPoint): string {
   return `${point.timestamp}|${point.cycle}|${point.epoch}`;
@@ -67,6 +77,47 @@ function historyKey(point: SnapshotHistoryPoint): string {
 async function safeRead(filePath: string): Promise<string | null> {
   try {
     return await readFile(filePath, "utf8");
+  } catch (error) {
+    const candidate = error as NodeJS.ErrnoException;
+    if (candidate.code === "ENOENT") {
+      return null;
+    }
+    throw error;
+  }
+}
+
+async function safeReadLastNonEmptyLine(filePath: string): Promise<string | null> {
+  try {
+    const handle = await open(filePath, "r");
+    try {
+      const stats = await handle.stat();
+      if (stats.size <= 0) {
+        return null;
+      }
+
+      let position = stats.size;
+      let buffer = "";
+
+      while (position > 0) {
+        const chunkSize = Math.min(8192, position);
+        position -= chunkSize;
+        const chunk = Buffer.alloc(chunkSize);
+        const { bytesRead } = await handle.read(chunk, 0, chunkSize, position);
+        buffer = chunk.toString("utf8", 0, bytesRead) + buffer;
+
+        if (buffer.includes("\n") || position === 0) {
+          const lines = buffer
+            .split(/\r?\n/)
+            .map((line) => line.trim())
+            .filter(Boolean);
+          return lines.at(-1) ?? null;
+        }
+      }
+
+      return null;
+    } finally {
+      await handle.close();
+    }
   } catch (error) {
     const candidate = error as NodeJS.ErrnoException;
     if (candidate.code === "ENOENT") {
@@ -146,6 +197,37 @@ function parseCheckpointIndex(content: string | null): CheckpointMetadata[] {
       .sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt));
   } catch {
     return [];
+  }
+}
+
+function parsePersistenceLedger(content: string | null): PersistenceLedger | null {
+  if (!content) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(content) as Partial<PersistenceLedger>;
+    if (
+      typeof parsed.persistedEventCount !== "number" ||
+      typeof parsed.persistedHistoryCount !== "number"
+    ) {
+      return null;
+    }
+
+    return {
+      persistedEventCount: parsed.persistedEventCount,
+      persistedHistoryCount: parsed.persistedHistoryCount,
+      lastPersistedEventId:
+        typeof parsed.lastPersistedEventId === "string" ? parsed.lastPersistedEventId : undefined,
+      lastPersistedHistoryKey:
+        typeof parsed.lastPersistedHistoryKey === "string"
+          ? parsed.lastPersistedHistoryKey
+          : undefined,
+      lastSnapshotAt:
+        typeof parsed.lastSnapshotAt === "string" ? parsed.lastSnapshotAt : undefined
+    };
+  } catch {
+    return null;
   }
 }
 
@@ -239,7 +321,26 @@ async function atomicWrite(filePath: string, contents: string): Promise<void> {
   const tempPath = `${filePath}.${process.pid}.${Date.now()}-${Math.random().toString(16).slice(2)}.tmp`;
   await writeFile(tempPath, contents, "utf8");
   try {
-    await rename(tempPath, filePath);
+    for (let attempt = 0; attempt <= ATOMIC_WRITE_MAX_RETRIES; attempt += 1) {
+      try {
+        await rename(tempPath, filePath);
+        return;
+      } catch (error) {
+        const candidate = error as NodeJS.ErrnoException;
+        const retryable =
+          typeof candidate?.code === "string" && ATOMIC_WRITE_RETRY_CODES.has(candidate.code);
+        if (!retryable || attempt === ATOMIC_WRITE_MAX_RETRIES) {
+          if (retryable) {
+            await writeFile(filePath, contents, "utf8");
+            await safeUnlink(tempPath);
+            return;
+          }
+          throw error;
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 20 * (attempt + 1)));
+      }
+    }
   } catch (error) {
     await safeUnlink(tempPath);
     throw error;
@@ -250,6 +351,7 @@ export function createPersistence(rootDir = path.join(process.cwd(), ".runtime",
   const snapshotPath = path.join(rootDir, "snapshot.json");
   const eventsPath = path.join(rootDir, "events.ndjson");
   const historyPath = path.join(rootDir, "history.ndjson");
+  const statusPath = path.join(rootDir, "persistence-status.json");
   const checkpointsDir = path.join(rootDir, "checkpoints");
   const checkpointsPath = path.join(rootDir, "checkpoints.json");
 
@@ -293,6 +395,17 @@ export function createPersistence(rootDir = path.join(process.cwd(), ".runtime",
   async function writeCheckpointIndex(): Promise<void> {
     await atomicWrite(checkpointsPath, JSON.stringify(checkpoints, null, 2));
     syncCheckpointStatus();
+  }
+
+  async function writePersistenceLedger(): Promise<void> {
+    const ledger: PersistenceLedger = {
+      persistedEventCount: status.persistedEventCount,
+      persistedHistoryCount: status.persistedHistoryCount,
+      lastPersistedEventId: status.lastPersistedEventId,
+      lastPersistedHistoryKey: status.lastPersistedHistoryKey,
+      lastSnapshotAt: status.lastSnapshotAt
+    };
+    await atomicWrite(statusPath, JSON.stringify(ledger, null, 2));
   }
 
   async function readCheckpointState(
@@ -396,20 +509,67 @@ export function createPersistence(rootDir = path.join(process.cwd(), ".runtime",
   async function load(): Promise<EngineDurableState | null> {
     await ensureRoot();
 
-    const [snapshotContent, eventsContent, historyContent, checkpointIndexContent] = await Promise.all([
+    const [snapshotContent, checkpointIndexContent, ledgerContent] = await Promise.all([
       safeRead(snapshotPath),
-      safeRead(eventsPath),
-      safeRead(historyPath),
-      safeRead(checkpointsPath)
+      safeRead(checkpointsPath),
+      safeRead(statusPath)
     ]);
-
-    const persistedEvents = parseNdjson(eventsContent, eventEnvelopeSchema);
-    const persistedHistory = parseNdjson(historyContent, snapshotHistoryPointSchema);
 
     checkpoints = parseCheckpointIndex(checkpointIndexContent);
     syncCheckpointStatus();
     syncIntegrityStatus(undefined);
     status.invalidArtifactCount = 0;
+    let snapshotState: EngineDurableState | null = null;
+    const ledger = parsePersistenceLedger(ledgerContent);
+
+    if (snapshotContent) {
+      try {
+        snapshotState = engineDurableStateSchema.parse(JSON.parse(snapshotContent)) as EngineDurableState;
+      } catch {
+        snapshotState = null;
+      }
+    }
+
+    if (snapshotState && ledger) {
+      const [lastEventLine, lastHistoryLine] = await Promise.all([
+        safeReadLastNonEmptyLine(eventsPath),
+        safeReadLastNonEmptyLine(historyPath)
+      ]);
+      const lastEvent = lastEventLine
+        ? eventEnvelopeSchema.parse(JSON.parse(lastEventLine))
+        : null;
+      const lastHistory = lastHistoryLine
+        ? snapshotHistoryPointSchema.parse(JSON.parse(lastHistoryLine))
+        : null;
+      const lastPersistedHistoryKey = lastHistory ? historyKey(lastHistory) : undefined;
+
+      if (
+        (ledger.lastPersistedEventId ?? undefined) === (lastEvent?.eventId ?? undefined) &&
+        (ledger.lastPersistedHistoryKey ?? undefined) === (lastPersistedHistoryKey ?? undefined) &&
+        (!ledger.lastPersistedEventId ||
+          snapshotState.snapshot.lastEventId === ledger.lastPersistedEventId)
+      ) {
+        status.persistedEventCount = ledger.persistedEventCount;
+        status.persistedHistoryCount = ledger.persistedHistoryCount;
+        status.lastPersistedEventId = ledger.lastPersistedEventId;
+        status.lastPersistedHistoryKey = ledger.lastPersistedHistoryKey;
+        status.lastSnapshotAt = ledger.lastSnapshotAt ?? snapshotState.snapshot.timestamp;
+
+        const accepted = acceptCandidateState(snapshotState, [], []);
+        if (accepted) {
+          status.recovered = true;
+          status.recoveryMode = "snapshot";
+          return accepted;
+        }
+      }
+    }
+
+    const [eventsContent, historyContent] = await Promise.all([
+      safeRead(eventsPath),
+      safeRead(historyPath)
+    ]);
+    const persistedEvents = parseNdjson(eventsContent, eventEnvelopeSchema);
+    const persistedHistory = parseNdjson(historyContent, snapshotHistoryPointSchema);
 
     status.persistedEventCount = persistedEvents.length;
     status.persistedHistoryCount = persistedHistory.length;
@@ -419,15 +579,6 @@ export function createPersistence(rootDir = path.join(process.cwd(), ".runtime",
       : undefined;
 
     const newestPersistedEventId = persistedEvents.at(-1)?.eventId;
-    let snapshotState: EngineDurableState | null = null;
-
-    if (snapshotContent) {
-      try {
-        snapshotState = engineDurableStateSchema.parse(JSON.parse(snapshotContent)) as EngineDurableState;
-      } catch {
-        snapshotState = null;
-      }
-    }
 
     for (const checkpoint of checkpoints) {
       const checkpointState = await readCheckpointState(checkpoint);
@@ -525,6 +676,8 @@ export function createPersistence(rootDir = path.join(process.cwd(), ".runtime",
       if (integrity.valid && shouldCheckpoint(parsed, status.lastCheckpointEventId)) {
         await writeCheckpoint(parsed, integrity);
       }
+
+      await writePersistenceLedger();
     });
 
     return writeChain;

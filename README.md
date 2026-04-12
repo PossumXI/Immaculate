@@ -1,6 +1,6 @@
 # Immaculate
 
-Gaetano Comparcola is the program owner, systems architect, and engineering lead for Immaculate. `PossumX.dev` is the personal/professional bio site attached to the published benchmark/report attribution. The build is being shaped around a control-system-first doctrine: durability, replayability, observability, benchmark publication, and operator control before broader scale-out.
+Gaetano Comparcola, operating publicly as `PossumX`, is the program owner, systems architect, and engineering lead for Immaculate. `PossumX.dev` is the public profile site attached to benchmark attribution, architecture ownership, and published results. The build is being shaped around a control-system-first doctrine: durability, replayability, observability, benchmark publication, and operator control before broader scale-out.
 
 This repository is prepared for public collaboration under the Apache 2.0 license. Community contributions are welcome, but the project keeps a hard line on governance, reproducibility, and security.
 
@@ -36,6 +36,7 @@ Immaculate is a greenfield orchestration substrate for:
 
 Generated runtime state, benchmark run dumps, local tooling environments, and local machine paths are intentionally kept out of git.
 Major breakthroughs and materially new system discoveries are tracked in the wiki source at `docs/wiki/Breakthrough-Log.md`.
+The tracked public benchmark surface lives at `docs/wiki/Benchmark-Status.md`.
 
 ## Security Monitoring
 
@@ -90,9 +91,14 @@ npm run benchmark:publish:wandb
 
 Defaults:
 
-- entity: `arobi-arobi-technology-alliance`
+- entity: authenticated W&B workspace attached to the API key, unless `WANDB_ENTITY` or `IMMACULATE_WANDB_ENTITY` overrides it
 - project: `immaculate`
 - mode: `online`
+
+Current live public benchmark pages:
+
+- W&B project: https://wandb.ai/arobi-arobi-technology-alliance/immaculate
+- tracked repo/wiki status: [docs/wiki/Benchmark-Status.md](docs/wiki/Benchmark-Status.md)
 
 Optional environment variables:
 
@@ -108,7 +114,7 @@ Published artifacts are written to:
 - `benchmarks/index.json`
 
 The published benchmark now carries explicit authorship and role attribution plus architecture contribution notes.
-These benchmark publication files are treated as generated artifacts and are produced locally or in CI rather than stored as permanent source files.
+These raw benchmark publication files are treated as generated artifacts and are produced locally or in CI rather than stored as permanent source files. The tracked public summary lives in `docs/wiki/Benchmark-Status.md` and points at the live W&B project and latest published runs by pack.
 
 Tier 1 cognitive-loop closure is also benchmarked in the publication report itself:
 
@@ -201,6 +207,10 @@ The harness now exposes a deliberate operator/automation surface. These routes a
 - `POST /api/neuro/replays/:replayId/stop`
 - `GET /api/neuro/live/sources`
 - `POST /api/neuro/live/:sourceId/stop`
+- `GET /api/devices/lsl/streams`
+- `GET /api/devices/lsl/connections`
+- `POST /api/devices/lsl/connect`
+- `POST /api/devices/lsl/:sourceId/stop`
 - `GET /api/intelligence`
 - `GET /api/intelligence/executions`
 - `GET /api/intelligence/arbitrations`

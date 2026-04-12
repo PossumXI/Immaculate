@@ -6,6 +6,8 @@ coverage/
 *.log
 *.pid
 *.pid.lock
+__pycache__/
+*.pyc
 
 # Local runtime and generated state
 .runtime/

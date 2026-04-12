@@ -61,6 +61,10 @@ function uniqueRoles(roles: IntelligenceLayerRole[]): IntelligenceLayerRole[] {
 
 const MULTI_TURN_ROLE_ORDER: IntelligenceLayerRole[] = ["mid", "soul", "reasoner", "guard"];
 
+export function isParallelScheduleMode(mode: ExecutionScheduleMode): boolean {
+  return mode === "swarm-parallel" || mode === "swarm-sequential" || mode === "guarded-swarm";
+}
+
 export function preferredScheduleRoles(arbitration: ExecutionArbitration): IntelligenceLayerRole[] {
   const preferred = arbitration.preferredLayerRole;
 
@@ -138,19 +142,42 @@ function scheduleModeForSelection(
   ) {
     return "guarded-swarm";
   }
-  return "swarm-sequential";
+  return "swarm-parallel";
 }
 
-function estimateLatencyMs(selected: IntelligenceLayer[], governancePressure: GovernancePressureLevel): number {
-  const base = selected.reduce((total, layer) => {
-    const statusMultiplier =
-      layer.status === "ready"
-        ? 0.9
-        : layer.status === "busy"
-          ? 1.3
-          : 1.55;
-    return total + roleLatencyMs(layer.role) * statusMultiplier;
-  }, 0);
+function estimatedRoleDurationMs(layer: IntelligenceLayer): number {
+  const statusMultiplier =
+    layer.status === "ready"
+      ? 0.9
+      : layer.status === "busy"
+        ? 1.3
+        : 1.55;
+  return roleLatencyMs(layer.role) * statusMultiplier;
+}
+
+function estimateLatencyMs(
+  selected: IntelligenceLayer[],
+  governancePressure: GovernancePressureLevel,
+  mode: ExecutionScheduleMode
+): number {
+  const nonGuardDurations = selected
+    .filter((layer) => layer.role !== "guard")
+    .map((layer) => estimatedRoleDurationMs(layer));
+  const guardDuration = selected
+    .filter((layer) => layer.role === "guard")
+    .reduce((max, layer) => Math.max(max, estimatedRoleDurationMs(layer)), 0);
+  const summedDuration = selected.reduce(
+    (total, layer) => total + estimatedRoleDurationMs(layer),
+    0
+  );
+  const parallelBatchDuration =
+    nonGuardDurations.length > 0 ? Math.max(...nonGuardDurations) : 0;
+  const base =
+    mode === "guarded-swarm"
+      ? parallelBatchDuration + guardDuration
+      : mode === "swarm-parallel" || mode === "swarm-sequential"
+        ? parallelBatchDuration + guardDuration
+        : summedDuration;
   const governanceOverhead =
     governancePressure === "critical" ? 600 : governancePressure === "elevated" ? 260 : 80;
   return Number((base + governanceOverhead).toFixed(2));
@@ -200,13 +227,24 @@ export function planExecutionSchedule(input: ExecutionSchedulePlanInput): Execut
   const mode = scheduleModeForSelection(input.arbitration, selectedLayers);
   const primaryLayer = selectedLayers.at(-1);
   const layerRoles = selectedLayers.map((layer) => layer.role);
-  const estimatedLatencyMs = estimateLatencyMs(selectedLayers, input.arbitration.governancePressure);
+  const estimatedLatencyMs = estimateLatencyMs(
+    selectedLayers,
+    input.arbitration.governancePressure,
+    mode
+  );
   const estimatedCost = estimateCost(selectedLayers);
   const canDispatch =
     input.arbitration.shouldDispatchActuation &&
     (!input.arbitration.shouldRunCognition || selectedLayers.length > 0);
+  const executionTopology =
+    mode === "guarded-swarm"
+      ? "parallel-then-guard"
+      : isParallelScheduleMode(mode)
+        ? "parallel"
+        : "sequential";
   const rationale = [
     `mode=${mode}`,
+    `topology=${executionTopology}`,
     `width=${selectedLayers.length}`,
     `primary=${primaryLayer?.role ?? "none"}`,
     `roles=${layerRoles.join(">") || "none"}`,

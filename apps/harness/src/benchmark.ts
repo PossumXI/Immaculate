@@ -89,7 +89,7 @@ const BENCHMARK_FIXTURE_NWB_PATH = path.join(REPO_ROOT, "fixtures", "nwb", "mini
 const LEGACY_DEFAULT_PACK_ID: BenchmarkPackId = "substrate-readiness";
 const LEGACY_DEFAULT_PACK_LABEL = "Substrate Readiness";
 const BENCHMARK_ATTRIBUTION: BenchmarkAttribution = {
-  owner: "Gaetano Comparcola",
+  owner: "Gaetano Comparcola (PossumX)",
   role: "Program Originator, Systems Architect, and Engineering Lead",
   website: "https://PossumX.dev",
   contributions: [
@@ -191,7 +191,9 @@ function createProgress(): BenchmarkProgress {
       "HTTP/2 direct device transport with typed RPC-style delivery and response telemetry",
       "Health- and latency-aware transport preference across concrete actuation lanes",
       "Durable execution arbitration that decides when the system should think, act, or hold",
-      "Durable execution scheduling that chooses single-layer versus swarm formation before cognition runs",
+      "Durable execution scheduling that chooses single-layer versus truthful parallel swarm formation before cognition runs",
+      "Truthful runtime swarm execution where non-guard cognition layers can execute concurrently and guarded swarms close with a final review turn",
+      "Real LSL bridge ingress that can feed external stream payloads into the same live neuro spine as replay and socket frames",
       "Tier 1 cognitive-loop benchmark coverage for parsed route/reason/commit structure, governance-aware cognition, soft-route priors, and multi-role conversation verdicts",
       "Core runtime parsing of LLM route suggestions and true multi-role conversation execution",
       "W&B benchmark publication backend for external experiment tracking",
@@ -2919,15 +2921,24 @@ export async function runPublishedBenchmark(
     ),
     createAssertion(
       "execution-schedule-cognitive",
-      "Execution scheduling expands low-confidence cognition into a multi-layer swarm",
-      cognitiveSchedulePlan.mode === "swarm-sequential" &&
+      "Execution scheduling expands low-confidence cognition into a truthful parallel swarm",
+      cognitiveSchedulePlan.mode === "swarm-parallel" &&
         cognitiveSchedulePlan.layerIds.length >= 2 &&
         cognitiveSchedulePlan.layerRoles.includes("mid") &&
         cognitiveSchedulePlan.layerRoles.includes("reasoner") &&
         cognitiveScheduleDecision.primaryLayerId === benchmarkLayer.id,
-      "swarm-sequential / width >= 2 / includes mid+reasoner / reasoner primary",
+      "swarm-parallel / width >= 2 / includes mid+reasoner / reasoner primary",
       `${cognitiveSchedulePlan.mode} / roles=${cognitiveSchedulePlan.layerRoles.join(">")} / primary=${cognitiveScheduleDecision.primaryLayerId ?? "none"}`,
       "once mediation decides to think, the next step is choosing an intelligence formation instead of a single opaque model call"
+    ),
+    createAssertion(
+      "execution-schedule-parallel-latency",
+      "Parallel swarm scheduling estimates latency as a real parallel formation instead of a summed sequential stack",
+      cognitiveSchedulePlan.estimatedLatencyMs < 3600 &&
+        cognitiveSchedulePlan.estimatedLatencyMs < guardedSchedulePlan.estimatedLatencyMs,
+      "< 3600 ms and below guarded-swarm estimate",
+      `${cognitiveSchedulePlan.estimatedLatencyMs.toFixed(2)} ms / guarded ${guardedSchedulePlan.estimatedLatencyMs.toFixed(2)} ms`,
+      "once the runtime is genuinely parallel, the planner latency estimate has to reflect that topology or the schedule ledger is lying"
     ),
     createAssertion(
       "execution-schedule-guarded",

@@ -21,6 +21,49 @@ For each breakthrough, record:
 
 ### 2026-04-12
 
+#### Swarm scheduling became truthful and external LSL ingress became real
+
+What changed:
+- cognition schedules that widen into a swarm now execute non-guard layers in parallel at runtime instead of being labeled as a swarm while actually running as a sequential chain
+- guarded swarms now close with a final review turn after the parallel cohort finishes, which makes the durable schedule topology match the real execution topology
+- a real LSL bridge manager and Python inlet helpers now let external Lab Streaming Layer sources flow into the same live neuro spine as replayed and socket-fed frames
+- the live harness exposes LSL discovery, connection, and stop routes so external neuro streams no longer depend on synthetic frame injection
+
+Why it matters:
+- this closes a core truthfulness gap in the intelligence plane: the schedule ledger now describes what the runtime really did instead of an idealized topology label
+- it also crosses the next neuro-ingress boundary from simulated socket injection to a real external stream protocol used by EEG and BCI tooling
+- the hidden systems point is that honest topology matters more than impressive labels, because replay, latency accounting, and future distributed scheduling all depend on the runtime matching the durable plan
+
+Evidence:
+- live mediation smoke showed `nonGuardStartSpreadMs: 0.0`, proving the non-guard cognition cohort started concurrently rather than serially
+- direct LSL discovery, bridge, and manager smokes succeeded against a temporary live outlet and produced a real ingested neuro frame with derived band state
+- `npm run typecheck`, `npm run build`, and `npm run benchmark:gate:all` passed after the truthful-swarm and LSL ingress pass
+
+What this unlocks next:
+- heterogeneous swarm execution where different backends can participate in the same parallel formation honestly
+- external device ingress paths that do not rely on synthetic harness-only injection
+- future locality-aware worker routing where truthful concurrency and real neuro ingress become schedulable resources
+
+#### Public benchmark publication became a tracked artifact instead of an external side effect
+
+What changed:
+- W&B publication now writes ownership, role, website, and artifact identity into the live run summary and artifact metadata instead of burying them only in run config
+- the publisher now refreshes a tracked benchmark status surface in `docs/wiki/Benchmark-Status.md` and `docs/wiki/Benchmark-Status.json`
+- the public repo now points directly at the live W&B project under `PossumX/immaculate` and keeps the generated runtime ledgers out of git
+
+Why it matters:
+- this closes the public truth gap: benchmark publication is now visible in three places at once, the live W&B run, the public repo, and the wiki source
+- the project can now publish results publicly without leaking private runtime ledgers or pretending that CI artifacts are the same thing as public benchmark memory
+
+Evidence:
+- the benchmark publisher now emits project/run URLs and refreshes the tracked repo/wiki benchmark status page
+- the README and wiki home now point directly at the live public W&B surface
+
+What this unlocks next:
+- repeatable public benchmark history by pack without turning the private runtime ledger into committed source
+- clearer operator and community visibility into what has actually been validated recently
+- richer future benchmark trend pages that can stay public without exposing internal run-state noise
+
 #### The controller stopped pretending its timing math was static
 
 What changed:

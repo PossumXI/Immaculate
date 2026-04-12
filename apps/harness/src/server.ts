@@ -26,7 +26,8 @@ import {
 import {
   buildExecutionScheduleDecision,
   planExecutionSchedule,
-  preferredScheduleRoles
+  preferredScheduleRoles,
+  isParallelScheduleMode
 } from "./scheduling.js";
 import {
   buildAgentTurn,
@@ -50,6 +51,7 @@ import {
   createLiveNeuroManager,
   type LiveNeuroPayload
 } from "./live-neuro.js";
+import { createLslAdapterManager } from "./lsl-adapter.js";
 import { createNeuroReplayManager } from "./neuro-replay.js";
 import { listBenchmarkPacks } from "./benchmark-packs.js";
 import {
@@ -64,6 +66,10 @@ import {
   deriveGovernancePressure,
   planAdaptiveRoute
 } from "./routing.js";
+import {
+  createIntelligenceWorkerRegistry,
+  type IntelligenceWorkerExecutionProfile
+} from "./workers.js";
 import { hashValue, resolvePathWithinAllowedRoot } from "./utils.js";
 import {
   deriveVisibilityScope,
@@ -87,6 +93,7 @@ const datasetRegistry = createDatasetRegistry(persistence.getStatus().rootDir);
 const neuroRegistry = createNeuroRegistry(persistence.getStatus().rootDir);
 const governance = createGovernanceRegistry();
 const actuationManager = await createActuationManager(persistence.getStatus().rootDir);
+const intelligenceWorkerRegistry = createIntelligenceWorkerRegistry(persistence.getStatus().rootDir);
 const durableState = await persistence.load();
 const engine = createEngine(
   durableState
@@ -117,6 +124,25 @@ const liveNeuroManager = createLiveNeuroManager({
     engine.ingestNeuroFrame(frame);
     await persistence.persist(engine.getDurableState());
     emitSnapshot();
+  }
+});
+const lslAdapterManager = createLslAdapterManager({
+  onPayload: async (payload) => {
+    await liveNeuroManager.ingest(payload);
+  },
+  onState: async (state) => {
+    app.log.info(
+      {
+        sourceId: state.sourceId,
+        state: state.state,
+        reason: "reason" in state ? state.reason : undefined,
+        pid: "pid" in state ? state.pid : undefined
+      },
+      "LSL bridge state updated"
+    );
+  },
+  onStatus: async (message) => {
+    app.log.info({ message }, "LSL bridge status");
   }
 });
 const clients = new Set<{
@@ -814,6 +840,103 @@ async function executeCognitivePass(options: {
   }
 }
 
+async function executeScheduledCognitivePass(options: {
+  layer: IntelligenceLayer;
+  objective: string;
+  context?: string;
+  consentScope?: string;
+}) {
+  const busyLayer: IntelligenceLayer = {
+    ...options.layer,
+    status: "busy"
+  };
+  const startedAt = new Date().toISOString();
+
+  engine.registerIntelligenceLayer(busyLayer);
+  await persistence.persist(engine.getDurableState());
+  emitSnapshot();
+
+  try {
+    const activeSnapshot = phaseSnapshotSchema.parse(engine.getSnapshot());
+    const governancePressure = deriveGovernancePressure(
+      options.consentScope,
+      governance.getStatus(),
+      governance.listDecisions()
+    );
+    const deniedCount = recentGovernanceDeniedCount();
+    const result = await runOllamaExecution({
+      snapshot: activeSnapshot,
+      layer: busyLayer,
+      objective: options.objective,
+      context: options.context,
+      governancePressure,
+      recentDeniedCount: deniedCount
+    });
+    const settledLayer: IntelligenceLayer = {
+      ...busyLayer,
+      status: result.execution.status === "completed" ? "ready" : "degraded"
+    };
+
+    engine.registerIntelligenceLayer(settledLayer);
+    const snapshot = phaseSnapshotSchema.parse(
+      projectPhaseSnapshot(engine.commitCognitiveExecution(result.execution))
+    );
+    await persistence.persist(engine.getDurableState());
+    emitSnapshot();
+
+    return {
+      layer: settledLayer,
+      execution: result.execution,
+      response: result.response,
+      snapshot
+    };
+  } catch (error) {
+    const completedAt = new Date().toISOString();
+    const message = error instanceof Error ? error.message : "Unable to run the cognitive layer.";
+    const governancePressure = deriveGovernancePressure(
+      options.consentScope,
+      governance.getStatus(),
+      governance.listDecisions()
+    );
+    const deniedCount = recentGovernanceDeniedCount();
+    const failedExecution = {
+      id: `cog-${completedAt.replace(/[:.]/g, "-")}-${hashValue(busyLayer.id).slice(0, 8)}`,
+      layerId: busyLayer.id,
+      model: busyLayer.model,
+      objective: options.objective,
+      status: "failed" as const,
+      latencyMs: Math.max(1, Date.parse(completedAt) - Date.parse(startedAt)),
+      startedAt,
+      completedAt,
+      promptDigest: hashValue(
+        `${busyLayer.id}:${options.objective}:${options.context ?? ""}:${governancePressure}:${deniedCount}`
+      ).slice(0, 24),
+      responsePreview: `Cognitive execution failed: ${message}`.slice(0, 280),
+      guardVerdict: undefined,
+      governancePressure,
+      recentDeniedCount: deniedCount
+    };
+    const settledLayer: IntelligenceLayer = {
+      ...busyLayer,
+      status: "degraded"
+    };
+
+    engine.registerIntelligenceLayer(settledLayer);
+    const snapshot = phaseSnapshotSchema.parse(
+      projectPhaseSnapshot(engine.commitCognitiveExecution(failedExecution))
+    );
+    await persistence.persist(engine.getDurableState());
+    emitSnapshot();
+
+    return {
+      layer: settledLayer,
+      execution: failedExecution,
+      response: failedExecution.responsePreview,
+      snapshot
+    };
+  }
+}
+
 async function executeCognitiveSchedule(options: {
   schedule: ReturnType<typeof engine.getSnapshot>["executionSchedules"][number];
   objective?: string;
@@ -846,30 +969,98 @@ async function executeCognitiveSchedule(options: {
         (scheduleLayerOrder.get(right.id) ?? Number.MAX_SAFE_INTEGER)
     )
     .slice(0, options.schedule.layerIds.length > 1 ? options.schedule.layerIds.length : 1);
+  const parallelEligible = isParallelScheduleMode(options.schedule.mode);
+  const guardLayer = scheduledLayers.find((layer) => layer.role === "guard");
+  const nonGuardLayers = scheduledLayers.filter((layer) => layer.role !== "guard");
 
-  for (const layer of scheduledLayers) {
+  if (parallelEligible && nonGuardLayers.length > 1) {
+    const parallelResults = await Promise.all(
+      nonGuardLayers.map(async (layer) => {
+        const prompt = buildConversationObjective({
+          baseObjective,
+          role: layer.role,
+          priorTurns: []
+        });
+        return executeScheduledCognitivePass({
+          layer,
+          objective: prompt.objective,
+          context: prompt.context,
+          consentScope: options.consentScope
+        });
+      })
+    );
+
+    const orderedParallelResults = [...parallelResults].sort((left, right) => {
+      const completedDelta =
+        Date.parse(left.execution.completedAt) - Date.parse(right.execution.completedAt);
+      if (completedDelta !== 0) {
+        return completedDelta;
+      }
+      return left.layer.role.localeCompare(right.layer.role);
+    });
+
+    for (const result of orderedParallelResults) {
+      layers.push(result.layer);
+      executions.push(result.execution);
+      responses.push(result.response);
+      turns.push(
+        buildAgentTurn({
+          execution: result.execution,
+          layer: result.layer
+        })
+      );
+      latestSnapshot = result.snapshot;
+    }
+  } else {
+    for (const layer of nonGuardLayers) {
+      const prompt = buildConversationObjective({
+        baseObjective,
+        role: layer.role,
+        priorTurns: turns
+      });
+      const result = await executeScheduledCognitivePass({
+        layer,
+        objective: prompt.objective,
+        context: prompt.context,
+        consentScope: options.consentScope
+      });
+
+      layers.push(result.layer);
+      executions.push(result.execution);
+      responses.push(result.response);
+      turns.push(
+        buildAgentTurn({
+          execution: result.execution,
+          layer: result.layer
+        })
+      );
+      latestSnapshot = result.snapshot;
+    }
+  }
+
+  if (guardLayer) {
     const prompt = buildConversationObjective({
       baseObjective,
-      role: layer.role,
+      role: guardLayer.role,
       priorTurns: turns
     });
-    const result = await executeCognitivePass({
-      layer,
+    const guardResult = await executeScheduledCognitivePass({
+      layer: guardLayer,
       objective: prompt.objective,
       context: prompt.context,
       consentScope: options.consentScope
     });
 
-    layers.push(result.layer);
-    executions.push(result.execution);
-    responses.push(result.response);
+    layers.push(guardResult.layer);
+    executions.push(guardResult.execution);
+    responses.push(guardResult.response);
     turns.push(
       buildAgentTurn({
-        execution: result.execution,
-        layer: result.layer
+        execution: guardResult.execution,
+        layer: guardResult.layer
       })
     );
-    latestSnapshot = result.snapshot;
+    latestSnapshot = guardResult.snapshot;
   }
 
   const conversation =
@@ -1282,6 +1473,143 @@ app.get("/api/neuro/live/sources", async () => ({
   sources: liveNeuroManager.list()
 }));
 
+app.get("/api/devices/lsl/streams", async (request, reply) => {
+  if (
+    !authorizeGovernedAction(
+      "neuro-streaming",
+      "/api/devices/lsl/streams",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  const discovery = await lslAdapterManager.discover();
+  return {
+    accepted: true,
+    ...discovery,
+    connections: lslAdapterManager.listConnections()
+  };
+});
+
+app.get("/api/devices/lsl/connections", async (request, reply) => {
+  if (
+    !authorizeGovernedAction(
+      "neuro-streaming",
+      "/api/devices/lsl/connections",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  return {
+    accepted: true,
+    connections: lslAdapterManager.listConnections(),
+    sources: liveNeuroManager.list()
+  };
+});
+
+app.post("/api/devices/lsl/connect", async (request, reply) => {
+  if (
+    !authorizeGovernedAction(
+      "neuro-streaming",
+      "/api/devices/lsl/connect",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  const body =
+    ((request.body as {
+      sourceId?: string;
+      name?: string;
+      uid?: string;
+      sessionId?: string;
+      label?: string;
+      kind?: string;
+      rateHz?: number;
+      windowSize?: number;
+      pullTimeoutMs?: number;
+      maxRows?: number;
+    } | undefined) ?? {});
+
+  try {
+    const connection = await lslAdapterManager.connect({
+      sourceId: body.sourceId?.trim() || undefined,
+      name: body.name?.trim() || undefined,
+      uid: body.uid?.trim() || undefined,
+      sessionId: body.sessionId?.trim() || undefined,
+      label: body.label?.trim() || undefined,
+      kind: body.kind?.trim() || undefined,
+      rateHz: typeof body.rateHz === "number" ? body.rateHz : undefined,
+      windowSize: typeof body.windowSize === "number" ? body.windowSize : undefined,
+      pullTimeoutMs:
+        typeof body.pullTimeoutMs === "number" ? body.pullTimeoutMs : undefined,
+      maxRows: typeof body.maxRows === "number" ? body.maxRows : undefined
+    });
+
+    return {
+      accepted: true,
+      connectionId: connection.id,
+      sourceId: connection.sourceId,
+      state: connection.state(),
+      connections: lslAdapterManager.listConnections(),
+      snapshot: phaseSnapshotSchema.parse(projectPhaseSnapshot(engine.getSnapshot()))
+    };
+  } catch (error) {
+    reply.code(502);
+    return {
+      error: "lsl_connect_failed",
+      message: error instanceof Error ? error.message : "Unable to connect to the LSL source.",
+      connections: lslAdapterManager.listConnections()
+    };
+  }
+});
+
+app.post("/api/devices/lsl/:sourceId/stop", async (request, reply) => {
+  if (
+    !authorizeGovernedAction(
+      "neuro-streaming",
+      "/api/devices/lsl/:sourceId/stop",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  const params = request.params as { sourceId?: string };
+  if (!params.sourceId) {
+    reply.code(400);
+    return {
+      error: "missing_source_id"
+    };
+  }
+
+  const stopped = await lslAdapterManager.stop(params.sourceId);
+  if (!stopped) {
+    reply.code(404);
+    return {
+      error: "lsl_connection_not_found",
+      sourceId: params.sourceId
+    };
+  }
+
+  const source = await liveNeuroManager.stop(params.sourceId);
+  return {
+    accepted: true,
+    sourceId: params.sourceId,
+    connections: lslAdapterManager.listConnections(),
+    source,
+    snapshot: phaseSnapshotSchema.parse(projectPhaseSnapshot(engine.getSnapshot()))
+  };
+});
+
 app.get("/api/neuro/frames", async (request, reply) => {
   if (
     !authorizeGovernedAction(
@@ -1359,6 +1687,31 @@ app.get("/api/intelligence/executions", async (request, reply) => {
       .cognitiveExecutions.map((execution) =>
         projectCognitiveExecution(execution, consentScope)
       ),
+    recommendedLayerId: getPreferredLayer()?.id,
+    visibility: deriveVisibilityScope(consentScope)
+  };
+});
+
+app.get("/api/intelligence/workers", async (request, reply) => {
+  if (
+    !authorizeGovernedAction(
+      "cognitive-trace-read",
+      "/api/intelligence/workers",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  const consentScope = getGovernanceBinding(
+    "cognitive-trace-read",
+    "/api/intelligence/workers",
+    request
+  ).consentScope;
+  const workers = await intelligenceWorkerRegistry.listWorkers();
+  return {
+    workers,
     recommendedLayerId: getPreferredLayer()?.id,
     visibility: deriveVisibilityScope(consentScope)
   };
@@ -1601,6 +1954,231 @@ app.post("/api/intelligence/ollama/register", async (request, reply) => {
       message: error instanceof Error ? error.message : "Unable to register Ollama layer."
     };
   }
+});
+
+app.post("/api/intelligence/workers/register", async (request, reply) => {
+  if (
+    !authorizeGovernedAction(
+      "cognitive-registration",
+      "/api/intelligence/workers/register",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  const body =
+    (request.body as {
+      workerId?: string;
+      workerLabel?: string;
+      hostLabel?: string;
+      executionProfile?: IntelligenceWorkerExecutionProfile;
+      registeredAt?: string;
+      heartbeatAt?: string;
+      leaseDurationMs?: number;
+      watch?: boolean;
+      allowHostRisk?: boolean;
+      supportedBaseModels?: string[];
+      preferredLayerIds?: string[];
+    } | undefined) ?? {};
+
+  if (!body.workerId?.trim()) {
+    reply.code(400);
+    return {
+      error: "invalid_worker_registration",
+      message: "workerId is required."
+    };
+  }
+  if (body.executionProfile !== "local" && body.executionProfile !== "remote") {
+    reply.code(400);
+    return {
+      error: "invalid_worker_registration",
+      message: "executionProfile must be local or remote."
+    };
+  }
+
+  try {
+    const worker = await intelligenceWorkerRegistry.registerWorker({
+      workerId: body.workerId.trim(),
+      workerLabel: body.workerLabel?.trim() || undefined,
+      hostLabel: body.hostLabel?.trim() || undefined,
+      executionProfile: body.executionProfile,
+      registeredAt: body.registeredAt?.trim() || new Date().toISOString(),
+      heartbeatAt: body.heartbeatAt?.trim() || new Date().toISOString(),
+      leaseDurationMs:
+        typeof body.leaseDurationMs === "number" && Number.isFinite(body.leaseDurationMs)
+          ? Number(body.leaseDurationMs)
+          : 45_000,
+      watch: body.watch === true,
+      allowHostRisk: body.allowHostRisk === true,
+      supportedBaseModels: Array.isArray(body.supportedBaseModels)
+        ? body.supportedBaseModels
+        : [],
+      preferredLayerIds: Array.isArray(body.preferredLayerIds)
+        ? body.preferredLayerIds
+        : []
+    });
+    return {
+      accepted: true,
+      worker,
+      recommendedLayerId: getPreferredLayer()?.id
+    };
+  } catch (error) {
+    reply.code(400);
+    return {
+      error: "worker_registration_failed",
+      message:
+        error instanceof Error ? error.message : "Unable to register intelligence worker."
+    };
+  }
+});
+
+app.post("/api/intelligence/workers/:workerId/heartbeat", async (request, reply) => {
+  if (
+    !authorizeGovernedAction(
+      "cognitive-registration",
+      "/api/intelligence/workers/:workerId/heartbeat",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  const params = request.params as { workerId?: string };
+  const body =
+    (request.body as {
+      heartbeatAt?: string;
+      leaseDurationMs?: number;
+      workerLabel?: string;
+      hostLabel?: string;
+      executionProfile?: IntelligenceWorkerExecutionProfile;
+      watch?: boolean;
+      allowHostRisk?: boolean;
+      supportedBaseModels?: string[];
+      preferredLayerIds?: string[];
+    } | undefined) ?? {};
+
+  if (!params.workerId?.trim()) {
+    reply.code(400);
+    return {
+      error: "missing_worker_id"
+    };
+  }
+  if (
+    body.executionProfile !== undefined &&
+    body.executionProfile !== "local" &&
+    body.executionProfile !== "remote"
+  ) {
+    reply.code(400);
+    return {
+      error: "invalid_worker_heartbeat",
+      message: "executionProfile must be local or remote."
+    };
+  }
+
+  try {
+    const worker = await intelligenceWorkerRegistry.heartbeatWorker({
+      workerId: params.workerId.trim(),
+      heartbeatAt: body.heartbeatAt?.trim() || new Date().toISOString(),
+      leaseDurationMs:
+        typeof body.leaseDurationMs === "number" && Number.isFinite(body.leaseDurationMs)
+          ? Number(body.leaseDurationMs)
+          : undefined,
+      workerLabel: body.workerLabel?.trim() || undefined,
+      hostLabel: body.hostLabel?.trim() || undefined,
+      executionProfile: body.executionProfile,
+      watch: body.watch,
+      allowHostRisk: body.allowHostRisk,
+      supportedBaseModels: Array.isArray(body.supportedBaseModels)
+        ? body.supportedBaseModels
+        : undefined,
+      preferredLayerIds: Array.isArray(body.preferredLayerIds)
+        ? body.preferredLayerIds
+        : undefined
+    });
+    return {
+      accepted: true,
+      worker,
+      recommendedLayerId: getPreferredLayer()?.id
+    };
+  } catch (error) {
+    reply.code(400);
+    return {
+      error: "worker_heartbeat_failed",
+      message:
+        error instanceof Error ? error.message : "Unable to record intelligence worker heartbeat."
+    };
+  }
+});
+
+app.post("/api/intelligence/workers/:workerId/unregister", async (request, reply) => {
+  if (
+    !authorizeGovernedAction(
+      "cognitive-registration",
+      "/api/intelligence/workers/:workerId/unregister",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  const params = request.params as { workerId?: string };
+  if (!params.workerId?.trim()) {
+    reply.code(400);
+    return {
+      error: "missing_worker_id"
+    };
+  }
+
+  const worker = await intelligenceWorkerRegistry.removeWorker(params.workerId.trim());
+  return {
+    accepted: true,
+    worker,
+    recommendedLayerId: getPreferredLayer()?.id
+  };
+});
+
+app.post("/api/intelligence/workers/assign", async (request, reply) => {
+  if (
+    !authorizeGovernedAction(
+      "cognitive-execution",
+      "/api/intelligence/workers/assign",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  const body =
+    (request.body as {
+      requestedExecutionDecision?: "allow_local" | "remote_required" | "preflight_blocked";
+      baseModel?: string;
+      preferredLayerIds?: string[];
+      recommendedLayerId?: string;
+      target?: string;
+    } | undefined) ?? {};
+
+  const recommendedLayerId = body.recommendedLayerId?.trim() || getPreferredLayer()?.id;
+  const result = await intelligenceWorkerRegistry.assignWorker({
+    requestedExecutionDecision: body.requestedExecutionDecision,
+    baseModel: body.baseModel?.trim() || undefined,
+    preferredLayerIds: Array.isArray(body.preferredLayerIds)
+      ? body.preferredLayerIds
+      : [],
+    recommendedLayerId,
+    target: body.target?.trim() || undefined
+  });
+  return {
+    accepted: true,
+    assignment: result.assignment,
+    workers: result.workers,
+    workerCount: result.workers.length,
+    recommendedLayerId
+  };
 });
 
 app.post("/api/actuation/dispatch", async (request, reply) => {
@@ -2875,14 +3453,26 @@ app.get("/stream/actuation/device", { websocket: true }, (socket, request) => {
   });
 });
 
-const interval = setInterval(() => {
-  engine.tick();
-  void persistence.persist(engine.getDurableState());
-  emitSnapshot();
-}, tickIntervalMs);
+let interval: NodeJS.Timeout | null = null;
+
+function startTicker(): void {
+  if (interval) {
+    return;
+  }
+
+  interval = setInterval(() => {
+    engine.tick();
+    void persistence.persist(engine.getDurableState());
+    emitSnapshot();
+  }, tickIntervalMs);
+}
 
 const close = async () => {
-  clearInterval(interval);
+  if (interval) {
+    clearInterval(interval);
+    interval = null;
+  }
+  await lslAdapterManager.dispose();
   await liveNeuroManager.stopAll();
   await neuroReplayManager.stopAll();
   await persistence.flush();
@@ -2902,6 +3492,8 @@ await app.listen({
   port: HARNESS_PORT,
   host: HARNESS_HOST
 });
+
+startTicker();
 
 app.log.info(
   `Immaculate harness live at http://${HARNESS_HOST}:${HARNESS_PORT} with ${tickIntervalMs}ms ticks`

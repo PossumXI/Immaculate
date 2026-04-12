@@ -9,7 +9,7 @@ jobs:
   publish-benchmarks:
     runs-on: ubuntu-latest
     env:
-      WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
+      WANDB_API_KEY: ${{ secrets.WANDB_API_KEY || secrets.IMMACULATE_WANDB_API_KEY }}
 
     permissions:
       contents: read
@@ -36,7 +36,6 @@ jobs:
       - name: Publish benchmark to W&B
         if: ${{ env.WANDB_API_KEY != '' }}
         env:
-          WANDB_ENTITY: arobi-arobi-technology-alliance
           WANDB_PROJECT: immaculate
         run: npm run benchmark:publish:wandb
 

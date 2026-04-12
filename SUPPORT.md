@@ -8,7 +8,7 @@
 
 ## Maintainer
 
-- Project owner: Gaetano Comparcola
+- Project owner: Gaetano Comparcola (PossumX)
 - Public profile site: https://PossumX.dev
 
 ## Before Opening An Issue

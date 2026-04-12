@@ -1,4 +1,5 @@
 import argparse
+from datetime import datetime, timezone
 import json
 import os
 import sys
@@ -27,6 +28,18 @@ def load_report(report_path: Path) -> dict:
 
 def coerce_mode(value: str) -> str:
     return value if value in {"online", "offline", "disabled"} else "online"
+
+
+def repo_root() -> Path:
+    return Path(__file__).resolve().parents[3]
+
+
+def benchmark_status_json_path() -> Path:
+    return repo_root() / "docs" / "wiki" / "Benchmark-Status.json"
+
+
+def benchmark_status_markdown_path() -> Path:
+    return repo_root() / "docs" / "wiki" / "Benchmark-Status.md"
 
 
 def build_metrics(report: dict) -> dict:
@@ -94,6 +107,7 @@ def log_tables(run, report: dict) -> None:
 
 
 def attach_artifact(run, report: dict, report_json: Path, report_markdown: Path) -> tuple[str, str]:
+    attribution = report.get("attribution", {}) or {}
     artifact_name = f"immaculate-{report.get('suiteId', 'benchmark')}"
     artifact_type = "benchmark-report"
     artifact = wandb.Artifact(
@@ -102,9 +116,14 @@ def attach_artifact(run, report: dict, report_json: Path, report_markdown: Path)
         metadata={
             "suite_id": report.get("suiteId"),
             "pack_id": report.get("packId"),
+            "pack_label": report.get("packLabel"),
             "generated_at": report.get("generatedAt"),
             "integrity_status": report.get("integrity", {}).get("status"),
             "recovery_mode": report.get("recoveryMode"),
+            "owner": attribution.get("owner"),
+            "role": attribution.get("role"),
+            "website": attribution.get("website"),
+            "contributions": attribution.get("contributions") or [],
         },
     )
     artifact.add_file(str(report_json))
@@ -112,6 +131,132 @@ def attach_artifact(run, report: dict, report_json: Path, report_markdown: Path)
         artifact.add_file(str(report_markdown))
     run.log_artifact(artifact)
     return artifact_name, artifact_type
+
+
+def build_status_entry(
+    report: dict,
+    entity: str,
+    project: str,
+    run_url: str | None,
+    artifact_name: str,
+    artifact_type: str,
+) -> dict:
+    assertions = report.get("assertions", []) or []
+    failed_assertions = sum(1 for assertion in assertions if assertion.get("status") == "fail")
+    attribution = report.get("attribution", {}) or {}
+    return {
+        "suiteId": report.get("suiteId"),
+        "packId": report.get("packId"),
+        "packLabel": report.get("packLabel"),
+        "generatedAt": report.get("generatedAt"),
+        "publishedAt": datetime.now(timezone.utc).isoformat(),
+        "entity": entity,
+        "project": project,
+        "projectUrl": f"https://wandb.ai/{entity}/{project}",
+        "runUrl": run_url,
+        "artifactName": artifact_name,
+        "artifactType": artifact_type,
+        "integrityStatus": report.get("integrity", {}).get("status"),
+        "recoveryMode": report.get("recoveryMode"),
+        "failedAssertions": failed_assertions,
+        "totalAssertions": len(assertions),
+        "totalDurationMs": report.get("totalDurationMs"),
+        "owner": attribution.get("owner"),
+        "role": attribution.get("role"),
+        "website": attribution.get("website"),
+    }
+
+
+def render_status_markdown(status: dict) -> str:
+    publications = status.get("publications", {}) or {}
+    entries = list(publications.values())
+    entries.sort(key=lambda entry: str(entry.get("generatedAt") or ""), reverse=True)
+    lines = [
+        "# Benchmark Status",
+        "",
+        "This page is the tracked public benchmark surface for Immaculate.",
+        "",
+        f"- W&B project: {status.get('projectUrl')}",
+        f"- Owner: {status.get('owner')}",
+        f"- Role: {status.get('role')}",
+        f"- Website: {status.get('website')}",
+        f"- Updated: {status.get('updatedAt')}",
+        "",
+        "Raw benchmark ledgers remain generated runtime artifacts under `benchmarks/` and stay out of git.",
+        "This page only carries the public summary and links for the latest published run per pack.",
+        "",
+        "## Latest Public Runs By Pack",
+        "",
+    ]
+    if not entries:
+        lines.extend(
+            [
+                "No public benchmark runs have been published yet.",
+                "",
+                "Project page: https://wandb.ai/PossumX/immaculate",
+            ]
+        )
+        return "\n".join(lines).rstrip() + "\n"
+
+    for entry in entries:
+        lines.extend(
+            [
+                f"### {entry.get('packLabel') or entry.get('packId') or 'Unknown Pack'}",
+                "",
+                f"- Suite: `{entry.get('suiteId')}`",
+                f"- Generated: `{entry.get('generatedAt')}`",
+                f"- Published: `{entry.get('publishedAt')}`",
+                f"- Assertions: `{max((entry.get('totalAssertions') or 0) - (entry.get('failedAssertions') or 0), 0)}/{entry.get('totalAssertions') or 0}` passed",
+                f"- Integrity: `{entry.get('integrityStatus')}`",
+                f"- Recovery mode: `{entry.get('recoveryMode')}`",
+                f"- Duration: `{entry.get('totalDurationMs')}` ms",
+                f"- W&B run: {entry.get('runUrl') or 'not available'}",
+                f"- W&B artifact: `{entry.get('artifactName')}` (`{entry.get('artifactType')}`)",
+                "",
+            ]
+        )
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def update_benchmark_status(
+    report: dict,
+    entity: str,
+    project: str,
+    run_url: str | None,
+    artifact_name: str,
+    artifact_type: str,
+) -> tuple[Path, Path]:
+    json_path = benchmark_status_json_path()
+    markdown_path = benchmark_status_markdown_path()
+    json_path.parent.mkdir(parents=True, exist_ok=True)
+    existing: dict = {}
+    if json_path.exists():
+        try:
+            existing = json.loads(json_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            existing = {}
+
+    publications = existing.get("publications", {}) if isinstance(existing, dict) else {}
+    if not isinstance(publications, dict):
+        publications = {}
+
+    entry = build_status_entry(report, entity, project, run_url, artifact_name, artifact_type)
+    pack_key = str(entry.get("packId") or entry.get("suiteId") or "unknown")
+    publications[pack_key] = entry
+    attribution = report.get("attribution", {}) or {}
+    status = {
+        "updatedAt": datetime.now(timezone.utc).isoformat(),
+        "entity": entity,
+        "project": project,
+        "projectUrl": f"https://wandb.ai/{entity}/{project}",
+        "owner": attribution.get("owner"),
+        "role": attribution.get("role"),
+        "website": attribution.get("website"),
+        "publications": publications,
+    }
+    json_path.write_text(f"{json.dumps(status, indent=2)}\n", encoding="utf-8")
+    markdown_path.write_text(render_status_markdown(status), encoding="utf-8")
+    return markdown_path, json_path
 
 
 def main() -> None:
@@ -171,12 +316,19 @@ def main() -> None:
     run.summary["benchmark/failed_assertions"] = sum(
         1 for assertion in report.get("assertions", []) if assertion.get("status") == "fail"
     )
+    run.summary["benchmark/owner"] = report.get("attribution", {}).get("owner", "")
+    run.summary["benchmark/role"] = report.get("attribution", {}).get("role", "")
+    run.summary["benchmark/website"] = report.get("attribution", {}).get("website", "")
+    run.summary["benchmark/project_url"] = f"https://wandb.ai/{args.entity}/{args.project}"
 
     run.log(build_metrics(report))
     log_tables(run, report)
     artifact_name, artifact_type = attach_artifact(run, report, report_json, report_markdown)
     local_run_dir = str(getattr(run, "dir", "")) or None
     run_url = getattr(run, "url", None)
+    benchmark_status_path, benchmark_status_json = update_benchmark_status(
+        report, args.entity, args.project, run_url, artifact_name, artifact_type
+    )
     run.finish()
 
     print(
@@ -189,8 +341,11 @@ def main() -> None:
                 "suiteId": report.get("suiteId"),
                 "packId": report.get("packId"),
                 "url": run_url,
+                "projectUrl": f"https://wandb.ai/{args.entity}/{args.project}",
                 "artifactName": artifact_name,
                 "artifactType": artifact_type,
+                "benchmarkStatusPath": str(benchmark_status_path),
+                "benchmarkStatusJsonPath": str(benchmark_status_json),
                 "localRunDir": local_run_dir,
             }
         )

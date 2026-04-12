@@ -509,6 +509,7 @@ export type ExecutionArbitrationMode = (typeof executionArbitrationModes)[number
 export const executionScheduleModes = [
   "reflex-bypass",
   "single-layer",
+  "swarm-parallel",
   "swarm-sequential",
   "guarded-swarm",
   "held"
@@ -2729,7 +2730,9 @@ function mergeExecutionScheduleIntoSnapshot(
   ].slice(0, 24);
   const scheduleWidth = Math.max(1, schedule.layerIds.length);
   const scheduleBias =
-    schedule.mode === "swarm-sequential"
+    schedule.mode === "swarm-parallel"
+      ? 0.2
+      : schedule.mode === "swarm-sequential"
       ? 0.18
       : schedule.mode === "guarded-swarm"
         ? 0.12

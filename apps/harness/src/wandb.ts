@@ -11,6 +11,8 @@ export type WandbStatus = {
   mode: WandbMode;
   entity: string;
   project: string;
+  viewer?: string;
+  defaultEntity?: string;
   pythonPath: string;
   publisherScriptPath: string;
   apiKeyPresent: boolean;
@@ -25,12 +27,15 @@ export type WandbPublicationResult = {
   mode: WandbMode;
   entity: string;
   project: string;
+  projectUrl?: string;
   runName: string;
   suiteId: string;
   packId: string;
   url?: string;
   artifactName: string;
   artifactType: string;
+  benchmarkStatusPath?: string;
+  benchmarkStatusJsonPath?: string;
   localRunDir?: string;
 };
 
@@ -39,8 +44,8 @@ const HARNESS_ROOT = path.resolve(MODULE_ROOT, "..");
 const REPO_ROOT = path.resolve(HARNESS_ROOT, "../..");
 const LOCAL_VENV_PYTHON = getLocalVenvPythonPath(REPO_ROOT);
 const PUBLISHER_SCRIPT_PATH = path.join(HARNESS_ROOT, "scripts", "publish_wandb.py");
-const DEFAULT_ENTITY =
-  process.env.IMMACULATE_WANDB_ENTITY ?? process.env.WANDB_ENTITY ?? "arobi-arobi-technology-alliance";
+const CONFIGURED_ENTITY =
+  process.env.IMMACULATE_WANDB_ENTITY?.trim() || process.env.WANDB_ENTITY?.trim() || undefined;
 const DEFAULT_PROJECT =
   process.env.IMMACULATE_WANDB_PROJECT ?? process.env.WANDB_PROJECT ?? "immaculate";
 const DEFAULT_MODE = (
@@ -51,6 +56,28 @@ const DEFAULT_PUBLISH_TIMEOUT_MS = Number(
   process.env.IMMACULATE_WANDB_PUBLISH_TIMEOUT_MS ?? 420000
 );
 let cachedStatus: { value: WandbStatus; cachedAt: number } | null = null;
+const STATUS_PROBE_SCRIPT = `
+import importlib.util
+import json
+
+payload = {
+    "installed": bool(importlib.util.find_spec("wandb")),
+    "viewer": None,
+    "default_entity": None,
+}
+
+if payload["installed"]:
+    try:
+        import wandb
+
+        api = wandb.Api()
+        payload["viewer"] = getattr(getattr(api, "viewer", None), "username", None)
+        payload["default_entity"] = getattr(api, "default_entity", None)
+    except Exception:
+        pass
+
+print(json.dumps(payload))
+`.trim();
 
 function resolvePythonPath(): string {
   if (existsSync(LOCAL_VENV_PYTHON)) {
@@ -132,20 +159,31 @@ export async function inspectWandbStatus(): Promise<WandbStatus> {
     const probe = await runPython(
       [
         "-c",
-        "import importlib.util, json; print(json.dumps({'installed': bool(importlib.util.find_spec('wandb'))}))"
+        STATUS_PROBE_SCRIPT
       ],
       baseEnv,
       12000
     );
-    const payload = JSON.parse(probe.stdout) as { installed?: boolean };
+    const payload = JSON.parse(probe.stdout) as {
+      installed?: boolean;
+      viewer?: string | null;
+      default_entity?: string | null;
+    };
     const sdkInstalled = Boolean(payload.installed);
+    const resolvedEntity =
+      CONFIGURED_ENTITY ??
+      payload.default_entity?.trim() ??
+      payload.viewer?.trim() ??
+      "PossumX";
     const configured = mode === "offline" ? sdkInstalled : sdkInstalled && apiKeyPresent;
     const ready = mode === "disabled" ? false : configured;
 
     const status = {
       mode,
-      entity: DEFAULT_ENTITY,
+      entity: resolvedEntity,
       project: DEFAULT_PROJECT,
+      viewer: payload.viewer ?? undefined,
+      defaultEntity: payload.default_entity ?? undefined,
       pythonPath,
       publisherScriptPath: PUBLISHER_SCRIPT_PATH,
       apiKeyPresent,
@@ -172,8 +210,10 @@ export async function inspectWandbStatus(): Promise<WandbStatus> {
   } catch (error) {
     const status = {
       mode,
-      entity: DEFAULT_ENTITY,
+      entity: CONFIGURED_ENTITY ?? "PossumX",
       project: DEFAULT_PROJECT,
+      viewer: undefined,
+      defaultEntity: undefined,
       pythonPath,
       publisherScriptPath: PUBLISHER_SCRIPT_PATH,
       apiKeyPresent,
