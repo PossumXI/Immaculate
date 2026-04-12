@@ -11,7 +11,9 @@ import type {
   RoutingDecisionMode,
   CognitiveExecution
 } from "@immaculate/core";
+import { STABILITY_POLE } from "@immaculate/core";
 import type { GovernanceDecision, GovernanceStatus } from "./governance.js";
+import type { SessionConversationMemory } from "./conversation.js";
 import { deriveGovernancePressure } from "./routing.js";
 import { hashValue } from "./utils.js";
 
@@ -26,6 +28,7 @@ type ExecutionArbitrationPlanInput = {
   requestedLayerId?: string;
   forceCognition?: boolean;
   suppressed?: boolean;
+  sessionConversationMemory?: SessionConversationMemory;
 };
 
 export type ExecutionArbitrationPlan = {
@@ -161,11 +164,19 @@ export function planExecutionArbitration(
 ): ExecutionArbitrationPlan {
   const frame = input.frame ?? input.snapshot.neuroFrames[0];
   const execution = input.execution ?? input.snapshot.cognitiveExecutions[0];
-  const governancePressure = deriveGovernancePressure(
+  let governancePressure = deriveGovernancePressure(
     input.consentScope,
     input.governanceStatus,
     input.governanceDecisions
   );
+  const sessionConversationMemory = input.sessionConversationMemory;
+  const sessionBlockedVerdicts = sessionConversationMemory?.blockedVerdictCount ?? 0;
+  const sessionApprovedVerdicts = sessionConversationMemory?.approvedVerdictCount ?? 0;
+  if (sessionBlockedVerdicts >= 3 && governancePressure === "clear") {
+    governancePressure = "elevated";
+  } else if (sessionBlockedVerdicts >= 2 && governancePressure !== "critical") {
+    governancePressure = governancePressure === "clear" ? "elevated" : governancePressure;
+  }
   const decodeConfidence = frame?.decodeConfidence ?? 0;
   const spectralSignal = resolveArbitrationSignal(input.snapshot, frame);
   const activeSpectralSignal =
@@ -238,7 +249,7 @@ export function planExecutionArbitration(
     routeModeHint = "reflex-direct";
   } else if (
     !frame?.decodeReady ||
-    decodeConfidence < 0.82 ||
+    decodeConfidence < STABILITY_POLE ||
     governancePressure === "elevated" ||
     execution?.status === "failed"
   ) {
@@ -266,6 +277,15 @@ export function planExecutionArbitration(
     routeModeHint = "reflex-direct";
   }
 
+  if (sessionBlockedVerdicts >= 2 && mode !== "suppressed" && mode !== "operator-override") {
+    mode = "guarded-review";
+    targetNodeId = "integrity-gate";
+    targetPlane = "cognitive";
+    shouldRunCognition = Boolean(preferredLayer);
+    shouldDispatchActuation = false;
+    routeModeHint = "suppressed";
+  }
+
   const objective = input.objective?.trim() || defaultObjective(mode, frame, governancePressure);
   const rationale = [
     `mode=${mode}`,
@@ -274,6 +294,8 @@ export function planExecutionArbitration(
     `band=${spectralSignal.dominantBand}`,
     `artifact=${spectralSignal.artifactRatio.toFixed(2)}`,
     `governance=${governancePressure}`,
+    `sessionBlocked=${sessionBlockedVerdicts}`,
+    `sessionApproved=${sessionApprovedVerdicts}`,
     `cognition=${shouldRunCognition ? "run" : "skip"}`,
     `dispatch=${shouldDispatchActuation ? "allow" : "hold"}`,
     `layer=${preferredLayer?.role ?? "none"}`

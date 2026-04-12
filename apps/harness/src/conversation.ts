@@ -9,6 +9,8 @@ import {
 } from "@immaculate/core";
 import { hashValue } from "./utils.js";
 
+const SESSION_CONVERSATION_LIMIT = 5;
+
 function compact(value: string, maxLength = 160): string {
   const collapsed = value.replace(/\s+/g, " ").trim();
   if (collapsed.length <= maxLength) {
@@ -34,6 +36,16 @@ function latestValue<T>(values: T[]): T | undefined {
   return values.length > 0 ? values[values.length - 1] : undefined;
 }
 
+export type SessionConversationMemory = {
+  sessionId?: string;
+  conversationCount: number;
+  blockedVerdictCount: number;
+  approvedVerdictCount: number;
+  recentRouteHints: string[];
+  recentCommitStatements: string[];
+  recentGuardVerdicts: GuardVerdict[];
+};
+
 export function buildConversationObjective(options: {
   baseObjective: string;
   role: IntelligenceLayerRole;
@@ -57,6 +69,43 @@ export function buildConversationObjective(options: {
   return {
     objective,
     context: `${roleDirective(options.role)}\nPRIOR TURNS:\n${priorContext}`
+  };
+}
+
+export function buildSessionConversationMemory(options: {
+  conversations: MultiAgentConversation[];
+  sessionId?: string;
+  limit?: number;
+}): SessionConversationMemory {
+  const limit = Math.max(1, options.limit ?? SESSION_CONVERSATION_LIMIT);
+  const sessionConversations = options.conversations.filter((conversation) => {
+    if (typeof options.sessionId === "string") {
+      return conversation.sessionId === options.sessionId;
+    }
+    return conversation.sessionId === undefined;
+  });
+  const recentConversations = sessionConversations.slice(-limit);
+
+  return {
+    sessionId: options.sessionId,
+    conversationCount: sessionConversations.length,
+    blockedVerdictCount: sessionConversations.filter(
+      (conversation) => conversation.guardVerdict === "blocked"
+    ).length,
+    approvedVerdictCount: sessionConversations.filter(
+      (conversation) => conversation.guardVerdict === "approved"
+    ).length,
+    recentRouteHints: recentConversations
+      .map((conversation) => conversation.finalRouteSuggestion)
+      .filter((value): value is string => Boolean(value))
+      .slice(-limit),
+    recentCommitStatements: recentConversations
+      .map((conversation) => conversation.finalCommitStatement)
+      .filter((value): value is string => Boolean(value))
+      .slice(-limit),
+    recentGuardVerdicts: recentConversations
+      .map((conversation) => conversation.guardVerdict)
+      .slice(-limit)
   };
 }
 

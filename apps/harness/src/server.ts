@@ -15,7 +15,8 @@ import {
   type BenchmarkPackId,
   type BenchmarkReport,
   type ControlEnvelope,
-  type IntelligenceLayer
+  type IntelligenceLayer,
+  type RoutingDecision
 } from "@immaculate/core";
 import { createActuationManager } from "./actuation.js";
 import {
@@ -30,7 +31,8 @@ import {
 import {
   buildAgentTurn,
   buildConversationObjective,
-  buildConversationRecord
+  buildConversationRecord,
+  buildSessionConversationMemory
 } from "./conversation.js";
 import {
   loadPublishedBenchmarkIndex,
@@ -62,7 +64,7 @@ import {
   deriveGovernancePressure,
   planAdaptiveRoute
 } from "./routing.js";
-import { resolvePathWithinAllowedRoot } from "./utils.js";
+import { hashValue, resolvePathWithinAllowedRoot } from "./utils.js";
 import {
   deriveVisibilityScope,
   projectActuationOutput,
@@ -147,6 +149,9 @@ type BenchmarkJob = {
   wandb?: Awaited<ReturnType<typeof publishBenchmarkToWandb>>;
   error?: string;
 };
+
+type AdaptiveRoutePlan = ReturnType<typeof planAdaptiveRoute>;
+type SessionConversationMemory = ReturnType<typeof buildSessionConversationMemory>;
 
 await app.register(cors, {
   origin: (origin, callback) => {
@@ -253,6 +258,54 @@ function getGovernanceBinding(
       searchParams.get("consentScope") ??
       searchParams.get("x-immaculate-consent-scope") ??
       undefined
+  };
+}
+
+function getSessionConversationMemory(sessionId?: string): SessionConversationMemory {
+  return buildSessionConversationMemory({
+    conversations: engine.getSnapshot().conversations,
+    sessionId
+  });
+}
+
+function buildReviewRoutingDecision(options: {
+  routePlan: AdaptiveRoutePlan;
+  sessionId?: string;
+  frame?: ReturnType<typeof engine.getSnapshot>["neuroFrames"][number];
+  execution?: ReturnType<typeof engine.getSnapshot>["cognitiveExecutions"][number];
+  consentScope?: string;
+  heldReason: string;
+}): RoutingDecision {
+  const selectedAt = new Date().toISOString();
+  const source =
+    options.consentScope === "system:benchmark"
+      ? "benchmark"
+      : options.execution
+        ? "cognitive"
+        : options.frame
+          ? "neuro"
+          : "operator";
+
+  return {
+    id: `route-${hashValue(
+      `${options.sessionId ?? "global"}:${selectedAt}:${options.routePlan.mode}:${options.routePlan.channel}:${options.routePlan.targetNodeId}:held`
+    )}`,
+    sessionId: options.sessionId,
+    source,
+    mode: options.routePlan.mode,
+    targetNodeId: options.routePlan.targetNodeId,
+    channel: options.routePlan.channel,
+    adapterId: options.routePlan.recommendedAdapterId,
+    transportId: options.routePlan.selectedTransport?.id,
+    transportKind: options.routePlan.selectedTransport?.kind,
+    transportHealth: options.routePlan.selectedTransport?.health,
+    transportPreferenceScore: options.routePlan.selectedTransport?.preferenceScore,
+    transportPreferenceRank: options.routePlan.selectedTransport?.preferenceRank,
+    decodeConfidence: options.frame?.decodeConfidence ?? 0,
+    cognitiveLatencyMs: options.execution?.latencyMs,
+    governancePressure: options.routePlan.governancePressure,
+    rationale: `${options.routePlan.rationale} / review=held / ${options.heldReason}`,
+    selectedAt
   };
 }
 
@@ -2056,6 +2109,8 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
     };
   }
 
+  const sessionConversationMemory = getSessionConversationMemory(resolvedSessionId);
+
   const arbitrationPlan = planExecutionArbitration({
     snapshot,
     frame,
@@ -2066,7 +2121,8 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
     objective: body.objective,
     requestedLayerId: body.layerId?.trim() || undefined,
     forceCognition: body.forceCognition,
-    suppressed: body.suppressed
+    suppressed: body.suppressed,
+    sessionConversationMemory
   });
   const arbitrationDecision = buildExecutionArbitrationDecision({
     plan: arbitrationPlan,
@@ -2105,7 +2161,8 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
   const schedulePlan = planExecutionSchedule({
     snapshot: engine.getSnapshot(),
     arbitration: arbitrationDecision,
-    requestedLayerId: body.layerId?.trim() || undefined
+    requestedLayerId: body.layerId?.trim() || undefined,
+    sessionConversationMemory
   });
   const scheduleDecision = buildExecutionScheduleDecision({
     arbitration: arbitrationDecision,
@@ -2196,6 +2253,20 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
     dispatchOnApproval && arbitrationPlan.shouldDispatchActuation && guardAllowsDispatch;
 
   if (!shouldDispatchOnApproval) {
+    const reviewRouteDecision = buildReviewRoutingDecision({
+      routePlan: routePreview,
+      sessionId: resolvedSessionId,
+      frame,
+      execution: mediationExecution,
+      consentScope,
+      heldReason: guardAllowsDispatch ? "review_only" : "guard_blocked"
+    });
+    cognitionSnapshot = phaseSnapshotSchema.parse(
+      projectPhaseSnapshot(engine.recordRoutingDecision(reviewRouteDecision))
+    );
+    await persistence.persist(engine.getDurableState());
+    emitSnapshot();
+
     return {
       accepted: true,
       arbitrationDecision,
@@ -2207,6 +2278,7 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
       conversation: mediationConversation,
       response: mediationResponse,
       routePlan: routePreview,
+      routeDecision: reviewRouteDecision,
       snapshot: cognitionSnapshot
     };
   }

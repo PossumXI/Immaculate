@@ -238,7 +238,9 @@ Sensitive read surfaces now split into two modes:
 - governed derived reads such as `/api/neuro/frames`, `/api/intelligence/executions`, `/api/actuation/outputs`, and `/api/actuation/deliveries` apply field-level consent: benchmark scope gets bounded projections, while session/intelligence/actuation scope restores full derived detail
 - mediated orchestration at `POST /api/orchestration/mediate` is the first pass that explicitly chooses whether the system should act reflex-locally, escalate into cognition, hold under guard review, or suppress the outward action entirely
 - `POST /api/orchestration/mediate` now supports `dispatchOnApproval` so review-only passes can stop at the plan while approval-gated passes can close the loop into a single dispatch call
+- review-only mediated passes now emit a durable routing decision as well as a transient route plan, so held actions still leave replayable route lineage
 - blocked guard verdicts are now written back into governance memory, so the next mediated pass sees the denial pressure instead of treating the guard as a dead-end oracle
+- the core engine now names its stability eigenvalue as `STABILITY_POLE = 0.82`, tracks `predictionError` and `freeEnergyProxy` in live metrics/history, and adapts phase increments over time instead of treating phase timing as fixed forever
 - `GET /api/intelligence/arbitrations` exposes the durable arbitration ledger so operators can inspect why a mediated pass chose a given mode
 - `GET /api/intelligence/schedules` exposes the durable scheduling ledger so operators can inspect which intelligence formation the mediated pass selected before cognition ran
 - actuation device transports now open with a protocol-negotiation handshake on `WS /stream/actuation/device`; device clients send `actuation-device-hello` before dispatch starts, then acknowledge deliveries with `actuation-ack`

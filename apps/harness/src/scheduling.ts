@@ -7,6 +7,7 @@ import type {
   IntelligenceLayerRole,
   PhaseSnapshot
 } from "@immaculate/core";
+import type { SessionConversationMemory } from "./conversation.js";
 import { hashValue } from "./utils.js";
 
 type ExecutionSchedulePlanInput = {
@@ -14,6 +15,7 @@ type ExecutionSchedulePlanInput = {
   arbitration: ExecutionArbitration;
   requestedLayerId?: string;
   maxWidth?: number;
+  sessionConversationMemory?: SessionConversationMemory;
 };
 
 export type ExecutionSchedulePlan = {
@@ -162,6 +164,14 @@ export function planExecutionSchedule(input: ExecutionSchedulePlanInput): Execut
   let preferredRoles = preferredScheduleRoles(input.arbitration);
   const signalQuality = clamp(input.snapshot.neuralCoupling.signalQuality);
   const dominantBand = input.snapshot.neuralCoupling.dominantBand;
+  const sessionConversationMemory = input.sessionConversationMemory;
+  const sessionBlockedVerdicts = sessionConversationMemory?.blockedVerdictCount ?? 0;
+  const sessionApprovedVerdicts = sessionConversationMemory?.approvedVerdictCount ?? 0;
+  if (sessionBlockedVerdicts >= 2 && input.arbitration.shouldRunCognition) {
+    preferredRoles = uniqueRoles(["guard", "reasoner", ...preferredRoles]);
+  } else if (sessionApprovedVerdicts >= 2 && input.arbitration.governancePressure === "clear") {
+    preferredRoles = uniqueRoles([...preferredRoles, "mid"]);
+  }
   const strongFastSignal =
     signalQuality >= 0.78 && (dominantBand === "beta" || dominantBand === "gamma");
   const weakSignal = signalQuality > 0 && signalQuality < 0.18;
@@ -203,6 +213,8 @@ export function planExecutionSchedule(input: ExecutionSchedulePlanInput): Execut
     `signal=${signalQuality.toFixed(2)}`,
     `band=${dominantBand}`,
     `governance=${input.arbitration.governancePressure}`,
+    `sessionBlocked=${sessionBlockedVerdicts}`,
+    `sessionApproved=${sessionApprovedVerdicts}`,
     `dispatch=${input.arbitration.shouldDispatchActuation ? "allow" : "hold"}`
   ].join(" / ");
 

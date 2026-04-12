@@ -21,6 +21,29 @@ For each breakthrough, record:
 
 ### 2026-04-12
 
+#### The controller stopped pretending its timing math was static
+
+What changed:
+- the core engine now exports `STABILITY_POLE = 0.82` and uses it as an explicit stability threshold instead of scattering the same value through hidden control heuristics
+- `predictionError` and `freeEnergyProxy` are now first-class live metrics and history fields, so the engine can expose latency surprise and model-fit pressure rather than only raw throughput/coherence
+- adaptive phase increments are now persisted in durable state, which means the controller can carry a learned timing profile across recovery instead of rebooting into a permanently fixed phase table
+- review-only mediated passes now emit a durable routing decision before dispatch, so the route ledger records held intent and not just delivered action
+
+Why it matters:
+- this is the point where Immaculate stops being only a governed heuristic controller and starts becoming an explicit adaptive control system
+- a system that can hold action but still record the chosen route is more truthful, more replayable, and easier to improve than one that only becomes durable after outward dispatch
+- the hidden systems insight is that orchestration quality depends as much on measured surprise and settling behavior as it does on raw latency
+
+Evidence:
+- `npm run typecheck`, `npm run build`, and `npm run benchmark:gate:all` passed after the control-formalization pass
+- the benchmark now asserts the throughput floor, the stability-pole coherence threshold, and bounded prediction error
+- mediated review-only runs now persist a routing decision in the same durable ledger used by dispatched routes
+
+What this unlocks next:
+- explicit active-inference style optimization over the verify → optimize seam
+- trend analysis over prediction error and free-energy proxy instead of only latency/coherence
+- truthful future swarm orchestration where planned but suppressed actions still contribute to learned routing and safety memory
+
 #### Spectral evidence now shapes mediation before outward action
 
 What changed:

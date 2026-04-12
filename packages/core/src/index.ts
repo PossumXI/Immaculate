@@ -30,6 +30,8 @@ export const phaseIds = [
 ] as const;
 export type PhaseId = (typeof phaseIds)[number];
 
+export const STABILITY_POLE = 0.82;
+
 export const passStates = ["idle", "queued", "running", "completed", "degraded"] as const;
 export type PassState = (typeof passStates)[number];
 
@@ -100,6 +102,8 @@ export type PhaseMetrics = {
   propagationRate: number;
   graphHealth: number;
   coherence: number;
+  predictionError: number;
+  freeEnergyProxy: number;
   throughput: number;
   activeAgents: number;
 };
@@ -116,6 +120,7 @@ export type IntegrityFinding = {
 export type IntegrityReport = {
   valid: boolean;
   status: "verified" | "degraded" | "invalid";
+  coherenceStable: boolean;
   checkedAt: string;
   currentCycle: number;
   activePassCount: number;
@@ -372,6 +377,7 @@ export type NeuralCouplingState = {
   dominantRatio: number;
   artifactRatio: number;
   signalQuality: number;
+  predictionError?: number;
   phaseBias: Record<PhaseId, number>;
   decodeConfidence: number;
   decodeReadyRatio: number;
@@ -457,6 +463,14 @@ export type MultiAgentConversation = {
   startedAt: string;
   completedAt: string;
   turns: AgentTurn[];
+};
+
+export type SessionConversationSummary = {
+  conversationCount: number;
+  blockedVerdictCount: number;
+  approvedVerdictCount: number;
+  recentRouteHints: string[];
+  recentCommits: string[];
 };
 
 export const actuationChannels = ["visual", "haptic", "stim"] as const;
@@ -605,6 +619,7 @@ export type PhaseSnapshot = {
   executionSchedules: ExecutionSchedule[];
   routingDecisions: RoutingDecision[];
   actuationOutputs: ActuationOutput[];
+  sessionConversationSummary: SessionConversationSummary;
   logTail: string[];
   lastEventId?: string;
 };
@@ -618,6 +633,8 @@ export type SnapshotHistoryPoint = {
   cognitiveLatencyMs: number;
   propagationRate: number;
   coherence: number;
+  predictionError: number;
+  freeEnergyProxy: number;
   throughput: number;
 };
 
@@ -640,6 +657,10 @@ export type EngineDurableState = {
   events: EventEnvelope[];
   serial: number;
   pulse: number;
+  phaseIncrement: Record<PhaseId, number>;
+  expectedLatency: Record<PhaseId, number>;
+  latencyWindows: Record<PhaseId, number[]>;
+  predictionError: number;
 };
 
 export type ControlEnvelope = {
@@ -715,6 +736,8 @@ const phaseMetricsSchema = z.object({
   propagationRate: z.number(),
   graphHealth: z.number(),
   coherence: z.number(),
+  predictionError: z.number().nonnegative().default(0),
+  freeEnergyProxy: z.number().nonnegative().default(0),
   throughput: z.number(),
   activeAgents: z.number()
 });
@@ -731,6 +754,7 @@ const integrityFindingSchema = z.object({
 export const integrityReportSchema = z.object({
   valid: z.boolean(),
   status: z.enum(["verified", "degraded", "invalid"]),
+  coherenceStable: z.boolean().default(false),
   checkedAt: z.string(),
   currentCycle: z.number().int().positive(),
   activePassCount: z.number().int().nonnegative(),
@@ -948,6 +972,7 @@ export const neuralCouplingStateSchema = z.object({
   dominantRatio: z.number().nonnegative(),
   artifactRatio: z.number().nonnegative().default(0),
   signalQuality: z.number().nonnegative().default(0),
+  predictionError: z.number().nonnegative().optional().default(0),
   phaseBias: z.object({
     ingest: z.number().nonnegative(),
     synchronize: z.number().nonnegative(),
@@ -1031,6 +1056,14 @@ export const multiAgentConversationSchema = z.object({
   startedAt: z.string(),
   completedAt: z.string(),
   turns: z.array(agentTurnSchema)
+});
+
+export const sessionConversationSummarySchema = z.object({
+  conversationCount: z.number().int().nonnegative().default(0),
+  blockedVerdictCount: z.number().int().nonnegative().default(0),
+  approvedVerdictCount: z.number().int().nonnegative().default(0),
+  recentRouteHints: z.array(z.string()).default([]),
+  recentCommits: z.array(z.string()).default([])
 });
 
 export const actuationOutputSchema = z.object({
@@ -1137,6 +1170,13 @@ export const phaseSnapshotSchema = z.object({
   executionSchedules: z.array(executionScheduleSchema).default([]),
   routingDecisions: z.array(routingDecisionSchema).default([]),
   actuationOutputs: z.array(actuationOutputSchema).default([]),
+  sessionConversationSummary: sessionConversationSummarySchema.default({
+    conversationCount: 0,
+    blockedVerdictCount: 0,
+    approvedVerdictCount: 0,
+    recentRouteHints: [],
+    recentCommits: []
+  }),
   logTail: z.array(z.string()),
   lastEventId: z.string().optional()
 });
@@ -1150,6 +1190,8 @@ export const snapshotHistoryPointSchema = z.object({
   cognitiveLatencyMs: z.number(),
   propagationRate: z.number(),
   coherence: z.number(),
+  predictionError: z.number().nonnegative().default(0),
+  freeEnergyProxy: z.number().nonnegative().default(0),
   throughput: z.number()
 });
 
@@ -1187,7 +1229,11 @@ export const engineDurableStateSchema = z.object({
   history: z.array(snapshotHistoryPointSchema),
   events: z.array(eventEnvelopeSchema),
   serial: z.number().int().nonnegative(),
-  pulse: z.number()
+  pulse: z.number(),
+  phaseIncrement: z.record(z.enum(phaseIds), z.number().nonnegative()).default(defaultPhaseIncrement),
+  expectedLatency: z.record(z.enum(phaseIds), z.number().nonnegative()).default(defaultExpectedLatency),
+  latencyWindows: z.record(z.enum(phaseIds), z.array(z.number().nonnegative())).default(defaultLatencyWindows),
+  predictionError: z.number().nonnegative().default(0)
 });
 
 export const controlEnvelopeSchema = z.object({
@@ -1433,6 +1479,99 @@ const phaseIncrement: Record<PhaseId, number> = {
   optimize: 0.08
 };
 
+function defaultPhaseIncrement(): Record<PhaseId, number> {
+  return {
+    ingest: phaseIncrement.ingest,
+    synchronize: phaseIncrement.synchronize,
+    decode: phaseIncrement.decode,
+    route: phaseIncrement.route,
+    reason: phaseIncrement.reason,
+    commit: phaseIncrement.commit,
+    verify: phaseIncrement.verify,
+    feedback: phaseIncrement.feedback,
+    optimize: phaseIncrement.optimize
+  };
+}
+
+function defaultExpectedLatency(): Record<PhaseId, number> {
+  return {
+    ingest: baselineLatency.ingest,
+    synchronize: baselineLatency.synchronize,
+    decode: baselineLatency.decode,
+    route: baselineLatency.route,
+    reason: baselineLatency.reason,
+    commit: baselineLatency.commit,
+    verify: baselineLatency.verify,
+    feedback: baselineLatency.feedback,
+    optimize: baselineLatency.optimize
+  };
+}
+
+function defaultLatencyWindows(): Record<PhaseId, number[]> {
+  return {
+    ingest: [],
+    synchronize: [],
+    decode: [],
+    route: [],
+    reason: [],
+    commit: [],
+    verify: [],
+    feedback: [],
+    optimize: []
+  };
+}
+
+function defaultTimingState(): {
+  phaseIncrement: Record<PhaseId, number>;
+  expectedLatency: Record<PhaseId, number>;
+  latencyWindows: Record<PhaseId, number[]>;
+  predictionError: number;
+} {
+  return {
+    phaseIncrement: defaultPhaseIncrement(),
+    expectedLatency: defaultExpectedLatency(),
+    latencyWindows: defaultLatencyWindows(),
+    predictionError: 0
+  };
+}
+
+function updateAdaptiveTimingState(state: EngineState, completedPasses: PhasePass[]): void {
+  if (completedPasses.length === 0) {
+    return;
+  }
+
+  const nextExpectedLatency = { ...state.expectedLatency };
+  const nextLatencyWindows = { ...state.latencyWindows };
+  const nextPhaseIncrement = { ...state.phaseIncrement };
+  let errorAccumulator = 0;
+
+  for (const pass of completedPasses) {
+    const expectedLatency = nextExpectedLatency[pass.phase] ?? baselineLatency[pass.phase];
+    const actualLatency = pass.latencyMs;
+    const relativeError = expectedLatency > 0 ? (actualLatency - expectedLatency) / expectedLatency : 0;
+    errorAccumulator += relativeError * relativeError;
+
+    const phaseWindow = [...(nextLatencyWindows[pass.phase] ?? []), actualLatency].slice(-8);
+    nextLatencyWindows[pass.phase] = phaseWindow;
+    nextExpectedLatency[pass.phase] = Number(
+      (
+        phaseWindow.reduce((sum, latency) => sum + latency, 0) /
+        Math.max(phaseWindow.length, 1)
+      ).toFixed(2)
+    );
+    nextPhaseIncrement[pass.phase] = clamp(
+      nextPhaseIncrement[pass.phase] + relativeError * 0.003,
+      0.04,
+      0.22
+    );
+  }
+
+  state.expectedLatency = nextExpectedLatency;
+  state.latencyWindows = nextLatencyWindows;
+  state.phaseIncrement = nextPhaseIncrement;
+  state.predictionError = Number((errorAccumulator / completedPasses.length).toFixed(6));
+}
+
 const phaseToNeuroBand: Record<PhaseId, NeuroBand> = {
   ingest: "gamma",
   synchronize: "gamma",
@@ -1462,12 +1601,14 @@ function defaultPhaseBias(): Record<PhaseId, number> {
 function defaultNeuralCouplingState(): NeuralCouplingState & {
   artifactRatio: number;
   signalQuality: number;
+  predictionError: number;
 } {
   return {
     dominantBand: "alpha",
     dominantRatio: 0,
     artifactRatio: 0,
     signalQuality: 0,
+    predictionError: 0,
     phaseBias: defaultPhaseBias(),
     decodeConfidence: 0,
     decodeReadyRatio: 0,
@@ -1487,20 +1628,58 @@ type EngineState = {
   events: EventEnvelope[];
   serial: number;
   recordEvents: boolean;
+  phaseIncrement: Record<PhaseId, number>;
+  expectedLatency: Record<PhaseId, number>;
+  latencyWindows: Record<PhaseId, number[]>;
+  predictionError: number;
 };
 
 function cloneDurableState(durableState: EngineDurableState): EngineDurableState {
+  const parsed = engineDurableStateSchema.parse(durableState) as EngineDurableState;
+  const predictionError = Number.isFinite(parsed.predictionError) ? parsed.predictionError : 0;
   return {
-    snapshot: structuredClone(durableState.snapshot),
-    history: structuredClone(durableState.history),
-    events: structuredClone(durableState.events),
-    serial: durableState.serial,
-    pulse: durableState.pulse
+    ...structuredClone(parsed),
+    snapshot: {
+      ...structuredClone(parsed.snapshot),
+      metrics: {
+        ...structuredClone(parsed.snapshot.metrics),
+        predictionError
+      },
+      neuralCoupling: {
+        ...structuredClone(parsed.snapshot.neuralCoupling),
+        predictionError
+      }
+    },
+    phaseIncrement: normalizePhaseNumberRecord(parsed.phaseIncrement, defaultPhaseIncrement()),
+    expectedLatency: normalizePhaseNumberRecord(parsed.expectedLatency, defaultExpectedLatency()),
+    latencyWindows: normalizeLatencyWindows(parsed.latencyWindows),
+    predictionError
   };
 }
 
 function clamp(value: number, min = 0, max = 1): number {
   return Math.min(max, Math.max(min, value));
+}
+
+function normalizePhaseNumberRecord(
+  values: Partial<Record<PhaseId, number>> | undefined,
+  fallback: Record<PhaseId, number>
+): Record<PhaseId, number> {
+  return phaseIds.reduce((accumulator, phase) => {
+    const value = values?.[phase];
+    accumulator[phase] = Number.isFinite(value) ? (value as number) : fallback[phase];
+    return accumulator;
+  }, {} as Record<PhaseId, number>);
+}
+
+function normalizeLatencyWindows(
+  values: Partial<Record<PhaseId, number[]>> | undefined
+): Record<PhaseId, number[]> {
+  return phaseIds.reduce((accumulator, phase) => {
+    const value = values?.[phase];
+    accumulator[phase] = Array.isArray(value) ? value.slice(0, 8) : [];
+    return accumulator;
+  }, {} as Record<PhaseId, number[]>);
 }
 
 function wave(epoch: number, offset = 0, speed = 0.15): number {
@@ -1570,7 +1749,8 @@ function computeMetrics(
   nodes: ConnectomeNode[],
   edges: ConnectomeEdge[],
   passes: PhasePass[],
-  neuralCoupling: NeuralCouplingState = defaultNeuralCouplingState()
+  neuralCoupling: NeuralCouplingState = defaultNeuralCouplingState(),
+  timingState: Pick<EngineState, "expectedLatency"> = defaultTimingState()
 ): PhaseMetrics {
   const reflexPasses = passes.filter((pass) => pass.plane === "reflex");
   const cognitivePasses = passes.filter((pass) => pass.plane === "cognitive");
@@ -1583,6 +1763,33 @@ function computeMetrics(
   const couplingActive = couplingSignalQuality > 0;
   const couplingFactor = couplingActive ? clamp(1 + couplingSignalQuality * 0.01, 1, 1.02) : 1;
   const throughputFactor = couplingActive ? clamp(1 + couplingSignalQuality * 0.005, 1, 1.01) : 1;
+  const phaseCompletion =
+    passes.length > 0 ? passes.reduce((sum, pass) => sum + pass.progress, 0) / passes.length : 0;
+  const nodeStability =
+    nodes.length > 0
+      ? nodes.reduce((sum, node) => sum + node.activation * (1 - node.drift) * node.trust, 0) /
+        nodes.length
+      : 0;
+  const predictionError =
+    passes.length > 0
+      ? passes.reduce((sum, pass) => {
+          const expectedLatency = timingState.expectedLatency[pass.phase] ?? baselineLatency[pass.phase];
+          const normalizedLatency = Math.max(expectedLatency, 1);
+          const relativeDeviation = (pass.latencyMs - expectedLatency) / normalizedLatency;
+          return sum + relativeDeviation * relativeDeviation;
+        }, 0) / passes.length
+      : 0;
+  const freeEnergyProxy = nodes.reduce((sum, node) => {
+    if (node.activation <= 0) {
+      return sum + 2;
+    }
+
+    return sum - Math.log(Math.max(node.activation, 1e-6)) * (1 - node.trust);
+  }, 0) / Math.max(nodes.length, 1);
+  const graphHealth = Number(
+    (nodes.reduce((sum, node) => sum + node.trust - node.drift * STABILITY_POLE, 0) /
+      Math.max(nodes.length, 1)).toFixed(3)
+  );
 
   return {
     reflexLatencyMs: Number(average(reflexPasses).toFixed(2)),
@@ -1591,15 +1798,15 @@ function computeMetrics(
     propagationRate: Number(
       (edges.reduce((sum, edge) => sum + edge.propagation, 0) / Math.max(edges.length, 1)).toFixed(3)
     ),
-    graphHealth: Number(
-      (nodes.reduce((sum, node) => sum + node.trust - node.drift * 0.82, 0) / nodes.length).toFixed(3)
-    ),
+    graphHealth,
     coherence: Number(
       (
-        (nodes.reduce((sum, node) => sum + node.activation * (1 - node.drift), 0) /
-          nodes.length) * couplingFactor
+        (nodeStability * 0.15 + graphHealth * 0.4 + phaseCompletion * 0.35 + clamp(1 - predictionError * 1.5, 0, 1) * 0.1) *
+        couplingFactor
       ).toFixed(3)
     ),
+    predictionError: Number(predictionError.toFixed(6)),
+    freeEnergyProxy: Number(freeEnergyProxy.toFixed(6)),
     throughput: Number(
       (
         nodes.reduce((sum, node) => sum + node.throughput * (1 - node.saturation * 0.18), 0) *
@@ -1618,7 +1825,7 @@ function createInitialSnapshot(): PhaseSnapshot {
     ...edge,
     propagation: clamp(0.44 + index * 0.04)
   }));
-  const metrics = computeMetrics(initialNodes, edges, passes, defaultNeuralCouplingState());
+  const metrics = computeMetrics(initialNodes, edges, passes, defaultNeuralCouplingState(), defaultTimingState());
 
   return {
     epoch: 0,
@@ -1645,6 +1852,13 @@ function createInitialSnapshot(): PhaseSnapshot {
     executionSchedules: [],
     routingDecisions: [],
     actuationOutputs: [],
+    sessionConversationSummary: {
+      conversationCount: 0,
+      blockedVerdictCount: 0,
+      approvedVerdictCount: 0,
+      recentRouteHints: [],
+      recentCommits: []
+    },
     logTail: []
   };
 }
@@ -1915,6 +2129,7 @@ function deriveNeuralCoupling(
       ...prior,
       decodeConfidence: Number((prior.decodeConfidence * 0.74 + frame.decodeConfidence * 0.26).toFixed(6)),
       decodeReadyRatio: Number((prior.decodeReadyRatio * 0.72 + decodeReadyRatio * 0.28).toFixed(6)),
+      predictionError: prior.predictionError ?? 0,
       sourceFrameId: frame.id,
       updatedAt: frame.capturedAt
     };
@@ -1966,6 +2181,7 @@ function deriveNeuralCoupling(
     phaseBias,
     decodeConfidence: Number((prior.decodeConfidence * 0.58 + frame.decodeConfidence * 0.42).toFixed(6)),
     decodeReadyRatio: Number((prior.decodeReadyRatio * 0.62 + decodeReadyRatio * 0.38).toFixed(6)),
+    predictionError: prior.predictionError ?? 0,
     sourceFrameId: frame.id,
     updatedAt: frame.capturedAt
   };
@@ -2045,7 +2261,7 @@ function mergeNeuroFrameIntoSnapshot(
       return {
         ...node,
         activation: clamp(node.activation * 0.78 + frame.decodeConfidence * 0.1 + spectralLift * 0.08),
-        throughput: clamp(node.throughput * 0.82 + frame.decodeConfidence * 0.06 + spectralLift * 0.08)
+        throughput: clamp(node.throughput * STABILITY_POLE + frame.decodeConfidence * 0.06 + spectralLift * 0.08)
       };
     }
 
@@ -2329,10 +2545,28 @@ function mergeConversationIntoSnapshot(
     return node;
   });
 
+  const prior = snapshot.sessionConversationSummary;
+  const nextRouteHints = conversation.finalRouteSuggestion
+    ? [conversation.finalRouteSuggestion, ...prior.recentRouteHints].slice(0, 5)
+    : prior.recentRouteHints;
+  const nextCommits = conversation.finalCommitStatement
+    ? [conversation.finalCommitStatement, ...prior.recentCommits].slice(0, 5)
+    : prior.recentCommits;
+  const sessionConversationSummary: SessionConversationSummary = {
+    conversationCount: prior.conversationCount + 1,
+    blockedVerdictCount:
+      prior.blockedVerdictCount + (conversation.guardVerdict === "blocked" ? 1 : 0),
+    approvedVerdictCount:
+      prior.approvedVerdictCount + (conversation.guardVerdict === "approved" ? 1 : 0),
+    recentRouteHints: nextRouteHints,
+    recentCommits: nextCommits
+  };
+
   return {
     ...snapshot,
     nodes,
     conversations: nextConversations,
+    sessionConversationSummary,
     highlightedNodeId:
       conversation.guardVerdict === "blocked"
         ? "integrity-gate"
@@ -2847,6 +3081,8 @@ function createHistoryPoint(snapshot: PhaseSnapshot): SnapshotHistoryPoint {
     cognitiveLatencyMs: snapshot.metrics.cognitiveLatencyMs,
     propagationRate: snapshot.metrics.propagationRate,
     coherence: snapshot.metrics.coherence,
+    predictionError: snapshot.metrics.predictionError,
+    freeEnergyProxy: snapshot.metrics.freeEnergyProxy,
     throughput: snapshot.metrics.throughput
   };
 }
@@ -3161,10 +3397,12 @@ function buildIntegrityReport(
   const criticalCount = findings.filter((finding) => finding.severity === "critical").length;
   const status =
     criticalCount > 0 ? "invalid" : findings.length > 0 ? "degraded" : "verified";
+  const coherenceStable = durableState.snapshot.metrics.coherence >= STABILITY_POLE;
 
   return {
     valid: criticalCount === 0,
     status,
+    coherenceStable,
     checkedAt,
     currentCycle: durableState.snapshot.cycle,
     activePassCount,
@@ -3312,6 +3550,7 @@ function materializeHistory(state: EngineState): void {
     return;
   }
   state.history = [nextPoint, ...state.history].slice(0, HISTORY_LIMIT);
+  state.predictionError = state.snapshot.metrics.predictionError;
 }
 
 function completeCycle(state: EngineState, timestamp: string): PhasePass[] {
@@ -3355,7 +3594,7 @@ function evolveNodes(
     const activation = clamp(0.2 + base * 0.55 * planeMultiplier + activeBoost + pulse * 0.12);
     const load = clamp(node.load * 0.45 + burst * 0.4 + activeBoost * 0.4);
     const saturation = clamp(node.saturation * 0.58 + wave(epoch, index * 0.14, 0.16) * 0.3 + activeBoost * 0.2);
-    const drift = clamp(node.drift * 0.82 + wave(epoch, index * 0.17, 0.09) * 0.06, 0.01, 0.16);
+    const drift = clamp(node.drift * STABILITY_POLE + wave(epoch, index * 0.17, 0.09) * 0.06, 0.01, 0.16);
     return {
       ...node,
       activation,
@@ -3479,12 +3718,13 @@ function advanceSnapshot(state: EngineState, force = false): PhaseSnapshot {
 
       const bandBias = previous.neuralCoupling.phaseBias[pass.phase] ?? 0.5;
       const increment =
-        (phaseIncrement[pass.phase] * (0.7 + bandBias * 0.6) +
+        (state.phaseIncrement[pass.phase] * (0.7 + bandBias * 0.6) +
         targetNode.activation * 0.06 +
         state.pulse * 0.04) *
         spectralMultiplier;
       const progress = clamp(pass.progress + increment, 0, 1);
-      const nextState: PassState = progress >= 1 ? "completed" : progress >= 0.82 ? "degraded" : "running";
+      const nextState: PassState =
+        progress >= 1 ? "completed" : progress >= STABILITY_POLE ? "degraded" : "running";
       const updated: PhasePass = {
         ...pass,
         progress,
@@ -3517,6 +3757,8 @@ function advanceSnapshot(state: EngineState, force = false): PhaseSnapshot {
       });
     }
 
+    updateAdaptiveTimingState(state, completedThisTick);
+
     const verificationBarrierOpened = completedThisTick.some((pass) => pass.phase === "verify");
     if (!passes.some((pass) => passIsActive(pass))) {
       if (passes.every((pass) => pass.state === "completed")) {
@@ -3543,7 +3785,14 @@ function advanceSnapshot(state: EngineState, force = false): PhaseSnapshot {
   });
 
   const edges = evolveEdges(previous, epoch, state.pulse, runningAfter);
-  const metrics = computeMetrics(nodes, edges, passes, previous.neuralCoupling);
+  const timingBeforeUpdate = {
+    expectedLatency: { ...state.expectedLatency }
+  };
+  const controlNeuralCoupling = {
+    ...previous.neuralCoupling,
+    predictionError: state.predictionError
+  };
+  const metrics = computeMetrics(nodes, edges, passes, controlNeuralCoupling, timingBeforeUpdate);
   const highlightedNode =
     (runningAfter && nodes.find((node) => node.id === runningAfter.targetNodeId)) ??
     nodes.reduce((best, node) => (node.activation > best.activation ? node : best));
@@ -3567,6 +3816,7 @@ function advanceSnapshot(state: EngineState, force = false): PhaseSnapshot {
     edges,
     passes,
     metrics,
+    neuralCoupling: controlNeuralCoupling,
     objective,
     highlightedNodeId: highlightedNode.id
   };
@@ -3703,7 +3953,11 @@ export function createEngine(options?: {
         history: restored.history,
         events: restored.events,
         serial: restored.serial,
-        recordEvents: options?.recordEvents ?? true
+        recordEvents: options?.recordEvents ?? true,
+        phaseIncrement: restored.phaseIncrement,
+        expectedLatency: restored.expectedLatency,
+        latencyWindows: restored.latencyWindows,
+        predictionError: restored.predictionError
       }
     : {
         snapshot: createInitialSnapshot(),
@@ -3711,7 +3965,11 @@ export function createEngine(options?: {
         history: [],
         events: [],
         serial: 0,
-        recordEvents: options?.recordEvents ?? true
+        recordEvents: options?.recordEvents ?? true,
+        phaseIncrement: defaultTimingState().phaseIncrement,
+        expectedLatency: defaultTimingState().expectedLatency,
+        latencyWindows: defaultTimingState().latencyWindows,
+        predictionError: defaultTimingState().predictionError
       };
 
   if (!restored) {
@@ -3828,12 +4086,13 @@ export function createEngine(options?: {
     state.snapshot = mergeDatasetIntoSnapshot(state.snapshot, parsed);
     state.snapshot = {
       ...state.snapshot,
-    metrics: computeMetrics(
-      state.snapshot.nodes,
-      state.snapshot.edges,
-      state.snapshot.passes,
-      state.snapshot.neuralCoupling
-    )
+      metrics: computeMetrics(
+        state.snapshot.nodes,
+        state.snapshot.edges,
+        state.snapshot.passes,
+        state.snapshot.neuralCoupling,
+        { expectedLatency: { ...state.expectedLatency } }
+      )
     };
 
     pushEvent(state, {
@@ -3860,7 +4119,8 @@ export function createEngine(options?: {
         state.snapshot.nodes,
         state.snapshot.edges,
         state.snapshot.passes,
-        state.snapshot.neuralCoupling
+        state.snapshot.neuralCoupling,
+        { expectedLatency: { ...state.expectedLatency } }
       )
     };
 
@@ -3888,7 +4148,8 @@ export function createEngine(options?: {
         state.snapshot.nodes,
         state.snapshot.edges,
         state.snapshot.passes,
-        state.snapshot.neuralCoupling
+        state.snapshot.neuralCoupling,
+        { expectedLatency: { ...state.expectedLatency } }
       )
     };
 
@@ -3916,7 +4177,8 @@ export function createEngine(options?: {
         state.snapshot.nodes,
         state.snapshot.edges,
         state.snapshot.passes,
-        state.snapshot.neuralCoupling
+        state.snapshot.neuralCoupling,
+        { expectedLatency: { ...state.expectedLatency } }
       )
     };
 
@@ -3944,7 +4206,8 @@ export function createEngine(options?: {
         state.snapshot.nodes,
         state.snapshot.edges,
         state.snapshot.passes,
-        state.snapshot.neuralCoupling
+        state.snapshot.neuralCoupling,
+        { expectedLatency: { ...state.expectedLatency } }
       )
     };
 
@@ -3972,7 +4235,8 @@ export function createEngine(options?: {
         state.snapshot.nodes,
         state.snapshot.edges,
         state.snapshot.passes,
-        state.snapshot.neuralCoupling
+        state.snapshot.neuralCoupling,
+        { expectedLatency: { ...state.expectedLatency } }
       )
     };
 
@@ -4000,7 +4264,8 @@ export function createEngine(options?: {
         state.snapshot.nodes,
         state.snapshot.edges,
         state.snapshot.passes,
-        state.snapshot.neuralCoupling
+        state.snapshot.neuralCoupling,
+        { expectedLatency: { ...state.expectedLatency } }
       )
     };
 
@@ -4028,7 +4293,8 @@ export function createEngine(options?: {
         state.snapshot.nodes,
         state.snapshot.edges,
         state.snapshot.passes,
-        state.snapshot.neuralCoupling
+        state.snapshot.neuralCoupling,
+        { expectedLatency: { ...state.expectedLatency } }
       )
     };
 
@@ -4056,7 +4322,8 @@ export function createEngine(options?: {
         state.snapshot.nodes,
         state.snapshot.edges,
         state.snapshot.passes,
-        state.snapshot.neuralCoupling
+        state.snapshot.neuralCoupling,
+        { expectedLatency: { ...state.expectedLatency } }
       )
     };
 
@@ -4084,7 +4351,8 @@ export function createEngine(options?: {
         state.snapshot.nodes,
         state.snapshot.edges,
         state.snapshot.passes,
-        state.snapshot.neuralCoupling
+        state.snapshot.neuralCoupling,
+        { expectedLatency: { ...state.expectedLatency } }
       )
     };
 
@@ -4112,7 +4380,8 @@ export function createEngine(options?: {
         state.snapshot.nodes,
         state.snapshot.edges,
         state.snapshot.passes,
-        state.snapshot.neuralCoupling
+        state.snapshot.neuralCoupling,
+        { expectedLatency: { ...state.expectedLatency } }
       )
     };
 
@@ -4140,7 +4409,11 @@ export function createEngine(options?: {
       history: structuredClone(state.history),
       events: structuredClone(state.events),
       serial: state.serial,
-      pulse: state.pulse
+      pulse: state.pulse,
+      phaseIncrement: structuredClone(state.phaseIncrement),
+      expectedLatency: structuredClone(state.expectedLatency),
+      latencyWindows: structuredClone(state.latencyWindows),
+      predictionError: state.predictionError
     }),
     tick: () => advanceSnapshot(state, false),
     control,
@@ -4322,7 +4595,11 @@ export function rebuildDurableStateFromEvents(
       (max, event) => Math.max(max, serialFromEventId(event.eventId)),
       baseState?.serial ?? 0
     ),
-    pulse: durableState.pulse
+    pulse: durableState.pulse,
+    phaseIncrement: durableState.phaseIncrement,
+    expectedLatency: durableState.expectedLatency,
+    latencyWindows: durableState.latencyWindows,
+    predictionError: durableState.predictionError
   };
 }
 

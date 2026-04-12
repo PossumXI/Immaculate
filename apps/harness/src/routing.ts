@@ -9,6 +9,7 @@ import type {
   RoutingDecisionMode,
   GovernancePressureLevel
 } from "@immaculate/core";
+import { STABILITY_POLE } from "@immaculate/core";
 import type {
   ActuationAdapterState,
   ActuationDelivery,
@@ -316,7 +317,7 @@ export function planAdaptiveRoute(input: AdaptiveRoutePlanInput): AdaptiveRouteP
     channel = "visual";
   } else if (
     (strongSpectralReflexSignal ||
-      (frame?.decodeReady && frame.decodeConfidence >= 0.82)) &&
+      (frame?.decodeReady && frame.decodeConfidence >= STABILITY_POLE)) &&
     hapticTransport &&
     hapticTransport.health === "healthy" &&
     governancePressure === "clear"

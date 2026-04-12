@@ -14,6 +14,7 @@ import {
   type EventEnvelope,
   type IntelligenceLayer,
   type PhaseSnapshot,
+  type RoutingDecision,
   createEngine,
   inspectDurableState,
   type BenchmarkAssertion,
@@ -26,7 +27,8 @@ import {
   type BenchmarkProgress,
   type BenchmarkReport,
   type BenchmarkSeries,
-  type GovernancePressureLevel
+  type GovernancePressureLevel,
+  STABILITY_POLE
 } from "@immaculate/core";
 import { createActuationManager } from "./actuation.js";
 import {
@@ -827,6 +829,8 @@ export async function runPublishedBenchmark(
   const cognitiveSamples: number[] = [];
   const throughputSamples: number[] = [];
   const coherenceSamples: number[] = [];
+  const predictionErrorSamples: number[] = [];
+  const freeEnergyProxySamples: number[] = [];
   const decodeConfidenceSamples: number[] = [];
   const syncJitterSamples: number[] = [];
   const tier2BandDominanceSamples: number[] = [];
@@ -1937,9 +1941,30 @@ export async function runPublishedBenchmark(
     arbitrationDecision: mediationAllowedDecision,
     conversation: mediationAllowedConversation,
     dispatchOnApproval: false,
+    routePlan: mediationAllowedRoutePlan,
+    routeDecision: {
+      id: `route-${suiteId}-mediate-plan-only`,
+      sessionId: nwbFixture.summary.id,
+      source: "benchmark",
+      mode: mediationAllowedRoutePlan.mode,
+      targetNodeId: mediationAllowedRoutePlan.targetNodeId,
+      channel: mediationAllowedRoutePlan.channel,
+      adapterId: mediationAllowedRoutePlan.recommendedAdapterId,
+      transportId: mediationAllowedRoutePlan.selectedTransport?.id,
+      transportKind: mediationAllowedRoutePlan.selectedTransport?.kind,
+      transportHealth: mediationAllowedRoutePlan.selectedTransport?.health,
+      transportPreferenceScore: mediationAllowedRoutePlan.selectedTransport?.preferenceScore,
+      transportPreferenceRank: mediationAllowedRoutePlan.selectedTransport?.preferenceRank,
+      decodeConfidence: liveIngressResult.frame.decodeConfidence,
+      cognitiveLatencyMs: syntheticExecution.latencyMs,
+      governancePressure: mediationAllowedRoutePlan.governancePressure,
+      rationale: `${mediationAllowedRoutePlan.rationale} / review=held / benchmark-plan-only`,
+      selectedAt: new Date().toISOString()
+    } satisfies RoutingDecision,
     delivery: undefined as ActuationOutput | undefined,
     output: undefined as ActuationOutput | undefined
   };
+  engine.recordRoutingDecision(mediationAllowedPlanOnly.routeDecision);
   const mediationAllowedActuation =
     mediationAllowedPlan.shouldDispatchActuation &&
     mediationAllowedConversation.verdict !== "blocked"
@@ -2162,6 +2187,8 @@ export async function runPublishedBenchmark(
     cognitiveSamples.push(snapshot.metrics.cognitiveLatencyMs);
     throughputSamples.push(snapshot.metrics.throughput);
     coherenceSamples.push(snapshot.metrics.coherence);
+    predictionErrorSamples.push(snapshot.metrics.predictionError);
+    freeEnergyProxySamples.push(snapshot.metrics.freeEnergyProxy);
     await persistence.persist(engine.getDurableState());
 
     const cyclePasses = snapshot.passes.filter((pass) => pass.cycle === snapshot.cycle);
@@ -2223,6 +2250,18 @@ export async function runPublishedBenchmark(
     "Coherence",
     "ratio",
     coherenceSamples
+  );
+  const predictionErrorSeries = createSeries(
+    "prediction_error_ratio",
+    "Prediction error",
+    "ratio",
+    predictionErrorSamples
+  );
+  const freeEnergyProxySeries = createSeries(
+    "free_energy_proxy",
+    "Free-energy proxy",
+    "score",
+    freeEnergyProxySamples
   );
   const decodeConfidenceSeries = createSeries(
     "neuro_decode_confidence_ratio",
@@ -2974,11 +3013,15 @@ export async function runPublishedBenchmark(
       "mediate-plan-only",
       "Mediation returns plan-only output when dispatchOnApproval is false",
       mediationAllowedPlanOnly.dispatchOnApproval === false &&
+        mediationAllowedPlanOnly.routePlan !== undefined &&
+        mediationAllowedPlanOnly.routeDecision !== undefined &&
         mediationAllowedPlanOnly.delivery === undefined &&
         mediationAllowedPlanOnly.output === undefined,
-      "plan without delivery or output",
-      mediationAllowedPlanOnly.dispatchOnApproval ? "unexpected dispatch" : "plan-only",
-      "the mediated API should support a review-only mode that returns the plan without dispatching outward action"
+      "plan with durable route decision and no delivery/output",
+      mediationAllowedPlanOnly.dispatchOnApproval
+        ? "unexpected dispatch"
+        : mediationAllowedPlanOnly.routeDecision.mode,
+      "the mediated API should support a review-only mode that still records the chosen route into durable lineage before outward action is allowed"
     ),
     createAssertion(
       "mediate-dispatch-on-approval",
@@ -3056,14 +3099,15 @@ export async function runPublishedBenchmark(
     createAssertion(
       "routing-ledger",
       "Routing decisions persist as auditable snapshot and event lineage",
-      routingDecisions.length >= 2 &&
-        routingDecisions[0]?.id === guardedFallbackDecision.id &&
+      routingDecisions.length >= 3 &&
         routingDecisions.some((decision) => decision.id === preferredRouteDecision.id) &&
-        routingEvents.length >= 2 &&
+        routingDecisions.some((decision) => decision.id === mediationAllowedPlanOnly.routeDecision.id) &&
+        routingDecisions.some((decision) => decision.id === guardedFallbackDecision.id) &&
+        routingEvents.length >= 3 &&
         routingEvents.at(-1)?.schema.name === "immaculate.routing.decision",
-      ">= 2 routing decisions in snapshot and event ledger",
+      ">= 3 routing decisions in snapshot and event ledger",
       `${routingDecisions.length} snapshot decisions / ${routingEvents.length} routing events / latest ${routingDecisions[0]?.mode ?? "missing"}`,
-      "route choice must be durable and replayable, not an invisible side effect buried inside the dispatch path"
+      "route choice must be durable and replayable, including review-only mediated decisions that stop before outward dispatch"
     ),
     createAssertion(
       "tier2-band-dominance",
@@ -3361,6 +3405,30 @@ export async function runPublishedBenchmark(
       recoveredState
         ? `recovered with ${recoveredIntegrity.findingCount} findings`
         : "persistence could not recover a durable state"
+    ),
+    createAssertion(
+      "throughput-floor",
+      "Throughput p50 stays above operating floor",
+      throughputSeries.p50 >= 800,
+      ">= 800 ops/s p50",
+      formatSeries(throughputSeries),
+      "the 205-multiplier throughput model must sustain a measurable operating floor across a full benchmark run"
+    ),
+    createAssertion(
+      "coherence-stable",
+      "Coherence reaches the stability pole threshold during the run",
+      coherenceSeries.max >= STABILITY_POLE,
+      `>= ${STABILITY_POLE} coherence max (STABILITY_POLE)`,
+      formatSeries(coherenceSeries),
+      "system coherence must be able to reach the 0.82 stability eigenvalue during the run, even if the final snapshot settles below the peak"
+    ),
+    createAssertion(
+      "prediction-error-bounded",
+      "Prediction error stays bounded after adaptive timing settles",
+      predictionErrorSeries.p95 <= 0.65,
+      "<= 0.65 p95",
+      formatSeries(predictionErrorSeries),
+      "adaptive phase increments should keep latency surprise bounded instead of letting the controller drift unmeasured"
     )
   ];
 
@@ -3390,6 +3458,8 @@ export async function runPublishedBenchmark(
       cognitiveSeries,
       throughputSeries,
       coherenceSeries,
+      predictionErrorSeries,
+      freeEnergyProxySeries,
       cognitiveLoopParseLatencySeries,
       cognitiveLoopStructureSeries,
       cognitiveGovernanceContextSeries,
@@ -3416,6 +3486,8 @@ export async function runPublishedBenchmark(
           cognitiveSeries,
           throughputSeries,
           coherenceSeries,
+          predictionErrorSeries,
+          freeEnergyProxySeries,
           cognitiveLoopStructureSeries,
           cognitiveGovernanceContextSeries,
           cognitiveRouteSoftPriorSeries,
