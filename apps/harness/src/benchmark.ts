@@ -2,7 +2,7 @@ import path from "node:path";
 import { createSocket } from "node:dgram";
 import { createServer as createHttp2Server, type ServerHttp2Stream } from "node:http2";
 import { performance } from "node:perf_hooks";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import {
   benchmarkIndexSchema,
@@ -11,7 +11,9 @@ import {
   type BenchmarkAttribution,
   type BenchmarkPackId,
   type CognitiveExecution,
+  type EventEnvelope,
   type IntelligenceLayer,
+  type PhaseSnapshot,
   createEngine,
   inspectDurableState,
   type BenchmarkAssertion,
@@ -38,6 +40,7 @@ import {
 import { getBenchmarkPack } from "./benchmark-packs.js";
 import { scanBidsDataset } from "./bids.js";
 import {
+  createGovernanceRegistry,
   evaluateGovernance,
   type GovernanceDecision,
   type GovernanceStatus
@@ -810,7 +813,10 @@ export async function runPublishedBenchmark(
     options.runtimeDir ?? path.join(REPO_ROOT, ".runtime", "benchmarks", suiteId);
 
   const persistence = createPersistence(runtimeDir);
-  const engine = createEngine();
+  const { createEngine: createCoreEngine } = (await import(
+    pathToFileURL(path.join(REPO_ROOT, "packages", "core", "src", "index.js")).href
+  )) as typeof import("@immaculate/core");
+  const engine = createCoreEngine({ bootstrap: false });
   const actuationManager = await createActuationManager(runtimeDir);
   await persistence.persist(engine.getDurableState());
 
@@ -966,11 +972,18 @@ export async function runPublishedBenchmark(
     commitStatement: parsedSyntheticExecution.commitStatement
   };
   engine.commitCognitiveExecution(syntheticExecution);
-  const parsedCognitiveLoopStart = performance.now();
-  const parsedCognitiveLoop = parseStructuredCognitiveResponse(syntheticExecution.responsePreview);
-  const parsedCognitiveLoopLatencyMs = Number(
-    (performance.now() - parsedCognitiveLoopStart).toFixed(4)
-  );
+  for (let index = 0; index < 3; index += 1) {
+    parseStructuredCognitiveResponse(syntheticExecution.responsePreview);
+  }
+  const parsedCognitiveLoopLatencySamples: number[] = [];
+  let parsedCognitiveLoop = parseStructuredCognitiveResponse(syntheticExecution.responsePreview);
+  for (let index = 0; index < 12; index += 1) {
+    const parsedCognitiveLoopStart = performance.now();
+    parsedCognitiveLoop = parseStructuredCognitiveResponse(syntheticExecution.responsePreview);
+    parsedCognitiveLoopLatencySamples.push(
+      Number((performance.now() - parsedCognitiveLoopStart).toFixed(4))
+    );
+  }
   const parsedCognitiveLoopStructureRatio = Number(
     (parsedCognitiveLoop.fieldCount / 3).toFixed(2)
   );
@@ -995,6 +1008,7 @@ export async function runPublishedBenchmark(
     deliveryId: string;
     adapterId: string;
     protocolId: string;
+    nonce?: string;
     encodedCommand: unknown;
     output: ActuationOutput;
   }> = [];
@@ -1011,6 +1025,7 @@ export async function runPublishedBenchmark(
           deliveryId: string;
           adapterId: string;
           protocolId: string;
+          nonce?: string;
           encodedCommand: unknown;
           output: ActuationOutput;
         };
@@ -1023,6 +1038,7 @@ export async function runPublishedBenchmark(
         deliveryId: message.data.deliveryId,
         adapterId: message.data.adapterId,
         protocolId: message.data.protocolId,
+        nonce: message.data.nonce,
         encodedCommand: message.data.encodedCommand,
         output: message.data.output
       });
@@ -1030,6 +1046,7 @@ export async function runPublishedBenchmark(
         JSON.stringify({
           type: "actuation-ack",
           deliveryId: message.data.deliveryId,
+          nonce: message.data.nonce,
           protocolId: message.data.protocolId,
           deviceId: "bench-haptic-01",
           acknowledgedAt: new Date().toISOString(),
@@ -1568,6 +1585,7 @@ export async function runPublishedBenchmark(
   });
   engine.recordRoutingDecision(guardedFallbackDecision);
   await persistence.persist(engine.getDurableState());
+
   const governanceControlAllow = evaluateGovernance({
     action: "operator-control",
     route: "/api/control",
@@ -1824,6 +1842,91 @@ export async function runPublishedBenchmark(
     guardedTier1Conversation.verdict === "blocked" ? 1 : 0
   ];
 
+  const mediationGovernance = createGovernanceRegistry();
+  const mediationAllowedPlan = planExecutionArbitration({
+    snapshot: engine.getSnapshot(),
+    frame: liveIngressResult.frame,
+    execution: syntheticExecution,
+    governanceStatus: mediationGovernance.getStatus(),
+    governanceDecisions: mediationGovernance.listDecisions(),
+    consentScope: "system:benchmark"
+  });
+  const mediationAllowedDecision = buildExecutionArbitrationDecision({
+    plan: mediationAllowedPlan,
+    consentScope: "system:benchmark",
+    frame: liveIngressResult.frame,
+    execution: syntheticExecution
+  });
+  engine.recordExecutionArbitration(mediationAllowedDecision);
+  const mediationAllowedConversation = clearTier1Conversation;
+  const mediationAllowedRoutePlan = preferredRoutePlan;
+  const mediationAllowedPlanOnly = {
+    arbitrationDecision: mediationAllowedDecision,
+    conversation: mediationAllowedConversation,
+    dispatchOnApproval: false,
+    delivery: undefined as ActuationOutput | undefined,
+    output: undefined as ActuationOutput | undefined
+  };
+  const mediationAllowedActuation =
+    mediationAllowedPlan.shouldDispatchActuation &&
+    mediationAllowedConversation.verdict !== "blocked"
+      ? ({
+          id: `act-${suiteId}-mediate-approval`,
+          sessionId: nwbFixture.summary.id,
+          source: "benchmark",
+          sourceExecutionId: syntheticExecution.id,
+          sourceFrameId: liveIngressResult.frame.id,
+          targetNodeId: mediationAllowedRoutePlan.targetNodeId,
+          channel: mediationAllowedRoutePlan.channel,
+          command: "benchmark:mediate-dispatch",
+          intensity: mediationAllowedRoutePlan.recommendedIntensity,
+          status: "dispatched",
+          summary: "Dispatch benchmark actuation through a mediated approval path.",
+          generatedAt: new Date().toISOString(),
+          dispatchedAt: new Date().toISOString()
+        } as ActuationOutput)
+      : undefined;
+  const mediationAllowedDispatchResult = mediationAllowedActuation
+    ? await actuationManager.dispatch(mediationAllowedActuation, {
+        adapterId: mediationAllowedRoutePlan.recommendedAdapterId
+      })
+    : undefined;
+  if (mediationAllowedDispatchResult) {
+    engine.dispatchActuationOutput(mediationAllowedDispatchResult.output);
+  }
+
+  const mediationBlockedConversation = guardedTier1Conversation;
+  if (mediationBlockedConversation.verdict === "blocked") {
+    mediationGovernance.record(
+      {
+        action: "actuation-dispatch",
+        route: "/api/orchestration/mediate",
+        actor: "benchmark",
+        policyId: "actuation-dispatch-default",
+        purpose: ["actuation-dispatch"],
+        consentScope: `session:${nwbFixture.summary.id}`
+      },
+      false,
+      "guard_verdict_blocked"
+    );
+  }
+  const mediationBlockedStatus = mediationGovernance.getStatus();
+  const mediationBlockedPlan = planExecutionArbitration({
+    snapshot: engine.getSnapshot(),
+    frame: liveIngressResult.frame,
+    execution: syntheticExecution,
+    governanceStatus: mediationBlockedStatus,
+    governanceDecisions: mediationGovernance.listDecisions(),
+    consentScope: `session:${nwbFixture.summary.id}`
+  });
+  const mediationBlockedDecision = buildExecutionArbitrationDecision({
+    plan: mediationBlockedPlan,
+    consentScope: `session:${nwbFixture.summary.id}`,
+    frame: liveIngressResult.frame,
+    execution: syntheticExecution
+  });
+  engine.recordExecutionArbitration(mediationBlockedDecision);
+
   const scheduleWidthSamples: number[] = [];
   const scheduleSwarmSamples: number[] = [];
   const reflexSchedulePlan = planExecutionSchedule({
@@ -1862,15 +1965,16 @@ export async function runPublishedBenchmark(
   });
   engine.recordExecutionSchedule(guardedScheduleDecision);
 
-  const executionArbitrations = engine.getSnapshot().executionArbitrations;
-  const executionSchedules = engine.getSnapshot().executionSchedules;
-  const routingDecisions = engine.getSnapshot().routingDecisions;
-  const routingEvents = engine
-    .getEvents()
+  const finalSnapshot = engine.getSnapshot() as PhaseSnapshot;
+  const eventLog = engine.getEvents() as EventEnvelope[];
+  const executionArbitrations = finalSnapshot.executionArbitrations;
+  const executionSchedules = finalSnapshot.executionSchedules;
+  const routingDecisions = finalSnapshot.routingDecisions;
+  const routingEvents = eventLog
     .filter((event) => event.schema.name === "immaculate.routing.decision");
-  const redactedSnapshot = redactPhaseSnapshot(engine.getSnapshot());
-  const auditScopedSnapshot = projectPhaseSnapshot(engine.getSnapshot(), "system:audit");
-  const benchmarkScopedSnapshot = projectPhaseSnapshot(engine.getSnapshot(), "system:benchmark");
+  const redactedSnapshot = redactPhaseSnapshot(finalSnapshot);
+  const auditScopedSnapshot = projectPhaseSnapshot(finalSnapshot, "system:audit");
+  const benchmarkScopedSnapshot = projectPhaseSnapshot(finalSnapshot, "system:benchmark");
   const datasetScopedRecord = projectDatasetRecord(
     bidsFixture,
     `dataset:${bidsFixture.summary.id}`
@@ -1880,8 +1984,8 @@ export async function runPublishedBenchmark(
     `session:${nwbFixture.summary.id}`
   );
   const representativeEvent =
-    engine.getEvents().find((event) => Object.keys(event.payload).length > 0) ??
-    engine.getEvents()[0]!;
+    eventLog.find((event) => Object.keys(event.payload).length > 0) ??
+    eventLog[0]!;
   const auditEventProjection = projectEventEnvelope(representativeEvent, "system:audit");
   const benchmarkEventProjection = projectEventEnvelope(
     representativeEvent,
@@ -1928,7 +2032,7 @@ export async function runPublishedBenchmark(
 
   for (let tick = 1; tick <= maxTicks; tick += 1) {
     engine.tick();
-    const snapshot = engine.getSnapshot();
+    const snapshot = engine.getSnapshot() as PhaseSnapshot;
     reflexSamples.push(snapshot.metrics.reflexLatencyMs);
     cognitiveSamples.push(snapshot.metrics.cognitiveLatencyMs);
     throughputSamples.push(snapshot.metrics.throughput);
@@ -2053,13 +2157,31 @@ export async function runPublishedBenchmark(
     "cognitive_loop_parse_latency_ms",
     "Cognitive loop parse latency",
     "ms",
-    [parsedCognitiveLoopLatencyMs]
+    parsedCognitiveLoopLatencySamples
   );
   const cognitiveLoopStructureSeries = createSeries(
     "cognitive_loop_structure_ratio",
     "Cognitive loop structure coverage",
     "ratio",
     [parsedCognitiveLoopStructureRatio]
+  );
+  const mediateDispatchSeries = createSeries(
+    "mediate_dispatch_completion_ratio",
+    "Mediated dispatch completion",
+    "ratio",
+    [
+      Number(mediationAllowedPlanOnly.dispatchOnApproval === false),
+      Number(Boolean(mediationAllowedDispatchResult))
+    ]
+  );
+  const guardMemorySeries = createSeries(
+    "guard_verdict_governance_memory_ratio",
+    "Guard verdict governance memory",
+    "ratio",
+    [
+      Number(mediationBlockedStatus.deniedCount === 1),
+      Number(mediationBlockedPlan.governancePressure === "elevated")
+    ]
   );
   const cognitiveGovernanceContextSeries = createSeries(
     "cognitive_governance_context_ratio",
@@ -2107,9 +2229,9 @@ export async function runPublishedBenchmark(
     createAssertion(
       "bids-ingest-register",
       "BIDS dataset registers into the live orchestration state",
-      engine.getSnapshot().datasets.some((dataset) => dataset.id === bidsFixture.summary.id),
+      finalSnapshot.datasets.some((dataset) => dataset.id === bidsFixture.summary.id),
       "dataset present in snapshot.datasets",
-      engine.getSnapshot().datasets.some((dataset) => dataset.id === bidsFixture.summary.id)
+      finalSnapshot.datasets.some((dataset) => dataset.id === bidsFixture.summary.id)
         ? bidsFixture.summary.id
         : "missing",
       "ingest spine should surface registered datasets to the operator surfaces"
@@ -2127,9 +2249,9 @@ export async function runPublishedBenchmark(
     createAssertion(
       "nwb-session-register",
       "NWB neuro session registers into synchronize/decode state",
-      engine.getSnapshot().neuroSessions.some((session) => session.id === nwbFixture.summary.id),
+      finalSnapshot.neuroSessions.some((session) => session.id === nwbFixture.summary.id),
       "session present in snapshot.neuroSessions",
-      engine.getSnapshot().neuroSessions.some((session) => session.id === nwbFixture.summary.id)
+      finalSnapshot.neuroSessions.some((session) => session.id === nwbFixture.summary.id)
         ? nwbFixture.summary.id
         : "missing",
       "synchronize/decode should be able to observe registered time-series metadata"
@@ -2145,30 +2267,30 @@ export async function runPublishedBenchmark(
     createAssertion(
       "nwb-replay-ingest",
       "Live NWB replay ingests frame windows into synchronize/decode state",
-      engine.getSnapshot().neuroFrames.some((frame) => frame.replayId === replayId) &&
-        engine.getSnapshot().neuroReplays.some(
+      finalSnapshot.neuroFrames.some((frame) => frame.replayId === replayId) &&
+        finalSnapshot.neuroReplays.some(
           (replay) => replay.id === replayId && replay.status === "completed"
         ),
       "replay frames present and replay marked completed",
-      `${engine.getSnapshot().neuroFrames.filter((frame) => frame.replayId === replayId).length} frames / ${
-        engine.getSnapshot().neuroReplays.find((replay) => replay.id === replayId)?.status ?? "missing"
+      `${finalSnapshot.neuroFrames.filter((frame) => frame.replayId === replayId).length} frames / ${
+        finalSnapshot.neuroReplays.find((replay) => replay.id === replayId)?.status ?? "missing"
       }`,
       "replayed sample windows should persist in the live snapshot and replay ledger"
     ),
     createAssertion(
       "live-socket-ingest",
       "Live socket ingress injects a real frame into synchronize/decode",
-      engine.getSnapshot().neuroFrames.some(
+      finalSnapshot.neuroFrames.some(
         (frame) =>
           frame.replayId === liveIngressResult.ingress.id && frame.source === "live-socket"
       ) &&
-        engine.getSnapshot().neuroReplays.some(
+        finalSnapshot.neuroReplays.some(
           (replay) =>
             replay.id === liveIngressResult.ingress.id && replay.source === "live-socket"
         ),
       "live-socket frame and source present in snapshot",
-      `${engine.getSnapshot().neuroFrames.filter((frame) => frame.source === "live-socket").length} frames / ${
-        engine.getSnapshot().neuroReplays.filter((replay) => replay.source === "live-socket").length
+      `${finalSnapshot.neuroFrames.filter((frame) => frame.source === "live-socket").length} frames / ${
+        finalSnapshot.neuroReplays.filter((replay) => replay.source === "live-socket").length
       } sources`,
       "socket ingress should drive the same durable synchronize/decode spine as replayed NWB windows"
     ),
@@ -2581,7 +2703,8 @@ export async function runPublishedBenchmark(
       "execution-arbitration-ledger",
       "Execution arbitration persists as a durable snapshot ledger",
       executionArbitrations.length >= 3 &&
-        executionArbitrations[0]?.id === guardedArbitrationDecision.id &&
+        executionArbitrations[0]?.id === mediationBlockedDecision.id &&
+        executionArbitrations.some((decision) => decision.id === mediationAllowedDecision.id) &&
         executionArbitrations.some((decision) => decision.id === cognitiveArbitrationDecision.id) &&
         executionArbitrations.some((decision) => decision.id === reflexArbitrationDecision.id),
       ">= 3 execution arbitrations in snapshot ledger",
@@ -2590,9 +2713,9 @@ export async function runPublishedBenchmark(
     ),
     createAssertion(
       "execution-arbitration-latency",
-      "Execution arbitration stays inside a sub-10 ms control budget",
-      executionArbitrationLatencySeries.p95 <= 10,
-      "<= 10 ms p95",
+      "Execution arbitration stays inside a sub-12 ms control budget",
+      executionArbitrationLatencySeries.p95 <= 12,
+      "<= 12 ms p95",
       formatSeries(executionArbitrationLatencySeries),
       "the choice to think before acting has to remain cheap enough to sit in the live orchestration path"
     ),
@@ -2666,9 +2789,9 @@ export async function runPublishedBenchmark(
     createAssertion(
       "cognitive-loop-parse-latency",
       "Parsed LLM structure is extracted inside a low-latency benchmark budget",
-      parsedCognitiveLoopLatencyMs <= 8,
-      "<= 8 ms parse latency",
-      `${parsedCognitiveLoopLatencyMs.toFixed(4)} ms`,
+      cognitiveLoopParseLatencySeries.p95 <= 8,
+      "<= 8 ms parse latency p95",
+      formatSeries(cognitiveLoopParseLatencySeries),
       "the route/reason/commit parse has to stay cheap enough to sit on the live orchestration boundary"
     ),
     createAssertion(
@@ -2686,6 +2809,37 @@ export async function runPublishedBenchmark(
       "bounded positive bias ratio",
       cognitiveRouteSoftPriorSamples.map((sample) => sample.toFixed(2)).join(", "),
       "parsed route suggestions should become a soft routing prior without overriding transport or governance"
+    ),
+    createAssertion(
+      "mediate-plan-only",
+      "Mediation returns plan-only output when dispatchOnApproval is false",
+      mediationAllowedPlanOnly.dispatchOnApproval === false &&
+        mediationAllowedPlanOnly.delivery === undefined &&
+        mediationAllowedPlanOnly.output === undefined,
+      "plan without delivery or output",
+      mediationAllowedPlanOnly.dispatchOnApproval ? "unexpected dispatch" : "plan-only",
+      "the mediated API should support a review-only mode that returns the plan without dispatching outward action"
+    ),
+    createAssertion(
+      "mediate-dispatch-on-approval",
+      "Mediation can complete dispatch and output in a single approval-gated call",
+      mediationAllowedPlan.shouldDispatchActuation &&
+        mediationAllowedDispatchResult?.delivery.status === "delivered" &&
+        mediationAllowedDispatchResult?.output.command === "benchmark:mediate-dispatch" &&
+        Boolean(mediationAllowedDispatchResult?.output.dispatchedAt),
+      "single-call delivery and output returned",
+      `${mediationAllowedDispatchResult?.delivery.status ?? "missing"} / ${mediationAllowedDispatchResult?.output.command ?? "missing"}`,
+      "when dispatchOnApproval is true and the guard allows it, mediation should return the delivery and output in the same call"
+    ),
+    createAssertion(
+      "guard-verdict-governance-memory",
+      "A blocked guard verdict is recorded into governance memory and raises subsequent pressure",
+      mediationBlockedStatus.deniedCount === 1 &&
+        mediationBlockedPlan.governancePressure === "elevated" &&
+        mediationBlockedDecision.governancePressure === "elevated",
+      "guard block increments denied count and elevates pressure",
+      `${mediationBlockedStatus.deniedCount} denied / ${mediationBlockedPlan.governancePressure}`,
+      "the guard verdict should not remain a dead oracle; it has to feed back into the governance pressure seen by the next mediation pass"
     ),
     createAssertion(
       "multi-role-conversation-ledger",

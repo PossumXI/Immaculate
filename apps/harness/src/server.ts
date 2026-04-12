@@ -535,6 +535,7 @@ type DispatchBody = {
   command?: string;
   intensity?: number;
   suppressed?: boolean;
+  dispatchOnApproval?: boolean;
 };
 
 function selectPreferredLayer(preferredRoles?: IntelligenceLayer["role"][]): IntelligenceLayer | null {
@@ -2123,6 +2124,7 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
     | ReturnType<typeof engine.getSnapshot>["conversations"][number]
     | undefined;
   let cognitionSnapshot = scheduleSnapshot;
+  const dispatchOnApproval = Boolean(body.dispatchOnApproval);
 
   if (scheduleDecision.shouldRunCognition) {
     if (scheduleDecision.layerIds.length === 0) {
@@ -2165,6 +2167,50 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
     }
   }
 
+  if (mediationConversation?.guardVerdict === "blocked") {
+    governance.record(binding, false, "guard_verdict_blocked");
+  }
+
+  const guardAllowsDispatch =
+    mediationConversation?.guardVerdict === undefined ||
+    mediationConversation.guardVerdict === "approved";
+  const routePreview = planAdaptiveRoute({
+    snapshot: engine.getSnapshot(),
+    frame,
+    execution: mediationExecution,
+    cognitiveRouteSuggestion: mediationExecution?.routeSuggestion,
+    adapters: actuationManager.listAdapters(),
+    transports: actuationManager.listTransports(),
+    governanceStatus: governance.getStatus(),
+    governanceDecisions: governance.listDecisions(),
+    consentScope,
+    requestedAdapterId: body.adapterId?.trim() || undefined,
+    requestedChannel: body.channel,
+    requestedTargetNodeId: body.targetNodeId?.trim() || undefined,
+    requestedIntensity:
+      typeof body.intensity === "number" ? Number(body.intensity) : undefined,
+    suppressed:
+      !arbitrationPlan.shouldDispatchActuation || !guardAllowsDispatch
+  });
+  const shouldDispatchOnApproval =
+    dispatchOnApproval && arbitrationPlan.shouldDispatchActuation && guardAllowsDispatch;
+
+  if (!shouldDispatchOnApproval) {
+    return {
+      accepted: true,
+      arbitrationDecision,
+      arbitrationPlan,
+      scheduleDecision,
+      schedulePlan,
+      layer: mediationLayer,
+      execution: mediationExecution,
+      conversation: mediationConversation,
+      response: mediationResponse,
+      routePlan: routePreview,
+      snapshot: cognitionSnapshot
+    };
+  }
+
   try {
     const dispatchResult = await dispatchWithRoute({
       body: {
@@ -2176,9 +2222,7 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
         channel: body.channel,
         command: body.command,
         intensity: body.intensity,
-        suppressed:
-          !arbitrationPlan.shouldDispatchActuation ||
-          mediationConversation?.guardVerdict === "blocked"
+        suppressed: false
       },
       consentScope,
       execution: mediationExecution,

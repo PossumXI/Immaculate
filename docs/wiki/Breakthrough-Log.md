@@ -21,6 +21,28 @@ For each breakthrough, record:
 
 ### 2026-04-12
 
+#### Mediation now closes the loop with approval-gated dispatch
+
+What changed:
+- `POST /api/orchestration/mediate` now supports `dispatchOnApproval`, so the same call can return a plan only or complete dispatch when approval allows it
+- blocked guard verdicts are written back into governance memory, so the next mediated pass sees the denial pressure
+- the benchmark now covers both review-only mediation and single-call mediate-and-dispatch completion
+
+Why it matters:
+- this turns the guard from a passive report into a real control signal that changes subsequent governance pressure
+- it closes the last gap between mediated decisioning and outward action when the operator explicitly allows dispatch
+
+Evidence:
+- benchmark coverage now asserts plan-only mediation, approval-gated dispatch, and guard-verdict governance memory
+- the live harness route was updated to return plan-only results unless `dispatchOnApproval` is true
+
+What this unlocks next:
+- tighter session-scoped mediation policies
+- better operator control over when Immaculate should think versus act
+- richer single-call orchestration flows that remain governed end to end
+
+### 2026-04-12
+
 #### Tier 2 routing now follows bounded neural coupling
 
 What changed:

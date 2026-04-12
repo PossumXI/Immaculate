@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { z } from "zod";
 
 export const orchestrationPlanes = ["reflex", "cognitive", "offline"] as const;
@@ -625,7 +626,7 @@ export type EventEnvelope = {
   consent: { policyId: string; scopeHash: string };
   schema: { name: string; version: string };
   payload: Record<string, unknown>;
-  integrity: { hash: string; sig?: string };
+  integrity: { hash: string; prevEventHash?: string; sig?: string };
   summary: string;
 };
 
@@ -1167,6 +1168,7 @@ export const eventEnvelopeSchema = z.object({
   payload: z.record(z.string(), z.unknown()),
   integrity: z.object({
     hash: z.string(),
+    prevEventHash: z.string().optional(),
     sig: z.string().optional()
   }),
   summary: z.string()
@@ -1499,6 +1501,38 @@ function hashValue(value: string): string {
     hash = Math.imul(hash, 16777619);
   }
   return `fnv1a-${(hash >>> 0).toString(16).padStart(8, "0")}`;
+}
+
+function secureHash(value: string): string {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+function computeEventIntegrityHash(input: {
+  eventId: string;
+  eventTimeUtc: string;
+  producer: EventEnvelope["producer"];
+  subject: EventEnvelope["subject"];
+  purpose: EventEnvelope["purpose"];
+  consent: EventEnvelope["consent"];
+  schema: EventEnvelope["schema"];
+  payload: EventEnvelope["payload"];
+  summary: EventEnvelope["summary"];
+  prevEventHash?: string;
+}): string {
+  return secureHash(
+    JSON.stringify({
+      eventId: input.eventId,
+      eventTimeUtc: input.eventTimeUtc,
+      producer: input.producer,
+      subject: input.subject,
+      purpose: input.purpose,
+      consent: input.consent,
+      schema: input.schema,
+      payload: input.payload,
+      summary: input.summary,
+      prevEventHash: input.prevEventHash ?? null
+    })
+  );
 }
 
 function createPasses(cycle: number, timestamp: string): PhasePass[] {
@@ -2982,6 +3016,47 @@ function buildIntegrityReport(
     eventIds.add(event.eventId);
   }
 
+  for (let index = 0; index < durableState.events.length; index += 1) {
+    const event = durableState.events[index]!;
+    const legacyIntegrity = event.integrity.hash.startsWith("fnv1a-");
+    if (legacyIntegrity) {
+      continue;
+    }
+    const expectedPreviousHash = durableState.events[index + 1]?.integrity.hash;
+    const expectedHash = computeEventIntegrityHash({
+      eventId: event.eventId,
+      eventTimeUtc: event.eventTimeUtc,
+      producer: event.producer,
+      subject: event.subject,
+      purpose: event.purpose,
+      consent: event.consent,
+      schema: event.schema,
+      payload: event.payload,
+      summary: event.summary,
+      prevEventHash: event.integrity.prevEventHash
+    });
+
+    if (event.integrity.hash !== expectedHash) {
+      findings.push({
+        code: "event_hash_mismatch",
+        severity: "critical",
+        message: `event ${event.eventId} integrity hash does not match recomputed payload hash`,
+        subjectId: event.eventId,
+        cycle: durableState.snapshot.cycle
+      });
+    }
+
+    if ((expectedPreviousHash ?? undefined) !== (event.integrity.prevEventHash ?? undefined)) {
+      findings.push({
+        code: "event_chain_mismatch",
+        severity: "critical",
+        message: `event ${event.eventId} prevEventHash does not match the next event hash in lineage`,
+        subjectId: event.eventId,
+        cycle: durableState.snapshot.cycle
+      });
+    }
+  }
+
   if (
     durableState.events.length > 0 &&
     durableState.snapshot.lastEventId &&
@@ -3124,26 +3199,42 @@ function pushEvent(
     ...input.payload,
     summary: input.summary
   };
+  const previousEventHash = state.events[0]?.integrity.hash;
+  const producer: EventEnvelope["producer"] = {
+    service: ENGINE_SERVICE,
+    instance: ENGINE_INSTANCE
+  };
+  const consent: EventEnvelope["consent"] = {
+    policyId: "neurodata-default",
+    scopeHash: hashValue(input.purpose.join("|"))
+  };
+  const schema: EventEnvelope["schema"] = {
+    name: input.schemaName ?? "immaculate.event",
+    version: "1.0.0"
+  };
   const event: EventEnvelope = {
     eventId,
     eventTimeUtc,
-    producer: {
-      service: ENGINE_SERVICE,
-      instance: ENGINE_INSTANCE
-    },
+    producer,
     subject: input.subject,
     purpose: input.purpose,
-    consent: {
-      policyId: "neurodata-default",
-      scopeHash: hashValue(input.purpose.join("|"))
-    },
-    schema: {
-      name: input.schemaName ?? "immaculate.event",
-      version: "1.0.0"
-    },
+    consent,
+    schema,
     payload,
     integrity: {
-      hash: hashValue(JSON.stringify({ eventId, eventTimeUtc, payload }))
+      hash: computeEventIntegrityHash({
+        eventId,
+        eventTimeUtc,
+        producer,
+        subject: input.subject,
+        purpose: input.purpose,
+        consent,
+        schema,
+        payload,
+        summary: input.summary,
+        prevEventHash: previousEventHash
+      }),
+      prevEventHash: previousEventHash
     },
     summary: input.summary
   };

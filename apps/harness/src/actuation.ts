@@ -1,4 +1,5 @@
 import path from "node:path";
+import { randomUUID } from "node:crypto";
 import { createSocket } from "node:dgram";
 import { connect as connectHttp2 } from "node:http2";
 import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
@@ -129,6 +130,8 @@ export type ActuationAdapterState = {
   requiresSession: boolean;
   description: string;
   deliveryCount: number;
+  minDispatchIntervalMs: number;
+  lastDispatchAt?: string;
   lastDeliveredAt?: string;
   lastDeliveryTransport?: ActuationDeliveryTransport;
   bridgeConnected: boolean;
@@ -136,6 +139,7 @@ export type ActuationAdapterState = {
   bridgeSessionId?: string;
   bridgeDeviceId?: string;
   bridgeCapabilities: ActuationProtocolCapability[];
+  lateAckCount: number;
 };
 
 export type ActuationDelivery = {
@@ -193,11 +197,13 @@ type BridgeAckMessage = {
   deliveryId: string;
   deviceId?: string;
   protocolId?: string;
+  nonce?: string;
   acknowledgedAt?: string;
   policyNote?: string;
 };
 
 type PendingBridgeDispatch = {
+  nonce: string;
   resolve: (ack: { acknowledgedAt: string; policyNote?: string }) => void;
   reject: (error: Error) => void;
   timer: NodeJS.Timeout;
@@ -231,6 +237,7 @@ const BRIDGE_ACK_TIMEOUT_MS = 2500;
 const TRANSPORT_FAILURE_ISOLATION_THRESHOLD = 2;
 const DEFAULT_TRANSPORT_HEARTBEAT_INTERVAL_MS = 5000;
 const DEFAULT_TRANSPORT_HEARTBEAT_TIMEOUT_MS = 15000;
+const DEFAULT_MIN_DISPATCH_INTERVAL_MS = 10;
 const HTTP2_DISPATCH_TIMEOUT_MS = 2500;
 
 async function safeRead(filePath: string): Promise<string | null> {
@@ -289,6 +296,9 @@ function buildAdapterConfigs(rootDir: string): ActuationAdapterConfig[] {
       deviceClass: "visual-panel",
       maxIntensity: 1,
       requiresSession: false,
+      minDispatchIntervalMs: DEFAULT_MIN_DISPATCH_INTERVAL_MS,
+      lastDispatchAt: undefined,
+      lateAckCount: 0,
       description: "Visual actuation lane with file-backed persistence plus optional direct or bridge transports.",
       deliveryPath: path.join(actuationRoot, "visual-panel.ndjson")
     },
@@ -302,6 +312,9 @@ function buildAdapterConfigs(rootDir: string): ActuationAdapterConfig[] {
       deviceClass: "haptic-rig",
       maxIntensity: 0.85,
       requiresSession: true,
+      minDispatchIntervalMs: DEFAULT_MIN_DISPATCH_INTERVAL_MS,
+      lastDispatchAt: undefined,
+      lateAckCount: 0,
       description: "Session-bound haptic lane with file-backed persistence plus optional direct or bridge transports.",
       deliveryPath: path.join(actuationRoot, "haptic-rig.ndjson")
     },
@@ -315,6 +328,9 @@ function buildAdapterConfigs(rootDir: string): ActuationAdapterConfig[] {
       deviceClass: "stim-sandbox",
       maxIntensity: 0.65,
       requiresSession: true,
+      minDispatchIntervalMs: DEFAULT_MIN_DISPATCH_INTERVAL_MS,
+      lastDispatchAt: undefined,
+      lateAckCount: 0,
       description: "Conservative stimulation lane with file-backed persistence plus optional direct or bridge transports.",
       deliveryPath: path.join(actuationRoot, "stim-sandbox.ndjson")
     }
@@ -899,6 +915,12 @@ function encodeActuationCommand(
   });
 }
 
+function warnBridgeAck(adapterId: string, deliveryId: string, reason: string): void {
+  console.warn(
+    `Actuation bridge ${adapterId} dropped ack for ${deliveryId}: ${normalizePolicyToken(reason)}.`
+  );
+}
+
 function oscStringSize(value: string): number {
   const length = Buffer.byteLength(value, "utf8") + 1;
   return Math.ceil(length / 4) * 4;
@@ -1133,6 +1155,24 @@ async function sendHttp2JsonTransport(
   });
 }
 
+function isDispatchRateLimited(
+  lastDispatchAt: string | undefined,
+  attemptedAt: string,
+  minDispatchIntervalMs: number
+): boolean {
+  if (!lastDispatchAt) {
+    return false;
+  }
+
+  const lastDispatchAtMs = Date.parse(lastDispatchAt);
+  const attemptedAtMs = Date.parse(attemptedAt);
+  if (!Number.isFinite(lastDispatchAtMs) || !Number.isFinite(attemptedAtMs)) {
+    return false;
+  }
+
+  return attemptedAtMs - lastDispatchAtMs < minDispatchIntervalMs;
+}
+
 export async function createActuationManager(rootDir: string): Promise<{
   listProtocols: () => ActuationProtocolProfile[];
   listAdapters: () => ActuationAdapterState[];
@@ -1201,6 +1241,11 @@ export async function createActuationManager(rootDir: string): Promise<{
   const transports = parseTransportRegistry(await safeRead(transportsPath));
   const bridges = new Map<string, ActuationBridgeState>();
 
+  for (const adapter of adapters) {
+    const latestDelivery = deliveries.find((delivery) => delivery.adapterId === adapter.id);
+    adapter.lastDispatchAt = latestDelivery?.deliveredAt ?? latestDelivery?.generatedAt;
+  }
+
   async function persistTransportRegistry(): Promise<void> {
     await appendOrWriteJson(transportsPath, transports);
   }
@@ -1247,13 +1292,16 @@ export async function createActuationManager(rootDir: string): Promise<{
         requiresSession: adapter.requiresSession,
         description: adapter.description,
         deliveryCount: adapterDeliveries.length,
+        minDispatchIntervalMs: adapter.minDispatchIntervalMs,
+        lastDispatchAt: adapter.lastDispatchAt,
         lastDeliveredAt: adapterDeliveries[0]?.deliveredAt,
         lastDeliveryTransport: adapterDeliveries[0]?.transport,
         bridgeConnected: Boolean(bridge),
         bridgeReady: Boolean(bridge?.ready),
         bridgeSessionId: bridge?.sessionId,
         bridgeDeviceId: bridge?.deviceId,
-        bridgeCapabilities: bridge ? [...bridge.capabilities] : []
+        bridgeCapabilities: bridge ? [...bridge.capabilities] : [],
+        lateAckCount: adapter.lateAckCount
       };
     });
   }
@@ -1714,14 +1762,18 @@ export async function createActuationManager(rootDir: string): Promise<{
     output: ActuationOutput,
     deliveryId: string,
     encodedCommand: string
-  ): Promise<{ acknowledgedAt: string; policyNote?: string }> {
+): Promise<{ acknowledgedAt: string; policyNote?: string }> {
+    const nonce = randomUUID();
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         bridge.pending.delete(deliveryId);
+        adapter.lateAckCount += 1;
+        warnBridgeAck(adapter.id, deliveryId, "ack_timeout");
         reject(new Error(`Timed out waiting for bridge ack from ${adapter.id}.`));
       }, BRIDGE_ACK_TIMEOUT_MS);
 
       bridge.pending.set(deliveryId, {
+        nonce,
         resolve: (ack) => {
           clearTimeout(timer);
           bridge.pending.delete(deliveryId);
@@ -1745,6 +1797,7 @@ export async function createActuationManager(rootDir: string): Promise<{
             deviceId: bridge.deviceId,
             channel: adapter.channel,
             output,
+            nonce,
             encodedCommand: JSON.parse(encodedCommand)
           }
         })
@@ -1792,6 +1845,21 @@ export async function createActuationManager(rootDir: string): Promise<{
       status = "suppressed";
       intensity = 0;
       policyNote = "suppressed_by_request";
+    }
+
+    if (status === "dispatched") {
+      const attemptedAt = new Date().toISOString();
+      const wasRateLimited = isDispatchRateLimited(
+        adapter.lastDispatchAt,
+        attemptedAt,
+        adapter.minDispatchIntervalMs
+      );
+      adapter.lastDispatchAt = attemptedAt;
+      if (wasRateLimited) {
+        status = "suppressed";
+        intensity = 0;
+        policyNote = appendPolicyNote(policyNote, "rate_limited");
+      }
     }
 
     const normalizedOutput: ActuationOutput = {
@@ -2090,20 +2158,31 @@ export async function createActuationManager(rootDir: string): Promise<{
         throw new Error("Invalid actuation bridge payload.");
       }
 
-      if (!bridge.ready) {
-        throw new Error(
-          `Actuation bridge ${adapterConfig.id} is not ready for acknowledgements.`
-        );
-      }
-      if (parsed.protocolId && parsed.protocolId !== bridge.protocolId) {
-        throw new Error(`Actuation ack protocol mismatch for ${adapterConfig.id}.`);
-      }
-      if (parsed.deviceId && parsed.deviceId !== bridge.deviceId) {
-        throw new Error(`Actuation ack device mismatch for ${adapterConfig.id}.`);
-      }
-
       const pending = bridge.pending.get(parsed.deliveryId);
       if (!pending) {
+        adapterConfig.lateAckCount += 1;
+        warnBridgeAck(adapterConfig.id, parsed.deliveryId, "late_ack");
+        return undefined;
+      }
+
+      if (!bridge.ready) {
+        adapterConfig.lateAckCount += 1;
+        warnBridgeAck(adapterConfig.id, parsed.deliveryId, "bridge_not_ready");
+        return undefined;
+      }
+      if (parsed.protocolId && parsed.protocolId !== bridge.protocolId) {
+        adapterConfig.lateAckCount += 1;
+        warnBridgeAck(adapterConfig.id, parsed.deliveryId, "protocol_mismatch");
+        return undefined;
+      }
+      if (parsed.deviceId && parsed.deviceId !== bridge.deviceId) {
+        adapterConfig.lateAckCount += 1;
+        warnBridgeAck(adapterConfig.id, parsed.deliveryId, "device_mismatch");
+        return undefined;
+      }
+      if (!parsed.nonce || parsed.nonce !== pending.nonce) {
+        adapterConfig.lateAckCount += 1;
+        warnBridgeAck(adapterConfig.id, parsed.deliveryId, "nonce_mismatch");
         return undefined;
       }
 
