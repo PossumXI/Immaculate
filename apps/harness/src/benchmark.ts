@@ -1,4 +1,6 @@
 import path from "node:path";
+import os from "node:os";
+import { execFileSync } from "node:child_process";
 import { createSocket } from "node:dgram";
 import { createServer as createHttp2Server, type ServerHttp2Stream } from "node:http2";
 import { performance } from "node:perf_hooks";
@@ -9,7 +11,9 @@ import {
   benchmarkReportSchema,
   type ActuationOutput,
   type BenchmarkAttribution,
+  type BenchmarkHardwareContext,
   type BenchmarkPackId,
+  type BenchmarkRunKind,
   type CognitiveExecution,
   type EventEnvelope,
   type IntelligenceLayer,
@@ -53,6 +57,7 @@ import { parseStructuredResponse } from "./ollama.js";
 import { createPersistence } from "./persistence.js";
 import { buildRoutingDecision, planAdaptiveRoute } from "./routing.js";
 import { safeUnlink } from "./utils.js";
+import { createIntelligenceWorkerRegistry } from "./workers.js";
 import {
   projectActuationOutput,
   projectCognitiveExecution,
@@ -99,6 +104,102 @@ const BENCHMARK_ATTRIBUTION: BenchmarkAttribution = {
   ]
 };
 
+function classifyBenchmarkRunKind(plannedDurationMs: number): BenchmarkRunKind {
+  if (plannedDurationMs >= 3_600_000) {
+    return "soak";
+  }
+  if (plannedDurationMs >= 60_000) {
+    return "benchmark";
+  }
+  return "smoke";
+}
+
+function detectWindowsDiskKind(): string | undefined {
+  try {
+    const output = execFileSync(
+      "powershell",
+      [
+        "-NoProfile",
+        "-Command",
+        "Get-PhysicalDisk | Select-Object -First 1 MediaType,FriendlyName | ConvertTo-Json -Compress"
+      ],
+      {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"]
+      }
+    ).trim();
+    if (!output) {
+      return undefined;
+    }
+    const parsed = JSON.parse(output) as { MediaType?: string; FriendlyName?: string };
+    return parsed.MediaType?.trim() || parsed.FriendlyName?.trim() || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function detectLinuxDiskKind(): string | undefined {
+  try {
+    const output = execFileSync(
+      "lsblk",
+      ["-d", "-J", "-o", "rota,model"],
+      {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"]
+      }
+    ).trim();
+    if (!output) {
+      return undefined;
+    }
+    const parsed = JSON.parse(output) as {
+      blockdevices?: Array<{ rota?: boolean | number | string; model?: string }>;
+    };
+    const device = parsed.blockdevices?.[0];
+    if (!device) {
+      return undefined;
+    }
+    const rotational =
+      device.rota === true ||
+      device.rota === 1 ||
+      (typeof device.rota === "string" && device.rota.trim() === "1");
+    const media = rotational ? "HDD" : "SSD";
+    return device.model?.trim() ? `${media} (${device.model.trim()})` : media;
+  } catch {
+    return undefined;
+  }
+}
+
+function detectBenchmarkDiskKind(): string | undefined {
+  if (process.platform === "win32") {
+    return detectWindowsDiskKind();
+  }
+  if (process.platform === "linux") {
+    return detectLinuxDiskKind();
+  }
+  return undefined;
+}
+
+function captureBenchmarkHardwareContext(): BenchmarkHardwareContext {
+  const cpus = os.cpus();
+  const cpuCount = typeof os.availableParallelism === "function" ? os.availableParallelism() : cpus.length;
+  const cpuModel = cpus[0]?.model?.trim() || "unknown-cpu";
+  return {
+    host: os.hostname(),
+    platform: os.platform(),
+    arch: os.arch(),
+    osVersion: os.version(),
+    cpuModel,
+    cpuCount: Math.max(1, cpuCount),
+    memoryGiB: Number((os.totalmem() / 1024 ** 3).toFixed(2)),
+    diskKind: detectBenchmarkDiskKind(),
+    nodeVersion: process.version
+  };
+}
+
+function formatBenchmarkHardwareContext(context: BenchmarkHardwareContext): string {
+  return `${context.host} / ${context.platform}-${context.arch}${context.osVersion ? ` ${context.osVersion}` : ""} / ${context.cpuModel} / ${context.cpuCount} cores / ${context.memoryGiB.toFixed(2)} GiB RAM / ${context.diskKind ?? "unknown disk"} / Node ${context.nodeVersion}`;
+}
+
 function percentile(values: number[], quantile: number): number {
   if (values.length === 0) {
     return 0;
@@ -130,6 +231,8 @@ function createSeries(id: string, label: string, unit: string, values: number[])
     min: Number((sorted[0] ?? 0).toFixed(2)),
     p50: Number(percentile(sorted, 0.5).toFixed(2)),
     p95: Number(percentile(sorted, 0.95).toFixed(2)),
+    p99: Number(percentile(sorted, 0.99).toFixed(2)),
+    p999: Number(percentile(sorted, 0.999).toFixed(2)),
     average: Number(average(sorted).toFixed(2)),
     max: Number((sorted[sorted.length - 1] ?? 0).toFixed(2))
   };
@@ -154,6 +257,90 @@ function createAssertion(
   };
 }
 
+type BenchmarkSessionBindingInput = {
+  consentScope?: string;
+  requestedSessionId?: string;
+  sourceExecutionSessionId?: string;
+  sourceFrameSessionId?: string;
+  defaultExecutionSessionId?: string;
+  defaultFrameSessionId?: string;
+};
+
+type BenchmarkSessionBindingDecision = {
+  allowed: boolean;
+  reason: string;
+  resolvedSessionId?: string;
+};
+
+function evaluateBenchmarkSessionBinding(
+  input: BenchmarkSessionBindingInput
+): BenchmarkSessionBindingDecision {
+  const scopedSessionId = input.consentScope?.startsWith("session:")
+    ? input.consentScope.slice("session:".length)
+    : undefined;
+  const executionSessionId = input.sourceExecutionSessionId ?? input.defaultExecutionSessionId;
+  const frameSessionId = input.sourceFrameSessionId ?? input.defaultFrameSessionId;
+  const resolvedSessionId =
+    input.requestedSessionId?.trim() || frameSessionId || scopedSessionId || undefined;
+  const explicitSourcesProvided =
+    Boolean(input.sourceExecutionSessionId) || Boolean(input.sourceFrameSessionId);
+
+  if (scopedSessionId && resolvedSessionId && scopedSessionId !== resolvedSessionId) {
+    if (!explicitSourcesProvided) {
+      return {
+        allowed: false,
+        reason: "ambiguous_source_scope_mismatch",
+        resolvedSessionId
+      };
+    }
+    return {
+      allowed: false,
+      reason: "resource_scope_mismatch",
+      resolvedSessionId
+    };
+  }
+
+  if (explicitSourcesProvided) {
+    if (executionSessionId && resolvedSessionId && executionSessionId !== resolvedSessionId) {
+      return {
+        allowed: false,
+        reason: "source_scope_mismatch",
+        resolvedSessionId
+      };
+    }
+    if (frameSessionId && resolvedSessionId && frameSessionId !== resolvedSessionId) {
+      return {
+        allowed: false,
+        reason: "source_scope_mismatch",
+        resolvedSessionId
+      };
+    }
+    return {
+      allowed: true,
+      reason: "session_bound",
+      resolvedSessionId
+    };
+  }
+
+  if (
+    scopedSessionId &&
+    ((executionSessionId && executionSessionId !== scopedSessionId) ||
+      (frameSessionId && frameSessionId !== scopedSessionId))
+  ) {
+    return {
+      allowed: false,
+      reason: "ambiguous_source_scope_mismatch",
+      resolvedSessionId
+    };
+  }
+
+  return {
+    allowed: true,
+    reason: "session_bound",
+    resolvedSessionId
+  };
+}
+
 async function safeReadText(filePath: string): Promise<string | null> {
   try {
     return await readFile(filePath, "utf8");
@@ -165,10 +352,15 @@ async function safeReadText(filePath: string): Promise<string | null> {
   }
 }
 
-function createProgress(): BenchmarkProgress {
+function createProgress(options: {
+  runKind: BenchmarkRunKind;
+  hardwareContext: BenchmarkHardwareContext;
+}): BenchmarkProgress {
   return {
-    stage: "integration-ready substrate for internal functional testing",
+    stage: `${options.runKind} benchmark on ${options.hardwareContext.platform}-${options.hardwareContext.arch} (${options.hardwareContext.cpuCount} cores)`,
     completed: [
+      `Captured benchmark hardware context: ${formatBenchmarkHardwareContext(options.hardwareContext)}`,
+      `Classified this run as ${options.runKind} for honest publication`,
       "Canonical phase/pass engine across reflex, cognitive, and offline planes",
       "Realtime harness with websocket streaming and operator controls",
       "Durable event log, materialized history, and checkpoint persistence",
@@ -193,6 +385,8 @@ function createProgress(): BenchmarkProgress {
       "Durable execution arbitration that decides when the system should think, act, or hold",
       "Durable execution scheduling that chooses single-layer versus truthful parallel swarm formation before cognition runs",
       "Truthful runtime swarm execution where non-guard cognition layers can execute concurrently and guarded swarms close with a final review turn",
+      "Authoritative worker-assignment coverage for leased remote placement and visible duplicate assignment pressure",
+      "Explicit session-bound source safety coverage for mediated dispatch and fail-closed scope mismatches",
       "Real LSL bridge ingress that can feed external stream payloads into the same live neuro spine as replay and socket frames",
       "Tier 1 cognitive-loop benchmark coverage for parsed route/reason/commit structure, governance-aware cognition, soft-route priors, and multi-role conversation verdicts",
       "Core runtime parsing of LLM route suggestions and true multi-role conversation execution",
@@ -428,7 +622,7 @@ function renderMarkdown(report: BenchmarkReport): string {
   const seriesLines = report.series
     .map(
       (series) =>
-        `| ${series.label} | ${series.samples} | ${series.min.toFixed(2)} | ${series.p50.toFixed(2)} | ${series.p95.toFixed(2)} | ${series.max.toFixed(2)} | ${series.unit} |`
+        `| ${series.label} | ${series.samples} | ${series.min.toFixed(2)} | ${series.p50.toFixed(2)} | ${series.p95.toFixed(2)} | ${series.p99.toFixed(2)} | ${series.p999.toFixed(2)} | ${series.max.toFixed(2)} | ${series.unit} |`
     )
     .join("\n");
 
@@ -448,6 +642,7 @@ function renderMarkdown(report: BenchmarkReport): string {
 Generated: ${report.generatedAt}
 Suite: ${report.suiteId}
 Pack: ${report.packLabel} (${report.packId})
+Run kind: ${report.runKind}
 
 ## Publication
 
@@ -464,10 +659,12 @@ ${report.summary}
 
 - Tick interval: ${report.tickIntervalMs} ms
 - Total ticks: ${report.totalTicks}
-- Total duration: ${report.totalDurationMs} ms
+- Planned duration: ${report.plannedDurationMs} ms
+- Wall-clock duration: ${report.totalDurationMs} ms
 - Recovery mode: ${report.recoveryMode}
 - Checkpoints: ${report.checkpointCount}
 - Integrity: ${report.integrity.status} (${report.integrity.findingCount} findings)
+- Hardware: ${formatBenchmarkHardwareContext(report.hardwareContext)}
 ${report.comparison ? `- Previous baseline: ${report.comparison.previousSuiteId}` : ""}
 
 ## Assertions
@@ -478,8 +675,8 @@ ${assertionLines}
 
 ## Series
 
-| Series | Samples | Min | P50 | P95 | Max | Unit |
-| --- | --- | --- | --- | --- | --- | --- |
+| Series | Samples | Min | P50 | P95 | P99 | P99.9 | Max | Unit |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
 ${seriesLines}
 
 ${report.comparison ? `## Trend vs Previous Baseline
@@ -816,8 +1013,12 @@ export async function runPublishedBenchmark(
   const suiteId = `immaculate-benchmark-${generatedAt.replace(/[:.]/g, "-")}`;
   const tickIntervalMs = options.tickIntervalMs ?? pack.tickIntervalMs ?? DEFAULT_TICK_INTERVAL_MS;
   const maxTicks = options.maxTicks ?? pack.maxTicks ?? DEFAULT_MAX_TICKS;
+  const plannedDurationMs = maxTicks * tickIntervalMs;
+  const runKind = classifyBenchmarkRunKind(plannedDurationMs);
+  const hardwareContext = captureBenchmarkHardwareContext();
   const runtimeDir =
     options.runtimeDir ?? path.join(REPO_ROOT, ".runtime", "benchmarks", suiteId);
+  const benchmarkStartedAt = performance.now();
 
   const persistence = createPersistence(runtimeDir);
   const { createEngine: createCoreEngine } = (await import(
@@ -996,6 +1197,100 @@ export async function runPublishedBenchmark(
   const parsedCognitiveLoopStructureRatio = Number(
     (parsedCognitiveLoop.fieldCount / 3).toFixed(2)
   );
+  const workerRegistry = createIntelligenceWorkerRegistry(path.join(runtimeDir, "worker-plane"));
+  const workerRegistryNow = new Date().toISOString();
+  const workerRegistryLeasePast = new Date(
+    Date.parse(workerRegistryNow) - 30_000
+  ).toISOString();
+  const workerRemotePrimary = await workerRegistry.registerWorker({
+    workerId: `worker-${suiteId}-remote-primary`,
+    workerLabel: "Benchmark Remote Primary",
+    hostLabel: "worker-host-remote-primary",
+    executionProfile: "remote",
+    executionEndpoint: "http://127.0.0.1:11434",
+    registeredAt: workerRegistryNow,
+    heartbeatAt: workerRegistryNow,
+    leaseDurationMs: 45_000,
+    leaseExpiresAt: new Date(Date.parse(workerRegistryNow) + 45_000).toISOString(),
+    watch: true,
+    allowHostRisk: true,
+    supportedBaseModels: [benchmarkLayer.model],
+    preferredLayerIds: [benchmarkLayer.id]
+  });
+  await workerRegistry.registerWorker({
+    workerId: `worker-${suiteId}-remote-expired`,
+    workerLabel: "Benchmark Remote Expired",
+    hostLabel: "worker-host-remote-expired",
+    executionProfile: "remote",
+    executionEndpoint: "http://127.0.0.1:11435",
+    registeredAt: workerRegistryNow,
+    heartbeatAt: workerRegistryNow,
+    leaseDurationMs: 45_000,
+    leaseExpiresAt: workerRegistryLeasePast,
+    watch: false,
+    allowHostRisk: false,
+    supportedBaseModels: [benchmarkLayer.model],
+    preferredLayerIds: [benchmarkLayer.id]
+  });
+  const workerLocalFallback = await workerRegistry.registerWorker({
+    workerId: `worker-${suiteId}-local-fallback`,
+    workerLabel: "Benchmark Local Fallback",
+    hostLabel: "worker-host-local-fallback",
+    executionProfile: "local",
+    registeredAt: workerRegistryNow,
+    heartbeatAt: workerRegistryNow,
+    leaseDurationMs: 45_000,
+    leaseExpiresAt: new Date(Date.parse(workerRegistryNow) + 45_000).toISOString(),
+    watch: false,
+    allowHostRisk: false,
+    supportedBaseModels: ["*"],
+    preferredLayerIds: []
+  });
+  const workerAssignmentRequest = {
+    requestedExecutionDecision: "remote_required" as const,
+    baseModel: benchmarkLayer.model,
+    preferredLayerIds: [benchmarkLayer.id],
+    recommendedLayerId: benchmarkLayer.id,
+    target: "planner-swarm"
+  };
+  const workerAssignmentFirst = await workerRegistry.assignWorker(workerAssignmentRequest);
+  const workerAssignmentSecond = await workerRegistry.assignWorker(workerAssignmentRequest);
+  const workerRegistrySnapshot = await workerRegistry.listWorkers(workerRegistryNow);
+  const localSlotRegistry = createIntelligenceWorkerRegistry(
+    path.join(runtimeDir, "worker-plane-local-slots")
+  );
+  for (let slot = 1; slot <= 3; slot += 1) {
+    await localSlotRegistry.registerWorker({
+      workerId: `worker-${suiteId}-local-slot-${slot}`,
+      workerLabel: `Benchmark Local Slot ${slot}`,
+      hostLabel: "worker-host-local-slots",
+      executionProfile: "local",
+      executionEndpoint: "http://127.0.0.1:11434",
+      registeredAt: workerRegistryNow,
+      heartbeatAt: workerRegistryNow,
+      leaseDurationMs: 45_000,
+      leaseExpiresAt: new Date(Date.parse(workerRegistryNow) + 45_000).toISOString(),
+      watch: true,
+      allowHostRisk: false,
+      supportedBaseModels: ["*"],
+      preferredLayerIds: [benchmarkLayer.id]
+    });
+  }
+  const localSlotAssignments = await Promise.all(
+    Array.from({ length: 3 }, (_, index) =>
+      localSlotRegistry.assignWorker({
+        requestedExecutionDecision: "allow_local",
+        baseModel: benchmarkLayer.model,
+        preferredLayerIds: [benchmarkLayer.id],
+        recommendedLayerId: benchmarkLayer.id,
+        target: `planner-swarm:slot-${index + 1}`
+      })
+    )
+  );
+  const localSlotWorkerIds = localSlotAssignments.flatMap((entry) =>
+    entry.assignment?.workerId ? [entry.assignment.workerId] : []
+  );
+  const localSlotRegistrySnapshot = await localSlotRegistry.listWorkers(workerRegistryNow);
   const syntheticActuation: ActuationOutput = {
     id: `act-${suiteId}-synthetic`,
     sessionId: nwbFixture.summary.id,
@@ -2026,6 +2321,25 @@ export async function runPublishedBenchmark(
     execution: syntheticExecution
   });
   engine.recordExecutionArbitration(mediationBlockedDecision);
+  const mediationSessionId = nwbFixture.summary.id;
+  const foreignSessionId = `${mediationSessionId}-foreign`;
+  const sessionBoundExplicitAllowed = evaluateBenchmarkSessionBinding({
+    consentScope: `session:${mediationSessionId}`,
+    requestedSessionId: mediationSessionId,
+    sourceExecutionSessionId: mediationSessionId,
+    sourceFrameSessionId: mediationSessionId
+  });
+  const sessionBoundOmittedBlocked = evaluateBenchmarkSessionBinding({
+    consentScope: `session:${mediationSessionId}`,
+    defaultExecutionSessionId: foreignSessionId,
+    defaultFrameSessionId: foreignSessionId
+  });
+  const sessionBoundExplicitMismatchBlocked = evaluateBenchmarkSessionBinding({
+    consentScope: `session:${mediationSessionId}`,
+    requestedSessionId: foreignSessionId,
+    sourceExecutionSessionId: foreignSessionId,
+    sourceFrameSessionId: foreignSessionId
+  });
 
   const scheduleWidthSamples: number[] = [];
   const scheduleSwarmSamples: number[] = [];
@@ -2228,6 +2542,12 @@ export async function runPublishedBenchmark(
   const recoveredIntegrity = recoveredState
     ? inspectDurableState(recoveredState)
     : cleanIntegrity;
+  const actualWallClockDurationMs = Number((performance.now() - benchmarkStartedAt).toFixed(2));
+  const measuredEventCount = (engine.getEvents() as EventEnvelope[]).length;
+  const measuredEventThroughput =
+    actualWallClockDurationMs > 0
+      ? Number((measuredEventCount / (actualWallClockDurationMs / 1000)).toFixed(2))
+      : 0;
 
   const reflexSeries = createSeries(
     "reflex_latency_ms",
@@ -2246,6 +2566,12 @@ export async function runPublishedBenchmark(
     "Throughput",
     "ops/s",
     throughputSamples
+  );
+  const measuredEventThroughputSeries = createSeries(
+    "event_throughput_events_s",
+    "Measured event throughput",
+    "events/s",
+    [measuredEventThroughput]
   );
   const coherenceSeries = createSeries(
     "coherence_ratio",
@@ -3056,6 +3382,105 @@ export async function runPublishedBenchmark(
       "the guard verdict should not remain a dead oracle; it has to feed back into the governance pressure seen by the next mediation pass"
     ),
     createAssertion(
+      "worker-assignment-lease-selection",
+      "Worker assignment prefers the leased remote worker over expired and local fallbacks",
+      workerAssignmentFirst.assignment?.workerId === workerRemotePrimary.workerId &&
+        workerAssignmentFirst.assignment?.executionProfile === "remote" &&
+        Boolean(workerAssignmentFirst.assignment?.reason.includes("remote-capable")) &&
+        Boolean(workerAssignmentFirst.assignment?.reason.includes(benchmarkLayer.id)) &&
+        Boolean(workerAssignmentFirst.assignment?.leaseToken) &&
+        Boolean(workerAssignmentFirst.assignment?.leaseExpiresAt) &&
+        workerAssignmentFirst.workers.some(
+          (worker) =>
+            worker.workerId === workerRemotePrimary.workerId &&
+            worker.assignmentLeaseToken === workerAssignmentFirst.assignment?.leaseToken
+        ) &&
+        workerRegistrySnapshot.some((worker) => worker.workerId === workerLocalFallback.workerId) &&
+        !workerRegistrySnapshot.some((worker) =>
+          worker.workerId === `worker-${suiteId}-remote-expired`
+        ),
+      "leased remote worker selected / expired worker pruned / lease token visible",
+      `${workerAssignmentFirst.assignment?.workerId ?? "missing"} / lease ${workerAssignmentFirst.assignment?.leaseToken ?? "missing"} / registry ${workerRegistrySnapshot.length}`,
+      "assignment should honor lease windows, prefer the authoritative remote worker, and expose the reserved lease in the registry snapshot"
+    ),
+    createAssertion(
+      "worker-assignment-duplicate-pressure",
+      "Duplicate worker assignment requests are blocked while the leased worker remains reserved",
+      workerAssignmentSecond.assignment === null &&
+        Boolean(workerAssignmentFirst.assignment?.leaseToken) &&
+        workerAssignmentFirst.workers.some(
+          (worker) =>
+            worker.workerId === workerRemotePrimary.workerId &&
+            Boolean(worker.assignmentLeaseToken)
+        ),
+      "second assignment rejected while lease stays active",
+      `${workerAssignmentFirst.assignment?.workerId ?? "missing"} / second ${workerAssignmentSecond.assignment?.workerId ?? "null"}`,
+      "a reserved worker lease should make duplicate assignment pressure visible by refusing a second lease while the first remains active"
+    ),
+    createAssertion(
+      "local-worker-slot-pool",
+      "A single local host can expose multiple truthful worker slots for parallel swarm reservation",
+      localSlotWorkerIds.length === 3 &&
+        new Set(localSlotWorkerIds).size === 3 &&
+        localSlotAssignments.every(
+          (entry) => entry.assignment?.executionProfile === "local"
+        ) &&
+        localSlotRegistrySnapshot.filter((worker) =>
+          worker.assignmentTarget?.startsWith("planner-swarm:slot-")
+        ).length === 3,
+      "3 distinct local slot leases on one host",
+      `${localSlotWorkerIds.join(",")} / assigned=${localSlotRegistrySnapshot.filter((worker) => worker.assignmentTarget?.startsWith("planner-swarm:slot-")).length}`,
+      "parallel cognition on a single host needs leaseable local slots rather than a single monolithic local worker record"
+    ),
+    createAssertion(
+      "parallel-swarm-worker-placement",
+      "Truthful parallel swarm scheduling places the leased remote worker on the planner-swarm target",
+      cognitiveSchedulePlan.mode === "swarm-parallel" &&
+        workerAssignmentFirst.assignment?.workerId === workerRemotePrimary.workerId &&
+        workerAssignmentFirst.assignment?.executionProfile === "remote" &&
+        Boolean(workerAssignmentFirst.assignment?.reason.includes("swarm-offload")) &&
+        Boolean(workerAssignmentFirst.assignment?.reason.includes(benchmarkLayer.id)) &&
+        workerRegistrySnapshot.some(
+          (worker) =>
+            worker.workerId === workerRemotePrimary.workerId &&
+            worker.assignmentTarget === "planner-swarm"
+        ),
+      "swarm-parallel / planner-swarm / remote lease / swarm-offload",
+      `${cognitiveSchedulePlan.mode} / ${workerAssignmentFirst.assignment?.workerId ?? "missing"} / target planner-swarm`,
+      "the benchmark should prove that the parallel swarm plan is not just a label: it must reserve the remote worker against the planner-swarm target and record that placement in the worker registry"
+    ),
+    createAssertion(
+      "mediate-session-binding-allowed",
+      "Session-bound mediation resolves cleanly when explicit sources and session scope align",
+      sessionBoundExplicitAllowed.allowed &&
+        sessionBoundExplicitAllowed.reason === "session_bound" &&
+        sessionBoundExplicitAllowed.resolvedSessionId === mediationSessionId,
+      "explicit session-bound sources allowed",
+      `${sessionBoundExplicitAllowed.reason} / ${sessionBoundExplicitAllowed.resolvedSessionId ?? "missing"}`,
+      "session scope should allow explicit frame and execution sources when they belong to the same session"
+    ),
+    createAssertion(
+      "mediate-session-binding-omitted-fail-closed",
+      "Mediation fails closed when explicit sources are omitted and the default sources point across session scope",
+      !sessionBoundOmittedBlocked.allowed &&
+        sessionBoundOmittedBlocked.reason === "ambiguous_source_scope_mismatch" &&
+        sessionBoundOmittedBlocked.resolvedSessionId === foreignSessionId,
+      "blocked on ambiguous cross-session defaults",
+      `${sessionBoundOmittedBlocked.reason} / ${sessionBoundOmittedBlocked.resolvedSessionId ?? "missing"}`,
+      "ambiguous mediation sources should not fall through to a foreign session just because defaults exist"
+    ),
+    createAssertion(
+      "mediate-session-binding-explicit-mismatch",
+      "Mediation fails closed when explicit sources or session scope do not match",
+      !sessionBoundExplicitMismatchBlocked.allowed &&
+        (sessionBoundExplicitMismatchBlocked.reason === "resource_scope_mismatch" ||
+          sessionBoundExplicitMismatchBlocked.reason === "source_scope_mismatch") &&
+        sessionBoundExplicitMismatchBlocked.resolvedSessionId === foreignSessionId,
+      "blocked on explicit cross-session mismatch",
+      `${sessionBoundExplicitMismatchBlocked.reason} / ${sessionBoundExplicitMismatchBlocked.resolvedSessionId ?? "missing"}`,
+      "explicitly mismatched source/session combinations should fail closed rather than dispatching across the wrong scope"
+    ),
+    createAssertion(
       "multi-role-conversation-ledger",
       "Multi-role conversation execution is represented as a durable ledger shape in the benchmark",
       clearTier1Conversation.turns.length === 4 &&
@@ -3426,6 +3851,14 @@ export async function runPublishedBenchmark(
       "the 205-multiplier throughput model must sustain a measurable operating floor across a full benchmark run"
     ),
     createAssertion(
+      "measured-event-throughput-reported",
+      "Measured event throughput is reported from actual wall-clock runtime",
+      measuredEventThroughputSeries.p50 > 0 && actualWallClockDurationMs > 0,
+      "> 0 events/s from wall-clock duration",
+      `${measuredEventThroughputSeries.p50.toFixed(2)} events/s over ${actualWallClockDurationMs.toFixed(2)} ms`,
+      "benchmark credibility depends on reporting observed event throughput from real elapsed time, not only synthetic control-loop estimates"
+    ),
+    createAssertion(
       "coherence-stable",
       "Coherence reaches the stability pole threshold during the run",
       coherenceSeries.max >= STABILITY_POLE,
@@ -3454,20 +3887,24 @@ export async function runPublishedBenchmark(
     generatedAt,
     packId: pack.id,
     packLabel: pack.label,
-    profile: engine.getSnapshot().profile,
+    runKind,
+    profile: `${engine.getSnapshot().profile} / ${runKind} / ${hardwareContext.platform}-${hardwareContext.arch}`,
     summary:
-      "This publication benchmarks the real orchestration substrate that exists today: phase execution, verify gating, persistence, checkpoint recovery, integrity validation, replayed NWB windows, live socket neuro ingress, protocol-aware actuation, execution arbitration that decides when the system should think before acting, execution scheduling that chooses single-layer versus swarm formation before cognition runs, Tier 1 cognitive-loop closure coverage for parsed ROUTE/REASON/COMMIT structure, Tier 2 neural-coupling coverage for band dominance, phase bias, and coupled routing strength, governance-aware cognition, routing soft priors, and multi-role conversation verdicts, supervised serial and HTTP/2 direct device transports, and explicit routing decisions that react to transport health, decode confidence, and governance pressure. It does not yet claim external neurodata or BCI decoding performance.",
+      `This ${runKind} publication benchmarks the real orchestration substrate that exists today: phase execution, verify gating, persistence, checkpoint recovery, integrity validation, replayed NWB windows, live socket neuro ingress, protocol-aware actuation, execution arbitration that decides when the system should think before acting, execution scheduling that chooses single-layer versus swarm formation before cognition runs, Tier 1 cognitive-loop closure coverage for parsed ROUTE/REASON/COMMIT structure, Tier 2 neural-coupling coverage for band dominance, phase bias, and coupled routing strength, governance-aware cognition, routing soft priors, and multi-role conversation verdicts, authoritative worker-assignment coverage with lease visibility, supervised serial and HTTP/2 direct device transports, and explicit session-bound source safety for mediated dispatch decisions that react to transport health, decode confidence, governance pressure, and consent scope. Hardware context: ${formatBenchmarkHardwareContext(hardwareContext)}. It does not yet claim external neurodata or BCI decoding performance.`,
     tickIntervalMs,
     totalTicks,
-    totalDurationMs: totalTicks * tickIntervalMs,
+    plannedDurationMs,
+    totalDurationMs: actualWallClockDurationMs,
     checkpointCount: cleanStatus.checkpointCount,
     recoveryMode: recoveryStatus.recoveryMode,
     recovered: recoveryStatus.recovered,
     integrity: recoveredIntegrity,
+    hardwareContext,
     series: [
       reflexSeries,
       cognitiveSeries,
       throughputSeries,
+      measuredEventThroughputSeries,
       coherenceSeries,
       predictionErrorSeries,
       freeEnergyProxySeries,
@@ -3489,13 +3926,14 @@ export async function runPublishedBenchmark(
       tier2NeuroCoupledRoutingSeries
     ],
     assertions,
-    progress: createProgress(),
+    progress: createProgress({ runKind, hardwareContext }),
     attribution: BENCHMARK_ATTRIBUTION,
     comparison: previousReport
       ? compareBenchmarkReports(previousReport, [
           reflexSeries,
           cognitiveSeries,
           throughputSeries,
+          measuredEventThroughputSeries,
           coherenceSeries,
           predictionErrorSeries,
           freeEnergyProxySeries,

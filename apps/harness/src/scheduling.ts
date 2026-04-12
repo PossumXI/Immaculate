@@ -2,6 +2,7 @@ import type {
   ExecutionArbitration,
   ExecutionSchedule,
   ExecutionScheduleMode,
+  ExecutionTopology,
   GovernancePressureLevel,
   IntelligenceLayer,
   IntelligenceLayerRole,
@@ -20,6 +21,8 @@ type ExecutionSchedulePlanInput = {
 
 export type ExecutionSchedulePlan = {
   mode: ExecutionScheduleMode;
+  executionTopology: ExecutionTopology;
+  parallelWidth: number;
   primaryLayerId?: string;
   layerIds: string[];
   layerRoles: IntelligenceLayerRole[];
@@ -187,6 +190,33 @@ function estimateCost(selected: IntelligenceLayer[]): number {
   return Number(selected.reduce((total, layer) => total + roleCost(layer.role), 0).toFixed(2));
 }
 
+function executionTopologyForMode(
+  mode: ExecutionScheduleMode,
+  selected: IntelligenceLayer[]
+): ExecutionTopology {
+  const nonGuardWidth = selected.filter((layer) => layer.role !== "guard").length;
+  if (mode === "guarded-swarm" && nonGuardWidth > 1) {
+    return "parallel-then-guard";
+  }
+  if (mode === "swarm-parallel" && selected.length > 1) {
+    return "parallel";
+  }
+  return "sequential";
+}
+
+function parallelWidthForTopology(
+  topology: ExecutionTopology,
+  selected: IntelligenceLayer[]
+): number {
+  if (topology === "parallel-then-guard") {
+    return selected.filter((layer) => layer.role !== "guard").length;
+  }
+  if (topology === "parallel") {
+    return selected.length;
+  }
+  return selected.length > 0 ? 1 : 0;
+}
+
 export function planExecutionSchedule(input: ExecutionSchedulePlanInput): ExecutionSchedulePlan {
   let preferredRoles = preferredScheduleRoles(input.arbitration);
   const signalQuality = clamp(input.snapshot.neuralCoupling.signalQuality);
@@ -225,6 +255,8 @@ export function planExecutionSchedule(input: ExecutionSchedulePlanInput): Execut
     adaptiveMaxWidth
   );
   const mode = scheduleModeForSelection(input.arbitration, selectedLayers);
+  const executionTopology = executionTopologyForMode(mode, selectedLayers);
+  const parallelWidth = parallelWidthForTopology(executionTopology, selectedLayers);
   const primaryLayer = selectedLayers.at(-1);
   const layerRoles = selectedLayers.map((layer) => layer.role);
   const estimatedLatencyMs = estimateLatencyMs(
@@ -236,15 +268,10 @@ export function planExecutionSchedule(input: ExecutionSchedulePlanInput): Execut
   const canDispatch =
     input.arbitration.shouldDispatchActuation &&
     (!input.arbitration.shouldRunCognition || selectedLayers.length > 0);
-  const executionTopology =
-    mode === "guarded-swarm"
-      ? "parallel-then-guard"
-      : isParallelScheduleMode(mode)
-        ? "parallel"
-        : "sequential";
   const rationale = [
     `mode=${mode}`,
     `topology=${executionTopology}`,
+    `parallelWidth=${parallelWidth}`,
     `width=${selectedLayers.length}`,
     `primary=${primaryLayer?.role ?? "none"}`,
     `roles=${layerRoles.join(">") || "none"}`,
@@ -258,6 +285,8 @@ export function planExecutionSchedule(input: ExecutionSchedulePlanInput): Execut
 
   return {
     mode,
+    executionTopology,
+    parallelWidth,
     primaryLayerId: primaryLayer?.id,
     layerIds: selectedLayers.map((layer) => layer.id),
     layerRoles,
@@ -285,6 +314,8 @@ export function buildExecutionScheduleDecision(options: {
     source: options.arbitration.source,
     arbitrationId: options.arbitration.id,
     mode: options.plan.mode,
+    executionTopology: options.plan.executionTopology,
+    parallelWidth: options.plan.parallelWidth,
     primaryLayerId: options.plan.primaryLayerId,
     layerIds: options.plan.layerIds,
     layerRoles: options.plan.layerRoles,

@@ -51,6 +51,7 @@ def build_metrics(report: dict) -> dict:
         "benchmark/checkpoint_count": report.get("checkpointCount", 0),
         "benchmark/tick_interval_ms": report.get("tickIntervalMs", 0),
         "benchmark/total_ticks": report.get("totalTicks", 0),
+        "benchmark/planned_duration_ms": report.get("plannedDurationMs", 0),
         "benchmark/total_duration_ms": report.get("totalDurationMs", 0),
         "benchmark/recovered": 1 if report.get("recovered") else 0,
         "benchmark/integrity_finding_count": report.get("integrity", {}).get("findingCount", 0),
@@ -61,6 +62,8 @@ def build_metrics(report: dict) -> dict:
         metrics[f"{prefix}/min"] = series.get("min", 0)
         metrics[f"{prefix}/p50"] = series.get("p50", 0)
         metrics[f"{prefix}/p95"] = series.get("p95", 0)
+        metrics[f"{prefix}/p99"] = series.get("p99", 0)
+        metrics[f"{prefix}/p999"] = series.get("p999", 0)
         metrics[f"{prefix}/average"] = series.get("average", 0)
         metrics[f"{prefix}/max"] = series.get("max", 0)
 
@@ -108,6 +111,7 @@ def log_tables(run, report: dict) -> None:
 
 def attach_artifact(run, report: dict, report_json: Path, report_markdown: Path) -> tuple[str, str]:
     attribution = report.get("attribution", {}) or {}
+    hardware = report.get("hardwareContext", {}) or {}
     artifact_name = f"immaculate-{report.get('suiteId', 'benchmark')}"
     artifact_type = "benchmark-report"
     artifact = wandb.Artifact(
@@ -117,13 +121,17 @@ def attach_artifact(run, report: dict, report_json: Path, report_markdown: Path)
             "suite_id": report.get("suiteId"),
             "pack_id": report.get("packId"),
             "pack_label": report.get("packLabel"),
+            "run_kind": report.get("runKind"),
             "generated_at": report.get("generatedAt"),
+            "planned_duration_ms": report.get("plannedDurationMs"),
+            "total_duration_ms": report.get("totalDurationMs"),
             "integrity_status": report.get("integrity", {}).get("status"),
             "recovery_mode": report.get("recoveryMode"),
             "owner": attribution.get("owner"),
             "role": attribution.get("role"),
             "website": attribution.get("website"),
             "contributions": attribution.get("contributions") or [],
+            "hardware": hardware,
         },
     )
     artifact.add_file(str(report_json))
@@ -148,6 +156,7 @@ def build_status_entry(
         "suiteId": report.get("suiteId"),
         "packId": report.get("packId"),
         "packLabel": report.get("packLabel"),
+        "runKind": report.get("runKind"),
         "generatedAt": report.get("generatedAt"),
         "publishedAt": datetime.now(timezone.utc).isoformat(),
         "entity": entity,
@@ -158,9 +167,11 @@ def build_status_entry(
         "artifactType": artifact_type,
         "integrityStatus": report.get("integrity", {}).get("status"),
         "recoveryMode": report.get("recoveryMode"),
+        "plannedDurationMs": report.get("plannedDurationMs"),
         "failedAssertions": failed_assertions,
         "totalAssertions": len(assertions),
         "totalDurationMs": report.get("totalDurationMs"),
+        "hardwareContext": report.get("hardwareContext"),
         "owner": attribution.get("owner"),
         "role": attribution.get("role"),
         "website": attribution.get("website"),
@@ -207,9 +218,12 @@ def render_status_markdown(status: dict) -> str:
                 f"- Generated: `{entry.get('generatedAt')}`",
                 f"- Published: `{entry.get('publishedAt')}`",
                 f"- Assertions: `{max((entry.get('totalAssertions') or 0) - (entry.get('failedAssertions') or 0), 0)}/{entry.get('totalAssertions') or 0}` passed",
+                f"- Run kind: `{entry.get('runKind')}`",
                 f"- Integrity: `{entry.get('integrityStatus')}`",
                 f"- Recovery mode: `{entry.get('recoveryMode')}`",
-                f"- Duration: `{entry.get('totalDurationMs')}` ms",
+                f"- Planned duration: `{entry.get('plannedDurationMs')}` ms",
+                f"- Wall-clock duration: `{entry.get('totalDurationMs')}` ms",
+                f"- Hardware: `{json.dumps(entry.get('hardwareContext') or {}, separators=(',', ':'))}`",
                 f"- W&B run: {entry.get('runUrl') or 'not available'}",
                 f"- W&B artifact: `{entry.get('artifactName')}` (`{entry.get('artifactType')}`)",
                 "",
@@ -289,10 +303,14 @@ def main() -> None:
         "suite_id": report.get("suiteId"),
         "pack_id": report.get("packId"),
         "pack_label": report.get("packLabel"),
+        "run_kind": report.get("runKind"),
         "generated_at": report.get("generatedAt"),
         "recovery_mode": report.get("recoveryMode"),
         "integrity_status": report.get("integrity", {}).get("status"),
+        "planned_duration_ms": report.get("plannedDurationMs"),
+        "wall_clock_duration_ms": report.get("totalDurationMs"),
         "stage": report.get("progress", {}).get("stage"),
+        "hardware_context": report.get("hardwareContext"),
         "owner": report.get("attribution", {}).get("owner"),
         "role": report.get("attribution", {}).get("role"),
         "website": report.get("attribution", {}).get("website"),
@@ -311,8 +329,11 @@ def main() -> None:
         fail("wandb.init returned no run.")
 
     run.summary["benchmark/summary_text"] = report.get("summary", "")
+    run.summary["benchmark/run_kind"] = report.get("runKind", "")
     run.summary["benchmark/current_stage"] = report.get("progress", {}).get("stage", "")
     run.summary["benchmark/integrity_status"] = report.get("integrity", {}).get("status", "")
+    run.summary["benchmark/planned_duration_ms"] = report.get("plannedDurationMs", 0)
+    run.summary["benchmark/wall_clock_duration_ms"] = report.get("totalDurationMs", 0)
     run.summary["benchmark/failed_assertions"] = sum(
         1 for assertion in report.get("assertions", []) if assertion.get("status") == "fail"
     )
@@ -320,6 +341,7 @@ def main() -> None:
     run.summary["benchmark/role"] = report.get("attribution", {}).get("role", "")
     run.summary["benchmark/website"] = report.get("attribution", {}).get("website", "")
     run.summary["benchmark/project_url"] = f"https://wandb.ai/{args.entity}/{args.project}"
+    run.summary["benchmark/hardware"] = json.dumps(report.get("hardwareContext", {}), separators=(",", ":"))
 
     run.log(build_metrics(report))
     log_tables(run, report)

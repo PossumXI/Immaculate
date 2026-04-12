@@ -68,6 +68,7 @@ import {
 } from "./routing.js";
 import {
   createIntelligenceWorkerRegistry,
+  type IntelligenceWorkerAssignment,
   type IntelligenceWorkerExecutionProfile
 } from "./workers.js";
 import { hashValue, resolvePathWithinAllowedRoot } from "./utils.js";
@@ -162,6 +163,15 @@ const HARNESS_PORT = Number(process.env.IMMACULATE_HARNESS_PORT ?? 8787);
 const HARNESS_HOST = process.env.IMMACULATE_HARNESS_HOST ?? "127.0.0.1";
 const tickIntervalMs = Number(process.env.IMMACULATE_TICK_MS ?? 180);
 const API_KEY = process.env.IMMACULATE_API_KEY;
+const LOCAL_WORKER_ID_PREFIX =
+  process.env.IMMACULATE_WORKER_ID ??
+  `worker-local-${HARNESS_HOST.replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "")}-${HARNESS_PORT}`;
+const LOCAL_EXECUTION_WORKER_SLOT_CAP = Math.max(
+  1,
+  Number(process.env.IMMACULATE_LOCAL_WORKER_SLOTS ?? 4) || 4
+);
+const LOCAL_OLLAMA_ENDPOINT =
+  process.env.IMMACULATE_OLLAMA_URL ?? "http://127.0.0.1:11434";
 
 type BenchmarkJob = {
   id: string;
@@ -178,6 +188,8 @@ type BenchmarkJob = {
 
 type AdaptiveRoutePlan = ReturnType<typeof planAdaptiveRoute>;
 type SessionConversationMemory = ReturnType<typeof buildSessionConversationMemory>;
+type RequestedExecutionDecision = "allow_local" | "remote_required" | "preflight_blocked";
+type ExecutionWorkerAssignment = IntelligenceWorkerAssignment | undefined;
 
 await app.register(cors, {
   origin: (origin, callback) => {
@@ -608,6 +620,7 @@ type DispatchBody = {
   sessionId?: string;
   sourceExecutionId?: string;
   sourceFrameId?: string;
+  requestedExecutionDecision?: RequestedExecutionDecision;
   adapterId?: string;
   targetNodeId?: string;
   channel?: ActuationOutput["channel"];
@@ -616,6 +629,324 @@ type DispatchBody = {
   suppressed?: boolean;
   dispatchOnApproval?: boolean;
 };
+
+function sessionScopeId(consentScope?: string): string | undefined {
+  return consentScope?.startsWith("session:") ? consentScope.slice("session:".length) : undefined;
+}
+
+function localExecutionWorkerId(slot: number): string {
+  return `${LOCAL_WORKER_ID_PREFIX}-slot-${slot}`;
+}
+
+async function ensureLocalExecutionWorkers(minCount = 1): Promise<void> {
+  const now = new Date().toISOString();
+  const slotCount = Math.max(1, Math.min(LOCAL_EXECUTION_WORKER_SLOT_CAP, minCount));
+
+  for (let slot = 1; slot <= slotCount; slot += 1) {
+    await intelligenceWorkerRegistry.registerWorker({
+      workerId: localExecutionWorkerId(slot),
+      workerLabel:
+        slotCount > 1 ? `Immaculate Local Worker Slot ${slot}` : "Immaculate Local Worker",
+      hostLabel: `${HARNESS_HOST}:${HARNESS_PORT}`,
+      executionProfile: "local",
+      executionEndpoint: LOCAL_OLLAMA_ENDPOINT,
+      registeredAt: now,
+      heartbeatAt: now,
+      leaseDurationMs: Math.max(DEFAULT_INTELLIGENCE_WORKER_LEASE_MS, tickIntervalMs * 8),
+      watch: true,
+      allowHostRisk: false,
+      supportedBaseModels: ["*"],
+      preferredLayerIds: []
+    });
+  }
+}
+
+const DEFAULT_INTELLIGENCE_WORKER_LEASE_MS = 45_000;
+
+async function reserveExecutionWorker(options: {
+  layer: IntelligenceLayer;
+  requestedExecutionDecision?: RequestedExecutionDecision;
+  target?: string;
+  fallbackLocalPoolSize?: number;
+}): Promise<IntelligenceWorkerAssignment> {
+  if (options.requestedExecutionDecision === "preflight_blocked") {
+    throw new Error("Execution worker reservation blocked by preflight policy.");
+  }
+
+  let result = await intelligenceWorkerRegistry.assignWorker({
+    requestedExecutionDecision: options.requestedExecutionDecision ?? "allow_local",
+    baseModel: options.layer.model,
+    preferredLayerIds: [options.layer.id],
+    recommendedLayerId: options.layer.id,
+    target: options.target ?? options.layer.role
+  });
+
+  if (!result.assignment && options.requestedExecutionDecision !== "remote_required") {
+    await ensureLocalExecutionWorkers(options.fallbackLocalPoolSize);
+    result = await intelligenceWorkerRegistry.assignWorker({
+      requestedExecutionDecision: options.requestedExecutionDecision ?? "allow_local",
+      baseModel: options.layer.model,
+      preferredLayerIds: [options.layer.id],
+      recommendedLayerId: options.layer.id,
+      target: options.target ?? options.layer.role
+    });
+  }
+
+  if (!result.assignment) {
+    throw new Error(
+      options.requestedExecutionDecision === "remote_required"
+        ? `No eligible remote execution worker available for ${options.layer.id}.`
+        : `No eligible execution worker available for ${options.layer.id}.`
+    );
+  }
+
+  if (
+    result.assignment.executionProfile === "remote" &&
+    !result.assignment.executionEndpoint?.trim()
+  ) {
+    throw new Error(
+      `Remote execution worker ${result.assignment.workerId} is missing an execution endpoint.`
+    );
+  }
+
+  return result.assignment;
+}
+
+async function reserveExecutionWorkerBatch(options: {
+  layers: IntelligenceLayer[];
+  requestedExecutionDecision?: RequestedExecutionDecision;
+  targetPrefix: string;
+}): Promise<IntelligenceWorkerAssignment[]> {
+  const reservedAssignments: IntelligenceWorkerAssignment[] = [];
+
+  try {
+    for (const layer of options.layers) {
+      reservedAssignments.push(
+        await reserveExecutionWorker({
+          layer,
+          requestedExecutionDecision: options.requestedExecutionDecision,
+          target: `${options.targetPrefix}:${layer.role}`,
+          fallbackLocalPoolSize: options.layers.length
+        })
+      );
+    }
+    return reservedAssignments;
+  } catch (error) {
+    await Promise.allSettled(
+      reservedAssignments.map((assignment) => releaseExecutionWorker(assignment))
+    );
+    app.log.warn(
+      {
+        requestedWidth: options.layers.length,
+        releasedWidth: reservedAssignments.length,
+        message: error instanceof Error ? error.message : "unknown error"
+      },
+      "Parallel worker batch reservation failed; released partially reserved leases."
+    );
+    throw error;
+  }
+}
+
+async function releaseExecutionWorker(assignment: ExecutionWorkerAssignment): Promise<void> {
+  if (!assignment?.workerId || !assignment.leaseToken) {
+    return;
+  }
+
+  try {
+    await intelligenceWorkerRegistry.releaseWorker({
+      workerId: assignment.workerId,
+      leaseToken: assignment.leaseToken
+    });
+  } catch (error) {
+    app.log.warn(
+      {
+        workerId: assignment.workerId,
+        message: error instanceof Error ? error.message : "unknown error"
+      },
+      "Unable to release execution worker lease."
+    );
+  }
+}
+
+function placementExecutionEndpoint(
+  layer: IntelligenceLayer,
+  assignment: ExecutionWorkerAssignment
+): string {
+  return assignment?.executionEndpoint?.trim() || layer.endpoint;
+}
+
+function bindExecutionPlacement(options: {
+  execution: ReturnType<typeof engine.getSnapshot>["cognitiveExecutions"][number];
+  assignment: ExecutionWorkerAssignment;
+  sessionId?: string;
+  executionEndpoint: string;
+  executionTopology?: ReturnType<typeof engine.getSnapshot>["executionSchedules"][number]["executionTopology"];
+  parallelBatchId?: string;
+  parallelBatchSize?: number;
+  parallelPosition?: number;
+}) {
+  return {
+    ...options.execution,
+    sessionId: options.sessionId,
+    assignedWorkerId: options.assignment?.workerId,
+    assignedWorkerLabel: options.assignment?.workerLabel ?? undefined,
+    assignedWorkerHostLabel: options.assignment?.hostLabel ?? undefined,
+    assignedWorkerProfile: options.assignment?.executionProfile,
+    assignmentReason: options.assignment?.reason,
+    assignmentScore: options.assignment?.score,
+    executionEndpoint: options.executionEndpoint,
+    executionTopology: options.executionTopology,
+    parallelBatchId: options.parallelBatchId,
+    parallelBatchSize: options.parallelBatchSize,
+    parallelPosition: options.parallelPosition
+  };
+}
+
+function resolveBoundSources(options: {
+  snapshot: ReturnType<typeof engine.getSnapshot>;
+  body: DispatchBody;
+  consentScope?: string;
+}):
+  | {
+      sessionId?: string;
+      execution?: ReturnType<typeof engine.getSnapshot>["cognitiveExecutions"][number];
+      frame?: ReturnType<typeof engine.getSnapshot>["neuroFrames"][number];
+    }
+  | {
+      error: {
+        code: number;
+        body: Record<string, unknown>;
+      };
+    } {
+  const scopedSessionId = sessionScopeId(options.consentScope);
+  const requestedSessionId = options.body.sessionId?.trim() || undefined;
+  const explicitExecution = options.body.sourceExecutionId
+    ? options.snapshot.cognitiveExecutions.find(
+        (candidate) => candidate.id === options.body.sourceExecutionId
+      )
+    : undefined;
+  const explicitFrame = options.body.sourceFrameId
+    ? options.snapshot.neuroFrames.find((candidate) => candidate.id === options.body.sourceFrameId)
+    : undefined;
+
+  if (options.body.sourceExecutionId && !explicitExecution) {
+    return {
+      error: {
+        code: 404,
+        body: {
+          error: "cognitive_execution_not_found",
+          sourceExecutionId: options.body.sourceExecutionId
+        }
+      }
+    };
+  }
+
+  if (options.body.sourceFrameId && !explicitFrame) {
+    return {
+      error: {
+        code: 404,
+        body: {
+          error: "neuro_frame_not_found",
+          sourceFrameId: options.body.sourceFrameId
+        }
+      }
+    };
+  }
+
+  const resolvedSessionId =
+    requestedSessionId ??
+    explicitExecution?.sessionId ??
+    explicitFrame?.sessionId ??
+    scopedSessionId;
+
+  if (scopedSessionId && resolvedSessionId && scopedSessionId !== resolvedSessionId) {
+    return {
+      error: {
+        code: 403,
+        body: {
+          error: "governance_denied",
+          message: "Governance denied: resource_scope_mismatch"
+        }
+      }
+    };
+  }
+
+  if (
+    explicitExecution?.sessionId &&
+    resolvedSessionId &&
+    explicitExecution.sessionId !== resolvedSessionId
+  ) {
+    return {
+      error: {
+        code: 409,
+        body: {
+          error: "source_session_mismatch",
+          sourceExecutionId: explicitExecution.id,
+          sessionId: resolvedSessionId
+        }
+      }
+    };
+  }
+
+  if (explicitFrame?.sessionId && resolvedSessionId && explicitFrame.sessionId !== resolvedSessionId) {
+    return {
+      error: {
+        code: 409,
+        body: {
+          error: "source_session_mismatch",
+          sourceFrameId: explicitFrame.id,
+          sessionId: resolvedSessionId
+        }
+      }
+    };
+  }
+
+  if (!explicitExecution && !explicitFrame) {
+    if (!resolvedSessionId) {
+      return {
+        error: {
+          code: 400,
+          body: {
+            error: "ambiguous_source_context",
+            message:
+              "Explicit sourceExecutionId/sourceFrameId or a sessionId is required for bounded orchestration."
+          }
+        }
+      };
+    }
+
+    const sessionExecution = options.snapshot.cognitiveExecutions.find(
+      (candidate) => candidate.sessionId === resolvedSessionId
+    );
+    const sessionFrame = options.snapshot.neuroFrames.find(
+      (candidate) => candidate.sessionId === resolvedSessionId
+    );
+
+    if (!sessionExecution && !sessionFrame) {
+      return {
+        error: {
+          code: 404,
+          body: {
+            error: "session_source_not_found",
+            sessionId: resolvedSessionId
+          }
+        }
+      };
+    }
+
+    return {
+      sessionId: resolvedSessionId,
+      execution: sessionExecution,
+      frame: sessionFrame
+    };
+  }
+
+  return {
+    sessionId: resolvedSessionId,
+    execution: explicitExecution,
+    frame: explicitFrame
+  };
+}
 
 function selectPreferredLayer(preferredRoles?: IntelligenceLayer["role"][]): IntelligenceLayer | null {
   const snapshot = phaseSnapshotSchema.parse(engine.getSnapshot());
@@ -776,10 +1107,18 @@ async function executeCognitivePass(options: {
   objective?: string;
   context?: string;
   consentScope?: string;
+  sessionId?: string;
+  assignment?: ExecutionWorkerAssignment;
+  executionTopology?: ReturnType<typeof engine.getSnapshot>["executionSchedules"][number]["executionTopology"];
 }) {
   const busyLayer: IntelligenceLayer = {
     ...options.layer,
     status: "busy"
+  };
+  const executionEndpoint = placementExecutionEndpoint(options.layer, options.assignment);
+  const executionLayer: IntelligenceLayer = {
+    ...busyLayer,
+    endpoint: executionEndpoint
   };
 
   engine.registerIntelligenceLayer(busyLayer);
@@ -798,6 +1137,9 @@ async function executeCognitivePass(options: {
       {
         layerId: busyLayer.id,
         role: busyLayer.role,
+        workerId: options.assignment?.workerId,
+        workerProfile: options.assignment?.executionProfile,
+        executionEndpoint,
         governancePressure,
         deniedCount
       },
@@ -805,27 +1147,34 @@ async function executeCognitivePass(options: {
     );
     const result = await runOllamaExecution({
       snapshot: activeSnapshot,
-      layer: busyLayer,
+      layer: executionLayer,
       objective: options.objective,
       context: options.context,
       governancePressure,
       recentDeniedCount: deniedCount
     });
+    const boundExecution = bindExecutionPlacement({
+      execution: result.execution,
+      assignment: options.assignment,
+      sessionId: options.sessionId,
+      executionEndpoint,
+      executionTopology: options.executionTopology ?? "sequential"
+    });
     const settledLayer: IntelligenceLayer = {
       ...busyLayer,
-      status: result.execution.status === "completed" ? "ready" : "degraded"
+      status: boundExecution.status === "completed" ? "ready" : "degraded"
     };
 
     engine.registerIntelligenceLayer(settledLayer);
     const snapshot = phaseSnapshotSchema.parse(
-      projectPhaseSnapshot(engine.commitCognitiveExecution(result.execution))
+      projectPhaseSnapshot(engine.commitCognitiveExecution(boundExecution))
     );
     await persistence.persist(engine.getDurableState());
     emitSnapshot();
 
     return {
       layer: settledLayer,
-      execution: result.execution,
+      execution: boundExecution,
       response: result.response,
       snapshot
     };
@@ -837,6 +1186,8 @@ async function executeCognitivePass(options: {
     await persistence.persist(engine.getDurableState());
     emitSnapshot();
     throw error;
+  } finally {
+    await releaseExecutionWorker(options.assignment);
   }
 }
 
@@ -845,10 +1196,21 @@ async function executeScheduledCognitivePass(options: {
   objective: string;
   context?: string;
   consentScope?: string;
+  sessionId?: string;
+  assignment?: ExecutionWorkerAssignment;
+  executionTopology?: ReturnType<typeof engine.getSnapshot>["executionSchedules"][number]["executionTopology"];
+  parallelBatchId?: string;
+  parallelBatchSize?: number;
+  parallelPosition?: number;
 }) {
   const busyLayer: IntelligenceLayer = {
     ...options.layer,
     status: "busy"
+  };
+  const executionEndpoint = placementExecutionEndpoint(options.layer, options.assignment);
+  const executionLayer: IntelligenceLayer = {
+    ...busyLayer,
+    endpoint: executionEndpoint
   };
   const startedAt = new Date().toISOString();
 
@@ -866,27 +1228,37 @@ async function executeScheduledCognitivePass(options: {
     const deniedCount = recentGovernanceDeniedCount();
     const result = await runOllamaExecution({
       snapshot: activeSnapshot,
-      layer: busyLayer,
+      layer: executionLayer,
       objective: options.objective,
       context: options.context,
       governancePressure,
       recentDeniedCount: deniedCount
     });
+    const boundExecution = bindExecutionPlacement({
+      execution: result.execution,
+      assignment: options.assignment,
+      sessionId: options.sessionId,
+      executionEndpoint,
+      executionTopology: options.executionTopology ?? "sequential",
+      parallelBatchId: options.parallelBatchId,
+      parallelBatchSize: options.parallelBatchSize,
+      parallelPosition: options.parallelPosition
+    });
     const settledLayer: IntelligenceLayer = {
       ...busyLayer,
-      status: result.execution.status === "completed" ? "ready" : "degraded"
+      status: boundExecution.status === "completed" ? "ready" : "degraded"
     };
 
     engine.registerIntelligenceLayer(settledLayer);
     const snapshot = phaseSnapshotSchema.parse(
-      projectPhaseSnapshot(engine.commitCognitiveExecution(result.execution))
+      projectPhaseSnapshot(engine.commitCognitiveExecution(boundExecution))
     );
     await persistence.persist(engine.getDurableState());
     emitSnapshot();
 
     return {
       layer: settledLayer,
-      execution: result.execution,
+      execution: boundExecution,
       response: result.response,
       snapshot
     };
@@ -901,6 +1273,7 @@ async function executeScheduledCognitivePass(options: {
     const deniedCount = recentGovernanceDeniedCount();
     const failedExecution = {
       id: `cog-${completedAt.replace(/[:.]/g, "-")}-${hashValue(busyLayer.id).slice(0, 8)}`,
+      sessionId: options.sessionId,
       layerId: busyLayer.id,
       model: busyLayer.model,
       objective: options.objective,
@@ -914,7 +1287,18 @@ async function executeScheduledCognitivePass(options: {
       responsePreview: `Cognitive execution failed: ${message}`.slice(0, 280),
       guardVerdict: undefined,
       governancePressure,
-      recentDeniedCount: deniedCount
+      recentDeniedCount: deniedCount,
+      assignedWorkerId: options.assignment?.workerId,
+      assignedWorkerLabel: options.assignment?.workerLabel ?? undefined,
+      assignedWorkerHostLabel: options.assignment?.hostLabel ?? undefined,
+      assignedWorkerProfile: options.assignment?.executionProfile,
+      assignmentReason: options.assignment?.reason,
+      assignmentScore: options.assignment?.score,
+      executionEndpoint,
+      executionTopology: options.executionTopology ?? "sequential",
+      parallelBatchId: options.parallelBatchId,
+      parallelBatchSize: options.parallelBatchSize,
+      parallelPosition: options.parallelPosition
     };
     const settledLayer: IntelligenceLayer = {
       ...busyLayer,
@@ -934,7 +1318,29 @@ async function executeScheduledCognitivePass(options: {
       response: failedExecution.responsePreview,
       snapshot
     };
+  } finally {
+    await releaseExecutionWorker(options.assignment);
   }
+}
+
+function buildSwarmSharedContext(options: {
+  schedule: ReturnType<typeof engine.getSnapshot>["executionSchedules"][number];
+  objective: string;
+  layers: IntelligenceLayer[];
+}): string {
+  const roleChain = options.layers.map((layer) => layer.role).join(">");
+  const primaryRole =
+    options.layers.find((layer) => layer.id === options.schedule.primaryLayerId)?.role ?? "none";
+  return [
+    `SWARM OBJECTIVE: ${options.objective}`,
+    `SWARM MODE: ${options.schedule.mode}`,
+    `SWARM TOPOLOGY: ${options.schedule.executionTopology}`,
+    `PARALLEL WIDTH: ${options.schedule.parallelWidth}`,
+    `FORMATION: ${roleChain || "none"}`,
+    `PRIMARY ROLE: ${primaryRole}`,
+    "COORDINATION RULE: you are one member of a simultaneous cognition batch operating over the same substrate state.",
+    "Do not assume peer outputs are visible while you are running. Produce a role-specific route, reason, and commit that downstream integration or guard review can reconcile."
+  ].join("\n");
 }
 
 async function executeCognitiveSchedule(options: {
@@ -943,6 +1349,7 @@ async function executeCognitiveSchedule(options: {
   consentScope?: string;
   sessionId?: string;
   arbitrationId?: string;
+  requestedExecutionDecision?: RequestedExecutionDecision;
 }) {
   const executions: ReturnType<typeof engine.getSnapshot>["cognitiveExecutions"] = [];
   const layers: IntelligenceLayer[] = [];
@@ -972,31 +1379,53 @@ async function executeCognitiveSchedule(options: {
   const parallelEligible = isParallelScheduleMode(options.schedule.mode);
   const guardLayer = scheduledLayers.find((layer) => layer.role === "guard");
   const nonGuardLayers = scheduledLayers.filter((layer) => layer.role !== "guard");
+  const parallelBatchId =
+    parallelEligible && nonGuardLayers.length > 1
+      ? `swarm-${hashValue(`${options.schedule.id}:${options.sessionId ?? "system"}:${options.schedule.selectedAt}`)}`
+      : undefined;
+  const sharedSwarmContext =
+    parallelBatchId && nonGuardLayers.length > 1
+      ? buildSwarmSharedContext({
+          schedule: options.schedule,
+          objective: baseObjective,
+          layers: nonGuardLayers
+        })
+      : undefined;
 
   if (parallelEligible && nonGuardLayers.length > 1) {
+    const reservedAssignments = await reserveExecutionWorkerBatch({
+      layers: nonGuardLayers,
+      requestedExecutionDecision: options.requestedExecutionDecision,
+      targetPrefix: options.schedule.mode
+    });
     const parallelResults = await Promise.all(
-      nonGuardLayers.map(async (layer) => {
+      nonGuardLayers.map(async (layer, index) => {
         const prompt = buildConversationObjective({
           baseObjective,
           role: layer.role,
-          priorTurns: []
+          priorTurns: [],
+          sharedContext: sharedSwarmContext
         });
         return executeScheduledCognitivePass({
           layer,
           objective: prompt.objective,
           context: prompt.context,
-          consentScope: options.consentScope
+          consentScope: options.consentScope,
+          sessionId: options.sessionId,
+          assignment: reservedAssignments[index],
+          executionTopology: options.schedule.executionTopology,
+          parallelBatchId,
+          parallelBatchSize: nonGuardLayers.length,
+          parallelPosition: index + 1
         });
       })
     );
 
     const orderedParallelResults = [...parallelResults].sort((left, right) => {
-      const completedDelta =
-        Date.parse(left.execution.completedAt) - Date.parse(right.execution.completedAt);
-      if (completedDelta !== 0) {
-        return completedDelta;
-      }
-      return left.layer.role.localeCompare(right.layer.role);
+      return (
+        (scheduleLayerOrder.get(left.layer.id) ?? Number.MAX_SAFE_INTEGER) -
+        (scheduleLayerOrder.get(right.layer.id) ?? Number.MAX_SAFE_INTEGER)
+      );
     });
 
     for (const result of orderedParallelResults) {
@@ -1013,16 +1442,25 @@ async function executeCognitiveSchedule(options: {
     }
   } else {
     for (const layer of nonGuardLayers) {
+      const assignment = await reserveExecutionWorker({
+        layer,
+        requestedExecutionDecision: options.requestedExecutionDecision,
+        target: `${options.schedule.mode}:${layer.role}`
+      });
       const prompt = buildConversationObjective({
         baseObjective,
         role: layer.role,
-        priorTurns: turns
+        priorTurns: turns,
+        sharedContext: sharedSwarmContext
       });
       const result = await executeScheduledCognitivePass({
         layer,
         objective: prompt.objective,
         context: prompt.context,
-        consentScope: options.consentScope
+        consentScope: options.consentScope,
+        sessionId: options.sessionId,
+        assignment,
+        executionTopology: options.schedule.executionTopology
       });
 
       layers.push(result.layer);
@@ -1039,16 +1477,25 @@ async function executeCognitiveSchedule(options: {
   }
 
   if (guardLayer) {
+    const guardAssignment = await reserveExecutionWorker({
+      layer: guardLayer,
+      requestedExecutionDecision: options.requestedExecutionDecision,
+      target: `${options.schedule.mode}:guard`
+    });
     const prompt = buildConversationObjective({
       baseObjective,
       role: guardLayer.role,
-      priorTurns: turns
+      priorTurns: turns,
+      sharedContext: sharedSwarmContext
     });
     const guardResult = await executeScheduledCognitivePass({
       layer: guardLayer,
       objective: prompt.objective,
       context: prompt.context,
-      consentScope: options.consentScope
+      consentScope: options.consentScope,
+      sessionId: options.sessionId,
+      assignment: guardAssignment,
+      executionTopology: options.schedule.executionTopology
     });
 
     layers.push(guardResult.layer);
@@ -1191,6 +1638,7 @@ async function dispatchWithRoute(options: {
   };
 }
 
+await ensureLocalExecutionWorkers();
 await ensurePreferredIntelligenceLayer();
 
 const recoveredLiveSources = phaseSnapshotSchema
@@ -1974,6 +2422,7 @@ app.post("/api/intelligence/workers/register", async (request, reply) => {
       workerLabel?: string;
       hostLabel?: string;
       executionProfile?: IntelligenceWorkerExecutionProfile;
+      executionEndpoint?: string;
       registeredAt?: string;
       heartbeatAt?: string;
       leaseDurationMs?: number;
@@ -2004,6 +2453,7 @@ app.post("/api/intelligence/workers/register", async (request, reply) => {
       workerLabel: body.workerLabel?.trim() || undefined,
       hostLabel: body.hostLabel?.trim() || undefined,
       executionProfile: body.executionProfile,
+      executionEndpoint: body.executionEndpoint?.trim() || undefined,
       registeredAt: body.registeredAt?.trim() || new Date().toISOString(),
       heartbeatAt: body.heartbeatAt?.trim() || new Date().toISOString(),
       leaseDurationMs:
@@ -2054,6 +2504,7 @@ app.post("/api/intelligence/workers/:workerId/heartbeat", async (request, reply)
       workerLabel?: string;
       hostLabel?: string;
       executionProfile?: IntelligenceWorkerExecutionProfile;
+      executionEndpoint?: string;
       watch?: boolean;
       allowHostRisk?: boolean;
       supportedBaseModels?: string[];
@@ -2089,6 +2540,7 @@ app.post("/api/intelligence/workers/:workerId/heartbeat", async (request, reply)
       workerLabel: body.workerLabel?.trim() || undefined,
       hostLabel: body.hostLabel?.trim() || undefined,
       executionProfile: body.executionProfile,
+      executionEndpoint: body.executionEndpoint?.trim() || undefined,
       watch: body.watch,
       allowHostRisk: body.allowHostRisk,
       supportedBaseModels: Array.isArray(body.supportedBaseModels)
@@ -2197,50 +2649,25 @@ app.post("/api/actuation/dispatch", async (request, reply) => {
   const consentScope = binding.consentScope;
   const body = (request.body as DispatchBody | undefined) ?? {};
   const snapshot = engine.getSnapshot();
-  const execution = body.sourceExecutionId
-    ? snapshot.cognitiveExecutions.find((candidate) => candidate.id === body.sourceExecutionId)
-    : snapshot.cognitiveExecutions[0];
-  const frame = body.sourceFrameId
-    ? snapshot.neuroFrames.find((candidate) => candidate.id === body.sourceFrameId)
-    : snapshot.neuroFrames[0];
-
-  if (body.sourceExecutionId && !execution) {
-    reply.code(404);
-    return {
-      error: "cognitive_execution_not_found",
-      sourceExecutionId: body.sourceExecutionId
-    };
-  }
-
-  if (body.sourceFrameId && !frame) {
-    reply.code(404);
-    return {
-      error: "neuro_frame_not_found",
-      sourceFrameId: body.sourceFrameId
-    };
-  }
-
-  const scopedSessionId =
-    consentScope?.startsWith("session:") ? consentScope.slice("session:".length) : undefined;
-  const resolvedSessionId =
-    body.sessionId?.trim() || frame?.sessionId || scopedSessionId || undefined;
-  if (scopedSessionId && resolvedSessionId && scopedSessionId !== resolvedSessionId) {
-    reply.code(403);
-    return {
-      error: "governance_denied",
-      message: "Governance denied: resource_scope_mismatch"
-    };
+  const boundSources = resolveBoundSources({
+    snapshot,
+    body,
+    consentScope
+  });
+  if ("error" in boundSources) {
+    reply.code(boundSources.error.code);
+    return boundSources.error.body;
   }
 
   try {
     const result = await dispatchWithRoute({
       body: {
         ...body,
-        sessionId: resolvedSessionId
+        sessionId: boundSources.sessionId
       },
       consentScope,
-      execution,
-      frame
+      execution: boundSources.execution,
+      frame: boundSources.frame
     });
 
     return {
@@ -2582,12 +3009,19 @@ app.post("/api/intelligence/run", async (request, reply) => {
     return;
   }
 
-  const body = (request.body as { layerId?: string; objective?: string } | undefined) ?? {};
+  const body =
+    (request.body as {
+      layerId?: string;
+      objective?: string;
+      sessionId?: string;
+      requestedExecutionDecision?: RequestedExecutionDecision;
+    } | undefined) ?? {};
   const consentScope = getGovernanceBinding(
     "cognitive-execution",
     "/api/intelligence/run",
     request
   ).consentScope;
+  const resolvedSessionId = body.sessionId?.trim() || sessionScopeId(consentScope);
   const requestedLayer = body.layerId
     ? getPreferredLayer(body.layerId)
     : await ensurePreferredIntelligenceLayer();
@@ -2609,10 +3043,18 @@ app.post("/api/intelligence/run", async (request, reply) => {
   }
 
   try {
+    const assignment = await reserveExecutionWorker({
+      layer,
+      requestedExecutionDecision: body.requestedExecutionDecision,
+      target: "single-layer"
+    });
     const result = await executeCognitivePass({
       layer,
       objective: body.objective,
-      consentScope
+      consentScope,
+      sessionId: resolvedSessionId,
+      assignment,
+      executionTopology: "sequential"
     });
 
     return {
@@ -2652,40 +3094,18 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
   const snapshot = engine.getSnapshot();
   const binding = getGovernanceBinding("actuation-dispatch", "/api/orchestration/mediate", request);
   const consentScope = binding.consentScope;
-  const execution = body.sourceExecutionId
-    ? snapshot.cognitiveExecutions.find((candidate) => candidate.id === body.sourceExecutionId)
-    : snapshot.cognitiveExecutions[0];
-  const frame = body.sourceFrameId
-    ? snapshot.neuroFrames.find((candidate) => candidate.id === body.sourceFrameId)
-    : snapshot.neuroFrames[0];
-
-  if (body.sourceExecutionId && !execution) {
-    reply.code(404);
-    return {
-      error: "cognitive_execution_not_found",
-      sourceExecutionId: body.sourceExecutionId
-    };
+  const boundSources = resolveBoundSources({
+    snapshot,
+    body,
+    consentScope
+  });
+  if ("error" in boundSources) {
+    reply.code(boundSources.error.code);
+    return boundSources.error.body;
   }
-
-  if (body.sourceFrameId && !frame) {
-    reply.code(404);
-    return {
-      error: "neuro_frame_not_found",
-      sourceFrameId: body.sourceFrameId
-    };
-  }
-
-  const scopedSessionId =
-    consentScope?.startsWith("session:") ? consentScope.slice("session:".length) : undefined;
-  const resolvedSessionId =
-    body.sessionId?.trim() || frame?.sessionId || scopedSessionId || undefined;
-  if (scopedSessionId && resolvedSessionId && scopedSessionId !== resolvedSessionId) {
-    reply.code(403);
-    return {
-      error: "governance_denied",
-      message: "Governance denied: resource_scope_mismatch"
-    };
-  }
+  const execution = boundSources.execution;
+  const frame = boundSources.frame;
+  const resolvedSessionId = boundSources.sessionId;
 
   const sessionConversationMemory = getSessionConversationMemory(resolvedSessionId);
 
@@ -2781,7 +3201,8 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
         objective: scheduleDecision.objective,
         consentScope,
         sessionId: resolvedSessionId,
-        arbitrationId: arbitrationDecision.id
+        arbitrationId: arbitrationDecision.id,
+        requestedExecutionDecision: body.requestedExecutionDecision
       });
       mediationLayer = cognition.primaryLayer;
       mediationExecution = cognition.primaryExecution;

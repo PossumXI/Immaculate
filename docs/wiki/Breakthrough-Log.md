@@ -21,6 +21,77 @@ For each breakthrough, record:
 
 ### 2026-04-12
 
+#### Parallel swarm execution stopped dead-ending on a single local worker lease
+
+What changed:
+- the local execution plane no longer models one host as one leaseable worker record; it can now materialize a bounded pool of local worker slots on the same Ollama endpoint
+- parallel swarm reservation now cleans up partially reserved leases if a later reservation fails, instead of stranding earlier leases until TTL expiry
+- benchmark coverage now proves that three distinct local slot leases can be reserved on one host, and live guarded-swarm smoke now proves the non-guard turns actually launch under one parallel batch instead of failing on the second reservation
+
+Why it matters:
+- this closes the gap between a truthful parallel schedule in the ledger and a runtime that could only ever lease one local worker at a time
+- the missed systems pattern was simple but important: local parallelism is still a worker-placement problem, but the worker record has to represent concurrency slots, not the whole host as a single indivisible lease
+- without this, every local swarm formation was one reservation away from collapsing back into sequential reality
+
+Evidence:
+- `npm run typecheck`, `npm run build`, and `npm run benchmark:gate:all` passed after the worker-slot pass on `2026-04-12T18:45:42.571Z` with `runCount=3` and `violationCount=0`
+- live harness smoke on `127.0.0.1:8862` completed a guarded swarm with `executionTopology=parallel-then-guard`, `parallelWidth=3`, `roles=mid>soul>reasoner>guard`, and one shared `parallelBatchId`
+- the three non-guard turns launched within `69.0 ms` of each other before guard review, which is the concrete runtime signal that the widened cognition path is parallel instead of merely labeled as such
+
+What this unlocks next:
+- truthful local-versus-remote placement policies that can choose between slot pools on one host and remote worker endpoints using the same lease substrate
+- batch-level fault isolation and throughput tuning for wider swarms without rewriting the cognitive scheduler again
+- real comparative orchestration baselines where parallel topology is no longer invalidated by a single local worker bottleneck
+
+#### Benchmark truth stopped hiding behind synthetic durations and vague soak language
+
+What changed:
+- benchmark reports now carry explicit `runKind`, structured hardware context, planned duration, and measured wall-clock duration instead of only a free-text summary
+- benchmark series now publish `P50`, `P95`, `P99`, and `P99.9`, and the report now exposes a real measured `event_throughput_events_s` series based on wall-clock runtime instead of only the internal throughput heuristic
+- the short `latency-soak` pack is now published as `Latency Smoke` until a real 60-minute-plus soak lane exists
+- W&B publication and export now carry the same benchmark truth surface as the local report: run kind, planned duration, wall-clock duration, and hardware context
+- CI benchmark publication is now wired on every `main` push so W&B and the repo-tracked benchmark wiki surfaces stop depending on manual publication alone
+
+Why it matters:
+- this closes the benchmark honesty gap between what the system intended to run and what it actually measured on hardware
+- it also removes one of the fastest ways to lose credibility with serious reviewers: calling a sub-second run a soak and publishing uncalibrated numbers without machine context
+- the missed systems point is that benchmark trust is an architectural feature, not a marketing layer; if duration, hardware, and throughput are not first-class data, the whole trend line is suspect
+
+Evidence:
+- the latest benchmark gate passed with three runs and zero violations on `2026-04-12T18:31:02.112Z`
+- the latest published smoke runs are now exported with explicit hardware context and wall-clock duration in `docs/wiki/Benchmark-Status.md` and `docs/wiki/Benchmark-Wandb-Export.md`
+- the latest latency publication now shows `runKind=smoke`, `plannedDurationMs=12800`, `totalDurationMs=870.35`, and a measured event throughput series instead of an implied soak label
+
+What this unlocks next:
+- real 60-minute-plus soak lanes that can reuse the same truthful report contract without changing the publication surface again
+- durability torture, neurodata ingest, and baseline comparison packs that publish under the same calibrated benchmark schema
+- benchmark trend analysis that can reason over honest wall-clock results instead of mixing planned control-loop time with measured runtime
+
+#### Worker placement became authoritative and session safety stopped trusting global defaults
+
+What changed:
+- cognition execution now reserves a concrete intelligence worker before it runs instead of only scoring workers as an advisory side channel
+- worker reservations are lease-backed and visible in the registry, so duplicate assignment pressure is explicit and the same worker cannot be handed out twice concurrently
+- cognitive executions now persist placement metadata including `sessionId`, worker id/label/host, execution profile, placement reason, score, and the concrete execution endpoint
+- remote worker placement now uses a real but previously overlooked substrate: a worker can advertise an Ollama-compatible endpoint, and the runtime can place cognition there directly without inventing a separate remote orchestration RPC
+- actuation dispatch and mediated orchestration no longer fall back to the newest global execution or frame when the caller omits sources; they now require explicit session binding or fail closed on mismatch
+
+Why it matters:
+- this closes the gap between “the scheduler said it used a worker” and “the durable system can prove where cognition actually ran”
+- it also removes a subtle but dangerous safety failure mode where a session-scoped request could accidentally inherit the latest global execution context from a different session
+- the hidden systems insight is that truthful scale-out does not start with a fancy distributed control bus; it starts with making placement, lease ownership, and source binding real in the execution ledger
+
+Evidence:
+- `npm run typecheck`, `npm run build`, and `npm run benchmark:gate:all` all passed after the worker-authority pass
+- benchmark coverage now proves worker lease selection, duplicate assignment pressure, and session-bound source safety
+- live harness smoke on `127.0.0.1:8854` showed a `remote_required` cognitive pass running with `assignedWorkerId=smoke-remote-worker`, `assignedWorkerProfile=remote`, and `executionEndpoint=http://127.0.0.1:11434`
+- the same live drill showed session-bound mediation accepted for `session:smoke-a` and rejected the same source under `session:smoke-b` with `409 source_session_mismatch`
+
+What this unlocks next:
+- locality-aware placement that uses real worker endpoint health, observed latency, and cost as first-class scheduling signals
+- multi-node orchestration that can widen a swarm across remote compute honestly instead of labeling every formation as local
+- future worker federation where the current lease and placement substrate can become the control surface for broader backend diversity
+
 #### Swarm scheduling became truthful and external LSL ingress became real
 
 What changed:

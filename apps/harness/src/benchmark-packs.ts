@@ -39,9 +39,9 @@ export const benchmarkPacks: BenchmarkPack[] = [
   },
   {
     id: "latency-soak",
-    label: "Latency Soak",
+    label: "Latency Smoke",
     description:
-      "Higher-frequency pack that stresses reflex and cognitive latency consistency across more ticks.",
+      "Higher-frequency short-run pack that stresses reflex and cognitive latency consistency without claiming long-horizon soak coverage.",
     tickIntervalMs: 20,
     maxTicks: 640,
     reflexP95MaxMs: 100,

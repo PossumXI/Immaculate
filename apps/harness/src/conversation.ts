@@ -50,12 +50,15 @@ export function buildConversationObjective(options: {
   baseObjective: string;
   role: IntelligenceLayerRole;
   priorTurns: AgentTurn[];
+  sharedContext?: string;
 }): { objective: string; context?: string } {
   const objective = options.baseObjective.trim();
   if (options.priorTurns.length === 0) {
     return {
       objective,
-      context: roleDirective(options.role)
+      context: options.sharedContext
+        ? `${roleDirective(options.role)}\nSHARED SWARM CONTEXT:\n${options.sharedContext}`
+        : roleDirective(options.role)
     };
   }
 
@@ -68,7 +71,13 @@ export function buildConversationObjective(options: {
 
   return {
     objective,
-    context: `${roleDirective(options.role)}\nPRIOR TURNS:\n${priorContext}`
+    context: [
+      roleDirective(options.role),
+      options.sharedContext ? `SHARED SWARM CONTEXT:\n${options.sharedContext}` : undefined,
+      `PRIOR TURNS:\n${priorContext}`
+    ]
+      .filter(Boolean)
+      .join("\n")
   };
 }
 
@@ -127,7 +136,11 @@ export function buildAgentTurn(options: {
     guardVerdict: options.execution.guardVerdict,
     latencyMs: options.execution.latencyMs,
     startedAt: options.execution.startedAt,
-    completedAt: options.execution.completedAt
+    completedAt: options.execution.completedAt,
+    executionTopology: options.execution.executionTopology,
+    parallelBatchId: options.execution.parallelBatchId,
+    parallelBatchSize: options.execution.parallelBatchSize,
+    parallelPosition: options.execution.parallelPosition
   };
 }
 
@@ -172,13 +185,15 @@ export function buildConversationRecord(options: {
     scheduleId: options.schedule.id,
     mode: turns.length > 1 ? "multi-turn" : "single-turn",
     status,
+    executionTopology: options.schedule.executionTopology,
+    parallelWidth: options.schedule.parallelWidth,
     roles,
     turnCount: turns.length,
     guardVerdict,
     finalRouteSuggestion,
     finalCommitStatement,
     summary: compact(
-      `${options.schedule.mode} ${status} roles=${roleChain || "none"} verdict=${guardVerdict} route=${finalRouteSuggestion ?? "none"}`
+      `${options.schedule.mode} ${status} topology=${options.schedule.executionTopology} parallelWidth=${options.schedule.parallelWidth} roles=${roleChain || "none"} verdict=${guardVerdict} route=${finalRouteSuggestion ?? "none"}`
     ),
     startedAt,
     completedAt,

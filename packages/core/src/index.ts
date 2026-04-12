@@ -136,8 +136,25 @@ export type BenchmarkSeries = {
   min: number;
   p50: number;
   p95: number;
+  p99: number;
+  p999: number;
   average: number;
   max: number;
+};
+
+export const benchmarkRunKinds = ["smoke", "benchmark", "soak"] as const;
+export type BenchmarkRunKind = (typeof benchmarkRunKinds)[number];
+
+export type BenchmarkHardwareContext = {
+  host: string;
+  platform: string;
+  arch: string;
+  osVersion?: string;
+  cpuModel: string;
+  cpuCount: number;
+  memoryGiB: number;
+  diskKind?: string;
+  nodeVersion: string;
 };
 
 export const benchmarkPackIds = [
@@ -218,15 +235,18 @@ export type BenchmarkReport = {
   generatedAt: string;
   packId: BenchmarkPackId;
   packLabel: string;
+  runKind: BenchmarkRunKind;
   profile: string;
   summary: string;
   tickIntervalMs: number;
   totalTicks: number;
+  plannedDurationMs: number;
   totalDurationMs: number;
   checkpointCount: number;
   recoveryMode: string;
   recovered: boolean;
   integrity: IntegrityReport;
+  hardwareContext: BenchmarkHardwareContext;
   series: BenchmarkSeries[];
   assertions: BenchmarkAssertion[];
   progress: BenchmarkProgress;
@@ -413,6 +433,7 @@ export type IntelligenceLayer = {
 
 export type CognitiveExecution = {
   id: string;
+  sessionId?: string;
   layerId: string;
   model: string;
   objective: string;
@@ -428,6 +449,17 @@ export type CognitiveExecution = {
   guardVerdict?: GuardVerdict;
   governancePressure?: GovernancePressureLevel;
   recentDeniedCount?: number;
+  assignedWorkerId?: string;
+  assignedWorkerLabel?: string;
+  assignedWorkerHostLabel?: string;
+  assignedWorkerProfile?: "local" | "remote";
+  assignmentReason?: string;
+  assignmentScore?: number;
+  executionEndpoint?: string;
+  executionTopology?: ExecutionTopology;
+  parallelBatchId?: string;
+  parallelBatchSize?: number;
+  parallelPosition?: number;
 };
 
 export type AgentTurn = {
@@ -445,6 +477,10 @@ export type AgentTurn = {
   latencyMs: number;
   startedAt: string;
   completedAt: string;
+  executionTopology?: ExecutionTopology;
+  parallelBatchId?: string;
+  parallelBatchSize?: number;
+  parallelPosition?: number;
 };
 
 export type MultiAgentConversation = {
@@ -454,6 +490,8 @@ export type MultiAgentConversation = {
   scheduleId?: string;
   mode: "single-turn" | "multi-turn";
   status: "completed" | "failed" | "blocked";
+  executionTopology: ExecutionTopology;
+  parallelWidth: number;
   roles: IntelligenceLayerRole[];
   turnCount: number;
   guardVerdict: GuardVerdict;
@@ -515,6 +553,9 @@ export const executionScheduleModes = [
   "held"
 ] as const;
 export type ExecutionScheduleMode = (typeof executionScheduleModes)[number];
+
+export const executionTopologies = ["sequential", "parallel", "parallel-then-guard"] as const;
+export type ExecutionTopology = (typeof executionTopologies)[number];
 
 export type ActuationOutput = {
   id: string;
@@ -581,6 +622,8 @@ export type ExecutionSchedule = {
   source: RoutingDecisionSource;
   arbitrationId?: string;
   mode: ExecutionScheduleMode;
+  executionTopology: ExecutionTopology;
+  parallelWidth: number;
   primaryLayerId?: string;
   layerIds: string[];
   layerRoles: IntelligenceLayerRole[];
@@ -771,8 +814,22 @@ const benchmarkSeriesSchema = z.object({
   min: z.number(),
   p50: z.number(),
   p95: z.number(),
+  p99: z.number().default(0),
+  p999: z.number().default(0),
   average: z.number(),
   max: z.number()
+});
+
+const benchmarkHardwareContextSchema = z.object({
+  host: z.string(),
+  platform: z.string(),
+  arch: z.string(),
+  osVersion: z.string().optional(),
+  cpuModel: z.string(),
+  cpuCount: z.number().int().positive(),
+  memoryGiB: z.number().positive(),
+  diskKind: z.string().optional(),
+  nodeVersion: z.string()
 });
 
 const benchmarkAssertionSchema = z.object({
@@ -846,15 +903,26 @@ export const benchmarkReportSchema = z.object({
   generatedAt: z.string(),
   packId: z.enum(benchmarkPackIds),
   packLabel: z.string(),
+  runKind: z.enum(benchmarkRunKinds).default("benchmark"),
   profile: z.string(),
   summary: z.string(),
   tickIntervalMs: z.number().positive(),
   totalTicks: z.number().int().nonnegative(),
+  plannedDurationMs: z.number().nonnegative().default(0),
   totalDurationMs: z.number().nonnegative(),
   checkpointCount: z.number().int().nonnegative(),
   recoveryMode: z.string(),
   recovered: z.boolean(),
   integrity: integrityReportSchema,
+  hardwareContext: benchmarkHardwareContextSchema.default({
+    host: "unknown-host",
+    platform: "unknown-platform",
+    arch: "unknown-arch",
+    cpuModel: "unknown-cpu",
+    cpuCount: 1,
+    memoryGiB: 0.01,
+    nodeVersion: "unknown-node"
+  }),
   series: z.array(benchmarkSeriesSchema),
   assertions: z.array(benchmarkAssertionSchema),
   progress: benchmarkProgressSchema,
@@ -1007,6 +1075,7 @@ export const intelligenceLayerSchema = z.object({
 
 export const cognitiveExecutionSchema = z.object({
   id: z.string(),
+  sessionId: z.string().optional(),
   layerId: z.string(),
   model: z.string(),
   objective: z.string(),
@@ -1021,7 +1090,18 @@ export const cognitiveExecutionSchema = z.object({
   commitStatement: boundedPhraseSchema.optional(),
   guardVerdict: z.enum(guardVerdicts).optional(),
   governancePressure: z.enum(governancePressureLevels).optional(),
-  recentDeniedCount: z.number().int().nonnegative().optional()
+  recentDeniedCount: z.number().int().nonnegative().optional(),
+  assignedWorkerId: z.string().optional(),
+  assignedWorkerLabel: z.string().optional(),
+  assignedWorkerHostLabel: z.string().optional(),
+  assignedWorkerProfile: z.enum(["local", "remote"]).optional(),
+  assignmentReason: z.string().optional(),
+  assignmentScore: z.number().optional(),
+  executionEndpoint: z.string().optional(),
+  executionTopology: z.enum(executionTopologies).optional(),
+  parallelBatchId: z.string().optional(),
+  parallelBatchSize: z.number().int().positive().optional(),
+  parallelPosition: z.number().int().positive().optional()
 });
 
 export const agentTurnSchema = z.object({
@@ -1038,7 +1118,11 @@ export const agentTurnSchema = z.object({
   guardVerdict: z.enum(guardVerdicts).optional(),
   latencyMs: z.number().nonnegative(),
   startedAt: z.string(),
-  completedAt: z.string()
+  completedAt: z.string(),
+  executionTopology: z.enum(executionTopologies).optional(),
+  parallelBatchId: z.string().optional(),
+  parallelBatchSize: z.number().int().positive().optional(),
+  parallelPosition: z.number().int().positive().optional()
 });
 
 export const multiAgentConversationSchema = z.object({
@@ -1048,6 +1132,8 @@ export const multiAgentConversationSchema = z.object({
   scheduleId: z.string().optional(),
   mode: z.enum(["single-turn", "multi-turn"]),
   status: z.enum(["completed", "failed", "blocked"]),
+  executionTopology: z.enum(executionTopologies).default("sequential"),
+  parallelWidth: z.number().int().nonnegative().default(0),
   roles: z.array(z.enum(intelligenceLayerRoles)),
   turnCount: z.number().int().nonnegative(),
   guardVerdict: z.enum(guardVerdicts),
@@ -1132,6 +1218,8 @@ export const executionScheduleSchema = z.object({
   source: z.enum(routingDecisionSources),
   arbitrationId: z.string().optional(),
   mode: z.enum(executionScheduleModes),
+  executionTopology: z.enum(executionTopologies).default("sequential"),
+  parallelWidth: z.number().int().nonnegative().default(0),
   primaryLayerId: z.string().optional(),
   layerIds: z.array(z.string()),
   layerRoles: z.array(z.enum(intelligenceLayerRoles)),

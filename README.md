@@ -101,7 +101,7 @@ Defaults:
 - project: `immaculate`
 - mode: `online`
 
-Current live public benchmark pages:
+Current benchmark publication surfaces:
 
 - W&B project: https://wandb.ai/arobi-arobi-technology-alliance/immaculate
 - tracked repo/wiki status: [docs/wiki/Benchmark-Status.md](docs/wiki/Benchmark-Status.md)
@@ -138,12 +138,14 @@ Tier 2 spectral confidence is now benchmarked directly:
 - spectral-confidence suppression for artifact-heavy live frames
 - backward-compatible amplitude fallback when spectral bands are unavailable
 - routing-pressure assertions that prove contaminated windows de-escalate before outward action
+- worker-assignment lease coverage that proves remote placement is reserved and duplicate assignment pressure is visible
+- explicit session-bound source safety coverage that proves mediated orchestration fails closed on cross-session mismatches
 
 Benchmark packs currently include:
 
 - `substrate-readiness`
 - `durability-recovery`
-- `latency-soak`
+- `latency-soak` (current short-run pack published as `Latency Smoke` until a true 60m+ soak lane exists)
 
 ## Current Progress
 
@@ -178,6 +180,10 @@ Benchmark packs currently include:
 - mediated orchestration now treats current spectral evidence as a control signal: strong clean beta/gamma windows can stay reflex-local, while contaminated windows are pushed into guarded review before outward action
 - execution arbitration is now durable and inspectable through a mediated orchestration pass and dedicated arbitration ledger
 - execution scheduling is now durable and inspectable, choosing whether cognition runs as a single layer or a swarm formation before any mediated execution commits
+- intelligence worker assignment is now an authoritative runtime control instead of a sidecar scorer: cognition reserves a worker lease before it runs and records the chosen worker, profile, host, reason, score, and execution endpoint into the durable execution ledger
+- remote worker placement now rides an overlooked but real substrate that was already in front of the system: worker records can advertise Ollama-compatible execution endpoints, so cognition can be placed onto remote compute without inventing a second orchestration protocol
+- local swarm execution now treats one host as a pool of leaseable worker slots instead of a single monolithic worker record, so widened cognition can actually reserve parallel local capacity without lying about topology
+- session-bound actuation dispatch and mediated orchestration now fail closed on ambiguous or cross-session source resolution instead of silently falling back to the newest global frame or execution
 - benchmark publication now includes Tier 1 cognitive-loop closure coverage for parsed model structure, governance-aware cognition, routing soft priors, and multi-role conversation verdicts
 - dashboard and TUI now expose the latest routing decision so operators can see why the system chose a lane instead of inferring it from side effects
 - dashboard and TUI websocket reconnection with backoff
@@ -189,8 +195,16 @@ Benchmark packs currently include:
 - additional vendor-specific transports beyond serial and HTTP/2 direct lanes, including MIDI and richer gRPC-class adapters
 - arbitration and scheduling that feed live neural coupling, device health, decode confidence, and governance pressure deeper into multi-agent planning before route/dispatch
 - additional multi-agent and tool execution backends beyond the first Ollama layer
+- richer worker federation with explicit locality, cost, and observed latency shaping placement instead of relying only on static capability and lease state
 - domain benchmark packs against published neuro/BCI workloads
 - multi-node deployment, locality routing, and long-horizon benchmark trending
+
+Benchmark credibility rules now follow a stricter line:
+
+- short-run latency packs are published as smoke, not soak
+- wall-clock duration is reported separately from planned control-loop duration
+- hardware context is carried into benchmark reports, W&B metadata, and repo-tracked exports
+- `main` branch benchmark publication now runs through CI and pushes the refreshed W&B export/status pages back into `docs/wiki`
 
 ## Operator API
 

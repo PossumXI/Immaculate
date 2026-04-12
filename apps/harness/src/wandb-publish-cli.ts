@@ -6,7 +6,7 @@ function parseSuiteId(argv: string[]): string | undefined {
   if (suiteIndex >= 0) {
     return argv[suiteIndex + 1];
   }
-  return undefined;
+  return argv.find((argument) => !argument.startsWith("--"));
 }
 
 async function main(): Promise<void> {
