@@ -5,6 +5,7 @@ import { hashValue, safeUnlink } from "./utils.js";
 
 export type FederationPeerStatus = "healthy" | "stale" | "faulted";
 export type FederationLeaseRecoveryMode = "steady" | "tightened" | "recovering";
+export type FederationPeerRepairStatus = "idle" | "pending" | "repairing";
 
 export type FederationPeerRecord = {
   peerId: string;
@@ -42,6 +43,14 @@ export type FederationPeerRecord = {
   lastRemoteExecutionError?: string | null;
   remoteExecutionSmoothedLatencyMs?: number | null;
   nextLeaseRefreshAt: string;
+  repairStatus: FederationPeerRepairStatus;
+  repairAttemptCount: number;
+  lastRepairAt?: string | null;
+  lastRepairError?: string | null;
+  lastRepairCause?: string | null;
+  lastRepairSource?: string | null;
+  lastRepairAction?: string | null;
+  nextRepairAt: string;
 };
 
 export type FederationPeerView = Omit<FederationPeerRecord, "authorizationToken"> & {
@@ -56,6 +65,7 @@ export type FederationPeerView = Omit<FederationPeerRecord, "authorizationToken"
   leaseTrustRemainingMs: number;
   remoteExecutionSuccessRatio: number;
   remoteExecutionFailurePressure: number;
+  repairDue: boolean;
 };
 
 type FederationPeerRegistryState = {
@@ -134,6 +144,12 @@ function normalizeLeaseRecoveryMode(value: unknown): FederationLeaseRecoveryMode
     : undefined;
 }
 
+function normalizeRepairStatus(value: unknown): FederationPeerRepairStatus | undefined {
+  return value === "idle" || value === "pending" || value === "repairing"
+    ? value
+    : undefined;
+}
+
 function parsePeers(content: string | null): FederationPeerRecord[] {
   if (!content) {
     return [];
@@ -168,7 +184,10 @@ function parsePeers(content: string | null): FederationPeerRecord[] {
           typeof candidate.leaseConsecutiveFailureCount !== "number") ||
         (candidate.nextLeaseRefreshAt !== undefined &&
           candidate.nextLeaseRefreshAt !== null &&
-          typeof candidate.nextLeaseRefreshAt !== "string")
+          typeof candidate.nextLeaseRefreshAt !== "string") ||
+        (candidate.nextRepairAt !== undefined &&
+          candidate.nextRepairAt !== null &&
+          typeof candidate.nextRepairAt !== "string")
       ) {
         return [];
       }
@@ -256,7 +275,23 @@ function parsePeers(content: string | null): FederationPeerRecord[] {
             candidate.remoteExecutionSmoothedLatencyMs
           ),
           nextLeaseRefreshAt:
-            normalizeNullableString(candidate.nextLeaseRefreshAt) ?? candidate.nextRefreshAt
+            normalizeNullableString(candidate.nextLeaseRefreshAt) ?? candidate.nextRefreshAt,
+          repairStatus: normalizeRepairStatus(candidate.repairStatus) ?? "idle",
+          repairAttemptCount:
+            typeof candidate.repairAttemptCount === "number" &&
+            Number.isFinite(candidate.repairAttemptCount) &&
+            candidate.repairAttemptCount >= 0
+              ? candidate.repairAttemptCount
+              : 0,
+          lastRepairAt: normalizeNullableString(candidate.lastRepairAt),
+          lastRepairError: normalizeNullableString(candidate.lastRepairError),
+          lastRepairCause: normalizeNullableString(candidate.lastRepairCause),
+          lastRepairSource: normalizeNullableString(candidate.lastRepairSource),
+          lastRepairAction: normalizeNullableString(candidate.lastRepairAction),
+          nextRepairAt:
+            normalizeNullableString(candidate.nextRepairAt) ??
+            normalizeNullableString(candidate.nextLeaseRefreshAt) ??
+            candidate.nextRefreshAt
         }
       ];
     });
@@ -397,7 +432,8 @@ function buildPeerView(peer: FederationPeerRecord, now: string): FederationPeerV
     leaseTrustExpiresAt: leaseTrustExpiration,
     leaseTrustRemainingMs,
     remoteExecutionSuccessRatio: remoteExecutionSuccessRatio(peer),
-    remoteExecutionFailurePressure: remoteExecutionFailurePressure(peer)
+    remoteExecutionFailurePressure: remoteExecutionFailurePressure(peer),
+    repairDue: peer.repairStatus !== "idle" && peer.nextRepairAt <= now
   };
 }
 
@@ -508,7 +544,15 @@ export function createFederationPeerRegistry(rootDir: string) {
           lastRemoteExecutionStatus: existing?.lastRemoteExecutionStatus ?? null,
           lastRemoteExecutionError: existing?.lastRemoteExecutionError ?? null,
           remoteExecutionSmoothedLatencyMs: existing?.remoteExecutionSmoothedLatencyMs ?? null,
-          nextLeaseRefreshAt: existing?.nextLeaseRefreshAt ?? now
+          nextLeaseRefreshAt: existing?.nextLeaseRefreshAt ?? now,
+          repairStatus: existing?.repairStatus ?? "idle",
+          repairAttemptCount: existing?.repairAttemptCount ?? 0,
+          lastRepairAt: existing?.lastRepairAt ?? null,
+          lastRepairError: existing?.lastRepairError ?? null,
+          lastRepairCause: existing?.lastRepairCause ?? null,
+          lastRepairSource: existing?.lastRepairSource ?? null,
+          lastRepairAction: existing?.lastRepairAction ?? null,
+          nextRepairAt: existing?.nextRepairAt ?? now
         };
         await writePeers(peers.filter((peer) => peer.peerId !== next.peerId && peer.controlPlaneUrl !== args.controlPlaneUrl).concat(next));
         return buildPeerView(next, now);
@@ -740,6 +784,121 @@ export function createFederationPeerRegistry(rootDir: string) {
             args.status === "failed" && existing.nextLeaseRefreshAt > now
               ? new Date(Date.parse(now) + adaptiveLeaseBounds(existing).minLeaseRefreshIntervalMs).toISOString()
               : existing.nextLeaseRefreshAt
+        };
+        await writePeers(peers.filter((peer) => peer.peerId !== args.peerId).concat(next));
+        return buildPeerView(next, now);
+      });
+    },
+    async scheduleRepair(args: {
+      peerId: string;
+      cause: string;
+      source: string;
+      delayMs?: number;
+      now?: string;
+    }): Promise<FederationPeerView> {
+      return withRegistryLock(async () => {
+        const now = args.now ?? new Date().toISOString();
+        const peers = await readPeers();
+        const existing = peers.find((peer) => peer.peerId === args.peerId);
+        if (!existing) {
+          throw new Error(`Unknown federation peer ${args.peerId}.`);
+        }
+        const delayMs =
+          typeof args.delayMs === "number" && Number.isFinite(args.delayMs) && args.delayMs >= 0
+            ? Math.round(args.delayMs)
+            : 0;
+        const next: FederationPeerRecord = {
+          ...existing,
+          repairStatus: existing.repairStatus === "repairing" ? "repairing" : "pending",
+          lastRepairCause: args.cause.trim() || (existing.lastRepairCause ?? "repair_requested"),
+          lastRepairSource: args.source.trim() || (existing.lastRepairSource ?? "runtime"),
+          nextRepairAt: new Date(Date.parse(now) + delayMs).toISOString()
+        };
+        await writePeers(peers.filter((peer) => peer.peerId !== args.peerId).concat(next));
+        return buildPeerView(next, now);
+      });
+    },
+    async beginRepair(args: {
+      peerId: string;
+      cause: string;
+      source: string;
+      now?: string;
+    }): Promise<FederationPeerView> {
+      return withRegistryLock(async () => {
+        const now = args.now ?? new Date().toISOString();
+        const peers = await readPeers();
+        const existing = peers.find((peer) => peer.peerId === args.peerId);
+        if (!existing) {
+          throw new Error(`Unknown federation peer ${args.peerId}.`);
+        }
+        const next: FederationPeerRecord = {
+          ...existing,
+          repairStatus: "repairing",
+          repairAttemptCount: existing.repairAttemptCount + 1,
+          lastRepairAt: now,
+          lastRepairError: null,
+          lastRepairCause: args.cause.trim() || (existing.lastRepairCause ?? "repair_requested"),
+          lastRepairSource: args.source.trim() || (existing.lastRepairSource ?? "runtime"),
+          nextRepairAt: new Date(
+            Date.parse(now) + adaptiveLeaseBounds(existing).minLeaseRefreshIntervalMs
+          ).toISOString()
+        };
+        await writePeers(peers.filter((peer) => peer.peerId !== args.peerId).concat(next));
+        return buildPeerView(next, now);
+      });
+    },
+    async markRepairSuccess(args: {
+      peerId: string;
+      action: string;
+      now?: string;
+    }): Promise<FederationPeerView> {
+      return withRegistryLock(async () => {
+        const now = args.now ?? new Date().toISOString();
+        const peers = await readPeers();
+        const existing = peers.find((peer) => peer.peerId === args.peerId);
+        if (!existing) {
+          throw new Error(`Unknown federation peer ${args.peerId}.`);
+        }
+        const next: FederationPeerRecord = {
+          ...existing,
+          repairStatus: "idle",
+          lastRepairAt: now,
+          lastRepairError: null,
+          lastRepairAction: args.action.trim() || "repair_success",
+          nextRepairAt: new Date(Date.parse(now) + existing.leaseRefreshIntervalMs).toISOString()
+        };
+        await writePeers(peers.filter((peer) => peer.peerId !== args.peerId).concat(next));
+        return buildPeerView(next, now);
+      });
+    },
+    async markRepairFailure(args: {
+      peerId: string;
+      error: string;
+      action?: string;
+      delayMs?: number;
+      now?: string;
+    }): Promise<FederationPeerView> {
+      return withRegistryLock(async () => {
+        const now = args.now ?? new Date().toISOString();
+        const peers = await readPeers();
+        const existing = peers.find((peer) => peer.peerId === args.peerId);
+        if (!existing) {
+          throw new Error(`Unknown federation peer ${args.peerId}.`);
+        }
+        const delayMs =
+          typeof args.delayMs === "number" && Number.isFinite(args.delayMs) && args.delayMs >= 0
+            ? Math.round(args.delayMs)
+            : Math.max(
+                adaptiveLeaseBounds(existing).minLeaseRefreshIntervalMs,
+                existing.leaseRefreshIntervalMs
+              );
+        const next: FederationPeerRecord = {
+          ...existing,
+          repairStatus: "pending",
+          lastRepairAt: now,
+          lastRepairError: args.error.trim() || "repair_failed",
+          lastRepairAction: args.action?.trim() || "repair_failed",
+          nextRepairAt: new Date(Date.parse(now) + delayMs).toISOString()
         };
         await writePeers(peers.filter((peer) => peer.peerId !== args.peerId).concat(next));
         return buildPeerView(next, now);

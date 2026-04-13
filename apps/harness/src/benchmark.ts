@@ -2053,6 +2053,128 @@ export async function runPublishedBenchmark(
     error: "lease_timeout",
     now: federationFaultedAt
   });
+  const federationRepairPendingAt = new Date(
+    Date.parse(federationOutcomeCriticalAt) + 1_500
+  ).toISOString();
+  const federationPeerRepairPending = await federationPeerRegistry.scheduleRepair({
+    peerId: federationRegisteredNearPeer.peerId,
+    cause: "benchmark_manual_repair",
+    source: "benchmark-runtime",
+    now: federationRepairPendingAt
+  });
+  const federationPeerViewsRepairPending = await federationPeerRegistry.listPeers(
+    federationRepairPendingAt
+  );
+  const localityWorkerViewsRepairPending = await workerLocalityRegistry.listWorkers(
+    federationRepairPendingAt,
+    workerLocalityNodeViews,
+    federationPeerViewsRepairPending,
+    [...degradedExecutionOutcomes.workerSummaries.values()]
+  );
+  const repairPendingAssignment = await workerLocalityRegistry.assignWorker({
+    requestedExecutionDecision: "remote_required",
+    baseModel: benchmarkLayer.model,
+    preferredLayerIds: [benchmarkLayer.id],
+    recommendedLayerId: benchmarkLayer.id,
+    target: "planner-swarm",
+    preferredDeviceAffinityTags: ["swarm"],
+    maxObservedLatencyMs: 80,
+    maxCostPerHourUsd: 0.50,
+    nodeViews: workerLocalityNodeViews,
+    peerViews: federationPeerViewsRepairPending,
+    executionOutcomeSummaries: [...degradedExecutionOutcomes.workerSummaries.values()]
+  });
+  if (
+    repairPendingAssignment.assignment?.workerId &&
+    repairPendingAssignment.assignment.leaseToken
+  ) {
+    await workerLocalityRegistry.releaseWorker({
+      workerId: repairPendingAssignment.assignment.workerId,
+      leaseToken: repairPendingAssignment.assignment.leaseToken
+    });
+  }
+  const federationRepairFailClosedAt = new Date(
+    Date.parse(federationRepairPendingAt) + 250
+  ).toISOString();
+  const federationPeerFarRepairPending = await federationPeerRegistry.scheduleRepair({
+    peerId: federationRegisteredFarPeer.peerId,
+    cause: "benchmark_manual_repair_far",
+    source: "benchmark-runtime",
+    now: federationRepairFailClosedAt
+  });
+  const federationPeerViewsRepairFailClosed = await federationPeerRegistry.listPeers(
+    federationRepairFailClosedAt
+  );
+  const localityWorkerViewsRepairFailClosed = await workerLocalityRegistry.listWorkers(
+    federationRepairFailClosedAt,
+    workerLocalityNodeViews,
+    federationPeerViewsRepairFailClosed,
+    [...degradedExecutionOutcomes.workerSummaries.values()]
+  );
+  const repairFailClosedAssignment = await workerLocalityRegistry.assignWorker({
+    requestedExecutionDecision: "remote_required",
+    baseModel: benchmarkLayer.model,
+    preferredLayerIds: [benchmarkLayer.id],
+    recommendedLayerId: benchmarkLayer.id,
+    target: "planner-swarm",
+    preferredDeviceAffinityTags: ["swarm"],
+    maxObservedLatencyMs: 80,
+    maxCostPerHourUsd: 0.50,
+    nodeViews: workerLocalityNodeViews,
+    peerViews: federationPeerViewsRepairFailClosed,
+    executionOutcomeSummaries: [...degradedExecutionOutcomes.workerSummaries.values()]
+  });
+  const federationRepairBeginAt = new Date(
+    Date.parse(federationRepairPendingAt) + 500
+  ).toISOString();
+  const federationPeerRepairing = await federationPeerRegistry.beginRepair({
+    peerId: federationRegisteredNearPeer.peerId,
+    cause: "benchmark_manual_repair",
+    source: "benchmark-runtime",
+    now: federationRepairBeginAt
+  });
+  const federationPeerViewsRepairing = await federationPeerRegistry.listPeers(
+    federationRepairBeginAt
+  );
+  const localityWorkerViewsRepairing = await workerLocalityRegistry.listWorkers(
+    federationRepairBeginAt,
+    workerLocalityNodeViews,
+    federationPeerViewsRepairing,
+    [...degradedExecutionOutcomes.workerSummaries.values()]
+  );
+  const federationRepairRecoveredAt = new Date(
+    Date.parse(federationRepairBeginAt) + 500
+  ).toISOString();
+  const federationPeerRepairRecovered = await federationPeerRegistry.markRepairSuccess({
+    peerId: federationRegisteredNearPeer.peerId,
+    action: "lease-renewal",
+    now: federationRepairRecoveredAt
+  });
+  const federationPeerViewsRepairRecovered = await federationPeerRegistry.listPeers(
+    federationRepairRecoveredAt
+  );
+  const repairRecoveredAssignment = await workerLocalityRegistry.assignWorker({
+    requestedExecutionDecision: "remote_required",
+    baseModel: benchmarkLayer.model,
+    preferredLayerIds: [benchmarkLayer.id],
+    recommendedLayerId: benchmarkLayer.id,
+    target: "planner-swarm",
+    preferredDeviceAffinityTags: ["swarm"],
+    maxObservedLatencyMs: 80,
+    maxCostPerHourUsd: 0.50,
+    nodeViews: workerLocalityNodeViews,
+    peerViews: federationPeerViewsRepairRecovered,
+    executionOutcomeSummaries: [...degradedExecutionOutcomes.workerSummaries.values()]
+  });
+  if (
+    repairRecoveredAssignment.assignment?.workerId &&
+    repairRecoveredAssignment.assignment.leaseToken
+  ) {
+    await workerLocalityRegistry.releaseWorker({
+      workerId: repairRecoveredAssignment.assignment.workerId,
+      leaseToken: repairRecoveredAssignment.assignment.leaseToken
+    });
+  }
   const localSlotRegistry = createIntelligenceWorkerRegistry(
     path.join(runtimeDir, "worker-plane-local-slots")
   );
@@ -3793,6 +3915,30 @@ export async function runPublishedBenchmark(
       federationPeerAdaptiveRecovery.leaseRefreshIntervalMs
     ]
   );
+  const federationRepairStateSeries = createSeries(
+    "federation_repair_state_ratio",
+    "Federation repair state control",
+    "ratio",
+    [
+      Number(federationPeerRepairPending.repairDue),
+      Number(repairPendingAssignment.assignment?.peerId === federationRegisteredFarPeer.peerId),
+      Number(repairFailClosedAssignment.assignment === null),
+      Number(federationPeerRepairing.repairStatus === "repairing"),
+      Number(repairRecoveredAssignment.assignment?.workerId === localityNearWorker.workerId),
+      Number(federationPeerRepairRecovered.repairStatus === "idle"),
+      Number(federationPeerRepairRecovered.repairDue === false)
+    ]
+  );
+  const federationRepairAttemptSeries = createSeries(
+    "federation_repair_attempts",
+    "Federation repair attempts",
+    "count",
+    [
+      federationPeerRepairPending.repairAttemptCount,
+      federationPeerRepairing.repairAttemptCount,
+      federationPeerRepairRecovered.repairAttemptCount
+    ]
+  );
   const orchestrationCrossNodeBiasSeries = createSeries(
     "orchestration_cross_node_bias_ratio",
     "Orchestration cross-node bias",
@@ -4691,6 +4837,61 @@ export async function runPublishedBenchmark(
       "a peer that stops renewing signed lease state has to age out of trust before placement keeps using stale remote state"
     ),
     createAssertion(
+      "federation-peer-repair-pending",
+      "A pending federated repair gates the affected peer out of remote placement and shifts selection to the alternate authenticated peer",
+      federationPeerRepairPending.repairStatus === "pending" &&
+        federationPeerRepairPending.repairDue &&
+        repairPendingAssignment.assignment?.peerId === federationRegisteredFarPeer.peerId &&
+        localityWorkerViewsRepairPending.some(
+          (worker) =>
+            worker.peerId === federationRegisteredNearPeer.peerId &&
+            worker.assignmentEligible === false &&
+            worker.assignmentBlockedReason === "peer repair pending"
+        ),
+      "pending repair makes the near peer stale and placement flips to the far peer",
+      `${federationPeerRepairPending.repairStatus} / due=${federationPeerRepairPending.repairDue} / assignment=${repairPendingAssignment.assignment?.workerId ?? "null"}`,
+      "repair state only has value if it removes the peer from the eligible pool before the runtime keeps sending work into a damaged path"
+    ),
+    createAssertion(
+      "federation-peer-repair-fail-closed",
+      "Remote-required placement fails closed once every authenticated remote peer is under repair pressure",
+      federationPeerFarRepairPending.repairStatus === "pending" &&
+        repairFailClosedAssignment.assignment === null &&
+        localityWorkerViewsRepairFailClosed.filter(
+          (worker) =>
+            worker.executionProfile === "remote" && worker.assignmentEligible === false
+        ).length >= 2,
+      "both remotes gated and assignment returns null",
+      `${federationPeerFarRepairPending.repairStatus} / assignment=${repairFailClosedAssignment.assignment?.workerId ?? "null"}`,
+      "fail-closed remote selection should only happen once the pool genuinely has no healthy authenticated peer left"
+    ),
+    createAssertion(
+      "federation-peer-repair-in-progress",
+      "A federated repair in progress remains out of placement until the signed repair completes",
+      federationPeerRepairing.repairStatus === "repairing" &&
+        federationPeerRepairing.repairAttemptCount >= 1 &&
+        localityWorkerViewsRepairing.some(
+          (worker) =>
+            worker.peerId === federationRegisteredNearPeer.peerId &&
+            worker.assignmentEligible === false &&
+            worker.assignmentBlockedReason === "peer repair in progress"
+        ),
+      "repairing peer is stale with attempt count >= 1",
+      `${federationPeerRepairing.repairStatus} / attempts=${federationPeerRepairing.repairAttemptCount}`,
+      "mid-repair peers should stay out of remote placement until the repair loop finishes instead of racing the worker selector"
+    ),
+    createAssertion(
+      "federation-peer-repair-recovery",
+      "A successful federated repair clears repair state and restores the stable peer to remote placement",
+      federationPeerRepairRecovered.repairStatus === "idle" &&
+        federationPeerRepairRecovered.repairDue === false &&
+        repairRecoveredAssignment.assignment?.workerId === localityNearWorker.workerId &&
+        repairRecoveredAssignment.assignment?.peerId === federationRegisteredNearPeer.peerId,
+      "idle repair state and near peer returns as the selected remote worker",
+      `${federationPeerRepairRecovered.repairStatus} / due=${federationPeerRepairRecovered.repairDue} / ${repairRecoveredAssignment.assignment?.workerId ?? "missing"}`,
+      "the repair loop is only credible if successful repair actually returns the peer to the eligible pool instead of leaving it stuck in a half-recovered state"
+    ),
+    createAssertion(
       "worker-assignment-duplicate-pressure",
       "Duplicate worker assignment requests are blocked while the leased worker remains reserved",
       workerAssignmentSecond.assignment === null &&
@@ -5254,7 +5455,7 @@ export async function runPublishedBenchmark(
     runKind,
     profile: `${engine.getSnapshot().profile} / ${runKind} / ${hardwareContext.platform}-${hardwareContext.arch}`,
       summary:
-      `This ${runKind} publication benchmarks the real orchestration substrate that exists today: phase execution, verify gating, persistence, checkpoint recovery, integrity validation, replayed NWB windows, live socket neuro ingress, protocol-aware actuation, execution arbitration that decides when the system should think before acting, execution scheduling that chooses single-layer versus swarm formation before cognition runs, Tier 1 cognitive-loop closure coverage for parsed ROUTE/REASON/COMMIT structure, Tier 2 neural-coupling coverage for band dominance, phase bias, and coupled routing strength, governance-aware cognition, routing soft priors, and multi-role conversation verdicts, authoritative worker-assignment coverage with lease visibility, adaptive federated execution pressure that blends signed lease renewal with live cross-node latency and remote execution success/failure, supervised serial and HTTP/2 direct device transports, and explicit session-bound source safety for mediated dispatch decisions that react to transport health, decode confidence, governance pressure, consent scope, and federated execution pressure. ${describeBenchmarkTiming(pack)} ${liveFramesPerTick > 0 ? `It injected ${liveFramesPerTick} extra live frames per tick to sustain measurable event pressure.` : ""} ${benchmarkInputs.externalNeurodata ? `This run resolved a real OpenNeuro slice (${benchmarkInputs.externalNeurodata.openNeuroDatasetId}:${benchmarkInputs.externalNeurodata.openNeuroSnapshotTag}) and a real DANDI NWB asset (${benchmarkInputs.externalNeurodata.dandiDandisetId}:${benchmarkInputs.externalNeurodata.dandiVersion}) before scanning and replaying them locally.` : "It does not yet claim external neurodata or BCI decoding performance."} ${pack.id === "temporal-baseline" ? "It also executes an honest side-by-side Temporal workflow baseline for pure ingest-process-commit-verify wall-clock and memory comparison." : ""} Hardware context: ${formatBenchmarkHardwareContext(hardwareContext)}.`,
+      `This ${runKind} publication benchmarks the real orchestration substrate that exists today: phase execution, verify gating, persistence, checkpoint recovery, integrity validation, replayed NWB windows, live socket neuro ingress, protocol-aware actuation, execution arbitration that decides when the system should think before acting, execution scheduling that chooses single-layer versus swarm formation before cognition runs, Tier 1 cognitive-loop closure coverage for parsed ROUTE/REASON/COMMIT structure, Tier 2 neural-coupling coverage for band dominance, phase bias, and coupled routing strength, governance-aware cognition, routing soft priors, and multi-role conversation verdicts, authoritative worker-assignment coverage with lease visibility, adaptive federated execution pressure that blends signed lease renewal with live cross-node latency and remote execution success/failure, bounded federated retry-and-repair coverage that proves pending/repairing peers fall out of placement and only rejoin after signed repair success, supervised serial and HTTP/2 direct device transports, and explicit session-bound source safety for mediated dispatch decisions that react to transport health, decode confidence, governance pressure, consent scope, and federated execution pressure. ${describeBenchmarkTiming(pack)} ${liveFramesPerTick > 0 ? `It injected ${liveFramesPerTick} extra live frames per tick to sustain measurable event pressure.` : ""} ${benchmarkInputs.externalNeurodata ? `This run resolved a real OpenNeuro slice (${benchmarkInputs.externalNeurodata.openNeuroDatasetId}:${benchmarkInputs.externalNeurodata.openNeuroSnapshotTag}) and a real DANDI NWB asset (${benchmarkInputs.externalNeurodata.dandiDandisetId}:${benchmarkInputs.externalNeurodata.dandiVersion}) before scanning and replaying them locally.` : "It does not yet claim external neurodata or BCI decoding performance."} ${pack.id === "temporal-baseline" ? "It also executes an honest side-by-side Temporal workflow baseline for pure ingest-process-commit-verify wall-clock and memory comparison." : ""} Hardware context: ${formatBenchmarkHardwareContext(hardwareContext)}.`,
     tickIntervalMs,
     totalTicks,
     plannedDurationMs,
@@ -5283,6 +5484,8 @@ export async function runPublishedBenchmark(
       federationExecutionPressureSeries,
       federationRemoteSuccessSeries,
       federationLeaseCadenceSeries,
+      federationRepairStateSeries,
+      federationRepairAttemptSeries,
       orchestrationCrossNodeBiasSeries,
       multiRoleConversationLatencySeries,
       multiRoleConversationTurnSeries,
@@ -5334,6 +5537,8 @@ export async function runPublishedBenchmark(
             federationExecutionPressureSeries,
             federationRemoteSuccessSeries,
             federationLeaseCadenceSeries,
+            federationRepairStateSeries,
+            federationRepairAttemptSeries,
             orchestrationCrossNodeBiasSeries,
             multiRoleConversationTurnSeries,
             multiRoleConversationVerdictSeries,

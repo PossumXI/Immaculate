@@ -21,6 +21,28 @@ For each breakthrough, record:
 
 ### 2026-04-13
 
+#### Federated retry-and-repair closed the next honesty gap in remote cognition
+
+What changed:
+- failed remote cognition now records its first failed execution durably, schedules peer repair immediately, and can retry once against an alternate authenticated worker in the same governed request
+- cognitive execution lineage now carries explicit retry metadata, so a recovered second attempt can point back to the failed first attempt instead of overwriting it
+- federation peers now persist `idle` / `pending` / `repairing` repair state and due status, and worker health treats pending or repairing peers as stale so they stop participating in placement
+- repair stays inside the existing signed control plane: lease renewal first, membership refresh plus lease renewal second, fail-closed if neither succeeds
+
+Why it matters:
+- this closes the runtime truth gap between "placement noticed a bad peer" and "the request still died even though another healthy peer existed"
+- the missed systems pattern was that authenticated federation needs one more loop beyond membership, liveness, and execution quality: repair truth that can temporarily remove a peer from service without deleting its identity
+- keeping the first failed execution visible while linking the retry attempt preserves honesty under recovery instead of manufacturing a fake single-shot success
+
+Evidence:
+- `npm run typecheck`, `npm run build`, and `npm run benchmark:gate:all` passed again on `2026-04-13` after the federated retry-and-repair pass
+- the benchmark gate now proves three new repair properties together: pending repair gates placement, repair-in-progress stays out of placement, and successful signed repair restores the peer to eligibility
+- the runtime keeps repair internal and signed: there is no public federation repair endpoint, only the existing authenticated membership and lease-renew control paths
+
+What this unlocks next:
+- richer retry policy that can learn when to stay remote, when to fall back local, and when to suppress outward action entirely from the same failure evidence
+- multi-peer repair-aware swarm routing where batch width can contract around peers already under repair instead of discovering that pressure only after execution starts
+
 #### Adaptive federated execution pressure became a real runtime control law
 
 What changed:

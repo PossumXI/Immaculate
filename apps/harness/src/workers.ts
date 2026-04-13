@@ -474,6 +474,12 @@ function buildWorkerView(
   } else if (peer?.leaseStatus === "faulted") {
     healthStatus = "faulted";
     healthReason = "peer lease expired";
+  } else if (peer?.repairStatus === "repairing") {
+    healthStatus = "stale";
+    healthReason = "peer repair in progress";
+  } else if (peer?.repairStatus === "pending") {
+    healthStatus = "stale";
+    healthReason = "peer repair pending";
   } else if (
     worker.executionProfile === "remote" &&
     peer?.leaseRecoveryMode === "recovering" &&

@@ -473,6 +473,10 @@ export type CognitiveExecution = {
   assignmentScore?: number;
   executionEndpoint?: string;
   executionTopology?: ExecutionTopology;
+  repairGroupId?: string;
+  repairAttempt?: number;
+  retriedFromExecutionId?: string;
+  repairCause?: string;
   parallelBatchId?: string;
   parallelBatchSize?: number;
   parallelPosition?: number;
@@ -1135,6 +1139,10 @@ export const cognitiveExecutionSchema = z.object({
   assignmentScore: z.number().optional(),
   executionEndpoint: z.string().optional(),
   executionTopology: z.enum(executionTopologies).optional(),
+  repairGroupId: z.string().optional(),
+  repairAttempt: z.number().int().positive().optional(),
+  retriedFromExecutionId: z.string().optional(),
+  repairCause: z.string().optional(),
   parallelBatchId: z.string().optional(),
   parallelBatchSize: z.number().int().positive().optional(),
   parallelPosition: z.number().int().positive().optional()

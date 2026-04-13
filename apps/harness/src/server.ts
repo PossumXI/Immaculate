@@ -285,6 +285,14 @@ setInterval(() => {
       "Unable to complete federation peer lease-renewal poll."
     );
   });
+  void repairDueFederationPeers().catch((error) => {
+    app.log.warn(
+      {
+        message: error instanceof Error ? error.message : "unknown federation repair poll error"
+      },
+      "Unable to complete federation peer repair poll."
+    );
+  });
 }, FEDERATION_REFRESH_POLL_MS).unref();
 
 type BenchmarkJob = {
@@ -301,9 +309,45 @@ type BenchmarkJob = {
 };
 
 type AdaptiveRoutePlan = ReturnType<typeof planAdaptiveRoute>;
+type PhaseSnapshot = ReturnType<typeof phaseSnapshotSchema.parse>;
+type CognitiveExecutionRecord = PhaseSnapshot["cognitiveExecutions"][number];
 type SessionConversationMemory = ReturnType<typeof buildSessionConversationMemory>;
 type RequestedExecutionDecision = "allow_local" | "remote_required" | "preflight_blocked";
 type ExecutionWorkerAssignment = IntelligenceWorkerAssignment | undefined;
+type FederatedRepairOutcome =
+  | "not-needed"
+  | "lease-renewed"
+  | "membership-refresh-renewed"
+  | "failed";
+type FederatedRepairSummary = {
+  attempted: boolean;
+  peerId?: string;
+  outcome: FederatedRepairOutcome;
+  action?: string;
+  error?: string;
+};
+type FederatedRetryReservation = {
+  requestedExecutionDecision?: RequestedExecutionDecision;
+  target?: string;
+  fallbackLocalPoolSize?: number;
+  preferredDeviceAffinityTags?: string[];
+  avoidPeerIds?: string[];
+  maxObservedLatencyMs?: number;
+  maxCostPerHourUsd?: number;
+};
+type CognitivePassResult = {
+  layer: IntelligenceLayer;
+  execution: CognitiveExecutionRecord;
+  response: string;
+  snapshot: PhaseSnapshot;
+};
+type FederatedRetryRunOptions = {
+  assignment?: ExecutionWorkerAssignment;
+  repairGroupId?: string;
+  repairAttempt?: number;
+  retriedFromExecutionId?: string;
+  repairCause?: string;
+};
 
 await app.register(cors, {
   origin: (origin, callback) => {
@@ -610,6 +654,13 @@ async function recordFederatedExecutionOutcome(options: {
           ? options.execution.responsePreview?.slice(0, 160)
           : undefined
     });
+    if (options.execution.status === "failed") {
+      await federationPeerRegistry.scheduleRepair({
+        peerId: options.execution.assignedWorkerPeerId,
+        cause: options.execution.responsePreview?.slice(0, 160) || "execution_failed",
+        source: "execution-failure"
+      });
+    }
   } catch (error) {
     app.log.warn(
       {
@@ -618,6 +669,203 @@ async function recordFederatedExecutionOutcome(options: {
       },
       "Unable to record federated execution outcome."
     );
+  }
+}
+
+async function attemptFederationPeerRepairByPeerId(options: {
+  peerId: string;
+  cause: string;
+  source: string;
+  now?: string;
+}): Promise<FederatedRepairSummary> {
+  const now = options.now ?? new Date().toISOString();
+  const peer = await federationPeerRegistry.getPeerRecord(options.peerId);
+  if (!peer) {
+    return {
+      attempted: false,
+      peerId: options.peerId,
+      outcome: "failed",
+      error: "unknown federation peer"
+    };
+  }
+
+  await federationPeerRegistry.scheduleRepair({
+    peerId: options.peerId,
+    cause: options.cause,
+    source: options.source,
+    now
+  });
+  await federationPeerRegistry.beginRepair({
+    peerId: options.peerId,
+    cause: options.cause,
+    source: options.source,
+    now
+  });
+
+  try {
+    await renewFederationPeerLeaseByPeerId(options.peerId);
+    await federationPeerRegistry.markRepairSuccess({
+      peerId: options.peerId,
+      action: "lease-renewal",
+      now
+    });
+    return {
+      attempted: true,
+      peerId: options.peerId,
+      outcome: "lease-renewed",
+      action: "lease-renewal"
+    };
+  } catch (leaseError) {
+    const leaseMessage =
+      leaseError instanceof Error ? leaseError.message : "unknown federation lease renewal error";
+    try {
+      await refreshFederationPeer(options.peerId);
+      await renewFederationPeerLeaseByPeerId(options.peerId);
+      await federationPeerRegistry.markRepairSuccess({
+        peerId: options.peerId,
+        action: "membership-refresh-renewal",
+        now
+      });
+      return {
+        attempted: true,
+        peerId: options.peerId,
+        outcome: "membership-refresh-renewed",
+        action: "membership-refresh-renewal"
+      };
+    } catch (refreshError) {
+      const refreshMessage =
+        refreshError instanceof Error
+          ? refreshError.message
+          : "unknown federation membership refresh error";
+      const delayMs = Math.max(
+        2_000,
+        peer.leaseRefreshIntervalMs,
+        peer.configuredLeaseRefreshIntervalMs
+      );
+      await federationPeerRegistry.markRepairFailure({
+        peerId: options.peerId,
+        error: `${leaseMessage}; ${refreshMessage}`,
+        action: "membership-refresh-renewal",
+        delayMs,
+        now
+      });
+      return {
+        attempted: true,
+        peerId: options.peerId,
+        outcome: "failed",
+        action: "membership-refresh-renewal",
+        error: `${leaseMessage}; ${refreshMessage}`
+      };
+    }
+  }
+}
+
+function createFederatedRepairGroupId(options: {
+  layerId: string;
+  sessionId?: string;
+  executionId: string;
+}): string {
+  return `repair-${hashValue(
+    `${options.sessionId ?? "system"}:${options.layerId}:${options.executionId}`
+  ).slice(0, 16)}`;
+}
+
+function shouldRetryFederatedExecution(execution: CognitiveExecutionRecord): boolean {
+  return execution.status === "failed" && execution.assignedWorkerProfile === "remote";
+}
+
+async function attemptAlternateFederatedExecution(options: {
+  layer: IntelligenceLayer;
+  firstResult: CognitivePassResult;
+  consentScope?: string;
+  sessionId?: string;
+  reservation: FederatedRetryReservation;
+  runRetry: (options: FederatedRetryRunOptions) => Promise<CognitivePassResult>;
+}): Promise<CognitivePassResult> {
+  if (!shouldRetryFederatedExecution(options.firstResult.execution)) {
+    return options.firstResult;
+  }
+
+  const failedPeerId = options.firstResult.execution.assignedWorkerPeerId?.trim();
+  if (!failedPeerId) {
+    return options.firstResult;
+  }
+
+  const repairCause =
+    options.firstResult.execution.responsePreview?.trim().slice(0, 160) || "execution_failed";
+  const repairGroupId = createFederatedRepairGroupId({
+    layerId: options.layer.id,
+    sessionId: options.sessionId,
+    executionId: options.firstResult.execution.id
+  });
+  let repairSummary: FederatedRepairSummary = {
+    attempted: false,
+    peerId: failedPeerId,
+    outcome: "failed"
+  };
+
+  try {
+    repairSummary = await attemptFederationPeerRepairByPeerId({
+      peerId: failedPeerId,
+      cause: repairCause,
+      source: "runtime-retry"
+    });
+  } catch (error) {
+    repairSummary = {
+      attempted: true,
+      peerId: failedPeerId,
+      outcome: "failed",
+      error: error instanceof Error ? error.message : "unknown federation repair error"
+    };
+  }
+
+  try {
+    const retryAssignment = await reserveExecutionWorker({
+      layer: options.layer,
+      requestedExecutionDecision: options.reservation.requestedExecutionDecision,
+      target: options.reservation.target,
+      fallbackLocalPoolSize: options.reservation.fallbackLocalPoolSize,
+      preferredDeviceAffinityTags: options.reservation.preferredDeviceAffinityTags,
+      avoidPeerIds: [...new Set([...(options.reservation.avoidPeerIds ?? []), failedPeerId])],
+      maxObservedLatencyMs: options.reservation.maxObservedLatencyMs,
+      maxCostPerHourUsd: options.reservation.maxCostPerHourUsd
+    });
+    if (retryAssignment.peerId && retryAssignment.peerId === failedPeerId) {
+      await releaseExecutionWorker(retryAssignment);
+      return options.firstResult;
+    }
+
+    app.log.warn(
+      {
+        failedExecutionId: options.firstResult.execution.id,
+        failedPeerId,
+        retryWorkerId: retryAssignment.workerId,
+        retryPeerId: retryAssignment.peerId ?? null,
+        repairOutcome: repairSummary.outcome,
+        repairAction: repairSummary.action,
+        repairError: repairSummary.error
+      },
+      "Retrying federated cognitive execution on an alternate worker."
+    );
+
+    return await options.runRetry({
+      assignment: retryAssignment,
+      repairGroupId,
+      repairAttempt: 2,
+      retriedFromExecutionId: options.firstResult.execution.id,
+      repairCause
+    });
+  } catch (error) {
+    app.log.warn(
+      {
+        failedExecutionId: options.firstResult.execution.id,
+        failedPeerId,
+        repairOutcome: repairSummary.outcome,
+        message: error instanceof Error ? error.message : "unknown retry reservation error"
+      },
+      "Unable to secure an alternate execution worker after federated failure."
+    );
+    return options.firstResult;
   }
 }
 
@@ -1152,6 +1400,42 @@ async function renewDueFederationPeerLeases() {
             error instanceof Error ? error.message : "unknown federation lease renewal error"
         },
         "Federation peer lease renewal failed."
+      );
+    }
+  }
+}
+
+async function repairDueFederationPeers() {
+  const now = new Date().toISOString();
+  const peers = await federationPeerRegistry.listPeers(now);
+  for (const peer of peers) {
+    if (!peer.repairDue) {
+      continue;
+    }
+    try {
+      const summary = await attemptFederationPeerRepairByPeerId({
+        peerId: peer.peerId,
+        cause: peer.lastRepairCause ?? peer.lastRepairError ?? "scheduled_repair",
+        source: peer.lastRepairSource ?? "background-repair",
+        now
+      });
+      app.log.info(
+        {
+          peerId: peer.peerId,
+          outcome: summary.outcome,
+          action: summary.action,
+          error: summary.error
+        },
+        "Completed due federation peer repair attempt."
+      );
+    } catch (error) {
+      app.log.warn(
+        {
+          peerId: peer.peerId,
+          controlPlaneUrl: peer.controlPlaneUrl,
+          message: error instanceof Error ? error.message : "unknown federation repair error"
+        },
+        "Federation peer repair attempt failed."
       );
     }
   }
@@ -1693,6 +1977,10 @@ function bindExecutionPlacement(options: {
   sessionId?: string;
   executionEndpoint: string;
   executionTopology?: ReturnType<typeof engine.getSnapshot>["executionSchedules"][number]["executionTopology"];
+  repairGroupId?: string;
+  repairAttempt?: number;
+  retriedFromExecutionId?: string;
+  repairCause?: string;
   parallelBatchId?: string;
   parallelBatchSize?: number;
   parallelPosition?: number;
@@ -1720,6 +2008,10 @@ function bindExecutionPlacement(options: {
     assignmentScore: options.assignment?.score,
     executionEndpoint: options.executionEndpoint,
     executionTopology: options.executionTopology,
+    repairGroupId: options.repairGroupId,
+    repairAttempt: options.repairAttempt,
+    retriedFromExecutionId: options.retriedFromExecutionId,
+    repairCause: options.repairCause,
     parallelBatchId: options.parallelBatchId,
     parallelBatchSize: options.parallelBatchSize,
     parallelPosition: options.parallelPosition
@@ -2034,6 +2326,10 @@ async function executeCognitivePass(options: {
   sessionId?: string;
   assignment?: ExecutionWorkerAssignment;
   executionTopology?: ReturnType<typeof engine.getSnapshot>["executionSchedules"][number]["executionTopology"];
+  repairGroupId?: string;
+  repairAttempt?: number;
+  retriedFromExecutionId?: string;
+  repairCause?: string;
 }) {
   const busyLayer: IntelligenceLayer = {
     ...options.layer,
@@ -2083,7 +2379,11 @@ async function executeCognitivePass(options: {
       assignment: options.assignment,
       sessionId: options.sessionId,
       executionEndpoint,
-      executionTopology: options.executionTopology ?? "sequential"
+      executionTopology: options.executionTopology ?? "sequential",
+      repairGroupId: options.repairGroupId,
+      repairAttempt: options.repairAttempt,
+      retriedFromExecutionId: options.retriedFromExecutionId,
+      repairCause: options.repairCause
     });
     const settledLayer: IntelligenceLayer = {
       ...busyLayer,
@@ -2150,12 +2450,17 @@ async function executeCognitivePass(options: {
       assignmentReason: options.assignment?.reason,
       assignmentScore: options.assignment?.score,
       executionEndpoint,
-      executionTopology: options.executionTopology ?? "sequential"
+      executionTopology: options.executionTopology ?? "sequential",
+      repairGroupId: options.repairGroupId,
+      repairAttempt: options.repairAttempt,
+      retriedFromExecutionId: options.retriedFromExecutionId,
+      repairCause: options.repairCause
     };
-    engine.registerIntelligenceLayer({
+    const failedLayer: IntelligenceLayer = {
       ...busyLayer,
       status: "degraded"
-    });
+    };
+    engine.registerIntelligenceLayer(failedLayer);
     const snapshot = phaseSnapshotSchema.parse(
       projectPhaseSnapshot(engine.commitCognitiveExecution(failedExecution))
     );
@@ -2165,10 +2470,7 @@ async function executeCognitivePass(options: {
       execution: failedExecution
     });
     return {
-      layer: {
-        ...busyLayer,
-        status: "degraded"
-      },
+      layer: failedLayer,
       execution: failedExecution,
       response: failedExecution.responsePreview,
       snapshot
@@ -2189,6 +2491,10 @@ async function executeScheduledCognitivePass(options: {
   parallelBatchId?: string;
   parallelBatchSize?: number;
   parallelPosition?: number;
+  repairGroupId?: string;
+  repairAttempt?: number;
+  retriedFromExecutionId?: string;
+  repairCause?: string;
 }) {
   const busyLayer: IntelligenceLayer = {
     ...options.layer,
@@ -2227,6 +2533,10 @@ async function executeScheduledCognitivePass(options: {
       sessionId: options.sessionId,
       executionEndpoint,
       executionTopology: options.executionTopology ?? "sequential",
+      repairGroupId: options.repairGroupId,
+      repairAttempt: options.repairAttempt,
+      retriedFromExecutionId: options.retriedFromExecutionId,
+      repairCause: options.repairCause,
       parallelBatchId: options.parallelBatchId,
       parallelBatchSize: options.parallelBatchSize,
       parallelPosition: options.parallelPosition
@@ -2286,6 +2596,10 @@ async function executeScheduledCognitivePass(options: {
       assignmentScore: options.assignment?.score,
       executionEndpoint,
       executionTopology: options.executionTopology ?? "sequential",
+      repairGroupId: options.repairGroupId,
+      repairAttempt: options.repairAttempt,
+      retriedFromExecutionId: options.retriedFromExecutionId,
+      repairCause: options.repairCause,
       parallelBatchId: options.parallelBatchId,
       parallelBatchSize: options.parallelBatchSize,
       parallelPosition: options.parallelPosition
@@ -2314,6 +2628,99 @@ async function executeScheduledCognitivePass(options: {
   } finally {
     await releaseExecutionWorker(options.assignment);
   }
+}
+
+async function executeCognitivePassWithRetry(options: {
+  layer: IntelligenceLayer;
+  objective?: string;
+  context?: string;
+  consentScope?: string;
+  sessionId?: string;
+  assignment?: ExecutionWorkerAssignment;
+  executionTopology?: ReturnType<typeof engine.getSnapshot>["executionSchedules"][number]["executionTopology"];
+  reservation: FederatedRetryReservation;
+}): Promise<CognitivePassResult> {
+  const firstResult = await executeCognitivePass({
+    layer: options.layer,
+    objective: options.objective,
+    context: options.context,
+    consentScope: options.consentScope,
+    sessionId: options.sessionId,
+    assignment: options.assignment,
+    executionTopology: options.executionTopology
+  });
+  return attemptAlternateFederatedExecution({
+    layer: options.layer,
+    firstResult,
+    consentScope: options.consentScope,
+    sessionId: options.sessionId,
+    reservation: options.reservation,
+    runRetry: async (retry) =>
+      executeCognitivePass({
+        layer: options.layer,
+        objective: options.objective,
+        context: options.context,
+        consentScope: options.consentScope,
+        sessionId: options.sessionId,
+        assignment: retry.assignment,
+        executionTopology: options.executionTopology,
+        repairGroupId: retry.repairGroupId,
+        repairAttempt: retry.repairAttempt,
+        retriedFromExecutionId: retry.retriedFromExecutionId,
+        repairCause: retry.repairCause
+      })
+  });
+}
+
+async function executeScheduledCognitivePassWithRetry(options: {
+  layer: IntelligenceLayer;
+  objective: string;
+  context?: string;
+  consentScope?: string;
+  sessionId?: string;
+  assignment?: ExecutionWorkerAssignment;
+  executionTopology?: ReturnType<typeof engine.getSnapshot>["executionSchedules"][number]["executionTopology"];
+  parallelBatchId?: string;
+  parallelBatchSize?: number;
+  parallelPosition?: number;
+  reservation: FederatedRetryReservation;
+}): Promise<CognitivePassResult> {
+  const firstResult = await executeScheduledCognitivePass({
+    layer: options.layer,
+    objective: options.objective,
+    context: options.context,
+    consentScope: options.consentScope,
+    sessionId: options.sessionId,
+    assignment: options.assignment,
+    executionTopology: options.executionTopology,
+    parallelBatchId: options.parallelBatchId,
+    parallelBatchSize: options.parallelBatchSize,
+    parallelPosition: options.parallelPosition
+  });
+  return attemptAlternateFederatedExecution({
+    layer: options.layer,
+    firstResult,
+    consentScope: options.consentScope,
+    sessionId: options.sessionId,
+    reservation: options.reservation,
+    runRetry: async (retry) =>
+      executeScheduledCognitivePass({
+        layer: options.layer,
+        objective: options.objective,
+        context: options.context,
+        consentScope: options.consentScope,
+        sessionId: options.sessionId,
+        assignment: retry.assignment,
+        executionTopology: options.executionTopology,
+        parallelBatchId: options.parallelBatchId,
+        parallelBatchSize: options.parallelBatchSize,
+        parallelPosition: options.parallelPosition,
+        repairGroupId: retry.repairGroupId,
+        repairAttempt: retry.repairAttempt,
+        retriedFromExecutionId: retry.retriedFromExecutionId,
+        repairCause: retry.repairCause
+      })
+  });
 }
 
 function buildSwarmSharedContext(options: {
@@ -2399,7 +2806,7 @@ async function executeCognitiveSchedule(options: {
           priorTurns: [],
           sharedContext: sharedSwarmContext
         });
-        return executeScheduledCognitivePass({
+        return executeScheduledCognitivePassWithRetry({
           layer,
           objective: prompt.objective,
           context: prompt.context,
@@ -2409,7 +2816,15 @@ async function executeCognitiveSchedule(options: {
           executionTopology: options.schedule.executionTopology,
           parallelBatchId,
           parallelBatchSize: nonGuardLayers.length,
-          parallelPosition: index + 1
+          parallelPosition: index + 1,
+          reservation: {
+            requestedExecutionDecision: options.requestedExecutionDecision,
+            target: `${options.schedule.mode}:${layer.role}`,
+            preferredDeviceAffinityTags: [
+              layer.role,
+              ...(options.schedule.mode.includes("swarm") ? ["swarm"] : [])
+            ]
+          }
         });
       })
     );
@@ -2446,14 +2861,22 @@ async function executeCognitiveSchedule(options: {
         priorTurns: turns,
         sharedContext: sharedSwarmContext
       });
-      const result = await executeScheduledCognitivePass({
+      const result = await executeScheduledCognitivePassWithRetry({
         layer,
         objective: prompt.objective,
         context: prompt.context,
         consentScope: options.consentScope,
         sessionId: options.sessionId,
         assignment,
-        executionTopology: options.schedule.executionTopology
+        executionTopology: options.schedule.executionTopology,
+        reservation: {
+          requestedExecutionDecision: options.requestedExecutionDecision,
+          target: `${options.schedule.mode}:${layer.role}`,
+          preferredDeviceAffinityTags: [
+            layer.role,
+            ...(options.schedule.mode.includes("swarm") ? ["swarm"] : [])
+          ]
+        }
       });
 
       layers.push(result.layer);
@@ -2481,14 +2904,19 @@ async function executeCognitiveSchedule(options: {
       priorTurns: turns,
       sharedContext: sharedSwarmContext
     });
-    const guardResult = await executeScheduledCognitivePass({
+    const guardResult = await executeScheduledCognitivePassWithRetry({
       layer: guardLayer,
       objective: prompt.objective,
       context: prompt.context,
       consentScope: options.consentScope,
       sessionId: options.sessionId,
       assignment: guardAssignment,
-      executionTopology: options.schedule.executionTopology
+      executionTopology: options.schedule.executionTopology,
+      reservation: {
+        requestedExecutionDecision: options.requestedExecutionDecision,
+        target: `${options.schedule.mode}:guard`,
+        preferredDeviceAffinityTags: [guardLayer.role]
+      }
     });
 
     layers.push(guardResult.layer);
@@ -4757,13 +5185,18 @@ app.post("/api/intelligence/run", async (request, reply) => {
       requestedExecutionDecision: body.requestedExecutionDecision,
       target: "single-layer"
     });
-    const result = await executeCognitivePass({
+    const result = await executeCognitivePassWithRetry({
       layer,
       objective: body.objective,
       consentScope,
       sessionId: resolvedSessionId,
       assignment,
-      executionTopology: "sequential"
+      executionTopology: "sequential",
+      reservation: {
+        requestedExecutionDecision: body.requestedExecutionDecision,
+        target: "single-layer",
+        preferredDeviceAffinityTags: [layer.role]
+      }
     });
 
     if (result.execution.status === "failed") {
