@@ -56,6 +56,7 @@ import {
 } from "./governance.js";
 import { buildLiveNeuroFrame } from "./live-neuro.js";
 import { signFederationPayload, verifyFederationEnvelope } from "./federation.js";
+import { createFederationPeerRegistry, smoothObservedLatency } from "./federation-peers.js";
 import { buildNwbReplayFrames, scanNwbFile } from "./nwb.js";
 import { parseStructuredResponse } from "./ollama.js";
 import { createPersistence } from "./persistence.js";
@@ -1689,6 +1690,40 @@ export async function runPublishedBenchmark(
     workerRegistryNow,
     workerLocalityNodeViews
   );
+  const federationPeerRegistry = createFederationPeerRegistry(
+    path.join(runtimeDir, "federation-peer-plane")
+  );
+  const federationRegisteredPeer = await federationPeerRegistry.registerPeer({
+    controlPlaneUrl: "http://127.0.0.1:9788",
+    expectedNodeId: workerLocalityNearNode.nodeId,
+    refreshIntervalMs: 10_000,
+    trustWindowMs: 15_000,
+    maxObservedLatencyMs: 50,
+    now: workerRegistryNow
+  });
+  const federationPeerSuccessFirst = await federationPeerRegistry.markRefreshSuccess({
+    peerId: federationRegisteredPeer.peerId,
+    expectedNodeId: workerLocalityNearNode.nodeId,
+    observedLatencyMs: 48,
+    now: workerRegistryNow
+  });
+  const federationRenewedAt = new Date(Date.parse(workerRegistryNow) + 10_000).toISOString();
+  const federationPeerSuccessSecond = await federationPeerRegistry.markRefreshSuccess({
+    peerId: federationRegisteredPeer.peerId,
+    expectedNodeId: workerLocalityNearNode.nodeId,
+    observedLatencyMs: 18,
+    now: federationRenewedAt
+  });
+  const federationPeerAfterRenewal = await federationPeerRegistry.getPeer(
+    federationRegisteredPeer.peerId,
+    federationRenewedAt
+  );
+  const federationFaultedAt = new Date(Date.parse(federationRenewedAt) + 16_000).toISOString();
+  const federationPeerAfterFailure = await federationPeerRegistry.markRefreshFailure({
+    peerId: federationRegisteredPeer.peerId,
+    error: "timeout",
+    now: federationFaultedAt
+  });
   const localSlotRegistry = createIntelligenceWorkerRegistry(
     path.join(runtimeDir, "worker-plane-local-slots")
   );
@@ -3275,6 +3310,16 @@ export async function runPublishedBenchmark(
       )
     ]
   );
+  const federationPeerLatencySeries = createSeries(
+    "federation_peer_latency_ms",
+    "Federation peer observed latency",
+    "ms",
+    [
+      federationPeerSuccessFirst.observedLatencyMs ?? 0,
+      federationPeerSuccessSecond.observedLatencyMs ?? 0,
+      federationPeerSuccessSecond.smoothedLatencyMs ?? 0
+    ]
+  );
   const multiRoleConversationLatencySeries = createSeries(
     "multi_role_conversation_latency_ms",
     "Multi-role conversation latency",
@@ -4053,6 +4098,30 @@ export async function runPublishedBenchmark(
       "authenticated federation is only real if unsigned remote workers stop being assignable instead of merely ranking lower"
     ),
     createAssertion(
+      "federation-peer-renewal",
+      "Federation peer refresh renews trust and smooths live latency instead of freezing a one-shot sync measurement",
+      federationPeerAfterRenewal?.status === "healthy" &&
+        federationPeerAfterRenewal.expectedNodeId === workerLocalityNearNode.nodeId &&
+        federationPeerAfterRenewal.lastSuccessAt === federationRenewedAt &&
+        federationPeerAfterRenewal.smoothedLatencyMs ===
+          smoothObservedLatency(federationPeerSuccessFirst.smoothedLatencyMs, 18) &&
+        federationPeerAfterRenewal.smoothedLatencyMs !== federationPeerSuccessFirst.smoothedLatencyMs &&
+        federationPeerAfterRenewal.trustRemainingMs > 0,
+      "renewed success with updated smoothed latency and healthy trust window",
+      `${federationPeerAfterRenewal?.status ?? "missing"} / smoothed ${federationPeerAfterRenewal?.smoothedLatencyMs ?? "missing"} / expected ${workerLocalityNearNode.nodeId}`,
+      "federated liveness should be a renewing control signal, not a static latency number captured at import time"
+    ),
+    createAssertion(
+      "federation-peer-stale-eviction-window",
+      "Federation peers become faulted when the signed trust window expires without renewal",
+      federationPeerAfterFailure.status === "faulted" &&
+        federationPeerAfterFailure.trustRemainingMs === 0 &&
+        federationPeerAfterFailure.lastError === "timeout",
+      "faulted peer after trust window expiry",
+      `${federationPeerAfterFailure.status} / trust=${federationPeerAfterFailure.trustRemainingMs} / error=${federationPeerAfterFailure.lastError ?? "none"}`,
+      "a peer that stops renewing signed membership has to age out of trust before placement keeps using stale remote state"
+    ),
+    createAssertion(
       "worker-assignment-duplicate-pressure",
       "Duplicate worker assignment requests are blocked while the leased worker remains reserved",
       workerAssignmentSecond.assignment === null &&
@@ -4630,6 +4699,7 @@ export async function runPublishedBenchmark(
       cognitiveGovernanceContextSeries,
       cognitiveRouteSoftPriorSeries,
       workerLocalityAffinitySeries,
+      federationPeerLatencySeries,
       multiRoleConversationLatencySeries,
       multiRoleConversationTurnSeries,
       multiRoleConversationVerdictSeries,
@@ -4675,6 +4745,7 @@ export async function runPublishedBenchmark(
             cognitiveGovernanceContextSeries,
             cognitiveRouteSoftPriorSeries,
             workerLocalityAffinitySeries,
+            federationPeerLatencySeries,
             multiRoleConversationTurnSeries,
             multiRoleConversationVerdictSeries,
             executionArbitrationCognitionSeries,

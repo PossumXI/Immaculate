@@ -62,6 +62,7 @@ import {
   type FederationSignedEnvelope,
   type FederationWorkerIdentityPayload
 } from "./federation.js";
+import { createFederationPeerRegistry, smoothObservedLatency } from "./federation-peers.js";
 import { createNodeRegistry } from "./node-registry.js";
 import { createNeuroReplayManager } from "./neuro-replay.js";
 import { listBenchmarkPacks } from "./benchmark-packs.js";
@@ -106,6 +107,7 @@ const neuroRegistry = createNeuroRegistry(persistence.getStatus().rootDir);
 const governance = createGovernanceRegistry();
 const actuationManager = await createActuationManager(persistence.getStatus().rootDir);
 const intelligenceWorkerRegistry = createIntelligenceWorkerRegistry(persistence.getStatus().rootDir);
+const federationPeerRegistry = createFederationPeerRegistry(persistence.getStatus().rootDir);
 const nodeRegistry = createNodeRegistry(persistence.getStatus().rootDir, {
   localNodeId:
     process.env.IMMACULATE_NODE_ID ??
@@ -220,6 +222,26 @@ const NODE_HEARTBEAT_INTERVAL_MS = Math.max(
   5_000,
   Number(process.env.IMMACULATE_NODE_HEARTBEAT_INTERVAL_MS ?? 15_000) || 15_000
 );
+const FEDERATION_REFRESH_POLL_MS = Math.max(
+  2_000,
+  Number(process.env.IMMACULATE_FEDERATION_REFRESH_POLL_MS ?? 5_000) || 5_000
+);
+const FEDERATION_DEFAULT_REFRESH_INTERVAL_MS = Math.max(
+  FEDERATION_REFRESH_POLL_MS,
+  Number(process.env.IMMACULATE_FEDERATION_REFRESH_INTERVAL_MS ?? 10_000) || 10_000
+);
+const FEDERATION_DEFAULT_TRUST_WINDOW_MS = Math.max(
+  FEDERATION_DEFAULT_REFRESH_INTERVAL_MS * 2,
+  Number(process.env.IMMACULATE_FEDERATION_TRUST_WINDOW_MS ?? 45_000) || 45_000
+);
+const FEDERATION_ENVELOPE_MAX_AGE_MS = Math.max(
+  FEDERATION_DEFAULT_TRUST_WINDOW_MS,
+  Number(process.env.IMMACULATE_FEDERATION_ENVELOPE_MAX_AGE_MS ?? 60_000) || 60_000
+);
+const FEDERATION_ENVELOPE_MAX_CLOCK_SKEW_MS = Math.max(
+  2_000,
+  Number(process.env.IMMACULATE_FEDERATION_ENVELOPE_MAX_CLOCK_SKEW_MS ?? 5_000) || 5_000
+);
 
 setInterval(() => {
   void nodeRegistry.ensureLocalNode().catch((error) => {
@@ -231,6 +253,17 @@ setInterval(() => {
     );
   });
 }, NODE_HEARTBEAT_INTERVAL_MS).unref();
+
+setInterval(() => {
+  void refreshDueFederationPeers().catch((error) => {
+    app.log.warn(
+      {
+        message: error instanceof Error ? error.message : "unknown federation refresh poll error"
+      },
+      "Unable to complete federation peer refresh poll."
+    );
+  });
+}, FEDERATION_REFRESH_POLL_MS).unref();
 
 type BenchmarkJob = {
   id: string;
@@ -446,19 +479,83 @@ function federationRequestHeaders(token?: string): HeadersInit {
   };
 }
 
+function federationTelemetryAllowed(executionProfile: IntelligenceWorkerExecutionProfile | undefined): boolean {
+  return executionProfile === "local";
+}
+
+function federationNodeTelemetryAllowed(isLocal: boolean | undefined): boolean {
+  return isLocal === true;
+}
+
+function rejectFederationQueryToken(request: FastifyRequest, reply: FastifyReply): boolean {
+  if (!extractQueryToken(request.raw.url)) {
+    return false;
+  }
+  reply.code(400).send({
+    error: "federation_query_token_rejected",
+    message: "Federation routes require an Authorization header; query-string tokens are rejected."
+  });
+  return true;
+}
+
+async function evictFederationPeerState(options: {
+  expectedNodeId?: string | null;
+  controlPlaneUrl?: string | null;
+}) {
+  const now = new Date().toISOString();
+  const nodeState = await nodeRegistry.listNodes(now);
+  const remoteNode =
+    nodeState.nodes.find(
+      (node) =>
+        !node.isLocal &&
+        ((options.expectedNodeId && node.nodeId === options.expectedNodeId) ||
+          (options.controlPlaneUrl && node.controlPlaneUrl === options.controlPlaneUrl))
+    ) ?? null;
+  if (!remoteNode) {
+    return {
+      evictedNodeId: null,
+      removedWorkerIds: [] as string[]
+    };
+  }
+
+  const workers = await intelligenceWorkerRegistry.listWorkers(now, nodeState.nodes);
+  const removedWorkerIds: string[] = [];
+  for (const worker of workers) {
+    if (worker.nodeId === remoteNode.nodeId && worker.executionProfile === "remote") {
+      await intelligenceWorkerRegistry.removeWorker(worker.workerId, now, nodeState.nodes);
+      removedWorkerIds.push(worker.workerId);
+    }
+  }
+  await nodeRegistry.removeNode(remoteNode.nodeId, now);
+  return {
+    evictedNodeId: remoteNode.nodeId,
+    removedWorkerIds
+  };
+}
+
 async function syncFederationPeer(options: {
+  peerId?: string;
   controlPlaneUrl: string;
   authorizationToken?: string;
   expectedNodeId?: string;
   maxObservedLatencyMs?: number;
+  priorSmoothedLatencyMs?: number | null;
+  now?: string;
 }) {
   const secret = requireFederationSecret();
+  const now = options.now ?? new Date().toISOString();
   const normalizedControlPlaneUrl = normalizeFederationControlPlaneUrl(options.controlPlaneUrl);
   const startedAtMs = Date.now();
   const response = await fetch(`${normalizedControlPlaneUrl}/api/federation/membership`, {
-    headers: federationRequestHeaders(options.authorizationToken)
+    headers: federationRequestHeaders(options.authorizationToken),
+    redirect: "error",
+    cache: "no-store"
   });
   const observedLatencyMs = Date.now() - startedAtMs;
+  const effectiveObservedLatencyMs = smoothObservedLatency(
+    options.priorSmoothedLatencyMs,
+    observedLatencyMs
+  );
 
   if (!response.ok) {
     throw new Error(`Federation membership fetch failed with status ${response.status}.`);
@@ -490,7 +587,10 @@ async function syncFederationPeer(options: {
   const nodeEnvelope = payload.membership.node;
   const nodeVerification = verifyFederationEnvelope(nodeEnvelope, {
     secret,
-    expectedIssuerNodeId: payload.membership.exporterNodeId
+    expectedIssuerNodeId: payload.membership.exporterNodeId,
+    now,
+    maxAgeMs: FEDERATION_ENVELOPE_MAX_AGE_MS,
+    maxClockSkewMs: FEDERATION_ENVELOPE_MAX_CLOCK_SKEW_MS
   });
   if (!nodeVerification.verified) {
     throw new Error(`Federation node identity verification failed: ${nodeVerification.reason}`);
@@ -520,7 +620,7 @@ async function syncFederationPeer(options: {
     identityIssuedAt: nodeEnvelope.issuedAt,
     identitySignature: nodeEnvelope.signature,
     identityVerified: true,
-    observedLatencyMs,
+    observedLatencyMs: effectiveObservedLatencyMs,
     costPerHourUsd: remoteNodePayload.costPerHourUsd ?? null,
     deviceAffinityTags: remoteNodePayload.deviceAffinityTags
   });
@@ -532,7 +632,10 @@ async function syncFederationPeer(options: {
   for (const workerEnvelope of payload.membership.workers) {
     const workerVerification = verifyFederationEnvelope(workerEnvelope, {
       secret,
-      expectedIssuerNodeId: remoteNode.nodeId
+      expectedIssuerNodeId: remoteNode.nodeId,
+      now,
+      maxAgeMs: FEDERATION_ENVELOPE_MAX_AGE_MS,
+      maxClockSkewMs: FEDERATION_ENVELOPE_MAX_CLOCK_SKEW_MS
     });
     if (!workerVerification.verified) {
       throw new Error(
@@ -557,7 +660,7 @@ async function syncFederationPeer(options: {
           hostLabel: workerEnvelope.payload.hostLabel ?? undefined,
           nodeId: remoteNode.nodeId,
           locality: workerEnvelope.payload.locality ?? remoteNode.locality,
-          executionProfile: workerEnvelope.payload.executionProfile,
+          executionProfile: "remote",
           executionEndpoint: workerEnvelope.payload.executionEndpoint ?? undefined,
           registeredAt: workerEnvelope.payload.registeredAt,
           heartbeatAt: workerEnvelope.payload.heartbeatAt,
@@ -572,7 +675,7 @@ async function syncFederationPeer(options: {
           identityIssuedAt: workerEnvelope.issuedAt,
           identitySignature: workerEnvelope.signature,
           identityVerified: true,
-          observedLatencyMs,
+          observedLatencyMs: effectiveObservedLatencyMs,
           costPerHourUsd: workerEnvelope.payload.costPerHourUsd ?? null,
           deviceAffinityTags: workerEnvelope.payload.deviceAffinityTags
         },
@@ -596,10 +699,81 @@ async function syncFederationPeer(options: {
 
   return {
     observedLatencyMs,
+    effectiveObservedLatencyMs,
     remoteNode,
     importedWorkers,
     removedWorkers
   };
+}
+
+async function refreshFederationPeer(peerId: string) {
+  const peer = await federationPeerRegistry.getPeerRecord(peerId);
+  if (!peer) {
+    throw new Error(`Unknown federation peer ${peerId}.`);
+  }
+  const now = new Date().toISOString();
+  try {
+    const sync = await syncFederationPeer({
+      peerId: peer.peerId,
+      controlPlaneUrl: peer.controlPlaneUrl,
+      authorizationToken: peer.authorizationToken ?? undefined,
+      expectedNodeId: peer.expectedNodeId ?? undefined,
+      maxObservedLatencyMs: peer.maxObservedLatencyMs ?? undefined,
+      priorSmoothedLatencyMs: peer.smoothedLatencyMs ?? undefined,
+      now
+    });
+    const peerView = await federationPeerRegistry.markRefreshSuccess({
+      peerId: peer.peerId,
+      expectedNodeId: sync.remoteNode.nodeId,
+      observedLatencyMs: sync.observedLatencyMs,
+      now
+    });
+    return {
+      peer: peerView,
+      sync
+    };
+  } catch (error) {
+    const peerView = await federationPeerRegistry.markRefreshFailure({
+      peerId: peer.peerId,
+      error: error instanceof Error ? error.message : "unknown federation refresh error",
+      now
+    });
+    if (peerView.status === "faulted") {
+      await evictFederationPeerState({
+        expectedNodeId: peerView.expectedNodeId ?? undefined,
+        controlPlaneUrl: peerView.controlPlaneUrl
+      });
+    }
+    throw error;
+  }
+}
+
+async function refreshDueFederationPeers() {
+  const now = new Date().toISOString();
+  const peers = await federationPeerRegistry.listPeers(now);
+  for (const peer of peers) {
+    if (peer.status === "faulted") {
+      await evictFederationPeerState({
+        expectedNodeId: peer.expectedNodeId ?? undefined,
+        controlPlaneUrl: peer.controlPlaneUrl
+      });
+    }
+    if (!peer.refreshDue) {
+      continue;
+    }
+    try {
+      await refreshFederationPeer(peer.peerId);
+    } catch (error) {
+      app.log.warn(
+        {
+          peerId: peer.peerId,
+          controlPlaneUrl: peer.controlPlaneUrl,
+          message: error instanceof Error ? error.message : "unknown federation refresh error"
+        },
+        "Federation peer refresh failed."
+      );
+    }
+  }
 }
 
 function getSessionConversationMemory(sessionId?: string): SessionConversationMemory {
@@ -2534,6 +2708,9 @@ app.get("/api/nodes", async (request, reply) => {
 });
 
 app.get("/api/federation/membership", async (request, reply) => {
+  if (rejectFederationQueryToken(request, reply)) {
+    return;
+  }
   if (
     !authorizeGovernedAction(
       "cognitive-trace-read",
@@ -2558,6 +2735,27 @@ app.get("/api/federation/membership", async (request, reply) => {
       message: error instanceof Error ? error.message : "Unable to export federation membership."
     };
   }
+});
+
+app.get("/api/federation/peers", async (request, reply) => {
+  if (rejectFederationQueryToken(request, reply)) {
+    return;
+  }
+  if (
+    !authorizeGovernedAction(
+      "cognitive-trace-read",
+      "/api/federation/peers",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  return {
+    accepted: true,
+    peers: await federationPeerRegistry.listPeers()
+  };
 });
 
 app.get("/api/intelligence/workers", async (request, reply) => {
@@ -2889,6 +3087,7 @@ app.post("/api/intelligence/workers/register", async (request, reply) => {
     const localNode =
       body.executionProfile === "local" ? await nodeRegistry.ensureLocalNode() : undefined;
     const nodeState = await nodeRegistry.listNodes();
+    const allowTelemetry = federationTelemetryAllowed(body.executionProfile);
     const worker = await intelligenceWorkerRegistry.registerWorker({
       workerId: body.workerId.trim(),
       workerLabel: body.workerLabel?.trim() || undefined,
@@ -2913,18 +3112,20 @@ app.post("/api/intelligence/workers/register", async (request, reply) => {
         : [],
       identityVerified: body.executionProfile === "local",
       observedLatencyMs:
+        allowTelemetry &&
         typeof body.observedLatencyMs === "number" && Number.isFinite(body.observedLatencyMs)
           ? Number(body.observedLatencyMs)
           : body.executionProfile === "local"
             ? 0
             : undefined,
       costPerHourUsd:
+        allowTelemetry &&
         typeof body.costPerHourUsd === "number" && Number.isFinite(body.costPerHourUsd)
           ? Number(body.costPerHourUsd)
           : body.executionProfile === "local"
             ? LOCAL_WORKER_COST_PER_HOUR_USD
             : undefined,
-      deviceAffinityTags: Array.isArray(body.deviceAffinityTags)
+      deviceAffinityTags: allowTelemetry && Array.isArray(body.deviceAffinityTags)
         ? body.deviceAffinityTags
         : body.executionProfile === "local"
           ? LOCAL_WORKER_DEVICE_AFFINITY_TAGS
@@ -3002,6 +3203,7 @@ app.post("/api/intelligence/workers/:workerId/heartbeat", async (request, reply)
     const localNode =
       body.executionProfile === "local" ? await nodeRegistry.ensureLocalNode() : undefined;
     const nodeState = await nodeRegistry.listNodes();
+    const allowTelemetry = federationTelemetryAllowed(body.executionProfile);
     const worker = await intelligenceWorkerRegistry.heartbeatWorker({
       workerId: params.workerId.trim(),
       heartbeatAt: body.heartbeatAt?.trim() || new Date().toISOString(),
@@ -3025,18 +3227,20 @@ app.post("/api/intelligence/workers/:workerId/heartbeat", async (request, reply)
         : undefined,
       identityVerified: body.executionProfile === "local" ? true : undefined,
       observedLatencyMs:
+        allowTelemetry &&
         typeof body.observedLatencyMs === "number" && Number.isFinite(body.observedLatencyMs)
           ? Number(body.observedLatencyMs)
           : body.executionProfile === "local"
             ? 0
             : undefined,
       costPerHourUsd:
+        allowTelemetry &&
         typeof body.costPerHourUsd === "number" && Number.isFinite(body.costPerHourUsd)
           ? Number(body.costPerHourUsd)
           : body.executionProfile === "local"
             ? LOCAL_WORKER_COST_PER_HOUR_USD
             : undefined,
-      deviceAffinityTags: Array.isArray(body.deviceAffinityTags)
+      deviceAffinityTags: allowTelemetry && Array.isArray(body.deviceAffinityTags)
         ? body.deviceAffinityTags
         : body.executionProfile === "local"
           ? LOCAL_WORKER_DEVICE_AFFINITY_TAGS
@@ -3201,6 +3405,7 @@ app.post("/api/nodes/register", async (request, reply) => {
   }
 
   try {
+    const allowTelemetry = federationNodeTelemetryAllowed(body.isLocal);
     const node = await nodeRegistry.registerNode({
       nodeId: body.nodeId.trim(),
       nodeLabel: body.nodeLabel?.trim() || undefined,
@@ -3218,10 +3423,12 @@ app.post("/api/nodes/register", async (request, reply) => {
       identityVerified: body.isLocal === true,
       observedLatencyMs: body.isLocal === true ? 0 : undefined,
       costPerHourUsd:
+        allowTelemetry &&
         typeof body.costPerHourUsd === "number" && Number.isFinite(body.costPerHourUsd)
           ? Number(body.costPerHourUsd)
           : undefined,
-      deviceAffinityTags: Array.isArray(body.deviceAffinityTags) ? body.deviceAffinityTags : []
+      deviceAffinityTags:
+        allowTelemetry && Array.isArray(body.deviceAffinityTags) ? body.deviceAffinityTags : []
     });
     const nodeState = await nodeRegistry.listNodes();
     return {
@@ -3238,7 +3445,80 @@ app.post("/api/nodes/register", async (request, reply) => {
   }
 });
 
+app.post("/api/federation/peers/register", async (request, reply) => {
+  if (rejectFederationQueryToken(request, reply)) {
+    return;
+  }
+  if (
+    !authorizeGovernedAction(
+      "cognitive-registration",
+      "/api/federation/peers/register",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  const body =
+    (request.body as {
+      controlPlaneUrl?: string;
+      expectedNodeId?: string;
+      refreshIntervalMs?: number;
+      trustWindowMs?: number;
+      maxObservedLatencyMs?: number;
+      authorizationToken?: string;
+    } | undefined) ?? {};
+
+  if (!body.controlPlaneUrl?.trim()) {
+    reply.code(400);
+    return {
+      error: "invalid_federation_peer",
+      message: "controlPlaneUrl is required."
+    };
+  }
+
+  try {
+    const peer = await federationPeerRegistry.registerPeer({
+      controlPlaneUrl: normalizeFederationControlPlaneUrl(body.controlPlaneUrl.trim()),
+      authorizationToken: body.authorizationToken?.trim() || null,
+      expectedNodeId: body.expectedNodeId?.trim() || undefined,
+      refreshIntervalMs:
+        typeof body.refreshIntervalMs === "number" && Number.isFinite(body.refreshIntervalMs)
+          ? Number(body.refreshIntervalMs)
+          : FEDERATION_DEFAULT_REFRESH_INTERVAL_MS,
+      trustWindowMs:
+        typeof body.trustWindowMs === "number" && Number.isFinite(body.trustWindowMs)
+          ? Number(body.trustWindowMs)
+          : FEDERATION_DEFAULT_TRUST_WINDOW_MS,
+      maxObservedLatencyMs:
+        typeof body.maxObservedLatencyMs === "number" && Number.isFinite(body.maxObservedLatencyMs)
+          ? Number(body.maxObservedLatencyMs)
+          : undefined
+    });
+    const result = await refreshFederationPeer(peer.peerId);
+    return {
+      accepted: true,
+      peer: result.peer,
+      observedLatencyMs: result.sync.observedLatencyMs,
+      smoothedLatencyMs: result.sync.effectiveObservedLatencyMs,
+      node: result.sync.remoteNode,
+      importedWorkers: result.sync.importedWorkers,
+      removedWorkers: result.sync.removedWorkers
+    };
+  } catch (error) {
+    reply.code(400);
+    return {
+      error: "federation_peer_register_failed",
+      message: error instanceof Error ? error.message : "Unable to register federation peer."
+    };
+  }
+});
+
 app.post("/api/federation/peers/sync", async (request, reply) => {
+  if (rejectFederationQueryToken(request, reply)) {
+    return;
+  }
   if (
     !authorizeGovernedAction(
       "cognitive-registration",
@@ -3252,38 +3532,51 @@ app.post("/api/federation/peers/sync", async (request, reply) => {
 
   const body =
     (request.body as {
+      peerId?: string;
       controlPlaneUrl?: string;
       authorizationToken?: string;
       expectedNodeId?: string;
       maxObservedLatencyMs?: number;
     } | undefined) ?? {};
 
-  if (!body.controlPlaneUrl?.trim()) {
-    reply.code(400);
-    return {
-      error: "invalid_federation_peer",
-      message: "controlPlaneUrl is required."
-    };
-  }
-
   try {
-    const result = await syncFederationPeer({
-      controlPlaneUrl: body.controlPlaneUrl.trim(),
-      authorizationToken: body.authorizationToken?.trim() || undefined,
-      expectedNodeId: body.expectedNodeId?.trim() || undefined,
-      maxObservedLatencyMs:
-        typeof body.maxObservedLatencyMs === "number" && Number.isFinite(body.maxObservedLatencyMs)
-          ? Number(body.maxObservedLatencyMs)
-          : undefined
-    });
-    const nodeState = await nodeRegistry.listNodes();
+    const existingPeer =
+      body.peerId?.trim()
+        ? await federationPeerRegistry.getPeer(body.peerId.trim())
+        : body.controlPlaneUrl?.trim()
+          ? await federationPeerRegistry.findPeerByUrl(
+              normalizeFederationControlPlaneUrl(body.controlPlaneUrl.trim())
+            )
+          : null;
+
+    if (!existingPeer) {
+      reply.code(400);
+      return {
+        error: "invalid_federation_peer",
+        message: "Peer must be registered before sync."
+      };
+    }
+
+    if (body.authorizationToken?.trim()) {
+      await federationPeerRegistry.registerPeer({
+        controlPlaneUrl: existingPeer.controlPlaneUrl,
+        authorizationToken: body.authorizationToken.trim(),
+        expectedNodeId: existingPeer.expectedNodeId ?? undefined,
+        refreshIntervalMs: existingPeer.refreshIntervalMs,
+        trustWindowMs: existingPeer.trustWindowMs,
+        maxObservedLatencyMs: existingPeer.maxObservedLatencyMs ?? undefined
+      });
+    }
+
+    const result = await refreshFederationPeer(existingPeer.peerId);
     return {
       accepted: true,
-      observedLatencyMs: result.observedLatencyMs,
-      node: result.remoteNode,
-      importedWorkers: result.importedWorkers,
-      removedWorkers: result.removedWorkers,
-      summary: nodeState.summary
+      peer: result.peer,
+      observedLatencyMs: result.sync.observedLatencyMs,
+      smoothedLatencyMs: result.sync.effectiveObservedLatencyMs,
+      node: result.sync.remoteNode,
+      importedWorkers: result.sync.importedWorkers,
+      removedWorkers: result.sync.removedWorkers
     };
   } catch (error) {
     reply.code(400);
@@ -3292,6 +3585,84 @@ app.post("/api/federation/peers/sync", async (request, reply) => {
       message: error instanceof Error ? error.message : "Unable to sync federation peer."
     };
   }
+});
+
+app.post("/api/federation/peers/:peerId/refresh", async (request, reply) => {
+  if (rejectFederationQueryToken(request, reply)) {
+    return;
+  }
+  if (
+    !authorizeGovernedAction(
+      "cognitive-registration",
+      "/api/federation/peers/:peerId/refresh",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  const params = request.params as { peerId?: string };
+  if (!params.peerId?.trim()) {
+    reply.code(400);
+    return {
+      error: "missing_peer_id"
+    };
+  }
+
+  try {
+    const result = await refreshFederationPeer(params.peerId.trim());
+    return {
+      accepted: true,
+      peer: result.peer,
+      observedLatencyMs: result.sync.observedLatencyMs,
+      smoothedLatencyMs: result.sync.effectiveObservedLatencyMs,
+      node: result.sync.remoteNode,
+      importedWorkers: result.sync.importedWorkers,
+      removedWorkers: result.sync.removedWorkers
+    };
+  } catch (error) {
+    reply.code(400);
+    return {
+      error: "federation_peer_refresh_failed",
+      message: error instanceof Error ? error.message : "Unable to refresh federation peer."
+    };
+  }
+});
+
+app.delete("/api/federation/peers/:peerId", async (request, reply) => {
+  if (rejectFederationQueryToken(request, reply)) {
+    return;
+  }
+  if (
+    !authorizeGovernedAction(
+      "cognitive-registration",
+      "/api/federation/peers/:peerId",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  const params = request.params as { peerId?: string };
+  if (!params.peerId?.trim()) {
+    reply.code(400);
+    return {
+      error: "missing_peer_id"
+    };
+  }
+
+  const peer = await federationPeerRegistry.removePeer(params.peerId.trim());
+  const eviction = await evictFederationPeerState({
+    expectedNodeId: peer?.expectedNodeId ?? undefined,
+    controlPlaneUrl: peer?.controlPlaneUrl
+  });
+  return {
+    accepted: true,
+    peer,
+    eviction
+  };
 });
 
 app.post("/api/nodes/:nodeId/heartbeat", async (request, reply) => {
@@ -3329,6 +3700,8 @@ app.post("/api/nodes/:nodeId/heartbeat", async (request, reply) => {
   }
 
   try {
+    const existingNode = await nodeRegistry.getNode(params.nodeId.trim());
+    const allowTelemetry = federationNodeTelemetryAllowed(existingNode?.isLocal);
     const node = await nodeRegistry.heartbeatNode({
       nodeId: params.nodeId.trim(),
       heartbeatAt: body.heartbeatAt?.trim() || new Date().toISOString(),
@@ -3342,14 +3715,17 @@ app.post("/api/nodes/:nodeId/heartbeat", async (request, reply) => {
       controlPlaneUrl: body.controlPlaneUrl?.trim() || undefined,
       capabilities: Array.isArray(body.capabilities) ? body.capabilities : undefined,
       observedLatencyMs:
+        allowTelemetry &&
         typeof body.observedLatencyMs === "number" && Number.isFinite(body.observedLatencyMs)
           ? Number(body.observedLatencyMs)
           : undefined,
       costPerHourUsd:
+        allowTelemetry &&
         typeof body.costPerHourUsd === "number" && Number.isFinite(body.costPerHourUsd)
           ? Number(body.costPerHourUsd)
           : undefined,
-      deviceAffinityTags: Array.isArray(body.deviceAffinityTags) ? body.deviceAffinityTags : undefined
+      deviceAffinityTags:
+        allowTelemetry && Array.isArray(body.deviceAffinityTags) ? body.deviceAffinityTags : undefined
     });
     const nodeState = await nodeRegistry.listNodes();
     return {

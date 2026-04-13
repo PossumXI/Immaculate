@@ -21,6 +21,32 @@ For each breakthrough, record:
 
 ### 2026-04-13
 
+#### Authenticated federation crossed from signed import into renewing trust and stale-state eviction
+
+What changed:
+- federation peers are now persisted as first-class control-plane records instead of existing only as one-shot sync inputs
+- signed membership freshness is now enforced with issued-at age and clock-skew windows instead of trusting any valid signature forever
+- peer refresh now runs on a background cadence, smooths observed latency over time, and reuses peer-specific control-plane auth when configured
+- remote node and worker state is now evicted when a peer ages out of its trust window, so dead remotes cannot remain assignable after liveness is lost
+- federation imports now normalize exporter-local workers into importer-remote workers, which keeps placement semantics honest across node boundaries
+
+Why it matters:
+- this closes the real liveness gap in federation: identity was already verified, but trust was still static and placement could outlive the peer that earned it
+- the missed systems pattern was that signed membership alone is not enough; a distributed substrate also needs freshness, renewal, and a hard eviction path when renewal stops
+- it turns federation from a signed discovery trick into a control loop with explicit trust decay, which is the minimum honest boundary before broader multi-node orchestration
+
+Evidence:
+- `npm run typecheck`, `npm run build`, and `npm run benchmark:gate:all` passed again on `2026-04-13` after the peer-refresh and eviction pass
+- a live three-process drill on `127.0.0.1:8941-8943` plus a mock Ollama endpoint on `127.0.0.1:19170` proved the full path:
+- the healthy signed peer on `8942` imported remote worker `worker-local-127-0-0-1-8942-slot-1`, which was recorded as `executionProfile=remote` and won `remote_required` placement with reason `remote-capable · locality local:knightly · identity verified · model demo-model · latency 21.0ms · cost $0.42/h · watch`
+- the bad-secret peer on `8943` was rejected with `Federation node identity verification failed: unexpected key 6fa91d17b766`
+- after the healthy peer process was killed, the peer aged into `faulted`, the remote node disappeared from `/api/nodes`, remote workers disappeared from `/api/intelligence/workers`, and the next `remote_required` cognition run failed closed with `No eligible remote execution worker available`
+
+What this unlocks next:
+- signed lease renewal and heartbeat-style federation where renewal cadence itself becomes a live control signal
+- multi-peer placement that can combine locality, smoothed cross-node latency, and device affinity without trusting stale membership
+- future mesh-style federation only after renewal, eviction, and recovery paths have already been made truthful
+
 #### Authenticated federation reached the signed-membership and verified-identity stage
 
 What changed:

@@ -119,6 +119,9 @@ export function verifyFederationEnvelope<T>(
     secret: string;
     expectedIssuerNodeId?: string;
     expectedKeyId?: string;
+    now?: string;
+    maxAgeMs?: number;
+    maxClockSkewMs?: number;
   }
 ): { verified: boolean; reason?: string } {
   if (!federationSignatureAlgorithms.includes(envelope.algorithm)) {
@@ -130,6 +133,25 @@ export function verifyFederationEnvelope<T>(
   const expectedKeyId = options.expectedKeyId ?? buildFederationKeyId(options.secret);
   if (envelope.keyId !== expectedKeyId) {
     return { verified: false, reason: `unexpected key ${envelope.keyId}` };
+  }
+  const nowMs = Date.parse(options.now ?? new Date().toISOString());
+  const issuedAtMs = Date.parse(envelope.issuedAt);
+  if (!Number.isFinite(issuedAtMs)) {
+    return { verified: false, reason: "invalid issuedAt" };
+  }
+  if (
+    typeof options.maxClockSkewMs === "number" &&
+    Number.isFinite(options.maxClockSkewMs) &&
+    issuedAtMs - nowMs > options.maxClockSkewMs
+  ) {
+    return { verified: false, reason: "issuedAt exceeds clock skew window" };
+  }
+  if (
+    typeof options.maxAgeMs === "number" &&
+    Number.isFinite(options.maxAgeMs) &&
+    nowMs - issuedAtMs > options.maxAgeMs
+  ) {
+    return { verified: false, reason: "envelope expired" };
   }
   const expectedSignature = computeEnvelopeSignature(
     {

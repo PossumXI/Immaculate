@@ -222,7 +222,7 @@ Benchmark packs currently include:
 - remote worker placement now rides an overlooked but real substrate that was already in front of the system: worker records can advertise Ollama-compatible execution endpoints, so cognition can be placed onto remote compute without inventing a second orchestration protocol
 - locality-aware worker placement now runs inside the live harness: when multiple healthy remote workers can satisfy the same request, the system can prefer the worker in the local control locality before crossing into a different rack/zone
 - local swarm execution now treats one host as a pool of leaseable worker slots instead of a single monolithic worker record, so widened cognition can actually reserve parallel local capacity without lying about topology
-- authenticated federation work now centers on signed membership export/import, verified remote node and worker identity, and placement that ranks locality, observed latency, cost, and device affinity
+- authenticated federation now includes signed membership export/import, verified remote node and worker identity, recurring peer refresh, and stale-trust eviction before dead remotes can stay in placement
 - session-bound actuation dispatch and mediated orchestration now fail closed on ambiguous or cross-session source resolution instead of silently falling back to the newest global frame or execution
 - benchmark publication now includes Tier 1 cognitive-loop closure coverage for parsed model structure, governance-aware cognition, routing soft priors, and multi-role conversation verdicts
 - benchmark history can now be queried through a real `/api/benchmarks/trend` surface that analyzes published run order, flags drift, and stays explicit about what metric it is trending
@@ -236,7 +236,7 @@ Benchmark packs currently include:
 - additional vendor-specific transports beyond serial and HTTP/2 direct lanes, including MIDI and richer gRPC-class adapters
 - arbitration and scheduling that feed live neural coupling, device health, decode confidence, and governance pressure deeper into multi-agent planning before route/dispatch
 - additional multi-agent and tool execution backends beyond the first Ollama layer
-- richer worker federation beyond the current authenticated membership export/import and verified identity phase
+- richer worker federation beyond the current authenticated membership, recurring peer refresh, and stale-trust eviction phase
 - domain benchmark packs against published neuro/BCI workloads
 - real multi-node deployment and cluster-wide locality routing beyond the current single-harness node registry
 - richer operator surfaces over published-run trend analysis instead of only the raw API
@@ -256,6 +256,8 @@ The harness now exposes a deliberate operator/automation surface. These routes a
 - `GET /api/governance/status`
 - `GET /api/governance/policies`
 - `GET /api/governance/decisions`
+- `GET /api/federation/membership`
+- `GET /api/federation/peers`
 - `GET /api/nodes`
 - `GET /api/topology`
 - `GET /api/integrity`
@@ -297,12 +299,16 @@ The harness now exposes a deliberate operator/automation surface. These routes a
 - `POST /api/actuation/transports/:transportId/reset`
 - `POST /api/nodes/register`
 - `POST /api/nodes/:nodeId/heartbeat`
+- `POST /api/federation/peers/register`
+- `POST /api/federation/peers/sync`
+- `POST /api/federation/peers/:peerId/refresh`
 - `POST /api/intelligence/ollama/register`
 - `POST /api/intelligence/workers/register`
 - `POST /api/intelligence/workers/:workerId/heartbeat`
 - `POST /api/intelligence/workers/:workerId/unregister`
 - `POST /api/intelligence/workers/assign`
 - `DELETE /api/nodes/:nodeId`
+- `DELETE /api/federation/peers/:peerId`
 - `WS /stream/actuation/device`
 - `WS /stream/neuro/live`
 
@@ -327,6 +333,9 @@ Sensitive read surfaces now split into two modes:
 - the core engine now names its stability eigenvalue as `STABILITY_POLE = 0.82`, tracks `predictionError` and `freeEnergyProxy` in live metrics/history, and adapts phase increments over time instead of treating phase timing as fixed forever
 - `GET /api/intelligence/arbitrations` exposes the durable arbitration ledger so operators can inspect why a mediated pass chose a given mode
 - `GET /api/intelligence/schedules` exposes the durable scheduling ledger so operators can inspect which intelligence formation the mediated pass selected before cognition ran
+- `GET /api/federation/peers` exposes the persisted peer registry with trust-window status, smoothed observed latency, and auth-configured state without leaking peer secrets
+- `POST /api/federation/peers/register`, `POST /api/federation/peers/sync`, and `POST /api/federation/peers/:peerId/refresh` let operators establish and renew signed peer membership through a governed surface instead of ad hoc fetches
+- background federation refresh now evicts remote node and worker state when a peer ages out of its trust window, so `remote_required` execution fails closed instead of continuing to place onto dead remote membership
 - actuation device transports now open with a protocol-negotiation handshake on `WS /stream/actuation/device`; device clients send `actuation-device-hello` before dispatch starts, then acknowledge deliveries with `actuation-ack`
 - UDP/OSC actuation endpoints can be registered through `POST /api/actuation/transports/udp/register`; when present, dispatch prefers that concrete transport before bridge or file fallback
 - serial vendor transports can be registered through `POST /api/actuation/transports/serial/register`; they require heartbeats on `POST /api/actuation/transports/:transportId/heartbeat`, isolate on stale liveness, and can be cleared through `POST /api/actuation/transports/:transportId/reset`
