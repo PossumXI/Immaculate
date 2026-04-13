@@ -69,6 +69,10 @@ import {
   smoothObservedLatency,
   type FederationPeerView
 } from "./federation-peers.js";
+import {
+  buildFederatedExecutionPressure,
+  summarizeRemoteExecutionOutcomes
+} from "./federation-pressure.js";
 import { createNodeRegistry } from "./node-registry.js";
 import { createNeuroReplayManager } from "./neuro-replay.js";
 import { listBenchmarkPacks } from "./benchmark-packs.js";
@@ -538,6 +542,85 @@ async function listFederationPeerViews(now = new Date().toISOString()): Promise<
   return federationPeerRegistry.listPeers(now);
 }
 
+function remoteExecutionOutcomeSummaries(snapshot = engine.getSnapshot()) {
+  return summarizeRemoteExecutionOutcomes(snapshot.cognitiveExecutions);
+}
+
+async function listIntelligenceWorkerViewsWithOutcomes(now = new Date().toISOString()) {
+  const nodeState = await nodeRegistry.listNodes(now);
+  const peerViews = await listFederationPeerViews(now);
+  const executionOutcomes = remoteExecutionOutcomeSummaries();
+  const workers = await intelligenceWorkerRegistry.listWorkers(
+    now,
+    nodeState.nodes,
+    peerViews,
+    [...executionOutcomes.workerSummaries.values()]
+  );
+  return {
+    nodeState,
+    peerViews,
+    workers,
+    executionOutcomes
+  };
+}
+
+async function computeFederatedExecutionPressure(options?: {
+  preferredLayerIds?: string[];
+  preferredDeviceAffinityTags?: string[];
+  baseModel?: string;
+  target?: string;
+}) {
+  const workerState = await listIntelligenceWorkerViewsWithOutcomes();
+  return {
+    ...workerState,
+    pressure: buildFederatedExecutionPressure({
+      peerViews: workerState.peerViews,
+      workers: workerState.workers,
+      preferredLayerIds: options?.preferredLayerIds,
+      preferredDeviceAffinityTags: options?.preferredDeviceAffinityTags,
+      baseModel: options?.baseModel,
+      target: options?.target
+    })
+  };
+}
+
+async function recordFederatedExecutionOutcome(options: {
+  execution: {
+    status: "completed" | "failed";
+    latencyMs: number;
+    assignedWorkerProfile?: "local" | "remote";
+    assignedWorkerPeerId?: string;
+    responsePreview?: string;
+  };
+}) {
+  if (
+    options.execution.assignedWorkerProfile !== "remote" ||
+    !options.execution.assignedWorkerPeerId
+  ) {
+    return;
+  }
+
+  try {
+    await federationPeerRegistry.recordExecutionOutcome({
+      peerId: options.execution.assignedWorkerPeerId,
+      status: options.execution.status,
+      latencyMs: options.execution.latencyMs,
+      error:
+        options.execution.status === "failed"
+          ? options.execution.responsePreview?.slice(0, 160)
+          : undefined
+    });
+  } catch (error) {
+    app.log.warn(
+      {
+        peerId: options.execution.assignedWorkerPeerId,
+        message: error instanceof Error ? error.message : "unknown error"
+      },
+      "Unable to record federated execution outcome."
+    );
+  }
+}
+
 function federationRequestHeaders(token?: string): HeadersInit {
   return {
     ...(token?.trim() || API_KEY
@@ -947,11 +1030,15 @@ async function refreshFederationPeer(peerId: string) {
       observedLatencyMs: sync.observedLatencyMs,
       now
     });
-    const peerView = await federationPeerRegistry.markLeaseSuccess({
-      peerId: peer.peerId,
-      observedLatencyMs: sync.observedLatencyMs,
-      now
-    });
+    const peerView =
+      !peer.lastLeaseSuccessAt
+        ? await federationPeerRegistry.markLeaseSuccess({
+            peerId: peer.peerId,
+            observedLatencyMs: sync.observedLatencyMs,
+            source: "membership-refresh",
+            now
+          })
+        : (await federationPeerRegistry.getPeer(peer.peerId, now))!;
     return {
       peer: peerView,
       sync
@@ -1113,6 +1200,9 @@ function buildReviewRoutingDecision(options: {
     decodeConfidence: options.frame?.decodeConfidence ?? 0,
     cognitiveLatencyMs: options.execution?.latencyMs,
     governancePressure: options.routePlan.governancePressure,
+    federationPressure: options.routePlan.federationPressure,
+    federationObservedLatencyMs: options.routePlan.federationObservedLatencyMs,
+    federationRemoteSuccessRatio: options.routePlan.federationRemoteSuccessRatio,
     rationale: `${options.routePlan.rationale} / review=held / ${options.heldReason}`,
     selectedAt
   };
@@ -1449,6 +1539,7 @@ async function reserveExecutionWorker(options: {
   target?: string;
   fallbackLocalPoolSize?: number;
   preferredDeviceAffinityTags?: string[];
+  avoidPeerIds?: string[];
   maxObservedLatencyMs?: number;
   maxCostPerHourUsd?: number;
 }): Promise<IntelligenceWorkerAssignment> {
@@ -1459,6 +1550,8 @@ async function reserveExecutionWorker(options: {
   const localNode = await nodeRegistry.ensureLocalNode();
   const nodeState = await nodeRegistry.listNodes();
   const peerViews = await listFederationPeerViews();
+  const executionOutcomes = remoteExecutionOutcomeSummaries();
+  const executionOutcomeSummaries = [...executionOutcomes.workerSummaries.values()];
 
   let result = await intelligenceWorkerRegistry.assignWorker({
     requestedExecutionDecision: options.requestedExecutionDecision ?? "allow_local",
@@ -1475,7 +1568,9 @@ async function reserveExecutionWorker(options: {
     maxObservedLatencyMs: options.maxObservedLatencyMs,
     maxCostPerHourUsd: options.maxCostPerHourUsd,
     nodeViews: nodeState.nodes,
-    peerViews
+    peerViews,
+    avoidPeerIds: options.avoidPeerIds,
+    executionOutcomeSummaries
   });
 
   if (!result.assignment && options.requestedExecutionDecision !== "remote_required") {
@@ -1494,7 +1589,9 @@ async function reserveExecutionWorker(options: {
       maxObservedLatencyMs: options.maxObservedLatencyMs,
       maxCostPerHourUsd: options.maxCostPerHourUsd,
       nodeViews: nodeState.nodes,
-      peerViews
+      peerViews,
+      avoidPeerIds: options.avoidPeerIds,
+      executionOutcomeSummaries
     });
   }
 
@@ -1525,17 +1622,25 @@ async function reserveExecutionWorkerBatch(options: {
   targetPrefix: string;
 }): Promise<IntelligenceWorkerAssignment[]> {
   const reservedAssignments: IntelligenceWorkerAssignment[] = [];
+  const usedPeerIds = new Set<string>();
 
   try {
     for (const layer of options.layers) {
-      reservedAssignments.push(
-        await reserveExecutionWorker({
-          layer,
-          requestedExecutionDecision: options.requestedExecutionDecision,
-          target: `${options.targetPrefix}:${layer.role}`,
-          fallbackLocalPoolSize: options.layers.length
-        })
-      );
+      const assignment = await reserveExecutionWorker({
+        layer,
+        requestedExecutionDecision: options.requestedExecutionDecision,
+        target: `${options.targetPrefix}:${layer.role}`,
+        fallbackLocalPoolSize: options.layers.length,
+        preferredDeviceAffinityTags: [
+          layer.role,
+          ...(options.targetPrefix.includes("swarm") ? ["swarm"] : [])
+        ],
+        avoidPeerIds: [...usedPeerIds]
+      });
+      reservedAssignments.push(assignment);
+      if (assignment.peerId) {
+        usedPeerIds.add(assignment.peerId);
+      }
     }
     return reservedAssignments;
   } catch (error) {
@@ -1939,6 +2044,7 @@ async function executeCognitivePass(options: {
     ...busyLayer,
     endpoint: executionEndpoint
   };
+  const startedAt = new Date().toISOString();
 
   engine.registerIntelligenceLayer(busyLayer);
   await persistence.persist(engine.getDurableState());
@@ -1990,6 +2096,9 @@ async function executeCognitivePass(options: {
     );
     await persistence.persist(engine.getDurableState());
     emitSnapshot();
+    await recordFederatedExecutionOutcome({
+      execution: boundExecution
+    });
 
     return {
       layer: settledLayer,
@@ -1998,13 +2107,72 @@ async function executeCognitivePass(options: {
       snapshot
     };
   } catch (error) {
+    const completedAt = new Date().toISOString();
+    const message = error instanceof Error ? error.message : "Unable to run the cognitive layer.";
+    const governancePressure = deriveGovernancePressure(
+      options.consentScope,
+      governance.getStatus(),
+      governance.listDecisions()
+    );
+    const deniedCount = recentGovernanceDeniedCount();
+    const failedExecution = {
+      id: `cog-${completedAt.replace(/[:.]/g, "-")}-${hashValue(busyLayer.id).slice(0, 8)}`,
+      sessionId: options.sessionId,
+      layerId: busyLayer.id,
+      model: busyLayer.model,
+      objective: options.objective ?? "",
+      status: "failed" as const,
+      latencyMs: Math.max(1, Date.parse(completedAt) - Date.parse(startedAt)),
+      startedAt,
+      completedAt,
+      promptDigest: hashValue(
+        `${busyLayer.id}:${options.objective ?? ""}:${options.context ?? ""}:${governancePressure}:${deniedCount}`
+      ).slice(0, 24),
+      responsePreview: `Cognitive execution failed: ${message}`.slice(0, 280),
+      governancePressure,
+      recentDeniedCount: deniedCount,
+      assignedWorkerId: options.assignment?.workerId,
+      assignedWorkerLabel: options.assignment?.workerLabel ?? undefined,
+      assignedWorkerHostLabel: options.assignment?.hostLabel ?? undefined,
+      assignedWorkerProfile: options.assignment?.executionProfile,
+      assignedWorkerNodeId: options.assignment?.nodeId ?? undefined,
+      assignedWorkerLocality: options.assignment?.locality ?? undefined,
+      assignedWorkerIdentityVerified: options.assignment?.identityVerified,
+      assignedWorkerObservedLatencyMs: options.assignment?.observedLatencyMs ?? undefined,
+      assignedWorkerCostPerHourUsd: options.assignment?.costPerHourUsd ?? undefined,
+      assignedWorkerDeviceAffinityTags: options.assignment?.deviceAffinityTags ?? undefined,
+      assignedWorkerPeerId: options.assignment?.peerId ?? undefined,
+      assignedWorkerPeerStatus: options.assignment?.peerStatus ?? undefined,
+      assignedWorkerPeerLeaseStatus: options.assignment?.peerLeaseStatus ?? undefined,
+      assignedWorkerPeerObservedLatencyMs: options.assignment?.peerObservedLatencyMs ?? undefined,
+      assignedWorkerPeerTrustRemainingMs:
+        options.assignment?.peerTrustRemainingMs ?? undefined,
+      assignmentReason: options.assignment?.reason,
+      assignmentScore: options.assignment?.score,
+      executionEndpoint,
+      executionTopology: options.executionTopology ?? "sequential"
+    };
     engine.registerIntelligenceLayer({
       ...busyLayer,
       status: "degraded"
     });
+    const snapshot = phaseSnapshotSchema.parse(
+      projectPhaseSnapshot(engine.commitCognitiveExecution(failedExecution))
+    );
     await persistence.persist(engine.getDurableState());
     emitSnapshot();
-    throw error;
+    await recordFederatedExecutionOutcome({
+      execution: failedExecution
+    });
+    return {
+      layer: {
+        ...busyLayer,
+        status: "degraded"
+      },
+      execution: failedExecution,
+      response: failedExecution.responsePreview,
+      snapshot
+    };
   } finally {
     await releaseExecutionWorker(options.assignment);
   }
@@ -2074,6 +2242,9 @@ async function executeScheduledCognitivePass(options: {
     );
     await persistence.persist(engine.getDurableState());
     emitSnapshot();
+    await recordFederatedExecutionOutcome({
+      execution: boundExecution
+    });
 
     return {
       layer: settledLayer,
@@ -2130,6 +2301,9 @@ async function executeScheduledCognitivePass(options: {
     );
     await persistence.persist(engine.getDurableState());
     emitSnapshot();
+    await recordFederatedExecutionOutcome({
+      execution: failedExecution
+    });
 
     return {
       layer: settledLayer,
@@ -2365,11 +2539,21 @@ async function dispatchWithRoute(options: {
   frame?: ReturnType<typeof engine.getSnapshot>["neuroFrames"][number];
 }) {
   const status: ActuationOutput["status"] = options.body.suppressed ? "suppressed" : "dispatched";
+  const federatedPressureState = await computeFederatedExecutionPressure({
+    target:
+      options.execution?.executionTopology === "parallel" ||
+      options.execution?.executionTopology === "parallel-then-guard"
+        ? "planner-swarm"
+        : "single-layer",
+    preferredDeviceAffinityTags:
+      options.execution?.assignedWorkerProfile === "remote" ? ["swarm"] : undefined
+  });
   const routePlan = planAdaptiveRoute({
     snapshot: engine.getSnapshot(),
     frame: options.frame,
     execution: options.execution,
     cognitiveRouteSuggestion: options.execution?.routeSuggestion,
+    federationPressure: federatedPressureState.pressure,
     adapters: actuationManager.listAdapters(),
     transports: actuationManager.listTransports(),
     governanceStatus: governance.getStatus(),
@@ -3108,13 +3292,7 @@ app.get("/api/intelligence/workers", async (request, reply) => {
     "/api/intelligence/workers",
     request
   ).consentScope;
-  const nodeState = await nodeRegistry.listNodes();
-  const peerViews = await listFederationPeerViews();
-  const workers = await intelligenceWorkerRegistry.listWorkers(
-    undefined,
-    nodeState.nodes,
-    peerViews
-  );
+  const { nodeState, workers } = await listIntelligenceWorkerViewsWithOutcomes();
   const healthyWorkerCount = workers.filter((worker) => worker.healthStatus === "healthy").length;
   const staleWorkerCount = workers.filter((worker) => worker.healthStatus === "stale").length;
   const faultedWorkerCount = workers.filter((worker) => worker.healthStatus === "faulted").length;
@@ -3668,6 +3846,7 @@ app.post("/api/intelligence/workers/assign", async (request, reply) => {
   const localNode = await nodeRegistry.ensureLocalNode();
   const nodeState = await nodeRegistry.listNodes();
   const peerViews = await listFederationPeerViews();
+  const executionOutcomes = remoteExecutionOutcomeSummaries();
   const result = await intelligenceWorkerRegistry.assignWorker({
     requestedExecutionDecision: body.requestedExecutionDecision,
     baseModel: body.baseModel?.trim() || undefined,
@@ -3692,7 +3871,8 @@ app.post("/api/intelligence/workers/assign", async (request, reply) => {
         ? Number(body.maxCostPerHourUsd)
         : undefined,
     nodeViews: nodeState.nodes,
-    peerViews
+    peerViews,
+    executionOutcomeSummaries: [...executionOutcomes.workerSummaries.values()]
   });
   return {
     accepted: true,
@@ -4586,6 +4766,18 @@ app.post("/api/intelligence/run", async (request, reply) => {
       executionTopology: "sequential"
     });
 
+    if (result.execution.status === "failed") {
+      reply.code(503);
+      return {
+        error: "cognitive_execution_failed",
+        message: result.execution.responsePreview,
+        layer: result.layer,
+        execution: result.execution,
+        response: result.response,
+        snapshot: result.snapshot
+      };
+    }
+
     return {
       accepted: true,
       layer: result.layer,
@@ -4637,6 +4829,10 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
   const resolvedSessionId = boundSources.sessionId;
 
   const sessionConversationMemory = getSessionConversationMemory(resolvedSessionId);
+  const federatedPressureState = await computeFederatedExecutionPressure({
+    target: "planner-swarm",
+    preferredDeviceAffinityTags: ["swarm"]
+  });
 
   const arbitrationPlan = planExecutionArbitration({
     snapshot,
@@ -4649,7 +4845,8 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
     requestedLayerId: body.layerId?.trim() || undefined,
     forceCognition: body.forceCognition,
     suppressed: body.suppressed,
-    sessionConversationMemory
+    sessionConversationMemory,
+    federationPressure: federatedPressureState.pressure
   });
   const arbitrationDecision = buildExecutionArbitrationDecision({
     plan: arbitrationPlan,
@@ -4689,7 +4886,8 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
     snapshot: engine.getSnapshot(),
     arbitration: arbitrationDecision,
     requestedLayerId: body.layerId?.trim() || undefined,
-    sessionConversationMemory
+    sessionConversationMemory,
+    federationPressure: federatedPressureState.pressure
   });
   const scheduleDecision = buildExecutionScheduleDecision({
     arbitration: arbitrationDecision,
@@ -4764,6 +4962,7 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
     frame,
     execution: mediationExecution,
     cognitiveRouteSuggestion: mediationExecution?.routeSuggestion,
+    federationPressure: federatedPressureState.pressure,
     adapters: actuationManager.listAdapters(),
     transports: actuationManager.listTransports(),
     governanceStatus: governance.getStatus(),
@@ -5143,13 +5342,7 @@ app.post("/api/benchmarks/publish/wandb", async (request, reply) => {
 
 app.get("/api/topology", async () => {
   const snapshot = phaseSnapshotSchema.parse(engine.getSnapshot());
-  const nodeState = await nodeRegistry.listNodes();
-  const peerViews = await listFederationPeerViews();
-  const workers = await intelligenceWorkerRegistry.listWorkers(
-    undefined,
-    nodeState.nodes,
-    peerViews
-  );
+  const { nodeState, workers } = await listIntelligenceWorkerViewsWithOutcomes();
   return {
     profile: snapshot.profile,
     objective: snapshot.objective,

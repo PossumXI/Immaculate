@@ -57,6 +57,10 @@ import {
 import { buildLiveNeuroFrame } from "./live-neuro.js";
 import { signFederationPayload, verifyFederationEnvelope } from "./federation.js";
 import { createFederationPeerRegistry, smoothObservedLatency } from "./federation-peers.js";
+import {
+  buildFederatedExecutionPressure,
+  summarizeRemoteExecutionOutcomes
+} from "./federation-pressure.js";
 import { buildNwbReplayFrames, scanNwbFile } from "./nwb.js";
 import { parseStructuredResponse } from "./ollama.js";
 import { createPersistence } from "./persistence.js";
@@ -446,6 +450,7 @@ function createProgress(options: {
       "Durable execution scheduling that chooses single-layer versus truthful parallel swarm formation before cognition runs",
       "Truthful runtime swarm execution where non-guard cognition layers can execute concurrently and guarded swarms close with a final review turn",
       "Authoritative worker-assignment coverage for leased remote placement and visible duplicate assignment pressure",
+      "Adaptive federated execution pressure with signed peer lease renewal, latency/outcome-aware remote placement, and multi-peer orchestration pressure signals",
       "Explicit session-bound source safety coverage for mediated dispatch and fail-closed scope mismatches",
       "Real LSL bridge ingress that can feed external stream payloads into the same live neuro spine as replay and socket frames",
       "Tier 1 cognitive-loop benchmark coverage for parsed route/reason/commit structure, governance-aware cognition, soft-route priors, and multi-role conversation verdicts",
@@ -459,7 +464,7 @@ function createProgress(options: {
       "Additional vendor-specific transports beyond serial and HTTP/2 direct lanes, including MIDI and richer gRPC-class adapters",
       "Additional multi-agent and tool backends beyond the first local Ollama cognition layer",
       "Domain benchmark packs against published BCI and neurodata workloads",
-      "Multi-node deployment, locality routing, and persisted historical benchmark trending"
+      "Distributed multi-peer swarm routing that feeds live cross-node execution pressure back into runtime cognition formation and outward routing"
       ]
   };
 }
@@ -1005,7 +1010,12 @@ function lowerIsBetter(seriesId: string): boolean {
     seriesId === "cognitive_latency_ms" ||
     seriesId === "execution_arbitration_latency_ms" ||
     seriesId === "cognitive_loop_parse_latency_ms" ||
-    seriesId === "multi_role_conversation_latency_ms"
+    seriesId === "multi_role_conversation_latency_ms" ||
+    seriesId === "prediction_error_ratio" ||
+    seriesId === "free_energy_proxy" ||
+    seriesId === "neuro_sync_jitter_ms" ||
+    seriesId === "federation_peer_latency_ms" ||
+    seriesId === "federation_execution_pressure_ms"
   );
 }
 
@@ -1446,6 +1456,53 @@ export async function runPublishedBenchmark(
     commitStatement: parsedSyntheticExecution.commitStatement
   };
   engine.commitCognitiveExecution(syntheticExecution);
+  const buildRemoteOutcomeExecution = (options: {
+    id: string;
+    workerId: string;
+    peerId: string;
+    nodeId: string;
+    locality: string;
+    latencyMs: number;
+    status: "completed" | "failed";
+    completedAtOffsetMs: number;
+    peerLatencyMs: number;
+  }): CognitiveExecution => {
+    const completedAt = new Date(
+      Date.parse(syntheticExecution.completedAt) + options.completedAtOffsetMs
+    ).toISOString();
+    return {
+      id: options.id,
+      layerId: benchmarkLayer.id,
+      model: benchmarkLayer.model,
+      objective: syntheticExecution.objective,
+      status: options.status,
+      latencyMs: options.latencyMs,
+      startedAt: new Date(Date.parse(completedAt) - options.latencyMs).toISOString(),
+      completedAt,
+      promptDigest: `digest-${options.id}`,
+      responsePreview:
+        options.status === "completed"
+          ? syntheticResponse
+          : `Cognitive execution failed: remote peer ${options.peerId} timeout`,
+      routeSuggestion: parsedSyntheticExecution.routeSuggestion,
+      reasonSummary: parsedSyntheticExecution.reasonSummary,
+      commitStatement: parsedSyntheticExecution.commitStatement,
+      assignedWorkerId: options.workerId,
+      assignedWorkerProfile: "remote",
+      assignedWorkerNodeId: options.nodeId,
+      assignedWorkerLocality: options.locality,
+      assignedWorkerIdentityVerified: true,
+      assignedWorkerObservedLatencyMs: options.peerLatencyMs,
+      assignedWorkerPeerId: options.peerId,
+      assignedWorkerPeerStatus: "healthy",
+      assignedWorkerPeerLeaseStatus: "healthy",
+      assignedWorkerPeerObservedLatencyMs: options.peerLatencyMs,
+      assignmentReason: "benchmark remote execution outcome",
+      assignmentScore: 1,
+      executionEndpoint: "http://127.0.0.1:11434",
+      executionTopology: "parallel"
+    };
+  };
   for (let index = 0; index < 3; index += 1) {
     parseStructuredCognitiveResponse(syntheticExecution.responsePreview);
   }
@@ -1725,6 +1782,56 @@ export async function runPublishedBenchmark(
     now: federationRenewedAt
   });
   const federationPeerViewsInitial = await federationPeerRegistry.listPeers(federationRenewedAt);
+  const clearRemoteExecutionHistory = [
+    buildRemoteOutcomeExecution({
+      id: `cog-${suiteId}-remote-near-success-1`,
+      workerId: localityNearWorker.workerId,
+      peerId: federationRegisteredNearPeer.peerId,
+      nodeId: workerLocalityNearNode.nodeId,
+      locality: workerLocalityNearNode.locality,
+      latencyMs: 980,
+      status: "completed",
+      completedAtOffsetMs: 1_000,
+      peerLatencyMs: 18
+    }),
+    buildRemoteOutcomeExecution({
+      id: `cog-${suiteId}-remote-near-success-2`,
+      workerId: localityNearWorker.workerId,
+      peerId: federationRegisteredNearPeer.peerId,
+      nodeId: workerLocalityNearNode.nodeId,
+      locality: workerLocalityNearNode.locality,
+      latencyMs: 1025,
+      status: "completed",
+      completedAtOffsetMs: 2_000,
+      peerLatencyMs: 18
+    }),
+    buildRemoteOutcomeExecution({
+      id: `cog-${suiteId}-remote-far-success-1`,
+      workerId: `worker-${suiteId}-remote-far`,
+      peerId: federationRegisteredFarPeer.peerId,
+      nodeId: workerLocalityFarNode.nodeId,
+      locality: workerLocalityFarNode.locality,
+      latencyMs: 1180,
+      status: "completed",
+      completedAtOffsetMs: 3_000,
+      peerLatencyMs: 34
+    })
+  ];
+  const clearExecutionOutcomes = summarizeRemoteExecutionOutcomes(clearRemoteExecutionHistory);
+  const localityWorkerViewsFederationClear = await workerLocalityRegistry.listWorkers(
+    federationRenewedAt,
+    workerLocalityNodeViews,
+    federationPeerViewsInitial,
+    [...clearExecutionOutcomes.workerSummaries.values()]
+  );
+  const federatedPressureClear = buildFederatedExecutionPressure({
+    peerViews: federationPeerViewsInitial,
+    workers: localityWorkerViewsFederationClear,
+    preferredLayerIds: [benchmarkLayer.id],
+    preferredDeviceAffinityTags: ["swarm"],
+    baseModel: benchmarkLayer.model,
+    target: "planner-swarm"
+  });
   const federationPeerAfterRenewal = await federationPeerRegistry.getPeer(
     federationRegisteredNearPeer.peerId,
     federationRenewedAt
@@ -1740,12 +1847,14 @@ export async function runPublishedBenchmark(
     maxObservedLatencyMs: 50,
     maxCostPerHourUsd: 0.50,
     nodeViews: workerLocalityNodeViews,
-    peerViews: federationPeerViewsInitial
+    peerViews: federationPeerViewsInitial,
+    executionOutcomeSummaries: [...clearExecutionOutcomes.workerSummaries.values()]
   });
   const localityRegistryAfterFirstAssignment = await workerLocalityRegistry.listWorkers(
     federationRenewedAt,
     workerLocalityNodeViews,
-    federationPeerViewsInitial
+    federationPeerViewsInitial,
+    [...clearExecutionOutcomes.workerSummaries.values()]
   );
   if (localityAssignment.assignment?.workerId && localityAssignment.assignment.leaseToken) {
     await workerLocalityRegistry.releaseWorker({
@@ -1779,17 +1888,163 @@ export async function runPublishedBenchmark(
     maxObservedLatencyMs: 80,
     maxCostPerHourUsd: 0.50,
     nodeViews: workerLocalityNodeViews,
-    peerViews: federationPeerViewsFlipped
+    peerViews: federationPeerViewsFlipped,
+    executionOutcomeSummaries: [...clearExecutionOutcomes.workerSummaries.values()]
   });
   const localityRegistrySnapshot = await workerLocalityRegistry.listWorkers(
     federationLatencyFlippedAt,
     workerLocalityNodeViews,
-    federationPeerViewsFlipped
+    federationPeerViewsFlipped,
+    [...clearExecutionOutcomes.workerSummaries.values()]
   );
+  if (
+    localityLatencyInversionAssignment.assignment?.workerId &&
+    localityLatencyInversionAssignment.assignment.leaseToken
+  ) {
+    await workerLocalityRegistry.releaseWorker({
+      workerId: localityLatencyInversionAssignment.assignment.workerId,
+      leaseToken: localityLatencyInversionAssignment.assignment.leaseToken
+    });
+  }
   const federationPeerAfterInversion = await federationPeerRegistry.getPeer(
     federationRegisteredFarPeer.peerId,
     federationLatencyFlippedAt
   );
+  const federationOutcomeFailureAt = new Date(
+    Date.parse(federationLatencyFlippedAt) + 2_000
+  ).toISOString();
+  const federationPeerAdaptiveFailure = await federationPeerRegistry.recordExecutionOutcome({
+    peerId: federationRegisteredFarPeer.peerId,
+    status: "failed",
+    latencyMs: 3_520,
+    error: "benchmark_remote_timeout",
+    now: federationOutcomeFailureAt
+  });
+  const federationPeerViewsAdaptive = await federationPeerRegistry.listPeers(
+    federationOutcomeFailureAt
+  );
+  const federationOutcomeCriticalAt = new Date(
+    Date.parse(federationOutcomeFailureAt) + 1_000
+  ).toISOString();
+  await federationPeerRegistry.recordExecutionOutcome({
+    peerId: federationRegisteredFarPeer.peerId,
+    status: "failed",
+    latencyMs: 3_880,
+    error: "benchmark_remote_timeout_repeat",
+    now: federationOutcomeCriticalAt
+  });
+  const federationPeerViewsCritical = await federationPeerRegistry.listPeers(
+    federationOutcomeCriticalAt
+  );
+  const degradedRemoteExecutionHistory = clearRemoteExecutionHistory.concat([
+    buildRemoteOutcomeExecution({
+      id: `cog-${suiteId}-remote-far-failed-1`,
+      workerId: `worker-${suiteId}-remote-far`,
+      peerId: federationRegisteredFarPeer.peerId,
+      nodeId: workerLocalityFarNode.nodeId,
+      locality: workerLocalityFarNode.locality,
+      latencyMs: 3_520,
+      status: "failed",
+      completedAtOffsetMs: 4_000,
+      peerLatencyMs: 6
+    }),
+    buildRemoteOutcomeExecution({
+      id: `cog-${suiteId}-remote-far-failed-2`,
+      workerId: `worker-${suiteId}-remote-far`,
+      peerId: federationRegisteredFarPeer.peerId,
+      nodeId: workerLocalityFarNode.nodeId,
+      locality: workerLocalityFarNode.locality,
+      latencyMs: 3_880,
+      status: "failed",
+      completedAtOffsetMs: 5_000,
+      peerLatencyMs: 6
+    }),
+    buildRemoteOutcomeExecution({
+      id: `cog-${suiteId}-remote-near-success-3`,
+      workerId: localityNearWorker.workerId,
+      peerId: federationRegisteredNearPeer.peerId,
+      nodeId: workerLocalityNearNode.nodeId,
+      locality: workerLocalityNearNode.locality,
+      latencyMs: 960,
+      status: "completed",
+      completedAtOffsetMs: 6_000,
+      peerLatencyMs: 72
+    })
+  ]);
+  const degradedExecutionOutcomes = summarizeRemoteExecutionOutcomes(
+    degradedRemoteExecutionHistory
+  );
+  const localityWorkerViewsFederationElevated = await workerLocalityRegistry.listWorkers(
+    federationOutcomeFailureAt,
+    workerLocalityNodeViews,
+    federationPeerViewsAdaptive,
+    [...clearExecutionOutcomes.workerSummaries.values()]
+  );
+  const federatedPressureElevated = buildFederatedExecutionPressure({
+    peerViews: federationPeerViewsAdaptive,
+    workers: localityWorkerViewsFederationElevated,
+    preferredLayerIds: [benchmarkLayer.id],
+    preferredDeviceAffinityTags: ["swarm"],
+    baseModel: benchmarkLayer.model,
+    target: "planner-swarm"
+  });
+  const localityWorkerViewsFederationCritical = await workerLocalityRegistry.listWorkers(
+    federationOutcomeCriticalAt,
+    workerLocalityNodeViews,
+    federationPeerViewsCritical,
+    [...degradedExecutionOutcomes.workerSummaries.values()]
+  );
+  const federatedPressureCritical = buildFederatedExecutionPressure({
+    peerViews: federationPeerViewsCritical,
+    workers: localityWorkerViewsFederationCritical,
+    preferredLayerIds: [benchmarkLayer.id],
+    preferredDeviceAffinityTags: ["swarm"],
+    baseModel: benchmarkLayer.model,
+    target: "planner-swarm"
+  });
+  const outcomePressureAssignment = await workerLocalityRegistry.assignWorker({
+    requestedExecutionDecision: "remote_required",
+    baseModel: benchmarkLayer.model,
+    preferredLayerIds: [benchmarkLayer.id],
+    recommendedLayerId: benchmarkLayer.id,
+    target: "planner-swarm",
+    preferredDeviceAffinityTags: ["swarm"],
+    maxObservedLatencyMs: 80,
+    maxCostPerHourUsd: 0.50,
+    nodeViews: workerLocalityNodeViews,
+    peerViews: federationPeerViewsCritical,
+    executionOutcomeSummaries: [...degradedExecutionOutcomes.workerSummaries.values()]
+  });
+  if (outcomePressureAssignment.assignment?.workerId && outcomePressureAssignment.assignment.leaseToken) {
+    await workerLocalityRegistry.releaseWorker({
+      workerId: outcomePressureAssignment.assignment.workerId,
+      leaseToken: outcomePressureAssignment.assignment.leaseToken
+    });
+  }
+  const federationOutcomeRecoveryAt = new Date(
+    Date.parse(federationOutcomeCriticalAt) + 2_000
+  ).toISOString();
+  await federationPeerRegistry.markLeaseSuccess({
+    peerId: federationRegisteredFarPeer.peerId,
+    observedLatencyMs: 7,
+    now: federationOutcomeRecoveryAt
+  });
+  const federationOutcomeRecoveryAgainAt = new Date(
+    Date.parse(federationOutcomeRecoveryAt) + 2_000
+  ).toISOString();
+  await federationPeerRegistry.markLeaseSuccess({
+    peerId: federationRegisteredFarPeer.peerId,
+    observedLatencyMs: 7,
+    now: federationOutcomeRecoveryAgainAt
+  });
+  const federationOutcomeRecoverySettledAt = new Date(
+    Date.parse(federationOutcomeRecoveryAgainAt) + 2_000
+  ).toISOString();
+  const federationPeerAdaptiveRecovery = await federationPeerRegistry.markLeaseSuccess({
+    peerId: federationRegisteredFarPeer.peerId,
+    observedLatencyMs: 7,
+    now: federationOutcomeRecoverySettledAt
+  });
   const federationFaultedAt = new Date(
     Date.parse(federationLatencyFlippedAt) + 16_000
   ).toISOString();
@@ -2625,6 +2880,25 @@ export async function runPublishedBenchmark(
     decodeConfidence: 0.61,
     capturedAt: new Date().toISOString()
   };
+  const federatedRoutePressurePlan = planAdaptiveRoute({
+    snapshot: engine.getSnapshot(),
+    frame: escalationFrame,
+    execution: {
+      ...syntheticExecution,
+      assignedWorkerId: `worker-${suiteId}-remote-far`,
+      assignedWorkerProfile: "remote",
+      assignedWorkerPeerId: federationRegisteredFarPeer.peerId,
+      assignedWorkerPeerStatus: "healthy",
+      assignedWorkerPeerLeaseStatus: "healthy",
+      assignedWorkerPeerObservedLatencyMs: 6
+    },
+    federationPressure: federatedPressureCritical,
+    adapters: actuationManager.listAdapters(),
+    transports: actuationManager.listTransports(),
+    governanceStatus: preferredRouteGovernanceStatus,
+    governanceDecisions: preferredRouteGovernanceDecisions,
+    consentScope: "system:benchmark"
+  });
   const cognitiveArbitrationStart = performance.now();
   const cognitiveArbitrationPlan = planExecutionArbitration({
     snapshot: engine.getSnapshot(),
@@ -2648,6 +2922,27 @@ export async function runPublishedBenchmark(
     execution: syntheticExecution
   });
   engine.recordExecutionArbitration(cognitiveArbitrationDecision);
+  const federatedArbitrationClearPlan = planExecutionArbitration({
+    snapshot: engine.getSnapshot(),
+    frame: escalationFrame,
+    execution: syntheticExecution,
+    governanceStatus: {
+      mode: "enforced",
+      policyCount: 0,
+      decisionCount: 0,
+      deniedCount: 0
+    },
+    governanceDecisions: [],
+    consentScope: "system:benchmark",
+    federationPressure: federatedPressureClear
+  });
+  const federatedArbitrationClearDecision = buildExecutionArbitrationDecision({
+    plan: federatedArbitrationClearPlan,
+    consentScope: "system:benchmark",
+    frame: escalationFrame,
+    execution: syntheticExecution
+  });
+  engine.recordExecutionArbitration(federatedArbitrationClearDecision);
 
   const guardedArbitrationDecisionTime = new Date().toISOString();
   const guardedArbitrationGovernanceDecisions: GovernanceDecision[] = [
@@ -2690,6 +2985,27 @@ export async function runPublishedBenchmark(
     execution: syntheticExecution
   });
   engine.recordExecutionArbitration(guardedArbitrationDecision);
+  const federatedArbitrationCriticalPlan = planExecutionArbitration({
+    snapshot: engine.getSnapshot(),
+    frame: escalationFrame,
+    execution: syntheticExecution,
+    governanceStatus: {
+      mode: "enforced",
+      policyCount: 0,
+      decisionCount: 0,
+      deniedCount: 0
+    },
+    governanceDecisions: [],
+    consentScope: "system:benchmark",
+    federationPressure: federatedPressureCritical
+  });
+  const federatedArbitrationCriticalDecision = buildExecutionArbitrationDecision({
+    plan: federatedArbitrationCriticalPlan,
+    consentScope: "system:benchmark",
+    frame: escalationFrame,
+    execution: syntheticExecution
+  });
+  engine.recordExecutionArbitration(federatedArbitrationCriticalDecision);
   const tier1ConversationStart = performance.now();
   const clearTier1Conversation = buildTier1ConversationLedger({
     midLayer: benchmarkMidLayer,
@@ -2919,6 +3235,36 @@ export async function runPublishedBenchmark(
     plan: cognitiveSchedulePlan
   });
   engine.recordExecutionSchedule(cognitiveScheduleDecision);
+  const federatedScheduleClearPlan = planExecutionSchedule({
+    snapshot: engine.getSnapshot(),
+    arbitration: federatedArbitrationClearDecision,
+    federationPressure: federatedPressureClear
+  });
+  const federatedScheduleClearDecision = buildExecutionScheduleDecision({
+    arbitration: federatedArbitrationClearDecision,
+    plan: federatedScheduleClearPlan
+  });
+  engine.recordExecutionSchedule(federatedScheduleClearDecision);
+  const federatedScheduleElevatedPlan = planExecutionSchedule({
+    snapshot: engine.getSnapshot(),
+    arbitration: federatedArbitrationClearDecision,
+    federationPressure: federatedPressureElevated
+  });
+  const federatedScheduleElevatedDecision = buildExecutionScheduleDecision({
+    arbitration: federatedArbitrationClearDecision,
+    plan: federatedScheduleElevatedPlan
+  });
+  engine.recordExecutionSchedule(federatedScheduleElevatedDecision);
+  const federatedScheduleCriticalPlan = planExecutionSchedule({
+    snapshot: engine.getSnapshot(),
+    arbitration: federatedArbitrationCriticalDecision,
+    federationPressure: federatedPressureCritical
+  });
+  const federatedScheduleCriticalDecision = buildExecutionScheduleDecision({
+    arbitration: federatedArbitrationCriticalDecision,
+    plan: federatedScheduleCriticalPlan
+  });
+  engine.recordExecutionSchedule(federatedScheduleCriticalDecision);
 
   const guardedSchedulePlan = planExecutionSchedule({
     snapshot: engine.getSnapshot(),
@@ -3415,6 +3761,53 @@ export async function runPublishedBenchmark(
         (localityLatencyInversionAssignment.assignment?.peerObservedLatencyMs ?? Number.POSITIVE_INFINITY) <
           (federationPeerAfterRenewal?.leaseSmoothedLatencyMs ?? Number.POSITIVE_INFINITY)
       )
+    ]
+  );
+  const federationExecutionPressureSeries = createSeries(
+    "federation_execution_pressure_ms",
+    "Federated execution pressure latency",
+    "ms",
+    [
+      federatedPressureClear.crossNodeLatencyMs ?? 0,
+      federatedPressureElevated.crossNodeLatencyMs ?? 0,
+      federatedPressureCritical.crossNodeLatencyMs ?? 0
+    ]
+  );
+  const federationRemoteSuccessSeries = createSeries(
+    "federation_remote_success_ratio",
+    "Federated remote success ratio",
+    "ratio",
+    [
+      federatedPressureClear.remoteSuccessRatio,
+      federatedPressureElevated.remoteSuccessRatio,
+      federatedPressureCritical.remoteSuccessRatio
+    ]
+  );
+  const federationLeaseCadenceSeries = createSeries(
+    "federation_lease_cadence_ms",
+    "Federation lease cadence",
+    "ms",
+    [
+      federationPeerFarHealthy.leaseRefreshIntervalMs,
+      federationPeerAdaptiveFailure.leaseRefreshIntervalMs,
+      federationPeerAdaptiveRecovery.leaseRefreshIntervalMs
+    ]
+  );
+  const orchestrationCrossNodeBiasSeries = createSeries(
+    "orchestration_cross_node_bias_ratio",
+    "Orchestration cross-node bias",
+    "ratio",
+    [
+      Number(federatedArbitrationClearPlan.mode === "cognitive-escalation"),
+      Number(federatedArbitrationCriticalPlan.mode === "guarded-review"),
+      Number(federatedScheduleClearPlan.mode === "swarm-parallel"),
+      Number(federatedScheduleElevatedPlan.mode === "swarm-sequential"),
+      Number(federatedScheduleCriticalPlan.mode === "single-layer"),
+      Number(outcomePressureAssignment.assignment?.workerId === localityNearWorker.workerId),
+      Number(
+        localityLatencyInversionAssignment.assignment?.workerId === `worker-${suiteId}-remote-far`
+      ),
+      Number(federatedRoutePressurePlan.mode === "guarded-fallback")
     ]
   );
   const multiRoleConversationLatencySeries = createSeries(
@@ -3965,6 +4358,18 @@ export async function runPublishedBenchmark(
       "contaminated live windows should move the system into review before outward action is considered"
     ),
     createAssertion(
+      "execution-arbitration-federation-pressure",
+      "Federated execution pressure can tighten arbitration before any worker is leased",
+      federatedArbitrationClearPlan.mode === "cognitive-escalation" &&
+        federatedArbitrationClearDecision.federationPressure === "clear" &&
+        federatedArbitrationCriticalPlan.mode === "guarded-review" &&
+        federatedArbitrationCriticalDecision.federationPressure === "critical" &&
+        Boolean(federatedArbitrationCriticalPlan.rationale.includes("federation=critical")),
+      "clear federation keeps cognition / critical federation tightens to guarded review",
+      `${federatedArbitrationClearPlan.mode} -> ${federatedArbitrationCriticalPlan.mode} / ${federatedArbitrationCriticalPlan.rationale}`,
+      "cross-node execution pressure should be able to change whether the system escalates freely or holds for guarded review before placement becomes the only control surface"
+    ),
+    createAssertion(
       "execution-arbitration-ledger",
       "Execution arbitration persists as a durable snapshot ledger",
       executionArbitrations.length >= 5 &&
@@ -4039,6 +4444,20 @@ export async function runPublishedBenchmark(
       "guarded-swarm / width >= 2 / includes guard / dispatch held",
       `${spectralArtifactSchedulePlan.mode} / roles=${spectralArtifactSchedulePlan.layerRoles.join(">")} / dispatch=${spectralArtifactSchedulePlan.shouldDispatchActuation}`,
       "once spectral contamination forces review, the cognitive formation should widen into a guarded internal path instead of a narrow direct lane"
+    ),
+    createAssertion(
+      "execution-schedule-federation-pressure",
+      "Federated execution pressure changes swarm topology before placement",
+      federatedScheduleClearPlan.mode === "swarm-parallel" &&
+        federatedScheduleClearDecision.federationPressure === "clear" &&
+        federatedScheduleElevatedPlan.mode === "swarm-sequential" &&
+        federatedScheduleElevatedDecision.federationPressure === "elevated" &&
+        federatedScheduleCriticalPlan.mode === "single-layer" &&
+        federatedScheduleCriticalDecision.federationPressure === "critical" &&
+        federatedScheduleClearPlan.estimatedLatencyMs < federatedScheduleElevatedPlan.estimatedLatencyMs,
+      "parallel under clear pressure / sequential under elevated / single-layer under critical",
+      `${federatedScheduleClearPlan.mode} -> ${federatedScheduleElevatedPlan.mode} -> ${federatedScheduleCriticalPlan.mode}`,
+      "cross-node latency and remote failure pressure should change the selected cognition formation itself, not only which worker wins after the plan is already fixed"
     ),
     createAssertion(
       "execution-schedule-ledger",
@@ -4216,6 +4635,19 @@ export async function runPublishedBenchmark(
       "federated liveness should be a renewing control signal, not a static latency number captured at topology import time"
     ),
     createAssertion(
+      "federation-lease-cadence-adaptive",
+      "Lease cadence tightens on remote execution failure and relaxes again on signed recovery",
+      federationPeerAdaptiveFailure.leaseRecoveryMode === "recovering" &&
+        federationPeerAdaptiveFailure.leaseRefreshIntervalMs <
+          federationPeerFarHealthy.leaseRefreshIntervalMs &&
+        federationPeerAdaptiveRecovery.leaseRefreshIntervalMs >=
+          federationPeerAdaptiveFailure.leaseRefreshIntervalMs &&
+        federationPeerAdaptiveRecovery.leaseStatus === "healthy",
+      "recovering cadence tightens on failure then relaxes on recovery",
+      `${federationPeerFarHealthy.leaseRefreshIntervalMs} -> ${federationPeerAdaptiveFailure.leaseRefreshIntervalMs} -> ${federationPeerAdaptiveRecovery.leaseRefreshIntervalMs}`,
+      "signed lease renewal only becomes adaptive once the cadence itself reacts to real remote instability instead of polling forever at a fixed interval"
+    ),
+    createAssertion(
       "federation-peer-latency-placement-inversion",
       "Live peer latency can invert remote placement across two authenticated peers after lease renewal",
       localityLatencyInversionAssignment.assignment?.workerId === `worker-${suiteId}-remote-far` &&
@@ -4230,6 +4662,22 @@ export async function runPublishedBenchmark(
       "lower-latency peer wins after live renewal flips the control signal",
       `${localityLatencyInversionAssignment.assignment?.workerId ?? "missing"} / peer ${localityLatencyInversionAssignment.assignment?.peerId ?? "missing"} / ${localityLatencyInversionAssignment.assignment?.reason ?? "missing reason"}`,
       "multi-peer placement is only truthful if renewed peer latency can override stale import-time latency and actually change which remote worker is selected"
+    ),
+    createAssertion(
+      "worker-assignment-outcome-pressure",
+      "Remote placement blends live peer latency with measured execution success and failure pressure",
+      outcomePressureAssignment.assignment?.workerId === localityNearWorker.workerId &&
+        localityWorkerViewsFederationCritical.some(
+          (worker) =>
+            worker.peerId === federationRegisteredFarPeer.peerId &&
+            worker.assignmentEligible === false &&
+            worker.assignmentBlockedReason === "peer execution recovering"
+        ) &&
+        federatedPressureElevated.pressure === "elevated" &&
+        federatedPressureCritical.pressure === "critical",
+      "failure pressure keeps the stable peer selected and raises federated pressure",
+      `${outcomePressureAssignment.assignment?.workerId ?? "missing"} / ${outcomePressureAssignment.assignment?.reason ?? "missing reason"}`,
+      "remote workers should stop winning solely on lease latency once real execution failures prove that the peer is unstable under load"
     ),
     createAssertion(
       "federation-peer-stale-eviction-window",
@@ -4370,6 +4818,16 @@ export async function runPublishedBenchmark(
       "guarded-fallback / visual / integrity-gate / udp-osc / governance critical",
       `${guardedFallbackDecision.mode} / ${guardedFallbackDecision.channel} / ${guardedFallbackDecision.transportKind ?? "none"} / ${guardedFallbackDecision.governancePressure}`,
       "route selection should react to governance pressure and deliberately fall back to a safer outward lane rather than pretending transport health is the only signal"
+    ),
+    createAssertion(
+      "routing-federated-pressure",
+      "Adaptive routing can react to degraded federated execution pressure instead of only transport pressure",
+      federatedRoutePressurePlan.mode === "guarded-fallback" &&
+        federatedRoutePressurePlan.federationPressure === "critical" &&
+        Boolean(federatedRoutePressurePlan.rationale.includes("federation=critical")),
+      "guarded-fallback under critical federated pressure",
+      `${federatedRoutePressurePlan.mode} / ${federatedRoutePressurePlan.rationale}`,
+      "once remote swarm execution becomes unstable, the route layer should be able to bias toward guarded output even when transport availability itself has not changed"
     ),
     createAssertion(
       "routing-ledger",
@@ -4796,7 +5254,7 @@ export async function runPublishedBenchmark(
     runKind,
     profile: `${engine.getSnapshot().profile} / ${runKind} / ${hardwareContext.platform}-${hardwareContext.arch}`,
       summary:
-      `This ${runKind} publication benchmarks the real orchestration substrate that exists today: phase execution, verify gating, persistence, checkpoint recovery, integrity validation, replayed NWB windows, live socket neuro ingress, protocol-aware actuation, execution arbitration that decides when the system should think before acting, execution scheduling that chooses single-layer versus swarm formation before cognition runs, Tier 1 cognitive-loop closure coverage for parsed ROUTE/REASON/COMMIT structure, Tier 2 neural-coupling coverage for band dominance, phase bias, and coupled routing strength, governance-aware cognition, routing soft priors, and multi-role conversation verdicts, authoritative worker-assignment coverage with lease visibility, supervised serial and HTTP/2 direct device transports, and explicit session-bound source safety for mediated dispatch decisions that react to transport health, decode confidence, governance pressure, and consent scope. ${describeBenchmarkTiming(pack)} ${liveFramesPerTick > 0 ? `It injected ${liveFramesPerTick} extra live frames per tick to sustain measurable event pressure.` : ""} ${benchmarkInputs.externalNeurodata ? `This run resolved a real OpenNeuro slice (${benchmarkInputs.externalNeurodata.openNeuroDatasetId}:${benchmarkInputs.externalNeurodata.openNeuroSnapshotTag}) and a real DANDI NWB asset (${benchmarkInputs.externalNeurodata.dandiDandisetId}:${benchmarkInputs.externalNeurodata.dandiVersion}) before scanning and replaying them locally.` : "It does not yet claim external neurodata or BCI decoding performance."} ${pack.id === "temporal-baseline" ? "It also executes an honest side-by-side Temporal workflow baseline for pure ingest-process-commit-verify wall-clock and memory comparison." : ""} Hardware context: ${formatBenchmarkHardwareContext(hardwareContext)}.`,
+      `This ${runKind} publication benchmarks the real orchestration substrate that exists today: phase execution, verify gating, persistence, checkpoint recovery, integrity validation, replayed NWB windows, live socket neuro ingress, protocol-aware actuation, execution arbitration that decides when the system should think before acting, execution scheduling that chooses single-layer versus swarm formation before cognition runs, Tier 1 cognitive-loop closure coverage for parsed ROUTE/REASON/COMMIT structure, Tier 2 neural-coupling coverage for band dominance, phase bias, and coupled routing strength, governance-aware cognition, routing soft priors, and multi-role conversation verdicts, authoritative worker-assignment coverage with lease visibility, adaptive federated execution pressure that blends signed lease renewal with live cross-node latency and remote execution success/failure, supervised serial and HTTP/2 direct device transports, and explicit session-bound source safety for mediated dispatch decisions that react to transport health, decode confidence, governance pressure, consent scope, and federated execution pressure. ${describeBenchmarkTiming(pack)} ${liveFramesPerTick > 0 ? `It injected ${liveFramesPerTick} extra live frames per tick to sustain measurable event pressure.` : ""} ${benchmarkInputs.externalNeurodata ? `This run resolved a real OpenNeuro slice (${benchmarkInputs.externalNeurodata.openNeuroDatasetId}:${benchmarkInputs.externalNeurodata.openNeuroSnapshotTag}) and a real DANDI NWB asset (${benchmarkInputs.externalNeurodata.dandiDandisetId}:${benchmarkInputs.externalNeurodata.dandiVersion}) before scanning and replaying them locally.` : "It does not yet claim external neurodata or BCI decoding performance."} ${pack.id === "temporal-baseline" ? "It also executes an honest side-by-side Temporal workflow baseline for pure ingest-process-commit-verify wall-clock and memory comparison." : ""} Hardware context: ${formatBenchmarkHardwareContext(hardwareContext)}.`,
     tickIntervalMs,
     totalTicks,
     plannedDurationMs,
@@ -4822,6 +5280,10 @@ export async function runPublishedBenchmark(
       workerLocalityAffinitySeries,
       federationPeerLatencySeries,
       federationPeerPlacementSeries,
+      federationExecutionPressureSeries,
+      federationRemoteSuccessSeries,
+      federationLeaseCadenceSeries,
+      orchestrationCrossNodeBiasSeries,
       multiRoleConversationLatencySeries,
       multiRoleConversationTurnSeries,
       multiRoleConversationVerdictSeries,
@@ -4869,6 +5331,10 @@ export async function runPublishedBenchmark(
             workerLocalityAffinitySeries,
             federationPeerLatencySeries,
             federationPeerPlacementSeries,
+            federationExecutionPressureSeries,
+            federationRemoteSuccessSeries,
+            federationLeaseCadenceSeries,
+            orchestrationCrossNodeBiasSeries,
             multiRoleConversationTurnSeries,
             multiRoleConversationVerdictSeries,
             executionArbitrationCognitionSeries,

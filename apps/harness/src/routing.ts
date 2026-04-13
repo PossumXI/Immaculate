@@ -15,6 +15,7 @@ import type {
   ActuationDelivery,
   ActuationTransportState
 } from "./actuation.js";
+import type { FederatedExecutionPressure } from "./federation-pressure.js";
 import type { GovernanceDecision, GovernanceStatus } from "./governance.js";
 import { hashValue } from "./utils.js";
 
@@ -25,6 +26,7 @@ type AdaptiveRoutePlanInput = {
   cognitiveRouteSuggestion?: string;
   neuralBandPower?: NeuroFrameWindow["bandPower"];
   neuralCoupling?: NeuralCouplingState;
+  federationPressure?: FederatedExecutionPressure;
   adapters: ActuationAdapterState[];
   transports: ActuationTransportState[];
   governanceStatus: GovernanceStatus;
@@ -44,6 +46,9 @@ export type AdaptiveRoutePlan = {
   recommendedAdapterId?: string;
   recommendedIntensity: number;
   governancePressure: GovernancePressureLevel;
+  federationPressure?: GovernancePressureLevel;
+  federationObservedLatencyMs?: number;
+  federationRemoteSuccessRatio?: number;
   selectedTransport?: ActuationTransportState;
   rationale: string;
 };
@@ -168,7 +173,8 @@ function recommendedIntensity(
   cognitiveRouteSuggestion?: string,
   neuralBandPower?: NeuroFrameWindow["bandPower"],
   neuralSignalQuality = 0,
-  dominantBand?: string
+  dominantBand?: string,
+  federationPressure?: FederatedExecutionPressure
 ): number {
   if (typeof requestedIntensity === "number" && Number.isFinite(requestedIntensity)) {
     return clamp(requestedIntensity);
@@ -209,7 +215,13 @@ function recommendedIntensity(
   if (mode === "cognitive-assisted") {
     const latencyBias = execution ? Math.min(execution.latencyMs / 5000, 1) * 0.08 : 0;
     const couplingBias = neuralSignalQuality > 0 ? clamp(neuralSignalQuality * 0.03, 0, 0.03) : 0;
-    return clamp(0.32 + latencyBias + couplingBias + suggestionBias, 0.24, 0.56);
+    const federationBias =
+      federationPressure?.pressure === "critical"
+        ? -0.08
+        : federationPressure?.pressure === "elevated"
+          ? -0.04
+          : 0;
+    return clamp(0.32 + latencyBias + couplingBias + suggestionBias + federationBias, 0.18, 0.56);
   }
   if (mode === "operator-override") {
     const couplingBias = neuralSignalQuality > 0 ? clamp(neuralSignalQuality * 0.04, 0, 0.04) : 0;
@@ -304,10 +316,17 @@ export function planAdaptiveRoute(input: AdaptiveRoutePlanInput): AdaptiveRouteP
 
   let mode: RoutingDecisionMode;
   let channel: ActuationChannel;
+  const federatedPressure = input.federationPressure;
+  const criticalRemoteExecutionPressure =
+    federatedPressure?.pressure === "critical" &&
+    execution?.assignedWorkerProfile === "remote";
 
   if (input.suppressed) {
     mode = "suppressed";
     channel = input.requestedChannel ?? "visual";
+  } else if (criticalRemoteExecutionPressure) {
+    mode = "guarded-fallback";
+    channel = "visual";
   } else if (
     hasSpectralCoupling &&
     spectralConfidence < 0.18 &&
@@ -320,13 +339,19 @@ export function planAdaptiveRoute(input: AdaptiveRoutePlanInput): AdaptiveRouteP
       (frame?.decodeReady && frame.decodeConfidence >= STABILITY_POLE)) &&
     hapticTransport &&
     hapticTransport.health === "healthy" &&
-    governancePressure === "clear"
+    governancePressure === "clear" &&
+    federatedPressure?.pressure !== "critical"
   ) {
     mode = "reflex-direct";
     channel = "haptic";
   } else if (execution?.status === "completed" && governancePressure !== "critical") {
-    mode = "cognitive-assisted";
-    channel = "visual";
+    if (federatedPressure?.pressure === "critical") {
+      mode = "guarded-fallback";
+      channel = "visual";
+    } else {
+      mode = "cognitive-assisted";
+      channel = "visual";
+    }
   } else if (
     governancePressure !== "clear" ||
     !hapticTransport ||
@@ -369,7 +394,8 @@ export function planAdaptiveRoute(input: AdaptiveRoutePlanInput): AdaptiveRouteP
     input.cognitiveRouteSuggestion ?? execution?.routeSuggestion,
     input.neuralBandPower ?? frame?.bandPower,
     spectralConfidence,
-    dominantBand
+    dominantBand,
+    federatedPressure
   );
   const dominantRatio =
     spectralSignal.dominantRatio;
@@ -385,6 +411,9 @@ export function planAdaptiveRoute(input: AdaptiveRoutePlanInput): AdaptiveRouteP
     `signal=${hasSpectralCoupling ? spectralConfidence.toFixed(2) : "none"}`,
     `artifact=${hasSpectralCoupling ? spectralSignal.artifactRatio.toFixed(2) : "none"}`,
     `governance=${governancePressure}`,
+    `federation=${federatedPressure?.pressure ?? "none"}`,
+    `federationLatency=${typeof federatedPressure?.crossNodeLatencyMs === "number" ? federatedPressure.crossNodeLatencyMs.toFixed(2) : "none"}`,
+    `federationSuccess=${typeof federatedPressure?.remoteSuccessRatio === "number" ? federatedPressure.remoteSuccessRatio.toFixed(2) : "none"}`,
     `cognitive=${input.cognitiveRouteSuggestion ?? execution?.routeSuggestion ?? "none"}`,
     `transport=${selectedTransport?.kind ?? "none"}`,
     `health=${selectedTransport?.health ?? "none"}`
@@ -397,6 +426,9 @@ export function planAdaptiveRoute(input: AdaptiveRoutePlanInput): AdaptiveRouteP
     recommendedAdapterId: selectedAdapterId,
     recommendedIntensity: intensity,
     governancePressure,
+    federationPressure: federatedPressure?.pressure,
+    federationObservedLatencyMs: federatedPressure?.crossNodeLatencyMs,
+    federationRemoteSuccessRatio: federatedPressure?.remoteSuccessRatio,
     selectedTransport,
     rationale: rationaleParts.join(" / ")
   };
@@ -435,6 +467,9 @@ export function buildRoutingDecision(options: {
     decodeConfidence: options.frame?.decodeConfidence ?? 0,
     cognitiveLatencyMs: options.execution?.latencyMs,
     governancePressure: options.plan.governancePressure,
+    federationPressure: options.plan.federationPressure,
+    federationObservedLatencyMs: options.plan.federationObservedLatencyMs,
+    federationRemoteSuccessRatio: options.plan.federationRemoteSuccessRatio,
     rationale: `${options.plan.rationale}${actualNote} / policy=${options.delivery.policyNote}`,
     selectedAt
   };

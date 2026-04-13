@@ -12,6 +12,7 @@ import type {
   CognitiveExecution
 } from "@immaculate/core";
 import { STABILITY_POLE } from "@immaculate/core";
+import type { FederatedExecutionPressure } from "./federation-pressure.js";
 import type { GovernanceDecision, GovernanceStatus } from "./governance.js";
 import type { SessionConversationMemory } from "./conversation.js";
 import { deriveGovernancePressure } from "./routing.js";
@@ -29,6 +30,7 @@ type ExecutionArbitrationPlanInput = {
   forceCognition?: boolean;
   suppressed?: boolean;
   sessionConversationMemory?: SessionConversationMemory;
+  federationPressure?: FederatedExecutionPressure;
 };
 
 export type ExecutionArbitrationPlan = {
@@ -41,6 +43,9 @@ export type ExecutionArbitrationPlan = {
   shouldDispatchActuation: boolean;
   routeModeHint: RoutingDecisionMode;
   governancePressure: GovernancePressureLevel;
+  federationPressure?: GovernancePressureLevel;
+  federationObservedLatencyMs?: number;
+  federationRemoteSuccessRatio?: number;
   decodeConfidence: number;
   objective: string;
   rationale: string;
@@ -172,6 +177,7 @@ export function planExecutionArbitration(
   const sessionConversationMemory = input.sessionConversationMemory;
   const sessionBlockedVerdicts = sessionConversationMemory?.blockedVerdictCount ?? 0;
   const sessionApprovedVerdicts = sessionConversationMemory?.approvedVerdictCount ?? 0;
+  const federatedPressure = input.federationPressure;
   if (sessionBlockedVerdicts >= 3 && governancePressure === "clear") {
     governancePressure = "elevated";
   } else if (sessionBlockedVerdicts >= 2 && governancePressure !== "critical") {
@@ -286,6 +292,24 @@ export function planExecutionArbitration(
     routeModeHint = "suppressed";
   }
 
+  if (
+    mode === "cognitive-escalation" &&
+    federatedPressure?.pressure === "critical" &&
+    preferredLayer
+  ) {
+    mode = "guarded-review";
+    targetNodeId = "integrity-gate";
+    targetPlane = "cognitive";
+    shouldRunCognition = true;
+    shouldDispatchActuation = false;
+    routeModeHint = "suppressed";
+  } else if (
+    mode === "cognitive-escalation" &&
+    federatedPressure?.pressure === "elevated"
+  ) {
+    routeModeHint = "guarded-fallback";
+  }
+
   const objective = input.objective?.trim() || defaultObjective(mode, frame, governancePressure);
   const rationale = [
     `mode=${mode}`,
@@ -294,6 +318,9 @@ export function planExecutionArbitration(
     `band=${spectralSignal.dominantBand}`,
     `artifact=${spectralSignal.artifactRatio.toFixed(2)}`,
     `governance=${governancePressure}`,
+    `federation=${federatedPressure?.pressure ?? "none"}`,
+    `federationLatency=${typeof federatedPressure?.crossNodeLatencyMs === "number" ? federatedPressure.crossNodeLatencyMs.toFixed(2) : "none"}`,
+    `federationSuccess=${typeof federatedPressure?.remoteSuccessRatio === "number" ? federatedPressure.remoteSuccessRatio.toFixed(2) : "none"}`,
     `sessionBlocked=${sessionBlockedVerdicts}`,
     `sessionApproved=${sessionApprovedVerdicts}`,
     `cognition=${shouldRunCognition ? "run" : "skip"}`,
@@ -311,6 +338,9 @@ export function planExecutionArbitration(
     shouldDispatchActuation,
     routeModeHint,
     governancePressure,
+    federationPressure: federatedPressure?.pressure,
+    federationObservedLatencyMs: federatedPressure?.crossNodeLatencyMs,
+    federationRemoteSuccessRatio: federatedPressure?.remoteSuccessRatio,
     decodeConfidence,
     objective,
     rationale
@@ -348,6 +378,9 @@ export function buildExecutionArbitrationDecision(options: {
     routeModeHint: options.plan.routeModeHint,
     decodeConfidence: options.plan.decodeConfidence,
     governancePressure: options.plan.governancePressure,
+    federationPressure: options.plan.federationPressure,
+    federationObservedLatencyMs: options.plan.federationObservedLatencyMs,
+    federationRemoteSuccessRatio: options.plan.federationRemoteSuccessRatio,
     objective: options.plan.objective,
     rationale: options.plan.rationale,
     selectedAt
