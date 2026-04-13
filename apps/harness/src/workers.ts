@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import type { FederationSignatureAlgorithm } from "./federation.js";
 import type { NodeView } from "./node-registry.js";
 import { safeUnlink } from "./utils.js";
 
@@ -28,6 +29,15 @@ export type IntelligenceWorkerRecord = {
   allowHostRisk: boolean;
   supportedBaseModels: string[];
   preferredLayerIds: string[];
+  identityAlgorithm?: FederationSignatureAlgorithm | null;
+  identityKeyId?: string | null;
+  identityIssuerNodeId?: string | null;
+  identityIssuedAt?: string | null;
+  identitySignature?: string | null;
+  identityVerified: boolean;
+  observedLatencyMs?: number | null;
+  costPerHourUsd?: number | null;
+  deviceAffinityTags: string[];
 };
 
 export type IntelligenceWorkerView = IntelligenceWorkerRecord & {
@@ -48,6 +58,9 @@ export type IntelligenceWorkerAssignmentRequest = {
   target?: string | null;
   preferredNodeId?: string | null;
   preferredLocality?: string | null;
+  preferredDeviceAffinityTags?: string[];
+  maxObservedLatencyMs?: number | null;
+  maxCostPerHourUsd?: number | null;
   nodeViews?: NodeView[];
 };
 
@@ -67,6 +80,10 @@ export type IntelligenceWorkerAssignment = {
   leaseDurationMs?: number;
   healthStatus?: IntelligenceWorkerHealthStatus;
   healthSummary?: string;
+  identityVerified?: boolean;
+  observedLatencyMs?: number | null;
+  costPerHourUsd?: number | null;
+  deviceAffinityTags?: string[];
 };
 
 export type IntelligenceWorkerSummary = {
@@ -145,6 +162,20 @@ function normalizeNullableString(value: unknown): string | null | undefined {
   return normalized.length > 0 ? normalized : null;
 }
 
+function normalizeNullableNumber(value: unknown): number | null | undefined {
+  if (value === null) {
+    return null;
+  }
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return undefined;
+  }
+  return value;
+}
+
+function arraysEqual(left: string[], right: string[]): boolean {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
+}
+
 function buildNodeViewMap(nodeViews?: NodeView[]): Map<string, NodeView> {
   return new Map((nodeViews ?? []).map((node) => [node.nodeId, node]));
 }
@@ -195,6 +226,29 @@ function parseWorkerRegistry(content: string | null): IntelligenceWorkerRecord[]
         (candidate.assignmentTarget !== undefined &&
           candidate.assignmentTarget !== null &&
           typeof candidate.assignmentTarget !== "string") ||
+        (candidate.identityAlgorithm !== undefined &&
+          candidate.identityAlgorithm !== null &&
+          candidate.identityAlgorithm !== "hmac-sha256") ||
+        (candidate.identityKeyId !== undefined &&
+          candidate.identityKeyId !== null &&
+          typeof candidate.identityKeyId !== "string") ||
+        (candidate.identityIssuerNodeId !== undefined &&
+          candidate.identityIssuerNodeId !== null &&
+          typeof candidate.identityIssuerNodeId !== "string") ||
+        (candidate.identityIssuedAt !== undefined &&
+          candidate.identityIssuedAt !== null &&
+          typeof candidate.identityIssuedAt !== "string") ||
+        (candidate.identitySignature !== undefined &&
+          candidate.identitySignature !== null &&
+          typeof candidate.identitySignature !== "string") ||
+        (candidate.identityVerified !== undefined &&
+          typeof candidate.identityVerified !== "boolean") ||
+        (candidate.observedLatencyMs !== undefined &&
+          candidate.observedLatencyMs !== null &&
+          typeof candidate.observedLatencyMs !== "number") ||
+        (candidate.costPerHourUsd !== undefined &&
+          candidate.costPerHourUsd !== null &&
+          typeof candidate.costPerHourUsd !== "number") ||
         typeof candidate.watch !== "boolean" ||
         typeof candidate.allowHostRisk !== "boolean"
       ) {
@@ -238,7 +292,20 @@ function parseWorkerRegistry(content: string | null): IntelligenceWorkerRecord[]
           watch: candidate.watch,
           allowHostRisk: candidate.allowHostRisk,
           supportedBaseModels: normalizeStringArray(candidate.supportedBaseModels),
-          preferredLayerIds: normalizeStringArray(candidate.preferredLayerIds)
+          preferredLayerIds: normalizeStringArray(candidate.preferredLayerIds),
+          identityAlgorithm:
+            candidate.identityAlgorithm === "hmac-sha256" ? candidate.identityAlgorithm : null,
+          identityKeyId: normalizeNullableString(candidate.identityKeyId),
+          identityIssuerNodeId: normalizeNullableString(candidate.identityIssuerNodeId),
+          identityIssuedAt: normalizeNullableString(candidate.identityIssuedAt),
+          identitySignature: normalizeNullableString(candidate.identitySignature),
+          identityVerified:
+            typeof candidate.identityVerified === "boolean"
+              ? candidate.identityVerified
+              : candidate.executionProfile === "local",
+          observedLatencyMs: normalizeNullableNumber(candidate.observedLatencyMs),
+          costPerHourUsd: normalizeNullableNumber(candidate.costPerHourUsd),
+          deviceAffinityTags: normalizeStringArray(candidate.deviceAffinityTags)
         }
       ];
     });
@@ -326,11 +393,19 @@ function buildWorkerView(
 ): IntelligenceWorkerView {
   const node = worker.nodeId ? buildNodeViewMap(request?.nodeViews).get(worker.nodeId) : undefined;
   const resolvedLocality = worker.locality ?? node?.locality ?? null;
+  const resolvedObservedLatencyMs = worker.observedLatencyMs ?? node?.observedLatencyMs ?? null;
+  const resolvedCostPerHourUsd = worker.costPerHourUsd ?? node?.costPerHourUsd ?? null;
+  const resolvedDeviceAffinityTags = [
+    ...new Set([...worker.deviceAffinityTags, ...(node?.deviceAffinityTags ?? [])])
+  ];
   const leaseRemainingMs = Math.max(0, Date.parse(worker.leaseExpiresAt) - Date.parse(now));
   let healthStatus: IntelligenceWorkerHealthStatus = "healthy";
   let healthReason = "lease healthy";
 
-  if (worker.executionProfile === "remote" && !worker.executionEndpoint) {
+  if (worker.executionProfile === "remote" && !worker.identityVerified) {
+    healthStatus = "faulted";
+    healthReason = "unverified federation worker";
+  } else if (worker.executionProfile === "remote" && !worker.executionEndpoint) {
     healthStatus = "faulted";
     healthReason = "remote worker missing execution endpoint";
   } else if (worker.nodeId && !node) {
@@ -373,9 +448,34 @@ function buildWorkerView(
     assignmentBlockedReason = `base model mismatch (${request.baseModel})`;
   }
 
+  if (
+    assignmentEligible &&
+    typeof request?.maxObservedLatencyMs === "number" &&
+    Number.isFinite(request.maxObservedLatencyMs) &&
+    typeof resolvedObservedLatencyMs === "number" &&
+    resolvedObservedLatencyMs > request.maxObservedLatencyMs
+  ) {
+    assignmentEligible = false;
+    assignmentBlockedReason = `latency exceeds ${request.maxObservedLatencyMs} ms`;
+  }
+
+  if (
+    assignmentEligible &&
+    typeof request?.maxCostPerHourUsd === "number" &&
+    Number.isFinite(request.maxCostPerHourUsd) &&
+    typeof resolvedCostPerHourUsd === "number" &&
+    resolvedCostPerHourUsd > request.maxCostPerHourUsd
+  ) {
+    assignmentEligible = false;
+    assignmentBlockedReason = `cost exceeds $${request.maxCostPerHourUsd.toFixed(2)}/h`;
+  }
+
   return {
     ...worker,
     locality: resolvedLocality,
+    observedLatencyMs: resolvedObservedLatencyMs,
+    costPerHourUsd: resolvedCostPerHourUsd,
+    deviceAffinityTags: resolvedDeviceAffinityTags,
     healthStatus,
     healthSummary:
       healthStatus === "healthy"
@@ -509,6 +609,10 @@ function selectWorker(
         score += 5;
         reasons.push(`locality ${request.preferredLocality}`);
       }
+      if (worker.identityVerified) {
+        score += 9;
+        reasons.push("identity verified");
+      }
       if (
         request.requestedExecutionDecision !== "remote_required" &&
         worker.executionProfile === "local"
@@ -535,6 +639,22 @@ function selectWorker(
       if (request.baseModel && workerSupportsBaseModel(worker, request.baseModel)) {
         score += 3;
         reasons.push(`model ${request.baseModel}`);
+      }
+      const requestedAffinity = normalizeStringArray(request.preferredDeviceAffinityTags);
+      if (requestedAffinity.length > 0 && worker.deviceAffinityTags.length > 0) {
+        const affinityMatches = requestedAffinity.filter((tag) => worker.deviceAffinityTags.includes(tag));
+        if (affinityMatches.length > 0) {
+          score += Math.min(6, affinityMatches.length * 3);
+          reasons.push(`affinity ${affinityMatches.join(",")}`);
+        }
+      }
+      if (typeof worker.observedLatencyMs === "number" && Number.isFinite(worker.observedLatencyMs)) {
+        score += Math.max(0, 8 - worker.observedLatencyMs / 10);
+        reasons.push(`latency ${worker.observedLatencyMs.toFixed(1)}ms`);
+      }
+      if (typeof worker.costPerHourUsd === "number" && Number.isFinite(worker.costPerHourUsd)) {
+        score += Math.max(0, 6 - worker.costPerHourUsd * 4);
+        reasons.push(`cost $${worker.costPerHourUsd.toFixed(2)}/h`);
       }
       if (worker.watch) {
         score += 1;
@@ -579,7 +699,11 @@ function selectWorker(
       reason: winner.reason,
       score: winner.score,
       healthStatus: winner.worker.healthStatus,
-      healthSummary: winner.worker.healthSummary
+      healthSummary: winner.worker.healthSummary,
+      identityVerified: winner.worker.identityVerified,
+      observedLatencyMs: winner.worker.observedLatencyMs ?? null,
+      costPerHourUsd: winner.worker.costPerHourUsd ?? null,
+      deviceAffinityTags: winner.worker.deviceAffinityTags
     },
     workers: views,
     summary
@@ -612,7 +736,13 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
       });
     },
     async registerWorker(
-      worker: Omit<IntelligenceWorkerRecord, "leaseExpiresAt"> & { leaseExpiresAt?: string | null },
+      worker: Omit<IntelligenceWorkerRecord, "leaseExpiresAt" | "identityVerified" | "deviceAffinityTags"> & {
+        leaseExpiresAt?: string | null;
+        identityVerified?: boolean;
+        observedLatencyMs?: number | null;
+        costPerHourUsd?: number | null;
+        deviceAffinityTags?: string[];
+      },
       nodeViews?: NodeView[]
     ): Promise<IntelligenceWorkerView> {
       return withRegistryLock(async () => {
@@ -658,8 +788,49 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
           watch: worker.watch,
           allowHostRisk: worker.allowHostRisk,
           supportedBaseModels: normalizeStringArray(worker.supportedBaseModels),
-          preferredLayerIds: normalizeStringArray(worker.preferredLayerIds)
+          preferredLayerIds: normalizeStringArray(worker.preferredLayerIds),
+          identityAlgorithm:
+            worker.identityAlgorithm ?? existing?.identityAlgorithm ?? (worker.executionProfile === "local" ? "hmac-sha256" : null),
+          identityKeyId: normalizeNullableString(worker.identityKeyId) ?? existing?.identityKeyId ?? null,
+          identityIssuerNodeId:
+            normalizeNullableString(worker.identityIssuerNodeId) ?? existing?.identityIssuerNodeId ?? null,
+          identityIssuedAt:
+            normalizeNullableString(worker.identityIssuedAt) ?? existing?.identityIssuedAt ?? null,
+          identitySignature:
+            normalizeNullableString(worker.identitySignature) ?? existing?.identitySignature ?? null,
+          identityVerified:
+            typeof worker.identityVerified === "boolean"
+              ? worker.identityVerified
+              : existing?.identityVerified ?? worker.executionProfile === "local",
+          observedLatencyMs:
+            normalizeNullableNumber(worker.observedLatencyMs) ?? existing?.observedLatencyMs ?? null,
+          costPerHourUsd:
+            normalizeNullableNumber(worker.costPerHourUsd) ?? existing?.costPerHourUsd ?? null,
+          deviceAffinityTags:
+            worker.deviceAffinityTags !== undefined
+              ? normalizeStringArray(worker.deviceAffinityTags)
+              : existing?.deviceAffinityTags ?? []
         };
+        if (
+          existing &&
+          existing.identityVerified &&
+          existing.executionProfile === "remote" &&
+          (
+            existing.executionEndpoint !== next.executionEndpoint ||
+            existing.nodeId !== next.nodeId ||
+            existing.locality !== next.locality ||
+            existing.workerLabel !== next.workerLabel ||
+            existing.hostLabel !== next.hostLabel ||
+            existing.executionProfile !== next.executionProfile ||
+            !arraysEqual(existing.supportedBaseModels, next.supportedBaseModels) ||
+            !arraysEqual(existing.preferredLayerIds, next.preferredLayerIds) ||
+            !arraysEqual(existing.deviceAffinityTags, next.deviceAffinityTags) ||
+            (existing.costPerHourUsd ?? null) !== (next.costPerHourUsd ?? null)
+          ) &&
+          !normalizeNullableString(worker.identitySignature)
+        ) {
+          throw new Error(`Verified remote worker ${worker.workerId} requires a signed federation refresh.`);
+        }
         const updated = workers.filter((entry) => entry.workerId !== worker.workerId).concat(next);
         await writeWorkers(updated);
         return buildWorkerView(next, heartbeatAt, { nodeViews });
@@ -679,6 +850,15 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
       allowHostRisk?: boolean;
       supportedBaseModels?: string[];
       preferredLayerIds?: string[];
+      identityAlgorithm?: FederationSignatureAlgorithm | null;
+      identityKeyId?: string | null;
+      identityIssuerNodeId?: string | null;
+      identityIssuedAt?: string | null;
+      identitySignature?: string | null;
+      identityVerified?: boolean;
+      observedLatencyMs?: number | null;
+      costPerHourUsd?: number | null;
+      deviceAffinityTags?: string[];
     }, nodeViews?: NodeView[]): Promise<IntelligenceWorkerView> {
       return withRegistryLock(async () => {
         const heartbeatAt = args.heartbeatAt || new Date().toISOString();
@@ -739,8 +919,63 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
           preferredLayerIds:
             args.preferredLayerIds !== undefined
               ? normalizeStringArray(args.preferredLayerIds)
-              : existing.preferredLayerIds
+              : existing.preferredLayerIds,
+          identityAlgorithm:
+            args.identityAlgorithm !== undefined
+              ? args.identityAlgorithm
+              : existing.identityAlgorithm ?? null,
+          identityKeyId:
+            args.identityKeyId !== undefined
+              ? normalizeNullableString(args.identityKeyId)
+              : existing.identityKeyId ?? null,
+          identityIssuerNodeId:
+            args.identityIssuerNodeId !== undefined
+              ? normalizeNullableString(args.identityIssuerNodeId)
+              : existing.identityIssuerNodeId ?? null,
+          identityIssuedAt:
+            args.identityIssuedAt !== undefined
+              ? normalizeNullableString(args.identityIssuedAt)
+              : existing.identityIssuedAt ?? null,
+          identitySignature:
+            args.identitySignature !== undefined
+              ? normalizeNullableString(args.identitySignature)
+              : existing.identitySignature ?? null,
+          identityVerified:
+            typeof args.identityVerified === "boolean"
+              ? args.identityVerified
+              : existing.identityVerified,
+          observedLatencyMs:
+            args.observedLatencyMs !== undefined
+              ? normalizeNullableNumber(args.observedLatencyMs)
+              : existing.observedLatencyMs ?? null,
+          costPerHourUsd:
+            args.costPerHourUsd !== undefined
+              ? normalizeNullableNumber(args.costPerHourUsd)
+              : existing.costPerHourUsd ?? null,
+          deviceAffinityTags:
+            args.deviceAffinityTags !== undefined
+              ? normalizeStringArray(args.deviceAffinityTags)
+              : existing.deviceAffinityTags
         };
+        if (
+          existing.identityVerified &&
+          existing.executionProfile === "remote" &&
+          (
+            existing.executionEndpoint !== next.executionEndpoint ||
+            existing.nodeId !== next.nodeId ||
+            existing.locality !== next.locality ||
+            existing.workerLabel !== next.workerLabel ||
+            existing.hostLabel !== next.hostLabel ||
+            existing.executionProfile !== next.executionProfile ||
+            !arraysEqual(existing.supportedBaseModels, next.supportedBaseModels) ||
+            !arraysEqual(existing.preferredLayerIds, next.preferredLayerIds) ||
+            !arraysEqual(existing.deviceAffinityTags, next.deviceAffinityTags) ||
+            (existing.costPerHourUsd ?? null) !== (next.costPerHourUsd ?? null)
+          ) &&
+          args.identitySignature === undefined
+        ) {
+          throw new Error(`Verified remote worker ${args.workerId} requires a signed federation refresh.`);
+        }
         const updated = workers.filter((worker) => worker.workerId !== args.workerId).concat(next);
         await writeWorkers(updated);
         return buildWorkerView(next, heartbeatAt, { nodeViews });
@@ -793,7 +1028,11 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
             leaseExpiresAt:
               reservedWorker.assignmentLeaseExpiresAt ?? selection.assignment.leaseExpiresAt,
             leaseDurationMs:
-              reservedWorker.assignmentLeaseDurationMs ?? selection.assignment.leaseDurationMs
+              reservedWorker.assignmentLeaseDurationMs ?? selection.assignment.leaseDurationMs,
+            identityVerified: reservedWorker.identityVerified,
+            observedLatencyMs: reservedWorker.observedLatencyMs ?? null,
+            costPerHourUsd: reservedWorker.costPerHourUsd ?? null,
+            deviceAffinityTags: reservedWorker.deviceAffinityTags
           }
         };
       });

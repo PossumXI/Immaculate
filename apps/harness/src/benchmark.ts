@@ -55,6 +55,7 @@ import {
   type GovernanceStatus
 } from "./governance.js";
 import { buildLiveNeuroFrame } from "./live-neuro.js";
+import { signFederationPayload, verifyFederationEnvelope } from "./federation.js";
 import { buildNwbReplayFrames, scanNwbFile } from "./nwb.js";
 import { parseStructuredResponse } from "./ollama.js";
 import { createPersistence } from "./persistence.js";
@@ -1464,6 +1465,7 @@ export async function runPublishedBenchmark(
   const workerRegistryLeasePast = new Date(
     Date.parse(workerRegistryNow) - 30_000
   ).toISOString();
+  const federationBenchmarkSecret = "benchmark-federation-shared-secret";
   const workerRemotePrimary = await workerRegistry.registerWorker({
     workerId: `worker-${suiteId}-remote-primary`,
     workerLabel: "Benchmark Remote Primary",
@@ -1477,7 +1479,11 @@ export async function runPublishedBenchmark(
     watch: true,
     allowHostRisk: true,
     supportedBaseModels: [benchmarkLayer.model],
-    preferredLayerIds: [benchmarkLayer.id]
+    preferredLayerIds: [benchmarkLayer.id],
+    identityVerified: true,
+    observedLatencyMs: 12,
+    costPerHourUsd: 0.48,
+    deviceAffinityTags: ["swarm", "ollama", "gpu"]
   });
   await workerRegistry.registerWorker({
     workerId: `worker-${suiteId}-remote-expired`,
@@ -1492,7 +1498,11 @@ export async function runPublishedBenchmark(
     watch: false,
     allowHostRisk: false,
     supportedBaseModels: [benchmarkLayer.model],
-    preferredLayerIds: [benchmarkLayer.id]
+    preferredLayerIds: [benchmarkLayer.id],
+    identityVerified: true,
+    observedLatencyMs: 28,
+    costPerHourUsd: 0.24,
+    deviceAffinityTags: ["swarm", "cpu"]
   });
   const workerLocalFallback = await workerRegistry.registerWorker({
     workerId: `worker-${suiteId}-local-fallback`,
@@ -1526,29 +1536,75 @@ export async function runPublishedBenchmark(
     localCapabilities: ["control-plane", "worker-plane"]
   });
   const workerLocalityLocalNode = await workerLocalityNodeRegistry.ensureLocalNode(workerRegistryNow);
+  const signedNearNode = signFederationPayload(
+    {
+      nodeId: `node-${suiteId}-remote-near`,
+      nodeLabel: "Benchmark Remote Near Node",
+      hostLabel: "bench-node-remote-near",
+      locality: workerLocalityLocalNode.locality,
+      controlPlaneUrl: "http://127.0.0.1:9788",
+      registeredAt: workerRegistryNow,
+      heartbeatAt: workerRegistryNow,
+      leaseDurationMs: 45_000,
+      capabilities: ["worker-plane"],
+      isLocal: false,
+      costPerHourUsd: 0.32,
+      deviceAffinityTags: ["gpu-rack-a", "swarm"]
+    },
+    {
+      issuerNodeId: `node-${suiteId}-remote-near`,
+      secret: federationBenchmarkSecret,
+      issuedAt: workerRegistryNow
+    }
+  );
+  const signedFarNode = signFederationPayload(
+    {
+      nodeId: `node-${suiteId}-remote-far`,
+      nodeLabel: "Benchmark Remote Far Node",
+      hostLabel: "bench-node-remote-far",
+      locality: "rack-b",
+      controlPlaneUrl: "http://127.0.0.1:9789",
+      registeredAt: workerRegistryNow,
+      heartbeatAt: workerRegistryNow,
+      leaseDurationMs: 45_000,
+      capabilities: ["worker-plane"],
+      isLocal: false,
+      costPerHourUsd: 0.18,
+      deviceAffinityTags: ["cpu-rack-b", "swarm"]
+    },
+    {
+      issuerNodeId: `node-${suiteId}-remote-far`,
+      secret: federationBenchmarkSecret,
+      issuedAt: workerRegistryNow
+    }
+  );
+  const signedNearNodeVerification = verifyFederationEnvelope(signedNearNode, {
+    secret: federationBenchmarkSecret,
+    expectedIssuerNodeId: signedNearNode.payload.nodeId
+  });
   const workerLocalityNearNode = await workerLocalityNodeRegistry.registerNode({
-    nodeId: `node-${suiteId}-remote-near`,
-    nodeLabel: "Benchmark Remote Near Node",
-    hostLabel: "bench-node-remote-near",
-    locality: workerLocalityLocalNode.locality,
-    controlPlaneUrl: "http://127.0.0.1:9788",
-    registeredAt: workerRegistryNow,
-    heartbeatAt: workerRegistryNow,
-    leaseDurationMs: 45_000,
-    capabilities: ["worker-plane"],
-    isLocal: false
+    ...signedNearNode.payload,
+    identityAlgorithm: signedNearNode.algorithm,
+    identityKeyId: signedNearNode.keyId,
+    identityIssuerNodeId: signedNearNode.issuerNodeId,
+    identityIssuedAt: signedNearNode.issuedAt,
+    identitySignature: signedNearNode.signature,
+    identityVerified: signedNearNodeVerification.verified,
+    observedLatencyMs: 8
+  });
+  const signedFarNodeVerification = verifyFederationEnvelope(signedFarNode, {
+    secret: federationBenchmarkSecret,
+    expectedIssuerNodeId: signedFarNode.payload.nodeId
   });
   const workerLocalityFarNode = await workerLocalityNodeRegistry.registerNode({
-    nodeId: `node-${suiteId}-remote-far`,
-    nodeLabel: "Benchmark Remote Far Node",
-    hostLabel: "bench-node-remote-far",
-    locality: "rack-b",
-    controlPlaneUrl: "http://127.0.0.1:9789",
-    registeredAt: workerRegistryNow,
-    heartbeatAt: workerRegistryNow,
-    leaseDurationMs: 45_000,
-    capabilities: ["worker-plane"],
-    isLocal: false
+    ...signedFarNode.payload,
+    identityAlgorithm: signedFarNode.algorithm,
+    identityKeyId: signedFarNode.keyId,
+    identityIssuerNodeId: signedFarNode.issuerNodeId,
+    identityIssuedAt: signedFarNode.issuedAt,
+    identitySignature: signedFarNode.signature,
+    identityVerified: signedFarNodeVerification.verified,
+    observedLatencyMs: 42
   });
   const workerLocalityNodeViews = (await workerLocalityNodeRegistry.listNodes(workerRegistryNow)).nodes;
   const workerLocalityRegistry = createIntelligenceWorkerRegistry(
@@ -1569,7 +1625,32 @@ export async function runPublishedBenchmark(
     watch: true,
     allowHostRisk: true,
     supportedBaseModels: [benchmarkLayer.model],
-    preferredLayerIds: [benchmarkLayer.id]
+    preferredLayerIds: [benchmarkLayer.id],
+    identityVerified: true,
+    observedLatencyMs: 8,
+    costPerHourUsd: 0.32,
+    deviceAffinityTags: ["swarm", "gpu-rack-a", "bci"]
+  }, workerLocalityNodeViews);
+  await workerLocalityRegistry.registerWorker({
+    workerId: `worker-${suiteId}-remote-near-unverified`,
+    workerLabel: "Benchmark Remote Near Unverified",
+    hostLabel: workerLocalityNearNode.hostLabel ?? "bench-node-remote-near",
+    nodeId: workerLocalityNearNode.nodeId,
+    locality: workerLocalityNearNode.locality,
+    executionProfile: "remote",
+    executionEndpoint: "http://127.0.0.1:21436",
+    registeredAt: workerRegistryNow,
+    heartbeatAt: workerRegistryNow,
+    leaseDurationMs: 45_000,
+    leaseExpiresAt: new Date(Date.parse(workerRegistryNow) + 45_000).toISOString(),
+    watch: false,
+    allowHostRisk: true,
+    supportedBaseModels: [benchmarkLayer.model],
+    preferredLayerIds: [benchmarkLayer.id],
+    identityVerified: false,
+    observedLatencyMs: 4,
+    costPerHourUsd: 0.12,
+    deviceAffinityTags: ["swarm", "gpu-rack-a", "bci"]
   }, workerLocalityNodeViews);
   await workerLocalityRegistry.registerWorker({
     workerId: `worker-${suiteId}-remote-far`,
@@ -1586,7 +1667,11 @@ export async function runPublishedBenchmark(
     watch: true,
     allowHostRisk: true,
     supportedBaseModels: [benchmarkLayer.model],
-    preferredLayerIds: [benchmarkLayer.id]
+    preferredLayerIds: [benchmarkLayer.id],
+    identityVerified: true,
+    observedLatencyMs: 42,
+    costPerHourUsd: 0.18,
+    deviceAffinityTags: ["swarm", "cpu-rack-b"]
   }, workerLocalityNodeViews);
   const localityAssignment = await workerLocalityRegistry.assignWorker({
     requestedExecutionDecision: "remote_required",
@@ -1595,6 +1680,9 @@ export async function runPublishedBenchmark(
     recommendedLayerId: benchmarkLayer.id,
     target: "planner-swarm",
     preferredLocality: workerLocalityLocalNode.locality,
+    preferredDeviceAffinityTags: ["bci", "swarm"],
+    maxObservedLatencyMs: 50,
+    maxCostPerHourUsd: 0.50,
     nodeViews: workerLocalityNodeViews
   });
   const localityRegistrySnapshot = await workerLocalityRegistry.listWorkers(
@@ -3177,7 +3265,14 @@ export async function runPublishedBenchmark(
     "ratio",
     [
       Number(localityAssignment.assignment?.locality === workerLocalityLocalNode.locality),
-      Number(localityAssignment.assignment?.workerId === localityNearWorker.workerId)
+      Number(localityAssignment.assignment?.workerId === localityNearWorker.workerId),
+      Number(localityAssignment.assignment?.identityVerified === true),
+      Number((localityAssignment.assignment?.observedLatencyMs ?? 999) <= 10),
+      Number((localityAssignment.assignment?.costPerHourUsd ?? 999) <= 0.5),
+      Number(
+        (localityAssignment.assignment?.deviceAffinityTags ?? []).includes("bci") &&
+          (localityAssignment.assignment?.deviceAffinityTags ?? []).includes("swarm")
+      )
     ]
   );
   const multiRoleConversationLatencySeries = createSeries(
@@ -3919,19 +4014,43 @@ export async function runPublishedBenchmark(
     ),
     createAssertion(
       "worker-assignment-locality-affinity",
-      "Remote worker placement prefers the healthy node in the local control locality before crossing racks",
+      "Remote worker placement combines verified identity, locality, latency, cost, and device affinity",
       localityAssignment.assignment?.workerId === localityNearWorker.workerId &&
         localityAssignment.assignment?.executionProfile === "remote" &&
         localityAssignment.assignment?.locality === workerLocalityLocalNode.locality &&
+        localityAssignment.assignment?.identityVerified === true &&
+        (localityAssignment.assignment?.observedLatencyMs ?? Number.POSITIVE_INFINITY) <= 10 &&
+        (localityAssignment.assignment?.costPerHourUsd ?? Number.POSITIVE_INFINITY) <= 0.5 &&
+        Boolean(localityAssignment.assignment?.deviceAffinityTags?.includes("bci")) &&
         Boolean(localityAssignment.assignment?.reason.includes(`locality ${workerLocalityLocalNode.locality}`)) &&
+        Boolean(localityAssignment.assignment?.reason.includes("identity verified")) &&
+        Boolean(localityAssignment.assignment?.reason.includes("latency")) &&
+        Boolean(localityAssignment.assignment?.reason.includes("cost")) &&
+        Boolean(localityAssignment.assignment?.reason.includes("affinity")) &&
         localityRegistrySnapshot.some(
           (worker) =>
             worker.workerId === localityNearWorker.workerId &&
             worker.assignmentTarget === "planner-swarm"
         ),
-      "same-locality remote worker wins and records planner-swarm lease",
-      `${localityAssignment.assignment?.workerId ?? "missing"} / ${localityAssignment.assignment?.locality ?? "missing"} / local=${workerLocalityLocalNode.locality}`,
-      "a multi-node worker plane should show rack-aware affinity instead of pretending every remote worker is equal once it is healthy"
+      "verified same-locality remote worker wins with low latency, bounded cost, and BCI affinity",
+      `${localityAssignment.assignment?.workerId ?? "missing"} / ${localityAssignment.assignment?.reason ?? "missing reason"}`,
+      "authenticated federation should make placement truthful by consuming cost and latency as first-class signals instead of treating every healthy remote worker as equivalent"
+    ),
+    createAssertion(
+      "worker-assignment-verified-federation",
+      "Unverified remote workers are faulted and excluded from federation placement",
+      signedNearNodeVerification.verified &&
+        signedFarNodeVerification.verified &&
+        localityRegistrySnapshot.some(
+          (worker) =>
+            worker.workerId === `worker-${suiteId}-remote-near-unverified` &&
+            worker.healthStatus === "faulted" &&
+            worker.assignmentEligible === false &&
+            worker.assignmentBlockedReason === "unverified federation worker"
+        ),
+      "signed node identities verify and unverified worker is faulted",
+      `${signedNearNodeVerification.verified}/${signedFarNodeVerification.verified} / ${localityRegistrySnapshot.find((worker) => worker.workerId === `worker-${suiteId}-remote-near-unverified`)?.healthStatus ?? "missing"}`,
+      "authenticated federation is only real if unsigned remote workers stop being assignable instead of merely ranking lower"
     ),
     createAssertion(
       "worker-assignment-duplicate-pressure",

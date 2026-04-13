@@ -21,6 +21,8 @@ observable, governed control system for intelligence at scale.
 - BIDS and NWB ingest
 - Local cognition through Ollama
 - Governed actuation with direct transport supervision
+- Authenticated federation membership export/import with verified remote node and worker identity
+- Placement that combines locality, observed latency, cost, and device affinity without claiming full mesh federation yet
 
 ## Where Community Help Matters
 
@@ -36,6 +38,7 @@ observable, governed control system for intelligence at scale.
 - [[Engineering-Doctrine]] defines the standing build philosophy and what qualifies as a real leap
 - [[Benchmark-Status]] points to the live public W&B project plus the latest published benchmark runs by pack
 - [[Benchmark-Wandb-Export]] is the committed pull-back from W&B itself, so benchmark results live in git wiki even when the W&B project stays private
+- the live peer-sync drill completed at a high level with signed member exchange, identity checks passing, and placement following the expected locality and latency signals
 - the live benchmark surface now includes a real `60s` paced benchmark lane and a real `60m` soak lane with published hardware context and wall-clock timing
 - the credibility stack now also includes a real crash-torture lane, a real OpenNeuro+DANDI ingest lane, and an honest Temporal side-by-side baseline instead of hiding those claims inside generic smoke runs
 - the harness now exposes a governed local node registry plus locality-aware worker placement, so remote cognition can prefer the nearer healthy worker instead of treating every remote endpoint as identical

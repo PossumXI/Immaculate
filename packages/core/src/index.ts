@@ -458,6 +458,12 @@ export type CognitiveExecution = {
   assignedWorkerLabel?: string;
   assignedWorkerHostLabel?: string;
   assignedWorkerProfile?: "local" | "remote";
+  assignedWorkerNodeId?: string;
+  assignedWorkerLocality?: string;
+  assignedWorkerIdentityVerified?: boolean;
+  assignedWorkerObservedLatencyMs?: number;
+  assignedWorkerCostPerHourUsd?: number;
+  assignedWorkerDeviceAffinityTags?: string[];
   assignmentReason?: string;
   assignmentScore?: number;
   executionEndpoint?: string;
@@ -1100,6 +1106,12 @@ export const cognitiveExecutionSchema = z.object({
   assignedWorkerLabel: z.string().optional(),
   assignedWorkerHostLabel: z.string().optional(),
   assignedWorkerProfile: z.enum(["local", "remote"]).optional(),
+  assignedWorkerNodeId: z.string().optional(),
+  assignedWorkerLocality: z.string().optional(),
+  assignedWorkerIdentityVerified: z.boolean().optional(),
+  assignedWorkerObservedLatencyMs: z.number().optional(),
+  assignedWorkerCostPerHourUsd: z.number().optional(),
+  assignedWorkerDeviceAffinityTags: z.array(z.string()).optional(),
   assignmentReason: z.string().optional(),
   assignmentScore: z.number().optional(),
   executionEndpoint: z.string().optional(),

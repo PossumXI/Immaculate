@@ -21,6 +21,29 @@ For each breakthrough, record:
 
 ### 2026-04-13
 
+#### Authenticated federation reached the signed-membership and verified-identity stage
+
+What changed:
+- federation membership can now be exported and imported as signed artifacts instead of being implied by local registry state alone
+- remote node and worker identity is now verified before placement, so a worker has to prove who it is before it can join the scheduling set
+- placement now ranks locality, observed latency, cost, and device affinity together instead of relying on locality as a single proxy
+- the live peer-sync drill completed at a high level with authenticated member exchange and identity verification holding under coordination pressure
+
+Why it matters:
+- this is the first honest step into federation proper: the system can now exchange membership, verify remote participants, and make placement decisions from more than one real signal
+- it also keeps the project from overstating itself as a full mesh; the current phase is authenticated federation membership and placement, not a finished all-to-all mesh
+- the missed systems pattern was that distributed control only becomes real once membership, identity, and placement are all durable and explicit rather than inferred
+
+Evidence:
+- signed membership export/import is now part of the public progress surface
+- remote node and worker identity is verified before placement decisions are accepted
+- the peer-sync drill finished with the expected high-level outcome: authenticated coordination succeeded and placement followed the locality plus observed-latency path rather than a naive remote-first fallback
+
+What this unlocks next:
+- broader multi-node federation that can grow from authenticated membership instead of ad hoc discovery
+- more precise placement policies that continue to combine locality with latency, cost, and device affinity
+- eventual mesh-style coordination if and when the authenticated membership model proves it can scale safely
+
 #### Locality became a real worker-plane control signal, and benchmark drift gained an honest API
 
 What changed:

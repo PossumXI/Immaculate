@@ -222,6 +222,7 @@ Benchmark packs currently include:
 - remote worker placement now rides an overlooked but real substrate that was already in front of the system: worker records can advertise Ollama-compatible execution endpoints, so cognition can be placed onto remote compute without inventing a second orchestration protocol
 - locality-aware worker placement now runs inside the live harness: when multiple healthy remote workers can satisfy the same request, the system can prefer the worker in the local control locality before crossing into a different rack/zone
 - local swarm execution now treats one host as a pool of leaseable worker slots instead of a single monolithic worker record, so widened cognition can actually reserve parallel local capacity without lying about topology
+- authenticated federation work now centers on signed membership export/import, verified remote node and worker identity, and placement that ranks locality, observed latency, cost, and device affinity
 - session-bound actuation dispatch and mediated orchestration now fail closed on ambiguous or cross-session source resolution instead of silently falling back to the newest global frame or execution
 - benchmark publication now includes Tier 1 cognitive-loop closure coverage for parsed model structure, governance-aware cognition, routing soft priors, and multi-role conversation verdicts
 - benchmark history can now be queried through a real `/api/benchmarks/trend` surface that analyzes published run order, flags drift, and stays explicit about what metric it is trending
@@ -235,7 +236,7 @@ Benchmark packs currently include:
 - additional vendor-specific transports beyond serial and HTTP/2 direct lanes, including MIDI and richer gRPC-class adapters
 - arbitration and scheduling that feed live neural coupling, device health, decode confidence, and governance pressure deeper into multi-agent planning before route/dispatch
 - additional multi-agent and tool execution backends beyond the first Ollama layer
-- richer worker federation with authenticated network membership, cost, and observed latency shaping placement beyond the current local node registry
+- richer worker federation beyond the current authenticated membership export/import and verified identity phase
 - domain benchmark packs against published neuro/BCI workloads
 - real multi-node deployment and cluster-wide locality routing beyond the current single-harness node registry
 - richer operator surfaces over published-run trend analysis instead of only the raw API

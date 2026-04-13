@@ -53,6 +53,15 @@ import {
   type LiveNeuroPayload
 } from "./live-neuro.js";
 import { createLslAdapterManager } from "./lsl-adapter.js";
+import {
+  normalizeFederationControlPlaneUrl,
+  resolveFederationSecret,
+  signFederationPayload,
+  verifyFederationEnvelope,
+  type FederationNodeIdentityPayload,
+  type FederationSignedEnvelope,
+  type FederationWorkerIdentityPayload
+} from "./federation.js";
 import { createNodeRegistry } from "./node-registry.js";
 import { createNeuroReplayManager } from "./neuro-replay.js";
 import { listBenchmarkPacks } from "./benchmark-packs.js";
@@ -107,7 +116,16 @@ const nodeRegistry = createNodeRegistry(persistence.getStatus().rootDir, {
   localControlPlaneUrl:
     process.env.IMMACULATE_NODE_CONTROL_URL ??
     `http://${process.env.IMMACULATE_HARNESS_HOST ?? "127.0.0.1"}:${Number(process.env.IMMACULATE_HARNESS_PORT ?? 8787)}`,
-  localCapabilities: ["control-plane", "worker-plane", "benchmark-plane", "neuro-plane"]
+  localCapabilities: ["control-plane", "worker-plane", "benchmark-plane", "neuro-plane"],
+  localCostPerHourUsd:
+    typeof process.env.IMMACULATE_NODE_COST_PER_HOUR_USD === "string"
+      ? Number(process.env.IMMACULATE_NODE_COST_PER_HOUR_USD)
+      : undefined,
+  localDeviceAffinityTags:
+    process.env.IMMACULATE_NODE_DEVICE_AFFINITY?.split(",").map((value) => value.trim()).filter(Boolean) ?? [
+      "local-control-plane",
+      "cpu"
+    ]
 });
 await nodeRegistry.ensureLocalNode();
 const durableState = await persistence.load();
@@ -178,6 +196,7 @@ const HARNESS_PORT = Number(process.env.IMMACULATE_HARNESS_PORT ?? 8787);
 const HARNESS_HOST = process.env.IMMACULATE_HARNESS_HOST ?? "127.0.0.1";
 const tickIntervalMs = Number(process.env.IMMACULATE_TICK_MS ?? 180);
 const API_KEY = process.env.IMMACULATE_API_KEY;
+const FEDERATION_SHARED_SECRET = resolveFederationSecret();
 const LOCAL_WORKER_ID_PREFIX =
   process.env.IMMACULATE_WORKER_ID ??
   `worker-local-${HARNESS_HOST.replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "")}-${HARNESS_PORT}`;
@@ -187,6 +206,16 @@ const LOCAL_EXECUTION_WORKER_SLOT_CAP = Math.max(
 );
 const LOCAL_OLLAMA_ENDPOINT =
   process.env.IMMACULATE_OLLAMA_URL ?? "http://127.0.0.1:11434";
+const LOCAL_WORKER_COST_PER_HOUR_USD =
+  typeof process.env.IMMACULATE_WORKER_COST_PER_HOUR_USD === "string"
+    ? Number(process.env.IMMACULATE_WORKER_COST_PER_HOUR_USD)
+    : 0.42;
+const LOCAL_WORKER_DEVICE_AFFINITY_TAGS =
+  process.env.IMMACULATE_WORKER_DEVICE_AFFINITY?.split(",").map((value) => value.trim()).filter(Boolean) ?? [
+    "ollama",
+    "llm",
+    "cpu"
+  ];
 const NODE_HEARTBEAT_INTERVAL_MS = Math.max(
   5_000,
   Number(process.env.IMMACULATE_NODE_HEARTBEAT_INTERVAL_MS ?? 15_000) || 15_000
@@ -326,6 +355,250 @@ function getGovernanceBinding(
       searchParams.get("consentScope") ??
       searchParams.get("x-immaculate-consent-scope") ??
       undefined
+  };
+}
+
+function requireFederationSecret(): string {
+  if (!FEDERATION_SHARED_SECRET) {
+    throw new Error(
+      "Federation shared secret is not configured. Set IMMACULATE_FEDERATION_SHARED_SECRET or IMMACULATE_API_KEY."
+    );
+  }
+  return FEDERATION_SHARED_SECRET;
+}
+
+function toFederationNodeIdentityPayload(
+  node: Awaited<ReturnType<typeof nodeRegistry.ensureLocalNode>>
+): FederationNodeIdentityPayload {
+  return {
+    nodeId: node.nodeId,
+    nodeLabel: node.nodeLabel ?? null,
+    hostLabel: node.hostLabel ?? null,
+    locality: node.locality,
+    controlPlaneUrl: node.controlPlaneUrl ?? null,
+    registeredAt: node.registeredAt,
+    heartbeatAt: node.heartbeatAt,
+    leaseDurationMs: node.leaseDurationMs,
+    capabilities: node.capabilities,
+    isLocal: node.isLocal,
+    costPerHourUsd: node.costPerHourUsd ?? null,
+    deviceAffinityTags: node.deviceAffinityTags
+  };
+}
+
+function toFederationWorkerIdentityPayload(
+  worker: Awaited<ReturnType<typeof intelligenceWorkerRegistry.listWorkers>>[number]
+): FederationWorkerIdentityPayload {
+  return {
+    workerId: worker.workerId,
+    workerLabel: worker.workerLabel ?? null,
+    hostLabel: worker.hostLabel ?? null,
+    nodeId: worker.nodeId ?? null,
+    locality: worker.locality ?? null,
+    executionProfile: worker.executionProfile,
+    executionEndpoint: worker.executionEndpoint ?? null,
+    registeredAt: worker.registeredAt,
+    heartbeatAt: worker.heartbeatAt,
+    leaseDurationMs: worker.leaseDurationMs,
+    watch: worker.watch,
+    allowHostRisk: worker.allowHostRisk,
+    supportedBaseModels: worker.supportedBaseModels,
+    preferredLayerIds: worker.preferredLayerIds,
+    costPerHourUsd: worker.costPerHourUsd ?? null,
+    deviceAffinityTags: worker.deviceAffinityTags
+  };
+}
+
+async function buildFederationMembershipExport(now = new Date().toISOString()) {
+  const secret = requireFederationSecret();
+  const localNode = await nodeRegistry.ensureLocalNode(now);
+  const nodeState = await nodeRegistry.listNodes(now);
+  const workers = (await intelligenceWorkerRegistry.listWorkers(now, nodeState.nodes)).filter(
+    (worker) => (worker.nodeId ?? localNode.nodeId) === localNode.nodeId
+  );
+
+  return {
+    exportedAt: now,
+    exporterNodeId: localNode.nodeId,
+    node: signFederationPayload(toFederationNodeIdentityPayload(localNode), {
+      issuerNodeId: localNode.nodeId,
+      secret,
+      issuedAt: now
+    }),
+    workers: workers.map((worker) =>
+      signFederationPayload(toFederationWorkerIdentityPayload(worker), {
+        issuerNodeId: localNode.nodeId,
+        secret,
+        issuedAt: now
+      })
+    )
+  };
+}
+
+function federationRequestHeaders(token?: string): HeadersInit {
+  return {
+    ...(token?.trim() || API_KEY
+      ? { authorization: `Bearer ${(token?.trim() || API_KEY)!}` }
+      : {}),
+    "x-immaculate-purpose": "cognitive-trace-read",
+    "x-immaculate-consent-scope": "system:intelligence",
+    "x-immaculate-actor": "federation-sync"
+  };
+}
+
+async function syncFederationPeer(options: {
+  controlPlaneUrl: string;
+  authorizationToken?: string;
+  expectedNodeId?: string;
+  maxObservedLatencyMs?: number;
+}) {
+  const secret = requireFederationSecret();
+  const normalizedControlPlaneUrl = normalizeFederationControlPlaneUrl(options.controlPlaneUrl);
+  const startedAtMs = Date.now();
+  const response = await fetch(`${normalizedControlPlaneUrl}/api/federation/membership`, {
+    headers: federationRequestHeaders(options.authorizationToken)
+  });
+  const observedLatencyMs = Date.now() - startedAtMs;
+
+  if (!response.ok) {
+    throw new Error(`Federation membership fetch failed with status ${response.status}.`);
+  }
+  if (
+    typeof options.maxObservedLatencyMs === "number" &&
+    Number.isFinite(options.maxObservedLatencyMs) &&
+    observedLatencyMs > options.maxObservedLatencyMs
+  ) {
+    throw new Error(
+      `Federation peer latency ${observedLatencyMs} ms exceeds limit ${options.maxObservedLatencyMs} ms.`
+    );
+  }
+
+  const payload = (await response.json()) as {
+    accepted?: boolean;
+    membership?: {
+      exportedAt: string;
+      exporterNodeId: string;
+      node: FederationSignedEnvelope<FederationNodeIdentityPayload>;
+      workers: FederationSignedEnvelope<FederationWorkerIdentityPayload>[];
+    };
+  };
+
+  if (!payload.accepted || !payload.membership) {
+    throw new Error("Federation membership response was missing signed membership data.");
+  }
+
+  const nodeEnvelope = payload.membership.node;
+  const nodeVerification = verifyFederationEnvelope(nodeEnvelope, {
+    secret,
+    expectedIssuerNodeId: payload.membership.exporterNodeId
+  });
+  if (!nodeVerification.verified) {
+    throw new Error(`Federation node identity verification failed: ${nodeVerification.reason}`);
+  }
+
+  const remoteNodePayload = nodeEnvelope.payload;
+  if (options.expectedNodeId && remoteNodePayload.nodeId !== options.expectedNodeId) {
+    throw new Error(
+      `Federation peer returned ${remoteNodePayload.nodeId}; expected ${options.expectedNodeId}.`
+    );
+  }
+
+  const remoteNode = await nodeRegistry.registerNode({
+    nodeId: remoteNodePayload.nodeId,
+    nodeLabel: remoteNodePayload.nodeLabel ?? undefined,
+    hostLabel: remoteNodePayload.hostLabel ?? undefined,
+    locality: remoteNodePayload.locality,
+    controlPlaneUrl: remoteNodePayload.controlPlaneUrl ?? normalizedControlPlaneUrl,
+    registeredAt: remoteNodePayload.registeredAt,
+    heartbeatAt: remoteNodePayload.heartbeatAt,
+    leaseDurationMs: remoteNodePayload.leaseDurationMs,
+    capabilities: remoteNodePayload.capabilities,
+    isLocal: false,
+    identityAlgorithm: nodeEnvelope.algorithm,
+    identityKeyId: nodeEnvelope.keyId,
+    identityIssuerNodeId: nodeEnvelope.issuerNodeId,
+    identityIssuedAt: nodeEnvelope.issuedAt,
+    identitySignature: nodeEnvelope.signature,
+    identityVerified: true,
+    observedLatencyMs,
+    costPerHourUsd: remoteNodePayload.costPerHourUsd ?? null,
+    deviceAffinityTags: remoteNodePayload.deviceAffinityTags
+  });
+
+  const nodeState = await nodeRegistry.listNodes();
+  const importedWorkers: Awaited<ReturnType<typeof intelligenceWorkerRegistry.registerWorker>>[] = [];
+  const importedWorkerIds = new Set<string>();
+
+  for (const workerEnvelope of payload.membership.workers) {
+    const workerVerification = verifyFederationEnvelope(workerEnvelope, {
+      secret,
+      expectedIssuerNodeId: remoteNode.nodeId
+    });
+    if (!workerVerification.verified) {
+      throw new Error(
+        `Federation worker identity verification failed for ${workerEnvelope.payload.workerId}: ${workerVerification.reason}`
+      );
+    }
+    if (
+      workerEnvelope.payload.nodeId &&
+      workerEnvelope.payload.nodeId !== remoteNode.nodeId
+    ) {
+      throw new Error(
+        `Federation worker ${workerEnvelope.payload.workerId} belongs to ${workerEnvelope.payload.nodeId}, not ${remoteNode.nodeId}.`
+      );
+    }
+
+    importedWorkerIds.add(workerEnvelope.payload.workerId);
+    importedWorkers.push(
+      await intelligenceWorkerRegistry.registerWorker(
+        {
+          workerId: workerEnvelope.payload.workerId,
+          workerLabel: workerEnvelope.payload.workerLabel ?? undefined,
+          hostLabel: workerEnvelope.payload.hostLabel ?? undefined,
+          nodeId: remoteNode.nodeId,
+          locality: workerEnvelope.payload.locality ?? remoteNode.locality,
+          executionProfile: workerEnvelope.payload.executionProfile,
+          executionEndpoint: workerEnvelope.payload.executionEndpoint ?? undefined,
+          registeredAt: workerEnvelope.payload.registeredAt,
+          heartbeatAt: workerEnvelope.payload.heartbeatAt,
+          leaseDurationMs: workerEnvelope.payload.leaseDurationMs,
+          watch: workerEnvelope.payload.watch,
+          allowHostRisk: workerEnvelope.payload.allowHostRisk,
+          supportedBaseModels: workerEnvelope.payload.supportedBaseModels,
+          preferredLayerIds: workerEnvelope.payload.preferredLayerIds,
+          identityAlgorithm: workerEnvelope.algorithm,
+          identityKeyId: workerEnvelope.keyId,
+          identityIssuerNodeId: workerEnvelope.issuerNodeId,
+          identityIssuedAt: workerEnvelope.issuedAt,
+          identitySignature: workerEnvelope.signature,
+          identityVerified: true,
+          observedLatencyMs,
+          costPerHourUsd: workerEnvelope.payload.costPerHourUsd ?? null,
+          deviceAffinityTags: workerEnvelope.payload.deviceAffinityTags
+        },
+        nodeState.nodes
+      )
+    );
+  }
+
+  const existingWorkers = await intelligenceWorkerRegistry.listWorkers(undefined, nodeState.nodes);
+  const removedWorkers: string[] = [];
+  for (const worker of existingWorkers) {
+    if (
+      worker.nodeId === remoteNode.nodeId &&
+      worker.executionProfile === "remote" &&
+      !importedWorkerIds.has(worker.workerId)
+    ) {
+      await intelligenceWorkerRegistry.removeWorker(worker.workerId, undefined, nodeState.nodes);
+      removedWorkers.push(worker.workerId);
+    }
+  }
+
+  return {
+    observedLatencyMs,
+    remoteNode,
+    importedWorkers,
+    removedWorkers
   };
 }
 
@@ -689,7 +962,13 @@ async function ensureLocalExecutionWorkers(minCount = 1): Promise<void> {
       watch: true,
       allowHostRisk: false,
       supportedBaseModels: ["*"],
-      preferredLayerIds: []
+      preferredLayerIds: [],
+      identityVerified: true,
+      observedLatencyMs: 0,
+      costPerHourUsd: Number.isFinite(LOCAL_WORKER_COST_PER_HOUR_USD)
+        ? LOCAL_WORKER_COST_PER_HOUR_USD
+        : null,
+      deviceAffinityTags: LOCAL_WORKER_DEVICE_AFFINITY_TAGS
     });
   }
 }
@@ -701,6 +980,9 @@ async function reserveExecutionWorker(options: {
   requestedExecutionDecision?: RequestedExecutionDecision;
   target?: string;
   fallbackLocalPoolSize?: number;
+  preferredDeviceAffinityTags?: string[];
+  maxObservedLatencyMs?: number;
+  maxCostPerHourUsd?: number;
 }): Promise<IntelligenceWorkerAssignment> {
   if (options.requestedExecutionDecision === "preflight_blocked") {
     throw new Error("Execution worker reservation blocked by preflight policy.");
@@ -718,6 +1000,11 @@ async function reserveExecutionWorker(options: {
     preferredNodeId:
       options.requestedExecutionDecision === "remote_required" ? undefined : localNode.nodeId,
     preferredLocality: localNode.locality,
+    preferredDeviceAffinityTags:
+      options.preferredDeviceAffinityTags ??
+      [...new Set([options.layer.role, ...(options.target?.includes("swarm") ? ["swarm"] : [])])],
+    maxObservedLatencyMs: options.maxObservedLatencyMs,
+    maxCostPerHourUsd: options.maxCostPerHourUsd,
     nodeViews: nodeState.nodes
   });
 
@@ -731,6 +1018,11 @@ async function reserveExecutionWorker(options: {
       target: options.target ?? options.layer.role,
       preferredNodeId: localNode.nodeId,
       preferredLocality: localNode.locality,
+      preferredDeviceAffinityTags:
+        options.preferredDeviceAffinityTags ??
+        [...new Set([options.layer.role, ...(options.target?.includes("swarm") ? ["swarm"] : [])])],
+      maxObservedLatencyMs: options.maxObservedLatencyMs,
+      maxCostPerHourUsd: options.maxCostPerHourUsd,
       nodeViews: nodeState.nodes
     });
   }
@@ -836,6 +1128,12 @@ function bindExecutionPlacement(options: {
     assignedWorkerLabel: options.assignment?.workerLabel ?? undefined,
     assignedWorkerHostLabel: options.assignment?.hostLabel ?? undefined,
     assignedWorkerProfile: options.assignment?.executionProfile,
+    assignedWorkerNodeId: options.assignment?.nodeId ?? undefined,
+    assignedWorkerLocality: options.assignment?.locality ?? undefined,
+    assignedWorkerIdentityVerified: options.assignment?.identityVerified,
+    assignedWorkerObservedLatencyMs: options.assignment?.observedLatencyMs ?? undefined,
+    assignedWorkerCostPerHourUsd: options.assignment?.costPerHourUsd ?? undefined,
+    assignedWorkerDeviceAffinityTags: options.assignment?.deviceAffinityTags ?? undefined,
     assignmentReason: options.assignment?.reason,
     assignmentScore: options.assignment?.score,
     executionEndpoint: options.executionEndpoint,
@@ -2235,6 +2533,33 @@ app.get("/api/nodes", async (request, reply) => {
   };
 });
 
+app.get("/api/federation/membership", async (request, reply) => {
+  if (
+    !authorizeGovernedAction(
+      "cognitive-trace-read",
+      "/api/federation/membership",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  try {
+    const membership = await buildFederationMembershipExport();
+    return {
+      accepted: true,
+      membership
+    };
+  } catch (error) {
+    reply.code(503);
+    return {
+      error: "federation_membership_unavailable",
+      message: error instanceof Error ? error.message : "Unable to export federation membership."
+    };
+  }
+});
+
 app.get("/api/intelligence/workers", async (request, reply) => {
   if (
     !authorizeGovernedAction(
@@ -2540,6 +2865,9 @@ app.post("/api/intelligence/workers/register", async (request, reply) => {
       allowHostRisk?: boolean;
       supportedBaseModels?: string[];
       preferredLayerIds?: string[];
+      observedLatencyMs?: number;
+      costPerHourUsd?: number;
+      deviceAffinityTags?: string[];
     } | undefined) ?? {};
 
   if (!body.workerId?.trim()) {
@@ -2582,7 +2910,25 @@ app.post("/api/intelligence/workers/register", async (request, reply) => {
         : [],
       preferredLayerIds: Array.isArray(body.preferredLayerIds)
         ? body.preferredLayerIds
-        : []
+        : [],
+      identityVerified: body.executionProfile === "local",
+      observedLatencyMs:
+        typeof body.observedLatencyMs === "number" && Number.isFinite(body.observedLatencyMs)
+          ? Number(body.observedLatencyMs)
+          : body.executionProfile === "local"
+            ? 0
+            : undefined,
+      costPerHourUsd:
+        typeof body.costPerHourUsd === "number" && Number.isFinite(body.costPerHourUsd)
+          ? Number(body.costPerHourUsd)
+          : body.executionProfile === "local"
+            ? LOCAL_WORKER_COST_PER_HOUR_USD
+            : undefined,
+      deviceAffinityTags: Array.isArray(body.deviceAffinityTags)
+        ? body.deviceAffinityTags
+        : body.executionProfile === "local"
+          ? LOCAL_WORKER_DEVICE_AFFINITY_TAGS
+          : []
     }, nodeState.nodes);
     return {
       accepted: true,
@@ -2629,6 +2975,9 @@ app.post("/api/intelligence/workers/:workerId/heartbeat", async (request, reply)
       allowHostRisk?: boolean;
       supportedBaseModels?: string[];
       preferredLayerIds?: string[];
+      observedLatencyMs?: number;
+      costPerHourUsd?: number;
+      deviceAffinityTags?: string[];
     } | undefined) ?? {};
 
   if (!params.workerId?.trim()) {
@@ -2673,7 +3022,25 @@ app.post("/api/intelligence/workers/:workerId/heartbeat", async (request, reply)
         : undefined,
       preferredLayerIds: Array.isArray(body.preferredLayerIds)
         ? body.preferredLayerIds
-        : undefined
+        : undefined,
+      identityVerified: body.executionProfile === "local" ? true : undefined,
+      observedLatencyMs:
+        typeof body.observedLatencyMs === "number" && Number.isFinite(body.observedLatencyMs)
+          ? Number(body.observedLatencyMs)
+          : body.executionProfile === "local"
+            ? 0
+            : undefined,
+      costPerHourUsd:
+        typeof body.costPerHourUsd === "number" && Number.isFinite(body.costPerHourUsd)
+          ? Number(body.costPerHourUsd)
+          : body.executionProfile === "local"
+            ? LOCAL_WORKER_COST_PER_HOUR_USD
+            : undefined,
+      deviceAffinityTags: Array.isArray(body.deviceAffinityTags)
+        ? body.deviceAffinityTags
+        : body.executionProfile === "local"
+          ? LOCAL_WORKER_DEVICE_AFFINITY_TAGS
+          : undefined
     }, nodeState.nodes);
     return {
       accepted: true,
@@ -2750,6 +3117,9 @@ app.post("/api/intelligence/workers/assign", async (request, reply) => {
       target?: string;
       preferredNodeId?: string;
       preferredLocality?: string;
+      preferredDeviceAffinityTags?: string[];
+      maxObservedLatencyMs?: number;
+      maxCostPerHourUsd?: number;
     } | undefined) ?? {};
 
   const recommendedLayerId = body.recommendedLayerId?.trim() || getPreferredLayer()?.id;
@@ -2767,6 +3137,17 @@ app.post("/api/intelligence/workers/assign", async (request, reply) => {
       body.preferredNodeId?.trim() ||
       (body.requestedExecutionDecision === "remote_required" ? undefined : localNode.nodeId),
     preferredLocality: body.preferredLocality?.trim() || localNode.locality,
+    preferredDeviceAffinityTags: Array.isArray(body.preferredDeviceAffinityTags)
+      ? body.preferredDeviceAffinityTags
+      : undefined,
+    maxObservedLatencyMs:
+      typeof body.maxObservedLatencyMs === "number" && Number.isFinite(body.maxObservedLatencyMs)
+        ? Number(body.maxObservedLatencyMs)
+        : undefined,
+    maxCostPerHourUsd:
+      typeof body.maxCostPerHourUsd === "number" && Number.isFinite(body.maxCostPerHourUsd)
+        ? Number(body.maxCostPerHourUsd)
+        : undefined,
     nodeViews: nodeState.nodes
   });
   return {
@@ -2807,6 +3188,8 @@ app.post("/api/nodes/register", async (request, reply) => {
       leaseDurationMs?: number;
       capabilities?: string[];
       isLocal?: boolean;
+      costPerHourUsd?: number;
+      deviceAffinityTags?: string[];
     } | undefined) ?? {};
 
   if (!body.nodeId?.trim() || !body.locality?.trim()) {
@@ -2831,7 +3214,14 @@ app.post("/api/nodes/register", async (request, reply) => {
           ? Number(body.leaseDurationMs)
           : 45_000,
       capabilities: Array.isArray(body.capabilities) ? body.capabilities : [],
-      isLocal: body.isLocal === true
+      isLocal: body.isLocal === true,
+      identityVerified: body.isLocal === true,
+      observedLatencyMs: body.isLocal === true ? 0 : undefined,
+      costPerHourUsd:
+        typeof body.costPerHourUsd === "number" && Number.isFinite(body.costPerHourUsd)
+          ? Number(body.costPerHourUsd)
+          : undefined,
+      deviceAffinityTags: Array.isArray(body.deviceAffinityTags) ? body.deviceAffinityTags : []
     });
     const nodeState = await nodeRegistry.listNodes();
     return {
@@ -2844,6 +3234,62 @@ app.post("/api/nodes/register", async (request, reply) => {
     return {
       error: "node_registration_failed",
       message: error instanceof Error ? error.message : "Unable to register node."
+    };
+  }
+});
+
+app.post("/api/federation/peers/sync", async (request, reply) => {
+  if (
+    !authorizeGovernedAction(
+      "cognitive-registration",
+      "/api/federation/peers/sync",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  const body =
+    (request.body as {
+      controlPlaneUrl?: string;
+      authorizationToken?: string;
+      expectedNodeId?: string;
+      maxObservedLatencyMs?: number;
+    } | undefined) ?? {};
+
+  if (!body.controlPlaneUrl?.trim()) {
+    reply.code(400);
+    return {
+      error: "invalid_federation_peer",
+      message: "controlPlaneUrl is required."
+    };
+  }
+
+  try {
+    const result = await syncFederationPeer({
+      controlPlaneUrl: body.controlPlaneUrl.trim(),
+      authorizationToken: body.authorizationToken?.trim() || undefined,
+      expectedNodeId: body.expectedNodeId?.trim() || undefined,
+      maxObservedLatencyMs:
+        typeof body.maxObservedLatencyMs === "number" && Number.isFinite(body.maxObservedLatencyMs)
+          ? Number(body.maxObservedLatencyMs)
+          : undefined
+    });
+    const nodeState = await nodeRegistry.listNodes();
+    return {
+      accepted: true,
+      observedLatencyMs: result.observedLatencyMs,
+      node: result.remoteNode,
+      importedWorkers: result.importedWorkers,
+      removedWorkers: result.removedWorkers,
+      summary: nodeState.summary
+    };
+  } catch (error) {
+    reply.code(400);
+    return {
+      error: "federation_peer_sync_failed",
+      message: error instanceof Error ? error.message : "Unable to sync federation peer."
     };
   }
 });
@@ -2870,6 +3316,9 @@ app.post("/api/nodes/:nodeId/heartbeat", async (request, reply) => {
       locality?: string;
       controlPlaneUrl?: string;
       capabilities?: string[];
+      observedLatencyMs?: number;
+      costPerHourUsd?: number;
+      deviceAffinityTags?: string[];
     } | undefined) ?? {};
 
   if (!params.nodeId?.trim()) {
@@ -2891,7 +3340,16 @@ app.post("/api/nodes/:nodeId/heartbeat", async (request, reply) => {
       hostLabel: body.hostLabel?.trim() || undefined,
       locality: body.locality?.trim() || undefined,
       controlPlaneUrl: body.controlPlaneUrl?.trim() || undefined,
-      capabilities: Array.isArray(body.capabilities) ? body.capabilities : undefined
+      capabilities: Array.isArray(body.capabilities) ? body.capabilities : undefined,
+      observedLatencyMs:
+        typeof body.observedLatencyMs === "number" && Number.isFinite(body.observedLatencyMs)
+          ? Number(body.observedLatencyMs)
+          : undefined,
+      costPerHourUsd:
+        typeof body.costPerHourUsd === "number" && Number.isFinite(body.costPerHourUsd)
+          ? Number(body.costPerHourUsd)
+          : undefined,
+      deviceAffinityTags: Array.isArray(body.deviceAffinityTags) ? body.deviceAffinityTags : undefined
     });
     const nodeState = await nodeRegistry.listNodes();
     return {
