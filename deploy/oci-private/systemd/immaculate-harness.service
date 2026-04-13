@@ -1,0 +1,29 @@
+[Unit]
+Description=Immaculate Harness (OCI Private)
+Documentation=file:__REPO_ROOT__/docs/wiki/OCI-Private-Deployment.md
+After=network-online.target firewalld.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/immaculate/immaculate-harness.env
+WorkingDirectory=__REPO_ROOT__
+ExecStartPre=/usr/bin/bash __REPO_ROOT__/deploy/oci-private/scripts/fetch-oci-vault-secrets.sh
+ExecStart=/usr/bin/bash __REPO_ROOT__/deploy/oci-private/scripts/run-immaculate-harness.sh
+ExecStop=/usr/bin/bash -lc '/usr/bin/podman stop --ignore --time 20 "${IMMACULATE_CONTAINER_NAME:-immaculate-harness}"'
+Restart=always
+RestartSec=15
+TimeoutStartSec=300
+TimeoutStopSec=45
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/etc/immaculate /var/lib/immaculate /var/log/immaculate /var/lib/containers /run/containers
+LockPersonality=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target

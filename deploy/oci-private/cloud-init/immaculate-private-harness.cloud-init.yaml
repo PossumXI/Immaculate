@@ -1,0 +1,64 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+ssh_pwauth: false
+disable_root: true
+
+packages:
+  - git
+  - jq
+  - curl
+  - podman
+  - firewalld
+  - python3-pip
+  - ca-certificates
+  - policycoreutils-python-utils
+
+write_files:
+  - path: /etc/sysctl.d/60-immaculate-oci-private.conf
+    owner: root:root
+    permissions: "0644"
+    content: |
+      fs.protected_hardlinks = 1
+      fs.protected_symlinks = 1
+      kernel.kptr_restrict = 2
+      kernel.dmesg_restrict = 1
+      kernel.unprivileged_bpf_disabled = 1
+      net.ipv4.conf.all.rp_filter = 1
+      net.ipv4.conf.default.rp_filter = 1
+      net.ipv4.tcp_syncookies = 1
+      net.ipv4.conf.all.accept_redirects = 0
+      net.ipv4.conf.default.accept_redirects = 0
+      net.ipv4.conf.all.send_redirects = 0
+      net.ipv4.conf.default.send_redirects = 0
+      net.ipv6.conf.all.accept_redirects = 0
+      net.ipv6.conf.default.accept_redirects = 0
+  - path: /etc/tmpfiles.d/immaculate-private.conf
+    owner: root:root
+    permissions: "0644"
+    content: |
+      d /etc/immaculate 0750 root root -
+      d /etc/immaculate/secrets 0700 root root -
+      d /var/lib/immaculate 0750 immaculate immaculate -
+      d /var/lib/immaculate/runtime 0750 immaculate immaculate -
+      d /var/log/immaculate 0750 immaculate immaculate -
+      d /opt/immaculate 0755 root root -
+      d /opt/immaculate/src 0755 root root -
+
+runcmd:
+  - [bash, -lc, "id immaculate >/dev/null 2>&1 || useradd --system --uid 10001 --home-dir /var/lib/immaculate --shell /sbin/nologin immaculate"]
+  - [systemd-tmpfiles, --create, /etc/tmpfiles.d/immaculate-private.conf]
+  - [bash, -lc, "chown -R immaculate:immaculate /var/lib/immaculate /var/log/immaculate"]
+  - [systemctl, enable, --now, firewalld]
+  - [python3, -m, pip, install, --upgrade, oci-cli]
+  - [sysctl, --system]
+  - [bash, -lc, "if command -v setenforce >/dev/null 2>&1 && [ \"$(getenforce 2>/dev/null || echo Disabled)\" != \"Disabled\" ]; then setenforce 1; fi"]
+
+final_message: |
+  OCI private host bootstrap complete.
+  Next steps:
+    1. Clone Immaculate into /opt/immaculate/src
+    2. Copy deploy/oci-private/env/immaculate-harness.env.example to /etc/immaculate/immaculate-harness.env
+    3. Store IMMACULATE_API_KEY and federation secrets under /etc/immaculate/secrets or OCI Vault
+    4. Run sudo bash deploy/oci-private/scripts/install-oci-private-harness.sh --enable

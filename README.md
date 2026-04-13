@@ -85,6 +85,22 @@ The default generated output root is `.training-output/`, which is intentionally
 - Optional GitGuardian scanning is wired in `.github/workflows/gitguardian.yml`
   It activates when the repository secret `GITGUARDIAN_API_KEY` is configured.
 
+## OCI Private Deployment
+
+The harness now has a minimal OCI-specific private deployment bundle under
+`deploy/oci-private/`.
+
+Use it when you need a private-subnet Oracle deployment with:
+
+- no public ingress
+- Podman-based container isolation
+- API key and federation secrets loaded from root-readable files or OCI Vault
+- cloud-init bootstrap plus systemd supervision
+
+Deployment guide:
+
+- [docs/wiki/OCI-Private-Deployment.md](docs/wiki/OCI-Private-Deployment.md)
+
 ## Run
 
 ```powershell
