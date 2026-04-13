@@ -1,14 +1,19 @@
 import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import type { NodeView } from "./node-registry.js";
 import { safeUnlink } from "./utils.js";
 
 export type IntelligenceWorkerExecutionProfile = "local" | "remote";
+
+export type IntelligenceWorkerHealthStatus = "healthy" | "stale" | "faulted";
 
 export type IntelligenceWorkerRecord = {
   workerId: string;
   workerLabel?: string | null;
   hostLabel?: string | null;
+  nodeId?: string | null;
+  locality?: string | null;
   executionProfile: IntelligenceWorkerExecutionProfile;
   executionEndpoint?: string | null;
   registeredAt: string;
@@ -25,18 +30,33 @@ export type IntelligenceWorkerRecord = {
   preferredLayerIds: string[];
 };
 
+export type IntelligenceWorkerView = IntelligenceWorkerRecord & {
+  healthStatus: IntelligenceWorkerHealthStatus;
+  healthSummary: string;
+  healthReason: string;
+  lastHealthAt: string;
+  leaseRemainingMs: number;
+  assignmentEligible: boolean;
+  assignmentBlockedReason?: string | null;
+};
+
 export type IntelligenceWorkerAssignmentRequest = {
   requestedExecutionDecision?: "allow_local" | "remote_required" | "preflight_blocked" | null;
   baseModel?: string | null;
   preferredLayerIds?: string[];
   recommendedLayerId?: string | null;
   target?: string | null;
+  preferredNodeId?: string | null;
+  preferredLocality?: string | null;
+  nodeViews?: NodeView[];
 };
 
 export type IntelligenceWorkerAssignment = {
   workerId: string;
   workerLabel?: string | null;
   hostLabel?: string | null;
+  nodeId?: string | null;
+  locality?: string | null;
   executionProfile: IntelligenceWorkerExecutionProfile;
   executionEndpoint?: string | null;
   assignedAt: string;
@@ -45,6 +65,17 @@ export type IntelligenceWorkerAssignment = {
   leaseToken?: string;
   leaseExpiresAt?: string;
   leaseDurationMs?: number;
+  healthStatus?: IntelligenceWorkerHealthStatus;
+  healthSummary?: string;
+};
+
+export type IntelligenceWorkerSummary = {
+  workerCount: number;
+  healthyWorkerCount: number;
+  staleWorkerCount: number;
+  faultedWorkerCount: number;
+  eligibleWorkerCount: number;
+  blockedWorkerCount: number;
 };
 
 type WorkerRegistryState = {
@@ -53,6 +84,8 @@ type WorkerRegistryState = {
 
 const DEFAULT_WORKER_LEASE_MS = 45_000;
 const DEFAULT_ASSIGNMENT_LEASE_MS = 180_000;
+const MIN_WORKER_HEALTH_WINDOW_MS = 5_000;
+const MAX_WORKER_HEALTH_WINDOW_MS = 15_000;
 
 let registryWriteChain: Promise<void> = Promise.resolve();
 
@@ -112,6 +145,10 @@ function normalizeNullableString(value: unknown): string | null | undefined {
   return normalized.length > 0 ? normalized : null;
 }
 
+function buildNodeViewMap(nodeViews?: NodeView[]): Map<string, NodeView> {
+  return new Map((nodeViews ?? []).map((node) => [node.nodeId, node]));
+}
+
 function parseWorkerRegistry(content: string | null): IntelligenceWorkerRecord[] {
   if (!content) {
     return [];
@@ -137,6 +174,12 @@ function parseWorkerRegistry(content: string | null): IntelligenceWorkerRecord[]
         typeof candidate.heartbeatAt !== "string" ||
         typeof candidate.leaseExpiresAt !== "string" ||
         typeof candidate.leaseDurationMs !== "number" ||
+        (candidate.nodeId !== undefined &&
+          candidate.nodeId !== null &&
+          typeof candidate.nodeId !== "string") ||
+        (candidate.locality !== undefined &&
+          candidate.locality !== null &&
+          typeof candidate.locality !== "string") ||
         (candidate.executionEndpoint !== undefined &&
           candidate.executionEndpoint !== null &&
           typeof candidate.executionEndpoint !== "string") ||
@@ -166,6 +209,8 @@ function parseWorkerRegistry(content: string | null): IntelligenceWorkerRecord[]
           workerLabel:
             typeof candidate.workerLabel === "string" ? candidate.workerLabel : undefined,
           hostLabel: typeof candidate.hostLabel === "string" ? candidate.hostLabel : undefined,
+          nodeId: normalizeNullableString(candidate.nodeId),
+          locality: normalizeNullableString(candidate.locality),
           executionProfile: candidate.executionProfile,
           executionEndpoint: normalizeNullableString(candidate.executionEndpoint),
           registeredAt: candidate.registeredAt,
@@ -263,6 +308,116 @@ function isLeaseActive(leaseExpiresAt: string | null | undefined, now: string): 
   return typeof leaseExpiresAt === "string" && leaseExpiresAt > now;
 }
 
+function resolveWorkerHealthWindowMs(worker: IntelligenceWorkerRecord): number {
+  const derived = Math.floor(worker.leaseDurationMs * 0.25);
+  return Math.max(
+    MIN_WORKER_HEALTH_WINDOW_MS,
+    Math.min(
+      MAX_WORKER_HEALTH_WINDOW_MS,
+      Number.isFinite(derived) && derived > 0 ? derived : MIN_WORKER_HEALTH_WINDOW_MS
+    )
+  );
+}
+
+function buildWorkerView(
+  worker: IntelligenceWorkerRecord,
+  now: string,
+  request?: IntelligenceWorkerAssignmentRequest
+): IntelligenceWorkerView {
+  const node = worker.nodeId ? buildNodeViewMap(request?.nodeViews).get(worker.nodeId) : undefined;
+  const resolvedLocality = worker.locality ?? node?.locality ?? null;
+  const leaseRemainingMs = Math.max(0, Date.parse(worker.leaseExpiresAt) - Date.parse(now));
+  let healthStatus: IntelligenceWorkerHealthStatus = "healthy";
+  let healthReason = "lease healthy";
+
+  if (worker.executionProfile === "remote" && !worker.executionEndpoint) {
+    healthStatus = "faulted";
+    healthReason = "remote worker missing execution endpoint";
+  } else if (worker.nodeId && !node) {
+    healthStatus = "faulted";
+    healthReason = "node registry entry missing";
+  } else if (node?.healthStatus === "faulted" || node?.healthStatus === "offline") {
+    healthStatus = "faulted";
+    healthReason = `node ${node.healthStatus}`;
+  } else if (node?.healthStatus === "stale") {
+    healthStatus = "stale";
+    healthReason = "node heartbeat nearing expiry";
+  } else if (leaseRemainingMs <= resolveWorkerHealthWindowMs(worker)) {
+    healthStatus = "stale";
+    healthReason = "heartbeat lease near expiry";
+  }
+
+  let assignmentEligible = healthStatus === "healthy";
+  let assignmentBlockedReason: string | null = assignmentEligible ? null : healthReason;
+
+  if (assignmentEligible && isLeaseActive(worker.assignmentLeaseExpiresAt, now)) {
+    assignmentEligible = false;
+    assignmentBlockedReason = "assignment lease active";
+  }
+
+  if (
+    assignmentEligible &&
+    request?.requestedExecutionDecision === "remote_required" &&
+    worker.executionProfile !== "remote"
+  ) {
+    assignmentEligible = false;
+    assignmentBlockedReason = "remote execution required";
+  }
+
+  if (
+    assignmentEligible &&
+    request?.baseModel &&
+    !workerSupportsBaseModel(worker, request.baseModel)
+  ) {
+    assignmentEligible = false;
+    assignmentBlockedReason = `base model mismatch (${request.baseModel})`;
+  }
+
+  return {
+    ...worker,
+    locality: resolvedLocality,
+    healthStatus,
+    healthSummary:
+      healthStatus === "healthy"
+        ? `healthy · ${Math.max(1, Math.round(leaseRemainingMs / 1_000))}s lease remaining`
+        : `${healthStatus} · ${healthReason}`,
+    healthReason,
+    lastHealthAt: now,
+    leaseRemainingMs,
+    assignmentEligible,
+    assignmentBlockedReason
+  };
+}
+
+function summarizeWorkers(workers: IntelligenceWorkerView[]): IntelligenceWorkerSummary {
+  return workers.reduce<IntelligenceWorkerSummary>(
+    (summary, worker) => {
+      summary.workerCount += 1;
+      if (worker.healthStatus === "healthy") {
+        summary.healthyWorkerCount += 1;
+      } else if (worker.healthStatus === "stale") {
+        summary.staleWorkerCount += 1;
+      } else {
+        summary.faultedWorkerCount += 1;
+      }
+      if (worker.assignmentEligible) {
+        summary.eligibleWorkerCount += 1;
+      } else {
+        summary.blockedWorkerCount += 1;
+      }
+      return summary;
+    },
+    {
+      workerCount: 0,
+      healthyWorkerCount: 0,
+      staleWorkerCount: 0,
+      faultedWorkerCount: 0,
+      eligibleWorkerCount: 0,
+      blockedWorkerCount: 0
+    }
+  );
+}
+
 function createAssignmentLease(
   worker: IntelligenceWorkerRecord,
   now: string
@@ -317,28 +472,17 @@ function selectWorker(
   workers: IntelligenceWorkerRecord[],
   request: IntelligenceWorkerAssignmentRequest,
   now: string
-): IntelligenceWorkerAssignment | null {
+): { assignment: IntelligenceWorkerAssignment | null; workers: IntelligenceWorkerView[]; summary: IntelligenceWorkerSummary } {
   const preferredLayerIds = [
     request.recommendedLayerId?.trim() || null,
     ...(request.preferredLayerIds ?? []).map((value) => value.trim()).filter(Boolean)
   ].filter((value): value is string => Boolean(value));
 
-  const scored = workers
-    .filter((worker) => {
-      if (isLeaseActive(worker.assignmentLeaseExpiresAt, now)) {
-        return false;
-      }
-      if (
-        request.requestedExecutionDecision === "remote_required" &&
-        worker.executionProfile !== "remote"
-      ) {
-        return false;
-      }
-      if (worker.executionProfile === "remote" && !worker.executionEndpoint) {
-        return false;
-      }
-      return workerSupportsBaseModel(worker, request.baseModel);
-    })
+  const views = workers.map((worker) => buildWorkerView(worker, now, request));
+  const summary = summarizeWorkers(views);
+
+  const scored = views
+    .filter((worker) => worker.assignmentEligible)
     .map((worker) => {
       let score = 0;
       const reasons: string[] = [];
@@ -348,6 +492,22 @@ function selectWorker(
       ) {
         score += 8;
         reasons.push("remote-capable");
+      }
+      if (
+        request.preferredNodeId &&
+        worker.nodeId &&
+        worker.nodeId === request.preferredNodeId
+      ) {
+        score += 7;
+        reasons.push(`node ${request.preferredNodeId}`);
+      }
+      if (
+        request.preferredLocality &&
+        worker.locality &&
+        worker.locality === request.preferredLocality
+      ) {
+        score += 5;
+        reasons.push(`locality ${request.preferredLocality}`);
       }
       if (
         request.requestedExecutionDecision !== "remote_required" &&
@@ -398,18 +558,31 @@ function selectWorker(
       return left.worker.workerId < right.worker.workerId ? -1 : 1;
     });
 
-  const winner = scored[0];
+      const winner = scored[0];
   if (!winner) {
-    return null;
+    return {
+      assignment: null,
+      workers: views,
+      summary
+    };
   }
   return {
-    workerId: winner.worker.workerId,
-    workerLabel: winner.worker.workerLabel ?? null,
-    hostLabel: winner.worker.hostLabel ?? null,
-    executionProfile: winner.worker.executionProfile,
-    assignedAt: new Date().toISOString(),
-    reason: winner.reason,
-    score: winner.score
+    assignment: {
+      workerId: winner.worker.workerId,
+      workerLabel: winner.worker.workerLabel ?? null,
+      hostLabel: winner.worker.hostLabel ?? null,
+      nodeId: winner.worker.nodeId ?? null,
+      locality: winner.worker.locality ?? null,
+      executionProfile: winner.worker.executionProfile,
+      executionEndpoint: winner.worker.executionEndpoint ?? null,
+      assignedAt: new Date().toISOString(),
+      reason: winner.reason,
+      score: winner.score,
+      healthStatus: winner.worker.healthStatus,
+      healthSummary: winner.worker.healthSummary
+    },
+    workers: views,
+    summary
   };
 }
 
@@ -430,12 +603,18 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
   }
 
   return {
-    async listWorkers(now?: string): Promise<IntelligenceWorkerRecord[]> {
-      return withRegistryLock(() => readWorkers(now));
+    async listWorkers(now?: string, nodeViews?: NodeView[]): Promise<IntelligenceWorkerView[]> {
+      return withRegistryLock(async () => {
+        const at = now ?? new Date().toISOString();
+        return (await readWorkers(at)).map((worker) =>
+          buildWorkerView(worker, at, { nodeViews })
+        );
+      });
     },
     async registerWorker(
-      worker: Omit<IntelligenceWorkerRecord, "leaseExpiresAt"> & { leaseExpiresAt?: string | null }
-    ): Promise<IntelligenceWorkerRecord> {
+      worker: Omit<IntelligenceWorkerRecord, "leaseExpiresAt"> & { leaseExpiresAt?: string | null },
+      nodeViews?: NodeView[]
+    ): Promise<IntelligenceWorkerView> {
       return withRegistryLock(async () => {
         const heartbeatAt = worker.heartbeatAt || new Date().toISOString();
         const leaseDurationMs =
@@ -455,6 +634,8 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
           workerId: worker.workerId,
           workerLabel: worker.workerLabel ?? null,
           hostLabel: worker.hostLabel ?? null,
+          nodeId: worker.nodeId ?? null,
+          locality: worker.locality ?? null,
           executionProfile: worker.executionProfile,
           executionEndpoint: normalizeNullableString(worker.executionEndpoint),
           registeredAt: existing?.registeredAt ?? worker.registeredAt ?? heartbeatAt,
@@ -481,7 +662,7 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
         };
         const updated = workers.filter((entry) => entry.workerId !== worker.workerId).concat(next);
         await writeWorkers(updated);
-        return next;
+        return buildWorkerView(next, heartbeatAt, { nodeViews });
       });
     },
     async heartbeatWorker(args: {
@@ -490,13 +671,15 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
       leaseDurationMs?: number;
       workerLabel?: string | null;
       hostLabel?: string | null;
+      nodeId?: string | null;
+      locality?: string | null;
       executionProfile?: IntelligenceWorkerExecutionProfile;
       executionEndpoint?: string | null;
       watch?: boolean;
       allowHostRisk?: boolean;
       supportedBaseModels?: string[];
       preferredLayerIds?: string[];
-    }): Promise<IntelligenceWorkerRecord> {
+    }, nodeViews?: NodeView[]): Promise<IntelligenceWorkerView> {
       return withRegistryLock(async () => {
         const heartbeatAt = args.heartbeatAt || new Date().toISOString();
         const workers = await readWorkers(heartbeatAt);
@@ -513,6 +696,9 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
           workerLabel:
             args.workerLabel !== undefined ? args.workerLabel : existing.workerLabel ?? null,
           hostLabel: args.hostLabel !== undefined ? args.hostLabel : existing.hostLabel ?? null,
+          nodeId: args.nodeId !== undefined ? normalizeNullableString(args.nodeId) : existing.nodeId,
+          locality:
+            args.locality !== undefined ? normalizeNullableString(args.locality) : existing.locality,
           executionProfile: args.executionProfile ?? existing.executionProfile,
           executionEndpoint:
             args.executionEndpoint !== undefined
@@ -557,13 +743,14 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
         };
         const updated = workers.filter((worker) => worker.workerId !== args.workerId).concat(next);
         await writeWorkers(updated);
-        return next;
+        return buildWorkerView(next, heartbeatAt, { nodeViews });
       });
     },
     async removeWorker(
       workerId: string,
-      now = new Date().toISOString()
-    ): Promise<IntelligenceWorkerRecord | null> {
+      now = new Date().toISOString(),
+      nodeViews?: NodeView[]
+    ): Promise<IntelligenceWorkerView | null> {
       return withRegistryLock(async () => {
         const workers = await readWorkers(now);
         const existing = workers.find((worker) => worker.workerId === workerId) ?? null;
@@ -571,37 +758,42 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
           return null;
         }
         await writeWorkers(workers.filter((worker) => worker.workerId !== workerId));
-        return existing;
+        return buildWorkerView(existing, now, { nodeViews });
       });
     },
     async assignWorker(request: IntelligenceWorkerAssignmentRequest): Promise<{
-      workers: IntelligenceWorkerRecord[];
+      workers: IntelligenceWorkerView[];
+      summary: IntelligenceWorkerSummary;
       assignment: IntelligenceWorkerAssignment | null;
     }> {
       return withRegistryLock(async () => {
         const now = new Date().toISOString();
         const workers = await readWorkers(now);
-        const assignment = selectWorker(workers, request, now);
-        if (!assignment) {
-          return { workers, assignment: null };
+        const selection = selectWorker(workers, request, now);
+        if (!selection.assignment) {
+          return { workers: selection.workers, summary: selection.summary, assignment: null };
         }
-        const selected = workers.find((worker) => worker.workerId === assignment.workerId);
+        const selected = workers.find((worker) => worker.workerId === selection.assignment?.workerId);
         if (!selected) {
-          return { workers, assignment: null };
+          return { workers: selection.workers, summary: selection.summary, assignment: null };
         }
         const reservedWorker = applyAssignmentLease(selected, now, request.target);
         const updated = workers.filter((worker) => worker.workerId !== selected.workerId).concat(reservedWorker);
         await writeWorkers(updated);
+        const updatedViews = sortWorkers(updated).map((worker) => buildWorkerView(worker, now, request));
         return {
-          workers: sortWorkers(updated),
+          workers: updatedViews,
+          summary: summarizeWorkers(updatedViews),
           assignment: {
-            ...assignment,
+            ...selection.assignment,
             executionEndpoint: reservedWorker.executionEndpoint ?? null,
-            leaseToken: reservedWorker.assignmentLeaseToken ?? assignment.leaseToken,
+            nodeId: reservedWorker.nodeId ?? null,
+            locality: reservedWorker.locality ?? null,
+            leaseToken: reservedWorker.assignmentLeaseToken ?? selection.assignment.leaseToken,
             leaseExpiresAt:
-              reservedWorker.assignmentLeaseExpiresAt ?? assignment.leaseExpiresAt,
+              reservedWorker.assignmentLeaseExpiresAt ?? selection.assignment.leaseExpiresAt,
             leaseDurationMs:
-              reservedWorker.assignmentLeaseDurationMs ?? assignment.leaseDurationMs
+              reservedWorker.assignmentLeaseDurationMs ?? selection.assignment.leaseDurationMs
           }
         };
       });
@@ -609,15 +801,16 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
     async releaseWorker(args: {
       workerId: string;
       leaseToken: string;
-    }): Promise<IntelligenceWorkerRecord | null> {
+    }): Promise<IntelligenceWorkerView | null> {
       return withRegistryLock(async () => {
-        const workers = await readWorkers();
+        const now = new Date().toISOString();
+        const workers = await readWorkers(now);
         const existing = workers.find((worker) => worker.workerId === args.workerId) ?? null;
         if (!existing) {
           return null;
         }
         if (existing.assignmentLeaseToken !== args.leaseToken) {
-          return existing;
+          return buildWorkerView(existing, now);
         }
         const next: IntelligenceWorkerRecord = {
           ...existing,
@@ -627,7 +820,7 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
         };
         const updated = workers.filter((worker) => worker.workerId !== args.workerId).concat(next);
         await writeWorkers(updated);
-        return next;
+        return buildWorkerView(next, now);
       });
     }
   };

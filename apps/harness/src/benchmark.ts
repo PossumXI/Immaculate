@@ -61,6 +61,7 @@ import { createPersistence } from "./persistence.js";
 import { buildRoutingDecision, planAdaptiveRoute } from "./routing.js";
 import { runTemporalBaselineComparison } from "./temporal-baseline.js";
 import { safeUnlink } from "./utils.js";
+import { createNodeRegistry } from "./node-registry.js";
 import { createIntelligenceWorkerRegistry } from "./workers.js";
 import {
   projectActuationOutput,
@@ -1517,6 +1518,89 @@ export async function runPublishedBenchmark(
   const workerAssignmentFirst = await workerRegistry.assignWorker(workerAssignmentRequest);
   const workerAssignmentSecond = await workerRegistry.assignWorker(workerAssignmentRequest);
   const workerRegistrySnapshot = await workerRegistry.listWorkers(workerRegistryNow);
+  const workerLocalityNodeRegistry = createNodeRegistry(path.join(runtimeDir, "worker-plane-locality-nodes"), {
+    localNodeId: `node-${suiteId}-local`,
+    localNodeLabel: "Benchmark Local Node",
+    localHostLabel: "bench-node-local",
+    localLocality: "rack-a",
+    localCapabilities: ["control-plane", "worker-plane"]
+  });
+  const workerLocalityLocalNode = await workerLocalityNodeRegistry.ensureLocalNode(workerRegistryNow);
+  const workerLocalityNearNode = await workerLocalityNodeRegistry.registerNode({
+    nodeId: `node-${suiteId}-remote-near`,
+    nodeLabel: "Benchmark Remote Near Node",
+    hostLabel: "bench-node-remote-near",
+    locality: workerLocalityLocalNode.locality,
+    controlPlaneUrl: "http://127.0.0.1:9788",
+    registeredAt: workerRegistryNow,
+    heartbeatAt: workerRegistryNow,
+    leaseDurationMs: 45_000,
+    capabilities: ["worker-plane"],
+    isLocal: false
+  });
+  const workerLocalityFarNode = await workerLocalityNodeRegistry.registerNode({
+    nodeId: `node-${suiteId}-remote-far`,
+    nodeLabel: "Benchmark Remote Far Node",
+    hostLabel: "bench-node-remote-far",
+    locality: "rack-b",
+    controlPlaneUrl: "http://127.0.0.1:9789",
+    registeredAt: workerRegistryNow,
+    heartbeatAt: workerRegistryNow,
+    leaseDurationMs: 45_000,
+    capabilities: ["worker-plane"],
+    isLocal: false
+  });
+  const workerLocalityNodeViews = (await workerLocalityNodeRegistry.listNodes(workerRegistryNow)).nodes;
+  const workerLocalityRegistry = createIntelligenceWorkerRegistry(
+    path.join(runtimeDir, "worker-plane-locality")
+  );
+  const localityNearWorker = await workerLocalityRegistry.registerWorker({
+    workerId: `worker-${suiteId}-remote-near`,
+    workerLabel: "Benchmark Remote Near",
+    hostLabel: workerLocalityNearNode.hostLabel ?? "bench-node-remote-near",
+    nodeId: workerLocalityNearNode.nodeId,
+    locality: workerLocalityNearNode.locality,
+    executionProfile: "remote",
+    executionEndpoint: "http://127.0.0.1:21434",
+    registeredAt: workerRegistryNow,
+    heartbeatAt: workerRegistryNow,
+    leaseDurationMs: 45_000,
+    leaseExpiresAt: new Date(Date.parse(workerRegistryNow) + 45_000).toISOString(),
+    watch: true,
+    allowHostRisk: true,
+    supportedBaseModels: [benchmarkLayer.model],
+    preferredLayerIds: [benchmarkLayer.id]
+  }, workerLocalityNodeViews);
+  await workerLocalityRegistry.registerWorker({
+    workerId: `worker-${suiteId}-remote-far`,
+    workerLabel: "Benchmark Remote Far",
+    hostLabel: workerLocalityFarNode.hostLabel ?? "bench-node-remote-far",
+    nodeId: workerLocalityFarNode.nodeId,
+    locality: workerLocalityFarNode.locality,
+    executionProfile: "remote",
+    executionEndpoint: "http://127.0.0.1:21435",
+    registeredAt: workerRegistryNow,
+    heartbeatAt: workerRegistryNow,
+    leaseDurationMs: 45_000,
+    leaseExpiresAt: new Date(Date.parse(workerRegistryNow) + 45_000).toISOString(),
+    watch: true,
+    allowHostRisk: true,
+    supportedBaseModels: [benchmarkLayer.model],
+    preferredLayerIds: [benchmarkLayer.id]
+  }, workerLocalityNodeViews);
+  const localityAssignment = await workerLocalityRegistry.assignWorker({
+    requestedExecutionDecision: "remote_required",
+    baseModel: benchmarkLayer.model,
+    preferredLayerIds: [benchmarkLayer.id],
+    recommendedLayerId: benchmarkLayer.id,
+    target: "planner-swarm",
+    preferredLocality: workerLocalityLocalNode.locality,
+    nodeViews: workerLocalityNodeViews
+  });
+  const localityRegistrySnapshot = await workerLocalityRegistry.listWorkers(
+    workerRegistryNow,
+    workerLocalityNodeViews
+  );
   const localSlotRegistry = createIntelligenceWorkerRegistry(
     path.join(runtimeDir, "worker-plane-local-slots")
   );
@@ -1525,6 +1609,8 @@ export async function runPublishedBenchmark(
       workerId: `worker-${suiteId}-local-slot-${slot}`,
       workerLabel: `Benchmark Local Slot ${slot}`,
       hostLabel: "worker-host-local-slots",
+      nodeId: workerLocalityLocalNode.nodeId,
+      locality: workerLocalityLocalNode.locality,
       executionProfile: "local",
       executionEndpoint: "http://127.0.0.1:11434",
       registeredAt: workerRegistryNow,
@@ -1535,7 +1621,7 @@ export async function runPublishedBenchmark(
       allowHostRisk: false,
       supportedBaseModels: ["*"],
       preferredLayerIds: [benchmarkLayer.id]
-    });
+    }, workerLocalityNodeViews);
   }
   const localSlotAssignments = await Promise.all(
     Array.from({ length: 3 }, (_, index) =>
@@ -1544,14 +1630,20 @@ export async function runPublishedBenchmark(
         baseModel: benchmarkLayer.model,
         preferredLayerIds: [benchmarkLayer.id],
         recommendedLayerId: benchmarkLayer.id,
-        target: `planner-swarm:slot-${index + 1}`
+        target: `planner-swarm:slot-${index + 1}`,
+        preferredNodeId: workerLocalityLocalNode.nodeId,
+        preferredLocality: workerLocalityLocalNode.locality,
+        nodeViews: workerLocalityNodeViews
       })
     )
   );
   const localSlotWorkerIds = localSlotAssignments.flatMap((entry) =>
     entry.assignment?.workerId ? [entry.assignment.workerId] : []
   );
-  const localSlotRegistrySnapshot = await localSlotRegistry.listWorkers(workerRegistryNow);
+  const localSlotRegistrySnapshot = await localSlotRegistry.listWorkers(
+    workerRegistryNow,
+    workerLocalityNodeViews
+  );
   const syntheticActuation: ActuationOutput = {
     id: `act-${suiteId}-synthetic`,
     sessionId: nwbFixture.summary.id,
@@ -3079,6 +3171,15 @@ export async function runPublishedBenchmark(
     "ratio",
     cognitiveRouteSoftPriorSamples.map((value) => Number((Math.abs(value) / 0.06).toFixed(2)))
   );
+  const workerLocalityAffinitySeries = createSeries(
+    "worker_locality_affinity_ratio",
+    "Worker locality affinity",
+    "ratio",
+    [
+      Number(localityAssignment.assignment?.locality === workerLocalityLocalNode.locality),
+      Number(localityAssignment.assignment?.workerId === localityNearWorker.workerId)
+    ]
+  );
   const multiRoleConversationLatencySeries = createSeries(
     "multi_role_conversation_latency_ms",
     "Multi-role conversation latency",
@@ -3817,6 +3918,22 @@ export async function runPublishedBenchmark(
       "assignment should honor lease windows, prefer the authoritative remote worker, and expose the reserved lease in the registry snapshot"
     ),
     createAssertion(
+      "worker-assignment-locality-affinity",
+      "Remote worker placement prefers the healthy node in the local control locality before crossing racks",
+      localityAssignment.assignment?.workerId === localityNearWorker.workerId &&
+        localityAssignment.assignment?.executionProfile === "remote" &&
+        localityAssignment.assignment?.locality === workerLocalityLocalNode.locality &&
+        Boolean(localityAssignment.assignment?.reason.includes(`locality ${workerLocalityLocalNode.locality}`)) &&
+        localityRegistrySnapshot.some(
+          (worker) =>
+            worker.workerId === localityNearWorker.workerId &&
+            worker.assignmentTarget === "planner-swarm"
+        ),
+      "same-locality remote worker wins and records planner-swarm lease",
+      `${localityAssignment.assignment?.workerId ?? "missing"} / ${localityAssignment.assignment?.locality ?? "missing"} / local=${workerLocalityLocalNode.locality}`,
+      "a multi-node worker plane should show rack-aware affinity instead of pretending every remote worker is equal once it is healthy"
+    ),
+    createAssertion(
       "worker-assignment-duplicate-pressure",
       "Duplicate worker assignment requests are blocked while the leased worker remains reserved",
       workerAssignmentSecond.assignment === null &&
@@ -4393,6 +4510,7 @@ export async function runPublishedBenchmark(
       cognitiveLoopStructureSeries,
       cognitiveGovernanceContextSeries,
       cognitiveRouteSoftPriorSeries,
+      workerLocalityAffinitySeries,
       multiRoleConversationLatencySeries,
       multiRoleConversationTurnSeries,
       multiRoleConversationVerdictSeries,
@@ -4437,6 +4555,7 @@ export async function runPublishedBenchmark(
             cognitiveLoopStructureSeries,
             cognitiveGovernanceContextSeries,
             cognitiveRouteSoftPriorSeries,
+            workerLocalityAffinitySeries,
             multiRoleConversationTurnSeries,
             multiRoleConversationVerdictSeries,
             executionArbitrationCognitionSeries,

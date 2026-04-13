@@ -19,6 +19,32 @@ For each breakthrough, record:
 
 ## Current Entries
 
+### 2026-04-13
+
+#### Locality became a real worker-plane control signal, and benchmark drift gained an honest API
+
+What changed:
+- the harness now maintains a governed local node registry with explicit node heartbeat, registration, and removal routes instead of leaving locality as an internal-only hint
+- worker placement can now score against node-locality in the live reservation path, so a healthy same-locality remote worker can outrank an equally capable cross-rack worker before cognition is dispatched
+- the benchmark gate now proves this with a dedicated same-locality-versus-cross-rack assignment assertion instead of only checking that a remote worker lease exists
+- published benchmark history can now be queried through `/api/benchmarks/trend`, which analyzes published run order, exposes drift verdicts, and stays explicit about the fact that it is a run-order trend rather than pretending to be a wall-clock forecast
+- the trend loader was hardened after live validation exposed a Windows `EMFILE` failure mode from over-eager concurrent report reads
+
+Why it matters:
+- this closes an honesty gap in the worker plane: locality is no longer just a scoring idea on paper, it now shapes real worker assignment through a durable node surface
+- it also closes an operator gap in the benchmark story: trend analysis is now queryable from the harness itself instead of existing only as a file-side computation
+- the missed systems pattern was that distributed orchestration credibility begins before true federation; you first need stable node identity, explicit locality, and truthful trend reporting over the history you actually have
+
+Evidence:
+- `npm run typecheck`, `npm run build`, and `npm run benchmark:gate:all` all passed on `2026-04-13` after the node-plane and trend pass
+- live harness smoke on `127.0.0.1:8874` showed node count rising from `1` local node to `3` total nodes after remote registration, and remote worker assignment chose `smoke-worker-near` with reason `remote-capable · locality rack-a · swarm-offload · layer demo-layer · model demo-model · watch`
+- the same live smoke confirmed `/api/benchmarks/trend` was live with `trendCount=7`, `analysisBasis=published_run_order`, `sampleCount=5` for `durability-torture`, and a concrete drift verdict emitted directly from the harness API
+
+What this unlocks next:
+- authenticated networked federation where node identity and locality already exist as durable substrate primitives instead of needing to be invented later
+- richer placement policies that combine locality with observed latency, cost, and device affinity
+- operator and benchmark surfaces that can expose trend regressions before they turn into hidden long-run drift
+
 ### 2026-04-12
 
 #### Credibility lanes stopped pretending to be smoke and started benchmarking the claims buyers will actually inspect

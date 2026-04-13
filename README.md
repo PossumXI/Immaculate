@@ -170,6 +170,7 @@ Tier 2 spectral confidence is now benchmarked directly:
 - backward-compatible amplitude fallback when spectral bands are unavailable
 - routing-pressure assertions that prove contaminated windows de-escalate before outward action
 - worker-assignment lease coverage that proves remote placement is reserved and duplicate assignment pressure is visible
+- locality-aware worker placement coverage that proves same-locality remote workers outrank cross-rack candidates when capability and health are otherwise equal
 - explicit session-bound source safety coverage that proves mediated orchestration fails closed on cross-session mismatches
 
 Benchmark packs currently include:
@@ -217,10 +218,13 @@ Benchmark packs currently include:
 - execution arbitration is now durable and inspectable through a mediated orchestration pass and dedicated arbitration ledger
 - execution scheduling is now durable and inspectable, choosing whether cognition runs as a single layer or a swarm formation before any mediated execution commits
 - intelligence worker assignment is now an authoritative runtime control instead of a sidecar scorer: cognition reserves a worker lease before it runs and records the chosen worker, profile, host, reason, score, and execution endpoint into the durable execution ledger
+- the harness now maintains a governed local node registry and node heartbeat surface so worker placement has an explicit locality/control plane instead of anonymous host labels alone
 - remote worker placement now rides an overlooked but real substrate that was already in front of the system: worker records can advertise Ollama-compatible execution endpoints, so cognition can be placed onto remote compute without inventing a second orchestration protocol
+- locality-aware worker placement now runs inside the live harness: when multiple healthy remote workers can satisfy the same request, the system can prefer the worker in the local control locality before crossing into a different rack/zone
 - local swarm execution now treats one host as a pool of leaseable worker slots instead of a single monolithic worker record, so widened cognition can actually reserve parallel local capacity without lying about topology
 - session-bound actuation dispatch and mediated orchestration now fail closed on ambiguous or cross-session source resolution instead of silently falling back to the newest global frame or execution
 - benchmark publication now includes Tier 1 cognitive-loop closure coverage for parsed model structure, governance-aware cognition, routing soft priors, and multi-role conversation verdicts
+- benchmark history can now be queried through a real `/api/benchmarks/trend` surface that analyzes published run order, flags drift, and stays explicit about what metric it is trending
 - dashboard and TUI now expose the latest routing decision so operators can see why the system chose a lane instead of inferring it from side effects
 - dashboard and TUI websocket reconnection with backoff
 - operator-facing dashboard surfaces for the previously hidden backend control plane
@@ -231,9 +235,10 @@ Benchmark packs currently include:
 - additional vendor-specific transports beyond serial and HTTP/2 direct lanes, including MIDI and richer gRPC-class adapters
 - arbitration and scheduling that feed live neural coupling, device health, decode confidence, and governance pressure deeper into multi-agent planning before route/dispatch
 - additional multi-agent and tool execution backends beyond the first Ollama layer
-- richer worker federation with explicit locality, cost, and observed latency shaping placement instead of relying only on static capability and lease state
+- richer worker federation with authenticated network membership, cost, and observed latency shaping placement beyond the current local node registry
 - domain benchmark packs against published neuro/BCI workloads
-- multi-node deployment, locality routing, and long-horizon benchmark trending
+- real multi-node deployment and cluster-wide locality routing beyond the current single-harness node registry
+- richer operator surfaces over published-run trend analysis instead of only the raw API
 
 Benchmark credibility rules now follow a stricter line:
 
@@ -250,11 +255,13 @@ The harness now exposes a deliberate operator/automation surface. These routes a
 - `GET /api/governance/status`
 - `GET /api/governance/policies`
 - `GET /api/governance/decisions`
+- `GET /api/nodes`
 - `GET /api/topology`
 - `GET /api/integrity`
 - `GET /api/checkpoints`
 - `GET /api/events`
 - `GET /api/replay`
+- `GET /api/benchmarks/trend`
 - `GET /api/benchmarks/packs`
 - `GET /api/datasets`
 - `GET /api/datasets/:datasetId`
@@ -271,6 +278,7 @@ The harness now exposes a deliberate operator/automation surface. These routes a
 - `POST /api/devices/lsl/:sourceId/stop`
 - `GET /api/intelligence`
 - `GET /api/intelligence/executions`
+- `GET /api/intelligence/workers`
 - `GET /api/intelligence/arbitrations`
 - `GET /api/intelligence/schedules`
 - `GET /api/actuation/adapters`
@@ -286,7 +294,14 @@ The harness now exposes a deliberate operator/automation surface. These routes a
 - `POST /api/actuation/transports/http2/register`
 - `POST /api/actuation/transports/:transportId/heartbeat`
 - `POST /api/actuation/transports/:transportId/reset`
+- `POST /api/nodes/register`
+- `POST /api/nodes/:nodeId/heartbeat`
 - `POST /api/intelligence/ollama/register`
+- `POST /api/intelligence/workers/register`
+- `POST /api/intelligence/workers/:workerId/heartbeat`
+- `POST /api/intelligence/workers/:workerId/unregister`
+- `POST /api/intelligence/workers/assign`
+- `DELETE /api/nodes/:nodeId`
 - `WS /stream/actuation/device`
 - `WS /stream/neuro/live`
 

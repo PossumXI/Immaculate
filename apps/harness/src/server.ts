@@ -40,6 +40,7 @@ import {
   loadPublishedBenchmarkReport,
   loadPublishedBenchmarkReportBySuiteId
 } from "./benchmark.js";
+import { loadAllBenchmarkTrends, loadBenchmarkTrend } from "./benchmark-trend.js";
 import { createDatasetRegistry, scanBidsDataset } from "./bids.js";
 import { createNeuroRegistry, scanNwbFile } from "./nwb.js";
 import {
@@ -52,6 +53,7 @@ import {
   type LiveNeuroPayload
 } from "./live-neuro.js";
 import { createLslAdapterManager } from "./lsl-adapter.js";
+import { createNodeRegistry } from "./node-registry.js";
 import { createNeuroReplayManager } from "./neuro-replay.js";
 import { listBenchmarkPacks } from "./benchmark-packs.js";
 import {
@@ -95,6 +97,19 @@ const neuroRegistry = createNeuroRegistry(persistence.getStatus().rootDir);
 const governance = createGovernanceRegistry();
 const actuationManager = await createActuationManager(persistence.getStatus().rootDir);
 const intelligenceWorkerRegistry = createIntelligenceWorkerRegistry(persistence.getStatus().rootDir);
+const nodeRegistry = createNodeRegistry(persistence.getStatus().rootDir, {
+  localNodeId:
+    process.env.IMMACULATE_NODE_ID ??
+    `node-${(process.env.IMMACULATE_HARNESS_HOST ?? "127.0.0.1").replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase()}-${Number(process.env.IMMACULATE_HARNESS_PORT ?? 8787)}`,
+  localNodeLabel: process.env.IMMACULATE_NODE_LABEL ?? "Immaculate Local Node",
+  localHostLabel: `${process.env.IMMACULATE_HARNESS_HOST ?? "127.0.0.1"}:${Number(process.env.IMMACULATE_HARNESS_PORT ?? 8787)}`,
+  localLocality: process.env.IMMACULATE_NODE_LOCALITY,
+  localControlPlaneUrl:
+    process.env.IMMACULATE_NODE_CONTROL_URL ??
+    `http://${process.env.IMMACULATE_HARNESS_HOST ?? "127.0.0.1"}:${Number(process.env.IMMACULATE_HARNESS_PORT ?? 8787)}`,
+  localCapabilities: ["control-plane", "worker-plane", "benchmark-plane", "neuro-plane"]
+});
+await nodeRegistry.ensureLocalNode();
 const durableState = await persistence.load();
 const engine = createEngine(
   durableState
@@ -172,6 +187,21 @@ const LOCAL_EXECUTION_WORKER_SLOT_CAP = Math.max(
 );
 const LOCAL_OLLAMA_ENDPOINT =
   process.env.IMMACULATE_OLLAMA_URL ?? "http://127.0.0.1:11434";
+const NODE_HEARTBEAT_INTERVAL_MS = Math.max(
+  5_000,
+  Number(process.env.IMMACULATE_NODE_HEARTBEAT_INTERVAL_MS ?? 15_000) || 15_000
+);
+
+setInterval(() => {
+  void nodeRegistry.ensureLocalNode().catch((error) => {
+    app.log.warn(
+      {
+        message: error instanceof Error ? error.message : "unknown node heartbeat error"
+      },
+      "Unable to refresh local node heartbeat"
+    );
+  });
+}, NODE_HEARTBEAT_INTERVAL_MS).unref();
 
 type BenchmarkJob = {
   id: string;
@@ -641,6 +671,7 @@ function localExecutionWorkerId(slot: number): string {
 async function ensureLocalExecutionWorkers(minCount = 1): Promise<void> {
   const now = new Date().toISOString();
   const slotCount = Math.max(1, Math.min(LOCAL_EXECUTION_WORKER_SLOT_CAP, minCount));
+  const localNode = await nodeRegistry.ensureLocalNode(now);
 
   for (let slot = 1; slot <= slotCount; slot += 1) {
     await intelligenceWorkerRegistry.registerWorker({
@@ -648,6 +679,8 @@ async function ensureLocalExecutionWorkers(minCount = 1): Promise<void> {
       workerLabel:
         slotCount > 1 ? `Immaculate Local Worker Slot ${slot}` : "Immaculate Local Worker",
       hostLabel: `${HARNESS_HOST}:${HARNESS_PORT}`,
+      nodeId: localNode.nodeId,
+      locality: localNode.locality,
       executionProfile: "local",
       executionEndpoint: LOCAL_OLLAMA_ENDPOINT,
       registeredAt: now,
@@ -673,12 +706,19 @@ async function reserveExecutionWorker(options: {
     throw new Error("Execution worker reservation blocked by preflight policy.");
   }
 
+  const localNode = await nodeRegistry.ensureLocalNode();
+  const nodeState = await nodeRegistry.listNodes();
+
   let result = await intelligenceWorkerRegistry.assignWorker({
     requestedExecutionDecision: options.requestedExecutionDecision ?? "allow_local",
     baseModel: options.layer.model,
     preferredLayerIds: [options.layer.id],
     recommendedLayerId: options.layer.id,
-    target: options.target ?? options.layer.role
+    target: options.target ?? options.layer.role,
+    preferredNodeId:
+      options.requestedExecutionDecision === "remote_required" ? undefined : localNode.nodeId,
+    preferredLocality: localNode.locality,
+    nodeViews: nodeState.nodes
   });
 
   if (!result.assignment && options.requestedExecutionDecision !== "remote_required") {
@@ -688,15 +728,19 @@ async function reserveExecutionWorker(options: {
       baseModel: options.layer.model,
       preferredLayerIds: [options.layer.id],
       recommendedLayerId: options.layer.id,
-      target: options.target ?? options.layer.role
+      target: options.target ?? options.layer.role,
+      preferredNodeId: localNode.nodeId,
+      preferredLocality: localNode.locality,
+      nodeViews: nodeState.nodes
     });
   }
 
   if (!result.assignment) {
+    const availability = `${result.summary.healthyWorkerCount} healthy · ${result.summary.staleWorkerCount} stale · ${result.summary.faultedWorkerCount} faulted · ${result.summary.eligibleWorkerCount} eligible`;
     throw new Error(
       options.requestedExecutionDecision === "remote_required"
-        ? `No eligible remote execution worker available for ${options.layer.id}.`
-        : `No eligible execution worker available for ${options.layer.id}.`
+        ? `No eligible remote execution worker available for ${options.layer.id}. ${availability}`
+        : `No eligible execution worker available for ${options.layer.id}. ${availability}`
     );
   }
 
@@ -1778,6 +1822,34 @@ app.get("/api/benchmarks/history", async () => ({
   history: await loadPublishedBenchmarkIndex()
 }));
 
+app.get("/api/benchmarks/trend", async (request, reply) => {
+  const query = (request.query as { packId?: BenchmarkPackId; window?: string } | undefined) ?? {};
+  const window = query.window ? Number(query.window) : undefined;
+  const resolvedWindow =
+    Number.isFinite(window) && window
+      ? Math.max(3, Math.min(64, Math.round(window)))
+      : 20;
+
+  if (query.packId) {
+    try {
+      return {
+        trend: await loadBenchmarkTrend(query.packId, resolvedWindow)
+      };
+    } catch (error) {
+      reply.code(404);
+      return {
+        error: "benchmark_trend_not_found",
+        message: error instanceof Error ? error.message : "Unable to load benchmark trend.",
+        packId: query.packId
+      };
+    }
+  }
+
+  return {
+    trends: await loadAllBenchmarkTrends(resolvedWindow)
+  };
+});
+
 app.get("/api/benchmarks/jobs/:jobId", async (request, reply) => {
   const params = request.params as { jobId?: string };
   if (!params.jobId) {
@@ -2140,6 +2212,29 @@ app.get("/api/intelligence/executions", async (request, reply) => {
   };
 });
 
+app.get("/api/nodes", async (request, reply) => {
+  if (
+    !authorizeGovernedAction(
+      "cognitive-trace-read",
+      "/api/nodes",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  const consentScope = getGovernanceBinding("cognitive-trace-read", "/api/nodes", request).consentScope;
+  const nodeState = await nodeRegistry.listNodes();
+  return {
+    nodes: nodeState.nodes,
+    summary: nodeState.summary,
+    localNodeId: nodeRegistry.localNodeId,
+    localLocality: nodeRegistry.localLocality,
+    visibility: deriveVisibilityScope(consentScope)
+  };
+});
+
 app.get("/api/intelligence/workers", async (request, reply) => {
   if (
     !authorizeGovernedAction(
@@ -2157,9 +2252,22 @@ app.get("/api/intelligence/workers", async (request, reply) => {
     "/api/intelligence/workers",
     request
   ).consentScope;
-  const workers = await intelligenceWorkerRegistry.listWorkers();
+  const nodeState = await nodeRegistry.listNodes();
+  const workers = await intelligenceWorkerRegistry.listWorkers(undefined, nodeState.nodes);
+  const healthyWorkerCount = workers.filter((worker) => worker.healthStatus === "healthy").length;
+  const staleWorkerCount = workers.filter((worker) => worker.healthStatus === "stale").length;
+  const faultedWorkerCount = workers.filter((worker) => worker.healthStatus === "faulted").length;
+  const eligibleWorkerCount = workers.filter((worker) => worker.assignmentEligible).length;
   return {
+    nodes: nodeState.nodes,
+    nodeSummary: nodeState.summary,
     workers,
+    workerCount: workers.length,
+    healthyWorkerCount,
+    staleWorkerCount,
+    faultedWorkerCount,
+    eligibleWorkerCount,
+    blockedWorkerCount: workers.length - eligibleWorkerCount,
     recommendedLayerId: getPreferredLayer()?.id,
     visibility: deriveVisibilityScope(consentScope)
   };
@@ -2421,6 +2529,8 @@ app.post("/api/intelligence/workers/register", async (request, reply) => {
       workerId?: string;
       workerLabel?: string;
       hostLabel?: string;
+      nodeId?: string;
+      locality?: string;
       executionProfile?: IntelligenceWorkerExecutionProfile;
       executionEndpoint?: string;
       registeredAt?: string;
@@ -2448,10 +2558,15 @@ app.post("/api/intelligence/workers/register", async (request, reply) => {
   }
 
   try {
+    const localNode =
+      body.executionProfile === "local" ? await nodeRegistry.ensureLocalNode() : undefined;
+    const nodeState = await nodeRegistry.listNodes();
     const worker = await intelligenceWorkerRegistry.registerWorker({
       workerId: body.workerId.trim(),
       workerLabel: body.workerLabel?.trim() || undefined,
       hostLabel: body.hostLabel?.trim() || undefined,
+      nodeId: body.nodeId?.trim() || localNode?.nodeId,
+      locality: body.locality?.trim() || localNode?.locality,
       executionProfile: body.executionProfile,
       executionEndpoint: body.executionEndpoint?.trim() || undefined,
       registeredAt: body.registeredAt?.trim() || new Date().toISOString(),
@@ -2468,10 +2583,13 @@ app.post("/api/intelligence/workers/register", async (request, reply) => {
       preferredLayerIds: Array.isArray(body.preferredLayerIds)
         ? body.preferredLayerIds
         : []
-    });
+    }, nodeState.nodes);
     return {
       accepted: true,
       worker,
+      healthyWorkerCount: worker.healthStatus === "healthy" ? 1 : 0,
+      staleWorkerCount: worker.healthStatus === "stale" ? 1 : 0,
+      faultedWorkerCount: worker.healthStatus === "faulted" ? 1 : 0,
       recommendedLayerId: getPreferredLayer()?.id
     };
   } catch (error) {
@@ -2503,6 +2621,8 @@ app.post("/api/intelligence/workers/:workerId/heartbeat", async (request, reply)
       leaseDurationMs?: number;
       workerLabel?: string;
       hostLabel?: string;
+      nodeId?: string;
+      locality?: string;
       executionProfile?: IntelligenceWorkerExecutionProfile;
       executionEndpoint?: string;
       watch?: boolean;
@@ -2530,6 +2650,9 @@ app.post("/api/intelligence/workers/:workerId/heartbeat", async (request, reply)
   }
 
   try {
+    const localNode =
+      body.executionProfile === "local" ? await nodeRegistry.ensureLocalNode() : undefined;
+    const nodeState = await nodeRegistry.listNodes();
     const worker = await intelligenceWorkerRegistry.heartbeatWorker({
       workerId: params.workerId.trim(),
       heartbeatAt: body.heartbeatAt?.trim() || new Date().toISOString(),
@@ -2539,6 +2662,8 @@ app.post("/api/intelligence/workers/:workerId/heartbeat", async (request, reply)
           : undefined,
       workerLabel: body.workerLabel?.trim() || undefined,
       hostLabel: body.hostLabel?.trim() || undefined,
+      nodeId: body.nodeId?.trim() || localNode?.nodeId,
+      locality: body.locality?.trim() || localNode?.locality,
       executionProfile: body.executionProfile,
       executionEndpoint: body.executionEndpoint?.trim() || undefined,
       watch: body.watch,
@@ -2549,10 +2674,13 @@ app.post("/api/intelligence/workers/:workerId/heartbeat", async (request, reply)
       preferredLayerIds: Array.isArray(body.preferredLayerIds)
         ? body.preferredLayerIds
         : undefined
-    });
+    }, nodeState.nodes);
     return {
       accepted: true,
       worker,
+      healthyWorkerCount: worker.healthStatus === "healthy" ? 1 : 0,
+      staleWorkerCount: worker.healthStatus === "stale" ? 1 : 0,
+      faultedWorkerCount: worker.healthStatus === "faulted" ? 1 : 0,
       recommendedLayerId: getPreferredLayer()?.id
     };
   } catch (error) {
@@ -2585,10 +2713,18 @@ app.post("/api/intelligence/workers/:workerId/unregister", async (request, reply
     };
   }
 
-  const worker = await intelligenceWorkerRegistry.removeWorker(params.workerId.trim());
+  const nodeState = await nodeRegistry.listNodes();
+  const worker = await intelligenceWorkerRegistry.removeWorker(
+    params.workerId.trim(),
+    undefined,
+    nodeState.nodes
+  );
   return {
     accepted: true,
     worker,
+    healthyWorkerCount: worker?.healthStatus === "healthy" ? 1 : 0,
+    staleWorkerCount: worker?.healthStatus === "stale" ? 1 : 0,
+    faultedWorkerCount: worker?.healthStatus === "faulted" ? 1 : 0,
     recommendedLayerId: getPreferredLayer()?.id
   };
 });
@@ -2612,9 +2748,13 @@ app.post("/api/intelligence/workers/assign", async (request, reply) => {
       preferredLayerIds?: string[];
       recommendedLayerId?: string;
       target?: string;
+      preferredNodeId?: string;
+      preferredLocality?: string;
     } | undefined) ?? {};
 
   const recommendedLayerId = body.recommendedLayerId?.trim() || getPreferredLayer()?.id;
+  const localNode = await nodeRegistry.ensureLocalNode();
+  const nodeState = await nodeRegistry.listNodes();
   const result = await intelligenceWorkerRegistry.assignWorker({
     requestedExecutionDecision: body.requestedExecutionDecision,
     baseModel: body.baseModel?.trim() || undefined,
@@ -2622,14 +2762,178 @@ app.post("/api/intelligence/workers/assign", async (request, reply) => {
       ? body.preferredLayerIds
       : [],
     recommendedLayerId,
-    target: body.target?.trim() || undefined
+    target: body.target?.trim() || undefined,
+    preferredNodeId:
+      body.preferredNodeId?.trim() ||
+      (body.requestedExecutionDecision === "remote_required" ? undefined : localNode.nodeId),
+    preferredLocality: body.preferredLocality?.trim() || localNode.locality,
+    nodeViews: nodeState.nodes
   });
   return {
     accepted: true,
     assignment: result.assignment,
     workers: result.workers,
     workerCount: result.workers.length,
+    healthyWorkerCount: result.summary.healthyWorkerCount,
+    staleWorkerCount: result.summary.staleWorkerCount,
+    faultedWorkerCount: result.summary.faultedWorkerCount,
+    eligibleWorkerCount: result.summary.eligibleWorkerCount,
+    blockedWorkerCount: result.summary.blockedWorkerCount,
     recommendedLayerId
+  };
+});
+
+app.post("/api/nodes/register", async (request, reply) => {
+  if (
+    !authorizeGovernedAction(
+      "cognitive-registration",
+      "/api/nodes/register",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  const body =
+    (request.body as {
+      nodeId?: string;
+      nodeLabel?: string;
+      hostLabel?: string;
+      locality?: string;
+      controlPlaneUrl?: string;
+      registeredAt?: string;
+      heartbeatAt?: string;
+      leaseDurationMs?: number;
+      capabilities?: string[];
+      isLocal?: boolean;
+    } | undefined) ?? {};
+
+  if (!body.nodeId?.trim() || !body.locality?.trim()) {
+    reply.code(400);
+    return {
+      error: "invalid_node_registration",
+      message: "nodeId and locality are required."
+    };
+  }
+
+  try {
+    const node = await nodeRegistry.registerNode({
+      nodeId: body.nodeId.trim(),
+      nodeLabel: body.nodeLabel?.trim() || undefined,
+      hostLabel: body.hostLabel?.trim() || undefined,
+      locality: body.locality.trim(),
+      controlPlaneUrl: body.controlPlaneUrl?.trim() || undefined,
+      registeredAt: body.registeredAt?.trim() || new Date().toISOString(),
+      heartbeatAt: body.heartbeatAt?.trim() || new Date().toISOString(),
+      leaseDurationMs:
+        typeof body.leaseDurationMs === "number" && Number.isFinite(body.leaseDurationMs)
+          ? Number(body.leaseDurationMs)
+          : 45_000,
+      capabilities: Array.isArray(body.capabilities) ? body.capabilities : [],
+      isLocal: body.isLocal === true
+    });
+    const nodeState = await nodeRegistry.listNodes();
+    return {
+      accepted: true,
+      node,
+      summary: nodeState.summary
+    };
+  } catch (error) {
+    reply.code(400);
+    return {
+      error: "node_registration_failed",
+      message: error instanceof Error ? error.message : "Unable to register node."
+    };
+  }
+});
+
+app.post("/api/nodes/:nodeId/heartbeat", async (request, reply) => {
+  if (
+    !authorizeGovernedAction(
+      "cognitive-registration",
+      "/api/nodes/:nodeId/heartbeat",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  const params = request.params as { nodeId?: string };
+  const body =
+    (request.body as {
+      heartbeatAt?: string;
+      leaseDurationMs?: number;
+      nodeLabel?: string;
+      hostLabel?: string;
+      locality?: string;
+      controlPlaneUrl?: string;
+      capabilities?: string[];
+    } | undefined) ?? {};
+
+  if (!params.nodeId?.trim()) {
+    reply.code(400);
+    return {
+      error: "missing_node_id"
+    };
+  }
+
+  try {
+    const node = await nodeRegistry.heartbeatNode({
+      nodeId: params.nodeId.trim(),
+      heartbeatAt: body.heartbeatAt?.trim() || new Date().toISOString(),
+      leaseDurationMs:
+        typeof body.leaseDurationMs === "number" && Number.isFinite(body.leaseDurationMs)
+          ? Number(body.leaseDurationMs)
+          : undefined,
+      nodeLabel: body.nodeLabel?.trim() || undefined,
+      hostLabel: body.hostLabel?.trim() || undefined,
+      locality: body.locality?.trim() || undefined,
+      controlPlaneUrl: body.controlPlaneUrl?.trim() || undefined,
+      capabilities: Array.isArray(body.capabilities) ? body.capabilities : undefined
+    });
+    const nodeState = await nodeRegistry.listNodes();
+    return {
+      accepted: true,
+      node,
+      summary: nodeState.summary
+    };
+  } catch (error) {
+    reply.code(400);
+    return {
+      error: "node_heartbeat_failed",
+      message: error instanceof Error ? error.message : "Unable to record node heartbeat."
+    };
+  }
+});
+
+app.delete("/api/nodes/:nodeId", async (request, reply) => {
+  if (
+    !authorizeGovernedAction(
+      "cognitive-registration",
+      "/api/nodes/:nodeId",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  const params = request.params as { nodeId?: string };
+  if (!params.nodeId?.trim()) {
+    reply.code(400);
+    return {
+      error: "missing_node_id"
+    };
+  }
+
+  const node = await nodeRegistry.removeNode(params.nodeId.trim());
+  const nodeState = await nodeRegistry.listNodes();
+  return {
+    accepted: true,
+    node,
+    summary: nodeState.summary
   };
 });
 
@@ -3614,6 +3918,8 @@ app.post("/api/benchmarks/publish/wandb", async (request, reply) => {
 
 app.get("/api/topology", async () => {
   const snapshot = phaseSnapshotSchema.parse(engine.getSnapshot());
+  const nodeState = await nodeRegistry.listNodes();
+  const workers = await intelligenceWorkerRegistry.listWorkers(undefined, nodeState.nodes);
   return {
     profile: snapshot.profile,
     objective: snapshot.objective,
@@ -3621,7 +3927,15 @@ app.get("/api/topology", async () => {
     edges: snapshot.edges.length,
     planes: [...new Set(snapshot.nodes.map((node) => node.plane))],
     cycle: snapshot.cycle,
-    lastEventId: snapshot.lastEventId
+    lastEventId: snapshot.lastEventId,
+    clusterNodes: nodeState.summary.nodeCount,
+    clusterSummary: nodeState.summary,
+    workerPlane: {
+      workerCount: workers.length,
+      healthyWorkerCount: workers.filter((worker) => worker.healthStatus === "healthy").length,
+      staleWorkerCount: workers.filter((worker) => worker.healthStatus === "stale").length,
+      faultedWorkerCount: workers.filter((worker) => worker.healthStatus === "faulted").length
+    }
   };
 });
 
