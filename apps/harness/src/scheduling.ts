@@ -8,6 +8,7 @@ import type {
   IntelligenceLayerRole,
   PhaseSnapshot
 } from "@immaculate/core";
+import type { FederatedExecutionPressure } from "./federation-pressure.js";
 import type { SessionConversationMemory } from "./conversation.js";
 import { hashValue } from "./utils.js";
 
@@ -17,6 +18,7 @@ type ExecutionSchedulePlanInput = {
   requestedLayerId?: string;
   maxWidth?: number;
   sessionConversationMemory?: SessionConversationMemory;
+  federationPressure?: FederatedExecutionPressure;
 };
 
 export type ExecutionSchedulePlan = {
@@ -30,6 +32,9 @@ export type ExecutionSchedulePlan = {
   shouldDispatchActuation: boolean;
   decodeConfidence: number;
   governancePressure: GovernancePressureLevel;
+  federationPressure?: GovernancePressureLevel;
+  federationObservedLatencyMs?: number;
+  federationRemoteSuccessRatio?: number;
   estimatedLatencyMs: number;
   estimatedCost: number;
   objective: string;
@@ -65,7 +70,7 @@ function uniqueRoles(roles: IntelligenceLayerRole[]): IntelligenceLayerRole[] {
 const MULTI_TURN_ROLE_ORDER: IntelligenceLayerRole[] = ["mid", "soul", "reasoner", "guard"];
 
 export function isParallelScheduleMode(mode: ExecutionScheduleMode): boolean {
-  return mode === "swarm-parallel" || mode === "swarm-sequential" || mode === "guarded-swarm";
+  return mode === "swarm-parallel" || mode === "guarded-swarm";
 }
 
 export function preferredScheduleRoles(arbitration: ExecutionArbitration): IntelligenceLayerRole[] {
@@ -128,7 +133,8 @@ function selectLayers(
 
 function scheduleModeForSelection(
   arbitration: ExecutionArbitration,
-  selected: IntelligenceLayer[]
+  selected: IntelligenceLayer[],
+  federationPressure?: FederatedExecutionPressure
 ): ExecutionScheduleMode {
   if (!arbitration.shouldRunCognition) {
     return "reflex-bypass";
@@ -144,6 +150,9 @@ function scheduleModeForSelection(
     selected.some((layer) => layer.role === "guard")
   ) {
     return "guarded-swarm";
+  }
+  if (federationPressure?.pressure === "elevated") {
+    return "swarm-sequential";
   }
   return "swarm-parallel";
 }
@@ -161,7 +170,8 @@ function estimatedRoleDurationMs(layer: IntelligenceLayer): number {
 function estimateLatencyMs(
   selected: IntelligenceLayer[],
   governancePressure: GovernancePressureLevel,
-  mode: ExecutionScheduleMode
+  mode: ExecutionScheduleMode,
+  federationPressure?: FederatedExecutionPressure
 ): number {
   const nonGuardDurations = selected
     .filter((layer) => layer.role !== "guard")
@@ -178,12 +188,22 @@ function estimateLatencyMs(
   const base =
     mode === "guarded-swarm"
       ? parallelBatchDuration + guardDuration
-      : mode === "swarm-parallel" || mode === "swarm-sequential"
+      : mode === "swarm-parallel"
         ? parallelBatchDuration + guardDuration
+        : mode === "swarm-sequential"
+          ? summedDuration
         : summedDuration;
+  const federationPenalty =
+    typeof federationPressure?.crossNodeLatencyMs === "number"
+      ? mode === "swarm-parallel"
+        ? federationPressure.crossNodeLatencyMs
+        : mode === "swarm-sequential"
+          ? federationPressure.crossNodeLatencyMs * Math.max(1, selected.length - 1)
+          : federationPressure.crossNodeLatencyMs * 0.35
+      : 0;
   const governanceOverhead =
     governancePressure === "critical" ? 600 : governancePressure === "elevated" ? 260 : 80;
-  return Number((base + governanceOverhead).toFixed(2));
+  return Number((base + governanceOverhead + federationPenalty).toFixed(2));
 }
 
 function estimateCost(selected: IntelligenceLayer[]): number {
@@ -222,6 +242,7 @@ export function planExecutionSchedule(input: ExecutionSchedulePlanInput): Execut
   const signalQuality = clamp(input.snapshot.neuralCoupling.signalQuality);
   const dominantBand = input.snapshot.neuralCoupling.dominantBand;
   const sessionConversationMemory = input.sessionConversationMemory;
+  const federatedPressure = input.federationPressure;
   const sessionBlockedVerdicts = sessionConversationMemory?.blockedVerdictCount ?? 0;
   const sessionApprovedVerdicts = sessionConversationMemory?.approvedVerdictCount ?? 0;
   if (sessionBlockedVerdicts >= 2 && input.arbitration.shouldRunCognition) {
@@ -239,10 +260,22 @@ export function planExecutionSchedule(input: ExecutionSchedulePlanInput): Execut
       preferredRoles = preferredRoles.slice(0, Math.max(1, Math.min(2, preferredRoles.length)));
     }
   }
+  if (federatedPressure?.pressure === "critical" && input.arbitration.mode !== "operator-override") {
+    preferredRoles = preferredRoles.slice(0, 1);
+  } else if (
+    federatedPressure?.pressure === "elevated" &&
+    input.arbitration.mode !== "operator-override"
+  ) {
+    preferredRoles = preferredRoles.slice(0, Math.max(2, Math.min(preferredRoles.length, 2)));
+  }
   const adaptiveMaxWidth =
     input.maxWidth ??
     (input.arbitration.mode === "operator-override"
       ? Math.max(3, preferredRoles.length)
+      : federatedPressure?.pressure === "critical"
+        ? 1
+        : federatedPressure?.pressure === "elevated"
+          ? Math.min(2, Math.max(1, preferredRoles.length))
       : weakSignal
         ? Math.max(2, preferredRoles.length)
         : strongFastSignal && input.arbitration.governancePressure === "clear"
@@ -254,7 +287,7 @@ export function planExecutionSchedule(input: ExecutionSchedulePlanInput): Execut
     input.requestedLayerId,
     adaptiveMaxWidth
   );
-  const mode = scheduleModeForSelection(input.arbitration, selectedLayers);
+  const mode = scheduleModeForSelection(input.arbitration, selectedLayers, federatedPressure);
   const executionTopology = executionTopologyForMode(mode, selectedLayers);
   const parallelWidth = parallelWidthForTopology(executionTopology, selectedLayers);
   const primaryLayer = selectedLayers.at(-1);
@@ -262,7 +295,8 @@ export function planExecutionSchedule(input: ExecutionSchedulePlanInput): Execut
   const estimatedLatencyMs = estimateLatencyMs(
     selectedLayers,
     input.arbitration.governancePressure,
-    mode
+    mode,
+    federatedPressure
   );
   const estimatedCost = estimateCost(selectedLayers);
   const canDispatch =
@@ -278,6 +312,9 @@ export function planExecutionSchedule(input: ExecutionSchedulePlanInput): Execut
     `signal=${signalQuality.toFixed(2)}`,
     `band=${dominantBand}`,
     `governance=${input.arbitration.governancePressure}`,
+    `federation=${federatedPressure?.pressure ?? "none"}`,
+    `federationLatency=${typeof federatedPressure?.crossNodeLatencyMs === "number" ? federatedPressure.crossNodeLatencyMs.toFixed(2) : "none"}`,
+    `federationSuccess=${typeof federatedPressure?.remoteSuccessRatio === "number" ? federatedPressure.remoteSuccessRatio.toFixed(2) : "none"}`,
     `sessionBlocked=${sessionBlockedVerdicts}`,
     `sessionApproved=${sessionApprovedVerdicts}`,
     `dispatch=${input.arbitration.shouldDispatchActuation ? "allow" : "hold"}`
@@ -294,6 +331,9 @@ export function planExecutionSchedule(input: ExecutionSchedulePlanInput): Execut
     shouldDispatchActuation: canDispatch,
     decodeConfidence: input.arbitration.decodeConfidence,
     governancePressure: input.arbitration.governancePressure,
+    federationPressure: federatedPressure?.pressure,
+    federationObservedLatencyMs: federatedPressure?.crossNodeLatencyMs,
+    federationRemoteSuccessRatio: federatedPressure?.remoteSuccessRatio,
     estimatedLatencyMs,
     estimatedCost,
     objective: input.arbitration.objective,
@@ -323,6 +363,9 @@ export function buildExecutionScheduleDecision(options: {
     shouldDispatchActuation: options.plan.shouldDispatchActuation,
     decodeConfidence: options.plan.decodeConfidence,
     governancePressure: options.plan.governancePressure,
+    federationPressure: options.plan.federationPressure,
+    federationObservedLatencyMs: options.plan.federationObservedLatencyMs,
+    federationRemoteSuccessRatio: options.plan.federationRemoteSuccessRatio,
     estimatedLatencyMs: options.plan.estimatedLatencyMs,
     estimatedCost: options.plan.estimatedCost,
     objective: options.plan.objective,

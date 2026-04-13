@@ -224,6 +224,9 @@ Benchmark packs currently include:
 - local swarm execution now treats one host as a pool of leaseable worker slots instead of a single monolithic worker record, so widened cognition can actually reserve parallel local capacity without lying about topology
 - authenticated federation now includes signed membership export/import, verified remote node and worker identity, recurring peer refresh, signed lease renewal, and stale-state eviction before dead remotes can stay in placement
 - live remote placement now reads peer lease freshness and peer-smoothed latency as first-class worker-plane control signals instead of relying only on imported node metadata
+- adaptive federated execution pressure now blends peer-smoothed latency with measured remote execution success/failure, so a degraded peer can lose placement even before membership expires
+- signed lease recovery is now adaptive instead of fixed-rate: renewal cadence tightens under failed remote execution or failed lease refresh, then relaxes again after healthy signed renewals
+- live mediated swarm execution now spans authenticated peers under real worker leases, so guarded swarm topology can widen across multiple remote nodes instead of only choosing one remote winner
 - session-bound actuation dispatch and mediated orchestration now fail closed on ambiguous or cross-session source resolution instead of silently falling back to the newest global frame or execution
 - benchmark publication now includes Tier 1 cognitive-loop closure coverage for parsed model structure, governance-aware cognition, routing soft priors, and multi-role conversation verdicts
 - benchmark history can now be queried through a real `/api/benchmarks/trend` surface that analyzes published run order, flags drift, and stays explicit about what metric it is trending
@@ -238,6 +241,7 @@ Benchmark packs currently include:
 - arbitration and scheduling that feed live neural coupling, device health, decode confidence, and governance pressure deeper into multi-agent planning before route/dispatch
 - additional multi-agent and tool execution backends beyond the first Ollama layer
 - richer worker federation beyond the current authenticated membership, recurring peer refresh, and stale-trust eviction phase
+- fuller federated control pressure that can learn from longer execution history and cost envelopes without overfitting to short-term noise
 - domain benchmark packs against published neuro/BCI workloads
 - real multi-node deployment and cluster-wide locality routing beyond the current single-harness node registry
 - richer operator surfaces over published-run trend analysis instead of only the raw API
@@ -339,7 +343,7 @@ Sensitive read surfaces now split into two modes:
 - `GET /api/federation/peers` exposes the persisted peer registry with separate membership and lease freshness state, smoothed observed latency, and auth-configured state without leaking peer secrets
 - `GET /api/federation/leases` plus `POST /api/federation/peers/:peerId/lease-renew` make signed lease renewal a real governed surface instead of a hidden side effect of topology sync
 - `POST /api/federation/peers/register`, `POST /api/federation/peers/sync`, and `POST /api/federation/peers/:peerId/refresh` continue to own the slower signed membership control loop
-- background federation refresh and lease renewal now evict remote node and worker state when trust expires, while worker placement consumes peer lease freshness and peer-smoothed latency directly before selecting a remote endpoint
+- background federation refresh and lease renewal now evict remote node and worker state when trust expires, while worker placement consumes peer lease freshness, peer-smoothed latency, and remote execution failure pressure directly before selecting a remote endpoint
 - actuation device transports now open with a protocol-negotiation handshake on `WS /stream/actuation/device`; device clients send `actuation-device-hello` before dispatch starts, then acknowledge deliveries with `actuation-ack`
 - UDP/OSC actuation endpoints can be registered through `POST /api/actuation/transports/udp/register`; when present, dispatch prefers that concrete transport before bridge or file fallback
 - serial vendor transports can be registered through `POST /api/actuation/transports/serial/register`; they require heartbeats on `POST /api/actuation/transports/:transportId/heartbeat`, isolate on stale liveness, and can be cleared through `POST /api/actuation/transports/:transportId/reset`

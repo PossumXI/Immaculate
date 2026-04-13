@@ -4,6 +4,7 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { hashValue, safeUnlink } from "./utils.js";
 
 export type FederationPeerStatus = "healthy" | "stale" | "faulted";
+export type FederationLeaseRecoveryMode = "steady" | "tightened" | "recovering";
 
 export type FederationPeerRecord = {
   peerId: string;
@@ -11,6 +12,7 @@ export type FederationPeerRecord = {
   authorizationToken?: string | null;
   expectedNodeId?: string | null;
   registeredAt: string;
+  configuredLeaseRefreshIntervalMs: number;
   refreshIntervalMs: number;
   leaseRefreshIntervalMs: number;
   trustWindowMs: number;
@@ -30,6 +32,15 @@ export type FederationPeerRecord = {
   leaseConsecutiveFailureCount: number;
   leaseObservedLatencyMs?: number | null;
   leaseSmoothedLatencyMs?: number | null;
+  lastLeaseJitterMs?: number | null;
+  leaseRecoveryMode: FederationLeaseRecoveryMode;
+  remoteExecutionSuccessCount: number;
+  remoteExecutionFailureCount: number;
+  remoteExecutionConsecutiveFailureCount: number;
+  lastRemoteExecutionAt?: string | null;
+  lastRemoteExecutionStatus?: "completed" | "failed" | null;
+  lastRemoteExecutionError?: string | null;
+  remoteExecutionSmoothedLatencyMs?: number | null;
   nextLeaseRefreshAt: string;
 };
 
@@ -43,6 +54,8 @@ export type FederationPeerView = Omit<FederationPeerRecord, "authorizationToken"
   leaseRefreshDue: boolean;
   leaseTrustExpiresAt: string;
   leaseTrustRemainingMs: number;
+  remoteExecutionSuccessRatio: number;
+  remoteExecutionFailurePressure: number;
 };
 
 type FederationPeerRegistryState = {
@@ -115,6 +128,12 @@ function normalizeNullableNumber(value: unknown): number | null | undefined {
   return value;
 }
 
+function normalizeLeaseRecoveryMode(value: unknown): FederationLeaseRecoveryMode | undefined {
+  return value === "steady" || value === "tightened" || value === "recovering"
+    ? value
+    : undefined;
+}
+
 function parsePeers(content: string | null): FederationPeerRecord[] {
   if (!content) {
     return [];
@@ -137,6 +156,8 @@ function parsePeers(content: string | null): FederationPeerRecord[] {
         typeof candidate.peerId !== "string" ||
         typeof candidate.controlPlaneUrl !== "string" ||
         typeof candidate.registeredAt !== "string" ||
+        (candidate.configuredLeaseRefreshIntervalMs !== undefined &&
+          typeof candidate.configuredLeaseRefreshIntervalMs !== "number") ||
         typeof candidate.refreshIntervalMs !== "number" ||
         (candidate.leaseRefreshIntervalMs !== undefined &&
           typeof candidate.leaseRefreshIntervalMs !== "number") ||
@@ -158,6 +179,16 @@ function parsePeers(content: string | null): FederationPeerRecord[] {
           authorizationToken: normalizeNullableString(candidate.authorizationToken),
           expectedNodeId: normalizeNullableString(candidate.expectedNodeId),
           registeredAt: candidate.registeredAt,
+          configuredLeaseRefreshIntervalMs:
+            typeof candidate.configuredLeaseRefreshIntervalMs === "number" &&
+            Number.isFinite(candidate.configuredLeaseRefreshIntervalMs) &&
+            candidate.configuredLeaseRefreshIntervalMs > 0
+              ? candidate.configuredLeaseRefreshIntervalMs
+              : typeof candidate.leaseRefreshIntervalMs === "number" &&
+                  Number.isFinite(candidate.leaseRefreshIntervalMs) &&
+                  candidate.leaseRefreshIntervalMs > 0
+                ? candidate.leaseRefreshIntervalMs
+                : Math.max(2_000, Math.min(candidate.refreshIntervalMs, DEFAULT_LEASE_REFRESH_INTERVAL_MS)),
           refreshIntervalMs: candidate.refreshIntervalMs,
           leaseRefreshIntervalMs:
             typeof candidate.leaseRefreshIntervalMs === "number" &&
@@ -193,6 +224,37 @@ function parsePeers(content: string | null): FederationPeerRecord[] {
           leaseSmoothedLatencyMs: normalizeNullableNumber(
             candidate.leaseSmoothedLatencyMs ?? candidate.smoothedLatencyMs
           ),
+          lastLeaseJitterMs: normalizeNullableNumber(candidate.lastLeaseJitterMs),
+          leaseRecoveryMode:
+            normalizeLeaseRecoveryMode(candidate.leaseRecoveryMode) ?? "steady",
+          remoteExecutionSuccessCount:
+            typeof candidate.remoteExecutionSuccessCount === "number" &&
+            Number.isFinite(candidate.remoteExecutionSuccessCount) &&
+            candidate.remoteExecutionSuccessCount >= 0
+              ? candidate.remoteExecutionSuccessCount
+              : 0,
+          remoteExecutionFailureCount:
+            typeof candidate.remoteExecutionFailureCount === "number" &&
+            Number.isFinite(candidate.remoteExecutionFailureCount) &&
+            candidate.remoteExecutionFailureCount >= 0
+              ? candidate.remoteExecutionFailureCount
+              : 0,
+          remoteExecutionConsecutiveFailureCount:
+            typeof candidate.remoteExecutionConsecutiveFailureCount === "number" &&
+            Number.isFinite(candidate.remoteExecutionConsecutiveFailureCount) &&
+            candidate.remoteExecutionConsecutiveFailureCount >= 0
+              ? candidate.remoteExecutionConsecutiveFailureCount
+              : 0,
+          lastRemoteExecutionAt: normalizeNullableString(candidate.lastRemoteExecutionAt),
+          lastRemoteExecutionStatus:
+            candidate.lastRemoteExecutionStatus === "completed" ||
+            candidate.lastRemoteExecutionStatus === "failed"
+              ? candidate.lastRemoteExecutionStatus
+              : null,
+          lastRemoteExecutionError: normalizeNullableString(candidate.lastRemoteExecutionError),
+          remoteExecutionSmoothedLatencyMs: normalizeNullableNumber(
+            candidate.remoteExecutionSmoothedLatencyMs
+          ),
           nextLeaseRefreshAt:
             normalizeNullableString(candidate.nextLeaseRefreshAt) ?? candidate.nextRefreshAt
         }
@@ -205,6 +267,9 @@ function parsePeers(content: string | null): FederationPeerRecord[] {
 
 function sortPeers(peers: FederationPeerRecord[]): FederationPeerRecord[] {
   return [...peers].sort((left, right) => {
+    if (left.nextLeaseRefreshAt !== right.nextLeaseRefreshAt) {
+      return left.nextLeaseRefreshAt < right.nextLeaseRefreshAt ? -1 : 1;
+    }
     if (left.nextRefreshAt !== right.nextRefreshAt) {
       return left.nextRefreshAt < right.nextRefreshAt ? -1 : 1;
     }
@@ -221,6 +286,73 @@ function buildPeerId(controlPlaneUrl: string, expectedNodeId?: string | null): s
 
 function computeBackoffMs(refreshIntervalMs: number, consecutiveFailureCount: number): number {
   return Math.min(refreshIntervalMs * 2 ** Math.max(0, consecutiveFailureCount), MAX_BACKOFF_MS);
+}
+
+function adaptiveLeaseBounds(peer: Pick<
+  FederationPeerRecord,
+  "configuredLeaseRefreshIntervalMs" | "leaseRefreshIntervalMs"
+>): {
+  minLeaseRefreshIntervalMs: number;
+  maxLeaseRefreshIntervalMs: number;
+} {
+  const configured = Math.max(2_000, peer.configuredLeaseRefreshIntervalMs);
+  return {
+    minLeaseRefreshIntervalMs: Math.max(2_000, Math.floor(configured * 0.5)),
+    maxLeaseRefreshIntervalMs: Math.min(MAX_BACKOFF_MS, Math.max(configured, configured * 4))
+  };
+}
+
+function tightenLeaseInterval(
+  peer: Pick<FederationPeerRecord, "configuredLeaseRefreshIntervalMs" | "leaseRefreshIntervalMs">,
+  factor = 0.72
+): number {
+  const bounds = adaptiveLeaseBounds(peer);
+  return Math.max(
+    bounds.minLeaseRefreshIntervalMs,
+    Math.round(peer.leaseRefreshIntervalMs * factor)
+  );
+}
+
+function relaxLeaseInterval(
+  peer: Pick<FederationPeerRecord, "configuredLeaseRefreshIntervalMs" | "leaseRefreshIntervalMs">,
+  factor = 1.16
+): number {
+  const bounds = adaptiveLeaseBounds(peer);
+  return Math.min(
+    bounds.maxLeaseRefreshIntervalMs,
+    Math.max(peer.configuredLeaseRefreshIntervalMs, Math.round(peer.leaseRefreshIntervalMs * factor))
+  );
+}
+
+function remoteExecutionSuccessRatio(peer: Pick<
+  FederationPeerRecord,
+  "remoteExecutionSuccessCount" | "remoteExecutionFailureCount"
+>): number {
+  const attempts = peer.remoteExecutionSuccessCount + peer.remoteExecutionFailureCount;
+  if (attempts <= 0) {
+    return 1;
+  }
+  return Number((((peer.remoteExecutionSuccessCount + 1) / (attempts + 2))).toFixed(4));
+}
+
+function remoteExecutionFailurePressure(peer: Pick<
+  FederationPeerRecord,
+  | "remoteExecutionSuccessCount"
+  | "remoteExecutionFailureCount"
+  | "remoteExecutionConsecutiveFailureCount"
+  | "lastRemoteExecutionStatus"
+>): number {
+  const attempts = peer.remoteExecutionSuccessCount + peer.remoteExecutionFailureCount;
+  if (attempts <= 0) {
+    return 0;
+  }
+  const successRatio = (peer.remoteExecutionSuccessCount + 1) / (attempts + 2);
+  return Math.min(
+    1,
+    (1 - successRatio) * 0.52 +
+      Math.min(1, peer.remoteExecutionConsecutiveFailureCount * 0.18) +
+      (peer.lastRemoteExecutionStatus === "failed" ? 0.1 : 0)
+  );
 }
 
 function trustExpiresAt(peer: FederationPeerRecord): string {
@@ -263,7 +395,9 @@ function buildPeerView(peer: FederationPeerRecord, now: string): FederationPeerV
     leaseStatus,
     leaseRefreshDue: peer.nextLeaseRefreshAt <= now,
     leaseTrustExpiresAt: leaseTrustExpiration,
-    leaseTrustRemainingMs
+    leaseTrustRemainingMs,
+    remoteExecutionSuccessRatio: remoteExecutionSuccessRatio(peer),
+    remoteExecutionFailurePressure: remoteExecutionFailurePressure(peer)
   };
 }
 
@@ -343,6 +477,8 @@ export function createFederationPeerRegistry(rootDir: string) {
             normalizeNullableString(args.authorizationToken) ?? existing?.authorizationToken ?? null,
           expectedNodeId: normalizeNullableString(args.expectedNodeId) ?? existing?.expectedNodeId ?? null,
           registeredAt: existing?.registeredAt ?? now,
+          configuredLeaseRefreshIntervalMs:
+            existing?.configuredLeaseRefreshIntervalMs ?? leaseRefreshIntervalMs,
           refreshIntervalMs,
           leaseRefreshIntervalMs,
           trustWindowMs,
@@ -363,6 +499,15 @@ export function createFederationPeerRegistry(rootDir: string) {
           leaseConsecutiveFailureCount: existing?.leaseConsecutiveFailureCount ?? 0,
           leaseObservedLatencyMs: existing?.leaseObservedLatencyMs ?? existing?.observedLatencyMs ?? null,
           leaseSmoothedLatencyMs: existing?.leaseSmoothedLatencyMs ?? existing?.smoothedLatencyMs ?? null,
+          lastLeaseJitterMs: existing?.lastLeaseJitterMs ?? null,
+          leaseRecoveryMode: existing?.leaseRecoveryMode ?? "steady",
+          remoteExecutionSuccessCount: existing?.remoteExecutionSuccessCount ?? 0,
+          remoteExecutionFailureCount: existing?.remoteExecutionFailureCount ?? 0,
+          remoteExecutionConsecutiveFailureCount: existing?.remoteExecutionConsecutiveFailureCount ?? 0,
+          lastRemoteExecutionAt: existing?.lastRemoteExecutionAt ?? null,
+          lastRemoteExecutionStatus: existing?.lastRemoteExecutionStatus ?? null,
+          lastRemoteExecutionError: existing?.lastRemoteExecutionError ?? null,
+          remoteExecutionSmoothedLatencyMs: existing?.remoteExecutionSmoothedLatencyMs ?? null,
           nextLeaseRefreshAt: existing?.nextLeaseRefreshAt ?? now
         };
         await writePeers(peers.filter((peer) => peer.peerId !== next.peerId && peer.controlPlaneUrl !== args.controlPlaneUrl).concat(next));
@@ -430,6 +575,7 @@ export function createFederationPeerRegistry(rootDir: string) {
     async markLeaseSuccess(args: {
       peerId: string;
       observedLatencyMs: number;
+      source?: "lease-renewal" | "membership-refresh";
       now?: string;
     }): Promise<FederationPeerView> {
       return withRegistryLock(async () => {
@@ -439,10 +585,56 @@ export function createFederationPeerRegistry(rootDir: string) {
         if (!existing) {
           throw new Error(`Unknown federation peer ${args.peerId}.`);
         }
+        const membershipSeed =
+          args.source === "membership-refresh" && Boolean(existing.lastLeaseSuccessAt);
+        if (membershipSeed) {
+          const next: FederationPeerRecord = {
+            ...existing,
+            lastLeaseSyncAt: now,
+            leaseObservedLatencyMs: Number(args.observedLatencyMs.toFixed(2)),
+            nextLeaseRefreshAt:
+              existing.nextLeaseRefreshAt < now ? now : existing.nextLeaseRefreshAt
+          };
+          await writePeers(peers.filter((peer) => peer.peerId !== args.peerId).concat(next));
+          return buildPeerView(next, now);
+        }
+        const previousSmoothedLatencyMs =
+          existing.leaseSmoothedLatencyMs ?? existing.smoothedLatencyMs ?? args.observedLatencyMs;
+        const jitterMs = Number(
+          Math.abs(args.observedLatencyMs - previousSmoothedLatencyMs).toFixed(2)
+        );
+        const worseningLatencyDeltaMs = Number(
+          Math.max(0, args.observedLatencyMs - previousSmoothedLatencyMs).toFixed(2)
+        );
+        const recovering =
+          existing.leaseRecoveryMode === "recovering" ||
+          (existing.lastLeaseFailureAt !== null &&
+            existing.lastLeaseFailureAt !== undefined &&
+            (!existing.lastLeaseSuccessAt ||
+              existing.lastLeaseFailureAt >= existing.lastLeaseSuccessAt));
+        const decayedRemoteExecutionConsecutiveFailures =
+          recovering && existing.remoteExecutionConsecutiveFailureCount > 0
+            ? Math.max(0, existing.remoteExecutionConsecutiveFailureCount - 1)
+            : existing.remoteExecutionConsecutiveFailureCount;
         const leaseSmoothedLatencyMs = smoothObservedLatency(
           existing.leaseSmoothedLatencyMs,
           args.observedLatencyMs
         );
+        const latencyBudgetMs = existing.maxObservedLatencyMs ?? Number.POSITIVE_INFINITY;
+        const recentRemoteFailurePressure = Math.min(
+          1,
+          decayedRemoteExecutionConsecutiveFailures * 0.22 +
+            (existing.lastRemoteExecutionStatus === "failed" ? 0.12 : 0)
+        );
+        const unstableRenewal =
+          args.observedLatencyMs > latencyBudgetMs ||
+          worseningLatencyDeltaMs > Math.max(12, previousSmoothedLatencyMs * 0.35) ||
+          recentRemoteFailurePressure >= 0.4;
+        const nextLeaseRefreshIntervalMs = unstableRenewal
+          ? tightenLeaseInterval(existing, 0.82)
+          : recovering
+            ? relaxLeaseInterval(existing, 1.18)
+            : relaxLeaseInterval(existing);
         const next: FederationPeerRecord = {
           ...existing,
           lastLeaseSyncAt: now,
@@ -451,7 +643,15 @@ export function createFederationPeerRegistry(rootDir: string) {
           leaseConsecutiveFailureCount: 0,
           leaseObservedLatencyMs: Number(args.observedLatencyMs.toFixed(2)),
           leaseSmoothedLatencyMs,
-          nextLeaseRefreshAt: new Date(Date.parse(now) + existing.leaseRefreshIntervalMs).toISOString()
+          lastLeaseJitterMs: jitterMs,
+          remoteExecutionConsecutiveFailureCount: decayedRemoteExecutionConsecutiveFailures,
+          leaseRecoveryMode: unstableRenewal
+            ? "tightened"
+            : nextLeaseRefreshIntervalMs < existing.configuredLeaseRefreshIntervalMs
+              ? "tightened"
+              : "steady",
+          leaseRefreshIntervalMs: nextLeaseRefreshIntervalMs,
+          nextLeaseRefreshAt: new Date(Date.parse(now) + nextLeaseRefreshIntervalMs).toISOString()
         };
         await writePeers(peers.filter((peer) => peer.peerId !== args.peerId).concat(next));
         return buildPeerView(next, now);
@@ -475,10 +675,71 @@ export function createFederationPeerRegistry(rootDir: string) {
           lastLeaseFailureAt: now,
           lastLeaseError: args.error.trim() || "unknown error",
           leaseConsecutiveFailureCount: existing.leaseConsecutiveFailureCount + 1,
+          leaseRecoveryMode: "recovering",
+          leaseRefreshIntervalMs: tightenLeaseInterval(existing, 0.62),
           nextLeaseRefreshAt: new Date(
             Date.parse(now) +
-              computeBackoffMs(existing.leaseRefreshIntervalMs, existing.leaseConsecutiveFailureCount)
+              computeBackoffMs(
+                tightenLeaseInterval(existing, 0.62),
+                existing.leaseConsecutiveFailureCount + 1
+              )
           ).toISOString()
+        };
+        await writePeers(peers.filter((peer) => peer.peerId !== args.peerId).concat(next));
+        return buildPeerView(next, now);
+      });
+    },
+    async recordExecutionOutcome(args: {
+      peerId: string;
+      status: "completed" | "failed";
+      latencyMs: number;
+      error?: string;
+      now?: string;
+    }): Promise<FederationPeerView> {
+      return withRegistryLock(async () => {
+        const now = args.now ?? new Date().toISOString();
+        const peers = await readPeers();
+        const existing = peers.find((peer) => peer.peerId === args.peerId);
+        if (!existing) {
+          throw new Error(`Unknown federation peer ${args.peerId}.`);
+        }
+        const isSuccess = args.status === "completed";
+        const nextSuccessCount = existing.remoteExecutionSuccessCount + (isSuccess ? 1 : 0);
+        const nextFailureCount = existing.remoteExecutionFailureCount + (isSuccess ? 0 : 1);
+        const nextConsecutiveFailures = isSuccess
+          ? 0
+          : existing.remoteExecutionConsecutiveFailureCount + 1;
+        const nextRefreshIntervalMs = isSuccess
+          ? existing.leaseRecoveryMode === "recovering"
+            ? Math.max(
+                adaptiveLeaseBounds(existing).minLeaseRefreshIntervalMs,
+                Math.round(existing.configuredLeaseRefreshIntervalMs * 0.9)
+              )
+            : existing.leaseRefreshIntervalMs
+          : tightenLeaseInterval(existing, 0.7);
+        const next: FederationPeerRecord = {
+          ...existing,
+          remoteExecutionSuccessCount: nextSuccessCount,
+          remoteExecutionFailureCount: nextFailureCount,
+          remoteExecutionConsecutiveFailureCount: nextConsecutiveFailures,
+          lastRemoteExecutionAt: now,
+          lastRemoteExecutionStatus: args.status,
+          lastRemoteExecutionError:
+            args.status === "failed" ? args.error?.trim() || "execution_failed" : null,
+          remoteExecutionSmoothedLatencyMs: smoothObservedLatency(
+            existing.remoteExecutionSmoothedLatencyMs,
+            Math.max(1, args.latencyMs)
+          ),
+          leaseRecoveryMode: isSuccess
+            ? existing.leaseRecoveryMode === "recovering"
+              ? "tightened"
+              : existing.leaseRecoveryMode
+            : "recovering",
+          leaseRefreshIntervalMs: nextRefreshIntervalMs,
+          nextLeaseRefreshAt:
+            args.status === "failed" && existing.nextLeaseRefreshAt > now
+              ? new Date(Date.parse(now) + adaptiveLeaseBounds(existing).minLeaseRefreshIntervalMs).toISOString()
+              : existing.nextLeaseRefreshAt
         };
         await writePeers(peers.filter((peer) => peer.peerId !== args.peerId).concat(next));
         return buildPeerView(next, now);

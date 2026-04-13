@@ -609,6 +609,9 @@ export type RoutingDecision = {
   decodeConfidence: number;
   cognitiveLatencyMs?: number;
   governancePressure: GovernancePressureLevel;
+  federationPressure?: GovernancePressureLevel;
+  federationObservedLatencyMs?: number;
+  federationRemoteSuccessRatio?: number;
   rationale: string;
   selectedAt: string;
 };
@@ -627,6 +630,9 @@ export type ExecutionArbitration = {
   routeModeHint: RoutingDecisionMode;
   decodeConfidence: number;
   governancePressure: GovernancePressureLevel;
+  federationPressure?: GovernancePressureLevel;
+  federationObservedLatencyMs?: number;
+  federationRemoteSuccessRatio?: number;
   objective: string;
   rationale: string;
   selectedAt: string;
@@ -647,6 +653,9 @@ export type ExecutionSchedule = {
   shouldDispatchActuation: boolean;
   decodeConfidence: number;
   governancePressure: GovernancePressureLevel;
+  federationPressure?: GovernancePressureLevel;
+  federationObservedLatencyMs?: number;
+  federationRemoteSuccessRatio?: number;
   estimatedLatencyMs: number;
   estimatedCost: number;
   objective: string;
@@ -1216,6 +1225,9 @@ export const routingDecisionSchema = z.object({
   decodeConfidence: z.number().nonnegative(),
   cognitiveLatencyMs: z.number().nonnegative().optional(),
   governancePressure: z.enum(governancePressureLevels),
+  federationPressure: z.enum(governancePressureLevels).optional(),
+  federationObservedLatencyMs: z.number().nonnegative().optional(),
+  federationRemoteSuccessRatio: z.number().nonnegative().max(1).optional(),
   rationale: z.string(),
   selectedAt: z.string()
 });
@@ -1234,6 +1246,9 @@ export const executionArbitrationSchema = z.object({
   routeModeHint: z.enum(routingDecisionModes),
   decodeConfidence: z.number().nonnegative(),
   governancePressure: z.enum(governancePressureLevels),
+  federationPressure: z.enum(governancePressureLevels).optional(),
+  federationObservedLatencyMs: z.number().nonnegative().optional(),
+  federationRemoteSuccessRatio: z.number().nonnegative().max(1).optional(),
   objective: z.string(),
   rationale: z.string(),
   selectedAt: z.string()
@@ -1254,6 +1269,9 @@ export const executionScheduleSchema = z.object({
   shouldDispatchActuation: z.boolean(),
   decodeConfidence: z.number().nonnegative(),
   governancePressure: z.enum(governancePressureLevels),
+  federationPressure: z.enum(governancePressureLevels).optional(),
+  federationObservedLatencyMs: z.number().nonnegative().optional(),
+  federationRemoteSuccessRatio: z.number().nonnegative().max(1).optional(),
   estimatedLatencyMs: z.number().nonnegative(),
   estimatedCost: z.number().nonnegative(),
   objective: z.string(),

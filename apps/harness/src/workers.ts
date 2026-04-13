@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import type { IntelligenceWorkerExecutionOutcomeSummary } from "./federation-pressure.js";
 import type { FederationPeerView } from "./federation-peers.js";
 import type { FederationSignatureAlgorithm } from "./federation.js";
 import type { NodeView } from "./node-registry.js";
@@ -54,6 +55,10 @@ export type IntelligenceWorkerView = IntelligenceWorkerRecord & {
   peerLeaseStatus?: FederationPeerView["leaseStatus"] | null;
   peerObservedLatencyMs?: number | null;
   peerTrustRemainingMs?: number;
+  executionAttemptCount?: number;
+  executionSuccessRatio?: number;
+  executionFailurePressure?: number;
+  executionSmoothedLatencyMs?: number | null;
 };
 
 export type IntelligenceWorkerAssignmentRequest = {
@@ -65,10 +70,13 @@ export type IntelligenceWorkerAssignmentRequest = {
   preferredNodeId?: string | null;
   preferredLocality?: string | null;
   preferredDeviceAffinityTags?: string[];
+  avoidPeerIds?: string[];
   maxObservedLatencyMs?: number | null;
   maxCostPerHourUsd?: number | null;
   nodeViews?: NodeView[];
   peerViews?: FederationPeerView[];
+  executionOutcomeSummaries?: IntelligenceWorkerExecutionOutcomeSummary[];
+  executionOutcomeSummaryMap?: Map<string, IntelligenceWorkerExecutionOutcomeSummary>;
 };
 
 export type IntelligenceWorkerAssignment = {
@@ -96,6 +104,10 @@ export type IntelligenceWorkerAssignment = {
   peerLeaseStatus?: FederationPeerView["leaseStatus"] | null;
   peerObservedLatencyMs?: number | null;
   peerTrustRemainingMs?: number | null;
+  executionAttemptCount?: number;
+  executionSuccessRatio?: number;
+  executionFailurePressure?: number;
+  executionSmoothedLatencyMs?: number | null;
 };
 
 export type IntelligenceWorkerSummary = {
@@ -190,6 +202,12 @@ function arraysEqual(left: string[], right: string[]): boolean {
 
 function buildNodeViewMap(nodeViews?: NodeView[]): Map<string, NodeView> {
   return new Map((nodeViews ?? []).map((node) => [node.nodeId, node]));
+}
+
+function buildExecutionOutcomeSummaryMap(
+  summaries?: IntelligenceWorkerExecutionOutcomeSummary[]
+): Map<string, IntelligenceWorkerExecutionOutcomeSummary> {
+  return new Map((summaries ?? []).map((summary) => [summary.workerId, summary]));
 }
 
 function matchWorkerPeerView(
@@ -425,6 +443,10 @@ function buildWorkerView(
 ): IntelligenceWorkerView {
   const node = worker.nodeId ? buildNodeViewMap(request?.nodeViews).get(worker.nodeId) : undefined;
   const peer = matchWorkerPeerView(worker, node, request?.peerViews);
+  const outcomeSummaryMap =
+    request?.executionOutcomeSummaryMap ??
+    buildExecutionOutcomeSummaryMap(request?.executionOutcomeSummaries);
+  const outcomeSummary = outcomeSummaryMap.get(worker.workerId);
   const resolvedLocality = worker.locality ?? node?.locality ?? null;
   const resolvedObservedLatencyMs =
     peer?.leaseSmoothedLatencyMs ??
@@ -452,6 +474,13 @@ function buildWorkerView(
   } else if (peer?.leaseStatus === "faulted") {
     healthStatus = "faulted";
     healthReason = "peer lease expired";
+  } else if (
+    worker.executionProfile === "remote" &&
+    peer?.leaseRecoveryMode === "recovering" &&
+    peer.remoteExecutionFailurePressure > 0
+  ) {
+    healthStatus = "stale";
+    healthReason = "peer execution recovering";
   } else if (node?.healthStatus === "faulted" || node?.healthStatus === "offline") {
     healthStatus = "faulted";
     healthReason = `node ${node.healthStatus}`;
@@ -534,7 +563,15 @@ function buildWorkerView(
     peerStatus: peer?.status ?? null,
     peerLeaseStatus: peer?.leaseStatus ?? null,
     peerObservedLatencyMs: peer?.leaseSmoothedLatencyMs ?? peer?.smoothedLatencyMs ?? null,
-    peerTrustRemainingMs: peer?.leaseTrustRemainingMs ?? peer?.trustRemainingMs ?? 0
+    peerTrustRemainingMs: peer?.leaseTrustRemainingMs ?? peer?.trustRemainingMs ?? 0,
+    executionAttemptCount: outcomeSummary?.attemptCount ?? 0,
+    executionSuccessRatio:
+      outcomeSummary?.successRatio ??
+      (worker.executionProfile === "remote" ? peer?.remoteExecutionSuccessRatio ?? 1 : 1),
+    executionFailurePressure:
+      outcomeSummary?.failurePressure ??
+      (worker.executionProfile === "remote" ? peer?.remoteExecutionFailurePressure ?? 0 : 0),
+    executionSmoothedLatencyMs: outcomeSummary?.smoothedLatencyMs ?? null
   };
 }
 
@@ -622,12 +659,18 @@ function selectWorker(
   request: IntelligenceWorkerAssignmentRequest,
   now: string
 ): { assignment: IntelligenceWorkerAssignment | null; workers: IntelligenceWorkerView[]; summary: IntelligenceWorkerSummary } {
+  const resolvedRequest: IntelligenceWorkerAssignmentRequest = {
+    ...request,
+    executionOutcomeSummaryMap:
+      request.executionOutcomeSummaryMap ??
+      buildExecutionOutcomeSummaryMap(request.executionOutcomeSummaries)
+  };
   const preferredLayerIds = [
-    request.recommendedLayerId?.trim() || null,
-    ...(request.preferredLayerIds ?? []).map((value) => value.trim()).filter(Boolean)
+    resolvedRequest.recommendedLayerId?.trim() || null,
+    ...(resolvedRequest.preferredLayerIds ?? []).map((value) => value.trim()).filter(Boolean)
   ].filter((value): value is string => Boolean(value));
 
-  const views = workers.map((worker) => buildWorkerView(worker, now, request));
+  const views = workers.map((worker) => buildWorkerView(worker, now, resolvedRequest));
   const summary = summarizeWorkers(views);
 
   const scored = views
@@ -636,31 +679,53 @@ function selectWorker(
       let score = 0;
       const reasons: string[] = [];
       if (
-        request.requestedExecutionDecision === "remote_required" &&
+        resolvedRequest.requestedExecutionDecision === "remote_required" &&
         worker.executionProfile === "remote"
       ) {
         score += 8;
         reasons.push("remote-capable");
       }
       if (
-        request.preferredNodeId &&
+        resolvedRequest.preferredNodeId &&
         worker.nodeId &&
-        worker.nodeId === request.preferredNodeId
+        worker.nodeId === resolvedRequest.preferredNodeId
       ) {
         score += 7;
-        reasons.push(`node ${request.preferredNodeId}`);
+        reasons.push(`node ${resolvedRequest.preferredNodeId}`);
       }
       if (
-        request.preferredLocality &&
+        resolvedRequest.preferredLocality &&
         worker.locality &&
-        worker.locality === request.preferredLocality
+        worker.locality === resolvedRequest.preferredLocality
       ) {
         score += 5;
-        reasons.push(`locality ${request.preferredLocality}`);
+        reasons.push(`locality ${resolvedRequest.preferredLocality}`);
+      }
+      if (
+        worker.peerId &&
+        normalizeStringArray(resolvedRequest.avoidPeerIds).includes(worker.peerId)
+      ) {
+        score -= 4;
+        reasons.push(`avoid-peer ${worker.peerId}`);
       }
       if (worker.identityVerified) {
         score += 9;
         reasons.push("identity verified");
+      }
+      if (
+        typeof worker.executionSuccessRatio === "number" &&
+        Number.isFinite(worker.executionSuccessRatio)
+      ) {
+        score += worker.executionSuccessRatio * 6;
+        reasons.push(`exec-success ${(worker.executionSuccessRatio * 100).toFixed(0)}%`);
+      }
+      if (
+        typeof worker.executionFailurePressure === "number" &&
+        Number.isFinite(worker.executionFailurePressure) &&
+        worker.executionFailurePressure > 0
+      ) {
+        score -= Math.min(10, worker.executionFailurePressure * 10);
+        reasons.push(`exec-pressure ${worker.executionFailurePressure.toFixed(2)}`);
       }
       if (worker.peerLeaseStatus === "healthy") {
         score += 4;
@@ -671,7 +736,7 @@ function selectWorker(
         reasons.push("peer trust healthy");
       }
       if (
-        request.requestedExecutionDecision !== "remote_required" &&
+        resolvedRequest.requestedExecutionDecision !== "remote_required" &&
         worker.executionProfile === "local"
       ) {
         score += 2;
@@ -680,8 +745,8 @@ function selectWorker(
       if (
         worker.executionProfile === "remote" &&
         worker.executionEndpoint &&
-        typeof request.target === "string" &&
-        /swarm|parallel/i.test(request.target)
+        typeof resolvedRequest.target === "string" &&
+        /swarm|parallel/i.test(resolvedRequest.target)
       ) {
         score += 4;
         reasons.push("swarm-offload");
@@ -693,11 +758,11 @@ function selectWorker(
         score += 6;
         reasons.push(`layer ${matchedLayer}`);
       }
-      if (request.baseModel && workerSupportsBaseModel(worker, request.baseModel)) {
+      if (resolvedRequest.baseModel && workerSupportsBaseModel(worker, resolvedRequest.baseModel)) {
         score += 3;
-        reasons.push(`model ${request.baseModel}`);
+        reasons.push(`model ${resolvedRequest.baseModel}`);
       }
-      const requestedAffinity = normalizeStringArray(request.preferredDeviceAffinityTags);
+      const requestedAffinity = normalizeStringArray(resolvedRequest.preferredDeviceAffinityTags);
       if (requestedAffinity.length > 0 && worker.deviceAffinityTags.length > 0) {
         const affinityMatches = requestedAffinity.filter((tag) => worker.deviceAffinityTags.includes(tag));
         if (affinityMatches.length > 0) {
@@ -708,6 +773,13 @@ function selectWorker(
       if (typeof worker.observedLatencyMs === "number" && Number.isFinite(worker.observedLatencyMs)) {
         score += Math.max(0, 8 - worker.observedLatencyMs / 10);
         reasons.push(`latency ${worker.observedLatencyMs.toFixed(1)}ms`);
+      }
+      if (
+        typeof worker.executionSmoothedLatencyMs === "number" &&
+        Number.isFinite(worker.executionSmoothedLatencyMs)
+      ) {
+        score += Math.max(0, 4 - worker.executionSmoothedLatencyMs / 900);
+        reasons.push(`exec-latency ${worker.executionSmoothedLatencyMs.toFixed(1)}ms`);
       }
       if (
         typeof worker.peerTrustRemainingMs === "number" &&
@@ -751,6 +823,27 @@ function selectWorker(
       summary
     };
   }
+  const competingFailurePressure = Math.max(
+    0,
+    ...scored
+      .slice(1)
+      .map((entry) =>
+        typeof entry.worker.executionFailurePressure === "number" &&
+        Number.isFinite(entry.worker.executionFailurePressure)
+          ? entry.worker.executionFailurePressure
+          : 0
+      )
+  );
+  if (
+    competingFailurePressure >
+      ((typeof winner.worker.executionFailurePressure === "number" &&
+      Number.isFinite(winner.worker.executionFailurePressure)
+        ? winner.worker.executionFailurePressure
+        : 0) + 0.12) &&
+    !winner.reason.includes("exec-pressure")
+  ) {
+    winner.reason = `${winner.reason} · exec-pressure avoided ${competingFailurePressure.toFixed(2)}`;
+  }
   return {
     assignment: {
       workerId: winner.worker.workerId,
@@ -773,7 +866,11 @@ function selectWorker(
       peerStatus: winner.worker.peerStatus ?? null,
       peerLeaseStatus: winner.worker.peerLeaseStatus ?? null,
       peerObservedLatencyMs: winner.worker.peerObservedLatencyMs ?? null,
-      peerTrustRemainingMs: winner.worker.peerTrustRemainingMs ?? null
+      peerTrustRemainingMs: winner.worker.peerTrustRemainingMs ?? null,
+      executionAttemptCount: winner.worker.executionAttemptCount ?? 0,
+      executionSuccessRatio: winner.worker.executionSuccessRatio ?? 1,
+      executionFailurePressure: winner.worker.executionFailurePressure ?? 0,
+      executionSmoothedLatencyMs: winner.worker.executionSmoothedLatencyMs ?? null
     },
     workers: views,
     summary
@@ -800,12 +897,13 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
     async listWorkers(
       now?: string,
       nodeViews?: NodeView[],
-      peerViews?: FederationPeerView[]
+      peerViews?: FederationPeerView[],
+      executionOutcomeSummaries?: IntelligenceWorkerExecutionOutcomeSummary[]
     ): Promise<IntelligenceWorkerView[]> {
       return withRegistryLock(async () => {
         const at = now ?? new Date().toISOString();
         return (await readWorkers(at)).map((worker) =>
-          buildWorkerView(worker, at, { nodeViews, peerViews })
+          buildWorkerView(worker, at, { nodeViews, peerViews, executionOutcomeSummaries })
         );
       });
     },
@@ -1089,7 +1187,9 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
         const reservedWorker = applyAssignmentLease(selected, now, request.target);
         const updated = workers.filter((worker) => worker.workerId !== selected.workerId).concat(reservedWorker);
         await writeWorkers(updated);
-        const updatedViews = sortWorkers(updated).map((worker) => buildWorkerView(worker, now, request));
+        const updatedViews = sortWorkers(updated).map((worker) =>
+          buildWorkerView(worker, now, request)
+        );
         return {
           workers: updatedViews,
           summary: summarizeWorkers(updatedViews),
@@ -1111,7 +1211,12 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
             peerStatus: selection.assignment.peerStatus ?? null,
             peerLeaseStatus: selection.assignment.peerLeaseStatus ?? null,
             peerObservedLatencyMs: selection.assignment.peerObservedLatencyMs ?? null,
-            peerTrustRemainingMs: selection.assignment.peerTrustRemainingMs ?? null
+            peerTrustRemainingMs: selection.assignment.peerTrustRemainingMs ?? null,
+            executionAttemptCount: selection.assignment.executionAttemptCount ?? 0,
+            executionSuccessRatio: selection.assignment.executionSuccessRatio ?? 1,
+            executionFailurePressure: selection.assignment.executionFailurePressure ?? 0,
+            executionSmoothedLatencyMs:
+              selection.assignment.executionSmoothedLatencyMs ?? null
           }
         };
       });

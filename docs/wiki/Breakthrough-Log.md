@@ -21,6 +21,34 @@ For each breakthrough, record:
 
 ### 2026-04-13
 
+#### Adaptive federated execution pressure became a real runtime control law
+
+What changed:
+- federation peers now persist remote execution outcome history alongside lease health, so placement can read success ratio, failure pressure, and smoothed execution latency instead of only lease freshness
+- signed lease cadence now adapts in both directions: failed remote execution and failed lease renewal tighten the renewal interval, while healthy signed renewals relax it again
+- arbitration, scheduling, and routing now all carry federated pressure fields, so cross-node latency and remote execution quality are visible in the durable decision path rather than trapped inside worker scoring
+- multi-peer swarm reservation now widens across authenticated peers under one real guarded-swarm batch, so federated swarm execution is no longer only a local-host truthfulness story
+
+Why it matters:
+- this closes the next honesty gap in federation: the system no longer waits for membership expiry before learning that a peer is a bad execution target
+- the missed systems pattern was that distributed control has at least three clocks, not two: membership truth, lease/liveness truth, and execution-quality truth
+- once remote execution outcomes join lease latency in the same control loop, placement becomes adaptive pressure management instead of static import ranking plus timeout cleanup
+
+Evidence:
+- `npm run typecheck`, `npm run build`, and `npm run benchmark:gate:all` all passed again on `2026-04-13` after the adaptive federated execution pressure pass
+- the benchmark gate now proves five new properties together: federated arbitration pressure, federated scheduling pressure, adaptive lease cadence, worker assignment under execution failure pressure, and routing behavior under federated pressure
+- a live three-peer drill on `127.0.0.1:9011-9013` with delayed federation proxies on `9112-9113` and delayed remote execution proxies on `9212-9213` proved the runtime path:
+- guarded swarm cognition widened across both authenticated peers in one real `parallel-then-guard` batch
+- after lease latency inversion, the next `remote_required` cognition run flipped to the other peer
+- after one failed remote execution on peer `node-127-0-0-1-9012`, placement shifted to peer `node-127-0-0-1-9013` on the next attempt with recorded failure pressure `0.4167`
+- after a forced lease failure on peer `node-127-0-0-1-9012`, lease recovery mode moved to `recovering`, cadence tightened from `3168 ms` to `2000 ms`, and then relaxed back to `4526 ms` after healthy signed renewals restored lease status to `healthy`
+- one real bug fell out during that drill and is now fixed: a peer that had just failed execution could still win again on raw lease latency; execution recovery now gates placement until signed renewal has bled the stale failure pressure back down
+
+What this unlocks next:
+- longer-horizon federated control that can weigh rolling execution quality, cost, and locality without collapsing into hardcoded peer preference
+- broader multi-peer swarm routing where cross-node latency becomes a durable orchestration signal across more than two peers
+- future federated backend diversity where peer choice can be learned from the same runtime evidence instead of bolted on as a separate scorer
+
 #### Authenticated federation gained a second live control loop: signed lease renewal now drives placement directly
 
 What changed:
