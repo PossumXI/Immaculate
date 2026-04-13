@@ -14,6 +14,7 @@
     "benchmark:soak:60m": "tsx src/benchmark-cli.ts --pack=latency-soak-60m",
     "benchmark:temporal": "tsx src/benchmark-cli.ts --pack=temporal-baseline",
     "benchmark:export:wandb": "tsx src/wandb-export-cli.ts",
+    "ollama:alias:q": "tsx src/q-alias-cli.ts --",
     "training-data:curate": "tsx src/training-data-cli.ts",
     "training-data:list": "tsx src/training-data-cli.ts list",
     "training-data:show": "tsx src/training-data-cli.ts show",

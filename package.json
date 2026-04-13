@@ -18,6 +18,7 @@
     "benchmark:soak:60m": "npm run benchmark -w @immaculate/harness -- --pack=latency-soak-60m",
     "benchmark:temporal": "npm run benchmark -w @immaculate/harness -- --pack=temporal-baseline",
     "benchmark:export:wandb": "npm run benchmark:export:wandb -w @immaculate/harness",
+    "ollama:alias:q": "tsx ./apps/harness/src/q-alias-cli.ts --",
     "training-data:curate": "tsx ./apps/harness/src/training-data-cli.ts curate",
     "training-data:list": "tsx ./apps/harness/src/training-data-cli.ts list",
     "training-data:show": "tsx ./apps/harness/src/training-data-cli.ts show",

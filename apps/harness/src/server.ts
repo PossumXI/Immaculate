@@ -88,6 +88,7 @@ import {
   deriveGovernancePressure,
   planAdaptiveRoute
 } from "./routing.js";
+import { emitHarnessStartupBanner } from "./startup-banner.js";
 import {
   createIntelligenceWorkerRegistry,
   type IntelligenceWorkerAssignment,
@@ -6082,6 +6083,14 @@ process.on("SIGTERM", () => {
 await app.listen({
   port: HARNESS_PORT,
   host: HARNESS_HOST
+});
+
+emitHarnessStartupBanner({
+  host: HARNESS_HOST,
+  port: HARNESS_PORT,
+  tickIntervalMs,
+  ollamaUrl: LOCAL_OLLAMA_ENDPOINT,
+  configuredModel: process.env.IMMACULATE_OLLAMA_MODEL
 });
 
 startTicker();

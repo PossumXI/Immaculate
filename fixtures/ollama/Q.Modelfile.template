@@ -1,0 +1,3 @@
+# Local Immaculate alias for Q
+# This preserves the base model and only changes the local Ollama model name.
+FROM {{BASE_MODEL}}

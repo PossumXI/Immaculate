@@ -7,6 +7,11 @@ import {
   type IntelligenceLayerRole,
   type PhaseSnapshot
 } from "@immaculate/core";
+import {
+  expandOllamaAliasSearchText,
+  matchAliasedOllamaModel,
+  resolveQAliasSpecification
+} from "./ollama-alias.js";
 
 type OllamaModelDetails = {
   family?: string;
@@ -82,7 +87,7 @@ function layerIdForModel(model: string, role: IntelligenceLayerRole): string {
 }
 
 function modelSearchText(model: OllamaModelRecord): string {
-  return [
+  const baseSearchText = [
     model.name,
     model.model,
     model.details?.family,
@@ -92,6 +97,8 @@ function modelSearchText(model: OllamaModelRecord): string {
     .filter(Boolean)
     .join(" ")
     .toLowerCase();
+
+  return expandOllamaAliasSearchText(model.name ?? model.model ?? "", baseSearchText);
 }
 
 function parseModelScale(model: OllamaModelRecord): number {
@@ -138,7 +145,9 @@ function pickPreferredModel(
   const preferredModel = explicitModel ?? DEFAULT_MODEL;
   if (preferredModel) {
     return (
-      models.find((model) => model.name === preferredModel || model.model === preferredModel) ?? null
+      models.find((model) => model.name === preferredModel || model.model === preferredModel) ??
+      matchAliasedOllamaModel(models, preferredModel, modelSearchText) ??
+      null
     );
   }
 
@@ -209,9 +218,11 @@ export async function discoverPreferredOllamaLayer(
   }
 
   const modelName = preferred.name;
+  const qAlias = resolveQAliasSpecification();
+  const layerLabel = modelName === qAlias.baseModel ? qAlias.displayName : modelName;
   return {
     id: layerIdForModel(modelName, role),
-    name: `${modelName} ${role === "mid" ? "Mid Layer" : role === "reasoner" ? "Reasoner Layer" : `${role} Layer`}`,
+    name: `${layerLabel} ${role === "mid" ? "Mid Layer" : role === "reasoner" ? "Reasoner Layer" : `${role} Layer`}`,
     backend: "ollama",
     model: modelName,
     role,
