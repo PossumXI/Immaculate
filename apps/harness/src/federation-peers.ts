@@ -12,6 +12,7 @@ export type FederationPeerRecord = {
   expectedNodeId?: string | null;
   registeredAt: string;
   refreshIntervalMs: number;
+  leaseRefreshIntervalMs: number;
   trustWindowMs: number;
   maxObservedLatencyMs?: number | null;
   lastSyncAt?: string | null;
@@ -22,6 +23,14 @@ export type FederationPeerRecord = {
   observedLatencyMs?: number | null;
   smoothedLatencyMs?: number | null;
   nextRefreshAt: string;
+  lastLeaseSyncAt?: string | null;
+  lastLeaseSuccessAt?: string | null;
+  lastLeaseFailureAt?: string | null;
+  lastLeaseError?: string | null;
+  leaseConsecutiveFailureCount: number;
+  leaseObservedLatencyMs?: number | null;
+  leaseSmoothedLatencyMs?: number | null;
+  nextLeaseRefreshAt: string;
 };
 
 export type FederationPeerView = Omit<FederationPeerRecord, "authorizationToken"> & {
@@ -30,6 +39,10 @@ export type FederationPeerView = Omit<FederationPeerRecord, "authorizationToken"
   refreshDue: boolean;
   trustExpiresAt: string;
   trustRemainingMs: number;
+  leaseStatus: FederationPeerStatus;
+  leaseRefreshDue: boolean;
+  leaseTrustExpiresAt: string;
+  leaseTrustRemainingMs: number;
 };
 
 type FederationPeerRegistryState = {
@@ -37,6 +50,7 @@ type FederationPeerRegistryState = {
 };
 
 const DEFAULT_REFRESH_INTERVAL_MS = 10_000;
+const DEFAULT_LEASE_REFRESH_INTERVAL_MS = 4_000;
 const DEFAULT_TRUST_WINDOW_MS = 45_000;
 const MAX_BACKOFF_MS = 300_000;
 const SMOOTHING_ALPHA = 0.35;
@@ -124,9 +138,16 @@ function parsePeers(content: string | null): FederationPeerRecord[] {
         typeof candidate.controlPlaneUrl !== "string" ||
         typeof candidate.registeredAt !== "string" ||
         typeof candidate.refreshIntervalMs !== "number" ||
+        (candidate.leaseRefreshIntervalMs !== undefined &&
+          typeof candidate.leaseRefreshIntervalMs !== "number") ||
         typeof candidate.trustWindowMs !== "number" ||
         typeof candidate.consecutiveFailureCount !== "number" ||
-        typeof candidate.nextRefreshAt !== "string"
+        typeof candidate.nextRefreshAt !== "string" ||
+        (candidate.leaseConsecutiveFailureCount !== undefined &&
+          typeof candidate.leaseConsecutiveFailureCount !== "number") ||
+        (candidate.nextLeaseRefreshAt !== undefined &&
+          candidate.nextLeaseRefreshAt !== null &&
+          typeof candidate.nextLeaseRefreshAt !== "string")
       ) {
         return [];
       }
@@ -138,6 +159,12 @@ function parsePeers(content: string | null): FederationPeerRecord[] {
           expectedNodeId: normalizeNullableString(candidate.expectedNodeId),
           registeredAt: candidate.registeredAt,
           refreshIntervalMs: candidate.refreshIntervalMs,
+          leaseRefreshIntervalMs:
+            typeof candidate.leaseRefreshIntervalMs === "number" &&
+            Number.isFinite(candidate.leaseRefreshIntervalMs) &&
+            candidate.leaseRefreshIntervalMs > 0
+              ? candidate.leaseRefreshIntervalMs
+              : Math.max(2_000, Math.min(candidate.refreshIntervalMs, DEFAULT_LEASE_REFRESH_INTERVAL_MS)),
           trustWindowMs: candidate.trustWindowMs,
           maxObservedLatencyMs: normalizeNullableNumber(candidate.maxObservedLatencyMs),
           lastSyncAt: normalizeNullableString(candidate.lastSyncAt),
@@ -150,7 +177,24 @@ function parsePeers(content: string | null): FederationPeerRecord[] {
               : 0,
           observedLatencyMs: normalizeNullableNumber(candidate.observedLatencyMs),
           smoothedLatencyMs: normalizeNullableNumber(candidate.smoothedLatencyMs),
-          nextRefreshAt: candidate.nextRefreshAt
+          nextRefreshAt: candidate.nextRefreshAt,
+          lastLeaseSyncAt: normalizeNullableString(candidate.lastLeaseSyncAt ?? candidate.lastSyncAt),
+          lastLeaseSuccessAt: normalizeNullableString(candidate.lastLeaseSuccessAt ?? candidate.lastSuccessAt),
+          lastLeaseFailureAt: normalizeNullableString(candidate.lastLeaseFailureAt),
+          lastLeaseError: normalizeNullableString(candidate.lastLeaseError),
+          leaseConsecutiveFailureCount:
+            Number.isFinite(candidate.leaseConsecutiveFailureCount) &&
+            (candidate.leaseConsecutiveFailureCount ?? 0) >= 0
+              ? (candidate.leaseConsecutiveFailureCount as number)
+              : 0,
+          leaseObservedLatencyMs: normalizeNullableNumber(
+            candidate.leaseObservedLatencyMs ?? candidate.observedLatencyMs
+          ),
+          leaseSmoothedLatencyMs: normalizeNullableNumber(
+            candidate.leaseSmoothedLatencyMs ?? candidate.smoothedLatencyMs
+          ),
+          nextLeaseRefreshAt:
+            normalizeNullableString(candidate.nextLeaseRefreshAt) ?? candidate.nextRefreshAt
         }
       ];
     });
@@ -175,8 +219,8 @@ function buildPeerId(controlPlaneUrl: string, expectedNodeId?: string | null): s
   return `peer-${hashValue(controlPlaneUrl)}`;
 }
 
-function computeBackoffMs(peer: FederationPeerRecord): number {
-  return Math.min(peer.refreshIntervalMs * 2 ** Math.max(0, peer.consecutiveFailureCount), MAX_BACKOFF_MS);
+function computeBackoffMs(refreshIntervalMs: number, consecutiveFailureCount: number): number {
+  return Math.min(refreshIntervalMs * 2 ** Math.max(0, consecutiveFailureCount), MAX_BACKOFF_MS);
 }
 
 function trustExpiresAt(peer: FederationPeerRecord): string {
@@ -184,23 +228,42 @@ function trustExpiresAt(peer: FederationPeerRecord): string {
   return new Date(Date.parse(anchor) + peer.trustWindowMs).toISOString();
 }
 
+function leaseTrustExpiresAt(peer: FederationPeerRecord): string {
+  const anchor = peer.lastLeaseSuccessAt ?? peer.lastSuccessAt ?? peer.registeredAt;
+  return new Date(Date.parse(anchor) + peer.trustWindowMs).toISOString();
+}
+
 function buildPeerView(peer: FederationPeerRecord, now: string): FederationPeerView {
   const { authorizationToken: _authorizationToken, ...publicPeer } = peer;
   const trustExpiration = trustExpiresAt(peer);
   const trustRemainingMs = Math.max(0, Date.parse(trustExpiration) - Date.parse(now));
-  let status: FederationPeerStatus = "healthy";
+  const leaseTrustExpiration = leaseTrustExpiresAt(peer);
+  const leaseTrustRemainingMs = Math.max(0, Date.parse(leaseTrustExpiration) - Date.parse(now));
+  let membershipStatus: FederationPeerStatus = "healthy";
   if (trustRemainingMs <= 0) {
-    status = "faulted";
+    membershipStatus = "faulted";
   } else if (trustRemainingMs <= Math.max(2_000, Math.floor(peer.trustWindowMs * 0.25))) {
-    status = "stale";
+    membershipStatus = "stale";
+  }
+  let leaseStatus: FederationPeerStatus = "healthy";
+  if (leaseTrustRemainingMs <= 0) {
+    leaseStatus = "faulted";
+  } else if (
+    leaseTrustRemainingMs <= Math.max(2_000, Math.floor(peer.trustWindowMs * 0.25))
+  ) {
+    leaseStatus = "stale";
   }
   return {
     ...publicPeer,
     authorizationConfigured: Boolean(peer.authorizationToken?.trim()),
-    status,
+    status: membershipStatus,
     refreshDue: peer.nextRefreshAt <= now,
     trustExpiresAt: trustExpiration,
-    trustRemainingMs
+    trustRemainingMs,
+    leaseStatus,
+    leaseRefreshDue: peer.nextLeaseRefreshAt <= now,
+    leaseTrustExpiresAt: leaseTrustExpiration,
+    leaseTrustRemainingMs
   };
 }
 
@@ -249,6 +312,7 @@ export function createFederationPeerRegistry(rootDir: string) {
       authorizationToken?: string | null;
       expectedNodeId?: string | null;
       refreshIntervalMs?: number;
+      leaseRefreshIntervalMs?: number;
       trustWindowMs?: number;
       maxObservedLatencyMs?: number | null;
       now?: string;
@@ -259,6 +323,12 @@ export function createFederationPeerRegistry(rootDir: string) {
           typeof args.refreshIntervalMs === "number" && Number.isFinite(args.refreshIntervalMs) && args.refreshIntervalMs > 0
             ? Number(args.refreshIntervalMs)
             : DEFAULT_REFRESH_INTERVAL_MS;
+        const leaseRefreshIntervalMs =
+          typeof args.leaseRefreshIntervalMs === "number" &&
+          Number.isFinite(args.leaseRefreshIntervalMs) &&
+          args.leaseRefreshIntervalMs > 0
+            ? Number(args.leaseRefreshIntervalMs)
+            : Math.max(2_000, Math.min(refreshIntervalMs, DEFAULT_LEASE_REFRESH_INTERVAL_MS));
         const trustWindowMs =
           typeof args.trustWindowMs === "number" && Number.isFinite(args.trustWindowMs) && args.trustWindowMs > 0
             ? Number(args.trustWindowMs)
@@ -274,6 +344,7 @@ export function createFederationPeerRegistry(rootDir: string) {
           expectedNodeId: normalizeNullableString(args.expectedNodeId) ?? existing?.expectedNodeId ?? null,
           registeredAt: existing?.registeredAt ?? now,
           refreshIntervalMs,
+          leaseRefreshIntervalMs,
           trustWindowMs,
           maxObservedLatencyMs:
             normalizeNullableNumber(args.maxObservedLatencyMs) ?? existing?.maxObservedLatencyMs ?? null,
@@ -284,7 +355,15 @@ export function createFederationPeerRegistry(rootDir: string) {
           consecutiveFailureCount: existing?.consecutiveFailureCount ?? 0,
           observedLatencyMs: existing?.observedLatencyMs ?? null,
           smoothedLatencyMs: existing?.smoothedLatencyMs ?? null,
-          nextRefreshAt: existing?.nextRefreshAt ?? now
+          nextRefreshAt: existing?.nextRefreshAt ?? now,
+          lastLeaseSyncAt: existing?.lastLeaseSyncAt ?? existing?.lastSyncAt ?? null,
+          lastLeaseSuccessAt: existing?.lastLeaseSuccessAt ?? existing?.lastSuccessAt ?? null,
+          lastLeaseFailureAt: existing?.lastLeaseFailureAt ?? null,
+          lastLeaseError: existing?.lastLeaseError ?? null,
+          leaseConsecutiveFailureCount: existing?.leaseConsecutiveFailureCount ?? 0,
+          leaseObservedLatencyMs: existing?.leaseObservedLatencyMs ?? existing?.observedLatencyMs ?? null,
+          leaseSmoothedLatencyMs: existing?.leaseSmoothedLatencyMs ?? existing?.smoothedLatencyMs ?? null,
+          nextLeaseRefreshAt: existing?.nextLeaseRefreshAt ?? now
         };
         await writePeers(peers.filter((peer) => peer.peerId !== next.peerId && peer.controlPlaneUrl !== args.controlPlaneUrl).concat(next));
         return buildPeerView(next, now);
@@ -313,6 +392,9 @@ export function createFederationPeerRegistry(rootDir: string) {
           consecutiveFailureCount: 0,
           observedLatencyMs: Number(args.observedLatencyMs.toFixed(2)),
           smoothedLatencyMs,
+          lastLeaseSyncAt: existing.lastLeaseSyncAt ?? now,
+          lastLeaseSuccessAt: existing.lastLeaseSuccessAt ?? now,
+          lastLeaseError: existing.lastLeaseError ?? null,
           nextRefreshAt: new Date(Date.parse(now) + existing.refreshIntervalMs).toISOString()
         };
         await writePeers(peers.filter((peer) => peer.peerId !== args.peerId).concat(next));
@@ -337,7 +419,66 @@ export function createFederationPeerRegistry(rootDir: string) {
           lastFailureAt: now,
           lastError: args.error.trim() || "unknown error",
           consecutiveFailureCount: existing.consecutiveFailureCount + 1,
-          nextRefreshAt: new Date(Date.parse(now) + computeBackoffMs(existing)).toISOString()
+          nextRefreshAt: new Date(
+            Date.parse(now) + computeBackoffMs(existing.refreshIntervalMs, existing.consecutiveFailureCount)
+          ).toISOString()
+        };
+        await writePeers(peers.filter((peer) => peer.peerId !== args.peerId).concat(next));
+        return buildPeerView(next, now);
+      });
+    },
+    async markLeaseSuccess(args: {
+      peerId: string;
+      observedLatencyMs: number;
+      now?: string;
+    }): Promise<FederationPeerView> {
+      return withRegistryLock(async () => {
+        const now = args.now ?? new Date().toISOString();
+        const peers = await readPeers();
+        const existing = peers.find((peer) => peer.peerId === args.peerId);
+        if (!existing) {
+          throw new Error(`Unknown federation peer ${args.peerId}.`);
+        }
+        const leaseSmoothedLatencyMs = smoothObservedLatency(
+          existing.leaseSmoothedLatencyMs,
+          args.observedLatencyMs
+        );
+        const next: FederationPeerRecord = {
+          ...existing,
+          lastLeaseSyncAt: now,
+          lastLeaseSuccessAt: now,
+          lastLeaseError: null,
+          leaseConsecutiveFailureCount: 0,
+          leaseObservedLatencyMs: Number(args.observedLatencyMs.toFixed(2)),
+          leaseSmoothedLatencyMs,
+          nextLeaseRefreshAt: new Date(Date.parse(now) + existing.leaseRefreshIntervalMs).toISOString()
+        };
+        await writePeers(peers.filter((peer) => peer.peerId !== args.peerId).concat(next));
+        return buildPeerView(next, now);
+      });
+    },
+    async markLeaseFailure(args: {
+      peerId: string;
+      error: string;
+      now?: string;
+    }): Promise<FederationPeerView> {
+      return withRegistryLock(async () => {
+        const now = args.now ?? new Date().toISOString();
+        const peers = await readPeers();
+        const existing = peers.find((peer) => peer.peerId === args.peerId);
+        if (!existing) {
+          throw new Error(`Unknown federation peer ${args.peerId}.`);
+        }
+        const next: FederationPeerRecord = {
+          ...existing,
+          lastLeaseSyncAt: now,
+          lastLeaseFailureAt: now,
+          lastLeaseError: args.error.trim() || "unknown error",
+          leaseConsecutiveFailureCount: existing.leaseConsecutiveFailureCount + 1,
+          nextLeaseRefreshAt: new Date(
+            Date.parse(now) +
+              computeBackoffMs(existing.leaseRefreshIntervalMs, existing.leaseConsecutiveFailureCount)
+          ).toISOString()
         };
         await writePeers(peers.filter((peer) => peer.peerId !== args.peerId).concat(next));
         return buildPeerView(next, now);

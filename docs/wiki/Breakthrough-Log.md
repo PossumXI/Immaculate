@@ -21,6 +21,32 @@ For each breakthrough, record:
 
 ### 2026-04-13
 
+#### Authenticated federation gained a second live control loop: signed lease renewal now drives placement directly
+
+What changed:
+- federation now exports a dedicated signed lease surface alongside signed membership, so topology sync and liveness renewal are no longer the same control path
+- peer records now persist separate lease-refresh cadence, lease-smoothed latency, lease trust remaining, and lease failure history instead of collapsing everything into one membership timestamp
+- remote worker placement now consumes peer lease freshness and peer-smoothed latency directly, so renewed cross-node latency can outrank stale import-time node latency in live assignment
+- execution lineage now records assigned peer identity and peer lease state next to worker/node placement metadata, so the runtime can prove which federated control path won
+
+Why it matters:
+- this closes the next federation honesty gap: signed membership proved who a peer was, but it still left liveness and routing pressure trapped behind a slower topology sync loop
+- the missed systems pattern was that distributed placement needs two clocks, not one: slow-changing membership truth and fast-changing lease/latency truth
+- once lease renewal becomes a first-class signal, multi-peer placement stops being a static import ranking and becomes a live control decision
+
+Evidence:
+- `npm run typecheck`, `npm run build`, and `npm run benchmark:gate:all` all passed again on `2026-04-13` after the lease-renewal and multi-peer placement pass
+- the benchmark gate now includes a dedicated inversion proof: after authenticated peer renewals flip the live latency signal, placement flips from the near peer to the now-faster peer instead of sticking to the original import order
+- a live three-node drill on `127.0.0.1:8971-8973` with delayed federation proxies on `9072-9073` proved the runtime path:
+- initial `remote_required` placement chose peer `smoke-node-a` with peer latency `94.49 ms`
+- after four signed lease renewals with swapped proxy delay, placement flipped to peer `smoke-node-b` with peer latency `41.71 ms`
+- the final peer lease-smoothed latencies were `217.10 ms` for `smoke-node-a` and `41.71 ms` for `smoke-node-b`, which is the concrete control signal that drove the flip
+
+What this unlocks next:
+- signed lease recovery and adaptive renewal where the cadence itself can tighten or relax under cross-node instability
+- broader multi-peer placement that can combine live lease latency with device affinity, execution cost, and eventually measured remote execution success
+- future mesh coordination where worker routing depends on live federation pressure instead of a one-time membership import
+
 #### Authenticated federation crossed from signed import into renewing trust and stale-state eviction
 
 What changed:

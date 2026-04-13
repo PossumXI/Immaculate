@@ -46,6 +46,19 @@ export type FederationWorkerIdentityPayload = {
   deviceAffinityTags: string[];
 };
 
+export type FederationNodeLeasePayload = {
+  nodeId: string;
+  heartbeatAt: string;
+  leaseDurationMs: number;
+};
+
+export type FederationWorkerLeasePayload = {
+  workerId: string;
+  nodeId: string;
+  heartbeatAt: string;
+  leaseDurationMs: number;
+};
+
 function canonicalize(value: unknown): string {
   if (value === null || typeof value !== "object") {
     return JSON.stringify(value);

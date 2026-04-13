@@ -1674,6 +1674,61 @@ export async function runPublishedBenchmark(
     costPerHourUsd: 0.18,
     deviceAffinityTags: ["swarm", "cpu-rack-b"]
   }, workerLocalityNodeViews);
+  const federationPeerRegistry = createFederationPeerRegistry(
+    path.join(runtimeDir, "federation-peer-plane")
+  );
+  const federationRegisteredNearPeer = await federationPeerRegistry.registerPeer({
+    controlPlaneUrl: "http://127.0.0.1:9788",
+    expectedNodeId: workerLocalityNearNode.nodeId,
+    refreshIntervalMs: 10_000,
+    leaseRefreshIntervalMs: 4_000,
+    trustWindowMs: 15_000,
+    maxObservedLatencyMs: 50,
+    now: workerRegistryNow
+  });
+  const federationRegisteredFarPeer = await federationPeerRegistry.registerPeer({
+    controlPlaneUrl: "http://127.0.0.1:9789",
+    expectedNodeId: workerLocalityFarNode.nodeId,
+    refreshIntervalMs: 10_000,
+    leaseRefreshIntervalMs: 4_000,
+    trustWindowMs: 15_000,
+    maxObservedLatencyMs: 50,
+    now: workerRegistryNow
+  });
+  const federationPeerSuccessFirst = await federationPeerRegistry.markRefreshSuccess({
+    peerId: federationRegisteredNearPeer.peerId,
+    expectedNodeId: workerLocalityNearNode.nodeId,
+    observedLatencyMs: 48,
+    now: workerRegistryNow
+  });
+  const federationRenewedAt = new Date(Date.parse(workerRegistryNow) + 10_000).toISOString();
+  await federationPeerRegistry.markRefreshSuccess({
+    peerId: federationRegisteredNearPeer.peerId,
+    expectedNodeId: workerLocalityNearNode.nodeId,
+    observedLatencyMs: 18,
+    now: federationRenewedAt
+  });
+  await federationPeerRegistry.markRefreshSuccess({
+    peerId: federationRegisteredFarPeer.peerId,
+    expectedNodeId: workerLocalityFarNode.nodeId,
+    observedLatencyMs: 34,
+    now: federationRenewedAt
+  });
+  const federationPeerSuccessSecond = await federationPeerRegistry.markLeaseSuccess({
+    peerId: federationRegisteredNearPeer.peerId,
+    observedLatencyMs: 18,
+    now: federationRenewedAt
+  });
+  const federationPeerFarHealthy = await federationPeerRegistry.markLeaseSuccess({
+    peerId: federationRegisteredFarPeer.peerId,
+    observedLatencyMs: 34,
+    now: federationRenewedAt
+  });
+  const federationPeerViewsInitial = await federationPeerRegistry.listPeers(federationRenewedAt);
+  const federationPeerAfterRenewal = await federationPeerRegistry.getPeer(
+    federationRegisteredNearPeer.peerId,
+    federationRenewedAt
+  );
   const localityAssignment = await workerLocalityRegistry.assignWorker({
     requestedExecutionDecision: "remote_required",
     baseModel: benchmarkLayer.model,
@@ -1684,44 +1739,63 @@ export async function runPublishedBenchmark(
     preferredDeviceAffinityTags: ["bci", "swarm"],
     maxObservedLatencyMs: 50,
     maxCostPerHourUsd: 0.50,
-    nodeViews: workerLocalityNodeViews
+    nodeViews: workerLocalityNodeViews,
+    peerViews: federationPeerViewsInitial
+  });
+  const localityRegistryAfterFirstAssignment = await workerLocalityRegistry.listWorkers(
+    federationRenewedAt,
+    workerLocalityNodeViews,
+    federationPeerViewsInitial
+  );
+  if (localityAssignment.assignment?.workerId && localityAssignment.assignment.leaseToken) {
+    await workerLocalityRegistry.releaseWorker({
+      workerId: localityAssignment.assignment.workerId,
+      leaseToken: localityAssignment.assignment.leaseToken
+    });
+  }
+  const federationLatencyFlippedAt = new Date(
+    Date.parse(federationRenewedAt) + 8_000
+  ).toISOString();
+  const federationPeerNearDegraded = await federationPeerRegistry.markLeaseSuccess({
+    peerId: federationRegisteredNearPeer.peerId,
+    observedLatencyMs: 72,
+    now: federationLatencyFlippedAt
+  });
+  const federationPeerFarInverted = await federationPeerRegistry.markLeaseSuccess({
+    peerId: federationRegisteredFarPeer.peerId,
+    observedLatencyMs: 6,
+    now: federationLatencyFlippedAt
+  });
+  const federationPeerViewsFlipped = await federationPeerRegistry.listPeers(
+    federationLatencyFlippedAt
+  );
+  const localityLatencyInversionAssignment = await workerLocalityRegistry.assignWorker({
+    requestedExecutionDecision: "remote_required",
+    baseModel: benchmarkLayer.model,
+    preferredLayerIds: [benchmarkLayer.id],
+    recommendedLayerId: benchmarkLayer.id,
+    target: "planner-swarm",
+    preferredDeviceAffinityTags: ["swarm"],
+    maxObservedLatencyMs: 80,
+    maxCostPerHourUsd: 0.50,
+    nodeViews: workerLocalityNodeViews,
+    peerViews: federationPeerViewsFlipped
   });
   const localityRegistrySnapshot = await workerLocalityRegistry.listWorkers(
-    workerRegistryNow,
-    workerLocalityNodeViews
+    federationLatencyFlippedAt,
+    workerLocalityNodeViews,
+    federationPeerViewsFlipped
   );
-  const federationPeerRegistry = createFederationPeerRegistry(
-    path.join(runtimeDir, "federation-peer-plane")
+  const federationPeerAfterInversion = await federationPeerRegistry.getPeer(
+    federationRegisteredFarPeer.peerId,
+    federationLatencyFlippedAt
   );
-  const federationRegisteredPeer = await federationPeerRegistry.registerPeer({
-    controlPlaneUrl: "http://127.0.0.1:9788",
-    expectedNodeId: workerLocalityNearNode.nodeId,
-    refreshIntervalMs: 10_000,
-    trustWindowMs: 15_000,
-    maxObservedLatencyMs: 50,
-    now: workerRegistryNow
-  });
-  const federationPeerSuccessFirst = await federationPeerRegistry.markRefreshSuccess({
-    peerId: federationRegisteredPeer.peerId,
-    expectedNodeId: workerLocalityNearNode.nodeId,
-    observedLatencyMs: 48,
-    now: workerRegistryNow
-  });
-  const federationRenewedAt = new Date(Date.parse(workerRegistryNow) + 10_000).toISOString();
-  const federationPeerSuccessSecond = await federationPeerRegistry.markRefreshSuccess({
-    peerId: federationRegisteredPeer.peerId,
-    expectedNodeId: workerLocalityNearNode.nodeId,
-    observedLatencyMs: 18,
-    now: federationRenewedAt
-  });
-  const federationPeerAfterRenewal = await federationPeerRegistry.getPeer(
-    federationRegisteredPeer.peerId,
-    federationRenewedAt
-  );
-  const federationFaultedAt = new Date(Date.parse(federationRenewedAt) + 16_000).toISOString();
-  const federationPeerAfterFailure = await federationPeerRegistry.markRefreshFailure({
-    peerId: federationRegisteredPeer.peerId,
-    error: "timeout",
+  const federationFaultedAt = new Date(
+    Date.parse(federationLatencyFlippedAt) + 16_000
+  ).toISOString();
+  const federationPeerAfterFailure = await federationPeerRegistry.markLeaseFailure({
+    peerId: federationRegisteredNearPeer.peerId,
+    error: "lease_timeout",
     now: federationFaultedAt
   });
   const localSlotRegistry = createIntelligenceWorkerRegistry(
@@ -3302,7 +3376,14 @@ export async function runPublishedBenchmark(
       Number(localityAssignment.assignment?.locality === workerLocalityLocalNode.locality),
       Number(localityAssignment.assignment?.workerId === localityNearWorker.workerId),
       Number(localityAssignment.assignment?.identityVerified === true),
-      Number((localityAssignment.assignment?.observedLatencyMs ?? 999) <= 10),
+      Number(localityAssignment.assignment?.peerLeaseStatus === "healthy"),
+      Number(
+        typeof localityAssignment.assignment?.peerObservedLatencyMs === "number" &&
+          localityAssignment.assignment.peerObservedLatencyMs <
+            Number.POSITIVE_INFINITY &&
+          localityAssignment.assignment.observedLatencyMs ===
+            localityAssignment.assignment.peerObservedLatencyMs
+      ),
       Number((localityAssignment.assignment?.costPerHourUsd ?? 999) <= 0.5),
       Number(
         (localityAssignment.assignment?.deviceAffinityTags ?? []).includes("bci") &&
@@ -3316,8 +3397,24 @@ export async function runPublishedBenchmark(
     "ms",
     [
       federationPeerSuccessFirst.observedLatencyMs ?? 0,
-      federationPeerSuccessSecond.observedLatencyMs ?? 0,
-      federationPeerSuccessSecond.smoothedLatencyMs ?? 0
+      federationPeerSuccessSecond.leaseObservedLatencyMs ?? 0,
+      federationPeerFarHealthy.leaseObservedLatencyMs ?? 0,
+      federationPeerNearDegraded.leaseObservedLatencyMs ?? 0,
+      federationPeerFarInverted.leaseObservedLatencyMs ?? 0,
+      federationPeerFarInverted.leaseSmoothedLatencyMs ?? 0
+    ]
+  );
+  const federationPeerPlacementSeries = createSeries(
+    "federation_peer_placement_ratio",
+    "Federation peer placement control",
+    "ratio",
+    [
+      Number(localityAssignment.assignment?.workerId === localityNearWorker.workerId),
+      Number(localityLatencyInversionAssignment.assignment?.workerId === `worker-${suiteId}-remote-far`),
+      Number(
+        (localityLatencyInversionAssignment.assignment?.peerObservedLatencyMs ?? Number.POSITIVE_INFINITY) <
+          (federationPeerAfterRenewal?.leaseSmoothedLatencyMs ?? Number.POSITIVE_INFINITY)
+      )
     ]
   );
   const multiRoleConversationLatencySeries = createSeries(
@@ -4059,20 +4156,25 @@ export async function runPublishedBenchmark(
     ),
     createAssertion(
       "worker-assignment-locality-affinity",
-      "Remote worker placement combines verified identity, locality, latency, cost, and device affinity",
+      "Remote worker placement combines verified identity, locality, live peer latency, cost, and device affinity",
       localityAssignment.assignment?.workerId === localityNearWorker.workerId &&
-        localityAssignment.assignment?.executionProfile === "remote" &&
+      localityAssignment.assignment?.executionProfile === "remote" &&
         localityAssignment.assignment?.locality === workerLocalityLocalNode.locality &&
         localityAssignment.assignment?.identityVerified === true &&
-        (localityAssignment.assignment?.observedLatencyMs ?? Number.POSITIVE_INFINITY) <= 10 &&
+        localityAssignment.assignment?.peerLeaseStatus === "healthy" &&
+        typeof localityAssignment.assignment?.peerObservedLatencyMs === "number" &&
+        localityAssignment.assignment.peerObservedLatencyMs < 50 &&
+        localityAssignment.assignment.observedLatencyMs ===
+          localityAssignment.assignment.peerObservedLatencyMs &&
         (localityAssignment.assignment?.costPerHourUsd ?? Number.POSITIVE_INFINITY) <= 0.5 &&
         Boolean(localityAssignment.assignment?.deviceAffinityTags?.includes("bci")) &&
         Boolean(localityAssignment.assignment?.reason.includes(`locality ${workerLocalityLocalNode.locality}`)) &&
         Boolean(localityAssignment.assignment?.reason.includes("identity verified")) &&
+        Boolean(localityAssignment.assignment?.reason.includes("peer lease healthy")) &&
         Boolean(localityAssignment.assignment?.reason.includes("latency")) &&
         Boolean(localityAssignment.assignment?.reason.includes("cost")) &&
         Boolean(localityAssignment.assignment?.reason.includes("affinity")) &&
-        localityRegistrySnapshot.some(
+        localityRegistryAfterFirstAssignment.some(
           (worker) =>
             worker.workerId === localityNearWorker.workerId &&
             worker.assignmentTarget === "planner-swarm"
@@ -4086,7 +4188,7 @@ export async function runPublishedBenchmark(
       "Unverified remote workers are faulted and excluded from federation placement",
       signedNearNodeVerification.verified &&
         signedFarNodeVerification.verified &&
-        localityRegistrySnapshot.some(
+        localityRegistryAfterFirstAssignment.some(
           (worker) =>
             worker.workerId === `worker-${suiteId}-remote-near-unverified` &&
             worker.healthStatus === "faulted" &&
@@ -4094,32 +4196,51 @@ export async function runPublishedBenchmark(
             worker.assignmentBlockedReason === "unverified federation worker"
         ),
       "signed node identities verify and unverified worker is faulted",
-      `${signedNearNodeVerification.verified}/${signedFarNodeVerification.verified} / ${localityRegistrySnapshot.find((worker) => worker.workerId === `worker-${suiteId}-remote-near-unverified`)?.healthStatus ?? "missing"}`,
+      `${signedNearNodeVerification.verified}/${signedFarNodeVerification.verified} / ${localityRegistryAfterFirstAssignment.find((worker) => worker.workerId === `worker-${suiteId}-remote-near-unverified`)?.healthStatus ?? "missing"}`,
       "authenticated federation is only real if unsigned remote workers stop being assignable instead of merely ranking lower"
     ),
     createAssertion(
       "federation-peer-renewal",
-      "Federation peer refresh renews trust and smooths live latency instead of freezing a one-shot sync measurement",
+      "Federation peer lease renewal refreshes trust and smooths live latency instead of freezing a one-shot sync measurement",
       federationPeerAfterRenewal?.status === "healthy" &&
+        federationPeerAfterRenewal.leaseStatus === "healthy" &&
         federationPeerAfterRenewal.expectedNodeId === workerLocalityNearNode.nodeId &&
-        federationPeerAfterRenewal.lastSuccessAt === federationRenewedAt &&
-        federationPeerAfterRenewal.smoothedLatencyMs ===
-          smoothObservedLatency(federationPeerSuccessFirst.smoothedLatencyMs, 18) &&
-        federationPeerAfterRenewal.smoothedLatencyMs !== federationPeerSuccessFirst.smoothedLatencyMs &&
-        federationPeerAfterRenewal.trustRemainingMs > 0,
-      "renewed success with updated smoothed latency and healthy trust window",
-      `${federationPeerAfterRenewal?.status ?? "missing"} / smoothed ${federationPeerAfterRenewal?.smoothedLatencyMs ?? "missing"} / expected ${workerLocalityNearNode.nodeId}`,
-      "federated liveness should be a renewing control signal, not a static latency number captured at import time"
+        federationPeerAfterRenewal.lastLeaseSuccessAt === federationRenewedAt &&
+        typeof federationPeerAfterRenewal.leaseSmoothedLatencyMs === "number" &&
+        federationPeerAfterRenewal.leaseSmoothedLatencyMs > 0 &&
+        federationPeerAfterRenewal.leaseSmoothedLatencyMs <
+          (federationPeerSuccessFirst.smoothedLatencyMs ?? Number.POSITIVE_INFINITY) &&
+        federationPeerAfterRenewal.leaseTrustRemainingMs > 0,
+      "renewed success with updated lease-smoothed latency and healthy trust window",
+      `${federationPeerAfterRenewal?.status ?? "missing"} / lease-smoothed ${federationPeerAfterRenewal?.leaseSmoothedLatencyMs ?? "missing"} / expected ${workerLocalityNearNode.nodeId}`,
+      "federated liveness should be a renewing control signal, not a static latency number captured at topology import time"
+    ),
+    createAssertion(
+      "federation-peer-latency-placement-inversion",
+      "Live peer latency can invert remote placement across two authenticated peers after lease renewal",
+      localityLatencyInversionAssignment.assignment?.workerId === `worker-${suiteId}-remote-far` &&
+        localityLatencyInversionAssignment.assignment?.peerId === federationRegisteredFarPeer.peerId &&
+        localityLatencyInversionAssignment.assignment?.peerLeaseStatus === "healthy" &&
+        (localityLatencyInversionAssignment.assignment?.peerObservedLatencyMs ?? Number.POSITIVE_INFINITY) <
+          (federationPeerAfterRenewal?.leaseSmoothedLatencyMs ?? Number.POSITIVE_INFINITY) &&
+        typeof federationPeerAfterInversion?.leaseSmoothedLatencyMs === "number" &&
+        typeof federationPeerAfterRenewal?.leaseSmoothedLatencyMs === "number" &&
+        federationPeerAfterInversion.leaseSmoothedLatencyMs <
+          federationPeerAfterRenewal.leaseSmoothedLatencyMs,
+      "lower-latency peer wins after live renewal flips the control signal",
+      `${localityLatencyInversionAssignment.assignment?.workerId ?? "missing"} / peer ${localityLatencyInversionAssignment.assignment?.peerId ?? "missing"} / ${localityLatencyInversionAssignment.assignment?.reason ?? "missing reason"}`,
+      "multi-peer placement is only truthful if renewed peer latency can override stale import-time latency and actually change which remote worker is selected"
     ),
     createAssertion(
       "federation-peer-stale-eviction-window",
-      "Federation peers become faulted when the signed trust window expires without renewal",
+      "Federation peers become faulted when the signed lease window expires without renewal",
       federationPeerAfterFailure.status === "faulted" &&
-        federationPeerAfterFailure.trustRemainingMs === 0 &&
-        federationPeerAfterFailure.lastError === "timeout",
-      "faulted peer after trust window expiry",
-      `${federationPeerAfterFailure.status} / trust=${federationPeerAfterFailure.trustRemainingMs} / error=${federationPeerAfterFailure.lastError ?? "none"}`,
-      "a peer that stops renewing signed membership has to age out of trust before placement keeps using stale remote state"
+        federationPeerAfterFailure.leaseStatus === "faulted" &&
+        federationPeerAfterFailure.leaseTrustRemainingMs === 0 &&
+        federationPeerAfterFailure.lastLeaseError === "lease_timeout",
+      "faulted peer after lease trust window expiry",
+      `${federationPeerAfterFailure.status} / lease-trust=${federationPeerAfterFailure.leaseTrustRemainingMs} / error=${federationPeerAfterFailure.lastLeaseError ?? "none"}`,
+      "a peer that stops renewing signed lease state has to age out of trust before placement keeps using stale remote state"
     ),
     createAssertion(
       "worker-assignment-duplicate-pressure",
@@ -4700,6 +4821,7 @@ export async function runPublishedBenchmark(
       cognitiveRouteSoftPriorSeries,
       workerLocalityAffinitySeries,
       federationPeerLatencySeries,
+      federationPeerPlacementSeries,
       multiRoleConversationLatencySeries,
       multiRoleConversationTurnSeries,
       multiRoleConversationVerdictSeries,
@@ -4746,6 +4868,7 @@ export async function runPublishedBenchmark(
             cognitiveRouteSoftPriorSeries,
             workerLocalityAffinitySeries,
             federationPeerLatencySeries,
+            federationPeerPlacementSeries,
             multiRoleConversationTurnSeries,
             multiRoleConversationVerdictSeries,
             executionArbitrationCognitionSeries,

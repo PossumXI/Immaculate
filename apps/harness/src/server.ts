@@ -59,10 +59,16 @@ import {
   signFederationPayload,
   verifyFederationEnvelope,
   type FederationNodeIdentityPayload,
+  type FederationNodeLeasePayload,
   type FederationSignedEnvelope,
-  type FederationWorkerIdentityPayload
+  type FederationWorkerIdentityPayload,
+  type FederationWorkerLeasePayload
 } from "./federation.js";
-import { createFederationPeerRegistry, smoothObservedLatency } from "./federation-peers.js";
+import {
+  createFederationPeerRegistry,
+  smoothObservedLatency,
+  type FederationPeerView
+} from "./federation-peers.js";
 import { createNodeRegistry } from "./node-registry.js";
 import { createNeuroReplayManager } from "./neuro-replay.js";
 import { listBenchmarkPacks } from "./benchmark-packs.js";
@@ -230,6 +236,10 @@ const FEDERATION_DEFAULT_REFRESH_INTERVAL_MS = Math.max(
   FEDERATION_REFRESH_POLL_MS,
   Number(process.env.IMMACULATE_FEDERATION_REFRESH_INTERVAL_MS ?? 10_000) || 10_000
 );
+const FEDERATION_DEFAULT_LEASE_REFRESH_INTERVAL_MS = Math.max(
+  FEDERATION_REFRESH_POLL_MS,
+  Number(process.env.IMMACULATE_FEDERATION_LEASE_REFRESH_INTERVAL_MS ?? 4_000) || 4_000
+);
 const FEDERATION_DEFAULT_TRUST_WINDOW_MS = Math.max(
   FEDERATION_DEFAULT_REFRESH_INTERVAL_MS * 2,
   Number(process.env.IMMACULATE_FEDERATION_TRUST_WINDOW_MS ?? 45_000) || 45_000
@@ -261,6 +271,14 @@ setInterval(() => {
         message: error instanceof Error ? error.message : "unknown federation refresh poll error"
       },
       "Unable to complete federation peer refresh poll."
+    );
+  });
+  void renewDueFederationPeerLeases().catch((error) => {
+    app.log.warn(
+      {
+        message: error instanceof Error ? error.message : "unknown federation lease renewal poll error"
+      },
+      "Unable to complete federation peer lease-renewal poll."
     );
   });
 }, FEDERATION_REFRESH_POLL_MS).unref();
@@ -442,6 +460,28 @@ function toFederationWorkerIdentityPayload(
   };
 }
 
+function toFederationNodeLeasePayload(
+  node: Awaited<ReturnType<typeof nodeRegistry.ensureLocalNode>>
+): FederationNodeLeasePayload {
+  return {
+    nodeId: node.nodeId,
+    heartbeatAt: node.heartbeatAt,
+    leaseDurationMs: node.leaseDurationMs
+  };
+}
+
+function toFederationWorkerLeasePayload(
+  worker: Awaited<ReturnType<typeof intelligenceWorkerRegistry.listWorkers>>[number],
+  fallbackNodeId: string
+): FederationWorkerLeasePayload {
+  return {
+    workerId: worker.workerId,
+    nodeId: worker.nodeId ?? fallbackNodeId,
+    heartbeatAt: worker.heartbeatAt,
+    leaseDurationMs: worker.leaseDurationMs
+  };
+}
+
 async function buildFederationMembershipExport(now = new Date().toISOString()) {
   const secret = requireFederationSecret();
   const localNode = await nodeRegistry.ensureLocalNode(now);
@@ -466,6 +506,36 @@ async function buildFederationMembershipExport(now = new Date().toISOString()) {
       })
     )
   };
+}
+
+async function buildFederationLeaseExport(now = new Date().toISOString()) {
+  const secret = requireFederationSecret();
+  const localNode = await nodeRegistry.ensureLocalNode(now);
+  const nodeState = await nodeRegistry.listNodes(now);
+  const workers = (await intelligenceWorkerRegistry.listWorkers(now, nodeState.nodes)).filter(
+    (worker) => (worker.nodeId ?? localNode.nodeId) === localNode.nodeId
+  );
+
+  return {
+    exportedAt: now,
+    exporterNodeId: localNode.nodeId,
+    node: signFederationPayload(toFederationNodeLeasePayload(localNode), {
+      issuerNodeId: localNode.nodeId,
+      secret,
+      issuedAt: now
+    }),
+    workers: workers.map((worker) =>
+      signFederationPayload(toFederationWorkerLeasePayload(worker, localNode.nodeId), {
+        issuerNodeId: localNode.nodeId,
+        secret,
+        issuedAt: now
+      })
+    )
+  };
+}
+
+async function listFederationPeerViews(now = new Date().toISOString()): Promise<FederationPeerView[]> {
+  return federationPeerRegistry.listPeers(now);
 }
 
 function federationRequestHeaders(token?: string): HeadersInit {
@@ -706,6 +776,155 @@ async function syncFederationPeer(options: {
   };
 }
 
+async function renewFederationPeerLease(options: {
+  peerId?: string;
+  controlPlaneUrl: string;
+  authorizationToken?: string;
+  expectedNodeId?: string;
+  maxObservedLatencyMs?: number;
+  priorSmoothedLatencyMs?: number | null;
+  now?: string;
+}) {
+  const secret = requireFederationSecret();
+  const now = options.now ?? new Date().toISOString();
+  const normalizedControlPlaneUrl = normalizeFederationControlPlaneUrl(options.controlPlaneUrl);
+  const startedAtMs = Date.now();
+  const response = await fetch(`${normalizedControlPlaneUrl}/api/federation/leases`, {
+    headers: federationRequestHeaders(options.authorizationToken),
+    redirect: "error",
+    cache: "no-store"
+  });
+  const observedLatencyMs = Date.now() - startedAtMs;
+  const effectiveObservedLatencyMs = smoothObservedLatency(
+    options.priorSmoothedLatencyMs,
+    observedLatencyMs
+  );
+
+  if (!response.ok) {
+    throw new Error(`Federation lease fetch failed with status ${response.status}.`);
+  }
+  if (
+    typeof options.maxObservedLatencyMs === "number" &&
+    Number.isFinite(options.maxObservedLatencyMs) &&
+    observedLatencyMs > options.maxObservedLatencyMs
+  ) {
+    throw new Error(
+      `Federation lease latency ${observedLatencyMs} ms exceeds limit ${options.maxObservedLatencyMs} ms.`
+    );
+  }
+
+  const payload = (await response.json()) as {
+    accepted?: boolean;
+    leases?: {
+      exportedAt: string;
+      exporterNodeId: string;
+      node: FederationSignedEnvelope<FederationNodeLeasePayload>;
+      workers: FederationSignedEnvelope<FederationWorkerLeasePayload>[];
+    };
+  };
+
+  if (!payload.accepted || !payload.leases) {
+    throw new Error("Federation lease response was missing signed lease data.");
+  }
+
+  const nodeEnvelope = payload.leases.node;
+  const nodeVerification = verifyFederationEnvelope(nodeEnvelope, {
+    secret,
+    expectedIssuerNodeId: payload.leases.exporterNodeId,
+    now,
+    maxAgeMs: FEDERATION_ENVELOPE_MAX_AGE_MS,
+    maxClockSkewMs: FEDERATION_ENVELOPE_MAX_CLOCK_SKEW_MS
+  });
+  if (!nodeVerification.verified) {
+    throw new Error(`Federation node lease verification failed: ${nodeVerification.reason}`);
+  }
+
+  const nodeLease = nodeEnvelope.payload;
+  if (options.expectedNodeId && nodeLease.nodeId !== options.expectedNodeId) {
+    throw new Error(
+      `Federation lease returned ${nodeLease.nodeId}; expected ${options.expectedNodeId}.`
+    );
+  }
+
+  const existingNode = await nodeRegistry.getNode(nodeLease.nodeId, now);
+  if (!existingNode) {
+    throw new Error(
+      `Federation lease renewal requires an imported node for ${nodeLease.nodeId}; refresh membership first.`
+    );
+  }
+
+  const renewedNode = await nodeRegistry.heartbeatNode({
+    nodeId: nodeLease.nodeId,
+    heartbeatAt: nodeLease.heartbeatAt,
+    leaseDurationMs: nodeLease.leaseDurationMs,
+    identityAlgorithm: nodeEnvelope.algorithm,
+    identityKeyId: nodeEnvelope.keyId,
+    identityIssuerNodeId: nodeEnvelope.issuerNodeId,
+    identityIssuedAt: nodeEnvelope.issuedAt,
+    identitySignature: nodeEnvelope.signature,
+    identityVerified: true,
+    observedLatencyMs: effectiveObservedLatencyMs
+  });
+
+  const nodeState = await nodeRegistry.listNodes(now);
+  const workers = await intelligenceWorkerRegistry.listWorkers(now, nodeState.nodes);
+  const workerById = new Map(workers.map((worker) => [worker.workerId, worker]));
+  const renewedWorkers: Awaited<
+    ReturnType<typeof intelligenceWorkerRegistry.heartbeatWorker>
+  >[] = [];
+  const skippedWorkerIds: string[] = [];
+
+  for (const workerEnvelope of payload.leases.workers) {
+    const workerVerification = verifyFederationEnvelope(workerEnvelope, {
+      secret,
+      expectedIssuerNodeId: renewedNode.nodeId,
+      now,
+      maxAgeMs: FEDERATION_ENVELOPE_MAX_AGE_MS,
+      maxClockSkewMs: FEDERATION_ENVELOPE_MAX_CLOCK_SKEW_MS
+    });
+    if (!workerVerification.verified) {
+      throw new Error(
+        `Federation worker lease verification failed for ${workerEnvelope.payload.workerId}: ${workerVerification.reason}`
+      );
+    }
+    if (workerEnvelope.payload.nodeId !== renewedNode.nodeId) {
+      throw new Error(
+        `Federation worker lease ${workerEnvelope.payload.workerId} belongs to ${workerEnvelope.payload.nodeId}, not ${renewedNode.nodeId}.`
+      );
+    }
+    const existingWorker = workerById.get(workerEnvelope.payload.workerId);
+    if (!existingWorker || existingWorker.executionProfile !== "remote") {
+      skippedWorkerIds.push(workerEnvelope.payload.workerId);
+      continue;
+    }
+    renewedWorkers.push(
+      await intelligenceWorkerRegistry.heartbeatWorker(
+        {
+          workerId: workerEnvelope.payload.workerId,
+          heartbeatAt: workerEnvelope.payload.heartbeatAt,
+          leaseDurationMs: workerEnvelope.payload.leaseDurationMs,
+          identityAlgorithm: workerEnvelope.algorithm,
+          identityKeyId: workerEnvelope.keyId,
+          identityIssuerNodeId: workerEnvelope.issuerNodeId,
+          identityIssuedAt: workerEnvelope.issuedAt,
+          identitySignature: workerEnvelope.signature,
+          identityVerified: true,
+          observedLatencyMs: effectiveObservedLatencyMs
+        },
+        nodeState.nodes
+      )
+    );
+  }
+
+  return {
+    observedLatencyMs,
+    effectiveObservedLatencyMs,
+    renewedNode,
+    renewedWorkers,
+    skippedWorkerIds
+  };
+}
+
 async function refreshFederationPeer(peerId: string) {
   const peer = await federationPeerRegistry.getPeerRecord(peerId);
   if (!peer) {
@@ -722,9 +941,14 @@ async function refreshFederationPeer(peerId: string) {
       priorSmoothedLatencyMs: peer.smoothedLatencyMs ?? undefined,
       now
     });
-    const peerView = await federationPeerRegistry.markRefreshSuccess({
+    await federationPeerRegistry.markRefreshSuccess({
       peerId: peer.peerId,
       expectedNodeId: sync.remoteNode.nodeId,
+      observedLatencyMs: sync.observedLatencyMs,
+      now
+    });
+    const peerView = await federationPeerRegistry.markLeaseSuccess({
+      peerId: peer.peerId,
       observedLatencyMs: sync.observedLatencyMs,
       now
     });
@@ -739,6 +963,47 @@ async function refreshFederationPeer(peerId: string) {
       now
     });
     if (peerView.status === "faulted") {
+      await evictFederationPeerState({
+        expectedNodeId: peerView.expectedNodeId ?? undefined,
+        controlPlaneUrl: peerView.controlPlaneUrl
+      });
+    }
+    throw error;
+  }
+}
+
+async function renewFederationPeerLeaseByPeerId(peerId: string) {
+  const peer = await federationPeerRegistry.getPeerRecord(peerId);
+  if (!peer) {
+    throw new Error(`Unknown federation peer ${peerId}.`);
+  }
+  const now = new Date().toISOString();
+  try {
+    const renewal = await renewFederationPeerLease({
+      peerId: peer.peerId,
+      controlPlaneUrl: peer.controlPlaneUrl,
+      authorizationToken: peer.authorizationToken ?? undefined,
+      expectedNodeId: peer.expectedNodeId ?? undefined,
+      maxObservedLatencyMs: peer.maxObservedLatencyMs ?? undefined,
+      priorSmoothedLatencyMs: peer.leaseSmoothedLatencyMs ?? peer.smoothedLatencyMs ?? undefined,
+      now
+    });
+    const peerView = await federationPeerRegistry.markLeaseSuccess({
+      peerId: peer.peerId,
+      observedLatencyMs: renewal.observedLatencyMs,
+      now
+    });
+    return {
+      peer: peerView,
+      renewal
+    };
+  } catch (error) {
+    const peerView = await federationPeerRegistry.markLeaseFailure({
+      peerId: peer.peerId,
+      error: error instanceof Error ? error.message : "unknown federation lease renewal error",
+      now
+    });
+    if (peerView.leaseStatus === "faulted" || peerView.status === "faulted") {
       await evictFederationPeerState({
         expectedNodeId: peerView.expectedNodeId ?? undefined,
         controlPlaneUrl: peerView.controlPlaneUrl
@@ -771,6 +1036,35 @@ async function refreshDueFederationPeers() {
           message: error instanceof Error ? error.message : "unknown federation refresh error"
         },
         "Federation peer refresh failed."
+      );
+    }
+  }
+}
+
+async function renewDueFederationPeerLeases() {
+  const now = new Date().toISOString();
+  const peers = await federationPeerRegistry.listPeers(now);
+  for (const peer of peers) {
+    if (peer.leaseStatus === "faulted" || peer.status === "faulted") {
+      await evictFederationPeerState({
+        expectedNodeId: peer.expectedNodeId ?? undefined,
+        controlPlaneUrl: peer.controlPlaneUrl
+      });
+    }
+    if (!peer.leaseRefreshDue) {
+      continue;
+    }
+    try {
+      await renewFederationPeerLeaseByPeerId(peer.peerId);
+    } catch (error) {
+      app.log.warn(
+        {
+          peerId: peer.peerId,
+          controlPlaneUrl: peer.controlPlaneUrl,
+          message:
+            error instanceof Error ? error.message : "unknown federation lease renewal error"
+        },
+        "Federation peer lease renewal failed."
       );
     }
   }
@@ -1164,6 +1458,7 @@ async function reserveExecutionWorker(options: {
 
   const localNode = await nodeRegistry.ensureLocalNode();
   const nodeState = await nodeRegistry.listNodes();
+  const peerViews = await listFederationPeerViews();
 
   let result = await intelligenceWorkerRegistry.assignWorker({
     requestedExecutionDecision: options.requestedExecutionDecision ?? "allow_local",
@@ -1179,7 +1474,8 @@ async function reserveExecutionWorker(options: {
       [...new Set([options.layer.role, ...(options.target?.includes("swarm") ? ["swarm"] : [])])],
     maxObservedLatencyMs: options.maxObservedLatencyMs,
     maxCostPerHourUsd: options.maxCostPerHourUsd,
-    nodeViews: nodeState.nodes
+    nodeViews: nodeState.nodes,
+    peerViews
   });
 
   if (!result.assignment && options.requestedExecutionDecision !== "remote_required") {
@@ -1197,7 +1493,8 @@ async function reserveExecutionWorker(options: {
         [...new Set([options.layer.role, ...(options.target?.includes("swarm") ? ["swarm"] : [])])],
       maxObservedLatencyMs: options.maxObservedLatencyMs,
       maxCostPerHourUsd: options.maxCostPerHourUsd,
-      nodeViews: nodeState.nodes
+      nodeViews: nodeState.nodes,
+      peerViews
     });
   }
 
@@ -1308,6 +1605,12 @@ function bindExecutionPlacement(options: {
     assignedWorkerObservedLatencyMs: options.assignment?.observedLatencyMs ?? undefined,
     assignedWorkerCostPerHourUsd: options.assignment?.costPerHourUsd ?? undefined,
     assignedWorkerDeviceAffinityTags: options.assignment?.deviceAffinityTags ?? undefined,
+    assignedWorkerPeerId: options.assignment?.peerId ?? undefined,
+    assignedWorkerPeerStatus: options.assignment?.peerStatus ?? undefined,
+    assignedWorkerPeerLeaseStatus: options.assignment?.peerLeaseStatus ?? undefined,
+    assignedWorkerPeerObservedLatencyMs: options.assignment?.peerObservedLatencyMs ?? undefined,
+    assignedWorkerPeerTrustRemainingMs:
+      options.assignment?.peerTrustRemainingMs ?? undefined,
     assignmentReason: options.assignment?.reason,
     assignmentScore: options.assignment?.score,
     executionEndpoint: options.executionEndpoint,
@@ -2737,6 +3040,36 @@ app.get("/api/federation/membership", async (request, reply) => {
   }
 });
 
+app.get("/api/federation/leases", async (request, reply) => {
+  if (rejectFederationQueryToken(request, reply)) {
+    return;
+  }
+  if (
+    !authorizeGovernedAction(
+      "cognitive-trace-read",
+      "/api/federation/leases",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  try {
+    const leases = await buildFederationLeaseExport();
+    return {
+      accepted: true,
+      leases
+    };
+  } catch (error) {
+    reply.code(503);
+    return {
+      error: "federation_leases_unavailable",
+      message: error instanceof Error ? error.message : "Unable to export federation lease state."
+    };
+  }
+});
+
 app.get("/api/federation/peers", async (request, reply) => {
   if (rejectFederationQueryToken(request, reply)) {
     return;
@@ -2776,7 +3109,12 @@ app.get("/api/intelligence/workers", async (request, reply) => {
     request
   ).consentScope;
   const nodeState = await nodeRegistry.listNodes();
-  const workers = await intelligenceWorkerRegistry.listWorkers(undefined, nodeState.nodes);
+  const peerViews = await listFederationPeerViews();
+  const workers = await intelligenceWorkerRegistry.listWorkers(
+    undefined,
+    nodeState.nodes,
+    peerViews
+  );
   const healthyWorkerCount = workers.filter((worker) => worker.healthStatus === "healthy").length;
   const staleWorkerCount = workers.filter((worker) => worker.healthStatus === "stale").length;
   const faultedWorkerCount = workers.filter((worker) => worker.healthStatus === "faulted").length;
@@ -3329,6 +3667,7 @@ app.post("/api/intelligence/workers/assign", async (request, reply) => {
   const recommendedLayerId = body.recommendedLayerId?.trim() || getPreferredLayer()?.id;
   const localNode = await nodeRegistry.ensureLocalNode();
   const nodeState = await nodeRegistry.listNodes();
+  const peerViews = await listFederationPeerViews();
   const result = await intelligenceWorkerRegistry.assignWorker({
     requestedExecutionDecision: body.requestedExecutionDecision,
     baseModel: body.baseModel?.trim() || undefined,
@@ -3352,7 +3691,8 @@ app.post("/api/intelligence/workers/assign", async (request, reply) => {
       typeof body.maxCostPerHourUsd === "number" && Number.isFinite(body.maxCostPerHourUsd)
         ? Number(body.maxCostPerHourUsd)
         : undefined,
-    nodeViews: nodeState.nodes
+    nodeViews: nodeState.nodes,
+    peerViews
   });
   return {
     accepted: true,
@@ -3465,6 +3805,7 @@ app.post("/api/federation/peers/register", async (request, reply) => {
       controlPlaneUrl?: string;
       expectedNodeId?: string;
       refreshIntervalMs?: number;
+      leaseRefreshIntervalMs?: number;
       trustWindowMs?: number;
       maxObservedLatencyMs?: number;
       authorizationToken?: string;
@@ -3487,6 +3828,11 @@ app.post("/api/federation/peers/register", async (request, reply) => {
         typeof body.refreshIntervalMs === "number" && Number.isFinite(body.refreshIntervalMs)
           ? Number(body.refreshIntervalMs)
           : FEDERATION_DEFAULT_REFRESH_INTERVAL_MS,
+      leaseRefreshIntervalMs:
+        typeof body.leaseRefreshIntervalMs === "number" &&
+        Number.isFinite(body.leaseRefreshIntervalMs)
+          ? Number(body.leaseRefreshIntervalMs)
+          : FEDERATION_DEFAULT_LEASE_REFRESH_INTERVAL_MS,
       trustWindowMs:
         typeof body.trustWindowMs === "number" && Number.isFinite(body.trustWindowMs)
           ? Number(body.trustWindowMs)
@@ -3563,6 +3909,7 @@ app.post("/api/federation/peers/sync", async (request, reply) => {
         authorizationToken: body.authorizationToken.trim(),
         expectedNodeId: existingPeer.expectedNodeId ?? undefined,
         refreshIntervalMs: existingPeer.refreshIntervalMs,
+        leaseRefreshIntervalMs: existingPeer.leaseRefreshIntervalMs,
         trustWindowMs: existingPeer.trustWindowMs,
         maxObservedLatencyMs: existingPeer.maxObservedLatencyMs ?? undefined
       });
@@ -3626,6 +3973,50 @@ app.post("/api/federation/peers/:peerId/refresh", async (request, reply) => {
     return {
       error: "federation_peer_refresh_failed",
       message: error instanceof Error ? error.message : "Unable to refresh federation peer."
+    };
+  }
+});
+
+app.post("/api/federation/peers/:peerId/lease-renew", async (request, reply) => {
+  if (rejectFederationQueryToken(request, reply)) {
+    return;
+  }
+  if (
+    !authorizeGovernedAction(
+      "cognitive-registration",
+      "/api/federation/peers/:peerId/lease-renew",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  const params = request.params as { peerId?: string };
+  if (!params.peerId?.trim()) {
+    reply.code(400);
+    return {
+      error: "missing_peer_id"
+    };
+  }
+
+  try {
+    const result = await renewFederationPeerLeaseByPeerId(params.peerId.trim());
+    return {
+      accepted: true,
+      peer: result.peer,
+      observedLatencyMs: result.renewal.observedLatencyMs,
+      smoothedLatencyMs: result.renewal.effectiveObservedLatencyMs,
+      node: result.renewal.renewedNode,
+      renewedWorkers: result.renewal.renewedWorkers,
+      skippedWorkerIds: result.renewal.skippedWorkerIds
+    };
+  } catch (error) {
+    reply.code(400);
+    return {
+      error: "federation_peer_lease_renewal_failed",
+      message:
+        error instanceof Error ? error.message : "Unable to renew federation peer leases."
     };
   }
 });
@@ -4753,7 +5144,12 @@ app.post("/api/benchmarks/publish/wandb", async (request, reply) => {
 app.get("/api/topology", async () => {
   const snapshot = phaseSnapshotSchema.parse(engine.getSnapshot());
   const nodeState = await nodeRegistry.listNodes();
-  const workers = await intelligenceWorkerRegistry.listWorkers(undefined, nodeState.nodes);
+  const peerViews = await listFederationPeerViews();
+  const workers = await intelligenceWorkerRegistry.listWorkers(
+    undefined,
+    nodeState.nodes,
+    peerViews
+  );
   return {
     profile: snapshot.profile,
     objective: snapshot.objective,

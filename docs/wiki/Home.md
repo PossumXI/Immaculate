@@ -22,8 +22,8 @@ observable, governed control system for intelligence at scale.
 - Local cognition through Ollama
 - Governed actuation with direct transport supervision
 - Authenticated federation membership export/import with verified remote node and worker identity
-- Recurring signed peer refresh with stale-trust eviction, so dead remotes fall out of placement instead of lingering as ghost capacity
-- Placement that combines locality, observed latency, cost, and device affinity without claiming full mesh federation yet
+- Recurring signed peer refresh plus signed lease renewal with stale-state eviction, so dead remotes fall out of placement instead of lingering as ghost capacity
+- Placement that combines locality, live peer-smoothed latency, cost, and device affinity without claiming full mesh federation yet
 
 ## Where Community Help Matters
 
@@ -40,6 +40,7 @@ observable, governed control system for intelligence at scale.
 - [[Benchmark-Status]] points to the live public W&B project plus the latest published benchmark runs by pack
 - [[Benchmark-Wandb-Export]] is the committed pull-back from W&B itself, so benchmark results live in git wiki even when the W&B project stays private
 - the live peer-refresh drill now proves the full liveness loop: healthy signed peers import real remote workers, bad-secret peers are rejected, and killed peers age out and are evicted from placement
+- the live lease-renewal drill now proves a second control loop: signed renewals can move placement from one authenticated peer to another when cross-node latency flips
 - the live benchmark surface now includes a real `60s` paced benchmark lane and a real `60m` soak lane with published hardware context and wall-clock timing
 - the credibility stack now also includes a real crash-torture lane, a real OpenNeuro+DANDI ingest lane, and an honest Temporal side-by-side baseline instead of hiding those claims inside generic smoke runs
 - the harness now exposes a governed local node registry plus locality-aware worker placement, so remote cognition can prefer the nearer healthy worker instead of treating every remote endpoint as identical

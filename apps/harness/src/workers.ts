@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import type { FederationPeerView } from "./federation-peers.js";
 import type { FederationSignatureAlgorithm } from "./federation.js";
 import type { NodeView } from "./node-registry.js";
 import { safeUnlink } from "./utils.js";
@@ -48,6 +49,11 @@ export type IntelligenceWorkerView = IntelligenceWorkerRecord & {
   leaseRemainingMs: number;
   assignmentEligible: boolean;
   assignmentBlockedReason?: string | null;
+  peerId?: string | null;
+  peerStatus?: FederationPeerView["status"] | null;
+  peerLeaseStatus?: FederationPeerView["leaseStatus"] | null;
+  peerObservedLatencyMs?: number | null;
+  peerTrustRemainingMs?: number;
 };
 
 export type IntelligenceWorkerAssignmentRequest = {
@@ -62,6 +68,7 @@ export type IntelligenceWorkerAssignmentRequest = {
   maxObservedLatencyMs?: number | null;
   maxCostPerHourUsd?: number | null;
   nodeViews?: NodeView[];
+  peerViews?: FederationPeerView[];
 };
 
 export type IntelligenceWorkerAssignment = {
@@ -84,6 +91,11 @@ export type IntelligenceWorkerAssignment = {
   observedLatencyMs?: number | null;
   costPerHourUsd?: number | null;
   deviceAffinityTags?: string[];
+  peerId?: string | null;
+  peerStatus?: FederationPeerView["status"] | null;
+  peerLeaseStatus?: FederationPeerView["leaseStatus"] | null;
+  peerObservedLatencyMs?: number | null;
+  peerTrustRemainingMs?: number | null;
 };
 
 export type IntelligenceWorkerSummary = {
@@ -178,6 +190,26 @@ function arraysEqual(left: string[], right: string[]): boolean {
 
 function buildNodeViewMap(nodeViews?: NodeView[]): Map<string, NodeView> {
   return new Map((nodeViews ?? []).map((node) => [node.nodeId, node]));
+}
+
+function matchWorkerPeerView(
+  worker: IntelligenceWorkerRecord,
+  node: NodeView | undefined,
+  peerViews?: FederationPeerView[]
+): FederationPeerView | undefined {
+  if (worker.executionProfile !== "remote" || !peerViews || peerViews.length === 0) {
+    return undefined;
+  }
+  return peerViews.find((peer) => {
+    if (peer.expectedNodeId && worker.nodeId && peer.expectedNodeId === worker.nodeId) {
+      return true;
+    }
+    return Boolean(
+      node?.controlPlaneUrl &&
+        peer.controlPlaneUrl &&
+        node.controlPlaneUrl === peer.controlPlaneUrl
+    );
+  });
 }
 
 function parseWorkerRegistry(content: string | null): IntelligenceWorkerRecord[] {
@@ -392,8 +424,14 @@ function buildWorkerView(
   request?: IntelligenceWorkerAssignmentRequest
 ): IntelligenceWorkerView {
   const node = worker.nodeId ? buildNodeViewMap(request?.nodeViews).get(worker.nodeId) : undefined;
+  const peer = matchWorkerPeerView(worker, node, request?.peerViews);
   const resolvedLocality = worker.locality ?? node?.locality ?? null;
-  const resolvedObservedLatencyMs = worker.observedLatencyMs ?? node?.observedLatencyMs ?? null;
+  const resolvedObservedLatencyMs =
+    peer?.leaseSmoothedLatencyMs ??
+    peer?.smoothedLatencyMs ??
+    worker.observedLatencyMs ??
+    node?.observedLatencyMs ??
+    null;
   const resolvedCostPerHourUsd = worker.costPerHourUsd ?? node?.costPerHourUsd ?? null;
   const resolvedDeviceAffinityTags = [
     ...new Set([...worker.deviceAffinityTags, ...(node?.deviceAffinityTags ?? [])])
@@ -411,9 +449,15 @@ function buildWorkerView(
   } else if (worker.nodeId && !node) {
     healthStatus = "faulted";
     healthReason = "node registry entry missing";
+  } else if (peer?.leaseStatus === "faulted") {
+    healthStatus = "faulted";
+    healthReason = "peer lease expired";
   } else if (node?.healthStatus === "faulted" || node?.healthStatus === "offline") {
     healthStatus = "faulted";
     healthReason = `node ${node.healthStatus}`;
+  } else if (peer?.leaseStatus === "stale") {
+    healthStatus = "stale";
+    healthReason = "peer lease nearing expiry";
   } else if (node?.healthStatus === "stale") {
     healthStatus = "stale";
     healthReason = "node heartbeat nearing expiry";
@@ -485,7 +529,12 @@ function buildWorkerView(
     lastHealthAt: now,
     leaseRemainingMs,
     assignmentEligible,
-    assignmentBlockedReason
+    assignmentBlockedReason,
+    peerId: peer?.peerId ?? null,
+    peerStatus: peer?.status ?? null,
+    peerLeaseStatus: peer?.leaseStatus ?? null,
+    peerObservedLatencyMs: peer?.leaseSmoothedLatencyMs ?? peer?.smoothedLatencyMs ?? null,
+    peerTrustRemainingMs: peer?.leaseTrustRemainingMs ?? peer?.trustRemainingMs ?? 0
   };
 }
 
@@ -613,6 +662,14 @@ function selectWorker(
         score += 9;
         reasons.push("identity verified");
       }
+      if (worker.peerLeaseStatus === "healthy") {
+        score += 4;
+        reasons.push("peer lease healthy");
+      }
+      if (worker.peerStatus === "healthy") {
+        score += 2;
+        reasons.push("peer trust healthy");
+      }
       if (
         request.requestedExecutionDecision !== "remote_required" &&
         worker.executionProfile === "local"
@@ -651,6 +708,14 @@ function selectWorker(
       if (typeof worker.observedLatencyMs === "number" && Number.isFinite(worker.observedLatencyMs)) {
         score += Math.max(0, 8 - worker.observedLatencyMs / 10);
         reasons.push(`latency ${worker.observedLatencyMs.toFixed(1)}ms`);
+      }
+      if (
+        typeof worker.peerTrustRemainingMs === "number" &&
+        Number.isFinite(worker.peerTrustRemainingMs) &&
+        worker.peerTrustRemainingMs > 0
+      ) {
+        score += Math.min(3, worker.peerTrustRemainingMs / 15_000);
+        reasons.push(`peer-trust ${Math.max(1, Math.round(worker.peerTrustRemainingMs / 1_000))}s`);
       }
       if (typeof worker.costPerHourUsd === "number" && Number.isFinite(worker.costPerHourUsd)) {
         score += Math.max(0, 6 - worker.costPerHourUsd * 4);
@@ -703,7 +768,12 @@ function selectWorker(
       identityVerified: winner.worker.identityVerified,
       observedLatencyMs: winner.worker.observedLatencyMs ?? null,
       costPerHourUsd: winner.worker.costPerHourUsd ?? null,
-      deviceAffinityTags: winner.worker.deviceAffinityTags
+      deviceAffinityTags: winner.worker.deviceAffinityTags,
+      peerId: winner.worker.peerId ?? null,
+      peerStatus: winner.worker.peerStatus ?? null,
+      peerLeaseStatus: winner.worker.peerLeaseStatus ?? null,
+      peerObservedLatencyMs: winner.worker.peerObservedLatencyMs ?? null,
+      peerTrustRemainingMs: winner.worker.peerTrustRemainingMs ?? null
     },
     workers: views,
     summary
@@ -727,11 +797,15 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
   }
 
   return {
-    async listWorkers(now?: string, nodeViews?: NodeView[]): Promise<IntelligenceWorkerView[]> {
+    async listWorkers(
+      now?: string,
+      nodeViews?: NodeView[],
+      peerViews?: FederationPeerView[]
+    ): Promise<IntelligenceWorkerView[]> {
       return withRegistryLock(async () => {
         const at = now ?? new Date().toISOString();
         return (await readWorkers(at)).map((worker) =>
-          buildWorkerView(worker, at, { nodeViews })
+          buildWorkerView(worker, at, { nodeViews, peerViews })
         );
       });
     },
@@ -1030,9 +1104,14 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
             leaseDurationMs:
               reservedWorker.assignmentLeaseDurationMs ?? selection.assignment.leaseDurationMs,
             identityVerified: reservedWorker.identityVerified,
-            observedLatencyMs: reservedWorker.observedLatencyMs ?? null,
-            costPerHourUsd: reservedWorker.costPerHourUsd ?? null,
-            deviceAffinityTags: reservedWorker.deviceAffinityTags
+            observedLatencyMs: selection.assignment.observedLatencyMs ?? reservedWorker.observedLatencyMs ?? null,
+            costPerHourUsd: selection.assignment.costPerHourUsd ?? reservedWorker.costPerHourUsd ?? null,
+            deviceAffinityTags: selection.assignment.deviceAffinityTags ?? reservedWorker.deviceAffinityTags,
+            peerId: selection.assignment.peerId ?? null,
+            peerStatus: selection.assignment.peerStatus ?? null,
+            peerLeaseStatus: selection.assignment.peerLeaseStatus ?? null,
+            peerObservedLatencyMs: selection.assignment.peerObservedLatencyMs ?? null,
+            peerTrustRemainingMs: selection.assignment.peerTrustRemainingMs ?? null
           }
         };
       });

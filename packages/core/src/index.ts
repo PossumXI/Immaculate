@@ -464,6 +464,11 @@ export type CognitiveExecution = {
   assignedWorkerObservedLatencyMs?: number;
   assignedWorkerCostPerHourUsd?: number;
   assignedWorkerDeviceAffinityTags?: string[];
+  assignedWorkerPeerId?: string;
+  assignedWorkerPeerStatus?: "healthy" | "stale" | "faulted";
+  assignedWorkerPeerLeaseStatus?: "healthy" | "stale" | "faulted";
+  assignedWorkerPeerObservedLatencyMs?: number;
+  assignedWorkerPeerTrustRemainingMs?: number;
   assignmentReason?: string;
   assignmentScore?: number;
   executionEndpoint?: string;
@@ -1112,6 +1117,11 @@ export const cognitiveExecutionSchema = z.object({
   assignedWorkerObservedLatencyMs: z.number().optional(),
   assignedWorkerCostPerHourUsd: z.number().optional(),
   assignedWorkerDeviceAffinityTags: z.array(z.string()).optional(),
+  assignedWorkerPeerId: z.string().optional(),
+  assignedWorkerPeerStatus: z.enum(["healthy", "stale", "faulted"]).optional(),
+  assignedWorkerPeerLeaseStatus: z.enum(["healthy", "stale", "faulted"]).optional(),
+  assignedWorkerPeerObservedLatencyMs: z.number().optional(),
+  assignedWorkerPeerTrustRemainingMs: z.number().optional(),
   assignmentReason: z.string().optional(),
   assignmentScore: z.number().optional(),
   executionEndpoint: z.string().optional(),
