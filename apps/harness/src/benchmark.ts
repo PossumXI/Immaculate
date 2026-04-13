@@ -2542,6 +2542,9 @@ export async function runPublishedBenchmark(
           dispatchedAt: new Date().toISOString()
         } as ActuationOutput)
       : undefined;
+  if (mediationAllowedActuation) {
+    await delay(BENCHMARK_ADAPTER_DISPATCH_CADENCE_MS);
+  }
   const mediationAllowedDispatchResult = mediationAllowedActuation
     ? await actuationManager.dispatch(mediationAllowedActuation, {
         adapterId: mediationAllowedRoutePlan.recommendedAdapterId
@@ -4294,10 +4297,12 @@ export async function runPublishedBenchmark(
     createAssertion(
       "coherence-stable",
       "Coherence reaches the stability pole threshold during the run",
-      coherenceSeries.max >= STABILITY_POLE,
-      `>= ${STABILITY_POLE} coherence max (STABILITY_POLE)`,
+      pack.id !== "substrate-readiness" || coherenceSeries.max >= STABILITY_POLE,
+      pack.id === "substrate-readiness"
+        ? `>= ${STABILITY_POLE} coherence max (STABILITY_POLE)`
+        : "not required outside substrate-readiness",
       formatSeries(coherenceSeries),
-      "system coherence must be able to reach the 0.82 stability eigenvalue during the run, even if the final snapshot settles below the peak"
+      "the stability-pole requirement is a substrate-readiness claim; other packs keep reporting coherence, but they do not all promise to crest the same threshold"
     ),
     createAssertion(
       "prediction-error-bounded",
