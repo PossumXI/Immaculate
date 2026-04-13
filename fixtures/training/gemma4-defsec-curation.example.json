@@ -1,0 +1,125 @@
+{
+  "id": "gemma4-defensive-security-v1",
+  "name": "Gemma 4 Defensive Security Corpus",
+  "description": "Manifest-first code corpus curation for defensive security, DevSecOps, and repair traces.",
+  "createdAt": "2026-04-13T00:00:00.000Z",
+  "createdBy": "PossumX",
+  "purposeTags": [
+    "coding",
+    "security",
+    "ops",
+    "devsecops"
+  ],
+  "sources": [
+    {
+      "id": "immaculate-local",
+      "kind": "git",
+      "host": "local",
+      "location": ".",
+      "tags": [
+        "coding",
+        "ops",
+        "security"
+      ],
+      "description": "Local orchestration substrate repository."
+    },
+    {
+      "id": "sigma",
+      "kind": "git",
+      "host": "github",
+      "location": "https://github.com/SigmaHQ/sigma.git",
+      "expectedLicense": "DRL-1.1",
+      "tags": [
+        "security",
+        "detection"
+      ],
+      "description": "Detection engineering ruleset. This source is intentionally expected to require review before training."
+    }
+  ],
+  "policy": {
+    "allowedHosts": [
+      "github",
+      "gitlab",
+      "huggingface",
+      "local"
+    ],
+    "allowedLicenses": [
+      "MIT",
+      "Apache-2.0",
+      "BSD-2-Clause",
+      "BSD-3-Clause",
+      "ISC",
+      "Unlicense",
+      "CC0-1.0",
+      "0BSD"
+    ],
+    "reviewLicenses": [
+      "MPL-2.0",
+      "LGPL-2.1",
+      "LGPL-3.0",
+      "DRL-1.1"
+    ],
+    "maxFileBytes": 262144,
+    "includeExtensions": [
+      ".ts",
+      ".tsx",
+      ".js",
+      ".jsx",
+      ".py",
+      ".rs",
+      ".go",
+      ".java",
+      ".c",
+      ".cc",
+      ".cpp",
+      ".h",
+      ".hpp",
+      ".md",
+      ".json",
+      ".yaml",
+      ".yml",
+      ".toml",
+      ".rego",
+      ".tf",
+      ".bicep",
+      ".sql"
+    ],
+    "includeFileNames": [
+      "Dockerfile",
+      "Makefile",
+      "Jenkinsfile",
+      ".gitignore",
+      ".gitlab-ci.yml"
+    ],
+    "excludeDirectories": [
+      ".git",
+      ".codex-smoke",
+      ".runtime",
+      ".training-output",
+      "benchmarks",
+      "node_modules",
+      "dist",
+      "build",
+      "coverage",
+      ".next",
+      ".venv",
+      "venv",
+      "wandb",
+      "__pycache__",
+      "target"
+    ],
+    "excludeFilePatterns": [
+      ".png",
+      ".jpg",
+      ".jpeg",
+      ".gif",
+      ".pdf",
+      ".zip",
+      ".gz",
+      ".lock",
+      ".min.js"
+    ],
+    "secretScanningEnabled": true,
+    "deduplicate": true
+  }
+}

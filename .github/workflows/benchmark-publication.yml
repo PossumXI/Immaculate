@@ -36,6 +36,9 @@ jobs:
       - name: Build core workspace
         run: npm run build -w @immaculate/core
 
+      - name: Run training-data smoke
+        run: npm run training-data:smoke
+
       - name: Run benchmark gate
         run: npm run benchmark:gate:all
 

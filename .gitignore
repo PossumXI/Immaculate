@@ -13,6 +13,8 @@ __pycache__/
 .runtime/
 .runtime*/
 apps/**/.runtime/
+.training-output/
+apps/**/.training-output/
 wandb/
 benchmarks/runs/
 benchmarks/latest.json

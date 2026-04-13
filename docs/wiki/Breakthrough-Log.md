@@ -21,6 +21,29 @@ For each breakthrough, record:
 
 ### 2026-04-13
 
+#### Training-data curation stopped being a notebook idea and became a governed factory surface
+
+What changed:
+- Immaculate now has a manifest-first training-data curation path for Gemma-style defensive fine-tuning corpora instead of relying on ad hoc one-off scripts
+- the curation engine materializes local or remote git sources, applies explicit allow/review/reject license policy, scans accepted candidates for likely secrets, deduplicates repeated content, and emits curated JSONL shards plus a run manifest
+- every curated source now carries explicit provenance fields including raw-content hash, processed-content hash, policy flags, and a Blake2-style chain hash over the run lineage
+- the default output root is generated state outside git, and CI now runs a dedicated smoke that proves license rejection, secret detection, dedup behavior, and provenance emission on every benchmark-gate and benchmark-publication pass
+
+Why it matters:
+- this closes a real gap between "we have a model-training idea" and "we can produce a repeatable, reviewable corpus without immediately losing the security and provenance discipline the rest of the harness already enforces"
+- the missed systems pattern was that dataset assembly is itself part of the control plane: if source selection, license stance, secret scrubbing, and dedup live only in notebooks, the eventual training artifact can never be defended rigorously
+- it also gives the project a truthful middle ground between two bad extremes: blind scraping on one side and manual spreadsheet-only provenance on the other
+
+Evidence:
+- `npm run typecheck -w @immaculate/core`, `npm run typecheck -w @immaculate/harness`, `npm run build -w @immaculate/core`, `npm run build -w @immaculate/harness`, and `npm run training-data:smoke` all passed on `2026-04-13`
+- the smoke now proves four concrete properties together: unknown-license source rejection, secret finding emission, duplicate-content suppression, and provenance-record generation
+- the tracked example manifest in `fixtures/training/gemma4-defsec-curation.example.json` plus the generated run schema in the core package establish a repeatable contract instead of an unversioned local script pile
+
+What this unlocks next:
+- governed read APIs and operator surfaces over curated training runs without leaking raw generated output into git
+- richer source adapters beyond local and git intake, once the same policy and provenance contract is preserved
+- fine-tune and evaluation pipelines that can consume the curated shard outputs directly instead of rebuilding data assembly logic inside each training job
+
 #### Federated retry-and-repair closed the next honesty gap in remote cognition
 
 What changed:

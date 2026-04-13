@@ -38,6 +38,45 @@ Generated runtime state, benchmark run dumps, local tooling environments, and lo
 Major breakthroughs and materially new system discoveries are tracked in the wiki source at `docs/wiki/Breakthrough-Log.md`.
 The tracked public benchmark surface lives at `docs/wiki/Benchmark-Status.md`.
 
+## Training Data Curation
+
+Immaculate now includes a policy-aware training-data curation factory for defensive Gemma-style corpus work.
+It is built to make dataset assembly reproducible and auditable before any fine-tune run starts.
+
+What it does today:
+
+- loads an explicit source manifest
+- materializes local or remote git sources into a controlled workspace
+- applies allow/review/reject license policy gates
+- performs a best-effort scan for likely secrets before export
+- deduplicates repeated content across sources
+- emits curated JSONL shards plus a run manifest and provenance chain hashes
+- records commercial-use, defense-use, copyleft-free, and proprietary-output-free policy flags as explicit metadata rather than hidden assumptions
+
+Those flags are outputs of the current curation policy and heuristics, not legal certification.
+
+What it does not claim today:
+
+- legal certification
+- automatic proof that a dataset is safe for every downstream use
+- complete secret detection
+- automatic clearance of ambiguous or custom licenses without human review
+
+Run the curation smoke:
+
+```powershell
+npm run training-data:smoke
+```
+
+Run a real curation pass from a manifest:
+
+```powershell
+npm run training-data:curate -- fixtures/training/gemma4-defsec-curation.example.json
+```
+
+The tracked example manifest lives at [fixtures/training/gemma4-defsec-curation.example.json](fixtures/training/gemma4-defsec-curation.example.json).
+The default generated output root is `.training-output/`, which is intentionally ignored by git.
+
 ## Security Monitoring
 
 - GitHub secret scanning and push protection are enabled on the public repository
@@ -195,6 +234,7 @@ Benchmark packs currently include:
 - live socket neuro frames ingested into the same durable `synchronize` and `decode` path
 - first local Ollama/Gemma cognition backend wired into `route`, `reason`, and `commit`
 - W&B benchmark publication backend wired to the existing benchmark artifact ledger
+- policy-aware training-data curation with manifest-driven source intake, license gating, secret scanning, dedup, provenance hashes, and JSONL shard export for Gemma-style fine-tuning corpora
 - keyboard-first TUI and Next.js dashboard over the same live harness
 - internal benchmark publication for repeatable functional testing
 - benchmark execution offloaded from the live harness event loop into a worker job

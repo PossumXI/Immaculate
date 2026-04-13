@@ -296,6 +296,161 @@ export type IngestedDatasetSummary = {
   ingestedAt: string;
 };
 
+export const trainingCorpusSourceKinds = ["git"] as const;
+export type TrainingCorpusSourceKind = (typeof trainingCorpusSourceKinds)[number];
+
+export const trainingCorpusSourceHosts = [
+  "github",
+  "gitlab",
+  "huggingface",
+  "local"
+] as const;
+export type TrainingCorpusSourceHost = (typeof trainingCorpusSourceHosts)[number];
+
+export const trainingCorpusLicenseDecisions = [
+  "allow",
+  "review",
+  "reject"
+] as const;
+export type TrainingCorpusLicenseDecision =
+  (typeof trainingCorpusLicenseDecisions)[number];
+
+export const trainingCorpusCurationStatuses = [
+  "accepted",
+  "skipped",
+  "duplicate",
+  "rejected"
+] as const;
+export type TrainingCorpusCurationStatus =
+  (typeof trainingCorpusCurationStatuses)[number];
+
+export const trainingCorpusSecretScanStatuses = [
+  "clear",
+  "flagged",
+  "not-scanned"
+] as const;
+export type TrainingCorpusSecretScanStatus =
+  (typeof trainingCorpusSecretScanStatuses)[number];
+
+export type TrainingCorpusSourceManifest = {
+  id: string;
+  kind: TrainingCorpusSourceKind;
+  host: TrainingCorpusSourceHost;
+  location: string;
+  ref?: string;
+  expectedLicense?: string;
+  tags: string[];
+  description?: string;
+};
+
+export type TrainingCorpusPolicy = {
+  allowedHosts: TrainingCorpusSourceHost[];
+  allowedLicenses: string[];
+  reviewLicenses: string[];
+  maxFileBytes: number;
+  includeExtensions: string[];
+  includeFileNames: string[];
+  excludeDirectories: string[];
+  excludeFilePatterns: string[];
+  secretScanningEnabled: boolean;
+  deduplicate: boolean;
+};
+
+export type TrainingCorpusManifest = {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: string;
+  createdBy?: string;
+  purposeTags: string[];
+  sources: TrainingCorpusSourceManifest[];
+  policy: TrainingCorpusPolicy;
+};
+
+export type TrainingCorpusSourceSummary = {
+  sourceId: string;
+  kind: TrainingCorpusSourceKind;
+  host: TrainingCorpusSourceHost;
+  locationLabel: string;
+  provenanceRecordId: string;
+  resolvedRef?: string;
+  detectedLicense?: string;
+  expectedLicense?: string;
+  licenseDecision: TrainingCorpusLicenseDecision;
+  status: "accepted" | "rejected";
+  acceptedFileCount: number;
+  skippedFileCount: number;
+  duplicateFileCount: number;
+  secretFindingCount: number;
+  rawContentSha256: string;
+  processedContentSha256: string;
+  estimatedTokenCount: number;
+  commercialUse: boolean;
+  defenseUse: boolean;
+  copyleftFree: boolean;
+  gptOutputFree: boolean;
+  previousProvenanceRecordId?: string;
+  provenanceChainHash: string;
+  rationale: string;
+};
+
+export type TrainingCorpusFileRecord = {
+  sourceId: string;
+  relativePath: string;
+  language: string;
+  tags: string[];
+  sizeBytes: number;
+  lineCount: number;
+  detectedLicense?: string;
+  contentFingerprint: string;
+  dedupKey: string;
+  secretScanStatus: TrainingCorpusSecretScanStatus;
+  curationStatus: TrainingCorpusCurationStatus;
+  skipReason?: string;
+  secretFindingCount: number;
+};
+
+export type TrainingCorpusOutputShard = {
+  id: string;
+  label: string;
+  filePath: string;
+  recordCount: number;
+  tags: string[];
+};
+
+export type TrainingCorpusRunSummary = {
+  id: string;
+  manifestId: string;
+  manifestName: string;
+  createdAt: string;
+  createdBy?: string;
+  pipelineCodeSha256: string;
+  sourceCount: number;
+  acceptedSourceCount: number;
+  rejectedSourceCount: number;
+  acceptedFileCount: number;
+  skippedFileCount: number;
+  duplicateFileCount: number;
+  secretFindingCount: number;
+  outputRecordCount: number;
+  estimatedTokenCount: number;
+  commercialUse: boolean;
+  defenseUse: boolean;
+  copyleftFree: boolean;
+  gptOutputFree: boolean;
+  provenanceChainHash: string;
+  outputRoot: string;
+  outputJsonlPath: string;
+  shards: TrainingCorpusOutputShard[];
+  sources: TrainingCorpusSourceSummary[];
+};
+
+export type TrainingCorpusRun = TrainingCorpusRunSummary & {
+  manifestPath: string;
+  manifest: TrainingCorpusManifest;
+  files: TrainingCorpusFileRecord[];
+};
+
 export const neuroStreamKinds = [
   "electrical-series",
   "lfp-series",
@@ -980,6 +1135,215 @@ export const datasetSummarySchema = z.object({
   subjects: z.array(z.string()),
   sessions: z.array(z.string()),
   ingestedAt: z.string()
+});
+
+export const trainingCorpusSourceManifestSchema = z.object({
+  id: z.string(),
+  kind: z.enum(trainingCorpusSourceKinds),
+  host: z.enum(trainingCorpusSourceHosts),
+  location: z.string(),
+  ref: z.string().optional(),
+  expectedLicense: z.string().optional(),
+  tags: z.array(z.string()).default([]),
+  description: z.string().optional()
+});
+
+export const trainingCorpusPolicySchema = z.object({
+  allowedHosts: z.array(z.enum(trainingCorpusSourceHosts)).default([
+    "github",
+    "gitlab",
+    "huggingface",
+    "local"
+  ]),
+  allowedLicenses: z.array(z.string()).default([
+    "MIT",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unlicense",
+    "CC0-1.0",
+    "0BSD"
+  ]),
+  reviewLicenses: z.array(z.string()).default(["MPL-2.0", "LGPL-2.1", "LGPL-3.0"]),
+  maxFileBytes: z.number().int().positive().default(262144),
+  includeExtensions: z.array(z.string()).default([
+    ".ts",
+    ".tsx",
+    ".js",
+    ".jsx",
+    ".mjs",
+    ".cjs",
+    ".json",
+    ".jsonc",
+    ".yaml",
+    ".yml",
+    ".toml",
+    ".ini",
+    ".py",
+    ".rs",
+    ".go",
+    ".java",
+    ".kt",
+    ".scala",
+    ".c",
+    ".cc",
+    ".cpp",
+    ".h",
+    ".hpp",
+    ".md",
+    ".mdx",
+    ".txt",
+    ".sql",
+    ".rego",
+    ".tf",
+    ".tfvars",
+    ".bicep",
+    ".sh",
+    ".ps1",
+    ".dockerfile",
+    ".xml",
+    ".html",
+    ".css",
+    ".scss",
+    ".proto"
+  ]),
+  includeFileNames: z.array(z.string()).default([
+    "Dockerfile",
+    "Makefile",
+    "Jenkinsfile",
+    "Tiltfile",
+    "Procfile",
+    ".gitignore",
+    ".gitattributes",
+    ".dockerignore",
+    ".gitlab-ci.yml"
+  ]),
+  excludeDirectories: z.array(z.string()).default([
+    ".git",
+    ".hg",
+    ".svn",
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    "vendor",
+    ".next",
+    ".turbo",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "target"
+  ]),
+  excludeFilePatterns: z.array(z.string()).default([
+    ".min.js",
+    ".min.css",
+    ".lock",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".pdf",
+    ".zip",
+    ".gz"
+  ]),
+  secretScanningEnabled: z.boolean().default(true),
+  deduplicate: z.boolean().default(true)
+});
+
+export const trainingCorpusManifestSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  createdAt: z.string(),
+  createdBy: z.string().optional(),
+  purposeTags: z.array(z.string()).default([]),
+  sources: z.array(trainingCorpusSourceManifestSchema).min(1),
+  policy: trainingCorpusPolicySchema
+});
+
+export const trainingCorpusSourceSummarySchema = z.object({
+  sourceId: z.string(),
+  kind: z.enum(trainingCorpusSourceKinds),
+  host: z.enum(trainingCorpusSourceHosts),
+  locationLabel: z.string(),
+  provenanceRecordId: z.string(),
+  resolvedRef: z.string().optional(),
+  detectedLicense: z.string().optional(),
+  expectedLicense: z.string().optional(),
+  licenseDecision: z.enum(trainingCorpusLicenseDecisions),
+  status: z.enum(["accepted", "rejected"]),
+  acceptedFileCount: z.number().int().nonnegative(),
+  skippedFileCount: z.number().int().nonnegative(),
+  duplicateFileCount: z.number().int().nonnegative(),
+  secretFindingCount: z.number().int().nonnegative(),
+  rawContentSha256: z.string().regex(/^[a-f0-9]{64}$/),
+  processedContentSha256: z.string().regex(/^[a-f0-9]{64}$/),
+  estimatedTokenCount: z.number().int().nonnegative(),
+  commercialUse: z.boolean(),
+  defenseUse: z.boolean(),
+  copyleftFree: z.boolean(),
+  gptOutputFree: z.boolean(),
+  previousProvenanceRecordId: z.string().optional(),
+  provenanceChainHash: z.string().regex(/^[a-f0-9]{64}$/),
+  rationale: z.string()
+});
+
+export const trainingCorpusFileRecordSchema = z.object({
+  sourceId: z.string(),
+  relativePath: z.string(),
+  language: z.string(),
+  tags: z.array(z.string()).default([]),
+  sizeBytes: z.number().int().nonnegative(),
+  lineCount: z.number().int().nonnegative(),
+  detectedLicense: z.string().optional(),
+  contentFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+  dedupKey: z.string().regex(/^[a-f0-9]{64}$/),
+  secretScanStatus: z.enum(trainingCorpusSecretScanStatuses),
+  curationStatus: z.enum(trainingCorpusCurationStatuses),
+  skipReason: z.string().optional(),
+  secretFindingCount: z.number().int().nonnegative()
+});
+
+export const trainingCorpusOutputShardSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  filePath: z.string(),
+  recordCount: z.number().int().nonnegative(),
+  tags: z.array(z.string()).default([])
+});
+
+export const trainingCorpusRunSummarySchema = z.object({
+  id: z.string(),
+  manifestId: z.string(),
+  manifestName: z.string(),
+  createdAt: z.string(),
+  createdBy: z.string().optional(),
+  pipelineCodeSha256: z.string().regex(/^[a-f0-9]{64}$/),
+  sourceCount: z.number().int().nonnegative(),
+  acceptedSourceCount: z.number().int().nonnegative(),
+  rejectedSourceCount: z.number().int().nonnegative(),
+  acceptedFileCount: z.number().int().nonnegative(),
+  skippedFileCount: z.number().int().nonnegative(),
+  duplicateFileCount: z.number().int().nonnegative(),
+  secretFindingCount: z.number().int().nonnegative(),
+  outputRecordCount: z.number().int().nonnegative(),
+  estimatedTokenCount: z.number().int().nonnegative(),
+  commercialUse: z.boolean(),
+  defenseUse: z.boolean(),
+  copyleftFree: z.boolean(),
+  gptOutputFree: z.boolean(),
+  provenanceChainHash: z.string().regex(/^[a-f0-9]{64}$/),
+  outputRoot: z.string(),
+  outputJsonlPath: z.string(),
+  shards: z.array(trainingCorpusOutputShardSchema),
+  sources: z.array(trainingCorpusSourceSummarySchema)
+});
+
+export const trainingCorpusRunSchema = trainingCorpusRunSummarySchema.extend({
+  manifestPath: z.string(),
+  manifest: trainingCorpusManifestSchema,
+  files: z.array(trainingCorpusFileRecordSchema)
 });
 
 const neuroStreamSummarySchema = z.object({
