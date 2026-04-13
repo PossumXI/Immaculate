@@ -21,6 +21,33 @@ For each breakthrough, record:
 
 ### 2026-04-13
 
+#### Q became a truthful alias, the local comparison surface went live, and the latest regression stayed published
+
+What changed:
+- Immaculate now has a real local Ollama alias path so the current Gemma 4 model can be addressed as `Q` without hiding the underlying base model
+- the harness now emits a controlled yellow/ocean-blue startup banner and surfaces the `Q -> gemma4:e4b` mapping at boot
+- the repo now carries a live local model-comparison page that runs `Q`, `gemma3:4b`, and `qwen3:8b` through the same structured route/reason/commit contract and publishes the measured outputs into the wiki
+- the `Q` fine-tune path now has a tracked curation manifest, a text-dataset shaper, and an Unsloth launch bundle wired back to the training-data factory
+- the repo now also carries a hardened OCI private deployment bundle and a live validation page that records both the successful Temporal rerun and the failed fresh `60s` benchmark rerun
+
+Why it matters:
+- this closes a common honesty gap in local model work: a renamed model is now a real alias with an operator surface, not a silent doc-only nickname
+- the missed systems pattern was that local comparison pages are more valuable when they publish bad news as well as good news; the `60s` regression and the weak structured output from `Q` are both now part of the source-controlled record
+- it also ties training back to the governed corpus path, which keeps the next `Q` fine-tune from splintering into an untracked side experiment
+
+Evidence:
+- `npm run ollama:alias:q -- --force` succeeded and installed `q:latest`
+- `npm run benchmark:temporal` passed on `2026-04-13` with suite `immaculate-benchmark-2026-04-13T22-40-03-299Z`
+- `npm run benchmark:latency:60s` completed on `2026-04-13` with suite `immaculate-benchmark-2026-04-13T22-41-40-475Z` and `3` failing assertions, which are now published in `docs/wiki/Live-Validation-2026-04-13.md`
+- `npm run compare:models` generated `docs/wiki/Model-Benchmark-Comparison.md` and showed `gemma3:4b` at `4/4` parse success while `Q` and `qwen3:8b` both failed the structured contract on this machine
+- the follow-up live server drill kept one more ugly truth on record: `Q` failed closed with `No response returned by Ollama.`, and a governed `gemma3:4b` run started but still had no completion record at the last log read even while `/api/health` stayed healthy
+- `npm run training-data:curate -- fixtures/training/q-defsec-curation.example.json` produced run `cur-fnv1a-b7a9289b` with `969` accepted files, and `python training/q/build_q_text_dataset.py ...` shaped those records into `.training-output/q/q-train-cur-fnv1a-b7a9289b.jsonl`
+
+What this unlocks next:
+- real `Q` fine-tuning against the governed corpus path instead of continued alias-only work
+- structured-output evaluation gates for `Q` so route/reason/commit compliance becomes a hard release surface
+- a targeted fix pass for the fresh `60s` benchmark regression on Windows instead of pretending the older soak run already answered that question
+
 #### Training-data curation stopped being a notebook idea and became a governed factory surface
 
 What changed:

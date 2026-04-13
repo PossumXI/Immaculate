@@ -77,6 +77,12 @@ npm run training-data:curate -- fixtures/training/gemma4-defsec-curation.example
 The tracked example manifest lives at [fixtures/training/gemma4-defsec-curation.example.json](fixtures/training/gemma4-defsec-curation.example.json).
 The default generated output root is `.training-output/`, which is intentionally ignored by git.
 
+For the `Q` fine-tune path specifically:
+
+- alias/install guide: [docs/wiki/Q-Alias-and-Banner.md](docs/wiki/Q-Alias-and-Banner.md)
+- model/training manifest: [fixtures/training/q-defsec-curation.example.json](fixtures/training/q-defsec-curation.example.json)
+- training bundle: [training/q/README.md](training/q/README.md)
+
 ## Security Monitoring
 
 - GitHub secret scanning and push protection are enabled on the public repository
@@ -174,6 +180,24 @@ Run the honest Temporal comparison lane:
 npm run benchmark:temporal -w @immaculate/harness
 ```
 
+Run the live local model comparison across `Q` and the other installed Ollama models:
+
+```powershell
+npm run compare:models
+```
+
+Create or refresh the local Ollama alias for `Q`:
+
+```powershell
+npm run ollama:alias:q -- --force
+```
+
+Render the yellow/ocean-blue startup banner directly:
+
+```powershell
+npm run banner
+```
+
 Export the live W&B benchmark results back into the tracked wiki:
 
 ```powershell
@@ -191,6 +215,8 @@ Current benchmark publication surfaces:
 - W&B project: https://wandb.ai/arobi-arobi-technology-alliance/immaculate
 - tracked repo/wiki status: [docs/wiki/Benchmark-Status.md](docs/wiki/Benchmark-Status.md)
 - tracked repo/wiki W&B export: [docs/wiki/Benchmark-Wandb-Export.md](docs/wiki/Benchmark-Wandb-Export.md)
+- tracked repo/wiki live validation: [docs/wiki/Live-Validation-2026-04-13.md](docs/wiki/Live-Validation-2026-04-13.md)
+- tracked repo/wiki model comparison: [docs/wiki/Model-Benchmark-Comparison.md](docs/wiki/Model-Benchmark-Comparison.md)
 - latest run URL for every published pack lives in the tracked wiki status/export pages above
 
 Optional environment variables:

@@ -1,0 +1,36 @@
+{
+  "run_name": "q-defsec-lora-v1",
+  "alias_name": "Q",
+  "base_model": "unsloth/gemma-4-31B-it",
+  "curated_dataset_path": ".training-output/q/q-train.jsonl",
+  "output_dir": ".training-output/q/runs/q-defsec-lora-v1",
+  "max_seq_length": 4096,
+  "learning_rate": 0.0002,
+  "warmup_ratio": 0.1,
+  "lr_scheduler_type": "cosine",
+  "num_train_epochs": 3,
+  "per_device_train_batch_size": 2,
+  "gradient_accumulation_steps": 8,
+  "lora_rank": 32,
+  "lora_alpha": 64,
+  "lora_dropout": 0.05,
+  "target_modules": [
+    "q_proj",
+    "k_proj",
+    "v_proj",
+    "o_proj",
+    "gate_proj",
+    "up_proj",
+    "down_proj"
+  ],
+  "modules_to_save": [
+    "lm_head",
+    "embed_tokens"
+  ],
+  "bf16": true,
+  "logging_steps": 10,
+  "save_steps": 500,
+  "report_to": [
+    "wandb"
+  ]
+}

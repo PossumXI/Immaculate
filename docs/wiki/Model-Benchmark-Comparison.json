@@ -1,0 +1,254 @@
+{
+  "generatedAt": "2026-04-13T22:52:25.823Z",
+  "ollamaBaseUrl": "http://127.0.0.1:11434",
+  "qAlias": {
+    "alias": "Q",
+    "actualModel": "gemma4:e4b",
+    "truthfulLabel": "Q (gemma4:e4b)"
+  },
+  "hardwareContext": {
+    "host": "knightly",
+    "platform": "win32",
+    "arch": "x64",
+    "osVersion": "Windows 11 Pro",
+    "cpuModel": "AMD Ryzen 7 7735HS with Radeon Graphics",
+    "cpuCount": 16,
+    "memoryGiB": 23.29,
+    "nodeVersion": "v22.13.1"
+  },
+  "models": [
+    {
+      "requestedModel": "gemma3:4b",
+      "actualModel": "gemma3:4b",
+      "displayName": "gemma3:4b",
+      "truthfulLabel": "gemma3:4b",
+      "vendor": "Google DeepMind",
+      "role": "reasoner",
+      "taskCount": 4,
+      "completedTaskCount": 4,
+      "parseSuccessCount": 4,
+      "parseSuccessRate": 1,
+      "averageLatencyMs": 28840.36,
+      "p95LatencyMs": 39780.76,
+      "averageWallLatencyMs": 28944.61,
+      "averageStructuredFields": 3,
+      "tasks": [
+        {
+          "taskId": "security-triage",
+          "label": "Security triage",
+          "latencyMs": 39780.76,
+          "wallLatencyMs": 39835.29,
+          "structuredFieldCount": 3,
+          "parseSuccess": true,
+          "status": "completed",
+          "routeSuggestion": "Select the most reliable route to bypass the forged ACK path immediately.",
+          "reasonSummary": "Prioritize a stable route to prevent further propagation of the control-plane error.",
+          "commitStatement": "Implement fail-closed remediation by redirecting traffic through an alternative pathway.",
+          "responsePreview": "ROUTE: Select the most reliable route to bypass the forged ACK path immediately. REASON: Prioritize a stable route to prevent further propagation of the control-plane error. COMMIT: Implement fail-closed remediation by redirecting traffic through an alternative pathway."
+        },
+        {
+          "taskId": "ops-recovery",
+          "label": "Ops recovery",
+          "latencyMs": 24019.66,
+          "wallLatencyMs": 24162.95,
+          "structuredFieldCount": 3,
+          "parseSuccess": true,
+          "status": "completed",
+          "routeSuggestion": "Initiate a targeted repair window adjustment for the sensor-array peer.",
+          "reasonSummary": "Lease jitter and a failed execution necessitate immediate stabilization efforts.",
+          "commitStatement": "Execute the repair window adjustment to resolve the identified issues.",
+          "responsePreview": "ROUTE: Initiate a targeted repair window adjustment for the sensor-array peer. REASON: Lease jitter and a failed execution necessitate immediate stabilization efforts. COMMIT: Execute the repair window adjustment to resolve the identified issues."
+        },
+        {
+          "taskId": "coding-fix",
+          "label": "Coding fix",
+          "latencyMs": 24850.61,
+          "wallLatencyMs": 24859.87,
+          "structuredFieldCount": 3,
+          "parseSuccess": true,
+          "status": "completed",
+          "routeSuggestion": "Deploy the updated service with CORS headers to restrict sensitive data transmission.",
+          "reasonSummary": "Implementing CORS allows controlled access while preventing bearer token exposure in URLs.",
+          "commitStatement": "Execute the patch, ensuring the TypeScript service securely handles same-origin requests.",
+          "responsePreview": "ROUTE: Deploy the updated service with CORS headers to restrict sensitive data transmission. REASON: Implementing CORS allows controlled access while preventing bearer token exposure in URLs. COMMIT: Execute the patch, ensuring the TypeScript service securely handles same-origin…"
+        },
+        {
+          "taskId": "orchestration-route",
+          "label": "Orchestration route",
+          "latencyMs": 26710.4,
+          "wallLatencyMs": 26920.35,
+          "structuredFieldCount": 3,
+          "parseSuccess": true,
+          "status": "completed",
+          "routeSuggestion": "Initiate route selection prioritizing sensor-array data for immediate stabilization.",
+          "reasonSummary": "The substrate requires cautious navigation due to mixed decode confidence and arbitration’s deliberation.",
+          "commitStatement": "Execute the chosen route to stabilize the live orchestration, safeguarding against overcommitment.",
+          "responsePreview": "ROUTE: Initiate route selection prioritizing sensor-array data for immediate stabilization. REASON: The substrate requires cautious navigation due to mixed decode confidence and arbitration’s deliberation. COMMIT: Execute the chosen route to stabilize the live orchestration, saf…"
+        }
+      ]
+    },
+    {
+      "requestedModel": "qwen3:8b",
+      "actualModel": "qwen3:8b",
+      "displayName": "qwen3:8b",
+      "truthfulLabel": "qwen3:8b",
+      "vendor": "Alibaba Cloud",
+      "role": "reasoner",
+      "taskCount": 4,
+      "completedTaskCount": 0,
+      "parseSuccessCount": 0,
+      "parseSuccessRate": 0,
+      "averageLatencyMs": 68709.82,
+      "p95LatencyMs": 76901.56,
+      "averageWallLatencyMs": 68778.68,
+      "averageStructuredFields": 0,
+      "tasks": [
+        {
+          "taskId": "security-triage",
+          "label": "Security triage",
+          "latencyMs": 76901.56,
+          "wallLatencyMs": 76939.57,
+          "structuredFieldCount": 0,
+          "parseSuccess": false,
+          "status": "failed",
+          "responsePreview": "No response returned by Ollama."
+        },
+        {
+          "taskId": "ops-recovery",
+          "label": "Ops recovery",
+          "latencyMs": 62769.18,
+          "wallLatencyMs": 62821.02,
+          "structuredFieldCount": 0,
+          "parseSuccess": false,
+          "status": "failed",
+          "responsePreview": "No response returned by Ollama."
+        },
+        {
+          "taskId": "coding-fix",
+          "label": "Coding fix",
+          "latencyMs": 65005.67,
+          "wallLatencyMs": 65069.6,
+          "structuredFieldCount": 0,
+          "parseSuccess": false,
+          "status": "failed",
+          "responsePreview": "No response returned by Ollama."
+        },
+        {
+          "taskId": "orchestration-route",
+          "label": "Orchestration route",
+          "latencyMs": 70162.88,
+          "wallLatencyMs": 70284.52,
+          "structuredFieldCount": 0,
+          "parseSuccess": false,
+          "status": "failed",
+          "responsePreview": "No response returned by Ollama."
+        }
+      ]
+    },
+    {
+      "requestedModel": "q",
+      "actualModel": "gemma4:e4b",
+      "displayName": "Q",
+      "truthfulLabel": "Q (gemma4:e4b)",
+      "vendor": "Google DeepMind",
+      "role": "reasoner",
+      "taskCount": 4,
+      "completedTaskCount": 0,
+      "parseSuccessCount": 0,
+      "parseSuccessRate": 0,
+      "averageLatencyMs": 73218.67,
+      "p95LatencyMs": 154807.43,
+      "averageWallLatencyMs": 73473.05,
+      "averageStructuredFields": 0,
+      "tasks": [
+        {
+          "taskId": "security-triage",
+          "label": "Security triage",
+          "latencyMs": 154807.43,
+          "wallLatencyMs": 155502.91,
+          "structuredFieldCount": 0,
+          "parseSuccess": false,
+          "status": "failed",
+          "responsePreview": "No response returned by Ollama."
+        },
+        {
+          "taskId": "ops-recovery",
+          "label": "Ops recovery",
+          "latencyMs": 45885.21,
+          "wallLatencyMs": 46039.46,
+          "structuredFieldCount": 0,
+          "parseSuccess": false,
+          "status": "failed",
+          "responsePreview": "No response returned by Ollama."
+        },
+        {
+          "taskId": "coding-fix",
+          "label": "Coding fix",
+          "latencyMs": 46352.93,
+          "wallLatencyMs": 46446.79,
+          "structuredFieldCount": 0,
+          "parseSuccess": false,
+          "status": "failed",
+          "responsePreview": "No response returned by Ollama."
+        },
+        {
+          "taskId": "orchestration-route",
+          "label": "Orchestration route",
+          "latencyMs": 45829.12,
+          "wallLatencyMs": 45903.04,
+          "structuredFieldCount": 0,
+          "parseSuccess": false,
+          "status": "failed",
+          "responsePreview": "No response returned by Ollama."
+        }
+      ]
+    }
+  ],
+  "orchestrators": {
+    "generatedFrom": {
+      "latencyBenchmarkSuiteId": "immaculate-benchmark-2026-04-13T22-41-40-475Z",
+      "temporalSuiteId": "immaculate-benchmark-2026-04-13T22-40-03-299Z"
+    },
+    "immaculate": {
+      "packId": "latency-benchmark-60s",
+      "failedAssertions": 3,
+      "reflexP95Ms": 17.85,
+      "cognitiveP95Ms": 57.03,
+      "measuredEventThroughputEventsPerSecond": 662.15,
+      "hardware": {
+        "host": "knightly",
+        "platform": "win32",
+        "arch": "x64",
+        "osVersion": "Windows 11 Pro",
+        "cpuModel": "AMD Ryzen 7 7735HS with Radeon Graphics",
+        "cpuCount": 16,
+        "memoryGiB": 23.29,
+        "diskKind": "SSD",
+        "nodeVersion": "v22.13.1"
+      }
+    },
+    "temporal": {
+      "failedAssertions": 0,
+      "immaculateWorkflowWallClockP95Ms": 86.92,
+      "temporalWorkflowWallClockP95Ms": 517.36,
+      "immaculateRssPeakMiB": 701.83,
+      "temporalRssPeakMiB": 427.81,
+      "hardware": {
+        "host": "knightly",
+        "platform": "win32",
+        "arch": "x64",
+        "osVersion": "Windows 11 Pro",
+        "cpuModel": "AMD Ryzen 7 7735HS with Radeon Graphics",
+        "cpuCount": 16,
+        "memoryGiB": 23.29,
+        "diskKind": "SSD",
+        "nodeVersion": "v22.13.1"
+      }
+    },
+    "interpretation": "The latest local latency-benchmark-60s run exposed 3 failing assertions on this machine, so treat its throughput line as a live regression signal rather than a release-clean baseline."
+  },
+  "output": {
+    "jsonPath": "C:\\Users\\Knight\\Desktop\\Immaculate-repair-aware\\docs\\wiki\\Model-Benchmark-Comparison.json",
+    "markdownPath": "C:\\Users\\Knight\\Desktop\\Immaculate-repair-aware\\docs\\wiki\\Model-Benchmark-Comparison.md"
+  }
+}
