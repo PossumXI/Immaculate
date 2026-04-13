@@ -1,9 +1,9 @@
-import os from "node:os";
 import path from "node:path";
 import { execFile } from "node:child_process";
 import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { promisify } from "node:util";
 import { curateTrainingCorpus, createTrainingCorpusRegistry } from "./training-data.js";
+import { getAllowedDataRoot } from "./utils.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -25,7 +25,9 @@ async function createRepo(
 }
 
 async function main(): Promise<void> {
-  const tempRoot = await mkdtemp(path.join(os.tmpdir(), "immaculate-training-data-"));
+  const tempRoot = await mkdtemp(
+    path.join(getAllowedDataRoot(), "immaculate-training-data-")
+  );
   const outputRoot = path.join(tempRoot, "output");
   try {
     const allowedRepo = path.join(tempRoot, "allowed-repo");
