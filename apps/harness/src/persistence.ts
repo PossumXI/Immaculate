@@ -44,6 +44,12 @@ type ReplayQuery = {
   limit?: number;
 };
 
+type PersistenceFaultInjection = {
+  triggerPersistCount: number;
+  target: "events" | "history" | "snapshot" | "checkpoint" | "status";
+  errorCode?: "ENOSPC";
+};
+
 export type CheckpointMetadata = {
   id: string;
   filePath: string;
@@ -142,19 +148,30 @@ async function safeReadLastNonEmptyLine(filePath: string): Promise<string | null
   }
 }
 
-function parseNdjson<T>(
-  content: string | null,
-  parser: { parse: (value: unknown) => T }
-): T[] {
+function parseNdjson<T>(content: string | null, parser: { parse: (value: unknown) => T }): T[] {
   if (!content) {
     return [];
   }
 
-  return content
+  const lines = content
     .split(/\r?\n/)
     .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => parser.parse(JSON.parse(line)));
+    .filter(Boolean);
+  const parsed: T[] = [];
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index]!;
+    try {
+      parsed.push(parser.parse(JSON.parse(line)));
+    } catch (error) {
+      if (index === lines.length - 1) {
+        break;
+      }
+      throw error;
+    }
+  }
+
+  return parsed;
 }
 
 function parseCheckpointIndex(content: string | null): CheckpointMetadata[] {
@@ -395,7 +412,12 @@ async function atomicWrite(filePath: string, contents: string): Promise<void> {
   }
 }
 
-export function createPersistence(rootDir = path.join(process.cwd(), ".runtime", "harness")) {
+export function createPersistence(
+  rootDir = path.join(process.cwd(), ".runtime", "harness"),
+  options?: {
+    faultInjection?: PersistenceFaultInjection;
+  }
+) {
   const snapshotPath = path.join(rootDir, "snapshot.json");
   const eventsPath = path.join(rootDir, "events.ndjson");
   const historyPath = path.join(rootDir, "history.ndjson");
@@ -421,6 +443,7 @@ export function createPersistence(rootDir = path.join(process.cwd(), ".runtime",
 
   let checkpoints: CheckpointMetadata[] = [];
   let writeChain = Promise.resolve();
+  let persistInvocationCount = 0;
 
   async function ensureRoot(): Promise<void> {
     await mkdir(rootDir, { recursive: true });
@@ -456,6 +479,25 @@ export function createPersistence(rootDir = path.join(process.cwd(), ".runtime",
       compacted: status.compacted
     };
     await atomicWrite(statusPath, JSON.stringify(ledger, null, 2));
+  }
+
+  function maybeInjectFault(
+    target: PersistenceFaultInjection["target"],
+    persistCount: number
+  ): void {
+    const faultInjection = options?.faultInjection;
+    if (!faultInjection || faultInjection.target !== target) {
+      return;
+    }
+    if (persistCount < faultInjection.triggerPersistCount) {
+      return;
+    }
+
+    const error = new Error(
+      `Injected persistence fault at ${target} on persist ${persistCount}.`
+    ) as NodeJS.ErrnoException;
+    error.code = faultInjection.errorCode ?? "ENOSPC";
+    throw error;
   }
 
   async function compactPersistedWindows(): Promise<void> {
@@ -757,12 +799,15 @@ export function createPersistence(rootDir = path.join(process.cwd(), ".runtime",
     const parsed = engineDurableStateSchema.parse(durableState);
     const integrity = inspectDurableState(parsed);
     syncIntegrityStatus(integrity);
+    persistInvocationCount += 1;
+    const currentPersistCount = persistInvocationCount;
 
     writeChain = writeChain.then(async () => {
       await ensureRoot();
 
       const eventDelta = computeEventDelta(parsed.events);
       if (eventDelta.length > 0) {
+        maybeInjectFault("events", currentPersistCount);
         const payload = `${eventDelta.map((event) => JSON.stringify(eventEnvelopeSchema.parse(event))).join("\n")}\n`;
         await appendFile(eventsPath, payload, "utf8");
         status.persistedEventCount += eventDelta.length;
@@ -771,21 +816,25 @@ export function createPersistence(rootDir = path.join(process.cwd(), ".runtime",
 
       const historyDelta = computeHistoryDelta(parsed.history);
       if (historyDelta.length > 0) {
+        maybeInjectFault("history", currentPersistCount);
         const payload = `${historyDelta.map((point) => JSON.stringify(snapshotHistoryPointSchema.parse(point))).join("\n")}\n`;
         await appendFile(historyPath, payload, "utf8");
         status.persistedHistoryCount += historyDelta.length;
         status.lastPersistedHistoryKey = historyKey(historyDelta[historyDelta.length - 1]!);
       }
 
+      maybeInjectFault("snapshot", currentPersistCount);
       await atomicWrite(snapshotPath, JSON.stringify(parsed, null, 2));
       status.lastSnapshotAt = parsed.snapshot.timestamp;
 
       if (integrity.valid && shouldCheckpoint(parsed, status.lastCheckpointEventId)) {
+        maybeInjectFault("checkpoint", currentPersistCount);
         await writeCheckpoint(parsed, integrity);
       }
 
       await compactPersistedWindows();
 
+      maybeInjectFault("status", currentPersistCount);
       await writePersistenceLedger();
     });
 

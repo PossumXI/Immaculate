@@ -21,6 +21,30 @@ For each breakthrough, record:
 
 ### 2026-04-12
 
+#### Credibility lanes stopped pretending to be smoke and started benchmarking the claims buyers will actually inspect
+
+What changed:
+- Immaculate now has three dedicated credibility lanes beyond the generic smoke/gate packs: `durability-torture`, `neurodata-external`, and `temporal-baseline`
+- the durability lane now runs a real supervisor/worker crash harness across five failure modes for 1,000 total crash iterations and measures recovery success plus durable-marker loss instead of only claiming checkpoint recovery from a happy-path restart
+- the neurodata lane now resolves a real OpenNeuro BIDS slice and a real DANDI NWB asset before measuring ingest throughput in MB/s and events/s
+- the comparative lane now executes a minimal ingest -> process -> commit -> verify workflow through both Immaculate and Temporal and records wall-clock plus RSS on both sides
+- benchmark timing metadata now treats these credibility lanes as unpaced benchmark-class runs instead of misclassifying them as smoke based on synthetic control-loop duration
+
+Why it matters:
+- this closes a major credibility gap: the benchmark story is no longer limited to internal substrate behavior and short control-loop smoke packs
+- the missed systems pattern was that serious reviewers will care less about a pretty p95 chart and more about three harder questions: can it survive repeated crashes, can it ingest real external neurodata, and how does it compare honestly against a known orchestration baseline
+- making those lanes first-class benchmark packs means the same publication, export, and replay surfaces can now carry the hard proof instead of leaving it in ad hoc notebooks or one-off test scripts
+
+Evidence:
+- `durability-torture` suite `immaculate-benchmark-2026-04-13T00-47-28-666Z` completed with `failedAssertions=0` after `1000` crash iterations across `5` modes and published to W&B
+- `neurodata-external` suite `immaculate-benchmark-2026-04-13T01-32-33-217Z` completed with `failedAssertions=0` after resolving a real OpenNeuro dataset slice and a real DANDI NWB asset
+- `temporal-baseline` suite `immaculate-benchmark-2026-04-13T01-33-10-895Z` completed with `failedAssertions=0` and now publishes the comparative wall-clock and RSS story as a first-class benchmark artifact
+
+What this unlocks next:
+- long-horizon trend analysis for crash durability, external ingest, and baseline comparison instead of only substrate-local smoke lanes
+- future BCI buyer-facing benchmark packs where published external datasets matter more than internal fixture throughput
+- broader honest comparison work where Immaculate can concede raw workflow speed to specialized engines while proving governance, verify gates, arbitration, and durable semantic ledgers on the execution path
+
 #### Hour-class soak became real, and the persistence substrate stopped collapsing under its own event ledger
 
 What changed:

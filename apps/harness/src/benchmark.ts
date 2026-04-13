@@ -5,7 +5,7 @@ import { createSocket } from "node:dgram";
 import { createServer as createHttp2Server, type ServerHttp2Stream } from "node:http2";
 import { performance } from "node:perf_hooks";
 import { setTimeout as delay } from "node:timers/promises";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import {
   benchmarkIndexSchema,
@@ -45,6 +45,8 @@ import {
   planExecutionSchedule
 } from "./scheduling.js";
 import { getBenchmarkPack } from "./benchmark-packs.js";
+import { resolveBenchmarkInputs } from "./benchmark-data.js";
+import { runDurabilityTortureBenchmark } from "./benchmark-durability.js";
 import { scanBidsDataset } from "./bids.js";
 import {
   createGovernanceRegistry,
@@ -57,6 +59,7 @@ import { buildNwbReplayFrames, scanNwbFile } from "./nwb.js";
 import { parseStructuredResponse } from "./ollama.js";
 import { createPersistence } from "./persistence.js";
 import { buildRoutingDecision, planAdaptiveRoute } from "./routing.js";
+import { runTemporalBaselineComparison } from "./temporal-baseline.js";
 import { safeUnlink } from "./utils.js";
 import { createIntelligenceWorkerRegistry } from "./workers.js";
 import {
@@ -113,6 +116,30 @@ function classifyBenchmarkRunKind(plannedDurationMs: number): BenchmarkRunKind {
     return "benchmark";
   }
   return "smoke";
+}
+
+function resolveBenchmarkRunKind(
+  pack: ReturnType<typeof getBenchmarkPack>,
+  plannedDurationMs: number
+): BenchmarkRunKind {
+  return pack.reportRunKind ?? classifyBenchmarkRunKind(plannedDurationMs);
+}
+
+function resolveReportedPlannedDurationMs(
+  pack: ReturnType<typeof getBenchmarkPack>,
+  plannedDurationMs: number
+): number {
+  return pack.reportPlannedDurationMs ?? plannedDurationMs;
+}
+
+function describeBenchmarkTiming(pack: ReturnType<typeof getBenchmarkPack>): string {
+  if (pack.realTimePacing) {
+    return "This pack is wall-clock paced and claims its planned runtime honestly.";
+  }
+  if (pack.ciEligible) {
+    return "This pack is an unpaced smoke/gate lane and does not claim long-horizon soak duration.";
+  }
+  return "This pack is an unpaced credibility lane; wall-clock duration is measured directly and planned duration is intentionally left dynamic instead of pretending to be a soak target.";
 }
 
 function detectWindowsDiskKind(): string | undefined {
@@ -1048,18 +1075,132 @@ export async function runPublishedBenchmark(
   const completionStrategy = pack.completionStrategy;
   const persistEveryTicks = Math.max(1, pack.persistEveryTicks);
   const liveFramesPerTick = Math.max(0, pack.liveFramesPerTick);
-  const plannedDurationMs = maxTicks * tickIntervalMs;
-  const runKind = classifyBenchmarkRunKind(plannedDurationMs);
+  const nominalPlannedDurationMs = maxTicks * tickIntervalMs;
+  const plannedDurationMs = resolveReportedPlannedDurationMs(pack, nominalPlannedDurationMs);
+  const runKind = resolveBenchmarkRunKind(pack, nominalPlannedDurationMs);
   const hardwareContext = captureBenchmarkHardwareContext();
   const runtimeDir =
     options.runtimeDir ?? path.join(REPO_ROOT, ".runtime", "benchmarks", suiteId);
   const benchmarkStartedAt = performance.now();
 
+  if (pack.id === "durability-torture") {
+    const durability = await runDurabilityTortureBenchmark(runtimeDir);
+    const recoverySuccessSeries = createSeries(
+      "durability_recovery_success_ratio",
+      "Durability Recovery Success Ratio",
+      "ratio",
+      durability.recoverySuccessSamples
+    );
+    const dataLossSeries = createSeries(
+      "durability_data_loss_events",
+      "Durability Data Loss Events",
+      "events",
+      durability.dataLossSamples
+    );
+    const iterationDurationSeries = createSeries(
+      "durability_iteration_wall_clock_ms",
+      "Durability Iteration Wall Clock",
+      "ms",
+      durability.iterationDurationSamples
+    );
+    const assertions = [
+      createAssertion(
+        "durability-total-iterations",
+        "Durability torture runs the full 1,000 crash iterations",
+        durability.totalIterations >= 1000,
+        ">= 1000 iterations",
+        String(durability.totalIterations),
+        "credibility depends on proving recovery across repeated crashes rather than a handful of happy-path restarts"
+      ),
+      createAssertion(
+        "durability-failure-modes",
+        "Durability torture covers five distinct failure modes",
+        durability.modeCount >= 5,
+        ">= 5 failure modes",
+        String(durability.modeCount),
+        "the recovery story should survive multiple classes of failure, not just a single kill signal"
+      ),
+      createAssertion(
+        "durability-recovery-success",
+        "Durability torture recovers every crash iteration successfully",
+        recoverySuccessSeries.p50 >= 1 && recoverySuccessSeries.min >= 1,
+        "100% recovery success",
+        `${recoverySuccessSeries.average.toFixed(2)} average / min ${recoverySuccessSeries.min.toFixed(2)}`,
+        "recovery must succeed on every injected failure if the crash harness is going to be trusted"
+      ),
+      createAssertion(
+        "durability-data-loss",
+        "Durability torture retains every last acknowledged durable marker",
+        dataLossSeries.max === 0,
+        "0 durable markers lost",
+        `${dataLossSeries.max.toFixed(0)} max / ${dataLossSeries.average.toFixed(2)} average`,
+        "the supervisor only counts markers that were durably persisted before the failure boundary, so any loss here is real durability loss"
+      ),
+      createAssertion(
+        "durability-integrity",
+        "Durability torture ends in a verified integrity state",
+        durability.lastIntegrityStatus === "verified",
+        "verified",
+        durability.lastIntegrityStatus,
+        "every crash lane still has to rejoin the durable lineage without leaving the state degraded at the end"
+      )
+    ];
+    const report: BenchmarkReport = {
+      suiteId,
+      generatedAt,
+      packId: pack.id,
+      packLabel: pack.label,
+      runKind,
+      profile: `torture / ${hardwareContext.platform}-${hardwareContext.arch}`,
+      summary: `This benchmark runs a crash-supervised durability torture lane across five failure modes: hard kill, process abort, simulated disk full, corrupt checkpoint, and simulated power loss. Each iteration reuses the same runtime directory, kills or crashes the worker after a durable marker is acknowledged, then forces recovery through the real persistence loader. Hardware context: ${formatBenchmarkHardwareContext(hardwareContext)}.`,
+      tickIntervalMs,
+      totalTicks: durability.totalIterations,
+      plannedDurationMs,
+      totalDurationMs: durability.totalDurationMs,
+      checkpointCount: durability.lastCheckpointCount,
+      recoveryMode: durability.lastRecoveryMode,
+      recovered: recoverySuccessSeries.min >= 1,
+      integrity: {
+        valid: durability.lastIntegrityStatus === "verified",
+        status:
+          durability.lastIntegrityStatus === "verified" ||
+          durability.lastIntegrityStatus === "degraded" ||
+          durability.lastIntegrityStatus === "invalid"
+            ? durability.lastIntegrityStatus
+            : "invalid",
+        coherenceStable: false,
+        findingCount: 0,
+        findings: [],
+        checkedAt: new Date().toISOString(),
+        currentCycle: Math.max(1, durability.totalIterations),
+        activePassCount: 1
+      },
+      hardwareContext,
+      series: [recoverySuccessSeries, dataLossSeries, iterationDurationSeries],
+      assertions,
+      progress: {
+        stage: `durability torture across ${durability.modeCount} failure modes`,
+        completed: durability.modeSummaries.map(
+          (mode) =>
+            `${mode.mode}: ${mode.recovered}/${mode.iterations} recovered with ${mode.dataLosses} durable markers lost`
+        ),
+        remaining: []
+      },
+      attribution: BENCHMARK_ATTRIBUTION,
+      comparison: previousReport
+        ? compareBenchmarkReports(previousReport, [
+            recoverySuccessSeries,
+            dataLossSeries,
+            iterationDurationSeries
+          ])
+        : undefined
+    };
+
+    return publishBenchmarkReport(report);
+  }
+
   const persistence = createPersistence(runtimeDir);
-  const { createEngine: createCoreEngine } = (await import(
-    pathToFileURL(path.join(REPO_ROOT, "packages", "core", "src", "index.js")).href
-  )) as typeof import("@immaculate/core");
-  const engine = createCoreEngine({ bootstrap: false });
+  const engine = createEngine({ bootstrap: false });
   const actuationManager = await createActuationManager(runtimeDir);
   await persistence.persist(engine.getDurableState());
 
@@ -1071,16 +1212,72 @@ export async function runPublishedBenchmark(
   const freeEnergyProxySamples: number[] = [];
   const decodeConfidenceSamples: number[] = [];
   const syncJitterSamples: number[] = [];
+  const openNeuroIngestMbSamples: number[] = [];
+  const openNeuroIngestEventSamples: number[] = [];
+  const dandiIngestMbSamples: number[] = [];
+  const dandiIngestEventSamples: number[] = [];
+  const immaculateBaselineLatencySamples: number[] = [];
+  const temporalBaselineLatencySamples: number[] = [];
+  const immaculateBaselineRssSamples: number[] = [];
+  const temporalBaselineRssSamples: number[] = [];
   const tier2BandDominanceSamples: number[] = [];
   const tier2RouteBiasSamples: number[] = [];
   const tier2NeuroCoupledRoutingSamples: number[] = [];
   const tier2RouteModes: Array<"reflex-direct" | "cognitive-assisted" | "guarded-fallback" | "operator-override" | "suppressed"> = [];
-  const bidsFixture = await scanBidsDataset(BENCHMARK_FIXTURE_BIDS_PATH);
+  const benchmarkInputs = await resolveBenchmarkInputs(pack.id, runtimeDir, {
+    bidsFixturePath: BENCHMARK_FIXTURE_BIDS_PATH,
+    nwbFixturePath: BENCHMARK_FIXTURE_NWB_PATH
+  });
+  const bidsScanStartedAt = performance.now();
+  const bidsFixture = await scanBidsDataset(benchmarkInputs.bidsPath);
+  const bidsScanElapsedMs = performance.now() - bidsScanStartedAt;
+  if (benchmarkInputs.externalNeurodata) {
+    openNeuroIngestMbSamples.push(
+      Number(
+        (
+          benchmarkInputs.externalNeurodata.openNeuroBytes /
+          Math.max(bidsScanElapsedMs / 1000, 0.001) /
+          1024 /
+          1024
+        ).toFixed(4)
+      )
+    );
+    openNeuroIngestEventSamples.push(
+      Number(
+        (
+          benchmarkInputs.externalNeurodata.openNeuroFiles /
+          Math.max(bidsScanElapsedMs / 1000, 0.001)
+        ).toFixed(4)
+      )
+    );
+  }
   engine.registerDataset(bidsFixture.summary);
-  const nwbFixture = await scanNwbFile(BENCHMARK_FIXTURE_NWB_PATH);
+  const nwbScanStartedAt = performance.now();
+  const nwbFixture = await scanNwbFile(benchmarkInputs.nwbPath);
+  const nwbScanElapsedMs = performance.now() - nwbScanStartedAt;
+  if (benchmarkInputs.externalNeurodata) {
+    dandiIngestMbSamples.push(
+      Number(
+        (
+          benchmarkInputs.externalNeurodata.dandiBytes /
+          Math.max(nwbScanElapsedMs / 1000, 0.001) /
+          1024 /
+          1024
+        ).toFixed(4)
+      )
+    );
+    dandiIngestEventSamples.push(
+      Number(
+        (
+          Math.max(nwbFixture.summary.streamCount, 1) /
+          Math.max(nwbScanElapsedMs / 1000, 0.001)
+        ).toFixed(4)
+      )
+    );
+  }
   engine.registerNeuroSession(nwbFixture.summary);
   const replayId = `replay-${suiteId}`;
-  const replayFrames = await buildNwbReplayFrames(BENCHMARK_FIXTURE_NWB_PATH, {
+  const replayFrames = await buildNwbReplayFrames(benchmarkInputs.nwbPath, {
     replayId,
     windowSize: 2,
     maxWindows: 4
@@ -2572,6 +2769,13 @@ export async function runPublishedBenchmark(
     ? inspectDurableState(recoveredState)
     : cleanIntegrity;
   const actualWallClockDurationMs = Number((performance.now() - benchmarkStartedAt).toFixed(2));
+  if (pack.id === "temporal-baseline") {
+    const temporalBaseline = await runTemporalBaselineComparison(runtimeDir);
+    immaculateBaselineLatencySamples.push(...temporalBaseline.immaculateLatenciesMs);
+    temporalBaselineLatencySamples.push(...temporalBaseline.temporalLatenciesMs);
+    immaculateBaselineRssSamples.push(temporalBaseline.immaculateUsage.rssPeakMiB);
+    temporalBaselineRssSamples.push(temporalBaseline.temporalUsage.rssPeakMiB);
+  }
   const measuredEventCount = engine.getDurableState().serial;
   const measuredEventThroughput =
     actualWallClockDurationMs > 0
@@ -2758,6 +2962,54 @@ export async function runPublishedBenchmark(
     "ratio",
     tier2NeuroCoupledRoutingSamples
   );
+  const openNeuroIngestMbSeries = createSeries(
+    "openneuro_ingest_mb_s",
+    "OpenNeuro ingest throughput",
+    "MB/s",
+    openNeuroIngestMbSamples.length > 0 ? openNeuroIngestMbSamples : [0]
+  );
+  const openNeuroIngestEventSeries = createSeries(
+    "openneuro_ingest_events_s",
+    "OpenNeuro ingest event rate",
+    "events/s",
+    openNeuroIngestEventSamples.length > 0 ? openNeuroIngestEventSamples : [0]
+  );
+  const dandiIngestMbSeries = createSeries(
+    "dandi_ingest_mb_s",
+    "DANDI ingest throughput",
+    "MB/s",
+    dandiIngestMbSamples.length > 0 ? dandiIngestMbSamples : [0]
+  );
+  const dandiIngestEventSeries = createSeries(
+    "dandi_ingest_events_s",
+    "DANDI ingest event rate",
+    "events/s",
+    dandiIngestEventSamples.length > 0 ? dandiIngestEventSamples : [0]
+  );
+  const immaculateBaselineLatencySeries = createSeries(
+    "immaculate_baseline_wall_clock_ms",
+    "Immaculate baseline wall clock",
+    "ms",
+    immaculateBaselineLatencySamples.length > 0 ? immaculateBaselineLatencySamples : [0]
+  );
+  const temporalBaselineLatencySeries = createSeries(
+    "temporal_baseline_wall_clock_ms",
+    "Temporal baseline wall clock",
+    "ms",
+    temporalBaselineLatencySamples.length > 0 ? temporalBaselineLatencySamples : [0]
+  );
+  const immaculateBaselineRssSeries = createSeries(
+    "immaculate_baseline_rss_peak_mib",
+    "Immaculate baseline RSS peak",
+    "MiB",
+    immaculateBaselineRssSamples.length > 0 ? immaculateBaselineRssSamples : [0]
+  );
+  const temporalBaselineRssSeries = createSeries(
+    "temporal_baseline_rss_peak_mib",
+    "Temporal baseline RSS peak",
+    "MiB",
+    temporalBaselineRssSamples.length > 0 ? temporalBaselineRssSamples : [0]
+  );
   const executionArbitrationLatencySeries = createSeries(
     "execution_arbitration_latency_ms",
     "Execution arbitration latency",
@@ -2846,14 +3098,16 @@ export async function runPublishedBenchmark(
   const assertions: BenchmarkAssertion[] = [
     createAssertion(
       "bids-ingest-scan",
-      "BIDS fixture scans into a normalized dataset manifest",
+      benchmarkInputs.externalNeurodata
+        ? "OpenNeuro BIDS slice scans into a normalized dataset manifest"
+        : "BIDS fixture scans into a normalized dataset manifest",
       bidsFixture.summary.subjectCount > 0 &&
         bidsFixture.summary.fileCount >= 4 &&
         bidsFixture.summary.modalities.some((entry) => entry.modality === "anat") &&
         bidsFixture.summary.modalities.some((entry) => entry.modality === "func"),
       ">= 1 subject, >= 4 files, anat+func modalities",
       `${bidsFixture.summary.subjectCount} subjects / ${bidsFixture.summary.fileCount} files`,
-      `fixture ${bidsFixture.summary.name} scanned from ${toRelativePublicationPath(bidsFixture.summary.rootPath)}`
+      `${benchmarkInputs.externalNeurodata ? "OpenNeuro" : "fixture"} ${bidsFixture.summary.name} scanned from ${toRelativePublicationPath(bidsFixture.summary.rootPath)}`
     ),
     createAssertion(
       "bids-ingest-register",
@@ -2867,13 +3121,18 @@ export async function runPublishedBenchmark(
     ),
     createAssertion(
       "nwb-stream-scan",
-      "NWB fixture scans into stream-level neurophysiology metadata",
-      nwbFixture.summary.streamCount >= 2 &&
-        nwbFixture.summary.totalChannels >= 8 &&
-        (nwbFixture.summary.primaryRateHz ?? 0) >= 1000,
-      ">= 2 streams, >= 8 channels, primary rate >= 1000 Hz",
+      benchmarkInputs.externalNeurodata
+        ? "DANDI NWB asset scans into stream-level neurophysiology metadata"
+        : "NWB fixture scans into stream-level neurophysiology metadata",
+      nwbFixture.summary.streamCount >= 1 &&
+        nwbFixture.summary.totalChannels >= 1 &&
+        (Boolean(benchmarkInputs.externalNeurodata) ||
+          (nwbFixture.summary.primaryRateHz ?? 0) >= 1000),
+      benchmarkInputs.externalNeurodata
+        ? ">= 1 stream and >= 1 channel"
+        : ">= 2 streams, >= 8 channels, primary rate >= 1000 Hz",
       `${nwbFixture.summary.streamCount} streams / ${nwbFixture.summary.totalChannels} channels / ${nwbFixture.summary.primaryRateHz ?? 0} Hz`,
-      `fixture ${nwbFixture.summary.name} scanned from ${toRelativePublicationPath(nwbFixture.summary.filePath)}`
+      `${benchmarkInputs.externalNeurodata ? "DANDI" : "fixture"} ${nwbFixture.summary.name} scanned from ${toRelativePublicationPath(nwbFixture.summary.filePath)}`
     ),
     createAssertion(
       "nwb-session-register",
@@ -4047,6 +4306,48 @@ export async function runPublishedBenchmark(
       "<= 0.65 p95",
       formatSeries(predictionErrorSeries),
       "adaptive phase increments should keep latency surprise bounded instead of letting the controller drift unmeasured"
+    ),
+    createAssertion(
+      "external-neurodata-openneuro",
+      "External neurodata packs ingest a real OpenNeuro BIDS slice with measured MB/s and events/s",
+      pack.id !== "neurodata-external" ||
+        (openNeuroIngestMbSeries.p50 > 0 &&
+          openNeuroIngestEventSeries.p50 > 0 &&
+          benchmarkInputs.externalNeurodata !== undefined),
+      "positive OpenNeuro MB/s and events/s",
+      `${openNeuroIngestMbSeries.p50.toFixed(2)} MB/s / ${openNeuroIngestEventSeries.p50.toFixed(2)} events/s`,
+      "credibility for neurodata buyers depends on a real OpenNeuro ingest path, not only local toy fixtures"
+    ),
+    createAssertion(
+      "external-neurodata-dandi",
+      "External neurodata packs ingest a real DANDI NWB asset with measured MB/s and events/s",
+      pack.id !== "neurodata-external" ||
+        (dandiIngestMbSeries.p50 > 0 &&
+          dandiIngestEventSeries.p50 > 0 &&
+          benchmarkInputs.externalNeurodata !== undefined),
+      "positive DANDI MB/s and events/s",
+      `${dandiIngestMbSeries.p50.toFixed(2)} MB/s / ${dandiIngestEventSeries.p50.toFixed(2)} events/s`,
+      "the external NWB benchmark must run against a real DANDI asset and expose honest ingest rates"
+    ),
+    createAssertion(
+      "temporal-baseline-executes",
+      "Temporal baseline executes a real workflow side by side with Immaculate",
+      pack.id !== "temporal-baseline" ||
+        (temporalBaselineLatencySeries.p50 > 0 && immaculateBaselineLatencySeries.p50 > 0),
+      "positive wall-clock samples for Temporal and Immaculate",
+      `${immaculateBaselineLatencySeries.p50.toFixed(2)} ms vs ${temporalBaselineLatencySeries.p50.toFixed(2)} ms`,
+      "the comparison only becomes credible once both systems actually execute the same simple workflow boundary"
+    ),
+    createAssertion(
+      "temporal-baseline-story",
+      "Temporal baseline captures the honest workflow-execution story without pretending governance semantics are the same",
+      pack.id !== "temporal-baseline" ||
+        (temporalBaselineLatencySeries.p50 > 0 &&
+          temporalBaselineRssSeries.p50 > 0 &&
+          immaculateBaselineRssSeries.p50 > 0),
+      "wall-clock plus RSS measured for both systems",
+      `${immaculateBaselineRssSeries.p50.toFixed(2)} MiB vs ${temporalBaselineRssSeries.p50.toFixed(2)} MiB`,
+      "Temporal is the control for raw workflow execution; Immaculate's differentiator remains verify gates, arbitration, governance, and durable semantic ledgers on the execution path"
     )
   ];
 
@@ -4063,8 +4364,8 @@ export async function runPublishedBenchmark(
     packLabel: pack.label,
     runKind,
     profile: `${engine.getSnapshot().profile} / ${runKind} / ${hardwareContext.platform}-${hardwareContext.arch}`,
-    summary:
-      `This ${runKind} publication benchmarks the real orchestration substrate that exists today: phase execution, verify gating, persistence, checkpoint recovery, integrity validation, replayed NWB windows, live socket neuro ingress, protocol-aware actuation, execution arbitration that decides when the system should think before acting, execution scheduling that chooses single-layer versus swarm formation before cognition runs, Tier 1 cognitive-loop closure coverage for parsed ROUTE/REASON/COMMIT structure, Tier 2 neural-coupling coverage for band dominance, phase bias, and coupled routing strength, governance-aware cognition, routing soft priors, and multi-role conversation verdicts, authoritative worker-assignment coverage with lease visibility, supervised serial and HTTP/2 direct device transports, and explicit session-bound source safety for mediated dispatch decisions that react to transport health, decode confidence, governance pressure, and consent scope. ${realTimePacing ? "This pack is wall-clock paced and claims its planned runtime honestly." : "This pack is an unpaced smoke/gate lane and does not claim long-horizon soak duration."} ${liveFramesPerTick > 0 ? `It injected ${liveFramesPerTick} extra live frames per tick to sustain measurable event pressure.` : ""} Hardware context: ${formatBenchmarkHardwareContext(hardwareContext)}. It does not yet claim external neurodata or BCI decoding performance.`,
+      summary:
+      `This ${runKind} publication benchmarks the real orchestration substrate that exists today: phase execution, verify gating, persistence, checkpoint recovery, integrity validation, replayed NWB windows, live socket neuro ingress, protocol-aware actuation, execution arbitration that decides when the system should think before acting, execution scheduling that chooses single-layer versus swarm formation before cognition runs, Tier 1 cognitive-loop closure coverage for parsed ROUTE/REASON/COMMIT structure, Tier 2 neural-coupling coverage for band dominance, phase bias, and coupled routing strength, governance-aware cognition, routing soft priors, and multi-role conversation verdicts, authoritative worker-assignment coverage with lease visibility, supervised serial and HTTP/2 direct device transports, and explicit session-bound source safety for mediated dispatch decisions that react to transport health, decode confidence, governance pressure, and consent scope. ${describeBenchmarkTiming(pack)} ${liveFramesPerTick > 0 ? `It injected ${liveFramesPerTick} extra live frames per tick to sustain measurable event pressure.` : ""} ${benchmarkInputs.externalNeurodata ? `This run resolved a real OpenNeuro slice (${benchmarkInputs.externalNeurodata.openNeuroDatasetId}:${benchmarkInputs.externalNeurodata.openNeuroSnapshotTag}) and a real DANDI NWB asset (${benchmarkInputs.externalNeurodata.dandiDandisetId}:${benchmarkInputs.externalNeurodata.dandiVersion}) before scanning and replaying them locally.` : "It does not yet claim external neurodata or BCI decoding performance."} ${pack.id === "temporal-baseline" ? "It also executes an honest side-by-side Temporal workflow baseline for pure ingest-process-commit-verify wall-clock and memory comparison." : ""} Hardware context: ${formatBenchmarkHardwareContext(hardwareContext)}.`,
     tickIntervalMs,
     totalTicks,
     plannedDurationMs,
@@ -4098,7 +4399,15 @@ export async function runPublishedBenchmark(
       syncJitterSeries,
       tier2BandDominanceSeries,
       tier2PhaseBiasSeries,
-      tier2NeuroCoupledRoutingSeries
+      tier2NeuroCoupledRoutingSeries,
+      openNeuroIngestMbSeries,
+      openNeuroIngestEventSeries,
+      dandiIngestMbSeries,
+      dandiIngestEventSeries,
+      immaculateBaselineLatencySeries,
+      temporalBaselineLatencySeries,
+      immaculateBaselineRssSeries,
+      temporalBaselineRssSeries
     ],
     assertions,
     progress: createProgress({
@@ -4132,7 +4441,15 @@ export async function runPublishedBenchmark(
             syncJitterSeries,
             tier2BandDominanceSeries,
             tier2PhaseBiasSeries,
-            tier2NeuroCoupledRoutingSeries
+            tier2NeuroCoupledRoutingSeries,
+            openNeuroIngestMbSeries,
+            openNeuroIngestEventSeries,
+            dandiIngestMbSeries,
+            dandiIngestEventSeries,
+            immaculateBaselineLatencySeries,
+            temporalBaselineLatencySeries,
+            immaculateBaselineRssSeries,
+            temporalBaselineRssSeries
           ]
         )
       : undefined

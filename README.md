@@ -101,6 +101,24 @@ Run the paced 60-minute soak lane:
 npm run benchmark:soak:60m -w @immaculate/harness
 ```
 
+Run the real durability torture lane:
+
+```powershell
+npm run benchmark:durability:torture -w @immaculate/harness
+```
+
+Run the real external neurodata ingest lane:
+
+```powershell
+npm run benchmark:neurodata -w @immaculate/harness
+```
+
+Run the honest Temporal comparison lane:
+
+```powershell
+npm run benchmark:temporal -w @immaculate/harness
+```
+
 Export the live W&B benchmark results back into the tracked wiki:
 
 ```powershell
@@ -118,8 +136,7 @@ Current benchmark publication surfaces:
 - W&B project: https://wandb.ai/arobi-arobi-technology-alliance/immaculate
 - tracked repo/wiki status: [docs/wiki/Benchmark-Status.md](docs/wiki/Benchmark-Status.md)
 - tracked repo/wiki W&B export: [docs/wiki/Benchmark-Wandb-Export.md](docs/wiki/Benchmark-Wandb-Export.md)
-- latest 60-second benchmark: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/p8070jlj
-- latest 60-minute soak: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/bxncy45c
+- latest run URL for every published pack lives in the tracked wiki status/export pages above
 
 Optional environment variables:
 
@@ -162,6 +179,9 @@ Benchmark packs currently include:
 - `latency-soak` (legacy short-run smoke lane, published as `Latency Smoke`)
 - `latency-benchmark-60s`
 - `latency-soak-60m`
+- `durability-torture`
+- `neurodata-external`
+- `temporal-baseline`
 
 ## Current Progress
 
@@ -221,6 +241,7 @@ Benchmark credibility rules now follow a stricter line:
 - wall-clock duration is reported separately from planned control-loop duration
 - hardware context is carried into benchmark reports, W&B metadata, and repo-tracked exports
 - benchmark publication now runs through CI on every push, while wiki-export commits remain constrained to `main`
+- durability torture, external neurodata ingest, and Temporal comparison are published as dedicated credibility lanes instead of being folded into the smoke-pack story
 
 ## Operator API
 

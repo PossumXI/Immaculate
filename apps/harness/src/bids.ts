@@ -1,5 +1,5 @@
 import path from "node:path";
-import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
+import { lstat, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import {
   datasetModalities,
   datasetSummarySchema,
@@ -110,10 +110,17 @@ async function walkFiles(rootPath: string, currentPath = rootPath): Promise<stri
     entries.flatMap(async (entry) => {
       const fullPath = path.join(currentPath, entry.name);
       if (entry.isDirectory()) {
+        if (entry.name === ".git" || entry.name === ".datalad") {
+          return [];
+        }
         return walkFiles(rootPath, fullPath);
       }
 
       if (entry.isFile()) {
+        return [fullPath];
+      }
+
+      if (entry.isSymbolicLink()) {
         return [fullPath];
       }
 
@@ -134,7 +141,7 @@ export async function scanBidsDataset(rootPath: string): Promise<BidsDatasetReco
   const files = (
     await Promise.all(
       filesOnDisk.map(async (filePath) => {
-        const fileStat = await stat(filePath);
+        const fileStat = await lstat(filePath);
         const relativePath = normalizePath(path.relative(resolvedRoot, filePath));
         return parseFileMetadata(relativePath, fileStat.size);
       })

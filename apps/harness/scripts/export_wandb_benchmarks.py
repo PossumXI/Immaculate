@@ -132,6 +132,11 @@ def render_markdown(export: dict) -> str:
         lines.extend(["No W&B benchmark runs were exported.", ""])
         return "\n".join(lines).rstrip() + "\n"
 
+    def render_planned_duration(value: object) -> str:
+        if value in (None, 0, "0"):
+            return "`dynamic / unpaced`"
+        return f"`{value}` ms"
+
     for pack in packs:
         summary = pack.get("summary", {}) or {}
         artifact = pack.get("artifact", {}) or {}
@@ -150,7 +155,7 @@ def render_markdown(export: dict) -> str:
                 f"- Run kind: `{summary.get('benchmark/run_kind')}`",
                 f"- Integrity: `{summary.get('benchmark/integrity_status')}`",
                 f"- Stage: `{summary.get('benchmark/current_stage')}`",
-                f"- Planned duration: `{summary.get('benchmark/planned_duration_ms')}` ms",
+                f"- Planned duration: {render_planned_duration(summary.get('benchmark/planned_duration_ms'))}",
                 f"- Wall-clock duration: `{summary.get('benchmark/wall_clock_duration_ms')}` ms",
                 f"- Hardware: `{summary.get('benchmark/hardware')}`",
                 f"- Owner: `{summary.get('benchmark/owner')}`",

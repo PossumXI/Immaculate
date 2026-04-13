@@ -178,6 +178,12 @@ def build_status_entry(
     }
 
 
+def render_planned_duration(value: object) -> str:
+    if value in (None, 0, "0"):
+        return "`dynamic / unpaced`"
+    return f"`{value}` ms"
+
+
 def render_status_markdown(status: dict) -> str:
     publications = status.get("publications", {}) or {}
     entries = list(publications.values())
@@ -221,7 +227,7 @@ def render_status_markdown(status: dict) -> str:
                 f"- Run kind: `{entry.get('runKind')}`",
                 f"- Integrity: `{entry.get('integrityStatus')}`",
                 f"- Recovery mode: `{entry.get('recoveryMode')}`",
-                f"- Planned duration: `{entry.get('plannedDurationMs')}` ms",
+                f"- Planned duration: {render_planned_duration(entry.get('plannedDurationMs'))}",
                 f"- Wall-clock duration: `{entry.get('totalDurationMs')}` ms",
                 f"- Hardware: `{json.dumps(entry.get('hardwareContext') or {}, separators=(',', ':'))}`",
                 f"- W&B run: {entry.get('runUrl') or 'not available'}",

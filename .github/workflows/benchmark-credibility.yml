@@ -1,0 +1,95 @@
+name: Benchmark Credibility
+
+on:
+  workflow_dispatch:
+    inputs:
+      pack_id:
+        description: "Credibility benchmark pack to execute"
+        required: true
+        default: "durability-torture"
+        type: choice
+        options:
+          - durability-torture
+          - neurodata-external
+          - temporal-baseline
+  schedule:
+    - cron: "15 9 * * *"
+
+jobs:
+  credibility-benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      WANDB_API_KEY: ${{ secrets.WANDB_API_KEY || secrets.IMMACULATE_WANDB_API_KEY }}
+      WANDB_ENTITY: ${{ vars.WANDB_ENTITY || 'arobi-arobi-technology-alliance' }}
+      IMMACULATE_WANDB_ENTITY: ${{ vars.WANDB_ENTITY || 'arobi-arobi-technology-alliance' }}
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Resolve pack
+        id: pack
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "pack_id=durability-torture" >> "$GITHUB_OUTPUT"
+          else
+            echo "pack_id=${{ inputs.pack_id }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Bootstrap local W&B environment
+        run: npm run wandb:bootstrap
+
+      - name: Build core workspace
+        run: npm run build -w @immaculate/core
+
+      - name: Run credibility benchmark
+        env:
+          WANDB_PROJECT: immaculate
+        shell: bash
+        run: |
+          if [ -n "${WANDB_API_KEY}" ]; then
+            npm run benchmark -w @immaculate/harness -- --pack="${{ steps.pack.outputs.pack_id }}" --publish-wandb
+          else
+            npm run benchmark -w @immaculate/harness -- --pack="${{ steps.pack.outputs.pack_id }}"
+          fi
+
+      - name: Export benchmark status from W&B
+        if: ${{ env.WANDB_API_KEY != '' }}
+        env:
+          WANDB_PROJECT: immaculate
+        run: npm run benchmark:export:wandb
+
+      - name: Commit benchmark status to repo wiki
+        if: ${{ env.WANDB_API_KEY != '' && github.ref == 'refs/heads/main' && github.actor != 'github-actions[bot]' }}
+        shell: bash
+        run: |
+          if git diff --quiet -- docs/wiki/Benchmark-Status.md docs/wiki/Benchmark-Status.json docs/wiki/Benchmark-Wandb-Export.md docs/wiki/Benchmark-Wandb-Export.json; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/wiki/Benchmark-Status.md docs/wiki/Benchmark-Status.json docs/wiki/Benchmark-Wandb-Export.md docs/wiki/Benchmark-Wandb-Export.json
+          git commit -m "Update credibility benchmark status [skip ci]"
+          git push
+
+      - name: Upload credibility benchmark artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: immaculate-credibility-benchmark
+          path: benchmarks/
+          if-no-files-found: warn

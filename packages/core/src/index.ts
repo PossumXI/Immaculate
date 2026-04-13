@@ -160,9 +160,12 @@ export type BenchmarkHardwareContext = {
 export const benchmarkPackIds = [
   "substrate-readiness",
   "durability-recovery",
+  "durability-torture",
   "latency-soak",
   "latency-benchmark-60s",
-  "latency-soak-60m"
+  "latency-soak-60m",
+  "neurodata-external",
+  "temporal-baseline"
 ] as const;
 export type BenchmarkPackId = (typeof benchmarkPackIds)[number];
 

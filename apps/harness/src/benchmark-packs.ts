@@ -1,9 +1,11 @@
-import type { BenchmarkPackId } from "@immaculate/core";
+import type { BenchmarkPackId, BenchmarkRunKind } from "@immaculate/core";
 
 export type BenchmarkPack = {
   id: BenchmarkPackId;
   label: string;
   description: string;
+  reportRunKind?: BenchmarkRunKind;
+  reportPlannedDurationMs?: number;
   tickIntervalMs: number;
   maxTicks: number;
   ciEligible: boolean;
@@ -54,6 +56,25 @@ export const benchmarkPacks: BenchmarkPack[] = [
     percentRegressionTolerance: 2
   },
   {
+    id: "durability-torture",
+    label: "Durability Torture",
+    description:
+      "Crash-supervised durability lane that injects repeated hard failures, corruption, and write faults against a shared runtime directory before forcing recovery.",
+    reportRunKind: "benchmark",
+    reportPlannedDurationMs: 0,
+    tickIntervalMs: 10,
+    maxTicks: 1000,
+    ciEligible: false,
+    completionStrategy: "checkpoint-ready",
+    realTimePacing: false,
+    persistEveryTicks: 1,
+    liveFramesPerTick: 0,
+    reflexP95MaxMs: 100,
+    cognitiveP95MaxMs: 250,
+    maxRegressedSeries: 0,
+    percentRegressionTolerance: 5
+  },
+  {
     id: "latency-soak",
     label: "Latency Smoke",
     description:
@@ -101,6 +122,44 @@ export const benchmarkPacks: BenchmarkPack[] = [
     persistEveryTicks: 50,
     liveFramesPerTick: 12,
     targetMeasuredEventThroughput: 1000,
+    reflexP95MaxMs: 100,
+    cognitiveP95MaxMs: 250,
+    maxRegressedSeries: 0,
+    percentRegressionTolerance: 5
+  },
+  {
+    id: "neurodata-external",
+    label: "External Neurodata Ingest",
+    description:
+      "External-data credibility lane that downloads a real OpenNeuro BIDS slice and a real DANDI NWB asset, then measures ingest MB/s and events/s honestly.",
+    reportRunKind: "benchmark",
+    reportPlannedDurationMs: 0,
+    tickIntervalMs: 20,
+    maxTicks: 960,
+    ciEligible: false,
+    completionStrategy: "checkpoint-ready",
+    realTimePacing: false,
+    persistEveryTicks: 1,
+    liveFramesPerTick: 0,
+    reflexP95MaxMs: 100,
+    cognitiveP95MaxMs: 250,
+    maxRegressedSeries: 0,
+    percentRegressionTolerance: 5
+  },
+  {
+    id: "temporal-baseline",
+    label: "Temporal Baseline",
+    description:
+      "Opt-in comparative lane that runs a minimal ingest-process-commit-verify workflow through Temporal alongside Immaculate and reports wall-clock plus memory honestly.",
+    reportRunKind: "benchmark",
+    reportPlannedDurationMs: 0,
+    tickIntervalMs: 20,
+    maxTicks: 960,
+    ciEligible: false,
+    completionStrategy: "checkpoint-ready",
+    realTimePacing: false,
+    persistEveryTicks: 1,
+    liveFramesPerTick: 0,
     reflexP95MaxMs: 100,
     cognitiveP95MaxMs: 250,
     maxRegressedSeries: 0,
