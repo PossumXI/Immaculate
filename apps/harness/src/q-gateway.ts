@@ -24,9 +24,14 @@ type GatewayPrincipal = {
   rateLimit: QApiRateLimitPolicy;
 };
 
+type ChatMessageContentPartInput = {
+  type?: string;
+  text?: string;
+};
+
 type ChatMessageInput = {
   role?: string;
-  content?: string;
+  content?: string | ChatMessageContentPartInput[];
 };
 
 type ChatCompletionRequestBody = {
@@ -168,6 +173,24 @@ function normalizeModelSelection(value: string | undefined): string {
   throw new Error(`Unsupported model: ${requested}`);
 }
 
+function normalizeMessageContent(value: ChatMessageInput["content"]): string {
+  if (typeof value === "string") {
+    return value.trim();
+  }
+  if (!Array.isArray(value)) {
+    return "";
+  }
+  return value
+    .flatMap((part) => {
+      if (typeof part?.text === "string" && (part.type === undefined || part.type === "text" || part.type === "input_text")) {
+        return [part.text];
+      }
+      return [];
+    })
+    .join("\n")
+    .trim();
+}
+
 function validateMessages(value: ChatCompletionRequestBody["messages"]): OllamaChatMessage[] {
   if (!Array.isArray(value) || value.length === 0) {
     throw new Error("At least one chat message is required.");
@@ -178,12 +201,12 @@ function validateMessages(value: ChatCompletionRequestBody["messages"]): OllamaC
 
   const messages = value.map((message, index) => {
     const role = message?.role?.trim();
-    const content = message?.content?.trim();
+    const content = normalizeMessageContent(message?.content);
     if (role !== "system" && role !== "user" && role !== "assistant") {
       throw new Error(`Message ${index + 1} has an unsupported role.`);
     }
     if (!content) {
-      throw new Error(`Message ${index + 1} is empty.`);
+      throw new Error(`Message ${index + 1} is empty or has no supported text content.`);
     }
     return {
       role,

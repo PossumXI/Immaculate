@@ -14,6 +14,7 @@
     "benchmark:neurodata": "npm run benchmark -w @immaculate/harness -- --pack=neurodata-external",
     "benchmark:gate": "npm run benchmark:gate -w @immaculate/harness",
     "benchmark:gate:all": "npm run benchmark:gate:all -w @immaculate/harness",
+    "benchmark:harbor:report": "npm run benchmark:harbor:report -w @immaculate/harness",
     "benchmark:publish:wandb": "npm run benchmark:publish:wandb -w @immaculate/harness",
     "benchmark:soak:60m": "npm run benchmark -w @immaculate/harness -- --pack=latency-soak-60m",
     "benchmark:temporal": "npm run benchmark -w @immaculate/harness -- --pack=temporal-baseline",

@@ -32,6 +32,7 @@ This repository is prepared for public collaboration under the Apache 2.0 licens
 - current release surface: [docs/wiki/Release-Surface.md](docs/wiki/Release-Surface.md)
 - live model comparison: [docs/wiki/Model-Benchmark-Comparison.md](docs/wiki/Model-Benchmark-Comparison.md)
 - live BridgeBench: [docs/wiki/BridgeBench.md](docs/wiki/BridgeBench.md)
+- Harbor terminal bench: [docs/wiki/Harbor-Terminal-Bench.md](docs/wiki/Harbor-Terminal-Bench.md)
 - direct Q readiness gate: [docs/wiki/Q-Readiness-Gate.md](docs/wiki/Q-Readiness-Gate.md)
 - dedicated Q gateway validation: [docs/wiki/Q-Gateway-Validation.md](docs/wiki/Q-Gateway-Validation.md)
 - W&B pull-back committed into git: [docs/wiki/Benchmark-Wandb-Export.md](docs/wiki/Benchmark-Wandb-Export.md)

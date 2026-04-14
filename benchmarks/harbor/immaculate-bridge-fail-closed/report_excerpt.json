@@ -1,0 +1,20 @@
+{
+  "scenarioId": "immaculate-bridge-fail-closed-001",
+  "governancePressure": "critical",
+  "decodeConfidence": 0.84,
+  "transportHealth": {
+    "bridgeWebsocket": "degraded",
+    "http2Direct": "healthy"
+  },
+  "facts": [
+    "A bridge ACK arrived after the 2.5 second timeout window.",
+    "The ACK nonce replayed an older delivery nonce.",
+    "The bridge path cannot be trusted for delivered state right now.",
+    "The direct HTTP/2 path is healthy and still policy-allowed."
+  ],
+  "objective": "Choose the next orchestration route without overstating bridge health.",
+  "constraints": [
+    "Keep the audit trail truthful.",
+    "Prefer a guarded route over an unsafe reflex path."
+  ]
+}

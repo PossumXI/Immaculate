@@ -1,0 +1,16 @@
+{
+  "incidentId": "q-structured-contract-001",
+  "surface": "Q gateway",
+  "governancePressure": "elevated",
+  "objective": "Choose the safest next route for the immediate remediation pass.",
+  "facts": [
+    "A bridge ACK arrived after the 2.5 second timeout window.",
+    "The ACK nonce did not match the active delivery nonce.",
+    "The delivery ledger must stay truthful about whether the device acknowledged the action.",
+    "Operators require fail-closed behavior until the ACK path is trusted again."
+  ],
+  "constraints": [
+    "Do not report delivered state without verified acknowledgment.",
+    "Keep the response terse and structured."
+  ]
+}

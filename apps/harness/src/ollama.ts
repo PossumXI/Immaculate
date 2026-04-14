@@ -1,4 +1,6 @@
 import { createHash } from "node:crypto";
+import * as http from "node:http";
+import * as https from "node:https";
 import {
   type CognitiveExecution,
   type GuardVerdict,
@@ -179,47 +181,92 @@ async function fetchJson<T>(
   timeoutMs = 5000,
   baseUrl = DEFAULT_OLLAMA_URL
 ): Promise<T> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const base = normalizeBaseUrl(baseUrl);
+  const url = new URL(path.startsWith("/") ? `${base}${path}` : `${base}/${path}`);
+  const method = init?.method ?? "GET";
+  const headers = new Headers(init?.headers);
+  const rawBody = init?.body;
+  const body =
+    typeof rawBody === "string"
+      ? rawBody
+      : rawBody instanceof Uint8Array
+        ? Buffer.from(rawBody)
+        : rawBody == null
+          ? undefined
+          : (() => {
+              throw new OllamaRequestError("http_error", "Unsupported Ollama request body type.");
+            })();
 
   try {
-    let response: Response;
-    try {
-      response = await fetch(`${normalizeBaseUrl(baseUrl)}${path}`, {
-        ...init,
-        signal: controller.signal
-      });
-    } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") {
-        throw new OllamaRequestError(
-          "transport_timeout",
-          `Ollama request timed out after ${timeoutMs} ms.`
+    return await new Promise<T>((resolve, reject) => {
+      const requestImpl = url.protocol === "https:" ? https.request : http.request;
+      const request = requestImpl(
+        url,
+        {
+          method,
+          headers: Object.fromEntries(headers.entries())
+        },
+        (response) => {
+          const chunks: Buffer[] = [];
+          response.on("data", (chunk) => {
+            chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+          });
+          response.on("end", () => {
+            const payloadText = Buffer.concat(chunks).toString("utf8");
+            if ((response.statusCode ?? 0) < 200 || (response.statusCode ?? 0) >= 300) {
+              const detail = payloadText.trim().slice(0, 240);
+              reject(
+                new OllamaRequestError(
+                  "http_error",
+                  detail.length > 0
+                    ? `Ollama request failed with status ${response.statusCode}: ${detail}`
+                    : `Ollama request failed with status ${response.statusCode}.`
+                )
+              );
+              return;
+            }
+            try {
+              resolve(JSON.parse(payloadText) as T);
+            } catch (error) {
+              reject(
+                new OllamaRequestError(
+                  "invalid_json",
+                  error instanceof Error
+                    ? `Ollama returned invalid JSON: ${error.message}`
+                    : "Ollama returned invalid JSON."
+                )
+              );
+            }
+          });
+        }
+      );
+
+      request.setTimeout(timeoutMs, () => {
+        request.destroy(
+          new OllamaRequestError(
+            "transport_timeout",
+            `Ollama request timed out after ${timeoutMs} ms.`
+          )
         );
+      });
+      request.on("error", (error) => {
+        reject(
+          error instanceof OllamaRequestError
+            ? error
+            : new OllamaRequestError(
+                "http_error",
+                error instanceof Error ? error.message : "Unable to reach the configured Ollama endpoint."
+              )
+        );
+      });
+
+      if (body) {
+        request.write(body);
       }
-      throw error;
-    }
-
-    if (!response.ok) {
-      const body = await response.text().catch(() => "");
-      const detail = body.trim().slice(0, 240);
-      throw new OllamaRequestError(
-        "http_error",
-        detail.length > 0
-          ? `Ollama request failed with status ${response.status}: ${detail}`
-          : `Ollama request failed with status ${response.status}.`
-      );
-    }
-
-    try {
-      return (await response.json()) as T;
-    } catch (error) {
-      throw new OllamaRequestError(
-        "invalid_json",
-        error instanceof Error ? `Ollama returned invalid JSON: ${error.message}` : "Ollama returned invalid JSON."
-      );
-    }
-  } finally {
-    clearTimeout(timer);
+      request.end();
+    });
+  } catch (error) {
+    throw error;
   }
 }
 

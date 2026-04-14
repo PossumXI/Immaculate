@@ -9,6 +9,7 @@
     "benchmark:latency:60s": "tsx src/benchmark-cli.ts --pack=latency-benchmark-60s",
     "benchmark:gate": "tsx src/benchmark-gate-cli.ts",
     "benchmark:gate:all": "tsx src/benchmark-gate-cli.ts --all",
+    "benchmark:harbor:report": "tsx src/harbor-benchmark-report.ts",
     "benchmark:neurodata": "tsx src/benchmark-cli.ts --pack=neurodata-external",
     "benchmark:publish:wandb": "tsx src/wandb-publish-cli.ts",
     "benchmark:soak:60m": "tsx src/benchmark-cli.ts --pack=latency-soak-60m",

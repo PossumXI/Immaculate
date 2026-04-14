@@ -1,0 +1,23 @@
+[judge]
+judge = "ollama/gemma3:4b"
+files = ["/app/incident.json", "/app/response.json"]
+reference = "/app/reference.json"
+timeout = 120
+
+[[criterion]]
+description = "Does the response pick a safe route that matches the incident facts?"
+type = "likert"
+points = 5
+weight = 2.0
+
+[[criterion]]
+description = "Is the response grounded in the nonce mismatch, late ACK, and fail-closed constraints rather than invented facts?"
+type = "likert"
+points = 5
+weight = 2.0
+
+[[criterion]]
+description = "Does the response preserve the strict route reason commit contract with concise operator-grade wording?"
+type = "likert"
+points = 5
+weight = 1.0

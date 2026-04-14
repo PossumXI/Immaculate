@@ -49,6 +49,7 @@ If you only read one generated page before diving deeper, read [[Release-Surface
 - [[Engineering-Doctrine]] defines the standing build philosophy and what qualifies as a real leap
 - [[Benchmark-Status]] points to the live public W&B project plus the latest published benchmark runs by pack
 - [[Benchmark-Wandb-Export]] is the committed pull-back from W&B itself, so benchmark results live in git wiki even when the W&B project stays private
+- [[Harbor-Terminal-Bench]] records the repo-local Harbor task pack, the executed Q gateway scores, and the latest Harbor truth boundary
 - [[Model-Benchmark-Comparison]] carries the live local cross-model comparison surface for `Q`, Gemma 3, Qwen, and the latest orchestrator baseline readout
 - [[BridgeBench]] carries the live bridge/control-plane comparison surface for `Q` and the other installed local models, alongside the real bridge runtime assertions
 - [[Q-Gateway-Validation]] carries the live dedicated-gateway contract proof for `Q`: health, auth, model listing, served completion, and concurrency rejection

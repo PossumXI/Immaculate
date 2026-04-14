@@ -21,6 +21,33 @@ For each breakthrough, record:
 
 ### 2026-04-14
 
+#### Harbor now has a real Immaculate/Q task pack, and the hidden 300-second Q gateway ceiling was removed instead of worked around
+
+What changed:
+- the repo now carries a real Harbor task pack under `benchmarks/harbor/` for two strict terminal tasks: `q-structured-contract` and `immaculate-bridge-fail-closed`
+- the Harbor agent path for `Q` now runs through the dedicated OpenAI-compatible Q gateway instead of a fake local stub
+- the Ollama transport in `apps/harness/src/ollama.ts` now uses explicit Node `http`/`https` request handling with a controlled timeout instead of the older `fetch` path that quietly died around five minutes
+- the repo now generates `docs/wiki/Harbor-Terminal-Bench.md` and `docs/wiki/Harbor-Terminal-Bench.json`, tying Harbor results back to the release/build surface
+
+Why it matters:
+- the missed failure pattern was not in Harbor or in the task pack; it was the gateway transport itself, which was cutting off long Q completions at roughly `300` seconds even when direct Ollama could still finish honestly
+- removing that ceiling means the served Q edge is no longer weaker than the underlying model for longer structured completions
+- the Harbor pack gives the repo a second benchmark language beyond BridgeBench/model comparison: terminal tasks with an oracle baseline, a real Q agent lane, and RewardKit scoring
+- this is the first repo-local pass where Harbor, the Q gateway, and the benchmark publication story all line up on the same truthful surface
+
+Evidence:
+- `harbor-q-oracle-v7` and `harbor-immaculate-oracle-v7` both scored `1.000` under Harbor + RewardKit
+- `harbor-q-agent-custom-v5` and `harbor-immaculate-agent-custom-v1` both scored `1.000` through the real Q gateway agent lane
+- the same structured Q probe that previously failed around `300678` ms through the gateway succeeded directly against Ollama at `412787.48` ms, then succeeded through the repaired gateway at `8029.01` ms
+- `npm run benchmark:harbor:report` now writes the Harbor benchmark page into `docs/wiki/Harbor-Terminal-Bench.md` and `docs/wiki/Harbor-Terminal-Bench.json`
+
+What this unlocks next:
+- Harbor task count can grow without guessing whether failures come from Q reasoning or from the serving transport
+- a future LLM-judge lane can be reintroduced on top of a stable programmatic-scoring path instead of being the only gate
+- repo-local Harbor results can now be promoted into external publication or leaderboard packaging without pretending the current pack already is that submission
+
+### 2026-04-14
+
 #### Immaculate and Q now share a machine-stamped release surface, and Q training gained a real lock artifact instead of filename-only drift
 
 What changed:
