@@ -34,6 +34,7 @@ This repository is prepared for public collaboration under the Apache 2.0 licens
 - live BridgeBench: [docs/wiki/BridgeBench.md](docs/wiki/BridgeBench.md)
 - Harbor terminal bench: [docs/wiki/Harbor-Terminal-Bench.md](docs/wiki/Harbor-Terminal-Bench.md)
 - hybrid Q training session: [docs/wiki/Q-Hybrid-Training.md](docs/wiki/Q-Hybrid-Training.md)
+- OCI Q training bundle: [docs/wiki/OCI-Q-Training.md](docs/wiki/OCI-Q-Training.md)
 - direct Q readiness gate: [docs/wiki/Q-Readiness-Gate.md](docs/wiki/Q-Readiness-Gate.md)
 - dedicated Q gateway validation: [docs/wiki/Q-Gateway-Validation.md](docs/wiki/Q-Gateway-Validation.md)
 - W&B pull-back committed into git: [docs/wiki/Benchmark-Wandb-Export.md](docs/wiki/Benchmark-Wandb-Export.md)
@@ -116,6 +117,7 @@ For the `Q` fine-tune path specifically:
 - training lock generator: `npm run q:training:lock`
 - hybrid session doctor: `npm run q:training:doctor -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json`
 - hybrid session launcher: `npm run q:training:session -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --launch`
+- OCI controller launch script: `bash deploy/oci-training/scripts/launch-oci-q-training.sh --session-manifest .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --env-file deploy/oci-training/env/immaculate-q-training.env.example`
 
 As of `2026-04-14`, the direct `Q` structured-contract lane is green on this machine:
 `Q (gemma4:e4b)` is `4/4` on both
@@ -154,6 +156,10 @@ use:
 
 - [docs/wiki/Q-API-Hosting.md](docs/wiki/Q-API-Hosting.md)
 - [docs/wiki/Q-Gateway-Architecture.md](docs/wiki/Q-Gateway-Architecture.md)
+
+For the cloud Q training lane, use:
+
+- [docs/wiki/OCI-Q-Training.md](docs/wiki/OCI-Q-Training.md)
 
 ## Run
 

@@ -3,6 +3,8 @@
   "q": {
     "trainingLockPath": ".training-output/q/latest-training-lock.json",
     "configPath": "training/q/q_lora_config.long_context.example.json",
+    "mixManifestPath": ".training-output/q/q-mix-longctx-v2.manifest.json",
+    "curationRunPath": ".training-output/training-data/runs/<run-id>/run.json",
     "failureCorpusPath": "docs/wiki/Q-Failure-Corpus.json"
   },
   "immaculate": {
@@ -17,20 +19,46 @@
   "cloud": {
     "enabled": true,
     "provider": "oci",
-    "mode": "doctor",
+    "mode": "launch",
     "requiredEnv": [
-      "HF_TOKEN"
+      "OCI_COMPARTMENT_OCID",
+      "OCI_SUBNET_OCID",
+      "OCI_AVAILABILITY_DOMAIN",
+      "OCI_IMAGE_OCID",
+      "OCI_SHAPE",
+      "OCI_OBJECT_STORAGE_NAMESPACE",
+      "OCI_OBJECT_STORAGE_BUCKET"
     ],
     "optionalEnv": [
+      "HF_TOKEN",
+      "HUGGINGFACE_TOKEN",
       "WANDB_API_KEY",
       "WANDB_ENTITY",
       "WANDB_PROJECT",
       "OCI_CLI_AUTH",
+      "OCI_CLI_CONFIG_FILE",
+      "OCI_CLI_PROFILE",
       "OCI_CONFIG_FILE",
-      "OCI_PROFILE"
+      "OCI_PROFILE",
+      "OCI_Q_TRAINING_HF_TOKEN_SECRET_OCID",
+      "OCI_Q_TRAINING_WANDB_API_KEY_SECRET_OCID",
+      "WANDB_MODE"
     ],
-    "launchCommand": [],
-    "notes": "Replace launchCommand with the real cloud GPU launch command once the provider credentials and target worker are configured."
+    "envFilePath": [
+      "deploy/oci-training/env/immaculate-q-training.env.example"
+    ],
+    "inlineEnv": {
+      "WANDB_MODE": "offline"
+    },
+    "launchCommand": [
+      "bash",
+      "deploy/oci-training/scripts/launch-oci-q-training.sh",
+      "--session-manifest",
+      "training/q/hybrid_training_session.example.json",
+      "--env-file",
+      "deploy/oci-training/env/immaculate-q-training.env.example"
+    ],
+    "notes": "Fill the OCI launch target OCIDs plus either OCI_CLI_AUTH=instance_principal on a controller node or OCI_CLI_CONFIG_FILE/OCI_CLI_PROFILE for local API-key auth. Prefer OCI Vault secret OCIDs over plain-text tokens."
   },
   "artifacts": {
     "sessionRoot": ".training-output/q/sessions/q-hybrid-session-example",

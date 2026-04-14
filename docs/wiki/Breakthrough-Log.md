@@ -21,6 +21,33 @@ For each breakthrough, record:
 
 ### 2026-04-14
 
+#### The hybrid session can now carry a real OCI cloud-launch path, and the hidden controller/runtime mismatch is closed instead of hand-entered each run
+
+What changed:
+- the hybrid session runner now understands `cloud.envFilePath`, `cloud.inlineEnv`, canonical HF/W&B/OCI aliases, and a staged cloud bundle instead of relying only on the live shell
+- the repo now carries a dedicated `deploy/oci-training/` bundle with an OCI launcher, a remote training runner, a Vault-oriented secret fetcher, and a cloud-init template
+- the cloud lane now stages the exact locked session inputs into a tarball so a remote GPU node can train the tracked bundle instead of booting with no access to the local dataset
+- the OCI controller logic now prefers the real CLI env names `OCI_CLI_CONFIG_FILE` and `OCI_CLI_PROFILE` while keeping backward compatibility with the older shorthand names already used in the repo
+
+Why it matters:
+- the missed systems pattern was that a cloud launch command without a staged session bundle is theater, because the remote node still cannot see the exact local lock, config, and dataset
+- the second missed pattern was that the repo's earlier cloud checks mixed controller auth and remote runtime auth into one vague readiness guess
+- env-file sourcing matters because secrets and target OCIDs should not have to be re-exported into the shell by hand every time a session is launched
+- correcting the OCI CLI env names closes a subtle but real operator bug: the old `OCI_CONFIG_FILE` and `OCI_PROFILE` names were not the real CLI defaults even though they looked plausible
+
+Evidence:
+- `training/q/run_q_training_session.py` now emits a cloud bundle and stamps env-file plus OCI launch-target state into `docs/wiki/Q-Hybrid-Training.md`
+- `deploy/oci-training/scripts/launch-oci-q-training.sh` now uploads the staged session bundle to Object Storage and launches the OCI compute node with rendered cloud-init metadata
+- `deploy/oci-training/scripts/run-immaculate-q-training.sh` now downloads the staged bundle on the remote node and runs the tracked session manifest instead of an unbound ad hoc config
+- `docs/wiki/OCI-Q-Training.md` now records the cloud-launch boundary in operator-facing terms
+
+What this unlocks next:
+- the same hybrid session id can now drive the controller-side OCI launch and the remote-node training execution without inventing a second state model
+- once the missing OCI auth and target OCIDs are present, the current session can move from `not-configured` to a real launched GPU lane without changing the repo contract again
+- future cloud runs can be tied back to one staged session bundle hash instead of vague notes about what was “probably uploaded”
+
+### 2026-04-14
+
 #### Q now has a real hybrid training session surface, and Immaculate gained a truthful orchestration-training bundle instead of a vague “train the system” claim
 
 What changed:

@@ -1,0 +1,83 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+ssh_pwauth: false
+disable_root: true
+
+packages:
+  - git
+  - jq
+  - curl
+  - tar
+  - python3-pip
+  - ca-certificates
+  - firewalld
+  - policycoreutils-python-utils
+
+write_files:
+  - path: /etc/sysctl.d/62-immaculate-q-training.conf
+    owner: root:root
+    permissions: "0644"
+    content: |
+      fs.protected_hardlinks = 1
+      fs.protected_symlinks = 1
+      kernel.kptr_restrict = 2
+      kernel.dmesg_restrict = 1
+      kernel.unprivileged_bpf_disabled = 1
+      net.ipv4.conf.all.rp_filter = 1
+      net.ipv4.conf.default.rp_filter = 1
+      net.ipv4.tcp_syncookies = 1
+      net.ipv4.conf.all.accept_redirects = 0
+      net.ipv4.conf.default.accept_redirects = 0
+      net.ipv4.conf.all.send_redirects = 0
+      net.ipv4.conf.default.send_redirects = 0
+      net.ipv6.conf.all.accept_redirects = 0
+      net.ipv6.conf.default.accept_redirects = 0
+  - path: /etc/tmpfiles.d/immaculate-q-training.conf
+    owner: root:root
+    permissions: "0644"
+    content: |
+      d /etc/immaculate 0750 root root -
+      d /etc/immaculate/secrets 0700 root root -
+      d /var/lib/immaculate 0750 root root -
+      d /var/lib/immaculate/q-training 0750 root root -
+      d /var/log/immaculate 0750 root root -
+      d /var/log/immaculate/q-training 0750 root root -
+      d /opt/immaculate 0755 root root -
+      d /opt/immaculate/src 0755 root root -
+  - path: /etc/immaculate/immaculate-q-training.env
+    owner: root:root
+    permissions: "0600"
+    content: |
+      IMMACULATE_REPO_ROOT=/opt/immaculate/src
+      IMMACULATE_Q_HYBRID_SESSION_REPO_PATH=__SESSION_REPO_PATH__
+      IMMACULATE_Q_TRAINING_RUNTIME_DIR=/var/lib/immaculate/q-training
+      IMMACULATE_Q_TRAINING_LOG_DIR=/var/log/immaculate/q-training
+      IMMACULATE_Q_TRAINING_BUNDLE_PATH=/var/lib/immaculate/q-training/session-bundle.tar.gz
+      IMMACULATE_Q_TRAINING_PYTHON=python3
+      OCI_CLI_AUTH=instance_principal
+      OCI_OBJECT_STORAGE_NAMESPACE=__OBJECT_NAMESPACE__
+      OCI_OBJECT_STORAGE_BUCKET=__OBJECT_BUCKET__
+      OCI_Q_TRAINING_BUNDLE_OBJECT=__OBJECT_NAME__
+      OCI_Q_TRAINING_HF_TOKEN_SECRET_OCID=__HF_SECRET_OCID__
+      OCI_Q_TRAINING_WANDB_API_KEY_SECRET_OCID=__WANDB_SECRET_OCID__
+      WANDB_ENTITY=__WANDB_ENTITY__
+      WANDB_PROJECT=__WANDB_PROJECT__
+      WANDB_MODE=__WANDB_MODE__
+      HF_HOME=/var/lib/immaculate/q-training/cache/hf
+      TRANSFORMERS_CACHE=/var/lib/immaculate/q-training/cache/transformers
+      WANDB_DIR=/var/lib/immaculate/q-training/cache/wandb
+
+runcmd:
+  - [bash, -lc, "id immaculate >/dev/null 2>&1 || useradd --system --uid 10001 --home-dir /var/lib/immaculate --shell /sbin/nologin immaculate"]
+  - [systemd-tmpfiles, --create, /etc/tmpfiles.d/immaculate-q-training.conf]
+  - [systemctl, enable, --now, firewalld]
+  - [python3, -m, pip, install, --upgrade, oci-cli]
+  - [sysctl, --system]
+  - [bash, -lc, "git clone __REPO_URL__ /opt/immaculate/src && cd /opt/immaculate/src && git checkout __GIT_SHA__"]
+  - [bash, -lc, "cd /opt/immaculate/src && bash deploy/oci-training/scripts/run-immaculate-q-training.sh --env-file /etc/immaculate/immaculate-q-training.env > /var/log/immaculate/q-training/session.log 2>&1"]
+
+final_message: |
+  OCI Q training bootstrap complete.
+  The node cloned Immaculate at __GIT_SHA__ and started the tracked hybrid session runner.

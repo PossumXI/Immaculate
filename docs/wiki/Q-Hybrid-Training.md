@@ -2,20 +2,20 @@
 
 This page records one hybrid Q training session. In plain English: it ties the Q fine-tune lane and the Immaculate orchestration-improvement lane into one stamped session, then tells you exactly which parts are ready or missing.
 
-- Generated: `2026-04-14T20:47:00Z`
-- Release: `0.1.0+b4e599d`
+- Generated: `2026-04-14T21:35:43Z`
+- Release: `0.1.0+36fc9bb`
 - Session id: `q-hybrid-cur-fnv1a-8f551a5c`
 - Q training bundle: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5`
 - Base model: `unsloth/gemma-4-31B-it`
 - Dataset rows: `1013`
-- Immaculate orchestration bundle: `immaculate-orchestration-b4e599d-4c759c95`
+- Immaculate orchestration bundle: `immaculate-orchestration-36fc9bb-4c759c95`
 
 ## Plain English Status
 
-- Local lane: `completed` in mode `dry-run`
-- Cloud lane: `not-configured` on provider `oci`
-- Hugging Face token present: `True`
-- W&B publish env ready: `False`
+- Local lane: `ready` in mode `dry-run`
+- Cloud lane: `not-configured` on provider `oci` in mode `launch`
+- Hugging Face token or secret path ready: `True` via `HF_TOKEN`
+- W&B state ready: `True` via `WANDB_MODE=offline`
 
 ## Q Fine-Tune Lane
 
@@ -33,16 +33,36 @@ This page records one hybrid Q training session. In plain English: it ties the Q
 - Signal count: `14`
 - This lane improves Immaculate through benchmark and orchestration evidence, not by pretending Immaculate is a separate base model.
 
+## Cloud Bundle
+
+- Bundle id: `q-hybrid-cur-fnv1a-8f551a5c-36fc9bb`
+- Archive: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/cloud-bundle/q-hybrid-cur-fnv1a-8f551a5c-cloud-bundle.tar.gz`
+- Archive SHA-256: `19b5f006583797e26668dc90bc6f816474defdb702f2089326715dc650d54c84`
+- Bundle manifest: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/cloud-bundle/bundle-manifest.json`
+- Included file count: `8`
+
 ## Cloud Doctor
 
 - Provider: `oci`
-- Launch command configured: `False`
+- Launch command configured: `True`
+- OCI CLI path: `C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.tools/oci-cli-venv/Scripts/oci.exe`
+- OCI auth mode: `missing`
 - Cloud ready: `False`
-- Cloud note: OCI CLI is not installed.
-- Cloud note: OCI auth is not configured through instance principals, OCI_CONFIG_FILE, or explicit OCI_* identity variables.
+- Env file: `C:/Users/Knight/Desktop/cheeks/Asgard/.env` exists `True`
+- Env file: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/oci-cloud.env` exists `True`
+- Launch target `OCI_COMPARTMENT_OCID`: `False`
+- Launch target `OCI_SUBNET_OCID`: `False`
+- Launch target `OCI_AVAILABILITY_DOMAIN`: `False`
+- Launch target `OCI_IMAGE_OCID`: `False`
+- Launch target `OCI_SHAPE`: `False`
+- Launch target `OCI_OBJECT_STORAGE_NAMESPACE`: `False`
+- Launch target `OCI_OBJECT_STORAGE_BUCKET`: `False`
+- Cloud note: Missing cloud launch target env: OCI_COMPARTMENT_OCID, OCI_SUBNET_OCID, OCI_AVAILABILITY_DOMAIN, OCI_IMAGE_OCID, OCI_SHAPE, OCI_OBJECT_STORAGE_NAMESPACE, OCI_OBJECT_STORAGE_BUCKET
+- Cloud note: OCI auth is not configured through OCI_CLI_AUTH=instance_principal, OCI_CLI_CONFIG_FILE, or explicit OCI_CLI_* identity variables.
 
 ## Truth Boundary
 
 - One hybrid session can now coordinate local Q preparation, optional local training, optional cloud launch intent, and an Immaculate orchestration bundle in one place.
 - A cloud launch is only claimed when the session doctor marks the cloud lane ready and an actual launch command is configured.
-- On this machine, missing cloud auth or tooling keeps the cloud lane explicit as `not-configured` instead of being papered over.
+- The cloud bundle exists so a remote GPU node can train the exact locked dataset instead of booting without the tracked session inputs.
+- Missing OCI auth, missing launch target OCIDs, or missing secret mappings keep the cloud lane explicit as `not-configured` instead of being papered over.

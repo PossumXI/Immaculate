@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-04-14T20:47:00Z",
+  "generatedAt": "2026-04-14T21:35:43Z",
   "sessionId": "q-hybrid-cur-fnv1a-8f551a5c",
   "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/hybrid-session.manifest.json",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "b4e599d86d8b721b76686afbd92cc09fafcbf3c5",
-    "gitShortSha": "b4e599d",
-    "buildId": "0.1.0+b4e599d"
+    "gitSha": "36fc9bbfa404854aff675903b649dac1dd00ec82",
+    "gitShortSha": "36fc9bb",
+    "buildId": "0.1.0+36fc9bb"
   },
   "q": {
     "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5",
@@ -20,9 +20,18 @@
     "failureCorpusPath": "docs/wiki/Q-Failure-Corpus.json"
   },
   "immaculate": {
-    "bundleId": "immaculate-orchestration-b4e599d-4c759c95",
+    "bundleId": "immaculate-orchestration-36fc9bb-4c759c95",
     "bundlePath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-cur-fnv1a-8f551a5c.json",
     "signalCount": 14
+  },
+  "cloudBundle": {
+    "bundleId": "q-hybrid-cur-fnv1a-8f551a5c-36fc9bb",
+    "archivePath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/cloud-bundle/q-hybrid-cur-fnv1a-8f551a5c-cloud-bundle.tar.gz",
+    "archiveSha256": "19b5f006583797e26668dc90bc6f816474defdb702f2089326715dc650d54c84",
+    "archiveSizeBytes": 2209485,
+    "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/cloud-bundle/bundle-manifest.json",
+    "fileCount": 8,
+    "repoRemoteUrl": "https://github.com/PossumXI/Immaculate.git"
   },
   "doctor": {
     "local": {
@@ -41,38 +50,93 @@
     },
     "cloud": {
       "provider": "oci",
+      "mode": "launch",
       "ready": false,
+      "envFiles": [
+        {
+          "path": "C:/Users/Knight/Desktop/cheeks/Asgard/.env",
+          "exists": true
+        },
+        {
+          "path": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/oci-cloud.env",
+          "exists": true
+        }
+      ],
+      "inlineEnvKeys": [
+        "WANDB_MODE"
+      ],
       "requiredEnv": {
-        "HF_TOKEN": true
+        "OCI_COMPARTMENT_OCID": false,
+        "OCI_SUBNET_OCID": false,
+        "OCI_AVAILABILITY_DOMAIN": false,
+        "OCI_IMAGE_OCID": false,
+        "OCI_SHAPE": false,
+        "OCI_OBJECT_STORAGE_NAMESPACE": false,
+        "OCI_OBJECT_STORAGE_BUCKET": false
       },
       "optionalEnv": {
+        "HF_TOKEN": true,
+        "HUGGINGFACE_TOKEN": false,
         "WANDB_API_KEY": false,
         "WANDB_ENTITY": false,
         "WANDB_PROJECT": false,
         "OCI_CLI_AUTH": false,
+        "OCI_CLI_CONFIG_FILE": false,
+        "OCI_CLI_PROFILE": false,
         "OCI_CONFIG_FILE": false,
-        "OCI_PROFILE": false
+        "OCI_PROFILE": false,
+        "OCI_Q_TRAINING_HF_TOKEN_SECRET_OCID": false,
+        "OCI_Q_TRAINING_WANDB_API_KEY_SECRET_OCID": false,
+        "WANDB_MODE": true
       },
-      "launchCommandConfigured": false,
+      "launchTarget": {
+        "OCI_COMPARTMENT_OCID": false,
+        "OCI_SUBNET_OCID": false,
+        "OCI_AVAILABILITY_DOMAIN": false,
+        "OCI_IMAGE_OCID": false,
+        "OCI_SHAPE": false,
+        "OCI_OBJECT_STORAGE_NAMESPACE": false,
+        "OCI_OBJECT_STORAGE_BUCKET": false
+      },
+      "launchCommandConfigured": true,
+      "launchCommand": [
+        "bash",
+        "deploy/oci-training/scripts/launch-oci-q-training.sh",
+        "--session-manifest",
+        ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/hybrid-session.manifest.json",
+        "--env-file",
+        "C:/Users/Knight/Desktop/cheeks/Asgard/.env",
+        "--env-file",
+        ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/oci-cloud.env"
+      ],
+      "cliBin": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.tools/oci-cli-venv/Scripts/oci.exe",
+      "authMode": "missing",
       "reasons": [
-        "OCI CLI is not installed.",
-        "OCI auth is not configured through instance principals, OCI_CONFIG_FILE, or explicit OCI_* identity variables."
-      ]
+        "Missing cloud launch target env: OCI_COMPARTMENT_OCID, OCI_SUBNET_OCID, OCI_AVAILABILITY_DOMAIN, OCI_IMAGE_OCID, OCI_SHAPE, OCI_OBJECT_STORAGE_NAMESPACE, OCI_OBJECT_STORAGE_BUCKET",
+        "OCI auth is not configured through OCI_CLI_AUTH=instance_principal, OCI_CLI_CONFIG_FILE, or explicit OCI_CLI_* identity variables."
+      ],
+      "canonicalSources": {
+        "HF_TOKEN": "HF_TOKEN",
+        "WANDB_MODE": "WANDB_MODE"
+      }
     },
     "huggingFace": {
-      "ready": true
+      "ready": true,
+      "source": "HF_TOKEN"
     },
     "wandb": {
-      "ready": false,
+      "ready": true,
+      "source": "WANDB_MODE=offline",
       "entityPresent": false,
-      "projectPresent": false
+      "projectPresent": false,
+      "mode": "offline"
     }
   },
   "lanes": {
     "local": {
       "enabled": true,
       "mode": "dry-run",
-      "status": "completed",
+      "status": "ready",
       "command": [
         "C:\\Users\\Knight\\AppData\\Local\\Microsoft\\WindowsApps\\python.EXE",
         "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\training\\q\\train_q_lora_unsloth.py",
@@ -81,15 +145,23 @@
         "--session-manifest",
         "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\sessions\\q-hybrid-cur-fnv1a-8f551a5c\\hybrid-session.manifest.json",
         "--dry-run"
-      ],
-      "exitCode": 0
+      ]
     },
     "cloud": {
       "enabled": true,
       "provider": "oci",
-      "mode": "doctor",
+      "mode": "launch",
       "status": "not-configured",
-      "command": []
+      "command": [
+        "bash",
+        "deploy/oci-training/scripts/launch-oci-q-training.sh",
+        "--session-manifest",
+        ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/hybrid-session.manifest.json",
+        "--env-file",
+        "C:/Users/Knight/Desktop/cheeks/Asgard/.env",
+        "--env-file",
+        ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/oci-cloud.env"
+      ]
     }
   },
   "output": {

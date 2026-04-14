@@ -77,6 +77,14 @@ python training/q/train_q_lora_unsloth.py --config training/q/q_lora_config.exam
 
 11. Launch `train_q_lora_unsloth.py` on a GPU instance with the required Python packages installed if the session doctor marks the cloud lane ready.
 
+For the OCI controller path specifically:
+
+- use `deploy/oci-training/env/immaculate-q-training.env.example` as the controller and remote-launch template
+- put the OCI launch target OCIDs in that env file or a session-local overlay env file
+- prefer `OCI_Q_TRAINING_HF_TOKEN_SECRET_OCID` and `OCI_Q_TRAINING_WANDB_API_KEY_SECRET_OCID` over plain-text token exports
+- use `deploy/oci-training/scripts/launch-oci-q-training.sh --check` to verify the launch-target shape before a real billable launch
+- keep the hybrid session as the source of truth; the OCI launcher consumes the session bundle instead of inventing its own dataset state
+
 ## Hybrid Session
 
 The repo now has a session-level control surface for Q training:
@@ -92,6 +100,7 @@ That session is the truthful place to say:
 - which Immaculate orchestration bundle is paired with it
 - whether the local lane is ready
 - whether the cloud lane is actually configured or still blocked
+- which env files and OCI launch target settings are shaping the cloud lane
 
 The cloud lane is not allowed to silently pretend readiness. If OCI or another provider is not configured, the session stays explicit about that.
 
