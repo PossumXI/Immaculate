@@ -14,6 +14,7 @@ import {
   type OllamaChatCompletionResult,
   type OllamaChatMessage
 } from "./ollama.js";
+import { resolveReleaseMetadata } from "./release-metadata.js";
 import { getQModelAlias, getQModelTarget, isQAlias, isQTargetModel, truthfulModelLabel } from "./q-model.js";
 import { createFailureCircuitBreaker } from "./q-resilience.js";
 
@@ -99,7 +100,17 @@ const qPrimaryCircuit = createFailureCircuitBreaker({
   failureThreshold: PRIMARY_FAILURE_THRESHOLD,
   cooldownMs: PRIMARY_COOLDOWN_MS
 });
+const releaseMetadata = await resolveReleaseMetadata();
 const principals = new WeakMap<object, GatewayPrincipal>();
+
+app.log.info(
+  {
+    runtimeDir: persistence.getStatus().rootDir,
+    qApiKeyStorePath: qApiKeyRegistry.getStorePath(),
+    release: releaseMetadata.buildId
+  },
+  "Q gateway configured"
+);
 
 function extractAuthorizationToken(headers: Record<string, string | string[] | undefined>): string | undefined {
   const explicitApiKey = headers["x-api-key"];
@@ -316,6 +327,10 @@ app.get("/health", async () => {
   const circuit = qPrimaryCircuit.snapshot();
   return {
     ok: true,
+    release: {
+      buildId: releaseMetadata.buildId,
+      gitShortSha: releaseMetadata.gitShortSha
+    },
     gateway: "q",
     alias: getQModelAlias(),
     model: truthfulModelLabel(PRIMARY_MODEL),
@@ -342,6 +357,11 @@ app.get("/api/q/info", async (request, reply) => {
     enabled: true,
     alias: getQModelAlias(),
     model: truthfulModelLabel(PRIMARY_MODEL),
+    release: {
+      buildId: releaseMetadata.buildId,
+      gitShortSha: releaseMetadata.gitShortSha,
+      qTrainingBundleId: releaseMetadata.q.trainingLock?.bundleId
+    },
     fallbackModel: FALLBACK_ENABLED ? truthfulModelLabel(FALLBACK_MODEL) : undefined,
     circuit: qPrimaryCircuit.snapshot(),
     authMode: "api-key",

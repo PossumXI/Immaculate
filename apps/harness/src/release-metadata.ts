@@ -1,0 +1,183 @@
+import path from "node:path";
+import { existsSync } from "node:fs";
+import { readdir, readFile } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import { getQModelAlias, getQModelTarget, truthfulModelLabel } from "./q-model.js";
+
+export type QTrainingLockSummary = {
+  generatedAt?: string;
+  lockVersion?: number;
+  bundleId: string;
+  runName?: string;
+  aliasName?: string;
+  baseModel?: string;
+  trainDatasetPath?: string;
+  trainDatasetSha256?: string;
+  trainDatasetRowCount?: number;
+  mixManifestPath?: string;
+  mixManifestSha256?: string;
+  curationRunPath?: string;
+  curationRunId?: string;
+  lockPath: string;
+};
+
+export type ReleaseMetadata = {
+  packageVersion: string;
+  harnessVersion: string;
+  coreVersion: string;
+  gitSha: string;
+  gitShortSha: string;
+  gitBranch: string;
+  buildId: string;
+  q: {
+    alias: string;
+    providerModel: string;
+    truthfulLabel: string;
+    trainingLock?: QTrainingLockSummary;
+  };
+};
+
+const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
+const HARNESS_ROOT = path.resolve(MODULE_ROOT, "..");
+const REPO_ROOT = path.resolve(HARNESS_ROOT, "../..");
+const ROOT_PACKAGE_PATH = path.join(REPO_ROOT, "package.json");
+const HARNESS_PACKAGE_PATH = path.join(HARNESS_ROOT, "package.json");
+const CORE_PACKAGE_PATH = path.join(REPO_ROOT, "packages", "core", "package.json");
+const Q_OUTPUT_ROOT = path.join(REPO_ROOT, ".training-output", "q");
+const Q_LOCK_ROOT = path.join(Q_OUTPUT_ROOT, "locks");
+const Q_LATEST_LOCK_PATH = path.join(Q_OUTPUT_ROOT, "latest-training-lock.json");
+let cachedReleaseMetadata: ReleaseMetadata | undefined;
+
+type PackageJson = {
+  version?: string;
+};
+
+type QTrainingLockFile = {
+  generatedAt?: string;
+  lockVersion?: number;
+  bundleId?: string;
+  run?: {
+    runName?: string;
+    aliasName?: string;
+    baseModel?: string;
+    trainDatasetPath?: string;
+    trainDatasetSha256?: string;
+    trainDatasetRowCount?: number;
+  };
+  mixManifest?: {
+    path?: string;
+    sha256?: string;
+  };
+  curation?: {
+    runPath?: string;
+    runId?: string;
+  };
+};
+
+async function readJsonFile<T>(filePath: string): Promise<T | undefined> {
+  try {
+    const payload = await readFile(filePath, "utf8");
+    return JSON.parse(payload) as T;
+  } catch {
+    return undefined;
+  }
+}
+
+function runGit(args: string[]): string | undefined {
+  const result = spawnSync("git", args, {
+    cwd: REPO_ROOT,
+    encoding: "utf8",
+    windowsHide: true
+  });
+  if (result.status !== 0) {
+    return undefined;
+  }
+  const value = result.stdout.trim();
+  return value.length > 0 ? value : undefined;
+}
+
+async function readVersion(filePath: string): Promise<string> {
+  const payload = await readJsonFile<PackageJson>(filePath);
+  return payload?.version?.trim() || "0.0.0";
+}
+
+async function resolveLatestTrainingLockPath(): Promise<string | undefined> {
+  if (existsSync(Q_LATEST_LOCK_PATH)) {
+    return Q_LATEST_LOCK_PATH;
+  }
+  if (!existsSync(Q_LOCK_ROOT)) {
+    return undefined;
+  }
+  const entries = await readdir(Q_LOCK_ROOT, {
+    withFileTypes: true
+  });
+  const lockNames = entries
+    .filter((entry) => entry.isFile() && entry.name.startsWith("q-training-lock-") && entry.name.endsWith(".json"))
+    .map((entry) => entry.name)
+    .sort()
+    .reverse();
+  return lockNames[0] ? path.join(Q_LOCK_ROOT, lockNames[0]) : undefined;
+}
+
+async function readTrainingLockSummary(): Promise<QTrainingLockSummary | undefined> {
+  const lockPath = await resolveLatestTrainingLockPath();
+  if (!lockPath) {
+    return undefined;
+  }
+  const payload = await readJsonFile<QTrainingLockFile>(lockPath);
+  if (!payload?.bundleId) {
+    return undefined;
+  }
+  return {
+    generatedAt: payload.generatedAt,
+    lockVersion: payload.lockVersion,
+    bundleId: payload.bundleId,
+    runName: payload.run?.runName,
+    aliasName: payload.run?.aliasName,
+    baseModel: payload.run?.baseModel,
+    trainDatasetPath: payload.run?.trainDatasetPath,
+    trainDatasetSha256: payload.run?.trainDatasetSha256,
+    trainDatasetRowCount: payload.run?.trainDatasetRowCount,
+    mixManifestPath: payload.mixManifest?.path,
+    mixManifestSha256: payload.mixManifest?.sha256,
+    curationRunPath: payload.curation?.runPath,
+    curationRunId: payload.curation?.runId,
+    lockPath: path.relative(REPO_ROOT, lockPath).replaceAll("\\", "/")
+  };
+}
+
+export async function resolveReleaseMetadata(): Promise<ReleaseMetadata> {
+  if (cachedReleaseMetadata) {
+    return cachedReleaseMetadata;
+  }
+
+  const [packageVersion, harnessVersion, coreVersion, trainingLock] = await Promise.all([
+    readVersion(ROOT_PACKAGE_PATH),
+    readVersion(HARNESS_PACKAGE_PATH),
+    readVersion(CORE_PACKAGE_PATH),
+    readTrainingLockSummary()
+  ]);
+
+  const gitSha = runGit(["rev-parse", "HEAD"]) ?? "unknown";
+  const gitShortSha = runGit(["rev-parse", "--short=7", "HEAD"]) ?? (gitSha.slice(0, 7) || "unknown");
+  const gitBranch = runGit(["branch", "--show-current"]) ?? "detached";
+
+  cachedReleaseMetadata = {
+    packageVersion,
+    harnessVersion,
+    coreVersion,
+    gitSha,
+    gitShortSha,
+    gitBranch,
+    buildId: `${packageVersion}+${gitShortSha}`,
+    q: {
+      alias: getQModelAlias(),
+      providerModel: getQModelTarget(),
+      truthfulLabel: truthfulModelLabel(getQModelTarget()),
+      trainingLock
+    }
+  };
+
+  return cachedReleaseMetadata;
+}

@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { createEngine, type BenchmarkAssertion, type BenchmarkReport, type GovernancePressureLevel, type IntelligenceLayerRole } from "@immaculate/core";
 import { runPublishedBenchmark, loadLatestBenchmarkReportForPack } from "./benchmark.js";
 import { listOllamaModels, runOllamaExecution } from "./ollama.js";
+import { resolveReleaseMetadata, type ReleaseMetadata } from "./release-metadata.js";
 import { getQModelAlias, resolveQModel, truthfulModelLabel, vendorForModel } from "./q-model.js";
 
 type BridgeBenchScenario = {
@@ -65,6 +66,7 @@ export type BridgeBenchReport = {
   generatedAt: string;
   modelLaneSurface: "direct-local-ollama-structured-contract";
   ollamaBaseUrl: string;
+  release: ReleaseMetadata;
   qAlias: string;
   hardwareContext: {
     host: string;
@@ -284,7 +286,10 @@ function buildMarkdown(report: BridgeBenchReport): string {
   lines.push("# BridgeBench");
   lines.push("");
   lines.push(`Generated at: \`${report.generatedAt}\``);
+  lines.push(`Release: \`${report.release.buildId}\``);
+  lines.push(`Repo commit: \`${report.release.gitShortSha}\``);
   lines.push(`Model lane surface: \`${report.modelLaneSurface}\``);
+  lines.push(`Q training bundle: \`${report.release.q.trainingLock?.bundleId ?? "none generated yet"}\``);
   lines.push("The model lane below measures direct local Ollama structured-contract behavior, not the served Q gateway edge.");
   lines.push("");
   lines.push("## Model Lane");
@@ -345,6 +350,7 @@ export async function runBridgeBench(): Promise<BridgeBenchReport> {
     generatedAt: new Date().toISOString(),
     modelLaneSurface: "direct-local-ollama-structured-contract",
     ollamaBaseUrl: DEFAULT_OLLAMA_URL,
+    release: await resolveReleaseMetadata(),
     qAlias: getQModelAlias(),
     hardwareContext: captureHardwareContext(),
     models: modelSummaries,

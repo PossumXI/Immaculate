@@ -7,6 +7,15 @@
 
 They do different jobs and should not be described as the same thing.
 
+In plain English:
+
+- the private harness route is for operators already inside Immaculate
+- the dedicated Q gateway is the smaller, safer edge for Q users
+
+Current build and bundle identity:
+
+- [[Release-Surface]]
+
 ## Private Harness Q Edge
 
 Routes on the harness process:
@@ -39,6 +48,8 @@ This gateway is the safer deployment surface for external Q users because it:
 - keeps federation, actuation, benchmarks, and operator APIs off the public edge
 - uses the same hashed Q key store and per-key rate/concurrency limits
 - can trip open on repeated primary-model failures and use an explicit fallback model as optional continuity without lying about the provider that answered
+
+If you want one sentence: the gateway is the “public front desk” for Q, while the harness route is the “staff-only back room” inside the full control plane.
 
 Use the gateway when you want a bounded API surface.
 Use the harness route when you need the governed internal Q edge inside the full

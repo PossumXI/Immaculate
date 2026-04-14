@@ -1,8 +1,38 @@
 {
-  "generatedAt": "2026-04-14T11:48:11.906Z",
-  "gatewayUrl": "http://127.0.0.1:8900",
+  "generatedAt": "2026-04-14T15:45:30.608Z",
+  "gatewayUrl": "http://127.0.0.1:8905",
   "alias": "Q",
   "providerModel": "Q (gemma4:e4b)",
+  "release": {
+    "packageVersion": "0.1.0",
+    "harnessVersion": "0.1.0",
+    "coreVersion": "0.1.0",
+    "gitSha": "f3886f2118cc44447ac7a27c82593d6a6f6e89fa",
+    "gitShortSha": "f3886f2",
+    "gitBranch": "detached",
+    "buildId": "0.1.0+f3886f2",
+    "q": {
+      "alias": "Q",
+      "providerModel": "gemma4:e4b",
+      "truthfulLabel": "Q (gemma4:e4b)",
+      "trainingLock": {
+        "generatedAt": "2026-04-14T15:26:05Z",
+        "lockVersion": 1,
+        "bundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5",
+        "runName": "q-defsec-code-longctx-cur-fnv1a-8f551a5c",
+        "aliasName": "Q",
+        "baseModel": "unsloth/gemma-4-31B-it",
+        "trainDatasetPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c.jsonl",
+        "trainDatasetSha256": "5c329cc58772a0dc52e12dafcc421caa5458c6a7c37b96f2970d8a04e937c64f",
+        "trainDatasetRowCount": 1013,
+        "mixManifestPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c.manifest.json",
+        "mixManifestSha256": "3f2210e752c4407ab8baf87fbd686e40ef17b1571e87811bc04b92199d080ec7",
+        "curationRunPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\training-data\\runs\\cur-fnv1a-8f551a5c\\run.json",
+        "curationRunId": "cur-fnv1a-8f551a5c",
+        "lockPath": ".training-output/q/latest-training-lock.json"
+      }
+    }
+  },
   "hardwareContext": {
     "host": "knightly",
     "platform": "win32",
@@ -18,6 +48,10 @@
       "status": 200,
       "body": {
         "ok": true,
+        "release": {
+          "buildId": "0.1.0+f3886f2",
+          "gitShortSha": "f3886f2"
+        },
         "gateway": "q",
         "alias": "Q",
         "model": "Q (gemma4:e4b)",
@@ -29,17 +63,17 @@
         },
         "authMode": "api-key",
         "host": "127.0.0.1",
-        "port": 8900
+        "port": 8905
       },
       "headers": {
         "connection": "keep-alive",
-        "content-length": "207",
+        "content-length": "269",
         "content-type": "application/json; charset=utf-8",
-        "date": "Tue, 14 Apr 2026 11:48:08 GMT",
+        "date": "Tue, 14 Apr 2026 15:45:27 GMT",
         "keep-alive": "timeout=72",
         "vary": "Origin"
       },
-      "wallLatencyMs": 43.47
+      "wallLatencyMs": 44.27
     },
     "unauthorizedChat": {
       "status": 401,
@@ -51,11 +85,11 @@
         "connection": "keep-alive",
         "content-length": "91",
         "content-type": "application/json; charset=utf-8",
-        "date": "Tue, 14 Apr 2026 11:48:08 GMT",
+        "date": "Tue, 14 Apr 2026 15:45:27 GMT",
         "keep-alive": "timeout=72",
         "vary": "Origin"
       },
-      "wallLatencyMs": 8.75
+      "wallLatencyMs": 8.16
     },
     "info": {
       "status": 200,
@@ -63,12 +97,17 @@
         "enabled": true,
         "alias": "Q",
         "model": "Q (gemma4:e4b)",
+        "release": {
+          "buildId": "0.1.0+f3886f2",
+          "gitShortSha": "f3886f2",
+          "qTrainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5"
+        },
         "circuit": {
           "state": "closed",
           "consecutiveFailures": 0
         },
         "authMode": "api-key",
-        "keyId": "qkey-mnyk56n1-a3544f35",
+        "keyId": "qkey-mnysmdl0-23ca4f8b",
         "rateLimit": {
           "requestsPerMinute": 30,
           "burst": 30,
@@ -83,16 +122,16 @@
       },
       "headers": {
         "connection": "keep-alive",
-        "content-length": "305",
+        "content-length": "447",
         "content-type": "application/json; charset=utf-8",
-        "date": "Tue, 14 Apr 2026 11:48:08 GMT",
+        "date": "Tue, 14 Apr 2026 15:45:27 GMT",
         "keep-alive": "timeout=72",
         "vary": "Origin",
         "x-ratelimit-limit": "30",
         "x-ratelimit-remaining": "29",
         "x-ratelimit-reset-ms": "0"
       },
-      "wallLatencyMs": 88.73
+      "wallLatencyMs": 89.21
     },
     "models": {
       "status": 200,
@@ -113,27 +152,27 @@
         "connection": "keep-alive",
         "content-length": "124",
         "content-type": "application/json; charset=utf-8",
-        "date": "Tue, 14 Apr 2026 11:48:08 GMT",
+        "date": "Tue, 14 Apr 2026 15:45:27 GMT",
         "keep-alive": "timeout=72",
         "vary": "Origin",
         "x-ratelimit-limit": "30",
         "x-ratelimit-remaining": "28",
         "x-ratelimit-reset-ms": "0"
       },
-      "wallLatencyMs": 93.59
+      "wallLatencyMs": 90.62
     },
     "authorizedChat": {
       "status": 200,
       "body": {
-        "id": "chatcmpl-mnyk57sw",
+        "id": "chatcmpl-mnysmeoc",
         "object": "chat.completion",
-        "created": 1776167289,
+        "created": 1776181528,
         "model": "Q",
         "providerModel": "Q (gemma4:e4b)",
         "primaryModel": "Q (gemma4:e4b)",
         "fallbackUsed": false,
         "circuitState": "closed",
-        "latencyMs": 1095.24,
+        "latencyMs": 1002.25,
         "thinkingDetected": false,
         "choices": [
           {
@@ -155,21 +194,21 @@
         "connection": "keep-alive",
         "content-length": "430",
         "content-type": "application/json; charset=utf-8",
-        "date": "Tue, 14 Apr 2026 11:48:09 GMT",
+        "date": "Tue, 14 Apr 2026 15:45:28 GMT",
         "keep-alive": "timeout=72",
         "vary": "Origin",
         "x-provider-model": "Q (gemma4:e4b)",
         "x-q-alias": "Q",
         "x-q-circuit-state": "closed",
         "x-q-fallback-used": "false",
-        "x-q-primary-latency-ms": "1095.24",
+        "x-q-primary-latency-ms": "1002.25",
         "x-q-primary-model": "Q (gemma4:e4b)",
         "x-ratelimit-limit": "30",
         "x-ratelimit-remaining": "27",
         "x-ratelimit-reset-ms": "0",
-        "x-upstream-latency-ms": "1095.24"
+        "x-upstream-latency-ms": "1002.25"
       },
-      "wallLatencyMs": 1195.16
+      "wallLatencyMs": 1117.09
     },
     "concurrentRejection": {
       "status": 429,
@@ -182,7 +221,7 @@
         "connection": "keep-alive",
         "content-length": "101",
         "content-type": "application/json; charset=utf-8",
-        "date": "Tue, 14 Apr 2026 11:48:09 GMT",
+        "date": "Tue, 14 Apr 2026 15:45:28 GMT",
         "keep-alive": "timeout=72",
         "retry-after": "1",
         "vary": "Origin",
@@ -190,19 +229,19 @@
         "x-ratelimit-remaining": "26",
         "x-ratelimit-reset-ms": "1000"
       },
-      "wallLatencyMs": 92.63
+      "wallLatencyMs": 102.58
     }
   },
   "directOllama": {
-    "latencyMs": 1026.41,
-    "wallLatencyMs": 1037.22,
-    "responsePreview": "Gateway reports healthy."
+    "latencyMs": 981.13,
+    "wallLatencyMs": 995.66,
+    "responsePreview": "Gateway reports healthy status."
   },
   "comparison": {
-    "gatewayEndToEndLatencyMs": 1195.16,
-    "gatewayUpstreamLatencyMs": 1095.24,
-    "gatewayAddedLatencyMs": 99.92,
-    "directOllamaLatencyMs": 1026.41
+    "gatewayEndToEndLatencyMs": 1117.09,
+    "gatewayUpstreamLatencyMs": 1002.25,
+    "gatewayAddedLatencyMs": 114.84,
+    "directOllamaLatencyMs": 981.13
   },
   "output": {
     "jsonPath": "docs\\wiki\\Q-Gateway-Validation.json",

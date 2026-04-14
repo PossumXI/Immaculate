@@ -1,7 +1,5 @@
 {
-  "generatedAt": "2026-04-14T15:37:16.626Z",
-  "threshold": 0.75,
-  "ready": true,
+  "generatedAt": "2026-04-14T15:50:13.061Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
@@ -32,24 +30,35 @@
       }
     }
   },
-  "reasons": [],
-  "sources": {
-    "modelComparisonGeneratedAt": "2026-04-14T15:27:29.352Z",
-    "bridgeBenchGeneratedAt": "2026-04-14T15:37:11.471Z"
-  },
-  "q": {
-    "modelComparison": {
-      "parseSuccessRate": 1,
-      "completedTaskCount": 4,
-      "taskCount": 4
+  "surfaces": [
+    {
+      "label": "BridgeBench",
+      "path": "docs\\wiki\\BridgeBench.json",
+      "generatedAt": "2026-04-14T15:37:11.471Z"
     },
-    "bridgeBench": {
-      "parseSuccessRate": 1,
-      "taskCount": 4
+    {
+      "label": "Model comparison",
+      "path": "docs\\wiki\\Model-Benchmark-Comparison.json",
+      "generatedAt": "2026-04-14T15:27:29.352Z"
+    },
+    {
+      "label": "Q readiness gate",
+      "path": "docs\\wiki\\Q-Readiness-Gate.json",
+      "generatedAt": "2026-04-14T15:37:16.626Z"
+    },
+    {
+      "label": "Q gateway validation",
+      "path": "docs\\wiki\\Q-Gateway-Validation.json",
+      "generatedAt": "2026-04-14T15:45:30.608Z"
+    },
+    {
+      "label": "W&B benchmark export",
+      "path": "docs\\wiki\\Benchmark-Wandb-Export.json",
+      "generatedAt": "2026-04-14T15:50:07.491415+00:00"
     }
-  },
+  ],
   "output": {
-    "jsonPath": "docs\\wiki\\Q-Readiness-Gate.json",
-    "markdownPath": "docs\\wiki\\Q-Readiness-Gate.md"
+    "jsonPath": "docs\\wiki\\Release-Surface.json",
+    "markdownPath": "docs\\wiki\\Release-Surface.md"
   }
 }

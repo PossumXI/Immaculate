@@ -7,6 +7,7 @@ import { createEngine, type BenchmarkReport, type GovernancePressureLevel, type 
 import { loadLatestBenchmarkReportForPack } from "./benchmark.js";
 import { listOllamaModels, runOllamaExecution } from "./ollama.js";
 import { resolveQAliasSpecification } from "./ollama-alias.js";
+import { resolveReleaseMetadata, type ReleaseMetadata } from "./release-metadata.js";
 import {
   displayModelName,
   resolveQModel,
@@ -97,6 +98,7 @@ export type ModelComparisonReport = {
   generatedAt: string;
   surface: "direct-local-ollama-structured-contract";
   ollamaBaseUrl: string;
+  release: ReleaseMetadata;
   qAlias: {
     alias: string;
     actualModel: string;
@@ -396,9 +398,12 @@ function renderMarkdown(report: ModelComparisonReport): string {
     "It does not measure the served Q gateway edge. It measures the underlying local model path that the gateway depends on.",
     "",
     `- Generated: ${report.generatedAt}`,
+    `- Release: ${report.release.buildId}`,
+    `- Repo commit: ${report.release.gitShortSha}`,
     `- Surface: ${report.surface}`,
     `- Ollama endpoint: ${report.ollamaBaseUrl}`,
     `- Q alias: ${report.qAlias.alias.toUpperCase()} -> ${report.qAlias.actualModel}`,
+    `- Q training bundle: ${report.release.q.trainingLock?.bundleId ?? "none generated yet"}`,
     `- Hardware: ${JSON.stringify(report.hardwareContext)}`,
     ""
   ];
@@ -498,6 +503,7 @@ export async function runModelComparison(): Promise<ModelComparisonReport> {
     generatedAt,
     surface: "direct-local-ollama-structured-contract",
     ollamaBaseUrl: DEFAULT_OLLAMA_URL,
+    release: await resolveReleaseMetadata(),
     qAlias: {
       alias: resolveQAliasSpecification().displayName,
       actualModel: resolveQAliasSpecification().baseModel,

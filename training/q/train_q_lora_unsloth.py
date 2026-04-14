@@ -21,6 +21,12 @@ def inspect_jsonl_dataset(path_value: str) -> tuple[int, list[str]]:
     return row_count, sorted(columns)
 
 
+def load_training_lock(path_value: str | None) -> dict | None:
+    if not path_value:
+        return None
+    return json.loads(Path(path_value).read_text(encoding="utf-8"))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", required=True, help="Path to the Q LoRA training config JSON")
@@ -35,6 +41,7 @@ def main() -> None:
     dataset_path = config.get("train_dataset_path") or config.get("curated_dataset_path")
     if not dataset_path:
         raise ValueError("Config requires train_dataset_path or curated_dataset_path.")
+    training_lock = load_training_lock(config.get("training_lock_path"))
 
     row_count, column_names = inspect_jsonl_dataset(dataset_path)
     if "text" not in column_names:
@@ -42,6 +49,13 @@ def main() -> None:
             "Training dataset must already contain a text field. "
             "Run build_q_text_dataset.py and build_q_mixture.py before training."
         )
+    if training_lock:
+        locked_dataset_path = training_lock.get("run", {}).get("trainDatasetPath")
+        if locked_dataset_path and str(Path(locked_dataset_path).resolve()) != str(Path(dataset_path).resolve()):
+            raise ValueError("training_lock_path does not match train_dataset_path.")
+        locked_base_model = training_lock.get("run", {}).get("baseModel")
+        if locked_base_model and locked_base_model != config.get("base_model"):
+            raise ValueError("training_lock_path does not match base_model.")
 
     if args.dry_run:
         print(
@@ -54,6 +68,8 @@ def main() -> None:
                     "train_dataset_path": dataset_path,
                     "row_count": row_count,
                     "columns": column_names,
+                    "training_lock_path": config.get("training_lock_path"),
+                    "training_bundle_id": training_lock.get("bundleId") if training_lock else None,
                 },
                 indent=2,
             )

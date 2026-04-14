@@ -21,6 +21,33 @@ For each breakthrough, record:
 
 ### 2026-04-14
 
+#### Immaculate and Q now share a machine-stamped release surface, and Q training gained a real lock artifact instead of filename-only drift
+
+What changed:
+- the repo now generates a shared `Release-Surface` page that stamps the current Immaculate build, commit, Q serving label, and latest tracked Q training bundle
+- the Q training path now emits a sidecar mix manifest and a dedicated training lock file instead of relying on loose filenames
+- the runtime Q info and gateway health surfaces now expose the current build stamp so docs and live processes can be compared directly
+- the README and wiki home were rewritten in plainer language so a new reader can understand what the system does before reading the deeper operator docs
+
+Why it matters:
+- the missed infrastructure pattern was that “latest docs” are not enough when the model path, gateway path, and training path can drift independently
+- a release/build stamp makes every report answer a basic audit question: which exact repo state produced this page
+- a training lock makes the next cloud fine-tune replayable, because the dataset hash, mix manifest, config hash, and repo commit are bound together instead of implied by file names
+- plain-language copy matters because evidence that cannot be understood by a non-specialist is weaker in procurement, review, and external collaboration
+
+Evidence:
+- `npm run release:surface` now writes `docs/wiki/Release-Surface.md` and `docs/wiki/Release-Surface.json`
+- `training/q/build_q_mixture.py` now emits a sidecar `.manifest.json`
+- `npm run q:training:lock` now writes a tracked lock under `.training-output/q/locks/` and refreshes `.training-output/q/latest-training-lock.json`
+- the runtime Q surfaces now return release metadata in `/api/health`, `/api/q/info`, and the dedicated gateway `/health`
+
+What this unlocks next:
+- future Q report surfaces can be tied to one exact training bundle instead of “whatever was on disk”
+- a cloud training run can now publish a single bundle ID back into docs, W&B notes, and release gating
+- the repo can keep expanding without losing the ability to explain itself quickly to a non-operator
+
+### 2026-04-14
+
 #### Q gained a real long-context training lane and the Immaculate banner became a precise truecolor splash instead of ad hoc art
 
 What changed:

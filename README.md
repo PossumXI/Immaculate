@@ -1,21 +1,40 @@
 # Immaculate
 
-Gaetano Comparcola, operating publicly as `PossumX`, is the program owner, systems architect, and engineering lead for Immaculate. `PossumX.dev` is the public profile site attached to benchmark attribution, architecture ownership, and published results. The build is being shaped around a control-system-first doctrine: durability, replayability, observability, benchmark publication, and operator control before broader scale-out.
+```text
+██╗███╗   ███╗███╗   ███╗ █████╗  ██████╗██╗   ██╗██╗      █████╗ ████████╗███████╗
+██║████╗ ████║████╗ ████║██╔══██╗██╔════╝██║   ██║██║     ██╔══██╗╚══██╔══╝██╔════╝
+██║██╔████╔██║██╔████╔██║███████║██║     ██║   ██║██║     ███████║   ██║   █████╗
+██║██║╚██╔╝██║██║╚██╔╝██║██╔══██║██║     ██║   ██║██║     ██╔══██║   ██║   ██╔══╝
+██║██║ ╚═╝ ██║██║ ╚═╝ ██║██║  ██║╚██████╗╚██████╔╝███████╗██║  ██║   ██║   ███████╗
+╚═╝╚═╝     ╚═╝╚═╝     ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝
+```
+
+Immaculate is software for running AI and automation carefully.
+In plain English: it helps a system decide what to do next, checks whether that action is allowed, records what happened, and publishes real benchmarks instead of hand-wavy claims.
+
+`Q` is the repo's local reasoning-model lane. Right now it is a truthful alias over `gemma4:e4b`, wrapped in a dedicated gateway, measured with structured tasks, and tied to a reproducible training-bundle path.
+
+Gaetano Comparcola, operating publicly as `PossumX`, is the program owner, systems architect, and engineering lead for Immaculate. `PossumX.dev` is the public profile site attached to benchmark attribution, architecture ownership, and published results.
 
 This repository is prepared for public collaboration under the Apache 2.0 license. Community contributions are welcome, but the project keeps a hard line on governance, reproducibility, and security.
 
-Immaculate is a greenfield orchestration substrate for:
+## What It Does Today
 
-- phased intelligence execution across reflex, cognitive, and offline planes
-- a synthetic connectome graph with live propagation
-- a realtime harness service
-- a full-screen TUI control surface
-- a Next.js overwatch dashboard with 3D movement telemetry
-- BIDS and NWB ingest into the durable orchestration spine
-- replayed NWB sample windows flowing through synchronize/decode
-- live socket neuro frame ingress into synchronize/decode
-- a first live local cognition layer through Ollama/Gemma
-- W&B benchmark publication and experiment tracking
+- runs multi-step orchestration across fast reflex paths, deeper reasoning paths, and offline work
+- keeps a durable audit trail so actions, denials, retries, and failures are not lost
+- exposes a realtime harness, a terminal UI, and a dashboard
+- ingests BIDS and NWB neurodata and replays it through the orchestration spine
+- serves `Q` through a bounded API gateway with API keys, rate limits, and concurrency limits
+- publishes measured benchmark outputs to W&B and commits exported result summaries back into git
+
+## Current Build And Evidence
+
+- current release surface: [docs/wiki/Release-Surface.md](docs/wiki/Release-Surface.md)
+- live model comparison: [docs/wiki/Model-Benchmark-Comparison.md](docs/wiki/Model-Benchmark-Comparison.md)
+- live BridgeBench: [docs/wiki/BridgeBench.md](docs/wiki/BridgeBench.md)
+- direct Q readiness gate: [docs/wiki/Q-Readiness-Gate.md](docs/wiki/Q-Readiness-Gate.md)
+- dedicated Q gateway validation: [docs/wiki/Q-Gateway-Validation.md](docs/wiki/Q-Gateway-Validation.md)
+- W&B pull-back committed into git: [docs/wiki/Benchmark-Wandb-Export.md](docs/wiki/Benchmark-Wandb-Export.md)
 
 ## Workspace
 
@@ -82,6 +101,7 @@ For the `Q` fine-tune path specifically:
 - alias/install guide: [docs/wiki/Q-Alias-and-Banner.md](docs/wiki/Q-Alias-and-Banner.md)
 - secure API and hosting guide: [docs/wiki/Q-API-Hosting.md](docs/wiki/Q-API-Hosting.md)
 - gateway architecture: [docs/wiki/Q-Gateway-Architecture.md](docs/wiki/Q-Gateway-Architecture.md)
+- release/build identity: [docs/wiki/Release-Surface.md](docs/wiki/Release-Surface.md)
 - direct readiness gate: [docs/wiki/Q-Readiness-Gate.md](docs/wiki/Q-Readiness-Gate.md)
 - gateway fallback smoke: [docs/wiki/Q-Gateway-Fallback-Smoke.md](docs/wiki/Q-Gateway-Fallback-Smoke.md)
 - failure corpus: [docs/wiki/Q-Failure-Corpus.md](docs/wiki/Q-Failure-Corpus.md)
@@ -89,6 +109,7 @@ For the `Q` fine-tune path specifically:
 - training bundle: [training/q/README.md](training/q/README.md)
 - richer coding/long-context supplement: [training/q/coding_long_context_seed.json](training/q/coding_long_context_seed.json)
 - long-context LoRA config: [training/q/q_lora_config.long_context.example.json](training/q/q_lora_config.long_context.example.json)
+- training lock generator: `npm run q:training:lock`
 
 As of `2026-04-14`, the direct `Q` structured-contract lane is green on this machine:
 `Q (gemma4:e4b)` is `4/4` on both

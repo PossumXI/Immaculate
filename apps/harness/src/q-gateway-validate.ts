@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { createPersistence } from "./persistence.js";
 import { createQApiKeyRegistry, normalizeQApiRateLimitPolicy } from "./q-api-auth.js";
 import { getQModelAlias, getQModelTarget, truthfulModelLabel } from "./q-model.js";
+import { resolveReleaseMetadata, type ReleaseMetadata } from "./release-metadata.js";
 import { runOllamaChatCompletion, type OllamaChatMessage } from "./ollama.js";
 
 type ValidationFlags = {
@@ -37,6 +38,7 @@ type QGatewayValidationReport = {
   gatewayUrl: string;
   alias: string;
   providerModel: string;
+  release: ReleaseMetadata;
   hardwareContext: HardwareContext;
   checks: {
     health: HttpCheck;
@@ -153,9 +155,12 @@ function renderMarkdown(report: QGatewayValidationReport): string {
     "This page is generated from a real live loopback validation pass against the dedicated Q gateway process, plus a direct Ollama call against the same provider model.",
     "",
     `- Generated: ${report.generatedAt}`,
+    `- Release: ${report.release.buildId}`,
+    `- Repo commit: ${report.release.gitShortSha}`,
     `- Gateway URL: ${report.gatewayUrl}`,
     `- Alias: ${report.alias}`,
     `- Provider model: ${report.providerModel}`,
+    `- Q training bundle: ${report.release.q.trainingLock?.bundleId ?? "none generated yet"}`,
     `- Hardware: ${JSON.stringify(report.hardwareContext)}`,
     "",
     "## Contract Checks",
@@ -284,6 +289,7 @@ async function main(): Promise<void> {
       gatewayUrl,
       alias: getQModelAlias(),
       providerModel: truthfulModelLabel(getQModelTarget()),
+      release: await resolveReleaseMetadata(),
       hardwareContext: captureHardwareContext(),
       checks: {
         health,

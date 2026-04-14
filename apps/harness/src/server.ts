@@ -99,6 +99,7 @@ import {
   getQModelAlias,
   truthfulModelLabel
 } from "./q-model.js";
+import { resolveReleaseMetadata } from "./release-metadata.js";
 import { emitHarnessStartupBanner } from "./startup-banner.js";
 import {
   createIntelligenceWorkerRegistry,
@@ -124,6 +125,7 @@ import { inspectWandbStatus, publishBenchmarkToWandb } from "./wandb.js";
 
 const app = Fastify({ logger: true });
 const persistence = createPersistence(process.env.IMMACULATE_RUNTIME_DIR);
+const releaseMetadata = await resolveReleaseMetadata();
 const datasetRegistry = createDatasetRegistry(persistence.getStatus().rootDir);
 const neuroRegistry = createNeuroRegistry(persistence.getStatus().rootDir);
 const governance = createGovernanceRegistry();
@@ -3311,6 +3313,10 @@ await persistence.persist(engine.getDurableState());
 app.get("/api/health", async () => ({
   status: "ok",
   service: "immaculate-harness",
+  release: {
+    buildId: releaseMetadata.buildId,
+    gitShortSha: releaseMetadata.gitShortSha
+  },
   timestamp: new Date().toISOString(),
   clients: clients.size,
   recovered: persistence.getStatus().recovered,
@@ -3792,6 +3798,11 @@ app.get("/api/q/info", async () => {
     return {
       enabled: false,
       alias: getQModelAlias(),
+      release: {
+        buildId: releaseMetadata.buildId,
+        gitShortSha: releaseMetadata.gitShortSha,
+        qTrainingBundleId: releaseMetadata.q.trainingLock?.bundleId
+      },
       authMode: "disabled"
     };
   }
@@ -3800,6 +3811,11 @@ app.get("/api/q/info", async () => {
     enabled: true,
     alias: getQModelAlias(),
     model: truthfulModelLabel(getQModelAlias()),
+    release: {
+      buildId: releaseMetadata.buildId,
+      gitShortSha: releaseMetadata.gitShortSha,
+      qTrainingBundleId: releaseMetadata.q.trainingLock?.bundleId
+    },
     authMode: "api-key",
     keyManagement: "cli-only",
     rateLimit: DEFAULT_Q_API_RATE_LIMIT,

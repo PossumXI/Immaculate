@@ -2,6 +2,8 @@
 
 This page defines the truthful boundary for the dedicated `Q` gateway process.
 
+In plain English, this is the smaller server you expose when you want people to use `Q` without handing them the whole Immaculate control plane.
+
 It is not the full harness.
 It is a separate narrow server that exposes only:
 
@@ -13,6 +15,10 @@ It is a separate narrow server that exposes only:
 The gateway uses the same hashed Q API key store and the same per-key
 rate/concurrency model as the harness, but it does not expose federation,
 actuation, datasets, benchmarks, operator traces, or the broader control plane.
+
+Release/build identity for the current repo state lives in:
+
+- [[Release-Surface]]
 
 ## What The Gateway Owns
 

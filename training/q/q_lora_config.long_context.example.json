@@ -3,6 +3,7 @@
   "alias_name": "Q",
   "base_model": "unsloth/gemma-4-31B-it",
   "train_dataset_path": ".training-output/q/q-mix-longctx-v2.jsonl",
+  "training_lock_path": ".training-output/q/latest-training-lock.json",
   "output_dir": ".training-output/q/runs/q-defsec-code-longctx-v2",
   "max_seq_length": 8192,
   "learning_rate": 0.00015,

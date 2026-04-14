@@ -2,6 +2,12 @@
 
 This page documents the isolated `Q` alias and controlled startup banner slice that was added without touching the benchmark/comparison or OCI deployment surfaces.
 
+In plain English:
+
+- `Q` is the friendly name used inside the repo for the current Gemma 4 local model lane
+- the README homepage carries the static banner block for GitHub readers
+- the live terminal banner carries the truecolor 6-row splash for operators at runtime
+
 ## What It Adds
 
 - A local Ollama alias path so Gemma 4 can be addressed as `Q`
@@ -69,6 +75,10 @@ The banner prints:
 - the `Q` alias mapping
 
 The banner is cosmetic only. It does not change runtime governance, routing, or benchmark behavior.
+
+Current build and bundle identity:
+
+- [[Release-Surface]]
 
 ## Related Files
 

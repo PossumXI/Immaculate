@@ -2,6 +2,9 @@
 
 `Q` is the truthful Immaculate alias for the local Gemma 4 base model used in the current harness path.
 
+In plain English, this folder is the “make the next Q training run repeatable” bundle.
+It does not pretend the model is already fully retrained. It makes sure the next run can be tied back to exact files, hashes, and configs.
+
 The goal of this folder is not to pretend the fine-tune already happened.
 It gives the repo a reproducible bridge from:
 
@@ -30,7 +33,13 @@ python training/q/build_q_text_dataset.py --input .training-output/training-data
 python training/q/build_q_mixture.py --base .training-output/q/q-train-<run-id>.jsonl --supplemental training/q/bridgebench_seed.json --supplemental training/q/coding_long_context_seed.json --output .training-output/q/q-mix-<run-id>.jsonl
 ```
 
-4. Convert the live Q report failures into a tracked eval seed corpus:
+4. Generate the tracked training lock so the future fine-tune can be replayed exactly:
+
+```powershell
+npm run q:training:lock -- --config .training-output/q/q-lora-config-<run-id>.json --mix-manifest .training-output/q/q-mix-<run-id>.manifest.json --curation-run .training-output/training-data/runs/<run-id>/run.json
+```
+
+5. Convert the live Q report failures into a tracked eval seed corpus:
 
 ```powershell
 npm run q:failure-corpus
@@ -40,14 +49,14 @@ The failure export is now strict failure-only. When the direct Q lane is green,
 this surface stays empty rather than mixing resolved successes into a fake
 failure bucket.
 
-5. Copy `q_lora_config.example.json` or `q_lora_config.long_context.example.json` and adjust paths to the concrete run-id-specific files.
-6. Validate the config and dataset shape before a GPU run:
+6. Copy `q_lora_config.example.json` or `q_lora_config.long_context.example.json` and adjust paths to the concrete run-id-specific files.
+7. Validate the config and dataset shape before a GPU run:
 
 ```powershell
 python training/q/train_q_lora_unsloth.py --config training/q/q_lora_config.example.json --dry-run
 ```
 
-7. Launch `train_q_lora_unsloth.py` on a GPU instance with the required Python packages installed.
+8. Launch `train_q_lora_unsloth.py` on a GPU instance with the required Python packages installed.
 
 ## Stronger Current Training Direction
 

@@ -2,7 +2,7 @@
 
 This page is exported from live W&B benchmark runs and committed into the repo wiki.
 
-- Exported at: 2026-04-14T12:39:33.149057+00:00
+- Exported at: 2026-04-14T15:50:07.491415+00:00
 - W&B project: https://wandb.ai/arobi-arobi-technology-alliance/immaculate
 - Owner: Gaetano Comparcola (PossumX)
 - Role: Program Originator, Systems Architect, and Engineering Lead
@@ -12,68 +12,68 @@ This page is exported from live W&B benchmark runs and committed into the repo w
 
 ### Latency Smoke
 
-- Suite: `immaculate-benchmark-2026-04-14T12-39-04-475Z`
-- Run ID: `m2sh26tl`
-- Run name: `immaculate-benchmark-2026-04-14T12-39-04-475Z`
-- Run URL: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/m2sh26tl
+- Suite: `immaculate-benchmark-2026-04-14T15-49-01-472Z`
+- Run ID: `phxsfsvy`
+- Run name: `immaculate-benchmark-2026-04-14T15-49-01-472Z`
+- Run URL: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/phxsfsvy
 - State: `finished`
-- Generated: `2026-04-14T12:39:04.475Z`
-- Published: `2026-04-14T12:39:10.465061+00:00`
+- Generated: `2026-04-14T15:49:01.472Z`
+- Published: `2026-04-14T15:49:50.377656+00:00`
 - Failed assertions: `0`
 - Run kind: `smoke`
 - Integrity: `verified`
-- Stage: `smoke benchmark on linux-x64 (4 cores)`
+- Stage: `smoke benchmark on win32-x64 (16 cores)`
 - Planned duration: `12800` ms
-- Wall-clock duration: `534.55` ms
-- Hardware: `{"host":"runnervm35a4x","platform":"linux","arch":"x64","osVersion":"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026","cpuModel":"AMD EPYC 7763 64-Core Processor","cpuCount":4,"memoryGiB":15.62,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
+- Wall-clock duration: `1552.55` ms
+- Hardware: `{"host":"knightly","platform":"win32","arch":"x64","osVersion":"Windows 11 Pro","cpuModel":"AMD Ryzen 7 7735HS with Radeon Graphics","cpuCount":16,"memoryGiB":23.29,"diskKind":"SSD","nodeVersion":"v22.13.1"}`
 - Owner: `Gaetano Comparcola (PossumX)`
 - Role: `Program Originator, Systems Architect, and Engineering Lead`
 - Website: `https://PossumX.dev`
-- Benchmark artifact: `immaculate-immaculate-benchmark-2026-04-14T12-39-04-475Z:v0`
+- Benchmark artifact: `immaculate-immaculate-benchmark-2026-04-14T15-49-01-472Z:v0`
+- Artifact aliases: `latest`
+
+### Substrate Readiness
+
+- Suite: `immaculate-benchmark-2026-04-14T15-37-04-437Z`
+- Run ID: `485jg15y`
+- Run name: `immaculate-benchmark-2026-04-14T15-37-04-437Z`
+- Run URL: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/485jg15y
+- State: `finished`
+- Generated: `2026-04-14T15:37:04.437Z`
+- Published: `2026-04-14T15:47:27.200071+00:00`
+- Failed assertions: `0`
+- Run kind: `smoke`
+- Integrity: `verified`
+- Stage: `smoke benchmark on win32-x64 (16 cores)`
+- Planned duration: `12800` ms
+- Wall-clock duration: `1892.68` ms
+- Hardware: `{"host":"knightly","platform":"win32","arch":"x64","osVersion":"Windows 11 Pro","cpuModel":"AMD Ryzen 7 7735HS with Radeon Graphics","cpuCount":16,"memoryGiB":23.29,"diskKind":"SSD","nodeVersion":"v22.13.1"}`
+- Owner: `Gaetano Comparcola (PossumX)`
+- Role: `Program Originator, Systems Architect, and Engineering Lead`
+- Website: `https://PossumX.dev`
+- Benchmark artifact: `immaculate-immaculate-benchmark-2026-04-14T15-37-04-437Z:v0`
 - Artifact aliases: `latest`
 
 ### Durability Recovery
 
-- Suite: `immaculate-benchmark-2026-04-14T12-39-04-020Z`
-- Run ID: `araqk8yj`
-- Run name: `immaculate-benchmark-2026-04-14T12-39-04-020Z`
-- Run URL: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/araqk8yj
+- Suite: `immaculate-benchmark-2026-04-14T11-51-49-683Z`
+- Run ID: `8oudb7c3`
+- Run name: `immaculate-benchmark-2026-04-14T11-51-49-683Z`
+- Run URL: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/8oudb7c3
 - State: `finished`
-- Generated: `2026-04-14T12:39:04.020Z`
-- Published: `2026-04-14T12:39:17.788155+00:00`
+- Generated: `2026-04-14T11:51:49.683Z`
+- Published: `2026-04-14T11:52:04.823113+00:00`
 - Failed assertions: `0`
 - Run kind: `smoke`
 - Integrity: `verified`
 - Stage: `smoke benchmark on linux-x64 (4 cores)`
 - Planned duration: `20800` ms
-- Wall-clock duration: `439.21` ms
-- Hardware: `{"host":"runnervm35a4x","platform":"linux","arch":"x64","osVersion":"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026","cpuModel":"AMD EPYC 7763 64-Core Processor","cpuCount":4,"memoryGiB":15.62,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
+- Wall-clock duration: `410.8` ms
+- Hardware: `{"host":"runnervm35a4x","platform":"linux","arch":"x64","osVersion":"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026","cpuModel":"AMD EPYC 9V74 80-Core Processor","cpuCount":4,"memoryGiB":15.61,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
 - Owner: `Gaetano Comparcola (PossumX)`
 - Role: `Program Originator, Systems Architect, and Engineering Lead`
 - Website: `https://PossumX.dev`
-- Benchmark artifact: `immaculate-immaculate-benchmark-2026-04-14T12-39-04-020Z:v0`
-- Artifact aliases: `latest`
-
-### Substrate Readiness
-
-- Suite: `immaculate-benchmark-2026-04-14T12-39-03-350Z`
-- Run ID: `ainqp8m2`
-- Run name: `immaculate-benchmark-2026-04-14T12-39-03-350Z`
-- Run URL: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/ainqp8m2
-- State: `finished`
-- Generated: `2026-04-14T12:39:03.350Z`
-- Published: `2026-04-14T12:39:24.644693+00:00`
-- Failed assertions: `0`
-- Run kind: `smoke`
-- Integrity: `verified`
-- Stage: `smoke benchmark on linux-x64 (4 cores)`
-- Planned duration: `12800` ms
-- Wall-clock duration: `645.34` ms
-- Hardware: `{"host":"runnervm35a4x","platform":"linux","arch":"x64","osVersion":"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026","cpuModel":"AMD EPYC 7763 64-Core Processor","cpuCount":4,"memoryGiB":15.62,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
-- Owner: `Gaetano Comparcola (PossumX)`
-- Role: `Program Originator, Systems Architect, and Engineering Lead`
-- Website: `https://PossumX.dev`
-- Benchmark artifact: `immaculate-immaculate-benchmark-2026-04-14T12-39-03-350Z:v0`
+- Benchmark artifact: `immaculate-immaculate-benchmark-2026-04-14T11-51-49-683Z:v0`
 - Artifact aliases: `latest`
 
 ### Durability Torture

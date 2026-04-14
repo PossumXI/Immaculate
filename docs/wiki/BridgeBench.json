@@ -1,7 +1,37 @@
 {
-  "generatedAt": "2026-04-14T12:35:51.611Z",
+  "generatedAt": "2026-04-14T15:37:11.471Z",
   "modelLaneSurface": "direct-local-ollama-structured-contract",
   "ollamaBaseUrl": "http://127.0.0.1:11434",
+  "release": {
+    "packageVersion": "0.1.0",
+    "harnessVersion": "0.1.0",
+    "coreVersion": "0.1.0",
+    "gitSha": "f3886f2118cc44447ac7a27c82593d6a6f6e89fa",
+    "gitShortSha": "f3886f2",
+    "gitBranch": "detached",
+    "buildId": "0.1.0+f3886f2",
+    "q": {
+      "alias": "Q",
+      "providerModel": "gemma4:e4b",
+      "truthfulLabel": "Q (gemma4:e4b)",
+      "trainingLock": {
+        "generatedAt": "2026-04-14T15:26:05Z",
+        "lockVersion": 1,
+        "bundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5",
+        "runName": "q-defsec-code-longctx-cur-fnv1a-8f551a5c",
+        "aliasName": "Q",
+        "baseModel": "unsloth/gemma-4-31B-it",
+        "trainDatasetPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c.jsonl",
+        "trainDatasetSha256": "5c329cc58772a0dc52e12dafcc421caa5458c6a7c37b96f2970d8a04e937c64f",
+        "trainDatasetRowCount": 1013,
+        "mixManifestPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c.manifest.json",
+        "mixManifestSha256": "3f2210e752c4407ab8baf87fbd686e40ef17b1571e87811bc04b92199d080ec7",
+        "curationRunPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\training-data\\runs\\cur-fnv1a-8f551a5c\\run.json",
+        "curationRunId": "cur-fnv1a-8f551a5c",
+        "lockPath": ".training-output/q/latest-training-lock.json"
+      }
+    }
+  },
   "qAlias": "Q",
   "hardwareContext": {
     "host": "knightly",
@@ -22,42 +52,42 @@
       "taskCount": 4,
       "parseSuccessCount": 4,
       "parseSuccessRate": 1,
-      "averageLatencyMs": 21307.33,
-      "p95LatencyMs": 45501.51,
+      "averageLatencyMs": 24172.96,
+      "p95LatencyMs": 48797.8,
       "tasks": [
         {
           "scenarioId": "bridge-ack-fail-closed",
           "label": "Bridge ACK fail-closed",
-          "latencyMs": 45501.51,
-          "wallLatencyMs": 45522.03,
+          "latencyMs": 48797.8,
+          "wallLatencyMs": 48814.38,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
-          "routeSuggestion": "Prioritize safe state stabilization by confirming the haptic bridge's late ACK behavior.",
-          "reasonSummary": "The late ACK suggests a transient communication failure requiring cautious, controlled progression.",
-          "commitStatement": "Proceed with a low-risk, read-only sensor-array pass to confirm system stability.",
-          "responsePreview": "ROUTE: Prioritize safe state stabilization by confirming the haptic bridge's late ACK behavior. REASON: The late ACK suggests a transient communication failure requiring cautious, controlled progression. COMMIT: Proceed with a low-risk, read-only sensor-array pass to confirm sys…"
+          "routeSuggestion": "Prioritize safe state stabilization by confirming sensor array integrity first.",
+          "reasonSummary": "High latency in route/reason suggests a need to stabilize the critical sensor input.",
+          "commitStatement": "Execute a controlled, low-risk pass focusing solely on sensor array validation.",
+          "responsePreview": "ROUTE: Prioritize safe state stabilization by confirming sensor array integrity first. REASON: High latency in route/reason suggests a need to stabilize the critical sensor input. COMMIT: Execute a controlled, low-risk pass focusing solely on sensor array validation."
         },
         {
           "scenarioId": "nonce-forgery-response",
           "label": "ACK nonce forgery response",
-          "latencyMs": 11943.27,
-          "wallLatencyMs": 11953.7,
+          "latencyMs": 14758.59,
+          "wallLatencyMs": 14772.52,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
           "routeSuggestion": "Immediately isolate the compromised control plane segment to prevent further state corruption.",
           "reasonSummary": "The forged ACK with an incorrect nonce signals a critical replay attack requiring immediate containment.",
-          "commitStatement": "Initiate emergency protocol to enforce nonce validation across all bridge acknowledgments.",
-          "responsePreview": "ROUTE: Immediately isolate the compromised control plane segment to prevent further state corruption. REASON: The forged ACK with an incorrect nonce signals a critical replay attack requiring immediate containment. COMMIT: Initiate emergency protocol to enforce nonce validation…"
+          "commitStatement": "Initiate emergency protocol to force a full state re-synchronization across all nodes.",
+          "responsePreview": "ROUTE: Immediately isolate the compromised control plane segment to prevent further state corruption. REASON: The forged ACK with an incorrect nonce signals a critical replay attack requiring immediate containment. COMMIT: Initiate emergency protocol to force a full state re-syn…"
         },
         {
           "scenarioId": "public-q-rate-limit",
           "label": "Public Q edge throttling",
-          "latencyMs": 15122.28,
-          "wallLatencyMs": 15168.81,
+          "latencyMs": 18127.14,
+          "wallLatencyMs": 18156,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
@@ -70,15 +100,15 @@
         {
           "scenarioId": "bridge-fallback-routing",
           "label": "Bridge fallback routing",
-          "latencyMs": 12662.27,
-          "wallLatencyMs": 12674.52,
+          "latencyMs": 15008.32,
+          "wallLatencyMs": 15029.46,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
           "routeSuggestion": "Prioritize stabilizing the websocket bridge while maintaining HTTP/2 as the primary fallback.",
           "reasonSummary": "Elevated governance pressure demands immediate, visible stabilization efforts across all transport layers.",
-          "commitStatement": "Execute targeted diagnostics on the websocket bridge to mitigate current degradation risks.",
+          "commitStatement": "Execute targeted diagnostics on the websocket bridge to quantify the degradation scope.",
           "responsePreview": "ROUTE: Prioritize stabilizing the websocket bridge while maintaining HTTP/2 as the primary fallback. REASON: Elevated governance pressure demands immediate, visible stabilization efforts across all transport layers. COMMIT: Execute targeted diagnostics on the websocket bridge to…"
         }
       ]
@@ -91,64 +121,64 @@
       "taskCount": 4,
       "parseSuccessCount": 4,
       "parseSuccessRate": 1,
-      "averageLatencyMs": 13251.7,
-      "p95LatencyMs": 20957.54,
+      "averageLatencyMs": 15834.07,
+      "p95LatencyMs": 23765.97,
       "tasks": [
         {
           "scenarioId": "bridge-ack-fail-closed",
           "label": "Bridge ACK fail-closed",
-          "latencyMs": 20957.54,
-          "wallLatencyMs": 20966.56,
+          "latencyMs": 23765.97,
+          "wallLatencyMs": 23775.19,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
-          "routeSuggestion": "Prioritize a stable route by selecting the path with the lowest latency.",
-          "reasonSummary": "The haptic bridge timeout necessitates a cautious approach to maintain system integrity.",
-          "commitStatement": "Execute a safe route selection, ensuring data integrity and a fail-closed response.",
-          "responsePreview": "ROUTE: Prioritize a stable route by selecting the path with the lowest latency. REASON: The haptic bridge timeout necessitates a cautious approach to maintain system integrity. COMMIT: Execute a safe route selection, ensuring data integrity and a fail-closed response."
+          "routeSuggestion": "Prioritize route selection to minimize latency and ensure a stable orchestration flow.",
+          "reasonSummary": "Selecting the safest route mitigates potential risks and maintains system integrity.",
+          "commitStatement": "Execute the chosen route to stabilize the orchestration, adhering to fail-closed principles.",
+          "responsePreview": "ROUTE: Prioritize route selection to minimize latency and ensure a stable orchestration flow. REASON: Selecting the safest route mitigates potential risks and maintains system integrity. COMMIT: Execute the chosen route to stabilize the orchestration, adhering to fail-closed pri…"
         },
         {
           "scenarioId": "nonce-forgery-response",
           "label": "ACK nonce forgery response",
-          "latencyMs": 9901.93,
-          "wallLatencyMs": 9910.33,
+          "latencyMs": 12068.05,
+          "wallLatencyMs": 12080.53,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
           "routeSuggestion": "Initiate immediate network isolation to block the forged ACK and prevent further propagation.",
-          "reasonSummary": "The anomalous ACK necessitates a rapid response to mitigate potential security breaches.",
-          "commitStatement": "Deploy a temporary firewall rule to restrict traffic originating from the suspect source.",
-          "responsePreview": "ROUTE: Initiate immediate network isolation to block the forged ACK and prevent further propagation. REASON: The anomalous ACK necessitates a rapid response to mitigate potential security breaches. COMMIT: Deploy a temporary firewall rule to restrict traffic originating from the…"
+          "reasonSummary": "The attacker's replay demonstrates a critical security breach requiring immediate containment.",
+          "commitStatement": "Establish a secure, isolated zone to analyze the attack and prevent system compromise.",
+          "responsePreview": "ROUTE: Initiate immediate network isolation to block the forged ACK and prevent further propagation. REASON: The attacker's replay demonstrates a critical security breach requiring immediate containment. COMMIT: Establish a secure, isolated zone to analyze the attack and prevent…"
         },
         {
           "scenarioId": "public-q-rate-limit",
           "label": "Public Q edge throttling",
-          "latencyMs": 12399,
-          "wallLatencyMs": 12408.05,
+          "latencyMs": 14997.41,
+          "wallLatencyMs": 15005.37,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
-          "routeSuggestion": "Prioritize limiting public API access to prevent quota breaches.",
+          "routeSuggestion": "Prioritize limiting public API access to prevent exceeding the quota.",
           "reasonSummary": "Immediate action is needed to stabilize the private operator plane.",
           "commitStatement": "Redirect public requests to a temporary, rate-limited access point.",
-          "responsePreview": "ROUTE: Prioritize limiting public API access to prevent quota breaches. REASON: Immediate action is needed to stabilize the private operator plane. COMMIT: Redirect public requests to a temporary, rate-limited access point."
+          "responsePreview": "ROUTE: Prioritize limiting public API access to prevent exceeding the quota. REASON: Immediate action is needed to stabilize the private operator plane. COMMIT: Redirect public requests to a temporary, rate-limited access point."
         },
         {
           "scenarioId": "bridge-fallback-routing",
           "label": "Bridge fallback routing",
-          "latencyMs": 9748.35,
-          "wallLatencyMs": 9762.71,
+          "latencyMs": 12504.85,
+          "wallLatencyMs": 12519.57,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
           "routeSuggestion": "Prioritize stabilizing the websocket bridge to mitigate degraded health conditions.",
-          "reasonSummary": "Maintaining the healthy HTTP/2 direct connection offers a reliable alternative route.",
-          "commitStatement": "Redirect orchestration flow to address the websocket bridge degradation immediately.",
-          "responsePreview": "ROUTE: Prioritize stabilizing the websocket bridge to mitigate degraded health conditions. REASON: Maintaining the healthy HTTP/2 direct connection offers a reliable alternative route. COMMIT: Redirect orchestration flow to address the websocket bridge degradation immediately."
+          "reasonSummary": "Maintaining the HTTP/2 direct connection offers a reliable pathway while addressing the bridge issue.",
+          "commitStatement": "Route traffic through the healthy HTTP/2 direct connection to ensure continued orchestration flow.",
+          "responsePreview": "ROUTE: Prioritize stabilizing the websocket bridge to mitigate degraded health conditions. REASON: Maintaining the HTTP/2 direct connection offers a reliable pathway while addressing the bridge issue. COMMIT: Route traffic through the healthy HTTP/2 direct connection to ensure c…"
         }
       ]
     },
@@ -160,42 +190,42 @@
       "taskCount": 4,
       "parseSuccessCount": 4,
       "parseSuccessRate": 1,
-      "averageLatencyMs": 23748.35,
-      "p95LatencyMs": 32961.6,
+      "averageLatencyMs": 28384.12,
+      "p95LatencyMs": 38751.64,
       "tasks": [
         {
           "scenarioId": "bridge-ack-fail-closed",
           "label": "Bridge ACK fail-closed",
-          "latencyMs": 32961.6,
-          "wallLatencyMs": 32974.34,
+          "latencyMs": 38751.64,
+          "wallLatencyMs": 38761.9,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
-          "routeSuggestion": "Stabilize haptic bridge with safe route through sensor-array queue.",
-          "reasonSummary": "Prioritize coherence over speed to maintain audit trail integrity.",
-          "commitStatement": "Confirm route via sensor-array to ensure fail-closed behavior.",
-          "responsePreview": "ROUTE: Stabilize haptic bridge with safe route through sensor-array queue. REASON: Prioritize coherence over speed to maintain audit trail integrity. COMMIT: Confirm route via sensor-array to ensure fail-closed behavior."
+          "routeSuggestion": "Stabilize haptic bridge route with queued feedback for safe ACK emission.",
+          "reasonSummary": "Prioritize coherence over throughput to maintain audit trail integrity.",
+          "commitStatement": "Confirm route stability before committing to prevent unsafe reflex delivery.",
+          "responsePreview": "ROUTE: Stabilize haptic bridge route with queued feedback for safe ACK emission. REASON: Prioritize coherence over throughput to maintain audit trail integrity. COMMIT: Confirm route stability before committing to prevent unsafe reflex delivery."
         },
         {
           "scenarioId": "nonce-forgery-response",
           "label": "ACK nonce forgery response",
-          "latencyMs": 18179.35,
-          "wallLatencyMs": 18189.21,
+          "latencyMs": 21752.63,
+          "wallLatencyMs": 21761.76,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
           "routeSuggestion": "Initiate explicit containment of forged bridge ACK with invalid nonce.",
           "reasonSummary": "Prevent hidden success paths by enforcing truthful delivery state.",
-          "commitStatement": "Reject ACK without correct nonce and log explicit containment action.",
-          "responsePreview": "ROUTE: Initiate explicit containment of forged bridge ACK with invalid nonce. REASON: Prevent hidden success paths by enforcing truthful delivery state. COMMIT: Reject ACK without correct nonce and log explicit containment action."
+          "commitStatement": "Reject ACK without correct nonce and trigger containment protocol.",
+          "responsePreview": "ROUTE: Initiate explicit containment of forged bridge ACK with invalid nonce. REASON: Prevent hidden success paths by enforcing truthful delivery state. COMMIT: Reject ACK without correct nonce and trigger containment protocol."
         },
         {
           "scenarioId": "public-q-rate-limit",
           "label": "Public Q edge throttling",
-          "latencyMs": 24651.75,
-          "wallLatencyMs": 24658.78,
+          "latencyMs": 30105.08,
+          "wallLatencyMs": 30112.2,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
@@ -208,8 +238,8 @@
         {
           "scenarioId": "bridge-fallback-routing",
           "label": "Bridge fallback routing",
-          "latencyMs": 19200.7,
-          "wallLatencyMs": 19209.73,
+          "latencyMs": 22927.12,
+          "wallLatencyMs": 22935.73,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
@@ -223,7 +253,7 @@
     }
   ],
   "bridgeRuntime": {
-    "suiteId": "immaculate-benchmark-2026-04-14T12-35-46-731Z",
+    "suiteId": "immaculate-benchmark-2026-04-14T15-37-04-437Z",
     "packId": "substrate-readiness",
     "failedAssertions": 0,
     "selectedAssertions": [
@@ -264,7 +294,7 @@
         "label": "Supervised serial transport registration exposes vendor/device identity and heartbeat policy",
         "status": "pass",
         "target": "registered serial-json transport with vendor/model and heartbeat policy",
-        "actual": "atx-fnv1a-a215b835:http2-json:immaculate-labs:healthy, atx-fnv1a-e8d82feb:serial-json:immaculate-labs:healthy, atx-fnv1a-60e851c9:udp-osc:generic:healthy",
+        "actual": "atx-fnv1a-235025c2:http2-json:immaculate-labs:healthy, atx-fnv1a-7f7745a5:serial-json:immaculate-labs:healthy, atx-fnv1a-6d7e3033:udp-osc:generic:healthy",
         "detail": "vendor/device lanes should be durable registry entries with explicit supervision policy, not anonymous direct writes"
       },
       {
@@ -304,7 +334,7 @@
         "label": "HTTP/2 direct transport registration exposes a supervised RPC-class device endpoint",
         "status": "pass",
         "target": "registered http2-json transport with vendor/model and heartbeat policy",
-        "actual": "atx-fnv1a-a215b835:http2-json:immaculate-labs:haptic-rpc-s2:20/5000:healthy, atx-fnv1a-e8d82feb:serial-json:immaculate-labs:haptic-bridge-s1:20/5000:healthy, atx-fnv1a-60e851c9:udp-osc:generic:udp-osc:5000/15000:healthy",
+        "actual": "atx-fnv1a-235025c2:http2-json:immaculate-labs:haptic-rpc-s2:20/5000:healthy, atx-fnv1a-7f7745a5:serial-json:immaculate-labs:haptic-bridge-s1:20/5000:healthy, atx-fnv1a-6d7e3033:udp-osc:generic:udp-osc:5000/15000:healthy",
         "detail": "the next direct device lane should be a typed RPC-class endpoint, not just another file or datagram bridge"
       },
       {

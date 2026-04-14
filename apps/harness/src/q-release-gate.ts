@@ -1,6 +1,7 @@
 import path from "node:path";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
+import { resolveReleaseMetadata, type ReleaseMetadata } from "./release-metadata.js";
 
 type ModelComparisonTask = {
   status: "completed" | "failed";
@@ -43,6 +44,7 @@ type QReadinessGateReport = {
   generatedAt: string;
   threshold: number;
   ready: boolean;
+  release: ReleaseMetadata;
   reasons: string[];
   sources: {
     modelComparisonGeneratedAt?: string;
@@ -98,8 +100,11 @@ function renderMarkdown(report: QReadinessGateReport): string {
     "This page is generated from the tracked direct-Q report surfaces. It does not grade the gateway transport; it grades whether the underlying Q model is ready for structured route/reason/commit work on this machine.",
     "",
     `- Generated: ${report.generatedAt}`,
+    `- Release: \`${report.release.buildId}\``,
+    `- Repo commit: \`${report.release.gitShortSha}\``,
     `- Ready: \`${report.ready}\``,
     `- Threshold: \`${report.threshold}\``,
+    `- Q training bundle: \`${report.release.q.trainingLock?.bundleId ?? "none generated yet"}\``,
     `- Model comparison source: \`${report.sources.modelComparisonGeneratedAt ?? "missing"}\``,
     `- BridgeBench source: \`${report.sources.bridgeBenchGeneratedAt ?? "missing"}\``,
     "",
@@ -149,6 +154,7 @@ async function main(): Promise<void> {
     generatedAt: new Date().toISOString(),
     threshold,
     ready: reasons.length === 0,
+    release: await resolveReleaseMetadata(),
     reasons,
     sources: {
       modelComparisonGeneratedAt: modelComparison?.generatedAt,

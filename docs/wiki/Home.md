@@ -2,8 +2,12 @@
 
 Welcome to the live field guide for Immaculate.
 
-Immaculate is not trying to cosplay a brain. It is trying to become a durable,
-observable, governed control system for intelligence at scale.
+In plain English, Immaculate is a control system for AI and automation.
+It helps a machine decide what to do next, checks whether that action is allowed, keeps receipts, and publishes measurements so people can see what is real.
+
+`Q` is the local reasoning-model lane inside that system. It is currently a truthful alias over `gemma4:e4b`, served through a bounded gateway and tied to a tracked training-bundle path.
+
+If you only read one generated page before diving deeper, read [[Release-Surface]]. It tells you exactly which build, commit, and Q training bundle the current docs refer to.
 
 ## What This Project Actually Prioritizes
 
@@ -15,12 +19,12 @@ observable, governed control system for intelligence at scale.
 
 ## Current Shape
 
-- Multi-plane orchestration substrate
-- Synthetic connectome state and propagation
-- Durable harness with TUI and dashboard control
-- BIDS and NWB ingest
-- Local cognition through Ollama
-- Governed actuation with direct transport supervision
+- A system that runs AI work in stages instead of one opaque jump
+- A durable harness with a dashboard and terminal control surface
+- A record of what happened, what was denied, and what retried
+- Neurodata ingest through BIDS and NWB
+- Local cognition through Ollama and the dedicated `Q` gateway
+- Governed actuation with transport health checks instead of blind delivery
 - Authenticated federation membership export/import with verified remote node and worker identity
 - Recurring signed peer refresh plus signed lease renewal with stale-state eviction, so dead remotes fall out of placement instead of lingering as ghost capacity
 - Placement that combines locality, live peer-smoothed latency, cost, and device affinity without claiming full mesh federation yet
@@ -40,6 +44,7 @@ observable, governed control system for intelligence at scale.
 
 ## Living Record
 
+- [[Release-Surface]] is the machine-stamped build-and-bundle page for the current Immaculate and `Q` release state
 - [[Breakthrough-Log]] tracks major leaps, missed-but-real insights, and hard system milestones as they land
 - [[Engineering-Doctrine]] defines the standing build philosophy and what qualifies as a real leap
 - [[Benchmark-Status]] points to the live public W&B project plus the latest published benchmark runs by pack
