@@ -46,11 +46,16 @@ observable, governed control system for intelligence at scale.
 - [[Benchmark-Wandb-Export]] is the committed pull-back from W&B itself, so benchmark results live in git wiki even when the W&B project stays private
 - [[Model-Benchmark-Comparison]] carries the live local cross-model comparison surface for `Q`, Gemma 3, Qwen, and the latest orchestrator baseline readout
 - [[BridgeBench]] carries the live bridge/control-plane comparison surface for `Q` and the other installed local models, alongside the real bridge runtime assertions
+- [[Q-Gateway-Validation]] carries the live dedicated-gateway contract proof for `Q`: health, auth, model listing, served completion, and concurrency rejection
+- [[Q-Gateway-Fallback-Smoke]] proves the dedicated gateway can still trip open on an intentionally dead primary and serve through an explicitly configured fallback lane without lying about which model answered
+- [[Q-Gateway-Architecture]] tracks the dedicated private OCI-first gateway boundary for `Q`, separate from the full harness
+- [[Q-Readiness-Gate]] keeps the direct-Q structured contract honest and is currently green: direct `Q` is release-eligible on the tracked local contract lane on this machine
+- [[Q-Failure-Corpus]] is now a strict failure-only export and currently records zero live failure seeds; resolved successes are no longer mixed into that surface
 - [[Live-Validation-2026-04-13]] records the latest fresh machine-run validation pass, including the current `60s` benchmark regression instead of hiding it
 - [[Training-Data-Factory]] tracks the manifest-first corpus curation path for Gemma-style defensive fine-tuning work without pretending the machine replaced legal review
 - [[OCI-Private-Deployment]] tracks the hardened Oracle private-subnet harness bundle: Podman image, cloud-init bootstrap, systemd supervision, OCI Vault pull-through, and no public ingress
 - [[Q-Alias-and-Banner]] tracks the truthful `Q` alias over Gemma 4 plus the yellow/ocean-blue startup banner controls
-- [[Q-API-Hosting]] tracks the narrow header-authenticated Q inference edge, per-key rate limiting, loopback live validation, and the truthful OCI/private-hosting boundary
+- [[Q-API-Hosting]] tracks both the private harness Q edge and the separate dedicated Q gateway, with the hosting truth boundary kept explicit
 - the live peer-refresh drill now proves the full liveness loop: healthy signed peers import real remote workers, bad-secret peers are rejected, and killed peers age out and are evicted from placement
 - the live lease-renewal drill now proves a second control loop: signed renewals can move placement from one authenticated peer to another when cross-node latency flips
 - the live adaptive-federation drill now proves a third control loop: once a peer starts failing remote executions, placement shifts away from it before membership dies, and the failed peer's renewal cadence tightens until signed recovery succeeds
@@ -58,9 +63,10 @@ observable, governed control system for intelligence at scale.
 - the training-data factory now proves a fifth truth surface: a corpus can be assembled through explicit source manifests, policy gates, secret scanning, dedup, and provenance chain hashes instead of ad hoc scraping
 - the `Q` training path now has a tracked manifest, dataset shaper, and Unsloth launch bundle tied back to that same curation/provenance spine instead of an unrelated notebook path
 - the `Q` training path now also has a tracked BridgeBench seed mix, a run-id-shaped dataset flow, and a dry-run validator so the repo can test the training path honestly before a GPU job starts
-- the live model comparison surface now proves a hard local truth: `gemma3:4b` currently follows the route/reason/commit contract more reliably than `Q` or `qwen3:8b` on this machine, so `Q` still needs fine-tune work rather than branding alone
-- the live Q API drill now proves the serving edge itself is bounded correctly: `401` without a key, `429` on concurrent keyed pressure, and a truthful model-side `503` when Ollama returns no completion
-- the live validation page now also records a second runtime split: `gemma3:4b` wins the direct comparison CLI on structure, but the governed live harness route still shows an unresolved in-server hang for that model on this machine
+- the live model comparison surface now proves the repaired truth after the direct-Q fix: `Q (gemma4:e4b)` is `4/4` on the direct structured contract lane, matching the readiness gate instead of hiding behind the gateway
+- the live BridgeBench surface now also shows direct `Q` at `4/4` parse success with a clean bridge-runtime lane, so the bridge/control-plane benchmark and the model-contract benchmark agree again
+- the live dedicated Q gateway drill still proves the serving edge itself is bounded correctly: `401` without a key, `429` on concurrent keyed pressure, a sanitized served response at `200`, and only ~`93 ms` of gateway overhead above upstream latency on the latest loopback pass
+- the live fallback smoke remains useful, but it is now an optional continuity proof rather than the only viable explanation for why `Q` can be served
 - the live benchmark surface now includes a real `60s` paced benchmark lane and a real `60m` soak lane with published hardware context and wall-clock timing
 - the latest live validation page now also keeps the ugly part on record: the fresh `60s` benchmark rerun failed three assertions on `knightly`, so the throughput line is published as a regression signal rather than quietly replaced with an older clean run
 - the credibility stack now also includes a real crash-torture lane, a real OpenNeuro+DANDI ingest lane, and an honest Temporal side-by-side baseline instead of hiding those claims inside generic smoke runs

@@ -25,6 +25,8 @@ type BridgeBenchTaskResult = {
   parseSuccess: boolean;
   structuredFieldCount: number;
   status: "completed" | "failed";
+  failureClass?: string;
+  thinkingDetected: boolean;
   routeSuggestion?: string;
   reasonSummary?: string;
   commitStatement?: string;
@@ -61,6 +63,7 @@ type TemporalSummary = {
 
 export type BridgeBenchReport = {
   generatedAt: string;
+  modelLaneSurface: "direct-local-ollama-structured-contract";
   ollamaBaseUrl: string;
   qAlias: string;
   hardwareContext: {
@@ -210,19 +213,23 @@ async function runBridgeBenchModel(requestedModel: string, actualModel: string):
         governancePressure: scenario.governancePressure,
         context: scenario.context
       });
-      const structuredFieldCount = [
-        result.execution.routeSuggestion,
-        result.execution.reasonSummary,
-        result.execution.commitStatement
-      ].filter(Boolean).length;
+      const structuredFieldCount =
+        result.structuredFieldCount ||
+        [
+          result.execution.routeSuggestion,
+          result.execution.reasonSummary,
+          result.execution.commitStatement
+        ].filter(Boolean).length;
       tasks.push({
         scenarioId: scenario.id,
         label: scenario.label,
         latencyMs: result.execution.latencyMs,
         wallLatencyMs: Number((performance.now() - started).toFixed(2)),
-        parseSuccess: structuredFieldCount === 3,
+        parseSuccess: structuredFieldCount === 3 && result.execution.status === "completed",
         structuredFieldCount,
         status: result.execution.status,
+        failureClass: result.failureClass,
+        thinkingDetected: result.thinkingDetected,
         routeSuggestion: result.execution.routeSuggestion,
         reasonSummary: result.execution.reasonSummary,
         commitStatement: result.execution.commitStatement,
@@ -237,6 +244,7 @@ async function runBridgeBenchModel(requestedModel: string, actualModel: string):
         parseSuccess: false,
         structuredFieldCount: 0,
         status: "failed",
+        thinkingDetected: false,
         responsePreview: "",
         error: error instanceof Error ? error.message : "BridgeBench model execution failed"
       });
@@ -276,6 +284,8 @@ function buildMarkdown(report: BridgeBenchReport): string {
   lines.push("# BridgeBench");
   lines.push("");
   lines.push(`Generated at: \`${report.generatedAt}\``);
+  lines.push(`Model lane surface: \`${report.modelLaneSurface}\``);
+  lines.push("The model lane below measures direct local Ollama structured-contract behavior, not the served Q gateway edge.");
   lines.push("");
   lines.push("## Model Lane");
   lines.push("");
@@ -303,9 +313,14 @@ function buildMarkdown(report: BridgeBenchReport): string {
     lines.push("");
     lines.push(`- temporal suite: \`${report.temporalBaseline.suiteId ?? "missing"}\``);
     lines.push(`- failed assertions: \`${report.temporalBaseline.failedAssertions ?? 0}\``);
-    lines.push(
-      `- workflow wall-clock P95: Immaculate \`${report.temporalBaseline.immaculateWorkflowWallClockP95Ms ?? 0} ms\` / Temporal \`${report.temporalBaseline.temporalWorkflowWallClockP95Ms ?? 0} ms\``
-    );
+    if (
+      typeof report.temporalBaseline.immaculateWorkflowWallClockP95Ms === "number" ||
+      typeof report.temporalBaseline.temporalWorkflowWallClockP95Ms === "number"
+    ) {
+      lines.push(
+        `- workflow wall-clock P95: Immaculate \`${report.temporalBaseline.immaculateWorkflowWallClockP95Ms ?? "n/a"} ms\` / Temporal \`${report.temporalBaseline.temporalWorkflowWallClockP95Ms ?? "n/a"} ms\``
+      );
+    }
   }
   return `${lines.join("\n")}\n`;
 }
@@ -328,6 +343,7 @@ export async function runBridgeBench(): Promise<BridgeBenchReport> {
 
   const report: BridgeBenchReport = {
     generatedAt: new Date().toISOString(),
+    modelLaneSurface: "direct-local-ollama-structured-contract",
     ollamaBaseUrl: DEFAULT_OLLAMA_URL,
     qAlias: getQModelAlias(),
     hardwareContext: captureHardwareContext(),
@@ -343,18 +359,18 @@ export async function runBridgeBench(): Promise<BridgeBenchReport> {
           suiteId: temporalBaseline.suiteId,
           failedAssertions: temporalBaseline.assertions.filter((assertion) => assertion.status === "fail").length,
           immaculateWorkflowWallClockP95Ms:
-            temporalBaseline.series.find((series) => series.id === "immaculate_workflow_wall_clock_ms")?.p95,
+            temporalBaseline.series.find((series) => series.id === "immaculate_baseline_wall_clock_ms")?.p95,
           temporalWorkflowWallClockP95Ms:
             temporalBaseline.series.find((series) => series.id === "temporal_workflow_wall_clock_ms")?.p95
         }
       : undefined,
     output: {
-      jsonPath: path.join(WIKI_ROOT, "BridgeBench.json"),
-      markdownPath: path.join(WIKI_ROOT, "BridgeBench.md")
+      jsonPath: path.join("docs", "wiki", "BridgeBench.json"),
+      markdownPath: path.join("docs", "wiki", "BridgeBench.md")
     }
   };
 
-  await writeFile(report.output.jsonPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
-  await writeFile(report.output.markdownPath, buildMarkdown(report), "utf8");
+  await writeFile(path.join(REPO_ROOT, report.output.jsonPath), `${JSON.stringify(report, null, 2)}\n`, "utf8");
+  await writeFile(path.join(REPO_ROOT, report.output.markdownPath), buildMarkdown(report), "utf8");
   return report;
 }

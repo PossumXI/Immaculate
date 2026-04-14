@@ -381,6 +381,8 @@ type CognitivePassResult = {
   execution: CognitiveExecutionRecord;
   response: string;
   snapshot: PhaseSnapshot;
+  failureClass?: string;
+  thinkingDetected?: boolean;
 };
 
 type QApiRequestContext = {
@@ -2612,7 +2614,9 @@ async function executeCognitivePass(options: {
       layer: settledLayer,
       execution: boundExecution,
       response: result.response,
-      snapshot
+      snapshot,
+      failureClass: result.failureClass,
+      thinkingDetected: result.thinkingDetected
     };
   } catch (error) {
     const completedAt = new Date().toISOString();
@@ -2681,7 +2685,9 @@ async function executeCognitivePass(options: {
       layer: failedLayer,
       execution: failedExecution,
       response: failedExecution.responsePreview,
-      snapshot
+      snapshot,
+      failureClass: "http_error",
+      thinkingDetected: false
     };
   } finally {
     await releaseExecutionWorker(options.assignment);
@@ -2768,7 +2774,9 @@ async function executeScheduledCognitivePass(options: {
       layer: settledLayer,
       execution: boundExecution,
       response: result.response,
-      snapshot
+      snapshot,
+      failureClass: result.failureClass,
+      thinkingDetected: result.thinkingDetected
     };
   } catch (error) {
     const completedAt = new Date().toISOString();
@@ -2831,7 +2839,9 @@ async function executeScheduledCognitivePass(options: {
       layer: settledLayer,
       execution: failedExecution,
       response: failedExecution.responsePreview,
-      snapshot
+      snapshot,
+      failureClass: "http_error",
+      thinkingDetected: false
     };
   } finally {
     await releaseExecutionWorker(options.assignment);
@@ -3881,6 +3891,8 @@ app.post("/api/q/run", async (request, reply) => {
         model: truthfulModelLabel(result.execution.model),
         executionId: result.execution.id,
         latencyMs: result.execution.latencyMs,
+        failureClass: result.failureClass,
+        thinkingDetected: result.thinkingDetected,
         message: result.execution.responsePreview
       };
     }

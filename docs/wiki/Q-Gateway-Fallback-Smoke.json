@@ -1,0 +1,146 @@
+{
+  "generatedAt": "2026-04-14T03:03:47.684Z",
+  "gatewayUrl": "http://127.0.0.1:8898",
+  "hardwareContext": {
+    "host": "knightly",
+    "platform": "win32",
+    "arch": "x64",
+    "osVersion": "Windows 11 Pro",
+    "cpuModel": "AMD Ryzen 7 7735HS with Radeon Graphics",
+    "cpuCount": 16,
+    "memoryGiB": 23.29,
+    "nodeVersion": "v22.13.1"
+  },
+  "checks": {
+    "health": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "gateway": "q",
+        "alias": "Q",
+        "model": "Q (q-primary-unavailable-for-smoke)",
+        "modelReady": false,
+        "fallbackModel": "gemma3:4b",
+        "fallbackReady": true,
+        "circuit": {
+          "state": "closed",
+          "consecutiveFailures": 0
+        },
+        "authMode": "api-key",
+        "host": "127.0.0.1",
+        "port": 8898
+      },
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "256",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Tue, 14 Apr 2026 03:03:38 GMT",
+        "keep-alive": "timeout=72",
+        "vary": "Origin"
+      }
+    },
+    "firstFallbackChat": {
+      "status": 200,
+      "body": {
+        "id": "chatcmpl-mny1eukb",
+        "object": "chat.completion",
+        "created": 1776135826,
+        "model": "Q",
+        "providerModel": "gemma3:4b",
+        "primaryModel": "Q (q-primary-unavailable-for-smoke)",
+        "fallbackUsed": true,
+        "primaryFailureClass": "http_error",
+        "circuitState": "open",
+        "latencyMs": 7801.48,
+        "thinkingDetected": false,
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "Stable, Reliable, Recovered"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0
+        }
+      },
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "474",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Tue, 14 Apr 2026 03:03:46 GMT",
+        "keep-alive": "timeout=72",
+        "vary": "Origin",
+        "x-provider-model": "gemma3:4b",
+        "x-q-alias": "Q",
+        "x-q-circuit-state": "open",
+        "x-q-fallback-used": "true",
+        "x-q-primary-failure-class": "http_error",
+        "x-q-primary-latency-ms": "7",
+        "x-q-primary-model": "Q (q-primary-unavailable-for-smoke)",
+        "x-ratelimit-limit": "12",
+        "x-ratelimit-remaining": "11",
+        "x-ratelimit-reset-ms": "0",
+        "x-upstream-latency-ms": "7801.48"
+      }
+    },
+    "secondFallbackChat": {
+      "status": 200,
+      "body": {
+        "id": "chatcmpl-mny1evod",
+        "object": "chat.completion",
+        "created": 1776135827,
+        "model": "Q",
+        "providerModel": "gemma3:4b",
+        "primaryModel": "Q (q-primary-unavailable-for-smoke)",
+        "fallbackUsed": true,
+        "primaryFailureClass": "circuit_open",
+        "circuitState": "open",
+        "latencyMs": 1244.71,
+        "thinkingDetected": false,
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "Stable, Reliable, Optimized."
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0
+        }
+      },
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "477",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Tue, 14 Apr 2026 03:03:47 GMT",
+        "keep-alive": "timeout=72",
+        "vary": "Origin",
+        "x-provider-model": "gemma3:4b",
+        "x-q-alias": "Q",
+        "x-q-circuit-state": "open",
+        "x-q-fallback-used": "true",
+        "x-q-primary-failure-class": "circuit_open",
+        "x-q-primary-model": "Q (q-primary-unavailable-for-smoke)",
+        "x-ratelimit-limit": "12",
+        "x-ratelimit-remaining": "11",
+        "x-ratelimit-reset-ms": "0",
+        "x-upstream-latency-ms": "1244.71"
+      }
+    }
+  },
+  "output": {
+    "jsonPath": "docs\\wiki\\Q-Gateway-Fallback-Smoke.json",
+    "markdownPath": "docs\\wiki\\Q-Gateway-Fallback-Smoke.md"
+  }
+}

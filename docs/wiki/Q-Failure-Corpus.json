@@ -1,0 +1,16 @@
+{
+  "generatedAt": "2026-04-14T11:41:32Z",
+  "recordCount": 0,
+  "evalSeedCount": 0,
+  "resolvedSuccessCount": 8,
+  "failureClassCounts": {},
+  "sources": {
+    "modelComparison": "Model-Benchmark-Comparison.json",
+    "bridgeBench": "BridgeBench.json"
+  },
+  "output": {
+    "jsonlPath": ".training-output/q/q-failure-corpus.jsonl",
+    "manifestPath": "docs/wiki/Q-Failure-Corpus.json",
+    "markdownPath": "docs/wiki/Q-Failure-Corpus.md"
+  }
+}

@@ -37,6 +37,7 @@ type OllamaGenerateResponse = {
   message?: {
     role?: string;
     content?: string;
+    thinking?: string;
   };
   response?: string;
   total_duration?: number;
@@ -45,15 +46,52 @@ type OllamaGenerateResponse = {
   done?: boolean;
 };
 
+export type OllamaFailureClass =
+  | "transport_timeout"
+  | "http_error"
+  | "invalid_json"
+  | "empty_response"
+  | "contract_invalid";
+
+export type OllamaChatMessage = {
+  role: "system" | "user" | "assistant";
+  content: string;
+};
+
+export type OllamaChatCompletionResult = {
+  response: string;
+  model: string;
+  startedAt: string;
+  completedAt: string;
+  latencyMs: number;
+  done: boolean;
+  thinkingDetected: boolean;
+  responsePreview: string;
+  failureClass?: OllamaFailureClass;
+  errorMessage?: string;
+};
+
 export type OllamaExecutionResult = {
   response: string;
   execution: CognitiveExecution;
+  failureClass?: OllamaFailureClass;
+  thinkingDetected: boolean;
+  structuredFieldCount: number;
 };
 
 const DEFAULT_OLLAMA_URL = process.env.IMMACULATE_OLLAMA_URL ?? "http://127.0.0.1:11434";
 const DEFAULT_MODEL = process.env.IMMACULATE_OLLAMA_MODEL;
 const DEFAULT_ROLE = (process.env.IMMACULATE_OLLAMA_ROLE as IntelligenceLayerRole | undefined) ?? "mid";
-const DEFAULT_GENERATE_TIMEOUT_MS = Number(process.env.IMMACULATE_OLLAMA_TIMEOUT_MS ?? 300000);
+const DEFAULT_CONTROL_TIMEOUT_MS = Number(process.env.IMMACULATE_OLLAMA_CONTROL_TIMEOUT_MS ?? 180000);
+const DEFAULT_STRUCTURED_MAX_TOKENS = 120;
+const DEFAULT_STRUCTURED_TEMPERATURE = 0.2;
+const Q_STRUCTURED_MAX_TOKENS = Math.max(
+  DEFAULT_STRUCTURED_MAX_TOKENS,
+  Number(process.env.IMMACULATE_OLLAMA_Q_EXECUTION_MAX_TOKENS ?? 640) || 640
+);
+const Q_STRUCTURED_TEMPERATURE = Number(
+  process.env.IMMACULATE_OLLAMA_Q_EXECUTION_TEMPERATURE ?? 0.1
+);
 
 function normalizeBaseUrl(baseUrl = DEFAULT_OLLAMA_URL): string {
   return baseUrl.replace(/\/+$/, "");
@@ -77,8 +115,36 @@ function normalizeWords(value: string, maxWords = 24): string {
     .join(" ");
 }
 
+function clampTemperature(value: number, fallback: number): number {
+  if (!Number.isFinite(value)) {
+    return fallback;
+  }
+  return Math.min(1, Math.max(0, value));
+}
+
+function normalizeModel(value: string | undefined): string {
+  return value?.trim().toLowerCase() ?? "";
+}
+
+function isQExecutionModel(value: string | undefined): boolean {
+  return normalizeModel(value) === normalizeModel(resolveQAliasSpecification().baseModel);
+}
+
 function digest(value: string): string {
   return createHash("sha256").update(value).digest("hex");
+}
+
+class OllamaRequestError extends Error {
+  readonly failureClass: Exclude<OllamaFailureClass, "empty_response" | "contract_invalid">;
+
+  constructor(
+    failureClass: Exclude<OllamaFailureClass, "empty_response" | "contract_invalid">,
+    message: string
+  ) {
+    super(message);
+    this.name = "OllamaRequestError";
+    this.failureClass = failureClass;
+  }
 }
 
 function layerIdForModel(model: string, role: IntelligenceLayerRole): string {
@@ -117,16 +183,41 @@ async function fetchJson<T>(
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const response = await fetch(`${normalizeBaseUrl(baseUrl)}${path}`, {
-      ...init,
-      signal: controller.signal
-    });
-
-    if (!response.ok) {
-      throw new Error(`Ollama request failed with status ${response.status}.`);
+    let response: Response;
+    try {
+      response = await fetch(`${normalizeBaseUrl(baseUrl)}${path}`, {
+        ...init,
+        signal: controller.signal
+      });
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new OllamaRequestError(
+          "transport_timeout",
+          `Ollama request timed out after ${timeoutMs} ms.`
+        );
+      }
+      throw error;
     }
 
-    return (await response.json()) as T;
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      const detail = body.trim().slice(0, 240);
+      throw new OllamaRequestError(
+        "http_error",
+        detail.length > 0
+          ? `Ollama request failed with status ${response.status}: ${detail}`
+          : `Ollama request failed with status ${response.status}.`
+      );
+    }
+
+    try {
+      return (await response.json()) as T;
+    } catch (error) {
+      throw new OllamaRequestError(
+        "invalid_json",
+        error instanceof Error ? `Ollama returned invalid JSON: ${error.message}` : "Ollama returned invalid JSON."
+      );
+    }
   } finally {
     clearTimeout(timer);
   }
@@ -378,24 +469,201 @@ function extractStructuredLine(
   response: string,
   field: "ROUTE" | "REASON" | "COMMIT" | "VERDICT"
 ): string | undefined {
-  const match = response.match(
-    new RegExp(`${field}\\s*:\\s*(.+?)(?=\\s+(?:ROUTE|REASON|COMMIT|VERDICT)\\s*:|$)`, "is")
+  const matches = Array.from(
+    response.matchAll(
+      new RegExp(`${field}\\s*:\\s*(.+?)(?=\\s+(?:ROUTE|REASON|COMMIT|VERDICT)\\s*:|$)`, "gis")
+    )
   );
-  return match?.[1] ? normalizeWords(match[1]) : undefined;
+  const value = matches.at(-1)?.[1];
+  return value ? normalizeWords(value) : undefined;
+}
+
+function extractChannelTail(response: string): string {
+  const trimmed = response.trim();
+  const channelIndex = trimmed.lastIndexOf("<channel|>");
+  if (channelIndex >= 0) {
+    const candidate = trimmed.slice(channelIndex + "<channel|>".length).trim();
+    if (candidate.length > 0) {
+      return candidate;
+    }
+  }
+  return trimmed;
+}
+
+function selectStructuredResponseCandidate(response: string): string {
+  const trimmed = extractChannelTail(response);
+  const routeMatches = Array.from(trimmed.matchAll(/ROUTE\s*:/gi));
+
+  for (let index = routeMatches.length - 1; index >= 0; index -= 1) {
+    const routeIndex = routeMatches[index]?.index;
+    if (typeof routeIndex !== "number") {
+      continue;
+    }
+    const candidate = trimmed.slice(routeIndex).trim();
+    const routeSuggestion = extractStructuredLine(candidate, "ROUTE");
+    const reasonSummary = extractStructuredLine(candidate, "REASON");
+    const commitStatement = extractStructuredLine(candidate, "COMMIT");
+    if (routeSuggestion && reasonSummary && commitStatement) {
+      return candidate;
+    }
+  }
+
+  return trimmed;
 }
 
 export function parseStructuredResponse(response: string, role: IntelligenceLayerRole) {
-  const routeSuggestion = extractStructuredLine(response, "ROUTE");
-  const reasonSummary = extractStructuredLine(response, "REASON");
-  const commitStatement = extractStructuredLine(response, "COMMIT");
-  const explicitVerdict = extractStructuredLine(response, "VERDICT");
+  const normalizedResponse = selectStructuredResponseCandidate(response);
+  const routeSuggestion = extractStructuredLine(normalizedResponse, "ROUTE");
+  const reasonSummary = extractStructuredLine(normalizedResponse, "REASON");
+  const commitStatement = extractStructuredLine(normalizedResponse, "COMMIT");
+  const explicitVerdict = extractStructuredLine(normalizedResponse, "VERDICT");
 
   return {
+    normalizedResponse,
     routeSuggestion,
     reasonSummary,
     commitStatement,
     guardVerdict: parseGuardVerdict(explicitVerdict, role)
   };
+}
+
+function resolveStructuredExecutionProfile(model: string) {
+  if (isQExecutionModel(model)) {
+    return {
+      maxTokens: Q_STRUCTURED_MAX_TOKENS,
+      temperature: clampTemperature(Q_STRUCTURED_TEMPERATURE, 0.1)
+    };
+  }
+
+  return {
+    maxTokens: DEFAULT_STRUCTURED_MAX_TOKENS,
+    temperature: DEFAULT_STRUCTURED_TEMPERATURE
+  };
+}
+
+function computeLatencyMs(
+  payload: Pick<OllamaGenerateResponse, "total_duration">,
+  startedAt: string,
+  completedAt: string
+): number {
+  return typeof payload.total_duration === "number"
+    ? Number((payload.total_duration / 1_000_000).toFixed(2))
+    : Math.max(1, new Date(completedAt).getTime() - new Date(startedAt).getTime());
+}
+
+function formatOllamaFailurePreview(
+  failureClass: OllamaFailureClass,
+  errorMessage?: string,
+  response?: string
+): string {
+  if (failureClass === "empty_response") {
+    return "No response returned by Ollama.";
+  }
+  if (failureClass === "contract_invalid") {
+    return truncate(
+      response?.trim().length
+        ? `Structured contract invalid: ${response}`
+        : "Structured contract invalid: missing ROUTE, REASON, or COMMIT."
+    );
+  }
+  return truncate(errorMessage?.trim() || "Ollama execution failed.");
+}
+
+const STRUCTURED_PROMPT_LEAK_PATTERNS = [
+  /\bone sentence\b/i,
+  /\bmax\s+\d+\s+words\b/i,
+  /\bno bullets\b/i,
+  /\bno preamble\b/i,
+  /\bno extra sections\b/i,
+  /\bthe user wants me\b/i,
+  /\bmy output must\b/i,
+  /^\s*thought\b/i
+];
+
+function containsStructuredPromptLeak(value: string | undefined): boolean {
+  const candidate = value?.trim();
+  if (!candidate) {
+    return false;
+  }
+  return STRUCTURED_PROMPT_LEAK_PATTERNS.some((pattern) => pattern.test(candidate));
+}
+
+export async function runOllamaChatCompletion(options: {
+  endpoint?: string;
+  model: string;
+  messages: OllamaChatMessage[];
+  temperature?: number;
+  maxTokens?: number;
+  timeoutMs?: number;
+  think?: boolean;
+}): Promise<OllamaChatCompletionResult> {
+  const startedAt = new Date().toISOString();
+  try {
+    const payload = await fetchJson<OllamaGenerateResponse>(
+      "/api/chat",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({
+          model: options.model,
+          stream: false,
+          think: options.think ?? false,
+          messages: options.messages,
+          options: {
+            temperature: options.temperature ?? 0.2,
+            num_predict: options.maxTokens ?? 120
+          }
+        })
+      },
+      options.timeoutMs ?? DEFAULT_CONTROL_TIMEOUT_MS,
+      options.endpoint ?? DEFAULT_OLLAMA_URL
+    );
+    const completedAt = new Date().toISOString();
+    const response =
+      typeof payload.message?.content === "string"
+        ? payload.message.content.trim()
+        : typeof payload.response === "string"
+          ? payload.response.trim()
+          : "";
+    const thinkingDetected =
+      typeof payload.message?.thinking === "string" && payload.message.thinking.trim().length > 0;
+    const latencyMs = computeLatencyMs(payload, startedAt, completedAt);
+    const failureClass = response.length > 0 ? undefined : "empty_response";
+
+    return {
+      response,
+      model: options.model,
+      startedAt,
+      completedAt,
+      latencyMs,
+      done: payload.done !== false,
+      thinkingDetected,
+      responsePreview: truncate(
+        failureClass ? formatOllamaFailurePreview(failureClass) : response
+      ),
+      failureClass
+    };
+  } catch (error) {
+    const completedAt = new Date().toISOString();
+    const failureClass =
+      error instanceof OllamaRequestError ? error.failureClass : "http_error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Unable to reach the configured Ollama endpoint.";
+    return {
+      response: "",
+      model: options.model,
+      startedAt,
+      completedAt,
+      latencyMs: Math.max(1, Date.parse(completedAt) - Date.parse(startedAt)),
+      done: false,
+      thinkingDetected: false,
+      responsePreview: formatOllamaFailurePreview(failureClass, errorMessage),
+      failureClass,
+      errorMessage
+    };
+  }
 }
 
 export async function runOllamaExecution(options: {
@@ -406,7 +674,7 @@ export async function runOllamaExecution(options: {
   recentDeniedCount?: number;
   context?: string;
 }): Promise<OllamaExecutionResult> {
-  const startedAt = new Date().toISOString();
+  const executionProfile = resolveStructuredExecutionProfile(options.layer.model);
   const prompt = buildImmaculatePrompt({
     snapshot: options.snapshot,
     role: options.layer.role,
@@ -421,60 +689,55 @@ You convert state into route/reason/commit outputs for a durable orchestration s
       ? " You must include VERDICT: approved or blocked."
       : ""
   }`;
-  const payload = await fetchJson<OllamaGenerateResponse>(
-    "/api/chat",
-    {
-      method: "POST",
-      headers: {
-        "content-type": "application/json"
+  const completion = await runOllamaChatCompletion({
+    endpoint: options.layer.endpoint,
+    model: options.layer.model,
+    messages: [
+      {
+        role: "system",
+        content: system
       },
-      body: JSON.stringify({
-        model: options.layer.model,
-        stream: false,
-        messages: [
-          {
-            role: "system",
-            content: system
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-        options: {
-          temperature: 0.2,
-          num_predict: 120
-        }
-      })
-    },
-    DEFAULT_GENERATE_TIMEOUT_MS,
-    options.layer.endpoint
-  );
-
-  const completedAt = new Date().toISOString();
-  const response =
-    typeof payload.message?.content === "string"
-      ? payload.message.content.trim()
-      : typeof payload.response === "string"
-        ? payload.response.trim()
-        : "";
-  const latencyMs =
-    typeof payload.total_duration === "number"
-      ? Number((payload.total_duration / 1_000_000).toFixed(2))
-      : Math.max(1, new Date(completedAt).getTime() - new Date(startedAt).getTime());
+      {
+        role: "user",
+        content: prompt
+      }
+    ],
+    temperature: executionProfile.temperature,
+    maxTokens: executionProfile.maxTokens,
+    timeoutMs: DEFAULT_CONTROL_TIMEOUT_MS,
+    think: false
+  });
+  const parsed = parseStructuredResponse(completion.response, options.layer.role);
+  const response = parsed.normalizedResponse || completion.response;
   const activeObjective = options.objective?.trim() || options.snapshot.objective;
-  const parsed = parseStructuredResponse(response, options.layer.role);
+  const structuredFieldCount = [
+    parsed.routeSuggestion,
+    parsed.reasonSummary,
+    parsed.commitStatement
+  ].filter(Boolean).length;
+  const contractValid =
+    completion.done &&
+    structuredFieldCount === 3 &&
+    !containsStructuredPromptLeak(response) &&
+    !containsStructuredPromptLeak(parsed.routeSuggestion) &&
+    !containsStructuredPromptLeak(parsed.reasonSummary) &&
+    !containsStructuredPromptLeak(parsed.commitStatement);
+  const failureClass =
+    completion.failureClass ??
+    (!contractValid ? "contract_invalid" : undefined);
   const execution: CognitiveExecution = {
-    id: `cog-${new Date(completedAt).toISOString().replace(/[:.]/g, "-")}-${digest(options.layer.id).slice(0, 8)}`,
+    id: `cog-${new Date(completion.completedAt).toISOString().replace(/[:.]/g, "-")}-${digest(options.layer.id).slice(0, 8)}`,
     layerId: options.layer.id,
     model: options.layer.model,
     objective: activeObjective,
-    status: response.length > 0 ? "completed" : "failed",
-    latencyMs,
-    startedAt,
-    completedAt,
+    status: failureClass ? "failed" : "completed",
+    latencyMs: completion.latencyMs,
+    startedAt: completion.startedAt,
+    completedAt: completion.completedAt,
     promptDigest: digest(prompt).slice(0, 24),
-    responsePreview: truncate(response.length > 0 ? response : "No response returned by Ollama."),
+    responsePreview: failureClass
+      ? formatOllamaFailurePreview(failureClass, completion.errorMessage, response)
+      : truncate(response),
     routeSuggestion: parsed.routeSuggestion,
     reasonSummary: parsed.reasonSummary,
     commitStatement: parsed.commitStatement,
@@ -485,6 +748,9 @@ You convert state into route/reason/commit outputs for a durable orchestration s
 
   return {
     response,
-    execution
+    execution,
+    failureClass,
+    thinkingDetected: completion.thinkingDetected,
+    structuredFieldCount
   };
 }

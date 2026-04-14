@@ -21,6 +21,87 @@ For each breakthrough, record:
 
 ### 2026-04-14
 
+#### Q gained a second serving control loop, and the direct model is now green under the readiness gate after the structured-contract fix
+
+What changed:
+- the dedicated Q gateway now carries a real primary-model circuit breaker plus an explicit fallback lane
+- repeated primary failures can open the circuit and stop the gateway from hammering a dead upstream
+- the repo now carries a direct-Q readiness gate that reads the tracked `Model-Benchmark-Comparison` and `BridgeBench` surfaces instead of inferring readiness from the gateway transport
+- the direct-Q execution path now uses a Q-specific structured output budget and tail normalization so final route/reason/commit lines survive instead of dying inside self-commentary
+
+Why it matters:
+- the missed systems pattern was that model readiness and serving-edge health are two different control problems
+- a public-ish inference edge needs a continuity path when the preferred model degrades, but that continuity path must not be allowed to masquerade as model readiness
+- once the readiness gate and fallback lane are separated, the repo can keep the API truthful for users without pretending the underlying model is already release-clean
+- the missed model-side pattern was that `Q` was spending too much of its output budget on meta reasoning before emitting the usable final answer, so the serving edge looked healthier than the direct contract lane
+
+Evidence:
+- `docs/wiki/Q-Readiness-Gate.json` now shows `ready: true` at threshold `0.75`
+- `docs/wiki/Model-Benchmark-Comparison.json` now shows direct `Q` at `4/4` parse success
+- `docs/wiki/BridgeBench.json` now also shows direct `Q` at `4/4` parse success with the bridge-runtime lane still green
+- `docs/wiki/Q-Gateway-Fallback-Smoke.json` proves the dedicated gateway served through `gemma3:4b` after an intentional dead-primary failure and then reused the open circuit on the second request with `x-q-primary-failure-class: circuit_open`
+- `docs/wiki/Q-Gateway-Validation.json` still shows the normal direct Q gateway path green on auth, concurrency control, and sanitized output when the primary model is healthy enough for the short-form request
+
+What this unlocks next:
+- a private OCI Q edge that can stay available without falsely claiming the direct Q model is production-ready
+- tighter public release policy where Q model promotion depends on the direct readiness gate instead of the gateway transport staying up
+- a cleaner cloud fine-tune loop because the remaining weak spots can now be measured as true model regressions instead of mixed gateway/model noise
+
+### 2026-04-14
+
+#### Q failure export became a strict failure-only surface instead of a mixed success bucket
+
+What changed:
+- `training/q/build_q_failure_corpus.py` now exports only genuine failure rows from the direct-Q report surfaces
+- resolved structured-contract successes are no longer serialized into the failure surface just because they came from the same tracked reports
+- when direct `Q` is green, `Q-Failure-Corpus` now stays empty instead of overstating eight fake failure records
+
+Why it matters:
+- the missed systems pattern was that a failure page can quietly become misleading if it is repurposed as a general training bucket
+- keeping the failure surface failure-only preserves its value as a release boundary instead of turning it into a mixed-status archive
+- this keeps the repo honest about what is still broken versus what merely belongs in a future cloud training mix
+
+Evidence:
+- `docs/wiki/BridgeBench.json` now shows direct `Q` at `4/4` parse success with no dominant failure
+- `docs/wiki/Model-Benchmark-Comparison.json` now shows the same `Q` lane at `4/4`
+- `.training-output/q/q-failure-corpus.jsonl` is now empty on the current live run because there are no failure seeds to export
+- `docs/wiki/Q-Failure-Corpus.json` now records `recordCount: 0` and `evalSeedCount: 0`
+
+What this unlocks next:
+- a reviewed cloud Q fine-tune pass that can wait for real failure evidence instead of training on fake negative examples
+- future eval runs that can repopulate the failure-only corpus the moment a real regression appears
+- a tighter boundary between benchmark prose, release policy, and training material, which is the right place to keep security and truthfulness separate
+
+### 2026-04-14
+
+#### Historical earlier 2026-04-14: Q split into a dedicated gateway, the live contract went green, and fake structured success stopped counting
+
+What changed:
+- the repo now contains a dedicated Q gateway server at `apps/harness/src/q-gateway.ts` instead of only the narrow Q route embedded inside the full harness
+- the gateway exposes only `GET /health`, `GET /api/q/info`, `GET /v1/models`, and `POST /v1/chat/completions`
+- the gateway uses Q API keys only and does not accept the broader harness admin key
+- the Ollama adapter now runs structured/control calls with `think: false`, explicit failure classes, and a harder contract validator that rejects prompt-echo garbage instead of rewarding it as parse success
+- the public gateway path now sanitizes leaked meta tags like `<channel|>` before returning content to callers
+- the OCI Q gateway bundle now targets the real dedicated Node gateway process instead of a proxy-only placeholder
+
+Why it matters:
+- this closes the next honesty gap in the Q stack: there is now a real smaller serving surface for external use, not just a promise to eventually separate it from the harness
+- the deeper missed pattern was that structured-output evaluation can lie if it only counts fields; a model that echoes the instructions back can look compliant while still being unusable
+- once prompt-echo leakage is treated as contract failure, the repo stops flattering `Q` and starts measuring the actual remaining fine-tune problem
+
+Evidence:
+- `npx tsx apps/harness/src/q-gateway-validate.ts --gateway-url=http://127.0.0.1:8899 --runtime-dir=... --keys-path=...` passed on `2026-04-14`
+- the dedicated gateway returned `200` on `/health`, `401` without a key on `/v1/chat/completions`, `200` on authenticated `/api/q/info` and `/v1/models`, and `429 concurrency_limited` on the second overlapping keyed request
+- the live gateway response was sanitized to `Gateway operational, all good.` with only about `95.83 ms` of overhead above upstream latency on the latest loopback pass
+- `npm run compare:models` now records the harsher truth after the metric fix: `Q (gemma4:e4b)` is at `0/4` structured-contract success with `transport_timeout` on each task
+- `npm run bridgebench` still passed the bridge-runtime lane with `0` failed assertions while the direct-Q model lane also sits at `0/4` parse success with `transport_timeout`
+- `npm run benchmark:gate:all` passed again at `2026-04-14T01:47:25.513Z` with `runCount: 3` and `violationCount: 0`
+
+What this unlocks next:
+- a real OCI-hosted private Q API without exposing the full harness control plane
+- structured-output release gates that can block a weak Q fine-tune even when the gateway itself is healthy
+- a cleaner next training pass for Q focused on contract obedience and anti-prompt-echo behavior instead of generic alias or serving work
+
 #### Q gained a real bounded serving edge, BridgeBench became a tracked surface, and the training path got more truthful
 
 What changed:

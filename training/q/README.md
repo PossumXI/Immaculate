@@ -30,14 +30,25 @@ python training/q/build_q_text_dataset.py --input .training-output/training-data
 python training/q/build_q_mixture.py --base .training-output/q/q-train-<run-id>.jsonl --supplemental training/q/bridgebench_seed.json --output .training-output/q/q-mix-<run-id>.jsonl
 ```
 
-4. Copy `q_lora_config.example.json` and adjust paths to the concrete run-id-specific files.
-5. Validate the config and dataset shape before a GPU run:
+4. Convert the live Q report failures into a tracked eval seed corpus:
+
+```powershell
+npm run q:failure-corpus
+```
+
+The current Q lane fails closed as `transport_timeout`, so these records are
+best treated as eval seeds first. That keeps the failure surface honest while
+still producing tracked corpus entries you can later promote into a reviewed
+training slice.
+
+5. Copy `q_lora_config.example.json` and adjust paths to the concrete run-id-specific files.
+6. Validate the config and dataset shape before a GPU run:
 
 ```powershell
 python training/q/train_q_lora_unsloth.py --config training/q/q_lora_config.example.json --dry-run
 ```
 
-6. Launch `train_q_lora_unsloth.py` on a GPU instance with the required Python packages installed.
+7. Launch `train_q_lora_unsloth.py` on a GPU instance with the required Python packages installed.
 
 ## Truth Boundary
 
@@ -59,6 +70,9 @@ defensive-security fine-tuning plan that this repo can enforce directly today:
 - a tracked BridgeBench seed set so the next `Q` LoRA run gets higher-signal
   route/reason/commit examples around bridge safety, rate limiting, and
   defensive control-plane behavior
+- a tracked failure-to-corpus path that turns the live BridgeBench and model
+  comparison failures into eval seeds instead of letting them disappear into
+  benchmark prose
 - a QLoRA-style launch surface for `Q` through the Unsloth training entrypoint
 
 The repo does **not** currently claim that every legal, export-control, or

@@ -1,0 +1,25 @@
+{
+  "generatedAt": "2026-04-14T11:41:27.545Z",
+  "threshold": 0.75,
+  "ready": true,
+  "reasons": [],
+  "sources": {
+    "modelComparisonGeneratedAt": "2026-04-14T11:31:40.656Z",
+    "bridgeBenchGeneratedAt": "2026-04-14T11:41:22.020Z"
+  },
+  "q": {
+    "modelComparison": {
+      "parseSuccessRate": 1,
+      "completedTaskCount": 4,
+      "taskCount": 4
+    },
+    "bridgeBench": {
+      "parseSuccessRate": 1,
+      "taskCount": 4
+    }
+  },
+  "output": {
+    "jsonPath": "docs\\wiki\\Q-Readiness-Gate.json",
+    "markdownPath": "docs\\wiki\\Q-Readiness-Gate.md"
+  }
+}

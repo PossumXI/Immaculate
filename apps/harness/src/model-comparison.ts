@@ -42,6 +42,8 @@ type ModelTaskResult = {
   structuredFieldCount: number;
   parseSuccess: boolean;
   status: "completed" | "failed";
+  failureClass?: string;
+  thinkingDetected: boolean;
   routeSuggestion?: string;
   reasonSummary?: string;
   commitStatement?: string;
@@ -93,6 +95,7 @@ type OrchestratorComparison = {
 
 export type ModelComparisonReport = {
   generatedAt: string;
+  surface: "direct-local-ollama-structured-contract";
   ollamaBaseUrl: string;
   qAlias: {
     alias: string;
@@ -272,19 +275,23 @@ async function runModelComparisonTasks(
         governancePressure: task.governancePressure,
         context: task.context
       });
-      const structuredFieldCount = [
-        result.execution.routeSuggestion,
-        result.execution.reasonSummary,
-        result.execution.commitStatement
-      ].filter(Boolean).length;
+      const structuredFieldCount =
+        result.structuredFieldCount ||
+        [
+          result.execution.routeSuggestion,
+          result.execution.reasonSummary,
+          result.execution.commitStatement
+        ].filter(Boolean).length;
       tasks.push({
         taskId: task.id,
         label: task.label,
         latencyMs: result.execution.latencyMs,
         wallLatencyMs: Number((performance.now() - started).toFixed(2)),
         structuredFieldCount,
-        parseSuccess: structuredFieldCount === 3,
+        parseSuccess: structuredFieldCount === 3 && result.execution.status === "completed",
         status: result.execution.status,
+        failureClass: result.failureClass,
+        thinkingDetected: result.thinkingDetected,
         routeSuggestion: result.execution.routeSuggestion,
         reasonSummary: result.execution.reasonSummary,
         commitStatement: result.execution.commitStatement,
@@ -299,6 +306,7 @@ async function runModelComparisonTasks(
         structuredFieldCount: 0,
         parseSuccess: false,
         status: "failed",
+        thinkingDetected: false,
         responsePreview: "",
         error: error instanceof Error ? error.message : "model comparison failed"
       });
@@ -384,9 +392,11 @@ function renderMarkdown(report: ModelComparisonReport): string {
   const lines = [
     "# Model and Orchestrator Comparison",
     "",
-    "This page is generated from live local Ollama runs plus the latest published orchestrator benchmark packs that exist on this machine.",
+    "This page is generated from direct local Ollama structured-contract runs plus the latest published orchestrator benchmark packs that exist on this machine.",
+    "It does not measure the served Q gateway edge. It measures the underlying local model path that the gateway depends on.",
     "",
     `- Generated: ${report.generatedAt}`,
+    `- Surface: ${report.surface}`,
     `- Ollama endpoint: ${report.ollamaBaseUrl}`,
     `- Q alias: ${report.qAlias.alias.toUpperCase()} -> ${report.qAlias.actualModel}`,
     `- Hardware: ${JSON.stringify(report.hardwareContext)}`,
@@ -410,6 +420,8 @@ function renderMarkdown(report: ModelComparisonReport): string {
       lines.push(`- Model latency: \`${task.latencyMs}\` ms`);
       lines.push(`- Wall latency: \`${task.wallLatencyMs}\` ms`);
       lines.push(`- Structured fields: \`${task.structuredFieldCount}/3\``);
+      lines.push(`- Thinking detected: \`${task.thinkingDetected}\``);
+      lines.push(`- Failure class: \`${task.failureClass ?? "none"}\``);
       if (task.error) {
         lines.push(`- Error: \`${task.error}\``);
       } else {
@@ -484,6 +496,7 @@ export async function runModelComparison(): Promise<ModelComparisonReport> {
 
   const report: ModelComparisonReport = {
     generatedAt,
+    surface: "direct-local-ollama-structured-contract",
     ollamaBaseUrl: DEFAULT_OLLAMA_URL,
     qAlias: {
       alias: resolveQAliasSpecification().displayName,
@@ -494,14 +507,14 @@ export async function runModelComparison(): Promise<ModelComparisonReport> {
     models,
     orchestrators: await loadOrchestratorComparison(),
     output: {
-      jsonPath: path.join(WIKI_ROOT, "Model-Benchmark-Comparison.json"),
-      markdownPath: path.join(WIKI_ROOT, "Model-Benchmark-Comparison.md")
+      jsonPath: path.join("docs", "wiki", "Model-Benchmark-Comparison.json"),
+      markdownPath: path.join("docs", "wiki", "Model-Benchmark-Comparison.md")
     }
   };
 
   await mkdir(WIKI_ROOT, { recursive: true });
-  await writeFile(report.output.jsonPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
-  await writeFile(report.output.markdownPath, `${renderMarkdown(report)}\n`, "utf8");
+  await writeFile(path.join(REPO_ROOT, report.output.jsonPath), `${JSON.stringify(report, null, 2)}\n`, "utf8");
+  await writeFile(path.join(REPO_ROOT, report.output.markdownPath), `${renderMarkdown(report)}\n`, "utf8");
 
   return report;
 }

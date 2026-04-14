@@ -1,20 +1,52 @@
 # Q API Hosting
 
-`Q` is the truthful alias for the current Gemma 4 base model in the Immaculate
-harness. The secure serving surface is a narrow route on the harness, not a
-separate public control plane.
+`Q` now has two truthful serving surfaces:
 
-## Routes
+1. the narrow private harness route
+2. the dedicated Q gateway server
+
+They do different jobs and should not be described as the same thing.
+
+## Private Harness Q Edge
+
+Routes on the harness process:
 
 - `GET /api/q/info`
 - `POST /api/q/run`
 
-`/api/q/info` can be left readable when the Q edge is enabled.
-`/api/q/run` stays header-authenticated, bounded, and rate-limited.
+This edge still matters for governed internal use.
+It lives inside the private harness, still benefits from the existing
+`q-public` governance policy, and should stay private unless you have a specific
+reason to expose it.
+
+The harness edge accepts Q API keys and, on a private trusted node, can still
+coexist with the broader harness operator surface.
+
+## Dedicated Q Gateway
+
+The repo now also contains a separate dedicated gateway server:
+
+- `GET /health`
+- `GET /api/q/info`
+- `GET /v1/models`
+- `POST /v1/chat/completions`
+
+This gateway is the safer deployment surface for external Q users because it:
+
+- accepts only Q API keys
+- does not accept the global harness admin key
+- exposes only four routes
+- keeps federation, actuation, benchmarks, and operator APIs off the public edge
+- uses the same hashed Q key store and per-key rate/concurrency limits
+- can trip open on repeated primary-model failures and use an explicit fallback model as optional continuity without lying about the provider that answered
+
+Use the gateway when you want a bounded API surface.
+Use the harness route when you need the governed internal Q edge inside the full
+control plane.
 
 ## Auth and Key Management
 
-The Q edge accepts:
+Both surfaces accept:
 
 - `Authorization: Bearer <q-api-key>`
 - `X-API-Key: <q-api-key>`
@@ -39,12 +71,12 @@ Revoke a key:
 npm run q:keys -- revoke --key-id <key-id>
 ```
 
-Keys are stored hashed with `scrypt` in the local Q key registry. The repo does
-not expose a browser-based key-management surface.
+Keys are stored hashed with `scrypt`.
+There is still no browser-based key management surface in the repo.
 
 ## Rate Limits
 
-Default Q edge settings:
+Default shared Q key policy fields:
 
 - `IMMACULATE_Q_API_DEFAULT_RPM`
 - `IMMACULATE_Q_API_DEFAULT_BURST`
@@ -52,42 +84,79 @@ Default Q edge settings:
 
 Per-key overrides are stored with the key record at creation time.
 
-## Live Validation
+## Live Gateway Validation
 
-Fresh loopback validation on `2026-04-14` proved the route behavior:
+Fresh loopback validation on `2026-04-14` against the dedicated gateway at
+`http://127.0.0.1:8900` proved:
 
-- `GET /api/q/info` returned `200`
-- unauthenticated `POST /api/q/run` returned `401`
-- keyed `POST /api/q/run` reached the execution path and returned a truthful `503`
-  when Ollama returned no completion
-- a second concurrent keyed request returned `429 concurrency_limited`
+- `GET /health` returned `200`
+- unauthenticated `POST /v1/chat/completions` returned `401`
+- authenticated `GET /api/q/info` returned `200`
+- authenticated `GET /v1/models` returned `200`
+- authenticated `POST /v1/chat/completions` returned `200`
+- the served response was sanitized to final-answer content:
+  `Gateway reports healthy status.`
+- the concurrency check returned `429 concurrency_limited`
+- measured gateway overhead above upstream latency was about `99.92 ms`
 
-That means the current hard boundary is the model backend, not the auth or
-rate-limit plane.
+Tracked evidence lives in:
+
+- [[Q-Gateway-Validation]]
+
+## Fallback Control Loop
+
+The dedicated gateway now has a second live control loop for upstream failure:
+
+- the primary Q model can accumulate consecutive failures
+- once the configured threshold is reached, the primary circuit opens
+- while the circuit is open, requests stop hammering the dead primary
+- if a fallback model is configured, the gateway can serve through that model as
+  optional continuity and
+  exposes the truth in headers and response metadata
+
+Fresh fallback smoke on `2026-04-14` against `http://127.0.0.1:8898` proved:
+
+- the intentionally invalid primary model surfaced as `modelReady: false`
+- the configured fallback `gemma3:4b` surfaced as `fallbackReady: true`
+- the first keyed request returned `200` through the fallback with
+  `x-q-primary-failure-class: http_error`
+- the second keyed request returned `200` through the fallback again with
+  `x-q-primary-failure-class: circuit_open`
+
+Tracked evidence lives in:
+
+- [[Q-Gateway-Fallback-Smoke]]
 
 ## OCI Private Hosting
 
-The OCI private bundle can carry the Q edge when you explicitly enable it in:
+The dedicated OCI deployment bundle for the gateway now lives under:
 
-- `deploy/oci-private/env/immaculate-harness.env.example`
+- `deploy/oci-q-gateway/`
 
-Recommended settings:
+Use it when you need:
 
-```ini
-IMMACULATE_Q_API_ENABLED=true
-IMMACULATE_Q_API_KEYS_PATH=/var/lib/immaculate/runtime/q-api-keys.json
-IMMACULATE_Q_API_DEFAULT_RPM=60
-IMMACULATE_Q_API_DEFAULT_BURST=60
-IMMACULATE_Q_API_DEFAULT_MAX_CONCURRENT=2
-```
+- a private-subnet Q-only API surface
+- Podman-based isolation
+- no public ingress by default
+- the dedicated gateway server instead of the full harness process
 
-Keep the Q key store under `/var/lib/immaculate/runtime` so it remains inside
-the mounted writable path already hardened by the private OCI bundle.
+Architecture details:
+
+- [[Q-Gateway-Architecture]]
+
+The older harness bundle under `deploy/oci-private/` still exists and still
+serves the full private harness.
 
 ## Truth Boundary
 
-- This is not yet a separate internet-facing gateway.
-- It is the narrow Q inference edge on the same private harness process and
-  port.
+- The dedicated Q gateway is real and lives in `apps/harness/src/q-gateway.ts`.
+- The harness Q edge is also still real and still private.
+- The gateway is private-OCI-first, not internet-public by default.
+- The gateway can now serve through a configured fallback model when the direct
+  Q upstream fails, but it keeps that fact explicit in headers and response
+  metadata.
 - No real OCI instance was launched from this pass.
-- No completed cloud fine-tune run is claimed from this pass.
+- No completed cloud fine-tune run for `Q` is claimed from this pass.
+- Direct `Q` is now green on the structured route/reason/commit readiness gate
+  on this machine, and the fallback lane remains optional continuity rather
+  than the primary story.

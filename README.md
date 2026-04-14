@@ -81,8 +81,20 @@ For the `Q` fine-tune path specifically:
 
 - alias/install guide: [docs/wiki/Q-Alias-and-Banner.md](docs/wiki/Q-Alias-and-Banner.md)
 - secure API and hosting guide: [docs/wiki/Q-API-Hosting.md](docs/wiki/Q-API-Hosting.md)
+- gateway architecture: [docs/wiki/Q-Gateway-Architecture.md](docs/wiki/Q-Gateway-Architecture.md)
+- direct readiness gate: [docs/wiki/Q-Readiness-Gate.md](docs/wiki/Q-Readiness-Gate.md)
+- gateway fallback smoke: [docs/wiki/Q-Gateway-Fallback-Smoke.md](docs/wiki/Q-Gateway-Fallback-Smoke.md)
+- failure corpus: [docs/wiki/Q-Failure-Corpus.md](docs/wiki/Q-Failure-Corpus.md)
 - model/training manifest: [fixtures/training/q-defsec-curation.example.json](fixtures/training/q-defsec-curation.example.json)
 - training bundle: [training/q/README.md](training/q/README.md)
+
+As of `2026-04-14`, the direct `Q` structured-contract lane is green on this machine:
+`Q (gemma4:e4b)` is `4/4` on both
+[docs/wiki/Model-Benchmark-Comparison.md](docs/wiki/Model-Benchmark-Comparison.md) and
+[docs/wiki/BridgeBench.md](docs/wiki/BridgeBench.md), and the tracked
+[docs/wiki/Q-Readiness-Gate.md](docs/wiki/Q-Readiness-Gate.md) is `ready: true`.
+The fallback smoke remains in the repo as an optional continuity proof, not the
+primary explanation for why `Q` works.
 
 ## Security Monitoring
 
@@ -112,6 +124,7 @@ If you explicitly enable the narrow Q inference edge on that private node, also
 use:
 
 - [docs/wiki/Q-API-Hosting.md](docs/wiki/Q-API-Hosting.md)
+- [docs/wiki/Q-Gateway-Architecture.md](docs/wiki/Q-Gateway-Architecture.md)
 
 ## Run
 
@@ -136,6 +149,17 @@ For the narrow Q inference edge:
 - inspect the edge with `GET /api/q/info`
 - invoke the edge with `POST /api/q/run`
 - keep it on the private harness unless you add a separate hardened gateway layer
+
+For the dedicated Q gateway:
+
+- start it with `npm run q:gateway`
+- validate it with `npm run q:gateway:validate -- --gateway-url=http://127.0.0.1:8897`
+- optionally prove the fallback lane with `npm run q:gateway:fallback:smoke`
+- it serves `GET /health`, `GET /api/q/info`, `GET /v1/models`, and `POST /v1/chat/completions`
+- it accepts only Q API keys, not the harness admin key
+- the latest loopback validation is green on auth, model listing, served completion, and `429` concurrency rejection
+- it can also trip open on repeated primary-model failures and serve through a configured fallback model without hiding which provider actually answered
+- it is designed for private OCI deployment, not public internet exposure by default
 
 ## Benchmark
 
@@ -213,6 +237,18 @@ npm run q:keys -- list
 npm run q:keys -- create --label q-live-verify
 ```
 
+Run the direct-Q readiness gate:
+
+```powershell
+npm run q:release-gate
+```
+
+Refresh the tracked Q failure-only corpus:
+
+```powershell
+npm run q:failure-corpus
+```
+
 Create or refresh the local Ollama alias for `Q`:
 
 ```powershell
@@ -246,6 +282,11 @@ Current benchmark publication surfaces:
 - tracked repo/wiki model comparison: [docs/wiki/Model-Benchmark-Comparison.md](docs/wiki/Model-Benchmark-Comparison.md)
 - tracked repo/wiki BridgeBench surface: [docs/wiki/BridgeBench.md](docs/wiki/BridgeBench.md)
 - tracked repo/wiki Q API and hosting guide: [docs/wiki/Q-API-Hosting.md](docs/wiki/Q-API-Hosting.md)
+- tracked repo/wiki Q gateway validation: [docs/wiki/Q-Gateway-Validation.md](docs/wiki/Q-Gateway-Validation.md)
+- tracked repo/wiki Q gateway fallback smoke: [docs/wiki/Q-Gateway-Fallback-Smoke.md](docs/wiki/Q-Gateway-Fallback-Smoke.md)
+- tracked repo/wiki Q gateway architecture: [docs/wiki/Q-Gateway-Architecture.md](docs/wiki/Q-Gateway-Architecture.md)
+- tracked repo/wiki Q readiness gate: [docs/wiki/Q-Readiness-Gate.md](docs/wiki/Q-Readiness-Gate.md)
+- tracked repo/wiki Q failure-only corpus: [docs/wiki/Q-Failure-Corpus.md](docs/wiki/Q-Failure-Corpus.md)
 - latest run URL for every published pack lives in the tracked wiki status/export pages above
 
 Optional environment variables:

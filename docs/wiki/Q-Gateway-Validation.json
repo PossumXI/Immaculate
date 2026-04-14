@@ -1,0 +1,211 @@
+{
+  "generatedAt": "2026-04-14T11:48:11.906Z",
+  "gatewayUrl": "http://127.0.0.1:8900",
+  "alias": "Q",
+  "providerModel": "Q (gemma4:e4b)",
+  "hardwareContext": {
+    "host": "knightly",
+    "platform": "win32",
+    "arch": "x64",
+    "osVersion": "Windows 11 Pro",
+    "cpuModel": "AMD Ryzen 7 7735HS with Radeon Graphics",
+    "cpuCount": 16,
+    "memoryGiB": 23.29,
+    "nodeVersion": "v22.13.1"
+  },
+  "checks": {
+    "health": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "gateway": "q",
+        "alias": "Q",
+        "model": "Q (gemma4:e4b)",
+        "modelReady": true,
+        "fallbackReady": false,
+        "circuit": {
+          "state": "closed",
+          "consecutiveFailures": 0
+        },
+        "authMode": "api-key",
+        "host": "127.0.0.1",
+        "port": 8900
+      },
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "207",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Tue, 14 Apr 2026 11:48:08 GMT",
+        "keep-alive": "timeout=72",
+        "vary": "Origin"
+      },
+      "wallLatencyMs": 43.47
+    },
+    "unauthorizedChat": {
+      "status": 401,
+      "body": {
+        "error": "unauthorized",
+        "message": "Q gateway requires Authorization: Bearer or X-API-Key."
+      },
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "91",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Tue, 14 Apr 2026 11:48:08 GMT",
+        "keep-alive": "timeout=72",
+        "vary": "Origin"
+      },
+      "wallLatencyMs": 8.75
+    },
+    "info": {
+      "status": 200,
+      "body": {
+        "enabled": true,
+        "alias": "Q",
+        "model": "Q (gemma4:e4b)",
+        "circuit": {
+          "state": "closed",
+          "consecutiveFailures": 0
+        },
+        "authMode": "api-key",
+        "keyId": "qkey-mnyk56n1-a3544f35",
+        "rateLimit": {
+          "requestsPerMinute": 30,
+          "burst": 30,
+          "maxConcurrentRequests": 1
+        },
+        "routes": [
+          "/health",
+          "/api/q/info",
+          "/v1/models",
+          "/v1/chat/completions"
+        ]
+      },
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "305",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Tue, 14 Apr 2026 11:48:08 GMT",
+        "keep-alive": "timeout=72",
+        "vary": "Origin",
+        "x-ratelimit-limit": "30",
+        "x-ratelimit-remaining": "29",
+        "x-ratelimit-reset-ms": "0"
+      },
+      "wallLatencyMs": 88.73
+    },
+    "models": {
+      "status": 200,
+      "body": {
+        "object": "list",
+        "data": [
+          {
+            "id": "Q",
+            "object": "model",
+            "owned_by": "immaculate",
+            "metadata": {
+              "providerModel": "Q (gemma4:e4b)"
+            }
+          }
+        ]
+      },
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "124",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Tue, 14 Apr 2026 11:48:08 GMT",
+        "keep-alive": "timeout=72",
+        "vary": "Origin",
+        "x-ratelimit-limit": "30",
+        "x-ratelimit-remaining": "28",
+        "x-ratelimit-reset-ms": "0"
+      },
+      "wallLatencyMs": 93.59
+    },
+    "authorizedChat": {
+      "status": 200,
+      "body": {
+        "id": "chatcmpl-mnyk57sw",
+        "object": "chat.completion",
+        "created": 1776167289,
+        "model": "Q",
+        "providerModel": "Q (gemma4:e4b)",
+        "primaryModel": "Q (gemma4:e4b)",
+        "fallbackUsed": false,
+        "circuitState": "closed",
+        "latencyMs": 1095.24,
+        "thinkingDetected": false,
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "Gateway reports healthy status."
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0
+        }
+      },
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "430",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Tue, 14 Apr 2026 11:48:09 GMT",
+        "keep-alive": "timeout=72",
+        "vary": "Origin",
+        "x-provider-model": "Q (gemma4:e4b)",
+        "x-q-alias": "Q",
+        "x-q-circuit-state": "closed",
+        "x-q-fallback-used": "false",
+        "x-q-primary-latency-ms": "1095.24",
+        "x-q-primary-model": "Q (gemma4:e4b)",
+        "x-ratelimit-limit": "30",
+        "x-ratelimit-remaining": "27",
+        "x-ratelimit-reset-ms": "0",
+        "x-upstream-latency-ms": "1095.24"
+      },
+      "wallLatencyMs": 1195.16
+    },
+    "concurrentRejection": {
+      "status": 429,
+      "body": {
+        "error": "concurrency_limited",
+        "message": "Q gateway concurrency limit exceeded.",
+        "retryAfterMs": 1000
+      },
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "101",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Tue, 14 Apr 2026 11:48:09 GMT",
+        "keep-alive": "timeout=72",
+        "retry-after": "1",
+        "vary": "Origin",
+        "x-ratelimit-limit": "30",
+        "x-ratelimit-remaining": "26",
+        "x-ratelimit-reset-ms": "1000"
+      },
+      "wallLatencyMs": 92.63
+    }
+  },
+  "directOllama": {
+    "latencyMs": 1026.41,
+    "wallLatencyMs": 1037.22,
+    "responsePreview": "Gateway reports healthy."
+  },
+  "comparison": {
+    "gatewayEndToEndLatencyMs": 1195.16,
+    "gatewayUpstreamLatencyMs": 1095.24,
+    "gatewayAddedLatencyMs": 99.92,
+    "directOllamaLatencyMs": 1026.41
+  },
+  "output": {
+    "jsonPath": "docs\\wiki\\Q-Gateway-Validation.json",
+    "markdownPath": "docs\\wiki\\Q-Gateway-Validation.md"
+  }
+}
