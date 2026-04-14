@@ -19,6 +19,35 @@ For each breakthrough, record:
 
 ## Current Entries
 
+### 2026-04-14
+
+#### Q gained a real bounded serving edge, BridgeBench became a tracked surface, and the training path got more truthful
+
+What changed:
+- the harness now exposes a narrow `Q` inference surface at `/api/q/info` and `/api/q/run` instead of forcing every Q call through the full private operator plane
+- the Q route now runs under a dedicated `q-public` governance policy with consent scope `intelligence:q-public`, hashed per-key auth, and per-key rate/concurrency control
+- the repo now carries a first tracked `BridgeBench` surface that publishes both the live bridge-runtime assertions and the current ugly local-model truth instead of hiding model failures behind the benchmark pass
+- the OCI private bundle now carries the Q edge env settings and key-store path needed to host that narrow route on a private Oracle node without weakening the existing harness boundary
+- the `Q` training path now has a cleaner run-id-shaped dataset flow, BridgeBench seed normalization, and a dry-run validator for the Unsloth entrypoint
+
+Why it matters:
+- this closes a real control-plane gap: Q can now be exposed as a bounded inference edge without pretending the entire harness should become public
+- the missed systems pattern was that public-ish inference safety starts with route narrowing and rate isolation, not with a marketing page or a reverse proxy
+- it also keeps the training path honest by validating the shaped text corpus before a GPU run starts, instead of letting a raw curated corpus sneak into a trainer that expects `text`
+
+Evidence:
+- `GET /api/q/info` on `127.0.0.1:8896` returned `200`
+- unauthenticated `POST /api/q/run` returned `401`
+- keyed `POST /api/q/run` reached the model execution path and returned a truthful `503` with `No response returned by Ollama.` instead of failing in the auth/governance layer
+- a second concurrent keyed request returned `429 concurrency_limited` while the first request was still in flight
+- `npm run bridgebench` regenerated `docs/wiki/BridgeBench.md` and `docs/wiki/BridgeBench.json` with `0` failed bridge-runtime assertions and a still-failing local model lane
+- `python -m py_compile training/q/train_q_lora_unsloth.py training/q/build_q_mixture.py` passed after the training-path cleanup
+
+What this unlocks next:
+- a separate hardened public gateway in front of Q, if and only if the private harness edge keeps proving stable under real load
+- structured-output release gates for Q that can fail a model backend without confusing that failure with a broken serving edge
+- a real cloud fine-tune run for Q using the repo-owned dataset flow rather than an ad hoc one-off training job
+
 ### 2026-04-13
 
 #### Q became a truthful alias, the local comparison surface went live, and the latest regression stayed published

@@ -6,6 +6,8 @@ internet.
 
 It is intentionally scoped to the harness only.
 It does not modify benchmark logic, comparison packs, or model-training code.
+It can carry the narrow `Q` inference edge, but only when that edge is
+explicitly enabled.
 
 ## Security Shape
 
@@ -105,6 +107,32 @@ OCI_IMMACULATE_API_KEY_SECRET_OCID=ocid1.vaultsecret.oc1..example
 
 If you use OCI Vault, grant the instance dynamic group permission to read only
 the specific secrets it needs.
+
+## Q API on OCI
+
+If you want the same private harness node to expose the bounded `Q` inference
+edge, wire these env settings in `/etc/immaculate/immaculate-harness.env`:
+
+```ini
+IMMACULATE_Q_API_ENABLED=true
+IMMACULATE_Q_API_KEYS_PATH=/var/lib/immaculate/runtime/q-api-keys.json
+IMMACULATE_Q_API_DEFAULT_RPM=60
+IMMACULATE_Q_API_DEFAULT_BURST=60
+IMMACULATE_Q_API_DEFAULT_MAX_CONCURRENT=2
+```
+
+Keep the key store inside `/var/lib/immaculate/runtime` unless you are also
+expanding the writable-path hardening model.
+
+Create or rotate keys from the repo on the host:
+
+```bash
+cd /opt/immaculate/src
+npm run q:keys -- create --label oci-q
+```
+
+This remains a private inference path on the same harness process. It is not a
+claim of a separate public Q gateway.
 
 ## Operational Hardening
 

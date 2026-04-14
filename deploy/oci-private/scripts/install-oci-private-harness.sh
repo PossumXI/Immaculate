@@ -122,6 +122,7 @@ OCI private deployment bundle installed.
 Next steps:
   1. Review ${ENV_TARGET}
   2. Place API and federation secrets under /etc/immaculate/secrets or map OCI Vault OCIDs
-  3. Start the service with: sudo systemctl start ${SERVICE_NAME}
-  4. Verify from a private client with: curl http://${IMMACULATE_PRIVATE_BIND_IP:-10.0.1.10}:${IMMACULATE_PUBLISHED_PORT:-8787}/api/health
+  3. If enabling the narrow Q edge, keep IMMACULATE_Q_API_KEYS_PATH under /var/lib/immaculate/runtime and create keys with: npm run q:keys -- create --label oci-q
+  4. Start the service with: sudo systemctl start ${SERVICE_NAME}
+  5. Verify from a private client with: curl http://${IMMACULATE_PRIVATE_BIND_IP:-10.0.1.10}:${IMMACULATE_PUBLISHED_PORT:-8787}/api/health
 EOF

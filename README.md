@@ -80,6 +80,7 @@ The default generated output root is `.training-output/`, which is intentionally
 For the `Q` fine-tune path specifically:
 
 - alias/install guide: [docs/wiki/Q-Alias-and-Banner.md](docs/wiki/Q-Alias-and-Banner.md)
+- secure API and hosting guide: [docs/wiki/Q-API-Hosting.md](docs/wiki/Q-API-Hosting.md)
 - model/training manifest: [fixtures/training/q-defsec-curation.example.json](fixtures/training/q-defsec-curation.example.json)
 - training bundle: [training/q/README.md](training/q/README.md)
 
@@ -107,6 +108,11 @@ Deployment guide:
 
 - [docs/wiki/OCI-Private-Deployment.md](docs/wiki/OCI-Private-Deployment.md)
 
+If you explicitly enable the narrow Q inference edge on that private node, also
+use:
+
+- [docs/wiki/Q-API-Hosting.md](docs/wiki/Q-API-Hosting.md)
+
 ## Run
 
 ```powershell
@@ -122,6 +128,14 @@ For browser and TUI operator auth:
 
 - Dashboard: `NEXT_PUBLIC_IMMACULATE_API_KEY`
 - TUI / harness tooling: `IMMACULATE_API_KEY`
+
+For the narrow Q inference edge:
+
+- enable with `IMMACULATE_Q_API_ENABLED=true`
+- manage keys with `npm run q:keys -- create --label <name>`
+- inspect the edge with `GET /api/q/info`
+- invoke the edge with `POST /api/q/run`
+- keep it on the private harness unless you add a separate hardened gateway layer
 
 ## Benchmark
 
@@ -186,6 +200,19 @@ Run the live local model comparison across `Q` and the other installed Ollama mo
 npm run compare:models
 ```
 
+Run the live BridgeBench pass:
+
+```powershell
+npm run bridgebench
+```
+
+Manage Q API keys:
+
+```powershell
+npm run q:keys -- list
+npm run q:keys -- create --label q-live-verify
+```
+
 Create or refresh the local Ollama alias for `Q`:
 
 ```powershell
@@ -217,6 +244,8 @@ Current benchmark publication surfaces:
 - tracked repo/wiki W&B export: [docs/wiki/Benchmark-Wandb-Export.md](docs/wiki/Benchmark-Wandb-Export.md)
 - tracked repo/wiki live validation: [docs/wiki/Live-Validation-2026-04-13.md](docs/wiki/Live-Validation-2026-04-13.md)
 - tracked repo/wiki model comparison: [docs/wiki/Model-Benchmark-Comparison.md](docs/wiki/Model-Benchmark-Comparison.md)
+- tracked repo/wiki BridgeBench surface: [docs/wiki/BridgeBench.md](docs/wiki/BridgeBench.md)
+- tracked repo/wiki Q API and hosting guide: [docs/wiki/Q-API-Hosting.md](docs/wiki/Q-API-Hosting.md)
 - latest run URL for every published pack lives in the tracked wiki status/export pages above
 
 Optional environment variables:

@@ -21,11 +21,23 @@ npm run training-data:curate -- fixtures/training/q-defsec-curation.example.json
 2. Build a plain-text training dataset from the curated run:
 
 ```powershell
-python training/q/build_q_text_dataset.py --input .training-output/training-data/runs/<run-id>/curated.jsonl --output .training-output/q/q-train.jsonl
+python training/q/build_q_text_dataset.py --input .training-output/training-data/runs/<run-id>/curated-records.jsonl --output .training-output/q/q-train-<run-id>.jsonl
 ```
 
-3. Copy `q_lora_config.example.json` and adjust paths.
-4. Launch `train_q_lora_unsloth.py` on a GPU instance with the required Python packages installed.
+3. Blend the governed corpus with the tracked BridgeBench seed set:
+
+```powershell
+python training/q/build_q_mixture.py --base .training-output/q/q-train-<run-id>.jsonl --supplemental training/q/bridgebench_seed.json --output .training-output/q/q-mix-<run-id>.jsonl
+```
+
+4. Copy `q_lora_config.example.json` and adjust paths to the concrete run-id-specific files.
+5. Validate the config and dataset shape before a GPU run:
+
+```powershell
+python training/q/train_q_lora_unsloth.py --config training/q/q_lora_config.example.json --dry-run
+```
+
+6. Launch `train_q_lora_unsloth.py` on a GPU instance with the required Python packages installed.
 
 ## Truth Boundary
 
@@ -44,6 +56,9 @@ defensive-security fine-tuning plan that this repo can enforce directly today:
 - provenance chain hashes on curated outputs
 - no deliberate inclusion of proprietary-LLM-generated outputs in the tracked
   example corpus path
+- a tracked BridgeBench seed set so the next `Q` LoRA run gets higher-signal
+  route/reason/commit examples around bridge safety, rate limiting, and
+  defensive control-plane behavior
 - a QLoRA-style launch surface for `Q` through the Unsloth training entrypoint
 
 The repo does **not** currently claim that every legal, export-control, or

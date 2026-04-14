@@ -88,6 +88,17 @@ import {
   deriveGovernancePressure,
   planAdaptiveRoute
 } from "./routing.js";
+import {
+  createQApiKeyRegistry,
+  normalizeQApiRateLimitPolicy,
+  type QApiKeyMetadata,
+  type QApiRateLimitPolicy
+} from "./q-api-auth.js";
+import { createQRateLimiter } from "./q-rate-limit.js";
+import {
+  getQModelAlias,
+  truthfulModelLabel
+} from "./q-model.js";
 import { emitHarnessStartupBanner } from "./startup-banner.js";
 import {
   createIntelligenceWorkerRegistry,
@@ -209,6 +220,28 @@ const HARNESS_PORT = Number(process.env.IMMACULATE_HARNESS_PORT ?? 8787);
 const HARNESS_HOST = process.env.IMMACULATE_HARNESS_HOST ?? "127.0.0.1";
 const tickIntervalMs = Number(process.env.IMMACULATE_TICK_MS ?? 180);
 const API_KEY = process.env.IMMACULATE_API_KEY;
+const Q_API_ENABLED = /^(1|true|yes|on)$/i.test(process.env.IMMACULATE_Q_API_ENABLED ?? "false");
+const DEFAULT_Q_API_RATE_LIMIT = normalizeQApiRateLimitPolicy(
+  {
+    requestsPerMinute:
+      typeof process.env.IMMACULATE_Q_API_DEFAULT_RPM === "string"
+        ? Number(process.env.IMMACULATE_Q_API_DEFAULT_RPM)
+        : undefined,
+    burst:
+      typeof process.env.IMMACULATE_Q_API_DEFAULT_BURST === "string"
+        ? Number(process.env.IMMACULATE_Q_API_DEFAULT_BURST)
+        : undefined,
+    maxConcurrentRequests:
+      typeof process.env.IMMACULATE_Q_API_DEFAULT_MAX_CONCURRENT === "string"
+        ? Number(process.env.IMMACULATE_Q_API_DEFAULT_MAX_CONCURRENT)
+        : undefined
+  },
+  {
+    requestsPerMinute: 60,
+    burst: 60,
+    maxConcurrentRequests: 2
+  }
+);
 const FEDERATION_SHARED_SECRET = resolveFederationSecret();
 const LOCAL_WORKER_ID_PREFIX =
   process.env.IMMACULATE_WORKER_ID ??
@@ -257,6 +290,13 @@ const FEDERATION_ENVELOPE_MAX_CLOCK_SKEW_MS = Math.max(
   2_000,
   Number(process.env.IMMACULATE_FEDERATION_ENVELOPE_MAX_CLOCK_SKEW_MS ?? 5_000) || 5_000
 );
+const qApiKeyRegistry = await createQApiKeyRegistry({
+  rootDir: persistence.getStatus().rootDir,
+  storePath: process.env.IMMACULATE_Q_API_KEYS_PATH,
+  defaultRateLimit: DEFAULT_Q_API_RATE_LIMIT
+});
+const qApiRateLimiter = createQRateLimiter();
+const qApiRequestContexts = new WeakMap<object, QApiRequestContext>();
 
 setInterval(() => {
   void nodeRegistry.ensureLocalNode().catch((error) => {
@@ -342,6 +382,13 @@ type CognitivePassResult = {
   response: string;
   snapshot: PhaseSnapshot;
 };
+
+type QApiRequestContext = {
+  principalKind: "loopback" | "admin" | "key";
+  subject: string;
+  key?: QApiKeyMetadata;
+  rateLimit: QApiRateLimitPolicy;
+};
 type FederatedRetryRunOptions = {
   assignment?: ExecutionWorkerAssignment;
   repairGroupId?: string;
@@ -405,6 +452,33 @@ function getHeaderValue(value?: string | string[]): string | undefined {
   }
 
   return typeof value === "string" && value.trim().length > 0 ? value : undefined;
+}
+
+function requestPath(urlValue?: string): string {
+  return urlValue?.split("?")[0] ?? "";
+}
+
+function isQApiRoute(urlValue?: string): boolean {
+  const pathname = requestPath(urlValue);
+  return pathname === "/api/q/info" || pathname === "/api/q/run";
+}
+
+function isPublicQInfoRoute(urlValue?: string): boolean {
+  return requestPath(urlValue) === "/api/q/info";
+}
+
+function extractAuthorizationToken(headers: Record<string, string | string[] | undefined>): string | undefined {
+  const explicitApiKey = getHeaderValue(headers["x-api-key"]);
+  if (explicitApiKey) {
+    return explicitApiKey.trim();
+  }
+
+  const authHeader = getHeaderValue(headers.authorization);
+  if (typeof authHeader === "string" && authHeader.startsWith("Bearer ")) {
+    return authHeader.slice("Bearer ".length).trim();
+  }
+
+  return undefined;
 }
 
 function getGovernancePurposeValues(request: {
@@ -1556,6 +1630,38 @@ function authorizeGovernedResourceRead(
   return true;
 }
 
+function getQPublicGovernanceBinding(request: FastifyRequest): GovernanceBinding {
+  const binding = getGovernanceBinding("cognitive-execution", "/api/q/run", request, {
+    policyIdOverride: "q-public"
+  });
+  return {
+    ...binding,
+    policyId: binding.policyId ?? "q-public",
+    purpose:
+      binding.purpose && binding.purpose.length > 0 ? binding.purpose : ["q-public-inference"],
+    consentScope: binding.consentScope ?? "intelligence:q-public"
+  };
+}
+
+function authorizeQPublicInference(
+  request: FastifyRequest,
+  reply: FastifyReply
+): GovernanceBinding | null {
+  const binding = getQPublicGovernanceBinding(request);
+  const preview = evaluateGovernance(binding);
+  const decision = governance.record(binding, preview.allowed, preview.reason);
+  if (decision.allowed) {
+    return binding;
+  }
+
+  reply.code(403).send({
+    error: "governance_denied",
+    message: `Governance denied: ${decision.reason}`,
+    decision
+  });
+  return null;
+}
+
 function evaluateGovernedSocketAction(
   action: GovernanceAction,
   route: string,
@@ -1592,26 +1698,127 @@ function isAuthorizedRequest(request: {
     return false;
   }
 
-  const authHeader = request.headers.authorization;
-  const bearerToken =
-    typeof authHeader === "string" && authHeader.startsWith("Bearer ")
-      ? authHeader.slice("Bearer ".length).trim()
-      : undefined;
-  const queryToken = extractQueryToken(request.raw.url);
-  return bearerToken === API_KEY || queryToken === API_KEY;
+  const token = extractAuthorizationToken(request.headers);
+  return token === API_KEY;
 }
 
-app.addHook("onRequest", (request, reply, done) => {
-  if (
-    request.method === "OPTIONS" ||
-    request.raw.url?.split("?")[0] === "/api/health"
-  ) {
-    done();
+function attachQApiRateLimitHeaders(
+  reply: FastifyReply,
+  outcome: {
+    limit: number;
+    remaining: number;
+    retryAfterMs: number;
+  }
+): void {
+  reply.header("x-ratelimit-limit", String(outcome.limit));
+  reply.header("x-ratelimit-remaining", String(outcome.remaining));
+  reply.header("x-ratelimit-reset-ms", String(outcome.retryAfterMs));
+  if (outcome.retryAfterMs > 0) {
+    reply.header("retry-after", String(Math.max(1, Math.ceil(outcome.retryAfterMs / 1000))));
+  }
+}
+
+async function authorizeQApiRequest(
+  request: FastifyRequest,
+  reply: FastifyReply
+): Promise<boolean> {
+  if (!Q_API_ENABLED) {
+    reply.code(404).send({
+      error: "q_api_disabled"
+    });
+    return false;
+  }
+
+  if (isPublicQInfoRoute(request.raw.url)) {
+    return true;
+  }
+
+  const token = extractAuthorizationToken(request.headers);
+  if (!token) {
+    reply.code(401).send({
+      error: "unauthorized",
+      message: "Q API requires Authorization: Bearer or X-API-Key."
+    });
+    return false;
+  }
+
+  let context: QApiRequestContext | null = null;
+  if (API_KEY && token === API_KEY) {
+    context = {
+      principalKind: isLoopbackAddress(request.ip) ? "loopback" : "admin",
+      subject: isLoopbackAddress(request.ip) ? `loopback:${request.ip}` : `admin:${request.ip}`,
+      rateLimit: {
+        requestsPerMinute: 600,
+        burst: 600,
+        maxConcurrentRequests: 8
+      }
+    };
+  } else {
+    const authenticated = await qApiKeyRegistry.authenticate(token, {
+      requiredScope: "invoke",
+      ip: request.ip
+    });
+    if (!authenticated) {
+      reply.code(401).send({
+        error: "unauthorized",
+        message: "Invalid Q API key."
+      });
+      return false;
+    }
+
+    context = {
+      principalKind: "key",
+      subject: `qkey:${authenticated.key.keyId}`,
+      key: authenticated.key,
+      rateLimit: authenticated.key.rateLimit
+    };
+  }
+
+  const grant = qApiRateLimiter.acquire(context.subject, context.rateLimit);
+  attachQApiRateLimitHeaders(reply, grant);
+  if (!grant.allowed) {
+    reply.code(429).send({
+      error: grant.reason,
+      message:
+        grant.reason === "concurrency_limited"
+          ? "Q API concurrency limit exceeded."
+          : "Q API rate limit exceeded.",
+      retryAfterMs: grant.retryAfterMs
+    });
+    return false;
+  }
+
+  const releaseOnce = (() => {
+    let released = false;
+    return () => {
+      if (released) {
+        return;
+      }
+      released = true;
+      grant.release();
+    };
+  })();
+  reply.raw.once("finish", releaseOnce);
+  reply.raw.once("close", releaseOnce);
+  qApiRequestContexts.set(request.raw, context);
+  return true;
+}
+
+function getQApiRequestContext(request: FastifyRequest): QApiRequestContext | undefined {
+  return qApiRequestContexts.get(request.raw);
+}
+
+app.addHook("onRequest", async (request, reply) => {
+  if (request.method === "OPTIONS" || requestPath(request.raw.url) === "/api/health") {
+    return;
+  }
+
+  if (isQApiRoute(request.raw.url)) {
+    await authorizeQApiRequest(request, reply);
     return;
   }
 
   if (isAuthorizedRequest(request)) {
-    done();
     return;
   }
 
@@ -3568,6 +3775,146 @@ app.get("/api/intelligence", async () => {
     recommendedLayerId: getPreferredLayer()?.id,
     visibility: "redacted"
   };
+});
+
+app.get("/api/q/info", async () => {
+  if (!Q_API_ENABLED) {
+    return {
+      enabled: false,
+      alias: getQModelAlias(),
+      authMode: "disabled"
+    };
+  }
+
+  return {
+    enabled: true,
+    alias: getQModelAlias(),
+    model: truthfulModelLabel(getQModelAlias()),
+    authMode: "api-key",
+    keyManagement: "cli-only",
+    rateLimit: DEFAULT_Q_API_RATE_LIMIT,
+    routes: ["/api/q/info", "/api/q/run"]
+  };
+});
+
+app.post("/api/q/run", async (request, reply) => {
+  if (!Q_API_ENABLED) {
+    reply.code(404);
+    return {
+      error: "q_api_disabled"
+    };
+  }
+
+  const qBinding = authorizeQPublicInference(request, reply);
+  if (!qBinding) {
+    return;
+  }
+
+  const body =
+    (request.body as {
+      prompt?: string;
+      context?: string;
+      role?: IntelligenceLayer["role"];
+      sessionId?: string;
+    } | undefined) ?? {};
+
+  const prompt = body.prompt?.trim() ?? "";
+  const context = body.context?.trim();
+  const role = body.role === "mid" || body.role === "reasoner" ? body.role : "reasoner";
+  const sessionId = body.sessionId?.trim() || `q-api-${Date.now().toString(36)}`;
+  const authContext = getQApiRequestContext(request);
+  const consentScope = qBinding.consentScope;
+
+  if (!prompt) {
+    reply.code(400);
+    return {
+      error: "missing_prompt"
+    };
+  }
+
+  if (prompt.length > 4000 || (context?.length ?? 0) > 8000) {
+    reply.code(400);
+    return {
+      error: "prompt_too_large",
+      message: "Q API prompt/context exceeded the bounded request size."
+    };
+  }
+
+  try {
+    const layer = await discoverPreferredOllamaLayer(role, LOCAL_OLLAMA_ENDPOINT, getQModelAlias());
+    if (!layer) {
+      reply.code(503);
+      return {
+        error: "q_model_unavailable",
+        message: "Q is not currently available from the configured Ollama endpoint."
+      };
+    }
+
+    const assignment = await reserveExecutionWorker({
+      layer,
+      requestedExecutionDecision: "allow_local",
+      target: "q-public",
+      fallbackLocalPoolSize: 1,
+      preferredDeviceAffinityTags: ["ollama", "llm", "q"]
+    });
+    const result = await executeCognitivePassWithRetry({
+      layer,
+      objective: prompt,
+      context,
+      consentScope,
+      sessionId,
+      assignment,
+      executionTopology: "sequential",
+      reservation: {
+        requestedExecutionDecision: "allow_local",
+        target: "q-public",
+        fallbackLocalPoolSize: 1,
+        preferredDeviceAffinityTags: ["ollama", "llm", "q"]
+      }
+    });
+
+    if (result.execution.status === "failed") {
+      reply.code(503);
+      return {
+        error: "q_execution_failed",
+        alias: getQModelAlias(),
+        model: truthfulModelLabel(result.execution.model),
+        executionId: result.execution.id,
+        latencyMs: result.execution.latencyMs,
+        message: result.execution.responsePreview
+      };
+    }
+
+    return {
+      accepted: true,
+      alias: getQModelAlias(),
+      model: truthfulModelLabel(result.execution.model),
+      role,
+      executionId: result.execution.id,
+      sessionId,
+      latencyMs: result.execution.latencyMs,
+      routeSuggestion: result.execution.routeSuggestion,
+      reasonSummary: result.execution.reasonSummary,
+      commitStatement: result.execution.commitStatement,
+      response: result.response,
+      principal:
+        authContext?.principalKind === "key"
+          ? {
+              kind: "key",
+              keyId: authContext.key?.keyId,
+              label: authContext.key?.label
+            }
+          : {
+              kind: authContext?.principalKind ?? "unknown"
+            }
+    };
+  } catch (error) {
+    reply.code(503);
+    return {
+      error: "q_execution_failed",
+      message: error instanceof Error ? error.message : "Unable to run Q."
+    };
+  }
 });
 
 app.get("/api/intelligence/executions", async (request, reply) => {

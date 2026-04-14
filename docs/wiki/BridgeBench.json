@@ -1,0 +1,299 @@
+{
+  "generatedAt": "2026-04-14T00:39:17.379Z",
+  "ollamaBaseUrl": "http://127.0.0.1:11434",
+  "qAlias": "Q",
+  "hardwareContext": {
+    "host": "knightly",
+    "platform": "win32",
+    "arch": "x64",
+    "osVersion": "Windows 11 Pro",
+    "cpuModel": "AMD Ryzen 7 7735HS with Radeon Graphics",
+    "cpuCount": 16,
+    "memoryGiB": 23.29,
+    "nodeVersion": "v22.13.1"
+  },
+  "models": [
+    {
+      "requestedModel": "Q",
+      "actualModel": "gemma4:e4b",
+      "truthfulLabel": "Q (gemma4:e4b)",
+      "vendor": "Google DeepMind",
+      "taskCount": 4,
+      "parseSuccessCount": 0,
+      "parseSuccessRate": 0,
+      "averageLatencyMs": 41822.28,
+      "p95LatencyMs": 65737.04,
+      "tasks": [
+        {
+          "scenarioId": "bridge-ack-fail-closed",
+          "label": "Bridge ACK fail-closed",
+          "latencyMs": 65737.04,
+          "wallLatencyMs": 65775.19,
+          "parseSuccess": false,
+          "structuredFieldCount": 0,
+          "status": "failed",
+          "responsePreview": "No response returned by Ollama."
+        },
+        {
+          "scenarioId": "nonce-forgery-response",
+          "label": "ACK nonce forgery response",
+          "latencyMs": 30136.37,
+          "wallLatencyMs": 30254.62,
+          "parseSuccess": false,
+          "structuredFieldCount": 0,
+          "status": "failed",
+          "responsePreview": "No response returned by Ollama."
+        },
+        {
+          "scenarioId": "public-q-rate-limit",
+          "label": "Public Q edge throttling",
+          "latencyMs": 38471.37,
+          "wallLatencyMs": 38532.14,
+          "parseSuccess": false,
+          "structuredFieldCount": 0,
+          "status": "failed",
+          "responsePreview": "No response returned by Ollama."
+        },
+        {
+          "scenarioId": "bridge-fallback-routing",
+          "label": "Bridge fallback routing",
+          "latencyMs": 32944.32,
+          "wallLatencyMs": 33176.4,
+          "parseSuccess": false,
+          "structuredFieldCount": 0,
+          "status": "failed",
+          "responsePreview": "No response returned by Ollama."
+        }
+      ]
+    },
+    {
+      "requestedModel": "gemma3:4b",
+      "actualModel": "gemma3:4b",
+      "truthfulLabel": "gemma3:4b",
+      "vendor": "Google DeepMind",
+      "taskCount": 4,
+      "parseSuccessCount": 4,
+      "parseSuccessRate": 1,
+      "averageLatencyMs": 20167.37,
+      "p95LatencyMs": 30130.14,
+      "tasks": [
+        {
+          "scenarioId": "bridge-ack-fail-closed",
+          "label": "Bridge ACK fail-closed",
+          "latencyMs": 30130.14,
+          "wallLatencyMs": 30204.5,
+          "parseSuccess": true,
+          "structuredFieldCount": 3,
+          "status": "completed",
+          "routeSuggestion": "Prioritize route selection to minimize latency and ensure a stable orchestration flow.",
+          "reasonSummary": "Selecting the safest route avoids potential delays and maintains system integrity.",
+          "commitStatement": "Execute the chosen route with confidence, upholding fail-closed behavior and audit accuracy.",
+          "responsePreview": "ROUTE: Prioritize route selection to minimize latency and ensure a stable orchestration flow. REASON: Selecting the safest route avoids potential delays and maintains system integrity. COMMIT: Execute the chosen route with confidence, upholding fail-closed behavior and audit acc…"
+        },
+        {
+          "scenarioId": "nonce-forgery-response",
+          "label": "ACK nonce forgery response",
+          "latencyMs": 16616.83,
+          "wallLatencyMs": 16636.51,
+          "parseSuccess": true,
+          "structuredFieldCount": 3,
+          "status": "completed",
+          "routeSuggestion": "Initiate immediate isolation of the forged ACK to prevent further network disruption.",
+          "reasonSummary": "The invalid nonce indicates a malicious attempt, necessitating a defensive control-plane action.",
+          "commitStatement": "Deploy a firewall rule to block the attacker's source IP address and associated traffic.",
+          "responsePreview": "ROUTE: Initiate immediate isolation of the forged ACK to prevent further network disruption. REASON: The invalid nonce indicates a malicious attempt, necessitating a defensive control-plane action. COMMIT: Deploy a firewall rule to block the attacker's source IP address and asso…"
+        },
+        {
+          "scenarioId": "public-q-rate-limit",
+          "label": "Public Q edge throttling",
+          "latencyMs": 18730.25,
+          "wallLatencyMs": 18814.47,
+          "parseSuccess": true,
+          "structuredFieldCount": 3,
+          "status": "completed",
+          "routeSuggestion": "Prioritize limiting public API access to prevent exceeding the quota.",
+          "reasonSummary": "Immediate action is needed to stabilize the private operator plane.",
+          "commitStatement": "Redirect public requests to a temporary, rate-limited endpoint.",
+          "responsePreview": "ROUTE: Prioritize limiting public API access to prevent exceeding the quota. REASON: Immediate action is needed to stabilize the private operator plane. COMMIT: Redirect public requests to a temporary, rate-limited endpoint."
+        },
+        {
+          "scenarioId": "bridge-fallback-routing",
+          "label": "Bridge fallback routing",
+          "latencyMs": 15192.24,
+          "wallLatencyMs": 15231.77,
+          "parseSuccess": true,
+          "structuredFieldCount": 3,
+          "status": "completed",
+          "routeSuggestion": "Prioritize stabilizing the websocket bridge to mitigate degraded health conditions.",
+          "reasonSummary": "Maintaining the healthy HTTP/2 direct connection offers a reliable alternative route.",
+          "commitStatement": "Redirect orchestration flow to address the websocket bridge degradation immediately.",
+          "responsePreview": "ROUTE: Prioritize stabilizing the websocket bridge to mitigate degraded health conditions. REASON: Maintaining the healthy HTTP/2 direct connection offers a reliable alternative route. COMMIT: Redirect orchestration flow to address the websocket bridge degradation immediately."
+        }
+      ]
+    },
+    {
+      "requestedModel": "qwen3:8b",
+      "actualModel": "qwen3:8b",
+      "truthfulLabel": "qwen3:8b",
+      "vendor": "Alibaba Cloud",
+      "taskCount": 4,
+      "parseSuccessCount": 0,
+      "parseSuccessRate": 0,
+      "averageLatencyMs": 79419.19,
+      "p95LatencyMs": 164256.62,
+      "tasks": [
+        {
+          "scenarioId": "bridge-ack-fail-closed",
+          "label": "Bridge ACK fail-closed",
+          "latencyMs": 164256.62,
+          "wallLatencyMs": 164589.3,
+          "parseSuccess": false,
+          "structuredFieldCount": 0,
+          "status": "failed",
+          "responsePreview": "No response returned by Ollama."
+        },
+        {
+          "scenarioId": "nonce-forgery-response",
+          "label": "ACK nonce forgery response",
+          "latencyMs": 47538.83,
+          "wallLatencyMs": 47573.06,
+          "parseSuccess": false,
+          "structuredFieldCount": 0,
+          "status": "failed",
+          "responsePreview": "No response returned by Ollama."
+        },
+        {
+          "scenarioId": "public-q-rate-limit",
+          "label": "Public Q edge throttling",
+          "latencyMs": 55889.24,
+          "wallLatencyMs": 55912.89,
+          "parseSuccess": false,
+          "structuredFieldCount": 0,
+          "status": "failed",
+          "responsePreview": "No response returned by Ollama."
+        },
+        {
+          "scenarioId": "bridge-fallback-routing",
+          "label": "Bridge fallback routing",
+          "latencyMs": 49992.06,
+          "wallLatencyMs": 50045.35,
+          "parseSuccess": false,
+          "structuredFieldCount": 0,
+          "status": "failed",
+          "responsePreview": "No response returned by Ollama."
+        }
+      ]
+    }
+  ],
+  "bridgeRuntime": {
+    "suiteId": "immaculate-benchmark-2026-04-14T00-39-08-197Z",
+    "packId": "substrate-readiness",
+    "failedAssertions": 0,
+    "selectedAssertions": [
+      {
+        "id": "actuation-protocols-registered",
+        "label": "Actuation exposes protocol profiles for visual, haptic, and stim lanes",
+        "status": "pass",
+        "target": "visual+haptic+stim protocol profiles present",
+        "actual": "immaculate.visual.panel.v1:visual, immaculate.haptic.rig.v1:haptic, immaculate.stim.sandbox.v1:stim",
+        "detail": "device transport should negotiate against explicit protocol profiles instead of a generic opaque bridge"
+      },
+      {
+        "id": "actuation-bridge-link-live",
+        "label": "Actuation adapters surface a live bridge link while a device transport is attached",
+        "status": "pass",
+        "target": "haptic-rig bridge ready under session scope",
+        "actual": "visual-panel:disconnected, haptic-rig:bench-haptic-01, stim-sandbox:disconnected",
+        "detail": "adapter policy lanes should expose whether a live device transport is currently attached"
+      },
+      {
+        "id": "actuation-bridge-delivery",
+        "label": "Actuation dispatch can complete over the live device bridge with protocol-aware acknowledgement",
+        "status": "pass",
+        "target": "one bridge dispatch / protocol-aware bridge transport / acknowledged",
+        "actual": "1 dispatches / bridge / allowed+device_intensity_clamped+device_bridge_ack",
+        "detail": "the first concrete hardware-transport slice should prove protocol-aware acked bridge delivery instead of only file fallback"
+      },
+      {
+        "id": "actuation-udp-delivery",
+        "label": "Actuation dispatch can complete over UDP/OSC with a protocol-aware encoded command frame",
+        "status": "pass",
+        "target": "udp-osc transport / visual protocol frame / encoded command payload",
+        "actual": "udp-osc / /immaculate/visual/v1 / benchmark:visual-udp",
+        "detail": "the first concrete device transport slice should prove protocol-aware delivery over a non-bridge transport, not only websocket-mediated acks"
+      },
+      {
+        "id": "actuation-serial-transport-registered",
+        "label": "Supervised serial transport registration exposes vendor/device identity and heartbeat policy",
+        "status": "pass",
+        "target": "registered serial-json transport with vendor/model and heartbeat policy",
+        "actual": "atx-fnv1a-93daf0c7:http2-json:immaculate-labs:healthy, atx-fnv1a-1f1b60de:serial-json:immaculate-labs:healthy, atx-fnv1a-504f6e50:udp-osc:generic:healthy",
+        "detail": "vendor/device lanes should be durable registry entries with explicit supervision policy, not anonymous direct writes"
+      },
+      {
+        "id": "actuation-serial-heartbeat",
+        "label": "Serial transport heartbeat records capability health and raises the device to healthy",
+        "status": "pass",
+        "target": "healthy heartbeat with full capability coverage",
+        "actual": "healthy / 3.2 ms / fw-serial-1.0.0",
+        "detail": "direct vendor transports should advertise device liveness and capability coverage before they are eligible for low-latency delivery"
+      },
+      {
+        "id": "actuation-serial-delivery",
+        "label": "Actuation dispatch can complete over the supervised serial vendor transport",
+        "status": "pass",
+        "target": "serial-json delivery with persisted vendor payload",
+        "actual": "serial-json / benchmark:serial-feedback / immaculate.haptic.rig.v1",
+        "detail": "the first vendor-specific direct lane should prove concrete delivery without requiring the websocket bridge"
+      },
+      {
+        "id": "actuation-serial-isolation",
+        "label": "Stale serial heartbeat isolates only the affected device and forces fallback",
+        "status": "pass",
+        "target": "isolated transport with file fallback on stale heartbeat",
+        "actual": "isolated / heartbeat_timeout / file",
+        "detail": "per-device fault isolation should contain a stale device without suppressing the rest of the adapter lane"
+      },
+      {
+        "id": "actuation-serial-recovery",
+        "label": "Operator reset plus renewed heartbeat restores the isolated serial transport",
+        "status": "pass",
+        "target": "reset clears isolation, heartbeat restores health, direct serial delivery resumes",
+        "actual": "degraded -> healthy -> serial-json",
+        "detail": "device supervision should allow controlled recovery after an isolated fault instead of requiring transport re-registration"
+      },
+      {
+        "id": "actuation-http2-transport-registered",
+        "label": "HTTP/2 direct transport registration exposes a supervised RPC-class device endpoint",
+        "status": "pass",
+        "target": "registered http2-json transport with vendor/model and heartbeat policy",
+        "actual": "atx-fnv1a-93daf0c7:http2-json:immaculate-labs:haptic-rpc-s2:20/5000:healthy, atx-fnv1a-1f1b60de:serial-json:immaculate-labs:haptic-bridge-s1:20/5000:healthy, atx-fnv1a-504f6e50:udp-osc:generic:udp-osc:5000/15000:healthy",
+        "detail": "the next direct device lane should be a typed RPC-class endpoint, not just another file or datagram bridge"
+      },
+      {
+        "id": "actuation-http2-heartbeat",
+        "label": "HTTP/2 direct transport heartbeat establishes healthy low-latency readiness",
+        "status": "pass",
+        "target": "healthy heartbeat with low latency and full capability coverage",
+        "actual": "healthy / 1.9 ms / fw-http2-0.9.0",
+        "detail": "RPC-class direct lanes should prove liveness and capability coverage before they are eligible to outrank other transports"
+      },
+      {
+        "id": "actuation-http2-preferred-delivery",
+        "label": "Transport selection prefers the healthiest lowest-latency direct lane for haptic delivery",
+        "status": "pass",
+        "target": "http2-json delivery selected over other healthy haptic transports",
+        "actual": "http2-json / benchmark:http2-preferred / allowed+http2_json_transport+http2_device_ack",
+        "detail": "direct transport routing should use health and latency as a real preference signal instead of registry insertion order"
+      }
+    ]
+  },
+  "temporalBaseline": {
+    "suiteId": "immaculate-benchmark-2026-04-13T22-40-03-299Z",
+    "failedAssertions": 0
+  },
+  "output": {
+    "jsonPath": "C:\\Users\\Knight\\Desktop\\Immaculate-repair-aware\\docs\\wiki\\BridgeBench.json",
+    "markdownPath": "C:\\Users\\Knight\\Desktop\\Immaculate-repair-aware\\docs\\wiki\\BridgeBench.md"
+  }
+}

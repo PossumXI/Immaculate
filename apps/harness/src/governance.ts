@@ -147,6 +147,14 @@ const policies: GovernancePolicy[] = [
     description: "Allows reasoning and execution under system or session-linked scope."
   },
   {
+    id: "q-public",
+    label: "Public Q Inference",
+    action: "cognitive-execution",
+    allowedPurposes: ["q-public-inference", "cognitive-execution"],
+    requiredConsentPrefixes: ["intelligence:q-public"],
+    description: "Allows the narrow public Q inference edge under a dedicated per-key consent boundary."
+  },
+  {
     id: "cognitive-trace-read-default",
     label: "Cognitive Trace Read",
     action: "cognitive-trace-read",
