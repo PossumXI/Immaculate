@@ -5,7 +5,7 @@ This page documents the isolated `Q` alias and controlled startup banner slice t
 ## What It Adds
 
 - A local Ollama alias path so Gemma 4 can be addressed as `Q`
-- A controlled yellow/ocean-blue startup banner for the harness
+- A controlled 6-row ANSI Shadow startup banner for the harness with a lavender-to-ocean truecolor gradient
 - Alias-aware Ollama discovery so `Q` still resolves as a Gemma-family model
 
 ## Local Ollama Alias
@@ -61,7 +61,7 @@ Behavior:
 
 The banner prints:
 
-- a yellow/ocean-blue ASCII-art `IMMACULATE` title
+- a 6-row ANSI Shadow `IMMACULATE` title with a row-by-row truecolor gradient
 - harness endpoint
 - tick rate
 - local Ollama endpoint

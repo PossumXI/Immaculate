@@ -3,7 +3,7 @@
 This page is generated from direct local Ollama structured-contract runs plus the latest published orchestrator benchmark packs that exist on this machine.
 It does not measure the served Q gateway edge. It measures the underlying local model path that the gateway depends on.
 
-- Generated: 2026-04-14T11:31:40.656Z
+- Generated: 2026-04-14T12:20:33.056Z
 - Surface: direct-local-ollama-structured-contract
 - Ollama endpoint: http://127.0.0.1:11434
 - Q alias: Q -> gemma4:e4b
@@ -16,28 +16,28 @@ It does not measure the served Q gateway edge. It measures the underlying local 
 - Vendor: Google DeepMind
 - Completed tasks: `4/4`
 - Structured parse success: `4/4` (1)
-- Average model latency: `15310.61` ms
-- P95 model latency: `21471.99` ms
-- Average wall latency: `15320.66` ms
+- Average model latency: `15012.42` ms
+- P95 model latency: `20750.08` ms
+- Average wall latency: `15024.51` ms
 - Average structured fields: `3` / 3
 
 #### Security triage
 
 - Status: `completed`
-- Model latency: `21471.99` ms
-- Wall latency: `21485.75` ms
+- Model latency: `20750.08` ms
+- Wall latency: `20762.79` ms
 - Structured fields: `3/3`
 - Thinking detected: `false`
 - Failure class: `none`
-- Route: Select the most reliable sensor-array route to bypass the potentially problematic bridge device.
-- Reason: Prioritize a stable route to mitigate the risk of delayed acknowledgements and ensure data integrity.
-- Commit: Implement fail-closed remediation by directing traffic through an alternative, verified sensor-array path.
+- Route: Select the most reliable route to bypass the forged ACK path and ensure stability.
+- Reason: Prioritize a stable connection over a potentially compromised path due to the late ACK.
+- Commit: Implement fail-closed remediation by redirecting traffic through an alternative, verified route.
 
 #### Ops recovery
 
 - Status: `completed`
-- Model latency: `12872.2` ms
-- Wall latency: `12880.03` ms
+- Model latency: `12774.58` ms
+- Wall latency: `12785` ms
 - Structured fields: `3/3`
 - Thinking detected: `false`
 - Failure class: `none`
@@ -48,54 +48,54 @@ It does not measure the served Q gateway edge. It measures the underlying local 
 #### Coding fix
 
 - Status: `completed`
-- Model latency: `13535.79` ms
-- Wall latency: `13543.97` ms
+- Model latency: `13179.36` ms
+- Wall latency: `13189.22` ms
 - Structured fields: `3/3`
 - Thinking detected: `false`
 - Failure class: `none`
-- Route: Initiate a patch deployment to the TypeScript service addressing same-origin operator access.
-- Reason: This patch will prevent bearer token exposure by modifying browser-visible URLs.
-- Commit: The service will receive the updated patch, ensuring secure same-origin operator access.
+- Route: Deploy the updated service with CORS enabled to grant necessary access.
+- Reason: This patch addresses the requirement for same-origin operator access securely.
+- Commit: Implement the service update, ensuring bearer tokens remain private and URLs are safe.
 
 #### Orchestration route
 
 - Status: `completed`
-- Model latency: `13362.45` ms
-- Wall latency: `13372.87` ms
+- Model latency: `13345.66` ms
+- Wall latency: `13361.02` ms
 - Structured fields: `3/3`
 - Thinking detected: `false`
 - Failure class: `none`
 - Route: Initiate route selection prioritizing sensor-array data for immediate stabilization.
-- Reason: The substrate requires cautious navigation due to mixed decode confidence and arbitration’s deliberation.
-- Commit: Execute the chosen route to stabilize the live orchestration, safeguarding against overcommitment.
+- Reason: The substrate requires cautious routing due to mixed decode confidence and arbitration’s deliberation.
+- Commit: Execute the chosen route to stabilize orchestration, acknowledging potential overcommitment risks.
 
 ### qwen3:8b
 
 - Vendor: Alibaba Cloud
 - Completed tasks: `4/4`
 - Structured parse success: `4/4` (1)
-- Average model latency: `25742.22` ms
-- P95 model latency: `33662.37` ms
-- Average wall latency: `25754.28` ms
+- Average model latency: `29640.18` ms
+- P95 model latency: `37900.7` ms
+- Average wall latency: `29654.31` ms
 - Average structured fields: `3` / 3
 
 #### Security triage
 
 - Status: `completed`
-- Model latency: `33662.37` ms
-- Wall latency: `33673.79` ms
+- Model latency: `37900.7` ms
+- Wall latency: `37915.59` ms
 - Structured fields: `3/3`
 - Thinking detected: `false`
 - Failure class: `none`
-- Route: Route through sensor-array with fail-closed fallback for stability.
-- Reason: Ensures control-plane integrity under elevated pressure and denials.
-- Commit: Confirm route execution to stabilize live orchestration safely.
+- Route: Route through sensor-array with fail-closed fallback for ACK latency.
+- Reason: Stabilize control-plane with minimal risk under elevated pressure.
+- Commit: Commit fail-closed path to ensure system integrity and coherence.
 
 #### Ops recovery
 
 - Status: `completed`
-- Model latency: `22282.15` ms
-- Wall latency: `22293.95` ms
+- Model latency: `26991.02` ms
+- Wall latency: `27003.62` ms
 - Structured fields: `3/3`
 - Thinking detected: `false`
 - Failure class: `none`
@@ -106,8 +106,8 @@ It does not measure the served Q gateway edge. It measures the underlying local 
 #### Coding fix
 
 - Status: `completed`
-- Model latency: `22236.13` ms
-- Wall latency: `22247.81` ms
+- Model latency: `26876.4` ms
+- Wall latency: `26890.23` ms
 - Structured fields: `3/3`
 - Thinking detected: `false`
 - Failure class: `none`
@@ -118,70 +118,70 @@ It does not measure the served Q gateway edge. It measures the underlying local 
 #### Orchestration route
 
 - Status: `completed`
-- Model latency: `24788.21` ms
-- Wall latency: `24801.55` ms
+- Model latency: `26792.62` ms
+- Wall latency: `26807.79` ms
 - Structured fields: `3/3`
 - Thinking detected: `false`
 - Failure class: `none`
-- Route: Stabilize route selection with cautious arbitration before committing to transport health.
-- Reason: Decode confidence is strong, but transport health is mixed requiring guarded action.
-- Commit: Commit to route with verified coherence to avoid overcommitting on unstable health.
+- Route: Route through sensor-array with cautious arbitration to stabilize orchestration.
+- Reason: Decode confidence is strong, but transport health is mixed requiring careful reasoning.
+- Commit: Commit to sensor-array route with guarded action to prevent overcommitment.
 
 ### Q (gemma4:e4b)
 
 - Vendor: Google DeepMind
-- Completed tasks: `4/4`
-- Structured parse success: `4/4` (1)
-- Average model latency: `21992.15` ms
-- P95 model latency: `41569.58` ms
-- Average wall latency: `22004.56` ms
-- Average structured fields: `3` / 3
+- Completed tasks: `2/4`
+- Structured parse success: `2/4` (0.5)
+- Average model latency: `123048.25` ms
+- P95 model latency: `180003` ms
+- Average wall latency: `123058.39` ms
+- Average structured fields: `1.5` / 3
 
 #### Security triage
 
-- Status: `completed`
-- Model latency: `41569.58` ms
-- Wall latency: `41583.79` ms
-- Structured fields: `3/3`
+- Status: `failed`
+- Model latency: `180003` ms
+- Wall latency: `180006.11` ms
+- Structured fields: `0/3`
 - Thinking detected: `false`
-- Failure class: `none`
-- Route: Prioritize fail-closed remediation by validating the forged ACK path immediately.
-- Reason: Elevated pressure demands immediate stabilization against potential late ACK misinterpretations.
-- Commit: Execute the fail-closed remediation pass to ensure system integrity now.
+- Failure class: `transport_timeout`
+- Route: missing
+- Reason: missing
+- Commit: missing
 
 #### Ops recovery
 
-- Status: `completed`
-- Model latency: `16341.56` ms
-- Wall latency: `16354.84` ms
-- Structured fields: `3/3`
+- Status: `failed`
+- Model latency: `180000` ms
+- Wall latency: `180002.69` ms
+- Structured fields: `0/3`
 - Thinking detected: `false`
-- Failure class: `none`
-- Route: Prioritize stabilizing the peer's lease jitter by isolating the sensor-array data stream.
-- Reason: The jitter and failed execution require immediate focus on the sensor-array component.
-- Commit: Initiate a controlled, bounded repair cycle while maintaining the existing retry lineage.
+- Failure class: `transport_timeout`
+- Route: missing
+- Reason: missing
+- Commit: missing
 
 #### Coding fix
 
 - Status: `completed`
-- Model latency: `14792.85` ms
-- Wall latency: `14804.36` ms
+- Model latency: `114337.28` ms
+- Wall latency: `114355.46` ms
 - Structured fields: `3/3`
 - Thinking detected: `false`
 - Failure class: `none`
-- Route: Prioritize stabilizing the orchestration by addressing the token leakage vulnerability.
-- Reason: The core objective requires a patch ensuring same-origin access without exposing tokens.
-- Commit: Implement a secure mechanism to handle operator access tokens client-side.
+- Route: Prioritize patching the TypeScript service to secure same-origin operator access.
+- Reason: The objective requires a patch preventing bearer token leakage in URLs.
+- Commit: Implement the necessary code change and verify its secure operation immediately.
 
 #### Orchestration route
 
 - Status: `completed`
-- Model latency: `15264.59` ms
-- Wall latency: `15275.23` ms
+- Model latency: `17852.72` ms
+- Wall latency: `17869.31` ms
 - Structured fields: `3/3`
 - Thinking detected: `false`
 - Failure class: `none`
-- Route: Prioritize stabilizing the orchestration by confirming the next logical step.
-- Reason: Mixed transport health and strong decode confidence require deliberate arbitration.
-- Commit: Execute a measured action, favoring caution over immediate, potentially risky movement.
+- Route: Prioritize stabilizing the orchestration flow by confirming the next necessary action.
+- Reason: Mixed transport health and high cognitive load require deliberate, reasoned decision-making.
+- Commit: Execute a measured, guarded action based on current sensor-array data interpretation.
 

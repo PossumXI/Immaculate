@@ -21,6 +21,33 @@ For each breakthrough, record:
 
 ### 2026-04-14
 
+#### Q gained a real long-context training lane and the Immaculate banner became a precise truecolor splash instead of ad hoc art
+
+What changed:
+- the startup banner renderer now uses a real 6-row ANSI Shadow `Immaculate` title with a fixed truecolor gradient instead of the older split blue/yellow custom block art
+- the Q training bundle now carries a richer coding/long-context supplement in `training/q/coding_long_context_seed.json`
+- the training mix builder can now accept multiple supplemental corpora in one run instead of forcing a single-seed path
+- the repo now also carries `training/q/q_lora_config.long_context.example.json`, which raises the next Q LoRA target to an `8192` token context ceiling
+
+Why it matters:
+- the missed model-training pattern was that Q was improving on control-plane obedience faster than on coding depth and long-horizon synthesis, because the tracked seed path was still dominated by short bridge/runtime examples
+- widening the supplement and the context ceiling makes the next cloud Q run target the actual remaining weakness: longer coding and repo-understanding tasks instead of only short structured-contract completion
+- the banner change matters for a smaller but still real reason: the startup artifact is now precise, reproducible, and matched to the documented color treatment instead of hand-shaped art that drifted from the spec
+
+Evidence:
+- `npm run banner` now renders the exact 6-row truecolor ANSI Shadow title through `apps/harness/src/startup-banner.ts`
+- `npm run training-data:curate -- fixtures/training/q-defsec-curation.example.json` produced `cur-fnv1a-8f551a5c` with `1001` curated rows and `2` secret findings skipped
+- `python training/q/build_q_text_dataset.py --input .training-output/training-data/runs/cur-fnv1a-8f551a5c/curated-records.jsonl --output .training-output/q/q-train-cur-fnv1a-8f551a5c.jsonl` produced `1001` training rows
+- `python training/q/build_q_mixture.py --base .training-output/q/q-train-cur-fnv1a-8f551a5c.jsonl --supplemental training/q/bridgebench_seed.json --supplemental training/q/coding_long_context_seed.json --output .training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c.jsonl` produced `1013` rows
+- `python training/q/train_q_lora_unsloth.py --config .training-output/q/q-lora-config-longctx-cur-fnv1a-8f551a5c.json --dry-run` passed on the new long-context mix
+
+What this unlocks next:
+- a cloud Q fine-tune run that actually targets coding repair, repo synthesis, and longer context windows
+- future BridgeBench/model-comparison regressions can now be separated from the richer training lane instead of polluting the failure-only surface
+- the documented banner artifact can now be reused in OCI/runtime surfaces without hand-copy drift
+
+### 2026-04-14
+
 #### Q gained a second serving control loop, and the direct model is now green under the readiness gate after the structured-contract fix
 
 What changed:

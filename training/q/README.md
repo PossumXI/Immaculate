@@ -24,10 +24,10 @@ npm run training-data:curate -- fixtures/training/q-defsec-curation.example.json
 python training/q/build_q_text_dataset.py --input .training-output/training-data/runs/<run-id>/curated-records.jsonl --output .training-output/q/q-train-<run-id>.jsonl
 ```
 
-3. Blend the governed corpus with the tracked BridgeBench seed set:
+3. Blend the governed corpus with the tracked BridgeBench seed set and the richer coding/long-context seed set:
 
 ```powershell
-python training/q/build_q_mixture.py --base .training-output/q/q-train-<run-id>.jsonl --supplemental training/q/bridgebench_seed.json --output .training-output/q/q-mix-<run-id>.jsonl
+python training/q/build_q_mixture.py --base .training-output/q/q-train-<run-id>.jsonl --supplemental training/q/bridgebench_seed.json --supplemental training/q/coding_long_context_seed.json --output .training-output/q/q-mix-<run-id>.jsonl
 ```
 
 4. Convert the live Q report failures into a tracked eval seed corpus:
@@ -36,12 +36,11 @@ python training/q/build_q_mixture.py --base .training-output/q/q-train-<run-id>.
 npm run q:failure-corpus
 ```
 
-The current Q lane fails closed as `transport_timeout`, so these records are
-best treated as eval seeds first. That keeps the failure surface honest while
-still producing tracked corpus entries you can later promote into a reviewed
-training slice.
+The failure export is now strict failure-only. When the direct Q lane is green,
+this surface stays empty rather than mixing resolved successes into a fake
+failure bucket.
 
-5. Copy `q_lora_config.example.json` and adjust paths to the concrete run-id-specific files.
+5. Copy `q_lora_config.example.json` or `q_lora_config.long_context.example.json` and adjust paths to the concrete run-id-specific files.
 6. Validate the config and dataset shape before a GPU run:
 
 ```powershell
@@ -49,6 +48,19 @@ python training/q/train_q_lora_unsloth.py --config training/q/q_lora_config.exam
 ```
 
 7. Launch `train_q_lora_unsloth.py` on a GPU instance with the required Python packages installed.
+
+## Stronger Current Training Direction
+
+The next truthful Q run should emphasize:
+
+- coding repair and secure patch selection
+- long-context repo synthesis instead of short reactive completions only
+- control-plane and gateway hardening examples that preserve the route/reason/commit contract
+
+The repo now carries a dedicated richer supplement for that purpose:
+
+- `training/q/coding_long_context_seed.json`
+- `training/q/q_lora_config.long_context.example.json`
 
 ## Truth Boundary
 

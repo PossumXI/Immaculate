@@ -87,6 +87,8 @@ For the `Q` fine-tune path specifically:
 - failure corpus: [docs/wiki/Q-Failure-Corpus.md](docs/wiki/Q-Failure-Corpus.md)
 - model/training manifest: [fixtures/training/q-defsec-curation.example.json](fixtures/training/q-defsec-curation.example.json)
 - training bundle: [training/q/README.md](training/q/README.md)
+- richer coding/long-context supplement: [training/q/coding_long_context_seed.json](training/q/coding_long_context_seed.json)
+- long-context LoRA config: [training/q/q_lora_config.long_context.example.json](training/q/q_lora_config.long_context.example.json)
 
 As of `2026-04-14`, the direct `Q` structured-contract lane is green on this machine:
 `Q (gemma4:e4b)` is `4/4` on both

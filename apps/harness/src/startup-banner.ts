@@ -9,10 +9,27 @@ export type StartupBannerOptions = {
 };
 
 const RESET = "\u001b[0m";
-const OCEAN_BLUE = "\u001b[38;5;39m";
-const OCEAN_BLUE_DIM = "\u001b[38;5;117m";
-const YELLOW = "\u001b[38;5;226m";
-const YELLOW_DIM = "\u001b[38;5;228m";
+const TITLE_ROWS = [
+  "██╗███╗   ███╗███╗   ███╗ █████╗  ██████╗██╗   ██╗██╗      █████╗ ████████╗███████╗",
+  "██║████╗ ████║████╗ ████║██╔══██╗██╔════╝██║   ██║██║     ██╔══██╗╚══██╔══╝██╔════╝",
+  "██║██╔████╔██║██╔████╔██║███████║██║     ██║   ██║██║     ███████║   ██║   █████╗  ",
+  "██║██║╚██╔╝██║██║╚██╔╝██║██╔══██║██║     ██║   ██║██║     ██╔══██║   ██║   ██╔══╝  ",
+  "██║██║ ╚═╝ ██║██║ ╚═╝ ██║██║  ██║╚██████╗╚██████╔╝███████╗██║  ██║   ██║   ███████╗",
+  "╚═╝╚═╝     ╚═╝╚═╝     ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝"
+] as const;
+
+const TITLE_GRADIENT = [
+  "\u001b[38;2;181;126;220m",
+  "\u001b[38;2;216;180;248m",
+  "\u001b[38;2;255;255;255m",
+  "\u001b[38;2;122;79;191m",
+  "\u001b[38;2;0;119;190m",
+  "\u001b[38;2;10;26;47m"
+] as const;
+
+const INFO_PRIMARY = "\u001b[38;2;0;119;190m";
+const INFO_ACCENT = "\u001b[38;2;181;126;220m";
+const INFO_DIM = "\u001b[38;2;122;79;191m";
 
 function bannerMode(): "auto" | "always" | "off" {
   const raw = (process.env.IMMACULATE_STARTUP_BANNER ?? "auto").trim().toLowerCase();
@@ -44,14 +61,7 @@ function applyColor(text: string, color: string): string {
 }
 
 function renderTitleLines(): string[] {
-  return [
-    `${applyColor("██╗███╗   ███╗███╗   ███╗", OCEAN_BLUE)} ${applyColor(" █████╗  ██████╗██╗   ██╗██╗      █████╗ ████████╗███████╗", YELLOW)}`,
-    `${applyColor("██║████╗ ████║████╗ ████║", OCEAN_BLUE)} ${applyColor("██╔══██╗██╔════╝██║   ██║██║     ██╔══██╗╚══██╔══╝██╔════╝", YELLOW)}`,
-    `${applyColor("██║██╔████╔██║██╔████╔██║", OCEAN_BLUE)} ${applyColor("███████║██║     ██║   ██║██║     ███████║   ██║   █████╗  ", YELLOW)}`,
-    `${applyColor("██║██║╚██╔╝██║██║╚██╔╝██║", OCEAN_BLUE)} ${applyColor("██╔══██║██║     ██║   ██║██║     ██╔══██║   ██║   ██╔══╝  ", YELLOW)}`,
-    `${applyColor("██║██║ ╚═╝ ██║██║ ╚═╝ ██║", OCEAN_BLUE)} ${applyColor("██║  ██║╚██████╗╚██████╔╝███████╗██║  ██║   ██║   ███████╗", YELLOW)}`,
-    `${applyColor("╚═╝╚═╝     ╚═╝╚═╝     ╚═╝", OCEAN_BLUE)} ${applyColor("╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝", YELLOW)}`
-  ];
+  return TITLE_ROWS.map((row, index) => applyColor(row, TITLE_GRADIENT[index] ?? TITLE_GRADIENT[TITLE_GRADIENT.length - 1]));
 }
 
 function renderInfoLines(options: StartupBannerOptions): string[] {
@@ -59,10 +69,10 @@ function renderInfoLines(options: StartupBannerOptions): string[] {
   const modelLabel = options.configuredModel?.trim() || qAlias.displayName;
 
   return [
-    `${applyColor("ocean-blue control plane", OCEAN_BLUE_DIM)} ${applyColor("|", YELLOW_DIM)} ${applyColor("yellow cognition alias", YELLOW_DIM)}`,
-    `${applyColor("endpoint", OCEAN_BLUE_DIM)} ${options.host}:${options.port} ${applyColor("| ticks", OCEAN_BLUE_DIM)} ${options.tickIntervalMs}ms`,
-    `${applyColor("ollama", OCEAN_BLUE_DIM)} ${options.ollamaUrl} ${applyColor("| model", OCEAN_BLUE_DIM)} ${modelLabel}`,
-    `${applyColor("Q alias", YELLOW_DIM)} ${qAlias.alias} -> ${qAlias.baseModel} ${applyColor("| banner", OCEAN_BLUE_DIM)} ${bannerMode()}`
+    `${applyColor("lavender-to-ocean truecolor banner", INFO_ACCENT)} ${applyColor("|", INFO_DIM)} ${applyColor("Q cognition alias", INFO_DIM)}`,
+    `${applyColor("endpoint", INFO_PRIMARY)} ${options.host}:${options.port} ${applyColor("| ticks", INFO_PRIMARY)} ${options.tickIntervalMs}ms`,
+    `${applyColor("ollama", INFO_PRIMARY)} ${options.ollamaUrl} ${applyColor("| model", INFO_PRIMARY)} ${modelLabel}`,
+    `${applyColor("Q alias", INFO_ACCENT)} ${qAlias.alias} -> ${qAlias.baseModel} ${applyColor("| banner", INFO_PRIMARY)} ${bannerMode()}`
   ];
 }
 
