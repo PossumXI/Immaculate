@@ -2,9 +2,9 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-04-14T15:50:13.061Z
-- Immaculate release: `0.1.0+f3886f2`
-- Repo commit: `f3886f2118cc44447ac7a27c82593d6a6f6e89fa`
+- Generated: 2026-04-14T20:47:10.994Z
+- Immaculate release: `0.1.0+b4e599d`
+- Repo commit: `b4e599d86d8b721b76686afbd92cc09fafcbf3c5`
 - Branch: `detached`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
@@ -13,12 +13,14 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Q alias: `Q`
 - Q provider model: `gemma4:e4b`
 - Q training bundle: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5`
+- Q hybrid session: `q-hybrid-cur-fnv1a-8f551a5c`
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+f3886f2` is the current repo build stamp.
+- Immaculate build `0.1.0+b4e599d` is the current repo build stamp.
 - Q is still served as `Q (gemma4:e4b)`, not a mystery renamed model.
 - The latest tracked Q training bundle is `q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5`, tied to dataset `C:\Users\Knight\Desktop\Immaculate\Immaculate-q-gateway\.training-output\q\q-mix-longctx-cur-fnv1a-8f551a5c.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
+- The latest hybrid session is `q-hybrid-cur-fnv1a-8f551a5c`, with local lane `completed` and cloud lane `not-configured` on provider `oci`.
 
 ## Current Evidence Surfaces
 
@@ -26,7 +28,8 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Model comparison: `2026-04-14T15:27:29.352Z` via `docs/wiki/Model-Benchmark-Comparison.json`
 - Q readiness gate: `2026-04-14T15:37:16.626Z` via `docs/wiki/Q-Readiness-Gate.json`
 - Q gateway validation: `2026-04-14T15:45:30.608Z` via `docs/wiki/Q-Gateway-Validation.json`
-- W&B benchmark export: `2026-04-14T15:50:07.491415+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
+- Q hybrid training: `2026-04-14T20:47:00Z` via `docs/wiki/Q-Hybrid-Training.json`
+- W&B benchmark export: `2026-04-14T15:58:05.467769+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
 
 ## Q Training Bundle
 
@@ -38,6 +41,15 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Training dataset SHA-256: `5c329cc58772a0dc52e12dafcc421caa5458c6a7c37b96f2970d8a04e937c64f`
 - Mix manifest: `C:\Users\Knight\Desktop\Immaculate\Immaculate-q-gateway\.training-output\q\q-mix-longctx-cur-fnv1a-8f551a5c.manifest.json`
 - Curation run: `cur-fnv1a-8f551a5c`
+
+## Hybrid Training Session
+
+- Session path: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/hybrid-session.json`
+- Session generated: `2026-04-14T20:47:00Z`
+- Local lane status: `completed`
+- Cloud lane status: `not-configured`
+- Cloud provider: `oci`
+- Immaculate orchestration bundle: `immaculate-orchestration-b4e599d-4c759c95`
 
 ## Truth Boundary
 

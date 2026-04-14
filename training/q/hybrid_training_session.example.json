@@ -1,0 +1,44 @@
+{
+  "sessionId": "q-hybrid-session-example",
+  "q": {
+    "trainingLockPath": ".training-output/q/latest-training-lock.json",
+    "configPath": "training/q/q_lora_config.long_context.example.json",
+    "failureCorpusPath": "docs/wiki/Q-Failure-Corpus.json"
+  },
+  "immaculate": {
+    "bundleOutputPath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-session-example.json"
+  },
+  "local": {
+    "enabled": true,
+    "python": "python",
+    "mode": "dry-run",
+    "extraArgs": []
+  },
+  "cloud": {
+    "enabled": true,
+    "provider": "oci",
+    "mode": "doctor",
+    "requiredEnv": [
+      "HF_TOKEN"
+    ],
+    "optionalEnv": [
+      "WANDB_API_KEY",
+      "WANDB_ENTITY",
+      "WANDB_PROJECT",
+      "OCI_CLI_AUTH",
+      "OCI_CONFIG_FILE",
+      "OCI_PROFILE"
+    ],
+    "launchCommand": [],
+    "notes": "Replace launchCommand with the real cloud GPU launch command once the provider credentials and target worker are configured."
+  },
+  "artifacts": {
+    "sessionRoot": ".training-output/q/sessions/q-hybrid-session-example",
+    "wikiJsonPath": "docs/wiki/Q-Hybrid-Training.json",
+    "wikiMarkdownPath": "docs/wiki/Q-Hybrid-Training.md"
+  },
+  "policy": {
+    "buildImmaculateBundle": true,
+    "allowCloudLaunchWhenDoctorFails": false
+  }
+}

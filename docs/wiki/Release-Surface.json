@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-14T15:50:13.061Z",
+  "generatedAt": "2026-04-14T20:47:10.994Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "f3886f2118cc44447ac7a27c82593d6a6f6e89fa",
-    "gitShortSha": "f3886f2",
+    "gitSha": "b4e599d86d8b721b76686afbd92cc09fafcbf3c5",
+    "gitShortSha": "b4e599d",
     "gitBranch": "detached",
-    "buildId": "0.1.0+f3886f2",
+    "buildId": "0.1.0+b4e599d",
     "q": {
       "alias": "Q",
       "providerModel": "gemma4:e4b",
@@ -27,6 +27,16 @@
         "curationRunPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\training-data\\runs\\cur-fnv1a-8f551a5c\\run.json",
         "curationRunId": "cur-fnv1a-8f551a5c",
         "lockPath": ".training-output/q/latest-training-lock.json"
+      },
+      "hybridSession": {
+        "generatedAt": "2026-04-14T20:47:00Z",
+        "sessionId": "q-hybrid-cur-fnv1a-8f551a5c",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/hybrid-session.json",
+        "localStatus": "completed",
+        "cloudStatus": "not-configured",
+        "cloudProvider": "oci",
+        "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5",
+        "immaculateBundleId": "immaculate-orchestration-b4e599d-4c759c95"
       }
     }
   },
@@ -52,9 +62,14 @@
       "generatedAt": "2026-04-14T15:45:30.608Z"
     },
     {
+      "label": "Q hybrid training",
+      "path": "docs\\wiki\\Q-Hybrid-Training.json",
+      "generatedAt": "2026-04-14T20:47:00Z"
+    },
+    {
       "label": "W&B benchmark export",
       "path": "docs\\wiki\\Benchmark-Wandb-Export.json",
-      "generatedAt": "2026-04-14T15:50:07.491415+00:00"
+      "generatedAt": "2026-04-14T15:58:05.467769+00:00"
     }
   ],
   "output": {

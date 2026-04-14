@@ -22,6 +22,17 @@ export type QTrainingLockSummary = {
   lockPath: string;
 };
 
+export type QHybridTrainingSessionSummary = {
+  generatedAt?: string;
+  sessionId: string;
+  sessionPath: string;
+  localStatus?: string;
+  cloudStatus?: string;
+  cloudProvider?: string;
+  trainingBundleId?: string;
+  immaculateBundleId?: string;
+};
+
 export type ReleaseMetadata = {
   packageVersion: string;
   harnessVersion: string;
@@ -35,6 +46,7 @@ export type ReleaseMetadata = {
     providerModel: string;
     truthfulLabel: string;
     trainingLock?: QTrainingLockSummary;
+    hybridSession?: QHybridTrainingSessionSummary;
   };
 };
 
@@ -47,6 +59,7 @@ const CORE_PACKAGE_PATH = path.join(REPO_ROOT, "packages", "core", "package.json
 const Q_OUTPUT_ROOT = path.join(REPO_ROOT, ".training-output", "q");
 const Q_LOCK_ROOT = path.join(Q_OUTPUT_ROOT, "locks");
 const Q_LATEST_LOCK_PATH = path.join(Q_OUTPUT_ROOT, "latest-training-lock.json");
+const Q_LATEST_HYBRID_SESSION_PATH = path.join(Q_OUTPUT_ROOT, "latest-hybrid-session.json");
 let cachedReleaseMetadata: ReleaseMetadata | undefined;
 
 type PackageJson = {
@@ -72,6 +85,29 @@ type QTrainingLockFile = {
   curation?: {
     runPath?: string;
     runId?: string;
+  };
+};
+
+type QHybridTrainingSessionFile = {
+  generatedAt?: string;
+  sessionId?: string;
+  q?: {
+    trainingBundleId?: string;
+  };
+  immaculate?: {
+    bundleId?: string;
+  };
+  lanes?: {
+    local?: {
+      status?: string;
+    };
+    cloud?: {
+      status?: string;
+      provider?: string;
+    };
+  };
+  output?: {
+    sessionJsonPath?: string;
   };
 };
 
@@ -147,16 +183,37 @@ async function readTrainingLockSummary(): Promise<QTrainingLockSummary | undefin
   };
 }
 
+async function readHybridSessionSummary(): Promise<QHybridTrainingSessionSummary | undefined> {
+  if (!existsSync(Q_LATEST_HYBRID_SESSION_PATH)) {
+    return undefined;
+  }
+  const payload = await readJsonFile<QHybridTrainingSessionFile>(Q_LATEST_HYBRID_SESSION_PATH);
+  if (!payload?.sessionId) {
+    return undefined;
+  }
+  return {
+    generatedAt: payload.generatedAt,
+    sessionId: payload.sessionId,
+    sessionPath: payload.output?.sessionJsonPath || path.relative(REPO_ROOT, Q_LATEST_HYBRID_SESSION_PATH).replaceAll("\\", "/"),
+    localStatus: payload.lanes?.local?.status,
+    cloudStatus: payload.lanes?.cloud?.status,
+    cloudProvider: payload.lanes?.cloud?.provider,
+    trainingBundleId: payload.q?.trainingBundleId,
+    immaculateBundleId: payload.immaculate?.bundleId
+  };
+}
+
 export async function resolveReleaseMetadata(): Promise<ReleaseMetadata> {
   if (cachedReleaseMetadata) {
     return cachedReleaseMetadata;
   }
 
-  const [packageVersion, harnessVersion, coreVersion, trainingLock] = await Promise.all([
+  const [packageVersion, harnessVersion, coreVersion, trainingLock, hybridSession] = await Promise.all([
     readVersion(ROOT_PACKAGE_PATH),
     readVersion(HARNESS_PACKAGE_PATH),
     readVersion(CORE_PACKAGE_PATH),
-    readTrainingLockSummary()
+    readTrainingLockSummary(),
+    readHybridSessionSummary()
   ]);
 
   const gitSha = runGit(["rev-parse", "HEAD"]) ?? "unknown";
@@ -175,7 +232,8 @@ export async function resolveReleaseMetadata(): Promise<ReleaseMetadata> {
       alias: getQModelAlias(),
       providerModel: getQModelTarget(),
       truthfulLabel: truthfulModelLabel(getQModelTarget()),
-      trainingLock
+      trainingLock,
+      hybridSession
     }
   };
 

@@ -21,6 +21,33 @@ For each breakthrough, record:
 
 ### 2026-04-14
 
+#### Q now has a real hybrid training session surface, and Immaculate gained a truthful orchestration-training bundle instead of a vague “train the system” claim
+
+What changed:
+- the repo now carries a session-level Q training controller in `training/q/run_q_training_session.py` plus a committed example manifest in `training/q/hybrid_training_session.example.json`
+- the repo now builds an Immaculate orchestration-training bundle from live Harbor, BridgeBench, model-comparison, gateway-validation, and readiness-gate surfaces through `training/immaculate/build_immaculate_training_bundle.py`
+- the latest session now writes a tracked wiki surface so the repo can say which parts of a hybrid local/cloud session are actually ready and which are still blocked
+- the release surface now ties the current build to the latest hybrid session instead of only the lock file
+
+Why it matters:
+- the missed pattern was that a training lock alone is not enough once local prep, cloud launch intent, and orchestration-improvement signals can drift independently
+- a hybrid session means one id can now tie together the Q fine-tune lane and the Immaculate orchestration lane without pretending they are the same thing
+- this keeps the cloud boundary honest: local preparation can be complete while the cloud lane stays explicitly `not-configured` until provider auth and launch tooling are really present
+- “train Immaculate” is now translated into something the repo can defend technically: an orchestration bundle grounded in measured control-plane evidence, not mythology about hidden weights
+
+Evidence:
+- `npm run immaculate:training:bundle` now emits a tracked orchestration bundle under `.training-output/immaculate/`
+- `npm run q:training:doctor -- --session ...` now materializes one hybrid session summary and stamps `docs/wiki/Q-Hybrid-Training.md`
+- `npm run q:training:session -- --session ... --launch` can now run the local Q lane while keeping the cloud lane truthful about readiness
+- `npm run release:surface` now includes the latest hybrid training session in the machine-stamped release page
+
+What this unlocks next:
+- a real cloud Q fine-tune launch can now plug into an already-tracked session instead of inventing a parallel state model
+- Immaculate eval and routing improvements can be tied back to one orchestration bundle id instead of scattered benchmark screenshots
+- future release notes can talk about one session artifact for Q plus Immaculate instead of separate undocumented prep steps
+
+### 2026-04-14
+
 #### Harbor now has a real Immaculate/Q task pack, and the hidden 300-second Q gateway ceiling was removed instead of worked around
 
 What changed:

@@ -1,0 +1,101 @@
+{
+  "generatedAt": "2026-04-14T20:47:00Z",
+  "sessionId": "q-hybrid-cur-fnv1a-8f551a5c",
+  "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/hybrid-session.manifest.json",
+  "release": {
+    "packageVersion": "0.1.0",
+    "gitSha": "b4e599d86d8b721b76686afbd92cc09fafcbf3c5",
+    "gitShortSha": "b4e599d",
+    "buildId": "0.1.0+b4e599d"
+  },
+  "q": {
+    "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5",
+    "trainingLockPath": ".training-output/q/latest-training-lock.json",
+    "configPath": ".training-output/q/q-lora-config-longctx-cur-fnv1a-8f551a5c.json",
+    "baseModel": "unsloth/gemma-4-31B-it",
+    "trainDatasetPath": ".training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c.jsonl",
+    "trainDatasetRowCount": 1013,
+    "mixManifestPath": ".training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c.manifest.json",
+    "curationRunId": "cur-fnv1a-8f551a5c",
+    "failureCorpusPath": "docs/wiki/Q-Failure-Corpus.json"
+  },
+  "immaculate": {
+    "bundleId": "immaculate-orchestration-b4e599d-4c759c95",
+    "bundlePath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-cur-fnv1a-8f551a5c.json",
+    "signalCount": 14
+  },
+  "doctor": {
+    "local": {
+      "python": "C:\\Users\\Knight\\AppData\\Local\\Microsoft\\WindowsApps\\python.EXE",
+      "ready": true,
+      "mode": "dry-run",
+      "pythonPresent": true,
+      "gpuVisible": false,
+      "dependencies": {
+        "datasets": true,
+        "transformers": false,
+        "trl": false,
+        "unsloth": false
+      },
+      "reasons": []
+    },
+    "cloud": {
+      "provider": "oci",
+      "ready": false,
+      "requiredEnv": {
+        "HF_TOKEN": true
+      },
+      "optionalEnv": {
+        "WANDB_API_KEY": false,
+        "WANDB_ENTITY": false,
+        "WANDB_PROJECT": false,
+        "OCI_CLI_AUTH": false,
+        "OCI_CONFIG_FILE": false,
+        "OCI_PROFILE": false
+      },
+      "launchCommandConfigured": false,
+      "reasons": [
+        "OCI CLI is not installed.",
+        "OCI auth is not configured through instance principals, OCI_CONFIG_FILE, or explicit OCI_* identity variables."
+      ]
+    },
+    "huggingFace": {
+      "ready": true
+    },
+    "wandb": {
+      "ready": false,
+      "entityPresent": false,
+      "projectPresent": false
+    }
+  },
+  "lanes": {
+    "local": {
+      "enabled": true,
+      "mode": "dry-run",
+      "status": "completed",
+      "command": [
+        "C:\\Users\\Knight\\AppData\\Local\\Microsoft\\WindowsApps\\python.EXE",
+        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\training\\q\\train_q_lora_unsloth.py",
+        "--config",
+        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-lora-config-longctx-cur-fnv1a-8f551a5c.json",
+        "--session-manifest",
+        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\sessions\\q-hybrid-cur-fnv1a-8f551a5c\\hybrid-session.manifest.json",
+        "--dry-run"
+      ],
+      "exitCode": 0
+    },
+    "cloud": {
+      "enabled": true,
+      "provider": "oci",
+      "mode": "doctor",
+      "status": "not-configured",
+      "command": []
+    }
+  },
+  "output": {
+    "sessionJsonPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/hybrid-session.json",
+    "sessionMarkdownPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/hybrid-session.md",
+    "wikiJsonPath": "docs/wiki/Q-Hybrid-Training.json",
+    "wikiMarkdownPath": "docs/wiki/Q-Hybrid-Training.md"
+  }
+}

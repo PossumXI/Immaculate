@@ -41,6 +41,10 @@ const SURFACE_FILES: SurfaceTimestamp[] = [
     path: path.join("docs", "wiki", "Q-Gateway-Validation.json")
   },
   {
+    label: "Q hybrid training",
+    path: path.join("docs", "wiki", "Q-Hybrid-Training.json")
+  },
+  {
     label: "W&B benchmark export",
     path: path.join("docs", "wiki", "Benchmark-Wandb-Export.json")
   }
@@ -60,6 +64,7 @@ async function readGeneratedAt(filePath: string): Promise<string | undefined> {
 
 function renderMarkdown(report: ReleaseSurfaceReport): string {
   const trainingLock = report.release.q.trainingLock;
+  const hybridSession = report.release.q.hybridSession;
   return [
     "# Release Surface",
     "",
@@ -76,6 +81,7 @@ function renderMarkdown(report: ReleaseSurfaceReport): string {
     `- Q alias: \`${report.release.q.alias}\``,
     `- Q provider model: \`${report.release.q.providerModel}\``,
     `- Q training bundle: \`${trainingLock?.bundleId ?? "none generated yet"}\``,
+    `- Q hybrid session: \`${hybridSession?.sessionId ?? "none generated yet"}\``,
     "",
     "## What This Means In Plain English",
     "",
@@ -84,6 +90,9 @@ function renderMarkdown(report: ReleaseSurfaceReport): string {
     trainingLock
       ? `- The latest tracked Q training bundle is \`${trainingLock.bundleId}\`, tied to dataset \`${trainingLock.trainDatasetPath ?? "unknown"}\` and config/provenance captured in \`${trainingLock.lockPath}\`.`
       : "- No tracked Q training bundle has been generated yet in this checkout.",
+    hybridSession
+      ? `- The latest hybrid session is \`${hybridSession.sessionId}\`, with local lane \`${hybridSession.localStatus ?? "unknown"}\` and cloud lane \`${hybridSession.cloudStatus ?? "unknown"}\` on provider \`${hybridSession.cloudProvider ?? "unknown"}\`.`
+      : "- No tracked hybrid Q training session has been generated yet in this checkout.",
     "",
     "## Current Evidence Surfaces",
     "",
@@ -101,6 +110,15 @@ function renderMarkdown(report: ReleaseSurfaceReport): string {
     `- Training dataset SHA-256: \`${trainingLock?.trainDatasetSha256 ?? "n/a"}\``,
     `- Mix manifest: \`${trainingLock?.mixManifestPath ?? "n/a"}\``,
     `- Curation run: \`${trainingLock?.curationRunId ?? "n/a"}\``,
+    "",
+    "## Hybrid Training Session",
+    "",
+    `- Session path: \`${hybridSession?.sessionPath ?? "none"}\``,
+    `- Session generated: \`${hybridSession?.generatedAt ?? "n/a"}\``,
+    `- Local lane status: \`${hybridSession?.localStatus ?? "n/a"}\``,
+    `- Cloud lane status: \`${hybridSession?.cloudStatus ?? "n/a"}\``,
+    `- Cloud provider: \`${hybridSession?.cloudProvider ?? "n/a"}\``,
+    `- Immaculate orchestration bundle: \`${hybridSession?.immaculateBundleId ?? "n/a"}\``,
     "",
     "## Truth Boundary",
     "",

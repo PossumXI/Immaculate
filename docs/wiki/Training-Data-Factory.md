@@ -102,5 +102,5 @@ If a claim matters, it should be implemented, measured, or cited independently.
 
 - governed read surfaces for curated training runs
 - richer source adapters with the same policy contract
-- direct handoff from curated shards into fine-tune and eval jobs
+- direct handoff from curated shards into a hybrid local/cloud Q session plus an Immaculate orchestration bundle
 - stronger review workflow for ambiguous licenses and flagged secrets

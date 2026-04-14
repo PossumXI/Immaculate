@@ -27,9 +27,19 @@ def load_training_lock(path_value: str | None) -> dict | None:
     return json.loads(Path(path_value).read_text(encoding="utf-8"))
 
 
+def load_session_manifest(path_value: str | None) -> dict | None:
+    if not path_value:
+        return None
+    return json.loads(Path(path_value).read_text(encoding="utf-8"))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", required=True, help="Path to the Q LoRA training config JSON")
+    parser.add_argument(
+        "--session-manifest",
+        help="Optional hybrid training session manifest JSON. Used to stamp and validate the training lane.",
+    )
     parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -42,6 +52,7 @@ def main() -> None:
     if not dataset_path:
         raise ValueError("Config requires train_dataset_path or curated_dataset_path.")
     training_lock = load_training_lock(config.get("training_lock_path"))
+    session_manifest = load_session_manifest(args.session_manifest)
 
     row_count, column_names = inspect_jsonl_dataset(dataset_path)
     if "text" not in column_names:
@@ -56,6 +67,18 @@ def main() -> None:
         locked_base_model = training_lock.get("run", {}).get("baseModel")
         if locked_base_model and locked_base_model != config.get("base_model"):
             raise ValueError("training_lock_path does not match base_model.")
+    if session_manifest:
+        session_q = session_manifest.get("q", {})
+        if isinstance(session_q, dict):
+            expected_bundle_id = session_q.get("trainingBundleId")
+            if expected_bundle_id and training_lock and expected_bundle_id != training_lock.get("bundleId"):
+                raise ValueError("session-manifest trainingBundleId does not match training_lock_path.")
+            expected_config = session_q.get("configPath")
+            if expected_config and str(Path(expected_config).resolve()) != str(Path(args.config).resolve()):
+                raise ValueError("session-manifest configPath does not match --config.")
+        session_id = session_manifest.get("sessionId")
+        if not session_id:
+            raise ValueError("session-manifest requires sessionId.")
 
     if args.dry_run:
         print(
@@ -70,6 +93,8 @@ def main() -> None:
                     "columns": column_names,
                     "training_lock_path": config.get("training_lock_path"),
                     "training_bundle_id": training_lock.get("bundleId") if training_lock else None,
+                    "training_session_path": args.session_manifest,
+                    "training_session_id": session_manifest.get("sessionId") if session_manifest else None,
                 },
                 indent=2,
             )
@@ -128,6 +153,8 @@ def main() -> None:
                 "alias_name": config["alias_name"],
                 "train_dataset_path": dataset_path,
                 "output_dir": config["output_dir"],
+                "training_session_path": args.session_manifest,
+                "training_session_id": session_manifest.get("sessionId") if session_manifest else None,
             },
             indent=2,
         )

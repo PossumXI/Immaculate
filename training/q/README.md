@@ -11,7 +11,8 @@ It gives the repo a reproducible bridge from:
 1. manifest-first curation
 2. curated JSONL output
 3. text-dataset shaping
-4. cloud or local Unsloth QLoRA launch
+4. a hybrid session that can coordinate local and cloud lanes under one tracked session id
+5. cloud or local Unsloth QLoRA launch
 
 ## Suggested Flow
 
@@ -39,7 +40,13 @@ python training/q/build_q_mixture.py --base .training-output/q/q-train-<run-id>.
 npm run q:training:lock -- --config .training-output/q/q-lora-config-<run-id>.json --mix-manifest .training-output/q/q-mix-<run-id>.manifest.json --curation-run .training-output/training-data/runs/<run-id>/run.json
 ```
 
-5. Convert the live Q report failures into a tracked eval seed corpus:
+5. Build the Immaculate orchestration bundle for the same session:
+
+```powershell
+npm run immaculate:training:bundle
+```
+
+6. Convert the live Q report failures into a tracked eval seed corpus:
 
 ```powershell
 npm run q:failure-corpus
@@ -49,14 +56,44 @@ The failure export is now strict failure-only. When the direct Q lane is green,
 this surface stays empty rather than mixing resolved successes into a fake
 failure bucket.
 
-6. Copy `q_lora_config.example.json` or `q_lora_config.long_context.example.json` and adjust paths to the concrete run-id-specific files.
-7. Validate the config and dataset shape before a GPU run:
+7. Copy `hybrid_training_session.example.json` and point it at the concrete lock/config files for the run, or create a concrete session manifest under `.training-output/q/sessions/<session-id>/`.
+8. Run the hybrid session doctor:
+
+```powershell
+npm run q:training:doctor -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json
+```
+
+9. Validate or launch the local and cloud lanes from the same tracked session:
+
+```powershell
+npm run q:training:session -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --launch
+```
+
+10. Validate the config and dataset shape before a GPU run:
 
 ```powershell
 python training/q/train_q_lora_unsloth.py --config training/q/q_lora_config.example.json --dry-run
 ```
 
-8. Launch `train_q_lora_unsloth.py` on a GPU instance with the required Python packages installed.
+11. Launch `train_q_lora_unsloth.py` on a GPU instance with the required Python packages installed if the session doctor marks the cloud lane ready.
+
+## Hybrid Session
+
+The repo now has a session-level control surface for Q training:
+
+- `training/q/hybrid_training_session.example.json`
+- `training/q/run_q_training_session.py`
+- `npm run q:training:doctor`
+- `npm run q:training:session`
+
+That session is the truthful place to say:
+
+- which Q bundle is being trained
+- which Immaculate orchestration bundle is paired with it
+- whether the local lane is ready
+- whether the cloud lane is actually configured or still blocked
+
+The cloud lane is not allowed to silently pretend readiness. If OCI or another provider is not configured, the session stays explicit about that.
 
 ## Stronger Current Training Direction
 
