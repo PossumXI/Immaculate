@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-15T14:02:02.119Z",
+  "generatedAt": "2026-04-15T15:20:53.766Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "a96bf4245129d0d5959c8c85f10188bf51041ed9",
-    "gitShortSha": "a96bf42",
+    "gitSha": "e04cfc5b068fa28427931ec3ed049a8c95ddfca8",
+    "gitShortSha": "e04cfc5",
     "gitBranch": "detached",
-    "buildId": "0.1.0+a96bf42",
+    "buildId": "0.1.0+e04cfc5",
     "q": {
       "alias": "Q",
       "providerModel": "Q",
@@ -34,14 +34,14 @@
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-15T13:58:47Z",
+        "generatedAt": "2026-04-15T15:19:56Z",
         "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
         "sessionPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.json",
-        "localStatus": "completed",
+        "localStatus": "ready",
         "cloudStatus": "not-configured",
         "cloudProvider": "oci",
         "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e",
-        "immaculateBundleId": "immaculate-orchestration-a96bf42-3dd4365f"
+        "immaculateBundleId": "immaculate-orchestration-e04cfc5-3dd4365f"
       }
     }
   },
@@ -74,17 +74,22 @@
     {
       "label": "Q hybrid training",
       "path": "docs\\wiki\\Q-Hybrid-Training.json",
-      "generatedAt": "2026-04-15T13:58:47Z"
+      "generatedAt": "2026-04-15T15:19:56Z"
     },
     {
       "label": "OCI GPU advisor",
       "path": "docs\\wiki\\OCI-GPU-Advisor.json",
-      "generatedAt": "2026-04-15T13:58:47Z"
+      "generatedAt": "2026-04-15T15:19:56Z"
+    },
+    {
+      "label": "OCI region capacity",
+      "path": "docs\\wiki\\OCI-Region-Capacity.json",
+      "generatedAt": "2026-04-15T15:19:36Z"
     },
     {
       "label": "Q benchmark corpus",
       "path": "docs\\wiki\\Q-Benchmark-Corpus.json",
-      "generatedAt": "2026-04-15T14:02:01Z"
+      "generatedAt": "2026-04-15T15:19:45Z"
     },
     {
       "label": "Q benchmark promotion",

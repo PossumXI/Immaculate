@@ -98,6 +98,7 @@ SESSION_REPO_PATH="${IMMACULATE_Q_HYBRID_SESSION_REPO_PATH:-}"
 OCI_BIN="${OCI_CLI_BIN:-oci}"
 OCI_TARGET_REGION="${OCI_TARGET_REGION:-}"
 OCI_OBJECT_STORAGE_REGION="${OCI_OBJECT_STORAGE_REGION:-}"
+OCI_Q_TRAINING_BUNDLE_SHA256="${OCI_Q_TRAINING_BUNDLE_SHA256:-}"
 
 if [[ "${PRINT_CONFIG}" == "true" ]]; then
   cat <<EOF
@@ -109,6 +110,7 @@ log_dir=${IMMACULATE_Q_TRAINING_LOG_DIR}
 session_repo_path=${SESSION_REPO_PATH}
 target_region=${OCI_TARGET_REGION}
 object_storage_region=${OCI_OBJECT_STORAGE_REGION}
+bundle_sha256=${OCI_Q_TRAINING_BUNDLE_SHA256}
 EOF
   exit 0
 fi
@@ -150,6 +152,16 @@ if [[ ! -d "${IMMACULATE_REPO_ROOT}" ]]; then
 fi
 
 print_banner
+
+if [[ -n "${OCI_Q_TRAINING_BUNDLE_SHA256}" ]]; then
+  ACTUAL_BUNDLE_SHA256="$(sha256sum "${IMMACULATE_Q_TRAINING_BUNDLE_PATH}" | awk '{print $1}')"
+  if [[ "${ACTUAL_BUNDLE_SHA256}" != "${OCI_Q_TRAINING_BUNDLE_SHA256}" ]]; then
+    echo "Training bundle SHA-256 mismatch." >&2
+    echo "expected=${OCI_Q_TRAINING_BUNDLE_SHA256}" >&2
+    echo "actual=${ACTUAL_BUNDLE_SHA256}" >&2
+    exit 1
+  fi
+fi
 
 validate_bundle_archive "${IMMACULATE_Q_TRAINING_BUNDLE_PATH}"
 tar -xzf "${IMMACULATE_Q_TRAINING_BUNDLE_PATH}" -C "${IMMACULATE_REPO_ROOT}"

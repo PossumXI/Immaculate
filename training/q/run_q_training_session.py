@@ -52,6 +52,15 @@ def save_markdown(path_value: Path, content: str) -> None:
     path_value.write_text(content, encoding="utf-8")
 
 
+def try_load_json(path_value: Path | None) -> dict | None:
+    if path_value is None or not path_value.exists():
+        return None
+    try:
+        return load_json(path_value)
+    except Exception:
+        return None
+
+
 def rebase_repo_owned_path(root: Path, candidate: Path) -> Path:
     resolved = candidate.expanduser().resolve(strict=False)
     try:
@@ -111,6 +120,30 @@ def relative_path(root: Path, path_value: Path) -> str:
         return str(path_value.resolve().relative_to(root.resolve())).replace("\\", "/")
     except ValueError:
         return str(path_value.resolve()).replace("\\", "/")
+
+
+def ocid_region_key(value: str | None) -> str:
+    text = str(value or "").strip()
+    parts = text.split(".")
+    if len(parts) >= 4 and parts[0] == "ocid1":
+        return parts[3].strip().upper()
+    return ""
+
+
+def region_label_token(region_name: str | None) -> str:
+    text = str(region_name or "").strip().upper()
+    if not text:
+        return ""
+    parts = [part for part in re.split(r"[^A-Z0-9]+", text) if part and not part.isdigit()]
+    if len(parts) >= 2:
+        return "".join(parts[1:])
+    return "".join(parts)
+
+
+def availability_domain_matches_region(ad_name: str | None, region_name: str | None) -> bool:
+    ad_token = re.sub(r"[^A-Z0-9]", "", str(ad_name or "").upper())
+    region_token = re.sub(r"[^A-Z0-9]", "", region_label_token(region_name))
+    return bool(ad_token and region_token and region_token in ad_token)
 
 
 def count_jsonl_rows(path_value: Path) -> int:
@@ -944,8 +977,10 @@ def render_markdown(summary: dict) -> str:
     doctor = summary["doctor"]
     cloud_bundle = summary["cloudBundle"]
     oci_gpu_advisor = summary.get("ociGpuAdvisor", {})
+    oci_region_capacity = summary.get("ociRegionCapacity", {})
     recommended_launch_target = oci_gpu_advisor.get("recommendedLaunchTarget", {}) if isinstance(oci_gpu_advisor, dict) else {}
     public_expansion_candidates = oci_gpu_advisor.get("publicExpansionCandidates", []) if isinstance(oci_gpu_advisor, dict) else []
+    latest_capacity_summary = oci_region_capacity.get("summary", {}) if isinstance(oci_region_capacity, dict) else {}
     lines = [
         "# Q Hybrid Training",
         "",
@@ -958,6 +993,7 @@ def render_markdown(summary: dict) -> str:
         f"- Dataset rows: `{q['trainDatasetRowCount']}`",
         f"- Immaculate orchestration bundle: `{immaculate['bundleId']}`",
         f"- OCI GPU advisor: `{summary['output'].get('ociGpuAdvisorMarkdownPath', 'docs/wiki/OCI-GPU-Advisor.md')}`",
+        f"- OCI region capacity probe: `{summary['output'].get('ociRegionCapacityMarkdownPath', 'docs/wiki/OCI-Region-Capacity.md')}`",
         "",
         "## Plain English Status",
         "",
@@ -1028,6 +1064,12 @@ def render_markdown(summary: dict) -> str:
         f"- Recommended shape: `{recommended_launch_target.get('shape') or 'n/a'}`",
         f"- Recommendation reason: {recommended_launch_target.get('reason', 'n/a')}",
         f"- Public expansion candidates: `{', '.join(format_region_label({'name': entry.get('region'), 'key': entry.get('regionKey')}) for entry in public_expansion_candidates if isinstance(entry, dict)) if public_expansion_candidates else 'none'}`",
+        "",
+        "## OCI Region Capacity",
+        "",
+        f"- Latest attempt status: `{latest_capacity_summary.get('latestAttemptStatus', 'unknown')}`",
+        f"- Subscription limit reached: `{latest_capacity_summary.get('subscriptionLimitReached', False)}`",
+        f"- Recommended next step: {latest_capacity_summary.get('recommendedNextStep', 'n/a')}",
         "",
         "## Truth Boundary",
         "",
@@ -1143,6 +1185,12 @@ def main() -> None:
     )
     oci_gpu_advisor_markdown_path = resolve_repo_path(str(artifacts.get("ociGpuAdvisorMarkdownPath", "")).strip()) or (
         root / "docs" / "wiki" / "OCI-GPU-Advisor.md"
+    )
+    oci_region_capacity_json_path = resolve_repo_path(str(artifacts.get("ociRegionCapacityJsonPath", "")).strip()) or (
+        root / "docs" / "wiki" / "OCI-Region-Capacity.json"
+    )
+    oci_region_capacity_markdown_path = resolve_repo_path(str(artifacts.get("ociRegionCapacityMarkdownPath", "")).strip()) or (
+        root / "docs" / "wiki" / "OCI-Region-Capacity.md"
     )
 
     policy = manifest.get("policy", {})
@@ -1307,6 +1355,7 @@ def main() -> None:
         if isinstance(current_region_inventory, dict)
         else []
     )
+    oci_region_capacity = try_load_json(oci_region_capacity_json_path) or {}
     oci_gpu_advisor = (
         build_oci_gpu_advisor(
             canonical_env=canonical_cloud_env,
@@ -1447,6 +1496,18 @@ def main() -> None:
                 (entry for entry in oci_gpu_inventory if str(entry.get("region", "")).strip() == configured_target_region),
                 None,
             )
+            configured_target_region_key = (
+                str(configured_target_inventory.get("regionKey", "")).strip().upper()
+                if isinstance(configured_target_inventory, dict)
+                else next(
+                    (
+                        str(entry.get("key", "")).strip().upper()
+                        for entry in oci_subscribed_regions
+                        if str(entry.get("name", "")).strip() == configured_target_region
+                    ),
+                    "",
+                )
+            )
             verified_gpu_targets = [entry for entry in oci_gpu_inventory if int(entry.get("gpuShapeCount", 0)) > 0]
             if oci_auth_ready and not verified_gpu_targets:
                 cloud_reasons.append(
@@ -1468,6 +1529,28 @@ def main() -> None:
             ):
                 cloud_reasons.append(
                     "Cross-region OCI launch requires OCI_OBJECT_STORAGE_REGION so the staged bundle can be fetched from the correct bucket region."
+                )
+            subnet_region_key = ocid_region_key(str(canonical_cloud_env.get("OCI_SUBNET_OCID", "")).strip())
+            image_region_key = ocid_region_key(str(canonical_cloud_env.get("OCI_IMAGE_OCID", "")).strip())
+            availability_domain = str(canonical_cloud_env.get("OCI_AVAILABILITY_DOMAIN", "")).strip()
+            if configured_target_region_key and subnet_region_key and subnet_region_key != configured_target_region_key:
+                cloud_reasons.append(
+                    f"Configured OCI_SUBNET_OCID belongs to region {subnet_region_key}, not target region {configured_target_region_key}."
+                )
+            if configured_target_region_key and image_region_key and image_region_key != configured_target_region_key:
+                cloud_reasons.append(
+                    f"Configured OCI_IMAGE_OCID belongs to region {image_region_key}, not target region {configured_target_region_key}."
+                )
+            if availability_domain and configured_target_region and not availability_domain_matches_region(availability_domain, configured_target_region):
+                cloud_reasons.append(
+                    f"Configured OCI_AVAILABILITY_DOMAIN={availability_domain} does not match target region {configured_target_region}."
+                )
+            capacity_summary = oci_region_capacity.get("summary", {}) if isinstance(oci_region_capacity, dict) else {}
+            if bool(capacity_summary.get("subscriptionLimitReached", False)):
+                latest_attempt_message = str(capacity_summary.get("latestAttemptMessage", "")).strip()
+                cloud_reasons.append(
+                    "OCI region subscription is currently blocked by the tenancy limit."
+                    + (f" {latest_attempt_message}" if latest_attempt_message else "")
                 )
         if not hf_ready:
             cloud_reasons.append(
@@ -1601,6 +1684,13 @@ def main() -> None:
                 "markdownPath": relative_path(root, oci_gpu_advisor_markdown_path),
             },
         },
+        "ociRegionCapacity": {
+            **oci_region_capacity,
+            "output": {
+                "jsonPath": relative_path(root, oci_region_capacity_json_path),
+                "markdownPath": relative_path(root, oci_region_capacity_markdown_path),
+            },
+        } if isinstance(oci_region_capacity, dict) else {},
         "lanes": {
             "local": {
                 "enabled": local_enabled,
@@ -1623,6 +1713,8 @@ def main() -> None:
             "wikiMarkdownPath": relative_path(root, wiki_markdown_path),
             "ociGpuAdvisorJsonPath": relative_path(root, oci_gpu_advisor_json_path),
             "ociGpuAdvisorMarkdownPath": relative_path(root, oci_gpu_advisor_markdown_path),
+            "ociRegionCapacityJsonPath": relative_path(root, oci_region_capacity_json_path),
+            "ociRegionCapacityMarkdownPath": relative_path(root, oci_region_capacity_markdown_path),
         },
     }
 

@@ -46,6 +46,7 @@ This repository is prepared for public collaboration under the Apache 2.0 licens
 - Q benchmark promotion: [docs/wiki/Q-Benchmark-Promotion.md](docs/wiki/Q-Benchmark-Promotion.md)
 - hybrid Q training session: [docs/wiki/Q-Hybrid-Training.md](docs/wiki/Q-Hybrid-Training.md)
 - OCI GPU advisor: [docs/wiki/OCI-GPU-Advisor.md](docs/wiki/OCI-GPU-Advisor.md)
+- OCI region capacity: [docs/wiki/OCI-Region-Capacity.md](docs/wiki/OCI-Region-Capacity.md)
 - OCI Q training bundle: [docs/wiki/OCI-Q-Training.md](docs/wiki/OCI-Q-Training.md)
 - product and release packaging plan: [docs/wiki/Product-Release-Plan.md](docs/wiki/Product-Release-Plan.md)
 - direct Q readiness gate: [docs/wiki/Q-Readiness-Gate.md](docs/wiki/Q-Readiness-Gate.md)
@@ -124,6 +125,7 @@ For the `Q` fine-tune path specifically:
 - failure corpus: [docs/wiki/Q-Failure-Corpus.md](docs/wiki/Q-Failure-Corpus.md)
 - hybrid training session surface: [docs/wiki/Q-Hybrid-Training.md](docs/wiki/Q-Hybrid-Training.md)
 - OCI GPU advisor: [docs/wiki/OCI-GPU-Advisor.md](docs/wiki/OCI-GPU-Advisor.md)
+- OCI region capacity probe: [docs/wiki/OCI-Region-Capacity.md](docs/wiki/OCI-Region-Capacity.md)
 - model/training manifest: [fixtures/training/q-defsec-curation.example.json](fixtures/training/q-defsec-curation.example.json)
 - training bundle: [training/q/README.md](training/q/README.md)
 - Immaculate orchestration bundle: [training/immaculate/README.md](training/immaculate/README.md)
@@ -133,6 +135,7 @@ For the `Q` fine-tune path specifically:
 - hybrid session doctor: `npm run q:training:doctor -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json`
 - hybrid session launcher: `npm run q:training:session -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --launch`
 - benchmark promotion command: `npm run q:training:promote-benchmark`
+- OCI region capacity probe: `npm run q:oci:capacity -- --oci-bin C:/path/to/oci.exe --config-file .training-output/q/oci-controller/DEFAULT.config --profile DEFAULT --region-key PHX`
 - OCI controller launch script: `bash deploy/oci-training/scripts/launch-oci-q-training.sh --session-manifest .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --env-file deploy/oci-training/env/immaculate-q-training.env.example`
 
 As of `2026-04-14`, the direct `Q` structured-contract lane is green on this machine:

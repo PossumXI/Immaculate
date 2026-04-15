@@ -21,6 +21,7 @@ The bundle lives under:
 - launches an OCI compute instance with cloud-init metadata
 - clones the repo on the training node at the tracked git commit
 - downloads the exact session bundle onto the node
+- verifies the staged bundle SHA-256 before extracting it on the training node
 - fetches Hugging Face and optional W&B secrets from OCI Vault or root-readable files
 - runs `training/q/train_q_lora_unsloth.py` against the session-tracked config and manifest
 
@@ -61,6 +62,7 @@ place.
 The current live capacity advice now has its own generated surface:
 
 - `[[OCI-GPU-Advisor]]`
+- `[[OCI-Region-Capacity]]`
 
 That page is where the repo records:
 
@@ -68,6 +70,7 @@ That page is where the repo records:
 - the difference between controller auth region and launch target region
 - whether the next blocker is missing capacity, missing subscription, or missing env wiring
 - the public expansion candidates that are discoverable but not yet verified for capacity
+- the actual tenancy response when the controller tries to subscribe the next GPU-candidate region
 
 ## Truth Boundary
 

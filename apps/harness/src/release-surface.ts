@@ -53,6 +53,10 @@ const SURFACE_FILES: SurfaceTimestamp[] = [
     path: path.join("docs", "wiki", "OCI-GPU-Advisor.json")
   },
   {
+    label: "OCI region capacity",
+    path: path.join("docs", "wiki", "OCI-Region-Capacity.json")
+  },
+  {
     label: "Q benchmark corpus",
     path: path.join("docs", "wiki", "Q-Benchmark-Corpus.json")
   },

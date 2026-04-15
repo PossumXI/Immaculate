@@ -128,6 +128,8 @@ if [[ ! -f "${BUNDLE_PATH}" ]]; then
   exit 1
 fi
 
+BUNDLE_SHA256="$(sha256sum "${BUNDLE_PATH}" | awk '{print $1}')"
+
 OCI_AUTH_MODE="${OCI_CLI_AUTH:-}"
 if [[ -z "${OCI_AUTH_MODE}" ]]; then
   if [[ -n "${OCI_CLI_CONFIG_FILE:-}" || -n "${OCI_CLI_PROFILE:-}" || -n "${OCI_CLI_USER:-}" || -n "${OCI_CLI_TENANCY:-}" || -n "${OCI_CLI_FINGERPRINT:-}" || -n "${OCI_CLI_REGION:-}" ]]; then
@@ -161,6 +163,7 @@ shape=${OCI_SHAPE:-}
 object_namespace=${OCI_OBJECT_STORAGE_NAMESPACE}
 object_bucket=${OCI_OBJECT_STORAGE_BUCKET}
 bundle_object=${OCI_Q_TRAINING_BUNDLE_OBJECT:-}
+bundle_sha256=${BUNDLE_SHA256}
 target_region=${OCI_TARGET_REGION:-}
 object_storage_region=${OCI_OBJECT_STORAGE_REGION:-}
 EOF
@@ -267,6 +270,7 @@ sed \
   -e "s|__OBJECT_BUCKET__|$(printf '%s' "${OCI_OBJECT_STORAGE_BUCKET}" | sed 's/[&|]/\\&/g')|g" \
   -e "s|__OBJECT_REGION__|$(printf '%s' "${OCI_OBJECT_STORAGE_REGION}" | sed 's/[&|]/\\&/g')|g" \
   -e "s|__OBJECT_NAME__|$(printf '%s' "${OCI_Q_TRAINING_BUNDLE_OBJECT}" | sed 's/[&|]/\\&/g')|g" \
+  -e "s|__OBJECT_SHA256__|$(printf '%s' "${BUNDLE_SHA256}" | sed 's/[&|]/\\&/g')|g" \
   -e "s|__SESSION_REPO_PATH__|$(printf '%s' "${SESSION_REPO_PATH}" | sed 's/[&|]/\\&/g')|g" \
   -e "s|__HF_SECRET_OCID__|$(printf '%s' "${OCI_Q_TRAINING_HF_TOKEN_SECRET_OCID:-}" | sed 's/[&|]/\\&/g')|g" \
   -e "s|__WANDB_SECRET_OCID__|$(printf '%s' "${OCI_Q_TRAINING_WANDB_API_KEY_SECRET_OCID:-}" | sed 's/[&|]/\\&/g')|g" \

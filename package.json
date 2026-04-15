@@ -27,6 +27,7 @@
     "q:failure-corpus": "python ./training/q/build_q_failure_corpus.py",
     "q:benchmark:corpus": "python ./training/q/build_q_benchmark_corpus.py",
     "q:training:promote-benchmark": "python ./training/q/promote_q_benchmark_lineage.py",
+    "q:oci:capacity": "python ./training/q/probe_oci_region_capacity.py",
     "ollama:alias:q": "tsx ./apps/harness/src/q-alias-cli.ts --",
     "banner": "npm run banner -w @immaculate/harness",
     "q:gateway": "tsx ./apps/harness/src/q-gateway.ts",
