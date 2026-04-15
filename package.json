@@ -29,6 +29,7 @@
     "q:training:promote-benchmark": "python ./training/q/promote_q_benchmark_lineage.py",
     "q:oci:capacity": "python ./training/q/probe_oci_region_capacity.py",
     "q:oci:limit-request": "python ./training/q/create_oci_region_limit_request.py",
+    "q:hf:jobs": "python ./training/q/launch_hf_jobs_training.py",
     "ollama:alias:q": "tsx ./apps/harness/src/q-alias-cli.ts --",
     "banner": "npm run banner -w @immaculate/harness",
     "q:gateway": "tsx ./apps/harness/src/q-gateway.ts",

@@ -129,6 +129,14 @@ That session is the truthful place to say:
 
 The cloud lane is not allowed to silently pretend readiness. If OCI or another provider is not configured, the session stays explicit about that.
 
+The active workaround cloud lane can also run through Hugging Face Jobs:
+
+- use `deploy/hf-jobs/env/immaculate-q-training.env.example` as the non-secret controller template
+- keep the token in a separate env file such as `C:/Users/Knight/Desktop/cheeks/Asgard/.env`
+- validate and stage the active bundle with `npm run q:hf:jobs -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --env-file C:/Users/Knight/Desktop/cheeks/Asgard/.env --env-file .training-output/q/sessions/<session-id>/hf-jobs.env --smoke-launch`
+- treat `docs/wiki/HF-Jobs-Training.md` as the truth surface for auth, staged bundle state, visible hardware, and any billing blocker
+- keep the session doctor as the source of truth for whether the HF Jobs lane is actually ready to launch
+
 ## Stronger Current Training Direction
 
 The next truthful Q run should emphasize:

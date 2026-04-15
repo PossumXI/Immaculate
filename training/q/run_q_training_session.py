@@ -195,12 +195,43 @@ def default_cloud_env(provider: str) -> list[str]:
             "OCI_OBJECT_STORAGE_NAMESPACE",
             "OCI_OBJECT_STORAGE_BUCKET",
         ],
+        "hf_jobs": ["HF_TOKEN"],
         "runpod": ["HF_TOKEN", "RUNPOD_API_KEY"],
         "vast": ["HF_TOKEN", "VAST_API_KEY"],
         "modal": ["HF_TOKEN", "MODAL_TOKEN_ID", "MODAL_TOKEN_SECRET"],
         "custom": ["HF_TOKEN"],
     }
     return defaults.get(provider, ["HF_TOKEN"])
+
+
+def locate_hf_cli(root: Path, env_map: dict[str, str]) -> str:
+    explicit = str(env_map.get("HF_CLI_BIN", "")).strip()
+    if explicit:
+        return explicit
+    for base in (root, root.parent):
+        local_windows = base / ".tools" / "foundry-venv" / "Scripts" / "hf.exe"
+        if local_windows.exists():
+            return str(local_windows)
+        local_posix = base / ".tools" / "foundry-venv" / "bin" / "hf"
+        if local_posix.exists():
+            return str(local_posix)
+    return shutil.which("hf") or "hf"
+
+
+def hf_gpu_flavor_names(hardware_entries: object) -> list[str]:
+    names: list[str] = []
+    if not isinstance(hardware_entries, list):
+        return names
+    for entry in hardware_entries:
+        if not isinstance(entry, dict):
+            continue
+        accelerator = str(entry.get("accelerator", "")).strip()
+        name = str(entry.get("name", "")).strip()
+        if not name:
+            continue
+        if accelerator and accelerator.upper() != "N/A":
+            names.append(name)
+    return names
 
 
 def build_release_summary(root: Path) -> dict:
@@ -976,6 +1007,7 @@ def render_markdown(summary: dict) -> str:
     cloud_lane = summary["lanes"]["cloud"]
     doctor = summary["doctor"]
     cloud_bundle = summary["cloudBundle"]
+    hf_jobs = summary.get("hfJobsTraining", {})
     oci_gpu_advisor = summary.get("ociGpuAdvisor", {})
     oci_region_capacity = summary.get("ociRegionCapacity", {})
     recommended_launch_target = oci_gpu_advisor.get("recommendedLaunchTarget", {}) if isinstance(oci_gpu_advisor, dict) else {}
@@ -994,6 +1026,7 @@ def render_markdown(summary: dict) -> str:
         f"- Q training bundle: `{q['trainingBundleId']}`",
         f"- Dataset rows: `{q['trainDatasetRowCount']}`",
         f"- Immaculate orchestration bundle: `{immaculate['bundleId']}`",
+        f"- HF Jobs training surface: `{summary['output'].get('hfJobsTrainingMarkdownPath', 'docs/wiki/HF-Jobs-Training.md')}`",
         f"- OCI GPU advisor: `{summary['output'].get('ociGpuAdvisorMarkdownPath', 'docs/wiki/OCI-GPU-Advisor.md')}`",
         f"- OCI region capacity probe: `{summary['output'].get('ociRegionCapacityMarkdownPath', 'docs/wiki/OCI-Region-Capacity.md')}`",
         "",
@@ -1035,57 +1068,88 @@ def render_markdown(summary: dict) -> str:
         "",
         f"- Provider: `{cloud_lane['provider']}`",
         f"- Launch command configured: `{doctor['cloud']['launchCommandConfigured']}`",
-        f"- OCI CLI path: `{doctor['cloud']['cliBin']}`",
-        f"- OCI auth mode: `{doctor['cloud']['authMode']}`",
-        f"- OCI auth source: `{doctor['cloud']['authSource']}`",
-        f"- OCI auth config: `{doctor['cloud']['authConfigPath'] or 'n/a'}`",
-        f"- OCI auth profile: `{doctor['cloud']['authProfile'] or 'n/a'}`",
-        f"- OCI auth key path: `{doctor['cloud']['authKeyPath'] or 'n/a'}`",
-        f"- OCI auth key repaired: `{doctor['cloud']['authKeyRepaired']}`",
-        f"- OCI session env updated: `{doctor['cloud']['sessionEnvUpdated']}`",
-        f"- OCI region: `{doctor['cloud']['region'] or 'n/a'}`",
-        f"- OCI subscribed regions: `{', '.join(doctor['cloud']['subscribedRegionNames']) if doctor['cloud']['subscribedRegionNames'] else 'none discovered'}`",
-        f"- OCI GPU shapes visible: `{', '.join(doctor['cloud']['availableGpuShapes']) if doctor['cloud']['availableGpuShapes'] else 'none'}`",
-        f"- OCI target region: `{doctor['cloud'].get('targetRegion') or 'n/a'}`",
-        f"- OCI Object Storage region: `{doctor['cloud'].get('objectStorageRegion') or 'n/a'}`",
         f"- Cloud ready: `{doctor['cloud']['ready']}`",
         *[
             f"- Env file: `{entry['path']}` exists `{entry['exists']}`"
             for entry in doctor["cloud"]["envFiles"]
         ],
-        *[
-            f"- Launch target `{name}`: `{present}`"
-            for name, present in doctor["cloud"]["launchTarget"].items()
-        ],
         *[f"- Cloud note: {reason}" for reason in doctor["cloud"]["reasons"]],
-        "",
-        "## OCI GPU Advisor",
-        "",
-        f"- Recommendation status: `{recommended_launch_target.get('status', 'none')}`",
-        f"- Recommended region: `{recommended_launch_target.get('region') or 'n/a'}`",
-        f"- Recommended shape: `{recommended_launch_target.get('shape') or 'n/a'}`",
-        f"- Recommendation reason: {recommended_launch_target.get('reason', 'n/a')}",
-        f"- Public expansion candidates: `{', '.join(format_region_label({'name': entry.get('region'), 'key': entry.get('regionKey')}) for entry in public_expansion_candidates if isinstance(entry, dict)) if public_expansion_candidates else 'none'}`",
-        "",
-        "## OCI Region Capacity",
-        "",
-        f"- Latest attempt status: `{latest_capacity_summary.get('latestAttemptStatus', 'unknown')}`",
-        f"- Subscription limit reached: `{latest_capacity_summary.get('subscriptionLimitReached', False)}`",
-        f"- Recommended next step: {latest_capacity_summary.get('recommendedNextStep', 'n/a')}",
-        f"- OCI support create ready now: `{support_capacity.get('createPossible', False)}`",
-        f"- OCI support create blocker: {support_capacity.get('createBlockedReason', 'n/a')}",
-        f"- OCI discovered support-domain candidate: `{support_capacity.get('domainDisplayName') or support_capacity.get('domainId') or 'n/a'}`",
-        f"- OCI support-domain binding verified: `{support_capacity.get('domainBindingVerified') if support_capacity.get('domainBindingVerified') is not None else 'unknown'}`",
-        f"- OCI support incident error: {support_capacity.get('incidentError', {}).get('message', 'n/a') if isinstance(support_capacity.get('incidentError'), dict) else 'n/a'}",
-        f"- Prepared limit-request helper: `{limit_request_helper_command}`",
-        "",
-        "## Truth Boundary",
-        "",
-        "- One hybrid session can now coordinate local Q preparation, optional local training, optional cloud launch intent, and an Immaculate orchestration bundle in one place.",
-        "- A cloud launch is only claimed when the session doctor marks the cloud lane ready and an actual launch command is configured.",
-        "- The cloud bundle exists so a remote GPU node can train the exact locked dataset instead of booting without the tracked session inputs.",
-        "- Missing OCI auth, missing launch target OCIDs, or missing secret mappings keep the cloud lane explicit as `not-configured` instead of being papered over.",
     ]
+    if cloud_lane["provider"] == "hf_jobs":
+        lines.extend(
+            [
+                f"- HF CLI path: `{doctor['cloud']['cliBin']}`",
+                f"- HF auth mode: `{doctor['cloud']['authMode']}`",
+                f"- HF auth source: `{doctor['cloud']['authSource']}`",
+                f"- HF authenticated user: `{doctor['cloud'].get('account') or 'n/a'}`",
+                f"- HF bundle repo: `{doctor['cloud'].get('bundleRepo') or 'n/a'}`",
+                f"- HF bundle staged: `{doctor['cloud'].get('bundleStaged')}`",
+                f"- HF jobs visible: `{doctor['cloud'].get('jobsVisibleCount', 'n/a')}`",
+                f"- HF GPU flavors visible: `{', '.join(doctor['cloud'].get('availableGpuShapes', [])) if doctor['cloud'].get('availableGpuShapes') else 'none'}`",
+                f"- HF smoke attempted: `{doctor['cloud'].get('smokeAttempted')}`",
+                f"- HF smoke blocker: {doctor['cloud'].get('smokeBlocker') or 'n/a'}",
+                f"- HF launch blocker: {doctor['cloud'].get('launchBlocker') or 'n/a'}",
+                "",
+                "## HF Jobs Surface",
+                "",
+                f"- Recommended next step: {hf_jobs.get('summary', {}).get('recommendedNextStep', 'n/a') if isinstance(hf_jobs, dict) else 'n/a'}",
+                f"- Staged archive path: `{hf_jobs.get('stagedBundle', {}).get('archiveRepoPath', 'n/a') if isinstance(hf_jobs, dict) else 'n/a'}`",
+                f"- Staged manifest path: `{hf_jobs.get('stagedBundle', {}).get('manifestRepoPath', 'n/a') if isinstance(hf_jobs, dict) else 'n/a'}`",
+            ]
+        )
+    else:
+        lines.extend(
+            [
+                f"- OCI CLI path: `{doctor['cloud']['cliBin']}`",
+                f"- OCI auth mode: `{doctor['cloud']['authMode']}`",
+                f"- OCI auth source: `{doctor['cloud']['authSource']}`",
+                f"- OCI auth config: `{doctor['cloud']['authConfigPath'] or 'n/a'}`",
+                f"- OCI auth profile: `{doctor['cloud']['authProfile'] or 'n/a'}`",
+                f"- OCI auth key path: `{doctor['cloud']['authKeyPath'] or 'n/a'}`",
+                f"- OCI auth key repaired: `{doctor['cloud']['authKeyRepaired']}`",
+                f"- OCI session env updated: `{doctor['cloud']['sessionEnvUpdated']}`",
+                f"- OCI region: `{doctor['cloud']['region'] or 'n/a'}`",
+                f"- OCI subscribed regions: `{', '.join(doctor['cloud']['subscribedRegionNames']) if doctor['cloud']['subscribedRegionNames'] else 'none discovered'}`",
+                f"- OCI GPU shapes visible: `{', '.join(doctor['cloud']['availableGpuShapes']) if doctor['cloud']['availableGpuShapes'] else 'none'}`",
+                f"- OCI target region: `{doctor['cloud'].get('targetRegion') or 'n/a'}`",
+                f"- OCI Object Storage region: `{doctor['cloud'].get('objectStorageRegion') or 'n/a'}`",
+                *[
+                    f"- Launch target `{name}`: `{present}`"
+                    for name, present in doctor["cloud"]["launchTarget"].items()
+                ],
+                "",
+                "## OCI GPU Advisor",
+                "",
+                f"- Recommendation status: `{recommended_launch_target.get('status', 'none')}`",
+                f"- Recommended region: `{recommended_launch_target.get('region') or 'n/a'}`",
+                f"- Recommended shape: `{recommended_launch_target.get('shape') or 'n/a'}`",
+                f"- Recommendation reason: {recommended_launch_target.get('reason', 'n/a')}",
+                f"- Public expansion candidates: `{', '.join(format_region_label({'name': entry.get('region'), 'key': entry.get('regionKey')}) for entry in public_expansion_candidates if isinstance(entry, dict)) if public_expansion_candidates else 'none'}`",
+                "",
+                "## OCI Region Capacity",
+                "",
+                f"- Latest attempt status: `{latest_capacity_summary.get('latestAttemptStatus', 'unknown')}`",
+                f"- Subscription limit reached: `{latest_capacity_summary.get('subscriptionLimitReached', False)}`",
+                f"- Recommended next step: {latest_capacity_summary.get('recommendedNextStep', 'n/a')}",
+                f"- OCI support create ready now: `{support_capacity.get('createPossible', False)}`",
+                f"- OCI support create blocker: {support_capacity.get('createBlockedReason', 'n/a')}",
+                f"- OCI discovered support-domain candidate: `{support_capacity.get('domainDisplayName') or support_capacity.get('domainId') or 'n/a'}`",
+                f"- OCI support-domain binding verified: `{support_capacity.get('domainBindingVerified') if support_capacity.get('domainBindingVerified') is not None else 'unknown'}`",
+                f"- OCI support incident error: {support_capacity.get('incidentError', {}).get('message', 'n/a') if isinstance(support_capacity.get('incidentError'), dict) else 'n/a'}",
+                f"- Prepared limit-request helper: `{limit_request_helper_command}`",
+            ]
+        )
+    lines.extend(
+        [
+            "",
+            "## Truth Boundary",
+            "",
+            "- One hybrid session can now coordinate local Q preparation, optional local training, optional cloud launch intent, and an Immaculate orchestration bundle in one place.",
+            "- A cloud launch is only claimed when the session doctor marks the cloud lane ready and an actual launch command is configured.",
+            "- The cloud bundle exists so a remote GPU node can train the exact locked dataset instead of booting without the tracked session inputs.",
+            "- Missing provider auth, staging proof, launch targets, or billing headroom keeps the cloud lane explicit as `not-configured` instead of being papered over.",
+        ]
+    )
     return "\n".join(lines) + "\n"
 
 
@@ -1187,6 +1251,12 @@ def main() -> None:
     )
     wiki_markdown_path = resolve_repo_path(str(artifacts.get("wikiMarkdownPath", "")).strip()) or (
         root / "docs" / "wiki" / "Q-Hybrid-Training.md"
+    )
+    hf_jobs_training_json_path = resolve_repo_path(str(artifacts.get("hfJobsTrainingJsonPath", "")).strip()) or (
+        root / "docs" / "wiki" / "HF-Jobs-Training.json"
+    )
+    hf_jobs_training_markdown_path = resolve_repo_path(str(artifacts.get("hfJobsTrainingMarkdownPath", "")).strip()) or (
+        root / "docs" / "wiki" / "HF-Jobs-Training.md"
     )
     oci_gpu_advisor_json_path = resolve_repo_path(str(artifacts.get("ociGpuAdvisorJsonPath", "")).strip()) or (
         root / "docs" / "wiki" / "OCI-GPU-Advisor.json"
@@ -1323,6 +1393,16 @@ def main() -> None:
 
     required_env = [str(entry) for entry in cloud_manifest.get("requiredEnv", default_cloud_env(cloud_provider))]
     optional_env = [str(entry) for entry in cloud_manifest.get("optionalEnv", [])]
+    hf_cli_bin = locate_hf_cli(root, canonical_cloud_env)
+    hf_cli_available = bool(shutil.which(hf_cli_bin) or Path(hf_cli_bin).exists())
+    hf_jobs_report = try_load_json(hf_jobs_training_json_path) or {}
+    hf_jobs_auth = hf_jobs_report.get("auth", {}) if isinstance(hf_jobs_report, dict) else {}
+    hf_jobs_staged_bundle = hf_jobs_report.get("stagedBundle", {}) if isinstance(hf_jobs_report, dict) else {}
+    hf_jobs_smoke = hf_jobs_report.get("smokeLaunch", {}) if isinstance(hf_jobs_report, dict) else {}
+    hf_jobs_launch = hf_jobs_report.get("launch", {}) if isinstance(hf_jobs_report, dict) else {}
+    hf_jobs_summary = hf_jobs_report.get("summary", {}) if isinstance(hf_jobs_report, dict) else {}
+    hf_jobs_hardware = hf_jobs_report.get("hardware", []) if isinstance(hf_jobs_report, dict) else []
+    hf_jobs_gpu_shapes = hf_gpu_flavor_names(hf_jobs_hardware)
     oci_cli_bin = str(canonical_cloud_env.get("OCI_CLI_BIN", "")).strip() or shutil.which("oci") or "oci"
     oci_cli_available = bool(shutil.which(oci_cli_bin) or Path(oci_cli_bin).exists())
     oci_auth_mode = "missing"
@@ -1426,9 +1506,10 @@ def main() -> None:
     optional_env_state = {name: bool(str(canonical_cloud_env.get(name, "")).strip()) for name in optional_env}
 
     launch_target_names = list(default_cloud_env(cloud_provider))
-    for extra_name in ("OCI_TARGET_REGION", "OCI_OBJECT_STORAGE_REGION"):
-        if extra_name not in launch_target_names:
-            launch_target_names.append(extra_name)
+    if cloud_provider == "oci":
+        for extra_name in ("OCI_TARGET_REGION", "OCI_OBJECT_STORAGE_REGION"):
+            if extra_name not in launch_target_names:
+                launch_target_names.append(extra_name)
     launch_target_state = {
         name: bool(str(canonical_cloud_env.get(name, "")).strip())
         for name in launch_target_names
@@ -1560,6 +1641,26 @@ def main() -> None:
                     "OCI region subscription is currently blocked by the tenancy limit."
                     + (f" {latest_attempt_message}" if latest_attempt_message else "")
                 )
+        if cloud_provider == "hf_jobs":
+            if not hf_cli_available:
+                cloud_reasons.append(f"Hugging Face CLI is not installed or not reachable at {hf_cli_bin}.")
+            if not hf_jobs_report:
+                cloud_reasons.append(
+                    "HF Jobs staging report is missing. Run the HF Jobs launcher to authenticate, stage the bundle, and probe billing before treating this as a cloud lane."
+                )
+            else:
+                if not bool(hf_jobs_auth.get("ready", False)):
+                    cloud_reasons.append("HF Jobs auth report is not ready.")
+                if not bool(hf_jobs_staged_bundle.get("staged", False)):
+                    cloud_reasons.append("HF Jobs bundle staging is not complete.")
+                smoke_blocker = str(hf_jobs_smoke.get("blocker") or "").strip()
+                launch_blocker = str(hf_jobs_launch.get("blocker") or "").strip()
+                if smoke_blocker:
+                    cloud_reasons.append(f"HF Jobs smoke launch blocker: {smoke_blocker}")
+                if launch_blocker:
+                    cloud_reasons.append(f"HF Jobs launch blocker: {launch_blocker}")
+                if not hf_jobs_gpu_shapes:
+                    cloud_reasons.append("HF Jobs hardware probe did not expose any GPU-capable flavors.")
         if not hf_ready:
             cloud_reasons.append(
                 "Hugging Face auth is not configured through HF_TOKEN/HUGGINGFACE_TOKEN, HF_TOKEN_FILE, or OCI_Q_TRAINING_HF_TOKEN_SECRET_OCID."
@@ -1649,24 +1750,31 @@ def main() -> None:
                 "launchTarget": launch_target_state,
                 "launchCommandConfigured": bool(cloud_launch_command),
                 "launchCommand": cloud_launch_command,
-                "cliBin": oci_cli_bin,
-                "authMode": oci_auth_mode if cloud_provider == "oci" else "n/a",
-                "authSource": oci_bootstrap.get("source"),
-                "authConfigPath": oci_bootstrap.get("configPath"),
-                "authProfile": oci_bootstrap.get("profile"),
-                "authKeyPath": oci_bootstrap.get("keyPath"),
-                "authKeyRepaired": oci_bootstrap.get("keyPathRepaired"),
-                "sessionEnvPath": oci_bootstrap.get("sessionEnvPath"),
-                "sessionEnvUpdated": oci_bootstrap.get("sessionEnvUpdated"),
-                "advisorEnvUpdated": bool(advisor_env_updates),
-                "region": oci_identity.get("region"),
-                "targetRegion": str(canonical_cloud_env.get("OCI_TARGET_REGION", "")).strip() or oci_identity.get("region"),
-                "objectStorageRegion": str(canonical_cloud_env.get("OCI_OBJECT_STORAGE_REGION", "")).strip() or oci_identity.get("region"),
-                "subscribedRegions": oci_subscribed_regions,
-                "subscribedRegionNames": oci_subscribed_region_names,
-                "availableGpuShapes": oci_available_gpu_shapes,
-                "gpuInventory": oci_gpu_inventory,
-                "recommendedLaunchTarget": oci_gpu_advisor.get("recommendedLaunchTarget") if isinstance(oci_gpu_advisor, dict) else {},
+                "cliBin": oci_cli_bin if cloud_provider == "oci" else hf_cli_bin,
+                "authMode": oci_auth_mode if cloud_provider == "oci" else ("token" if hf_ready else "missing"),
+                "authSource": oci_bootstrap.get("source") if cloud_provider == "oci" else hf_source,
+                "authConfigPath": oci_bootstrap.get("configPath") if cloud_provider == "oci" else None,
+                "authProfile": oci_bootstrap.get("profile") if cloud_provider == "oci" else None,
+                "authKeyPath": oci_bootstrap.get("keyPath") if cloud_provider == "oci" else None,
+                "authKeyRepaired": oci_bootstrap.get("keyPathRepaired") if cloud_provider == "oci" else False,
+                "sessionEnvPath": oci_bootstrap.get("sessionEnvPath") if cloud_provider == "oci" else None,
+                "sessionEnvUpdated": oci_bootstrap.get("sessionEnvUpdated") if cloud_provider == "oci" else False,
+                "advisorEnvUpdated": bool(advisor_env_updates) if cloud_provider == "oci" else False,
+                "region": oci_identity.get("region") if cloud_provider == "oci" else None,
+                "targetRegion": (str(canonical_cloud_env.get("OCI_TARGET_REGION", "")).strip() or oci_identity.get("region")) if cloud_provider == "oci" else None,
+                "objectStorageRegion": (str(canonical_cloud_env.get("OCI_OBJECT_STORAGE_REGION", "")).strip() or oci_identity.get("region")) if cloud_provider == "oci" else None,
+                "subscribedRegions": oci_subscribed_regions if cloud_provider == "oci" else [],
+                "subscribedRegionNames": oci_subscribed_region_names if cloud_provider == "oci" else [],
+                "availableGpuShapes": oci_available_gpu_shapes if cloud_provider == "oci" else hf_jobs_gpu_shapes,
+                "gpuInventory": oci_gpu_inventory if cloud_provider == "oci" else hf_jobs_hardware,
+                "recommendedLaunchTarget": oci_gpu_advisor.get("recommendedLaunchTarget") if (cloud_provider == "oci" and isinstance(oci_gpu_advisor, dict)) else {},
+                "account": hf_jobs_auth.get("user") if cloud_provider == "hf_jobs" else None,
+                "bundleRepo": hf_jobs_staged_bundle.get("repoId") if cloud_provider == "hf_jobs" else None,
+                "bundleStaged": hf_jobs_staged_bundle.get("staged") if cloud_provider == "hf_jobs" else None,
+                "jobsVisibleCount": hf_jobs_report.get("jobsVisibleCount") if cloud_provider == "hf_jobs" else None,
+                "smokeAttempted": hf_jobs_smoke.get("attempted") if cloud_provider == "hf_jobs" else None,
+                "smokeBlocker": hf_jobs_smoke.get("blocker") if cloud_provider == "hf_jobs" else None,
+                "launchBlocker": hf_jobs_launch.get("blocker") if cloud_provider == "hf_jobs" else None,
                 "reasons": cloud_reasons,
                 "canonicalSources": canonical_sources,
             },
@@ -1699,6 +1807,13 @@ def main() -> None:
                 "markdownPath": relative_path(root, oci_region_capacity_markdown_path),
             },
         } if isinstance(oci_region_capacity, dict) else {},
+        "hfJobsTraining": {
+            **hf_jobs_report,
+            "output": {
+                "jsonPath": relative_path(root, hf_jobs_training_json_path),
+                "markdownPath": relative_path(root, hf_jobs_training_markdown_path),
+            },
+        } if isinstance(hf_jobs_report, dict) and hf_jobs_report else {},
         "lanes": {
             "local": {
                 "enabled": local_enabled,
@@ -1719,6 +1834,8 @@ def main() -> None:
             "sessionMarkdownPath": relative_path(root, session_markdown_path),
             "wikiJsonPath": relative_path(root, wiki_json_path),
             "wikiMarkdownPath": relative_path(root, wiki_markdown_path),
+            "hfJobsTrainingJsonPath": relative_path(root, hf_jobs_training_json_path),
+            "hfJobsTrainingMarkdownPath": relative_path(root, hf_jobs_training_markdown_path),
             "ociGpuAdvisorJsonPath": relative_path(root, oci_gpu_advisor_json_path),
             "ociGpuAdvisorMarkdownPath": relative_path(root, oci_gpu_advisor_markdown_path),
             "ociRegionCapacityJsonPath": relative_path(root, oci_region_capacity_json_path),

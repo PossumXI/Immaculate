@@ -2,38 +2,32 @@
 
 This page records the current OCI GPU launch advice for the active Q hybrid training session.
 
-- Generated: `2026-04-15T17:07:28Z`
-- Release: `0.1.0+967ff93`
+- Generated: `2026-04-15T18:57:50Z`
+- Release: `0.1.0+bb5d749`
 - Session id: `q-hybrid-cur-fnv1a-8f551a5c-bench-v2`
 - Probe scope: `verified-subscribed-regions-only`
-- Controller region: `us-ashburn-1`
-- Configured target region: `us-ashburn-1`
+- Controller region: `n/a`
+- Configured target region: `n/a`
 - Configured shape: `n/a`
 - Object Storage region: `n/a`
 
 ## Verified Subscribed Regions
 
-- us-ashburn-1 (IAD) [home]: probe `verified`, gpu shapes `none`
-  Reason: No GPU-capable shapes are visible for the current controller auth.
+- No subscribed OCI regions could be verified.
 
 ## Recommended Launch Target
 
 - Status: `none`
 - Region: `n/a`
 - Shape: `n/a`
-- Reason: No subscribed OCI region currently exposes GPU-capable shapes for the current controller auth.
+- Reason: OCI GPU advisor is unavailable until OCI auth and CLI are ready.
 
 ## Public Expansion Candidates
 
-- us-chicago-1 (ORD): Public OCI region candidate. GPU capacity is not verified until the tenancy subscribes it.
-- us-phoenix-1 (PHX): Public OCI region candidate. GPU capacity is not verified until the tenancy subscribes it.
-- us-sanjose-1 (SJC): Public OCI region candidate. GPU capacity is not verified until the tenancy subscribes it.
+- No additional public region candidates were discovered.
 
 ## Next Actions
 
-- Only one subscribed OCI region is visible right now: us-ashburn-1 (IAD) [home].
-- Next capacity move is to subscribe an additional nearby public region such as: us-chicago-1 (ORD), us-phoenix-1 (PHX), us-sanjose-1 (SJC).
-- Keep the cloud lane as not-configured until a subscribed region shows verified GPU-capable shapes.
 
 ## Output
 

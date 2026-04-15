@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-04-15T17:07:28Z",
+  "generatedAt": "2026-04-15T18:57:50Z",
   "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
   "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.manifest.json",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "967ff9319e4a15e6acd9913bf16251b1d42d2fb6",
-    "gitShortSha": "967ff93",
-    "buildId": "0.1.0+967ff93"
+    "gitSha": "bb5d74917c953b52af2f71057a4d1cb7cdcd39a4",
+    "gitShortSha": "bb5d749",
+    "buildId": "0.1.0+bb5d749"
   },
   "q": {
     "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e",
@@ -23,15 +23,15 @@
     "failureCorpusPath": "docs/wiki/Q-Failure-Corpus.json"
   },
   "immaculate": {
-    "bundleId": "immaculate-orchestration-967ff93-3dd4365f",
+    "bundleId": "immaculate-orchestration-bb5d749-3dd4365f",
     "bundlePath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-cur-fnv1a-8f551a5c-bench-v2.json",
     "signalCount": 14
   },
   "cloudBundle": {
-    "bundleId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2-967ff93",
+    "bundleId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2-bb5d749",
     "archivePath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/cloud-bundle/q-hybrid-cur-fnv1a-8f551a5c-bench-v2-cloud-bundle.tar.gz",
-    "archiveSha256": "373e1cabdee6ee89b766fdaa282f065251ce6b862e78c1f03f6b1f71f7059e48",
-    "archiveSizeBytes": 2218409,
+    "archiveSha256": "a1b681737571a9e06ca52d0834109807fce0eac72a3938390dbd29f597d321c8",
+    "archiveSizeBytes": 2218381,
     "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/cloud-bundle/bundle-manifest.json",
     "fileCount": 10,
     "repoRemoteUrl": "https://github.com/PossumXI/Immaculate.git"
@@ -52,7 +52,7 @@
       "reasons": []
     },
     "cloud": {
-      "provider": "oci",
+      "provider": "hf_jobs",
       "mode": "launch",
       "ready": false,
       "envFiles": [
@@ -61,7 +61,7 @@
           "exists": true
         },
         {
-          "path": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/oci-cloud.env",
+          "path": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hf-jobs.env",
           "exists": true
         }
       ],
@@ -69,108 +69,249 @@
         "WANDB_MODE"
       ],
       "requiredEnv": {
-        "OCI_COMPARTMENT_OCID": true,
-        "OCI_SUBNET_OCID": true,
-        "OCI_AVAILABILITY_DOMAIN": true,
-        "OCI_IMAGE_OCID": true,
-        "OCI_SHAPE": false,
-        "OCI_OBJECT_STORAGE_NAMESPACE": true,
-        "OCI_OBJECT_STORAGE_BUCKET": true
+        "HF_TOKEN": true
       },
       "optionalEnv": {
-        "HF_TOKEN": true,
         "HUGGINGFACE_TOKEN": false,
         "WANDB_API_KEY": false,
         "WANDB_ENTITY": false,
         "WANDB_PROJECT": false,
-        "OCI_CLI_AUTH": true,
-        "OCI_CLI_CONFIG_FILE": true,
-        "OCI_CLI_PROFILE": true,
-        "OCI_CONFIG_FILE": false,
-        "OCI_PROFILE": false,
-        "OCI_Q_TRAINING_HF_TOKEN_SECRET_OCID": false,
-        "OCI_Q_TRAINING_WANDB_API_KEY_SECRET_OCID": false,
-        "WANDB_MODE": true
+        "WANDB_MODE": true,
+        "HF_BUNDLE_REPO": true,
+        "HF_JOB_NAMESPACE": true,
+        "HF_JOB_FLAVOR": true,
+        "HF_JOB_TIMEOUT": true,
+        "HF_JOB_IMAGE": true,
+        "HF_JOB_MODE": true,
+        "HF_JOB_SMOKE_FLAVOR": true,
+        "HF_JOB_SMOKE_TIMEOUT": true,
+        "HF_CLI_BIN": false
       },
       "launchTarget": {
-        "OCI_COMPARTMENT_OCID": true,
-        "OCI_SUBNET_OCID": true,
-        "OCI_AVAILABILITY_DOMAIN": true,
-        "OCI_IMAGE_OCID": true,
-        "OCI_SHAPE": false,
-        "OCI_OBJECT_STORAGE_NAMESPACE": true,
-        "OCI_OBJECT_STORAGE_BUCKET": true,
-        "OCI_TARGET_REGION": false,
-        "OCI_OBJECT_STORAGE_REGION": false
+        "HF_TOKEN": true
       },
       "launchCommandConfigured": true,
       "launchCommand": [
-        "bash",
-        "deploy/oci-training/scripts/launch-oci-q-training.sh",
-        "--session-manifest",
+        "python",
+        "training/q/launch_hf_jobs_training.py",
+        "--session",
         ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.manifest.json",
         "--env-file",
         "C:/Users/Knight/Desktop/cheeks/Asgard/.env",
         "--env-file",
-        ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/oci-cloud.env"
+        ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hf-jobs.env",
+        "--launch"
       ],
-      "cliBin": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.tools/oci-cli-venv/Scripts/oci.exe",
-      "authMode": "config_file",
-      "authSource": "OCI_CLI_CONFIG_FILE",
-      "authConfigPath": ".training-output/q/oci-controller/DEFAULT.config",
-      "authProfile": "DEFAULT",
-      "authKeyPath": "C:/Users/Knight/.oci/oci_api_key.pem",
+      "cliBin": "C:\\Users\\Knight\\Desktop\\Immaculate\\.tools\\foundry-venv\\Scripts\\hf.exe",
+      "authMode": "token",
+      "authSource": "HF_TOKEN",
+      "authConfigPath": null,
+      "authProfile": null,
+      "authKeyPath": null,
       "authKeyRepaired": false,
-      "sessionEnvPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/oci-cloud.env",
-      "sessionEnvUpdated": true,
+      "sessionEnvPath": null,
+      "sessionEnvUpdated": false,
       "advisorEnvUpdated": false,
-      "region": "us-ashburn-1",
-      "targetRegion": "us-ashburn-1",
-      "objectStorageRegion": "us-ashburn-1",
-      "subscribedRegions": [
-        {
-          "name": "us-ashburn-1",
-          "key": "IAD",
-          "isHomeRegion": true,
-          "status": "READY"
-        }
+      "region": null,
+      "targetRegion": null,
+      "objectStorageRegion": null,
+      "subscribedRegions": [],
+      "subscribedRegionNames": [],
+      "availableGpuShapes": [
+        "t4-small",
+        "t4-medium",
+        "a10g-small",
+        "a10g-large",
+        "a10g-largex2",
+        "a10g-largex4",
+        "a100-large",
+        "a100x4",
+        "h200",
+        "h200x2",
+        "h200x4",
+        "l4x1",
+        "l4x4",
+        "l40sx1",
+        "l40sx4"
       ],
-      "subscribedRegionNames": [
-        "us-ashburn-1 (IAD) [home]"
-      ],
-      "availableGpuShapes": [],
       "gpuInventory": [
         {
-          "region": "us-ashburn-1",
-          "regionKey": "IAD",
-          "isHomeRegion": true,
-          "subscriptionStatus": "READY",
-          "probeStatus": "verified",
-          "gpuShapes": [],
-          "gpuShapeCount": 0,
-          "reason": "No GPU-capable shapes are visible for the current controller auth."
+          "name": "cpu-basic",
+          "prettyName": "CPU Basic",
+          "cpu": "2 vCPU",
+          "ram": "16 GB",
+          "accelerator": "N/A",
+          "costPerMin": "$0.0002",
+          "costPerHour": "$0.01"
+        },
+        {
+          "name": "cpu-upgrade",
+          "prettyName": "CPU Upgrade",
+          "cpu": "8 vCPU",
+          "ram": "32 GB",
+          "accelerator": "N/A",
+          "costPerMin": "$0.0005",
+          "costPerHour": "$0.03"
+        },
+        {
+          "name": "cpu-xl",
+          "prettyName": "CPU XL",
+          "cpu": "16 vCPU",
+          "ram": "124 GB",
+          "accelerator": "N/A",
+          "costPerMin": "$0.0167",
+          "costPerHour": "$1.00"
+        },
+        {
+          "name": "t4-small",
+          "prettyName": "Nvidia T4 ... 4 vCPU",
+          "cpu": "15 GB",
+          "ram": "1x T4 (16 GB)",
+          "accelerator": "$0.0067",
+          "costPerMin": "$0.40",
+          "costPerHour": ""
+        },
+        {
+          "name": "t4-medium",
+          "prettyName": "Nvidia T4 ... 8 vCPU",
+          "cpu": "30 GB",
+          "ram": "1x T4 (16 GB)",
+          "accelerator": "$0.0100",
+          "costPerMin": "$0.60",
+          "costPerHour": ""
+        },
+        {
+          "name": "a10g-small",
+          "prettyName": "Nvidia A10... 4 vCPU",
+          "cpu": "15 GB",
+          "ram": "1x A10G (24 GB)",
+          "accelerator": "$0.0167",
+          "costPerMin": "$1.00",
+          "costPerHour": ""
+        },
+        {
+          "name": "a10g-large",
+          "prettyName": "Nvidia A10... 12 vCPU",
+          "cpu": "46 GB",
+          "ram": "1x A10G (24 GB)",
+          "accelerator": "$0.0250",
+          "costPerMin": "$1.50",
+          "costPerHour": ""
+        },
+        {
+          "name": "a10g-largex2",
+          "prettyName": "2x Nvidia ... 24 vCPU",
+          "cpu": "92 GB",
+          "ram": "2x A10G (48 GB)",
+          "accelerator": "$0.0500",
+          "costPerMin": "$3.00",
+          "costPerHour": ""
+        },
+        {
+          "name": "a10g-largex4",
+          "prettyName": "4x Nvidia ... 48 vCPU",
+          "cpu": "184 GB",
+          "ram": "4x A10G (96 GB)",
+          "accelerator": "$0.0833",
+          "costPerMin": "$5.00",
+          "costPerHour": ""
+        },
+        {
+          "name": "a100-large",
+          "prettyName": "Nvidia A10... 12 vCPU",
+          "cpu": "142 GB",
+          "ram": "1x A100 (80 GB)",
+          "accelerator": "$0.0417",
+          "costPerMin": "$2.50",
+          "costPerHour": ""
+        },
+        {
+          "name": "a100x4",
+          "prettyName": "4x Nvidia ... 48 vCPU",
+          "cpu": "568 GB",
+          "ram": "4x A100 (320 GB)",
+          "accelerator": "$0.1667",
+          "costPerMin": "$10.00",
+          "costPerHour": ""
+        },
+        {
+          "name": "h200",
+          "prettyName": "Nvidia H200",
+          "cpu": "23 vCPU",
+          "ram": "256 GB",
+          "accelerator": "1x H200 (141 GB)",
+          "costPerMin": "$0.0833",
+          "costPerHour": "$5.00"
+        },
+        {
+          "name": "h200x2",
+          "prettyName": "Nvidia H200",
+          "cpu": "46 vCPU",
+          "ram": "512 GB",
+          "accelerator": "2x H200 (282 GB)",
+          "costPerMin": "$0.1667",
+          "costPerHour": "$10.00"
+        },
+        {
+          "name": "h200x4",
+          "prettyName": "Nvidia H200",
+          "cpu": "92 vCPU",
+          "ram": "1024 GB 4x H200 (564 GB)",
+          "accelerator": "$0.3333",
+          "costPerMin": "$20.00",
+          "costPerHour": ""
+        },
+        {
+          "name": "l4x1",
+          "prettyName": "1x Nvidia L4",
+          "cpu": "8 vCPU",
+          "ram": "30 GB",
+          "accelerator": "1x L4 (24 GB)",
+          "costPerMin": "$0.0133",
+          "costPerHour": "$0.80"
+        },
+        {
+          "name": "l4x4",
+          "prettyName": "4x Nvidia L4",
+          "cpu": "48 vCPU",
+          "ram": "186 GB",
+          "accelerator": "4x L4 (96 GB)",
+          "costPerMin": "$0.0633",
+          "costPerHour": "$3.80"
+        },
+        {
+          "name": "l40sx1",
+          "prettyName": "1x Nvidia ... 8 vCPU",
+          "cpu": "62 GB",
+          "ram": "1x L40S (48 GB)",
+          "accelerator": "$0.0300",
+          "costPerMin": "$1.80",
+          "costPerHour": ""
+        },
+        {
+          "name": "l40sx4",
+          "prettyName": "4x Nvidia ... 48 vCPU",
+          "cpu": "382 GB",
+          "ram": "4x L40S (192 GB)",
+          "accelerator": "$0.1383",
+          "costPerMin": "$8.30",
+          "costPerHour": ""
         }
       ],
-      "recommendedLaunchTarget": {
-        "status": "none",
-        "region": null,
-        "regionKey": null,
-        "isHomeRegion": false,
-        "shape": null,
-        "reason": "No subscribed OCI region currently exposes GPU-capable shapes for the current controller auth."
-      },
+      "recommendedLaunchTarget": {},
+      "account": "TruLumecreator",
+      "bundleRepo": "TruLumecreator/immaculate-q-cloud-bundles",
+      "bundleStaged": true,
+      "jobsVisibleCount": 0,
+      "smokeAttempted": true,
+      "smokeBlocker": "Error: Client error '402 Payment Required' for url 'https://huggingface.co/api/jobs/TruLumecreator' (Request ID: Root=1-69dfdf17-1622321c5a518b1a144d1889;930d8b3e-293f-43fe-9615-4ea9f294a43c)\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402\n\nPre-paid credit balance is insufficient - add more credits to your account to use Jobs.",
+      "launchBlocker": null,
       "reasons": [
-        "Missing cloud launch target env: OCI_SHAPE",
-        "Only subscribed OCI region visible to this tenancy is us-ashburn-1 (IAD) [home].",
-        "No subscribed OCI region currently exposes GPU-capable shapes for the current controller auth.",
-        "OCI region subscription is currently blocked by the tenancy limit. You have exceeded the maximum number of allowed subscribed regions. Please see the Limits, Quotas and Usage page for more detail."
+        "HF Jobs smoke launch blocker: Error: Client error '402 Payment Required' for url 'https://huggingface.co/api/jobs/TruLumecreator' (Request ID: Root=1-69dfdf17-1622321c5a518b1a144d1889;930d8b3e-293f-43fe-9615-4ea9f294a43c)\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402\n\nPre-paid credit balance is insufficient - add more credits to your account to use Jobs."
       ],
       "canonicalSources": {
         "HF_TOKEN": "HF_TOKEN",
-        "WANDB_MODE": "WANDB_MODE",
-        "OCI_CLI_AUTH": "OCI_CLI_AUTH",
-        "OCI_CLI_CONFIG_FILE": "OCI_CLI_CONFIG_FILE",
-        "OCI_CLI_PROFILE": "OCI_CLI_PROFILE"
+        "WANDB_MODE": "WANDB_MODE"
       }
     },
     "huggingFace": {
@@ -187,61 +328,29 @@
   },
   "ociGpuAdvisor": {
     "probeScope": "verified-subscribed-regions-only",
-    "controllerRegion": "us-ashburn-1",
-    "configuredTargetRegion": "us-ashburn-1",
+    "controllerRegion": null,
+    "configuredTargetRegion": null,
     "configuredShape": null,
     "configuredObjectStorageRegion": null,
-    "verifiedInventory": [
-      {
-        "region": "us-ashburn-1",
-        "regionKey": "IAD",
-        "isHomeRegion": true,
-        "subscriptionStatus": "READY",
-        "probeStatus": "verified",
-        "gpuShapes": [],
-        "gpuShapeCount": 0,
-        "reason": "No GPU-capable shapes are visible for the current controller auth."
-      }
-    ],
-    "publicExpansionCandidates": [
-      {
-        "region": "us-chicago-1",
-        "regionKey": "ORD",
-        "reason": "Public OCI region candidate. GPU capacity is not verified until the tenancy subscribes it."
-      },
-      {
-        "region": "us-phoenix-1",
-        "regionKey": "PHX",
-        "reason": "Public OCI region candidate. GPU capacity is not verified until the tenancy subscribes it."
-      },
-      {
-        "region": "us-sanjose-1",
-        "regionKey": "SJC",
-        "reason": "Public OCI region candidate. GPU capacity is not verified until the tenancy subscribes it."
-      }
-    ],
+    "verifiedInventory": [],
+    "publicExpansionCandidates": [],
     "recommendedLaunchTarget": {
       "status": "none",
       "region": null,
       "regionKey": null,
       "isHomeRegion": false,
       "shape": null,
-      "reason": "No subscribed OCI region currently exposes GPU-capable shapes for the current controller auth."
+      "reason": "OCI GPU advisor is unavailable until OCI auth and CLI are ready."
     },
     "suggestedEnvUpdates": {},
-    "actions": [
-      "Only one subscribed OCI region is visible right now: us-ashburn-1 (IAD) [home].",
-      "Next capacity move is to subscribe an additional nearby public region such as: us-chicago-1 (ORD), us-phoenix-1 (PHX), us-sanjose-1 (SJC).",
-      "Keep the cloud lane as not-configured until a subscribed region shows verified GPU-capable shapes."
-    ],
-    "materializedEnvUpdates": {},
-    "generatedAt": "2026-04-15T17:07:28Z",
+    "actions": [],
+    "generatedAt": "2026-04-15T18:57:50Z",
     "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
     "release": {
       "packageVersion": "0.1.0",
-      "gitSha": "967ff9319e4a15e6acd9913bf16251b1d42d2fb6",
-      "gitShortSha": "967ff93",
-      "buildId": "0.1.0+967ff93"
+      "gitSha": "bb5d74917c953b52af2f71057a4d1cb7cdcd39a4",
+      "gitShortSha": "bb5d749",
+      "buildId": "0.1.0+bb5d749"
     },
     "output": {
       "jsonPath": "docs/wiki/OCI-GPU-Advisor.json",
@@ -351,6 +460,231 @@
       "markdownPath": "docs/wiki/OCI-Region-Capacity.md"
     }
   },
+  "hfJobsTraining": {
+    "generatedAt": "2026-04-15T18:55:22Z",
+    "release": {
+      "packageVersion": "0.1.0",
+      "gitSha": "bb5d74917c953b52af2f71057a4d1cb7cdcd39a4",
+      "gitShortSha": "bb5d749",
+      "buildId": "0.1.0+bb5d749"
+    },
+    "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
+    "auth": {
+      "hfCliBin": "C:\\Users\\Knight\\Desktop\\Immaculate\\.tools\\foundry-venv\\Scripts\\hf.exe",
+      "tokenSource": "HUGGINFACE_ACCESS_TOKEN",
+      "ready": true,
+      "user": "TruLumecreator",
+      "stderr": null
+    },
+    "hardware": [
+      {
+        "name": "cpu-basic",
+        "prettyName": "CPU Basic",
+        "cpu": "2 vCPU",
+        "ram": "16 GB",
+        "accelerator": "N/A",
+        "costPerMin": "$0.0002",
+        "costPerHour": "$0.01"
+      },
+      {
+        "name": "cpu-upgrade",
+        "prettyName": "CPU Upgrade",
+        "cpu": "8 vCPU",
+        "ram": "32 GB",
+        "accelerator": "N/A",
+        "costPerMin": "$0.0005",
+        "costPerHour": "$0.03"
+      },
+      {
+        "name": "cpu-xl",
+        "prettyName": "CPU XL",
+        "cpu": "16 vCPU",
+        "ram": "124 GB",
+        "accelerator": "N/A",
+        "costPerMin": "$0.0167",
+        "costPerHour": "$1.00"
+      },
+      {
+        "name": "t4-small",
+        "prettyName": "Nvidia T4 ... 4 vCPU",
+        "cpu": "15 GB",
+        "ram": "1x T4 (16 GB)",
+        "accelerator": "$0.0067",
+        "costPerMin": "$0.40",
+        "costPerHour": ""
+      },
+      {
+        "name": "t4-medium",
+        "prettyName": "Nvidia T4 ... 8 vCPU",
+        "cpu": "30 GB",
+        "ram": "1x T4 (16 GB)",
+        "accelerator": "$0.0100",
+        "costPerMin": "$0.60",
+        "costPerHour": ""
+      },
+      {
+        "name": "a10g-small",
+        "prettyName": "Nvidia A10... 4 vCPU",
+        "cpu": "15 GB",
+        "ram": "1x A10G (24 GB)",
+        "accelerator": "$0.0167",
+        "costPerMin": "$1.00",
+        "costPerHour": ""
+      },
+      {
+        "name": "a10g-large",
+        "prettyName": "Nvidia A10... 12 vCPU",
+        "cpu": "46 GB",
+        "ram": "1x A10G (24 GB)",
+        "accelerator": "$0.0250",
+        "costPerMin": "$1.50",
+        "costPerHour": ""
+      },
+      {
+        "name": "a10g-largex2",
+        "prettyName": "2x Nvidia ... 24 vCPU",
+        "cpu": "92 GB",
+        "ram": "2x A10G (48 GB)",
+        "accelerator": "$0.0500",
+        "costPerMin": "$3.00",
+        "costPerHour": ""
+      },
+      {
+        "name": "a10g-largex4",
+        "prettyName": "4x Nvidia ... 48 vCPU",
+        "cpu": "184 GB",
+        "ram": "4x A10G (96 GB)",
+        "accelerator": "$0.0833",
+        "costPerMin": "$5.00",
+        "costPerHour": ""
+      },
+      {
+        "name": "a100-large",
+        "prettyName": "Nvidia A10... 12 vCPU",
+        "cpu": "142 GB",
+        "ram": "1x A100 (80 GB)",
+        "accelerator": "$0.0417",
+        "costPerMin": "$2.50",
+        "costPerHour": ""
+      },
+      {
+        "name": "a100x4",
+        "prettyName": "4x Nvidia ... 48 vCPU",
+        "cpu": "568 GB",
+        "ram": "4x A100 (320 GB)",
+        "accelerator": "$0.1667",
+        "costPerMin": "$10.00",
+        "costPerHour": ""
+      },
+      {
+        "name": "h200",
+        "prettyName": "Nvidia H200",
+        "cpu": "23 vCPU",
+        "ram": "256 GB",
+        "accelerator": "1x H200 (141 GB)",
+        "costPerMin": "$0.0833",
+        "costPerHour": "$5.00"
+      },
+      {
+        "name": "h200x2",
+        "prettyName": "Nvidia H200",
+        "cpu": "46 vCPU",
+        "ram": "512 GB",
+        "accelerator": "2x H200 (282 GB)",
+        "costPerMin": "$0.1667",
+        "costPerHour": "$10.00"
+      },
+      {
+        "name": "h200x4",
+        "prettyName": "Nvidia H200",
+        "cpu": "92 vCPU",
+        "ram": "1024 GB 4x H200 (564 GB)",
+        "accelerator": "$0.3333",
+        "costPerMin": "$20.00",
+        "costPerHour": ""
+      },
+      {
+        "name": "l4x1",
+        "prettyName": "1x Nvidia L4",
+        "cpu": "8 vCPU",
+        "ram": "30 GB",
+        "accelerator": "1x L4 (24 GB)",
+        "costPerMin": "$0.0133",
+        "costPerHour": "$0.80"
+      },
+      {
+        "name": "l4x4",
+        "prettyName": "4x Nvidia L4",
+        "cpu": "48 vCPU",
+        "ram": "186 GB",
+        "accelerator": "4x L4 (96 GB)",
+        "costPerMin": "$0.0633",
+        "costPerHour": "$3.80"
+      },
+      {
+        "name": "l40sx1",
+        "prettyName": "1x Nvidia ... 8 vCPU",
+        "cpu": "62 GB",
+        "ram": "1x L40S (48 GB)",
+        "accelerator": "$0.0300",
+        "costPerMin": "$1.80",
+        "costPerHour": ""
+      },
+      {
+        "name": "l40sx4",
+        "prettyName": "4x Nvidia ... 48 vCPU",
+        "cpu": "382 GB",
+        "ram": "4x L40S (192 GB)",
+        "accelerator": "$0.1383",
+        "costPerMin": "$8.30",
+        "costPerHour": ""
+      }
+    ],
+    "jobsVisibleCount": 0,
+    "stagedBundle": {
+      "repoId": "TruLumecreator/immaculate-q-cloud-bundles",
+      "archiveRepoPath": "sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/q-hybrid-cur-fnv1a-8f551a5c-bench-v2-cloud-bundle.tar.gz",
+      "manifestRepoPath": "sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/bundle-manifest.json",
+      "staged": true,
+      "createRepoStdout": "Successfully created \u001b[1mTruLumecreator/immaculate-q-cloud-bundles\u001b[0m on the Hub.\nYour repo is now available at \u001b[1mhttps://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles\u001b[0m",
+      "createRepoStderr": "\u001b[33mFutureWarning: `hf repo` is deprecated in favor of `hf repos`.\u001b[0m",
+      "uploadArchiveStdout": "https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles/commit/02ac0aadd679967634aad0bff5a018ff335ebff6",
+      "uploadArchiveStderr": "Processing Files (0 / 0)      : |          |  0.00B /  0.00B            \n\nNew Data Upload               : |          |  0.00B /  0.00B            \u001b[A\n\n\n  ...ch-v2-cloud-bundle.tar.gz: 100%|##########| 2.22MB / 2.22MB            \u001b[A\u001b[A\n\n\n  ...ch-v2-cloud-bundle.tar.gz: 100%|##########| 2.22MB / 2.22MB            \u001b[A\u001b[A\nProcessing Files (1 / 1)      : 100%|##########| 2.22MB / 2.22MB,   ???B/s  \n\n\n  ...ch-v2-cloud-bundle.tar.gz: 100%|##########| 2.22MB / 2.22MB            \u001b[A\u001b[A\n\n\n  ...ch-v2-cloud-bundle.tar.gz: 100%|##########| 2.22MB / 2.22MB            \u001b[A\u001b[A\n\n\n  ...ch-v2-cloud-bundle.tar.gz: 100%|##########| 2.22MB / 2.22MB            \u001b[A\u001b[A\nProcessing Files (1 / 1)      : 100%|##########| 2.22MB / 2.22MB,  0.00B/s  \n\nNew Data Upload               : |          |  0.00B /  0.00B,  0.00B/s  \n\n  ...ch-v2-cloud-bundle.tar.gz: 100%|##########| 2.22MB / 2.22MB            \nRemoving 1 file(s) from commit that have not changed.\nNo files have been modified since last commit. Skipping to prevent empty commit.",
+      "uploadManifestStdout": "https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles/commit/02ac0aadd679967634aad0bff5a018ff335ebff6",
+      "uploadManifestStderr": "Removing 1 file(s) from commit that have not changed.\nNo files have been modified since last commit. Skipping to prevent empty commit."
+    },
+    "smokeLaunch": {
+      "attempted": true,
+      "ready": false,
+      "flavor": "cpu-basic",
+      "timeout": "5m",
+      "jobId": null,
+      "blocker": "Error: Client error '402 Payment Required' for url 'https://huggingface.co/api/jobs/TruLumecreator' (Request ID: Root=1-69dfdf17-1622321c5a518b1a144d1889;930d8b3e-293f-43fe-9615-4ea9f294a43c)\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402\n\nPre-paid credit balance is insufficient - add more credits to your account to use Jobs.",
+      "stdout": "\u001b[90mSet HF_DEBUG=1 as environment variable for full traceback.\u001b[0m",
+      "stderr": "Error: Client error '402 Payment Required' for url 'https://huggingface.co/api/jobs/TruLumecreator' (Request ID: Root=1-69dfdf17-1622321c5a518b1a144d1889;930d8b3e-293f-43fe-9615-4ea9f294a43c)\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402\n\nPre-paid credit balance is insufficient - add more credits to your account to use Jobs."
+    },
+    "launch": {
+      "attempted": false,
+      "jobMode": "dry-run",
+      "flavor": "a10g-small",
+      "timeout": "4h",
+      "image": "python:3.12",
+      "namespace": "TruLumecreator",
+      "jobId": null,
+      "blocker": null,
+      "stdout": null,
+      "stderr": null
+    },
+    "summary": {
+      "provider": "hf_jobs",
+      "launchReady": false,
+      "recommendedNextStep": "Hugging Face Jobs is authenticated and the bundle is staged, but prepaid credits are insufficient for launch. Add HF credits, then rerun the same session through the HF Jobs launcher."
+    },
+    "output": {
+      "jsonPath": "docs/wiki/HF-Jobs-Training.json",
+      "markdownPath": "docs/wiki/HF-Jobs-Training.md"
+    }
+  },
   "lanes": {
     "local": {
       "enabled": true,
@@ -368,18 +702,19 @@
     },
     "cloud": {
       "enabled": true,
-      "provider": "oci",
+      "provider": "hf_jobs",
       "mode": "launch",
       "status": "not-configured",
       "command": [
-        "bash",
-        "deploy/oci-training/scripts/launch-oci-q-training.sh",
-        "--session-manifest",
+        "python",
+        "training/q/launch_hf_jobs_training.py",
+        "--session",
         ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.manifest.json",
         "--env-file",
         "C:/Users/Knight/Desktop/cheeks/Asgard/.env",
         "--env-file",
-        ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/oci-cloud.env"
+        ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hf-jobs.env",
+        "--launch"
       ]
     }
   },
@@ -388,6 +723,8 @@
     "sessionMarkdownPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.md",
     "wikiJsonPath": "docs/wiki/Q-Hybrid-Training.json",
     "wikiMarkdownPath": "docs/wiki/Q-Hybrid-Training.md",
+    "hfJobsTrainingJsonPath": "docs/wiki/HF-Jobs-Training.json",
+    "hfJobsTrainingMarkdownPath": "docs/wiki/HF-Jobs-Training.md",
     "ociGpuAdvisorJsonPath": "docs/wiki/OCI-GPU-Advisor.json",
     "ociGpuAdvisorMarkdownPath": "docs/wiki/OCI-GPU-Advisor.md",
     "ociRegionCapacityJsonPath": "docs/wiki/OCI-Region-Capacity.json",

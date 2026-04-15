@@ -1,0 +1,226 @@
+{
+  "generatedAt": "2026-04-15T18:57:58Z",
+  "release": {
+    "packageVersion": "0.1.0",
+    "gitSha": "bb5d74917c953b52af2f71057a4d1cb7cdcd39a4",
+    "gitShortSha": "bb5d749",
+    "buildId": "0.1.0+bb5d749"
+  },
+  "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
+  "auth": {
+    "hfCliBin": "C:\\Users\\Knight\\Desktop\\Immaculate\\.tools\\foundry-venv\\Scripts\\hf.exe",
+    "tokenSource": "HUGGINFACE_ACCESS_TOKEN",
+    "ready": true,
+    "user": "TruLumecreator",
+    "stderr": null
+  },
+  "hardware": [
+    {
+      "name": "cpu-basic",
+      "prettyName": "CPU Basic",
+      "cpu": "2 vCPU",
+      "ram": "16 GB",
+      "accelerator": "N/A",
+      "costPerMin": "$0.0002",
+      "costPerHour": "$0.01"
+    },
+    {
+      "name": "cpu-upgrade",
+      "prettyName": "CPU Upgrade",
+      "cpu": "8 vCPU",
+      "ram": "32 GB",
+      "accelerator": "N/A",
+      "costPerMin": "$0.0005",
+      "costPerHour": "$0.03"
+    },
+    {
+      "name": "cpu-xl",
+      "prettyName": "CPU XL",
+      "cpu": "16 vCPU",
+      "ram": "124 GB",
+      "accelerator": "N/A",
+      "costPerMin": "$0.0167",
+      "costPerHour": "$1.00"
+    },
+    {
+      "name": "t4-small",
+      "prettyName": "Nvidia T4 ... 4 vCPU",
+      "cpu": "15 GB",
+      "ram": "1x T4 (16 GB)",
+      "accelerator": "$0.0067",
+      "costPerMin": "$0.40",
+      "costPerHour": ""
+    },
+    {
+      "name": "t4-medium",
+      "prettyName": "Nvidia T4 ... 8 vCPU",
+      "cpu": "30 GB",
+      "ram": "1x T4 (16 GB)",
+      "accelerator": "$0.0100",
+      "costPerMin": "$0.60",
+      "costPerHour": ""
+    },
+    {
+      "name": "a10g-small",
+      "prettyName": "Nvidia A10... 4 vCPU",
+      "cpu": "15 GB",
+      "ram": "1x A10G (24 GB)",
+      "accelerator": "$0.0167",
+      "costPerMin": "$1.00",
+      "costPerHour": ""
+    },
+    {
+      "name": "a10g-large",
+      "prettyName": "Nvidia A10... 12 vCPU",
+      "cpu": "46 GB",
+      "ram": "1x A10G (24 GB)",
+      "accelerator": "$0.0250",
+      "costPerMin": "$1.50",
+      "costPerHour": ""
+    },
+    {
+      "name": "a10g-largex2",
+      "prettyName": "2x Nvidia ... 24 vCPU",
+      "cpu": "92 GB",
+      "ram": "2x A10G (48 GB)",
+      "accelerator": "$0.0500",
+      "costPerMin": "$3.00",
+      "costPerHour": ""
+    },
+    {
+      "name": "a10g-largex4",
+      "prettyName": "4x Nvidia ... 48 vCPU",
+      "cpu": "184 GB",
+      "ram": "4x A10G (96 GB)",
+      "accelerator": "$0.0833",
+      "costPerMin": "$5.00",
+      "costPerHour": ""
+    },
+    {
+      "name": "a100-large",
+      "prettyName": "Nvidia A10... 12 vCPU",
+      "cpu": "142 GB",
+      "ram": "1x A100 (80 GB)",
+      "accelerator": "$0.0417",
+      "costPerMin": "$2.50",
+      "costPerHour": ""
+    },
+    {
+      "name": "a100x4",
+      "prettyName": "4x Nvidia ... 48 vCPU",
+      "cpu": "568 GB",
+      "ram": "4x A100 (320 GB)",
+      "accelerator": "$0.1667",
+      "costPerMin": "$10.00",
+      "costPerHour": ""
+    },
+    {
+      "name": "h200",
+      "prettyName": "Nvidia H200",
+      "cpu": "23 vCPU",
+      "ram": "256 GB",
+      "accelerator": "1x H200 (141 GB)",
+      "costPerMin": "$0.0833",
+      "costPerHour": "$5.00"
+    },
+    {
+      "name": "h200x2",
+      "prettyName": "Nvidia H200",
+      "cpu": "46 vCPU",
+      "ram": "512 GB",
+      "accelerator": "2x H200 (282 GB)",
+      "costPerMin": "$0.1667",
+      "costPerHour": "$10.00"
+    },
+    {
+      "name": "h200x4",
+      "prettyName": "Nvidia H200",
+      "cpu": "92 vCPU",
+      "ram": "1024 GB 4x H200 (564 GB)",
+      "accelerator": "$0.3333",
+      "costPerMin": "$20.00",
+      "costPerHour": ""
+    },
+    {
+      "name": "l4x1",
+      "prettyName": "1x Nvidia L4",
+      "cpu": "8 vCPU",
+      "ram": "30 GB",
+      "accelerator": "1x L4 (24 GB)",
+      "costPerMin": "$0.0133",
+      "costPerHour": "$0.80"
+    },
+    {
+      "name": "l4x4",
+      "prettyName": "4x Nvidia L4",
+      "cpu": "48 vCPU",
+      "ram": "186 GB",
+      "accelerator": "4x L4 (96 GB)",
+      "costPerMin": "$0.0633",
+      "costPerHour": "$3.80"
+    },
+    {
+      "name": "l40sx1",
+      "prettyName": "1x Nvidia ... 8 vCPU",
+      "cpu": "62 GB",
+      "ram": "1x L40S (48 GB)",
+      "accelerator": "$0.0300",
+      "costPerMin": "$1.80",
+      "costPerHour": ""
+    },
+    {
+      "name": "l40sx4",
+      "prettyName": "4x Nvidia ... 48 vCPU",
+      "cpu": "382 GB",
+      "ram": "4x L40S (192 GB)",
+      "accelerator": "$0.1383",
+      "costPerMin": "$8.30",
+      "costPerHour": ""
+    }
+  ],
+  "jobsVisibleCount": 0,
+  "stagedBundle": {
+    "repoId": "TruLumecreator/immaculate-q-cloud-bundles",
+    "archiveRepoPath": "sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/q-hybrid-cur-fnv1a-8f551a5c-bench-v2-cloud-bundle.tar.gz",
+    "manifestRepoPath": "sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/bundle-manifest.json",
+    "staged": true,
+    "createRepoStdout": "Successfully created \u001b[1mTruLumecreator/immaculate-q-cloud-bundles\u001b[0m on the Hub.\nYour repo is now available at \u001b[1mhttps://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles\u001b[0m",
+    "createRepoStderr": "\u001b[33mFutureWarning: `hf repo` is deprecated in favor of `hf repos`.\u001b[0m",
+    "uploadArchiveStdout": "https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles/commit/a0f34031355f91e8f8f440ed27cd585c57b156a3",
+    "uploadArchiveStderr": "Processing Files (0 / 0)      : |          |  0.00B /  0.00B            \n\nNew Data Upload               : |          |  0.00B /  0.00B            \u001b[A\n\n\n  ...ch-v2-cloud-bundle.tar.gz:  95%|#########4| 2.10MB / 2.22MB            \u001b[A\u001b[A\n\n\n  ...ch-v2-cloud-bundle.tar.gz:  95%|#########4| 2.10MB / 2.22MB            \u001b[A\u001b[A\nProcessing Files (0 / 1)      :  95%|#########4| 2.10MB / 2.22MB, 10.5MB/s  \n\nNew Data Upload               :  95%|#########4| 2.10MB / 2.22MB, 10.5MB/s  \u001b[A\n\n\n  ...ch-v2-cloud-bundle.tar.gz:  95%|#########4| 2.10MB / 2.22MB            \u001b[A\u001b[A\n\n\n  ...ch-v2-cloud-bundle.tar.gz:  95%|#########4| 2.10MB / 2.22MB            \u001b[A\u001b[A\n\n\n  ...ch-v2-cloud-bundle.tar.gz: 100%|##########| 2.22MB / 2.22MB            \u001b[A\u001b[A\nProcessing Files (1 / 1)      : 100%|##########| 2.22MB / 2.22MB, 2.77MB/s  \n\nNew Data Upload               : 100%|##########| 2.22MB / 2.22MB, 2.77MB/s  \u001b[A\n\n\n  ...ch-v2-cloud-bundle.tar.gz: 100%|##########| 2.22MB / 2.22MB            \u001b[A\u001b[A\n\n\n  ...ch-v2-cloud-bundle.tar.gz: 100%|##########| 2.22MB / 2.22MB            \u001b[A\u001b[A\nProcessing Files (1 / 1)      : 100%|##########| 2.22MB / 2.22MB, 2.22MB/s  \n\nNew Data Upload               : 100%|##########| 2.22MB / 2.22MB, 2.22MB/s  \n\n  ...ch-v2-cloud-bundle.tar.gz: 100%|##########| 2.22MB / 2.22MB",
+    "uploadManifestStdout": "https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles/commit/4c116241a118da973a9bcc5856c5f18393bae0fd",
+    "uploadManifestStderr": null
+  },
+  "smokeLaunch": {
+    "attempted": true,
+    "ready": false,
+    "flavor": "cpu-basic",
+    "timeout": "5m",
+    "jobId": null,
+    "blocker": "Error: Client error '402 Payment Required' for url 'https://huggingface.co/api/jobs/TruLumecreator' (Request ID: Root=1-69dfdfb3-6d068e3b2fa32b847cc2e8ec;644d56af-8af0-4c7d-a5f4-d3a14bca61cd)\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402\n\nPre-paid credit balance is insufficient - add more credits to your account to use Jobs.",
+    "stdout": "\u001b[90mSet HF_DEBUG=1 as environment variable for full traceback.\u001b[0m",
+    "stderr": "Error: Client error '402 Payment Required' for url 'https://huggingface.co/api/jobs/TruLumecreator' (Request ID: Root=1-69dfdfb3-6d068e3b2fa32b847cc2e8ec;644d56af-8af0-4c7d-a5f4-d3a14bca61cd)\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402\n\nPre-paid credit balance is insufficient - add more credits to your account to use Jobs."
+  },
+  "launch": {
+    "attempted": false,
+    "jobMode": "dry-run",
+    "flavor": "a10g-small",
+    "timeout": "4h",
+    "image": "python:3.12",
+    "namespace": "TruLumecreator",
+    "jobId": null,
+    "blocker": null,
+    "stdout": null,
+    "stderr": null
+  },
+  "summary": {
+    "provider": "hf_jobs",
+    "launchReady": false,
+    "recommendedNextStep": "Hugging Face Jobs is authenticated and the bundle is staged, but prepaid credits are insufficient for launch. Add HF credits, then rerun the same session through the HF Jobs launcher."
+  },
+  "output": {
+    "sessionJsonPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hf-jobs-launch.json",
+    "wikiJsonPath": "docs/wiki/HF-Jobs-Training.json",
+    "wikiMarkdownPath": "docs/wiki/HF-Jobs-Training.md"
+  }
+}

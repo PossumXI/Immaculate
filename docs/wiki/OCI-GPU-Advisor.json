@@ -1,60 +1,28 @@
 {
   "probeScope": "verified-subscribed-regions-only",
-  "controllerRegion": "us-ashburn-1",
-  "configuredTargetRegion": "us-ashburn-1",
+  "controllerRegion": null,
+  "configuredTargetRegion": null,
   "configuredShape": null,
   "configuredObjectStorageRegion": null,
-  "verifiedInventory": [
-    {
-      "region": "us-ashburn-1",
-      "regionKey": "IAD",
-      "isHomeRegion": true,
-      "subscriptionStatus": "READY",
-      "probeStatus": "verified",
-      "gpuShapes": [],
-      "gpuShapeCount": 0,
-      "reason": "No GPU-capable shapes are visible for the current controller auth."
-    }
-  ],
-  "publicExpansionCandidates": [
-    {
-      "region": "us-chicago-1",
-      "regionKey": "ORD",
-      "reason": "Public OCI region candidate. GPU capacity is not verified until the tenancy subscribes it."
-    },
-    {
-      "region": "us-phoenix-1",
-      "regionKey": "PHX",
-      "reason": "Public OCI region candidate. GPU capacity is not verified until the tenancy subscribes it."
-    },
-    {
-      "region": "us-sanjose-1",
-      "regionKey": "SJC",
-      "reason": "Public OCI region candidate. GPU capacity is not verified until the tenancy subscribes it."
-    }
-  ],
+  "verifiedInventory": [],
+  "publicExpansionCandidates": [],
   "recommendedLaunchTarget": {
     "status": "none",
     "region": null,
     "regionKey": null,
     "isHomeRegion": false,
     "shape": null,
-    "reason": "No subscribed OCI region currently exposes GPU-capable shapes for the current controller auth."
+    "reason": "OCI GPU advisor is unavailable until OCI auth and CLI are ready."
   },
   "suggestedEnvUpdates": {},
-  "actions": [
-    "Only one subscribed OCI region is visible right now: us-ashburn-1 (IAD) [home].",
-    "Next capacity move is to subscribe an additional nearby public region such as: us-chicago-1 (ORD), us-phoenix-1 (PHX), us-sanjose-1 (SJC).",
-    "Keep the cloud lane as not-configured until a subscribed region shows verified GPU-capable shapes."
-  ],
-  "materializedEnvUpdates": {},
-  "generatedAt": "2026-04-15T17:07:28Z",
+  "actions": [],
+  "generatedAt": "2026-04-15T18:57:50Z",
   "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "967ff9319e4a15e6acd9913bf16251b1d42d2fb6",
-    "gitShortSha": "967ff93",
-    "buildId": "0.1.0+967ff93"
+    "gitSha": "bb5d74917c953b52af2f71057a4d1cb7cdcd39a4",
+    "gitShortSha": "bb5d749",
+    "buildId": "0.1.0+bb5d749"
   },
   "output": {
     "jsonPath": "docs/wiki/OCI-GPU-Advisor.json",
