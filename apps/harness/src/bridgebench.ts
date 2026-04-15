@@ -9,7 +9,7 @@ import { listOllamaModels, runOllamaExecution } from "./ollama.js";
 import { resolveReleaseMetadata, type ReleaseMetadata } from "./release-metadata.js";
 import { getQModelAlias, matchesModelReference, resolveQModel, truthfulModelLabel, vendorForModel } from "./q-model.js";
 
-type BridgeBenchScenario = {
+export type BridgeBenchScenario = {
   id: string;
   label: string;
   objective: string;
@@ -92,7 +92,7 @@ const REPO_ROOT = path.resolve(MODULE_ROOT, "../../..");
 const WIKI_ROOT = path.join(REPO_ROOT, "docs", "wiki");
 const DEFAULT_OLLAMA_URL = process.env.IMMACULATE_OLLAMA_URL ?? "http://127.0.0.1:11434";
 
-const BRIDGEBENCH_SCENARIOS: BridgeBenchScenario[] = [
+export const BRIDGEBENCH_SCENARIOS: BridgeBenchScenario[] = [
   {
     id: "bridge-ack-fail-closed",
     label: "Bridge ACK fail-closed",

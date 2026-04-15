@@ -456,6 +456,42 @@ def list_available_oci_gpu_shapes(oci_cli_bin: str, canonical_env: dict[str, str
     return sorted(shape for shape in shapes if shape)
 
 
+def list_subscribed_oci_regions(oci_cli_bin: str, canonical_env: dict[str, str]) -> list[dict[str, object]]:
+    identity = resolve_oci_controller_identity(canonical_env)
+    command = [oci_cli_bin, "iam", "region-subscription", "list"]
+    auth_mode = str(canonical_env.get("OCI_CLI_AUTH", "")).strip()
+    if auth_mode:
+        command.extend(["--auth", auth_mode])
+    config_path = identity.get("configPath", "")
+    if config_path:
+        command.extend(["--config-file", config_path])
+    profile_name = identity.get("profile", "")
+    if profile_name:
+        command.extend(["--profile", profile_name])
+    command.extend(["--output", "json"])
+    result = subprocess.run(command, check=False, capture_output=True, text=True)
+    if result.returncode != 0 or not result.stdout.strip():
+        return []
+    try:
+        payload = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return []
+    regions: list[dict[str, object]] = []
+    for entry in payload.get("data", []):
+        region_name = str(entry.get("region-name", "")).strip()
+        if not region_name:
+            continue
+        regions.append(
+            {
+                "name": region_name,
+                "key": str(entry.get("region-key", "")).strip(),
+                "isHomeRegion": bool(entry.get("is-home-region", False)),
+                "status": str(entry.get("status", "")).strip(),
+            }
+        )
+    return regions
+
+
 def read_secret_value(env_map: dict[str, str], base_name: str) -> tuple[str | None, str | None]:
     file_var_name = f"{base_name}_FILE"
     file_path_value = str(env_map.get(file_var_name, "")).strip()
@@ -642,6 +678,7 @@ def render_markdown(summary: dict) -> str:
         f"- OCI auth key repaired: `{doctor['cloud']['authKeyRepaired']}`",
         f"- OCI session env updated: `{doctor['cloud']['sessionEnvUpdated']}`",
         f"- OCI region: `{doctor['cloud']['region'] or 'n/a'}`",
+        f"- OCI subscribed regions: `{', '.join(doctor['cloud']['subscribedRegionNames']) if doctor['cloud']['subscribedRegionNames'] else 'none discovered'}`",
         f"- OCI GPU shapes visible: `{', '.join(doctor['cloud']['availableGpuShapes']) if doctor['cloud']['availableGpuShapes'] else 'none'}`",
         f"- Cloud ready: `{doctor['cloud']['ready']}`",
         *[
@@ -908,6 +945,20 @@ def main() -> None:
         if cloud_provider == "oci" and oci_cli_available and oci_auth_ready
         else []
     )
+    oci_subscribed_regions = (
+        list_subscribed_oci_regions(oci_cli_bin, canonical_cloud_env)
+        if cloud_provider == "oci" and oci_cli_available and oci_auth_ready
+        else []
+    )
+    oci_subscribed_region_names = [
+        (
+            f"{str(entry.get('name', '')).strip()} "
+            f"({str(entry.get('key', '')).strip()})"
+            f"{' [home]' if bool(entry.get('isHomeRegion', False)) else ''}"
+        ).strip()
+        for entry in oci_subscribed_regions
+        if str(entry.get("name", "")).strip()
+    ]
 
     hf_source = "missing"
     hf_ready = False
@@ -968,7 +1019,13 @@ def main() -> None:
                 )
             elif oci_bootstrap.get("reason") and not oci_bootstrap.get("sessionEnvUpdated"):
                 cloud_reasons.append(str(oci_bootstrap["reason"]))
-            elif not oci_available_gpu_shapes:
+            if not oci_subscribed_regions:
+                cloud_reasons.append("OCI subscribed regions could not be discovered for the current controller auth.")
+            elif len(oci_subscribed_regions) == 1:
+                cloud_reasons.append(
+                    f"Only subscribed OCI region visible to this tenancy is {oci_subscribed_region_names[0]}."
+                )
+            if oci_auth_ready and not oci_available_gpu_shapes:
                 cloud_reasons.append(
                     f"No GPU shapes are available in OCI region {oci_identity.get('region', 'unknown')} for the current controller auth."
                 )
@@ -1075,6 +1132,8 @@ def main() -> None:
                 "sessionEnvPath": oci_bootstrap.get("sessionEnvPath"),
                 "sessionEnvUpdated": oci_bootstrap.get("sessionEnvUpdated"),
                 "region": oci_identity.get("region"),
+                "subscribedRegions": oci_subscribed_regions,
+                "subscribedRegionNames": oci_subscribed_region_names,
                 "availableGpuShapes": oci_available_gpu_shapes,
                 "reasons": cloud_reasons,
                 "canonicalSources": canonical_sources,

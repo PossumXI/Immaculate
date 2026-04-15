@@ -2,8 +2,25 @@ import path from "node:path";
 import { performance } from "node:perf_hooks";
 import { fileURLToPath } from "node:url";
 import { mkdir, writeFile } from "node:fs/promises";
-import { runBridgeBench, type BridgeBenchReport } from "./bridgebench.js";
+import { BRIDGEBENCH_SCENARIOS, runBridgeBench, type BridgeBenchReport } from "./bridgebench.js";
 import { type ReleaseMetadata } from "./release-metadata.js";
+
+type BridgeBenchSoakTrainingRow = {
+  attempt: number;
+  scenarioId: string;
+  label: string;
+  objective: string;
+  context: string;
+  latencyMs: number;
+  wallLatencyMs: number;
+  parseSuccess: boolean;
+  structuredFieldCount: number;
+  status: "completed" | "failed";
+  thinkingDetected: boolean;
+  routeSuggestion?: string;
+  reasonSummary?: string;
+  commitStatement?: string;
+};
 
 type BridgeBenchSoakRunSummary = {
   attempt: number;
@@ -22,6 +39,7 @@ type BridgeBenchSoakRunSummary = {
   maxLatencyMs?: number;
   medianLatencyMs?: number;
   bridgeRuntimeFailedAssertions?: number;
+  trainingRowCount?: number;
   error?: string;
 };
 
@@ -51,6 +69,7 @@ type BridgeBenchSoakReport = {
   truthfulModelLabel: string;
   release?: ReleaseMetadata;
   runs: BridgeBenchSoakRunSummary[];
+  trainingRows: BridgeBenchSoakTrainingRow[];
   markdownSummaryLines: string[];
   markdownSummary: string;
   output: {
@@ -136,15 +155,45 @@ function summarizeRun(attempt: number, report: BridgeBenchReport, startedAt: str
   latencies: number[];
   parseSuccessCount: number;
   taskCount: number;
+  trainingRows: BridgeBenchSoakTrainingRow[];
 } {
   const model = report.models[0];
   if (!model) {
     throw new Error("BridgeBench soak expected a Q model summary.");
   }
+  const scenarioMap = new Map(BRIDGEBENCH_SCENARIOS.map((scenario) => [scenario.id, scenario]));
   const latencies = collectLatencies(report);
   const parseSuccessCount = model.parseSuccessCount;
   const taskCount = model.taskCount;
   const completedAt = new Date().toISOString();
+  const trainingRows = model.tasks
+    .filter(
+      (task) =>
+        task.status === "completed" &&
+        task.parseSuccess &&
+        Boolean(task.routeSuggestion?.trim()) &&
+        Boolean(task.reasonSummary?.trim()) &&
+        Boolean(task.commitStatement?.trim())
+    )
+    .map((task) => {
+      const scenario = scenarioMap.get(task.scenarioId);
+      return {
+        attempt,
+        scenarioId: task.scenarioId,
+        label: task.label,
+        objective: scenario?.objective ?? task.label,
+        context: scenario?.context ?? task.responsePreview,
+        latencyMs: task.latencyMs,
+        wallLatencyMs: task.wallLatencyMs,
+        parseSuccess: task.parseSuccess,
+        structuredFieldCount: task.structuredFieldCount,
+        status: task.status,
+        thinkingDetected: task.thinkingDetected,
+        routeSuggestion: task.routeSuggestion,
+        reasonSummary: task.reasonSummary,
+        commitStatement: task.commitStatement
+      } satisfies BridgeBenchSoakTrainingRow;
+    });
   return {
     summary: {
       attempt,
@@ -162,11 +211,13 @@ function summarizeRun(attempt: number, report: BridgeBenchReport, startedAt: str
       minLatencyMs: latencies.length > 0 ? Math.min(...latencies) : 0,
       maxLatencyMs: latencies.length > 0 ? Math.max(...latencies) : 0,
       medianLatencyMs: Number(percentile(latencies, 0.5).toFixed(2)),
-      bridgeRuntimeFailedAssertions: report.bridgeRuntime.failedAssertions
+      bridgeRuntimeFailedAssertions: report.bridgeRuntime.failedAssertions,
+      trainingRowCount: trainingRows.length
     },
     latencies,
     parseSuccessCount,
-    taskCount
+    taskCount,
+    trainingRows
   };
 }
 
@@ -191,6 +242,7 @@ function buildMarkdownSummary(report: Pick<
   | "bridgeRuntimeFailedAssertionRuns"
   | "qAlias"
   | "truthfulModelLabel"
+  | "trainingRows"
 >): string {
   return [
     "# BridgeBench Soak",
@@ -202,6 +254,7 @@ function buildMarkdownSummary(report: Pick<
     `- Latency ms: avg \`${report.averageLatencyMs}\` / p95 \`${report.p95LatencyMs}\` / min \`${report.minLatencyMs}\` / max \`${report.maxLatencyMs}\` / median \`${report.medianLatencyMs}\``,
     `- Run latency ms: avg \`${report.averageRunLatencyMs}\` / p95 \`${report.p95RunLatencyMs}\``,
     `- Bridge runtime failed assertions: \`${report.bridgeRuntimeFailedAssertionsTotal}\` across \`${report.bridgeRuntimeFailedAssertionRuns}\` runs`,
+    `- Training rows: \`${report.trainingRows.length}\``,
     `- Q alias: \`${report.qAlias}\``,
     `- Truthful model label: \`${report.truthfulModelLabel}\``
   ].join("\n");
@@ -215,6 +268,7 @@ async function main(): Promise<void> {
   const startedAtMs = performance.now();
   const deadlineAtMs = Date.now() + durationSeconds * 1000;
   const runs: BridgeBenchSoakRunSummary[] = [];
+  const trainingRows: BridgeBenchSoakTrainingRow[] = [];
   const allLatencies: number[] = [];
   const runLatencies: number[] = [];
   let parseSuccessCount = 0;
@@ -236,6 +290,7 @@ async function main(): Promise<void> {
       const durationMs = performance.now() - runStartedMs;
       const run = summarizeRun(attempt, report, runStartedAt, durationMs);
       runs.push(run.summary);
+      trainingRows.push(...run.trainingRows);
       allLatencies.push(...run.latencies);
       runLatencies.push(run.summary.averageLatencyMs ?? 0);
       parseSuccessCount += run.parseSuccessCount;
@@ -298,6 +353,7 @@ async function main(): Promise<void> {
     truthfulModelLabel,
     release,
     runs,
+    trainingRows,
     markdownSummaryLines: [],
     markdownSummary: "",
     output: {

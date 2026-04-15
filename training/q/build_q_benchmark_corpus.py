@@ -53,6 +53,13 @@ def latest_training_bundle_id(root: Path) -> str:
     return str(payload.get("bundleId", "")).strip() or "none generated yet"
 
 
+def load_optional_json(path: Path) -> dict | None:
+    if not path.exists():
+        return None
+    payload = load_json(path)
+    return payload if isinstance(payload, dict) else None
+
+
 def harbor_context(root: Path, task_id: str, fallback_label: str) -> tuple[str, list[str]]:
     context_map = {
         "q-structured-contract": root / "benchmarks" / "harbor" / "q-structured-contract" / "incident.json",
@@ -67,7 +74,46 @@ def harbor_context(root: Path, task_id: str, fallback_label: str) -> tuple[str, 
     return objective, facts
 
 
-def build_text(record: dict) -> str:
+def format_quality_value(value) -> str:
+    if isinstance(value, bool):
+        return str(value).lower()
+    if isinstance(value, float):
+        return f"{value:.3f}"
+    return str(value)
+
+
+def build_quality_lines(record: dict) -> list[str]:
+    quality = record.get("quality", {})
+    if not isinstance(quality, dict):
+        return []
+    ordered_keys = [
+        "status",
+        "parse_success",
+        "structured_field_count",
+        "thinking_detected",
+        "score",
+        "agent",
+        "iteration",
+        "duration_sec",
+        "run_count",
+        "task_count",
+        "parse_success_rate",
+        "average_latency_ms",
+        "p95_latency_ms",
+        "average_duration_sec",
+    ]
+    lines: list[str] = []
+    for key in ordered_keys:
+        if key in quality and quality[key] is not None:
+            lines.append(f"{key}={format_quality_value(quality[key])}")
+    for key in sorted(quality.keys()):
+        if key in ordered_keys or quality[key] is None:
+            continue
+        lines.append(f"{key}={format_quality_value(quality[key])}")
+    return lines
+
+
+def build_decision_text(record: dict) -> str:
     lines = [
         "Q benchmark-derived corpus",
         f"source={record['source_surface']}",
@@ -87,15 +133,33 @@ def build_text(record: dict) -> str:
             f"ROUTE: {record['output']['route']}",
             f"REASON: {record['output']['reason']}",
             f"COMMIT: {record['output']['commit']}",
-            "",
-            "QUALITY",
-            f"status={record['quality']['status']}",
-            f"parse_success={str(record['quality']['parse_success']).lower()}",
-            f"structured_field_count={record['quality']['structured_field_count']}",
-            f"thinking_detected={str(record['quality']['thinking_detected']).lower()}",
-            f"score={record['quality']['score']}",
         ]
     )
+    quality_lines = build_quality_lines(record)
+    if quality_lines:
+        lines.extend(["", "QUALITY", *quality_lines])
+    return "\n".join(lines) + "\n"
+
+
+def build_observation_text(record: dict) -> str:
+    lines = [
+        "Q benchmark-derived corpus",
+        f"source={record['source_surface']}",
+        "language=text",
+        f"path={record['source_surface']}/{record['row_id']}",
+        f"tags={','.join(record['tags'])}",
+        "",
+        "OBJECTIVE",
+        record["objective"],
+    ]
+    if record["facts"]:
+        lines.extend(["", "REFERENCE FACTS", *record["facts"]])
+    observation_lines = [str(entry).strip() for entry in record.get("observation", []) if str(entry).strip()]
+    if observation_lines:
+        lines.extend(["", "BENCHMARK OBSERVATION", *observation_lines])
+    quality_lines = build_quality_lines(record)
+    if quality_lines:
+        lines.extend(["", "QUALITY", *quality_lines])
     return "\n".join(lines) + "\n"
 
 
@@ -107,7 +171,12 @@ def finalize_record(record: dict) -> dict:
     record["language"] = "text"
     record["tags"] = ["q", "benchmark-corpus", "decision-triplet"]
     record["provenance_record_id"] = record["id"]
-    record["text"] = build_text(record)
+    row_type = str(record.get("row_type", "decision_triplet")).strip() or "decision_triplet"
+    if row_type == "benchmark_observation":
+        record["tags"] = ["q", "benchmark-corpus", "benchmark-observation"]
+        record["text"] = build_observation_text(record)
+    else:
+        record["text"] = build_decision_text(record)
     return record
 
 
@@ -191,6 +260,196 @@ def collect_harbor_records(root: Path, harbor: dict) -> list[dict]:
     return records
 
 
+def collect_bridgebench_soak_records(bridgebench_soak: dict) -> list[dict]:
+    training_rows = bridgebench_soak.get("trainingRows", [])
+    if isinstance(training_rows, list) and training_rows:
+        records: list[dict] = []
+        for row in training_rows:
+            if not isinstance(row, dict):
+                continue
+            route = str(row.get("routeSuggestion", "")).strip()
+            reason = str(row.get("reasonSummary", "")).strip()
+            commit = str(row.get("commitStatement", "")).strip()
+            if not route or not reason or not commit:
+                continue
+            attempt = int(row.get("attempt", 0) or 0)
+            scenario_id = str(row.get("scenarioId") or "unknown").strip()
+            label = str(row.get("label", scenario_id)).strip() or scenario_id
+            context = str(row.get("context", "")).strip()
+            facts = [context] if context else []
+            record = {
+                "id": f"bridgebench-soak:{scenario_id}:attempt-{attempt:04d}",
+                "row_type": "decision_triplet",
+                "source_surface": "bridgebench-soak",
+                "row_id": f"{scenario_id}/attempt-{attempt:04d}",
+                "label": f"{label} soak attempt {attempt:04d}",
+                "objective": str(row.get("objective", label)).strip() or label,
+                "facts": facts,
+                "output": {
+                    "route": route,
+                    "reason": reason,
+                    "commit": commit,
+                },
+                "quality": {
+                    "status": str(row.get("status", "completed")).strip() or "completed",
+                    "parse_success": bool(row.get("parseSuccess", False)),
+                    "structured_field_count": int(row.get("structuredFieldCount", 3) or 3),
+                    "thinking_detected": bool(row.get("thinkingDetected", False)),
+                    "score": 1.0,
+                    "iteration": attempt,
+                    "duration_sec": round(float(row.get("wallLatencyMs", 0) or 0) / 1000, 3),
+                },
+            }
+            records.append(finalize_record(record))
+        return records
+
+    if int(bridgebench_soak.get("runCount", 0) or 0) <= 0:
+        return []
+    record = {
+        "id": "bridgebench-soak:aggregate",
+        "row_type": "benchmark_observation",
+        "source_surface": "bridgebench-soak",
+        "row_id": "aggregate",
+        "label": "BridgeBench 60m Q-only soak",
+        "objective": "Retain stable Q-only BridgeBench behavior across a repeated one-hour soak lane without parse regressions or bridge assertion failures.",
+        "facts": [
+            f"Duration seconds: {bridgebench_soak.get('durationSeconds', 0)}",
+            f"Completed runs: {bridgebench_soak.get('successfulRunCount', 0)}",
+            f"Failed runs: {bridgebench_soak.get('failedRunCount', 0)}",
+            f"Bridge runtime failed assertion runs: {bridgebench_soak.get('bridgeRuntimeFailedAssertionRuns', 0)}",
+        ],
+        "observation": [
+            (
+                "Q-only BridgeBench completed "
+                f"{bridgebench_soak.get('successfulRunCount', 0)} of {bridgebench_soak.get('runCount', 0)} repeated runs "
+                f"with parse success {bridgebench_soak.get('parseSuccessCount', 0)}/{bridgebench_soak.get('taskCount', 0)}."
+            ),
+            (
+                "Latency ms remained bounded at "
+                f"avg {bridgebench_soak.get('averageLatencyMs', 0)}, "
+                f"p95 {bridgebench_soak.get('p95LatencyMs', 0)}, "
+                f"median {bridgebench_soak.get('medianLatencyMs', 0)}, "
+                f"max {bridgebench_soak.get('maxLatencyMs', 0)}."
+            ),
+            (
+                "Bridge runtime failed assertions stayed at "
+                f"{bridgebench_soak.get('bridgeRuntimeFailedAssertionsTotal', 0)} across the soak."
+            ),
+        ],
+        "quality": {
+            "status": "completed" if int(bridgebench_soak.get("failedRunCount", 0) or 0) == 0 else "degraded",
+            "parse_success": bool(bridgebench_soak.get("parseSuccessRate", 0) == 1),
+            "structured_field_count": 0,
+            "thinking_detected": False,
+            "score": float(bridgebench_soak.get("parseSuccessRate", 0) or 0),
+            "run_count": int(bridgebench_soak.get("runCount", 0) or 0),
+            "task_count": int(bridgebench_soak.get("taskCount", 0) or 0),
+            "parse_success_rate": float(bridgebench_soak.get("parseSuccessRate", 0) or 0),
+            "average_latency_ms": float(bridgebench_soak.get("averageLatencyMs", 0) or 0),
+            "p95_latency_ms": float(bridgebench_soak.get("p95LatencyMs", 0) or 0),
+        },
+    }
+    return [finalize_record(record)]
+
+
+def collect_harbor_soak_records(root: Path, harbor_soak: dict) -> list[dict]:
+    records: list[dict] = []
+    summary = harbor_soak.get("summary", {})
+    if isinstance(summary, dict) and int(summary.get("totalRuns", 0) or 0) > 0:
+        task_summary_lines = []
+        for task in summary.get("tasks", []):
+            if not isinstance(task, dict):
+                continue
+            task_summary_lines.append(
+                (
+                    f"{task.get('taskLabel', task.get('taskId', 'task'))}: "
+                    f"oracle runs {task.get('oracle', {}).get('runs', 0)} avg score {task.get('oracle', {}).get('scoreAverage', 0)} "
+                    f"avg duration {task.get('oracle', {}).get('durationAverageSec', 0)} sec; "
+                    f"Q runs {task.get('q', {}).get('runs', 0)} avg score {task.get('q', {}).get('scoreAverage', 0)} "
+                    f"avg duration {task.get('q', {}).get('durationAverageSec', 0)} sec."
+                )
+            )
+        aggregate_record = {
+            "id": "harbor-terminal-bench-soak:aggregate",
+            "row_type": "benchmark_observation",
+            "source_surface": "harbor-terminal-bench-soak",
+            "row_id": "aggregate",
+            "label": "Harbor terminal bench 60m Q-only soak",
+            "objective": "Retain stable Q task-pack behavior across repeated Harbor runs while preserving perfect structured score on the tracked Q tasks.",
+            "facts": [
+                f"Duration seconds: {harbor_soak.get('durationSeconds', 0)}",
+                f"Oracle runs: {summary.get('oracle', {}).get('runs', 0)}",
+                f"Q runs: {summary.get('q', {}).get('runs', 0)}",
+            ],
+            "observation": [
+                (
+                    f"Harbor soak completed {summary.get('totalRuns', 0)} total runs with oracle avg score "
+                    f"{summary.get('oracle', {}).get('scoreAverage', 0)} and Q avg score {summary.get('q', {}).get('scoreAverage', 0)}."
+                ),
+                (
+                    f"Q average duration was {summary.get('q', {}).get('durationAverageSec', 0)} sec "
+                    f"versus oracle {summary.get('oracle', {}).get('durationAverageSec', 0)} sec."
+                ),
+                *task_summary_lines,
+            ],
+            "quality": {
+                "status": str(harbor_soak.get("state", "completed")).strip() or "completed",
+                "parse_success": True,
+                "structured_field_count": 0,
+                "thinking_detected": False,
+                "score": float(summary.get("overall", {}).get("scoreAverage", 0) or 0),
+                "run_count": int(summary.get("totalRuns", 0) or 0),
+                "average_duration_sec": float(summary.get("overall", {}).get("durationAverageSec", 0) or 0),
+            },
+        }
+        records.append(finalize_record(aggregate_record))
+
+    for run in harbor_soak.get("runs", []):
+        if not isinstance(run, dict):
+            continue
+        if str(run.get("agent", "")).strip().lower() != "q":
+            continue
+        response = run.get("response", {})
+        if not isinstance(response, dict):
+            continue
+        route = str(response.get("route", "")).strip()
+        reason = str(response.get("reason", "")).strip()
+        commit = str(response.get("commit", "")).strip()
+        score = run.get("score")
+        if score != 1 or not route or not reason or not commit:
+            continue
+        task_id = str(run.get("taskId") or "unknown").strip()
+        iteration = int(run.get("iteration", 0) or 0)
+        label = str(run.get("taskLabel", task_id)).strip() or task_id
+        objective, facts = harbor_context(root, task_id, label)
+        record = {
+            "id": f"harbor-terminal-bench-soak:{task_id}:iter-{iteration:04d}",
+            "row_type": "decision_triplet",
+            "source_surface": "harbor-terminal-bench-soak",
+            "row_id": f"{task_id}/iter-{iteration:04d}",
+            "label": f"{label} soak iteration {iteration:04d}",
+            "objective": objective,
+            "facts": facts,
+            "output": {
+                "route": route,
+                "reason": reason,
+                "commit": commit,
+            },
+            "quality": {
+                "status": "completed",
+                "parse_success": True,
+                "structured_field_count": 3,
+                "thinking_detected": False,
+                "score": float(score),
+                "agent": "q",
+                "iteration": iteration,
+                "duration_sec": float(run.get("durationSec", 0) or 0),
+            },
+        }
+        records.append(finalize_record(record))
+    return records
+
+
 def build_release_summary(root: Path) -> dict:
     package_version = load_json(root / "package.json").get("version", "0.0.0")
     git_sha = git_value(root, "rev-parse", "HEAD")
@@ -257,6 +516,16 @@ def main() -> None:
         help="Path to Harbor-Terminal-Bench.json",
     )
     parser.add_argument(
+        "--bridgebench-soak",
+        default=str(root / "docs" / "wiki" / "BridgeBench-Soak.json"),
+        help="Path to BridgeBench-Soak.json",
+    )
+    parser.add_argument(
+        "--harbor-soak",
+        default=str(root / "docs" / "wiki" / "Harbor-Terminal-Bench-Soak.json"),
+        help="Path to Harbor-Terminal-Bench-Soak.json",
+    )
+    parser.add_argument(
         "--output",
         default=str(root / ".training-output" / "q" / "q-benchmark-corpus.jsonl"),
         help="Output JSONL path",
@@ -271,6 +540,8 @@ def main() -> None:
     comparison_path = Path(args.comparison)
     bridgebench_path = Path(args.bridgebench)
     harbor_path = Path(args.harbor)
+    bridgebench_soak_path = Path(args.bridgebench_soak)
+    harbor_soak_path = Path(args.harbor_soak)
     output_path = Path(args.output)
     manifest_path = Path(args.manifest)
     markdown_path = manifest_path.with_suffix(".md")
@@ -278,6 +549,8 @@ def main() -> None:
     comparison = load_json(comparison_path)
     bridgebench = load_json(bridgebench_path)
     harbor = load_json(harbor_path)
+    bridgebench_soak = load_optional_json(bridgebench_soak_path)
+    harbor_soak = load_optional_json(harbor_soak_path)
 
     comparison_model = next((model for model in comparison.get("models", []) if normalize_q_model(model)), None)
     bridgebench_model = next((model for model in bridgebench.get("models", []) if normalize_q_model(model)), None)
@@ -288,6 +561,10 @@ def main() -> None:
     if bridgebench_model:
         records.extend(collect_model_records("bridgebench", bridgebench_model))
     records.extend(collect_harbor_records(root, harbor))
+    if bridgebench_soak:
+        records.extend(collect_bridgebench_soak_records(bridgebench_soak))
+    if harbor_soak:
+        records.extend(collect_harbor_soak_records(root, harbor_soak))
 
     source_counts = Counter(record["source_surface"] for record in records)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -306,6 +583,16 @@ def main() -> None:
             "model-comparison": relative_path(root, comparison_path),
             "bridgebench": relative_path(root, bridgebench_path),
             "harbor-terminal-bench": relative_path(root, harbor_path),
+            **(
+                {"bridgebench-soak": relative_path(root, bridgebench_soak_path)}
+                if bridgebench_soak
+                else {}
+            ),
+            **(
+                {"harbor-terminal-bench-soak": relative_path(root, harbor_soak_path)}
+                if harbor_soak
+                else {}
+            ),
         },
         "output": {
             "jsonlPath": relative_path(root, output_path),

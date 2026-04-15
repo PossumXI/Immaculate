@@ -468,6 +468,12 @@ def main() -> None:
         "mixManifestPath": relative_path(root, new_mix_manifest_path),
         "sessionManifestPath": relative_path(root, new_session_manifest_path),
     }
+    refreshed_run_name = str(refreshed_lock.get("run", {}).get("runName", "")).strip() or promotion_run_name
+    refreshed_session_id = str(refreshed_session.get("sessionId", "")).strip() or next_session_id
+    summary["candidate"] = {
+        "runName": next_bench_name(refreshed_run_name),
+        "sessionId": next_bench_name(refreshed_session_id),
+    }
 
     save_json(output_manifest_path, summary)
     save_markdown(output_markdown_path, render_markdown(summary))
