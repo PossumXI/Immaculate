@@ -37,13 +37,30 @@ def relative_path(root: Path, path_value: Path) -> str:
         return str(path_value.resolve()).replace("\\", "/")
 
 
+def rebase_repo_owned_path(root: Path, candidate: Path) -> Path:
+    resolved = candidate.expanduser().resolve(strict=False)
+    try:
+        resolved.relative_to(root.resolve())
+        return resolved
+    except ValueError:
+        pass
+    repo_markers = (".training-output", "training", "docs", "deploy", "benchmarks")
+    parts = list(resolved.parts)
+    for marker in repo_markers:
+        if marker not in parts:
+            continue
+        marker_index = parts.index(marker)
+        return (root / Path(*parts[marker_index:])).resolve(strict=False)
+    return resolved
+
+
 def resolve_repo_path(path_value: str | None) -> Path | None:
     if not path_value:
         return None
     candidate = Path(path_value).expanduser()
     if candidate.is_absolute():
-        return candidate.resolve()
-    return (repo_root() / candidate).resolve()
+        return rebase_repo_owned_path(repo_root(), candidate)
+    return (repo_root() / candidate).resolve(strict=False)
 
 
 def sha256_file(path_value: Path) -> str:
