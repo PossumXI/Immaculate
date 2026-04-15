@@ -2,7 +2,7 @@
 
 This page is generated from the tracked direct-Q report surfaces. The current live failure count is zero, so this failure-only export is empty. Resolved structured-contract rows are intentionally excluded from this surface.
 
-- Generated: 2026-04-15T03:40:56Z
+- Generated: 2026-04-15T03:43:35Z
 - Records: `0`
 - Eval seeds: `0`
 - Resolved successes excluded: `8`

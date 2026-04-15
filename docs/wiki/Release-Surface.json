@@ -1,21 +1,21 @@
 {
-  "generatedAt": "2026-04-15T03:41:14.690Z",
+  "generatedAt": "2026-04-15T03:43:47.698Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "d6927bb939197f5fec712a11eb3684958027e940",
-    "gitShortSha": "d6927bb",
+    "gitSha": "5e51e002d467540876a634002a9951c0eec64479",
+    "gitShortSha": "5e51e00",
     "gitBranch": "detached",
-    "buildId": "0.1.0+d6927bb",
+    "buildId": "0.1.0+5e51e00",
     "q": {
       "alias": "Q",
       "providerModel": "Q",
       "truthfulLabel": "Q",
       "trainingLock": {
-        "generatedAt": "2026-04-15T03:40:51Z",
+        "generatedAt": "2026-04-15T03:43:15Z",
         "lockVersion": 1,
-        "bundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1-d6927bb-e16a056e",
+        "bundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1-5e51e00-e16a056e",
         "runName": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1",
         "aliasName": "Q",
         "trainDatasetPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c-bench-v1.jsonl",
@@ -34,14 +34,14 @@
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-15T03:41:00Z",
+        "generatedAt": "2026-04-15T03:43:38Z",
         "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v1",
         "sessionPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/hybrid-session.json",
         "localStatus": "ready",
         "cloudStatus": "not-configured",
         "cloudProvider": "oci",
-        "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1-d6927bb-e16a056e",
-        "immaculateBundleId": "immaculate-orchestration-d6927bb-3dd4365f"
+        "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1-5e51e00-e16a056e",
+        "immaculateBundleId": "immaculate-orchestration-5e51e00-3dd4365f"
       }
     }
   },
@@ -69,17 +69,17 @@
     {
       "label": "Q hybrid training",
       "path": "docs\\wiki\\Q-Hybrid-Training.json",
-      "generatedAt": "2026-04-15T03:41:00Z"
+      "generatedAt": "2026-04-15T03:43:38Z"
     },
     {
       "label": "Q benchmark corpus",
       "path": "docs\\wiki\\Q-Benchmark-Corpus.json",
-      "generatedAt": "2026-04-15T03:40:56Z"
+      "generatedAt": "2026-04-15T03:43:35Z"
     },
     {
       "label": "W&B benchmark export",
       "path": "docs\\wiki\\Benchmark-Wandb-Export.json",
-      "generatedAt": "2026-04-15T02:39:24.911317+00:00"
+      "generatedAt": "2026-04-15T03:31:24.375275+00:00"
     }
   ],
   "output": {
