@@ -1059,3 +1059,28 @@ What this unlocks next:
 - richer RPC-class device adapters beyond the first HTTP/2 lane
 - routing that can incorporate device health as a first-class orchestration signal
 - future actuator swarms where direct hardware lanes compete on real measured fitness instead of static priority
+
+### 2026-04-15
+
+#### Cloudflare becomes a real Q-only deploy and evaluation lane
+
+What changed:
+- the repo now carries a local Cloudflare worker package under `deploy/cloudflare/worker/` with a bounded `Q`-only chat endpoint and Workers AI binding
+- `training/q/export_cloudflare_adapter.py` now checks whether a Cloudflare-ready adapter artifact actually exists and packages it only when the required files are present
+- `training/q/build_cloudflare_eval_bundle.py` now turns the tracked Q benchmark corpus into a replayable Cloudflare eval bundle
+- `training/q/launch_cloudflare_q_inference.py` now stamps a machine-readable `Cloudflare-Q-Inference` surface instead of leaving Cloudflare as an idea in notes
+
+Why it matters:
+- this creates a real deploy/eval path for `Q` that can be controlled from the repo once Cloudflare auth and a compatible adapter artifact exist
+- the repo can now treat Cloudflare as a serving and evaluation plane without lying that it replaced the heavier Q training backend
+- the eval loop gets a direct path from benchmark-derived Q rows into a replayable cloud endpoint
+
+Evidence:
+- the worker, env template, deploy script, adapter export script, eval-bundle script, and controller are now all committed under `deploy/cloudflare/` and `training/q/`
+- `docs/wiki/Cloudflare-Q-Inference.md` is generated as the truth surface for auth readiness, adapter readiness, worker typecheck state, and smoke-eval blockers
+- `docs/wiki/Release-Surface.md` now includes the Cloudflare inference surface in the stamped evidence list
+
+What this unlocks next:
+- actual Cloudflare worker deployment as soon as `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_Q_BASE_MODEL`, and `CLOUDFLARE_Q_LORA_NAME` are present
+- replaying the benchmark-derived Q eval bundle through AI Gateway metadata and logs
+- promoting Cloudflare from scaffolded deploy plane to active Q-only inference edge once a Cloudflare-ready adapter exists

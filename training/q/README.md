@@ -145,6 +145,15 @@ The active session can also emit a free supplemental Colab lane:
 - let the notebook rebuild the Immaculate bundle and run the Q dry-run on any runtime, then only allow the bounded Q micro-train when Colab exposes a large enough GPU
 - treat `docs/wiki/Colab-Free-Training.md` as the truth surface for what the free lane can honestly do
 
+The active session can also stage a Q-only Cloudflare deploy and eval lane:
+
+- use `deploy/cloudflare/env/immaculate-q-cloudflare.env.example` as the non-secret Cloudflare reference
+- export a Cloudflare-ready adapter bundle with `npm run q:cloudflare:adapter -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --check`
+- build the benchmark-derived eval replay bundle with `npm run q:cloudflare:eval-bundle -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json`
+- typecheck the worker with `npm run q:cloudflare:worker:typecheck`
+- materialize the Cloudflare deploy/eval report with `npm run q:cloudflare:inference -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --env-file deploy/cloudflare/env/immaculate-q-cloudflare.env.example --check`
+- treat `docs/wiki/Cloudflare-Q-Inference.md` as the truth surface for Cloudflare auth, worker readiness, adapter packaging, AI Gateway routing, and smoke-eval blockers
+
 ## Stronger Current Training Direction
 
 The next truthful Q run should emphasize:

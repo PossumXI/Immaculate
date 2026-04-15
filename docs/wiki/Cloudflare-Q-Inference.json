@@ -1,0 +1,76 @@
+{
+  "generatedAt": "2026-04-15T22:58:49Z",
+  "release": {
+    "packageVersion": "0.1.0",
+    "gitSha": "544c9200a73ecb10da88477bd975110dcd1f335c",
+    "gitShortSha": "544c920",
+    "buildId": "0.1.0+544c920"
+  },
+  "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
+  "auth": {
+    "accountIdReady": false,
+    "apiTokenReady": false,
+    "envFiles": [
+      "deploy/cloudflare/env/immaculate-q-cloudflare.env.example"
+    ]
+  },
+  "gateway": {
+    "gatewayId": "default",
+    "compatUrl": null,
+    "authHeader": "cf-aig-authorization: Bearer <token>",
+    "metadataLimit": 5
+  },
+  "adapter": {
+    "generatedAt": "2026-04-15T22:58:48Z",
+    "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
+    "ready": false,
+    "checkOnly": true,
+    "sourceDir": ".training-output/q/runs/q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2",
+    "trainingLockPath": ".training-output/q/latest-training-lock.json",
+    "adapterConfigPath": null,
+    "adapterWeightsPath": null,
+    "weightsSizeBytes": null,
+    "weightsSizeMb": null,
+    "outputDir": ".training-output/q/cloudflare/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/adapter",
+    "exportedPaths": [],
+    "blockers": [
+      "Adapter source directory is missing: .training-output/q/runs/q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2",
+      "adapter_config.json is missing from the candidate adapter source.",
+      "adapter_model.safetensors is missing from the candidate adapter source."
+    ]
+  },
+  "evalBundle": {
+    "ready": true,
+    "recordCount": 24,
+    "jsonlPath": ".training-output/q/cloudflare/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/eval/cloudflare-q-eval-bundle.jsonl",
+    "manifestPath": ".training-output/q/cloudflare/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/eval/cloudflare-q-eval-bundle.json"
+  },
+  "worker": {
+    "packagePath": "deploy/cloudflare/worker",
+    "wranglerConfigPath": "deploy/cloudflare/wrangler.toml",
+    "deployScriptPath": "deploy/cloudflare/scripts/deploy-cloudflare-worker.sh",
+    "typecheckReady": true,
+    "typecheckStdout": "> typecheck\n> tsc -p tsconfig.json",
+    "typecheckStderr": null,
+    "workerUrlReady": false,
+    "workerUrl": null,
+    "baseModelReady": false,
+    "loraReady": false
+  },
+  "smoke": {
+    "attempted": false,
+    "ready": false,
+    "evaluatedRows": 0,
+    "blocker": null
+  },
+  "summary": {
+    "provider": "cloudflare",
+    "ready": false,
+    "recommendedNextStep": "Set CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN, CLOUDFLARE_Q_BASE_MODEL, and CLOUDFLARE_Q_LORA_NAME, then deploy the worker and run a smoke eval."
+  },
+  "output": {
+    "sessionJsonPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/cloudflare-q-inference.json",
+    "wikiJsonPath": "docs/wiki/Cloudflare-Q-Inference.json",
+    "wikiMarkdownPath": "docs/wiki/Cloudflare-Q-Inference.md"
+  }
+}

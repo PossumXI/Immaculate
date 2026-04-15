@@ -1,0 +1,17 @@
+{
+  "name": "@immaculate/cloudflare-worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy --config ../wrangler.toml",
+    "dev": "wrangler dev --config ../wrangler.toml",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.2",
+    "wrangler": "^4.83.0"
+  },
+  "dependencies": {
+    "immaculate": "file:../../../.."
+  }
+}

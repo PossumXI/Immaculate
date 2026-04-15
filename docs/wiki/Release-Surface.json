@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-15T19:50:02.316Z",
+  "generatedAt": "2026-04-15T22:58:54.684Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "43c035a3dbb67eefb5c918c94973738ccb5097f3",
-    "gitShortSha": "43c035a",
+    "gitSha": "544c9200a73ecb10da88477bd975110dcd1f335c",
+    "gitShortSha": "544c920",
     "gitBranch": "detached",
-    "buildId": "0.1.0+43c035a",
+    "buildId": "0.1.0+544c920",
     "q": {
       "alias": "Q",
       "providerModel": "Q",
@@ -87,6 +87,11 @@
       "generatedAt": "2026-04-15T19:49:12Z"
     },
     {
+      "label": "Cloudflare Q inference",
+      "path": "docs\\wiki\\Cloudflare-Q-Inference.json",
+      "generatedAt": "2026-04-15T22:58:49Z"
+    },
+    {
       "label": "OCI GPU advisor",
       "path": "docs\\wiki\\OCI-GPU-Advisor.json",
       "generatedAt": "2026-04-15T19:49:15Z"
@@ -109,7 +114,7 @@
     {
       "label": "W&B benchmark export",
       "path": "docs\\wiki\\Benchmark-Wandb-Export.json",
-      "generatedAt": "2026-04-15T19:01:21.882373+00:00"
+      "generatedAt": "2026-04-15T19:46:41.746458+00:00"
     },
     {
       "label": "Harbor terminal bench soak",

@@ -47,6 +47,7 @@ This repository is prepared for public collaboration under the Apache 2.0 licens
 - hybrid Q training session: [docs/wiki/Q-Hybrid-Training.md](docs/wiki/Q-Hybrid-Training.md)
 - HF Jobs training lane: [docs/wiki/HF-Jobs-Training.md](docs/wiki/HF-Jobs-Training.md)
 - Colab free training lane: [docs/wiki/Colab-Free-Training.md](docs/wiki/Colab-Free-Training.md)
+- Cloudflare Q inference lane: [docs/wiki/Cloudflare-Q-Inference.md](docs/wiki/Cloudflare-Q-Inference.md)
 - OCI GPU advisor: [docs/wiki/OCI-GPU-Advisor.md](docs/wiki/OCI-GPU-Advisor.md)
 - OCI region capacity: [docs/wiki/OCI-Region-Capacity.md](docs/wiki/OCI-Region-Capacity.md)
 - OCI Q training bundle: [docs/wiki/OCI-Q-Training.md](docs/wiki/OCI-Q-Training.md)
@@ -128,6 +129,7 @@ For the `Q` fine-tune path specifically:
 - hybrid training session surface: [docs/wiki/Q-Hybrid-Training.md](docs/wiki/Q-Hybrid-Training.md)
 - HF Jobs training surface: [docs/wiki/HF-Jobs-Training.md](docs/wiki/HF-Jobs-Training.md)
 - Colab free training surface: [docs/wiki/Colab-Free-Training.md](docs/wiki/Colab-Free-Training.md)
+- Cloudflare Q inference surface: [docs/wiki/Cloudflare-Q-Inference.md](docs/wiki/Cloudflare-Q-Inference.md)
 - OCI GPU advisor: [docs/wiki/OCI-GPU-Advisor.md](docs/wiki/OCI-GPU-Advisor.md)
 - OCI region capacity probe: [docs/wiki/OCI-Region-Capacity.md](docs/wiki/OCI-Region-Capacity.md)
 - model/training manifest: [fixtures/training/q-defsec-curation.example.json](fixtures/training/q-defsec-curation.example.json)
@@ -140,6 +142,10 @@ For the `Q` fine-tune path specifically:
 - hybrid session launcher: `npm run q:training:session -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --launch`
 - HF Jobs launcher: `npm run q:hf:jobs -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --env-file C:/path/to/cloud.env --check`
 - Colab free notebook exporter: `npm run q:colab:export -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json`
+- Cloudflare adapter export: `npm run q:cloudflare:adapter -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --check`
+- Cloudflare eval bundle: `npm run q:cloudflare:eval-bundle -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json`
+- Cloudflare inference controller: `npm run q:cloudflare:inference -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --env-file deploy/cloudflare/env/immaculate-q-cloudflare.env.example --check`
+- Cloudflare worker typecheck: `npm run q:cloudflare:worker:typecheck`
 - benchmark promotion command: `npm run q:training:promote-benchmark`
 - OCI region capacity probe: `npm run q:oci:capacity -- --oci-bin C:/path/to/oci.exe --config-file .training-output/q/oci-controller/DEFAULT.config --profile DEFAULT --region-key PHX`
 - OCI controller launch script: `bash deploy/oci-training/scripts/launch-oci-q-training.sh --session-manifest .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --env-file deploy/oci-training/env/immaculate-q-training.env.example`

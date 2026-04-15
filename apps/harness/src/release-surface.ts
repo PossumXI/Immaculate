@@ -57,6 +57,10 @@ const SURFACE_FILES: SurfaceTimestamp[] = [
     path: path.join("docs", "wiki", "Colab-Free-Training.json")
   },
   {
+    label: "Cloudflare Q inference",
+    path: path.join("docs", "wiki", "Cloudflare-Q-Inference.json")
+  },
+  {
     label: "OCI GPU advisor",
     path: path.join("docs", "wiki", "OCI-GPU-Advisor.json")
   },

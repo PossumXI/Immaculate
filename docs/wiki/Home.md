@@ -59,6 +59,7 @@ If you only read one generated page before diving deeper, read [[Release-Surface
 - [[Q-Hybrid-Training]] records the latest tracked hybrid training session for `Q` plus the paired Immaculate orchestration bundle and cloud-readiness truth
 - [[HF-Jobs-Training]] records the authenticated Hugging Face Jobs cloud lane, staged bundle path, visible hardware, and any billing blocker without pretending a cloud run happened
 - [[Colab-Free-Training]] records the free supplemental Colab lane that replays the same session bundle for doctoring, Immaculate bundle regeneration, and bounded Q micro-trains
+- [[Cloudflare-Q-Inference]] records the Q-only Cloudflare worker, adapter-export readiness, AI Gateway path, and eval replay boundary without pretending Cloudflare became the heavy training backend
 - [[OCI-GPU-Advisor]] records the verified subscribed-region OCI GPU inventory plus the next launch recommendation for the active Q session
 - [[OCI-Region-Capacity]] records the real tenancy-level OCI region subscription attempts and any hard subscribed-region ceiling blocking the next GPU move
 - [[OCI-Q-Training]] tracks the OCI cloud launcher, bundle-staging path, and Vault-oriented training boundary for the Q fine-tune lane
