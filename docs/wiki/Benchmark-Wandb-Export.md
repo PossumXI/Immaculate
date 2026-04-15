@@ -2,7 +2,7 @@
 
 This page is exported from live W&B benchmark runs and committed into the repo wiki.
 
-- Exported at: 2026-04-14T21:39:44.220516+00:00
+- Exported at: 2026-04-15T02:39:24.911317+00:00
 - W&B project: https://wandb.ai/arobi-arobi-technology-alliance/immaculate
 - Owner: Gaetano Comparcola (PossumX)
 - Role: Program Originator, Systems Architect, and Engineering Lead
@@ -12,68 +12,68 @@ This page is exported from live W&B benchmark runs and committed into the repo w
 
 ### Latency Smoke
 
-- Suite: `immaculate-benchmark-2026-04-14T21-39-04-869Z`
-- Run ID: `f5stzc2b`
-- Run name: `immaculate-benchmark-2026-04-14T21-39-04-869Z`
-- Run URL: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/f5stzc2b
+- Suite: `immaculate-benchmark-2026-04-15T02-38-58-149Z`
+- Run ID: `w8w1kedm`
+- Run name: `immaculate-benchmark-2026-04-15T02-38-58-149Z`
+- Run URL: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/w8w1kedm
 - State: `finished`
-- Generated: `2026-04-14T21:39:04.869Z`
-- Published: `2026-04-14T21:39:10.973497+00:00`
+- Generated: `2026-04-15T02:38:58.149Z`
+- Published: `2026-04-15T02:39:04.126277+00:00`
 - Failed assertions: `0`
 - Run kind: `smoke`
 - Integrity: `verified`
 - Stage: `smoke benchmark on linux-x64 (4 cores)`
 - Planned duration: `12800` ms
-- Wall-clock duration: `753.95` ms
+- Wall-clock duration: `429.39` ms
 - Hardware: `{"host":"runnervm35a4x","platform":"linux","arch":"x64","osVersion":"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026","cpuModel":"AMD EPYC 7763 64-Core Processor","cpuCount":4,"memoryGiB":15.62,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
 - Owner: `Gaetano Comparcola (PossumX)`
 - Role: `Program Originator, Systems Architect, and Engineering Lead`
 - Website: `https://PossumX.dev`
-- Benchmark artifact: `immaculate-immaculate-benchmark-2026-04-14T21-39-04-869Z:v0`
+- Benchmark artifact: `immaculate-immaculate-benchmark-2026-04-15T02-38-58-149Z:v0`
 - Artifact aliases: `latest`
 
 ### Durability Recovery
 
-- Suite: `immaculate-benchmark-2026-04-14T21-39-04-451Z`
-- Run ID: `b00p816x`
-- Run name: `immaculate-benchmark-2026-04-14T21-39-04-451Z`
-- Run URL: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/b00p816x
+- Suite: `immaculate-benchmark-2026-04-15T02-38-57-685Z`
+- Run ID: `afeb8au9`
+- Run name: `immaculate-benchmark-2026-04-15T02-38-57-685Z`
+- Run URL: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/afeb8au9
 - State: `finished`
-- Generated: `2026-04-14T21:39:04.451Z`
-- Published: `2026-04-14T21:39:27.903412+00:00`
+- Generated: `2026-04-15T02:38:57.685Z`
+- Published: `2026-04-15T02:39:11.060737+00:00`
 - Failed assertions: `0`
 - Run kind: `smoke`
 - Integrity: `verified`
 - Stage: `smoke benchmark on linux-x64 (4 cores)`
 - Planned duration: `20800` ms
-- Wall-clock duration: `404.03` ms
+- Wall-clock duration: `445.66` ms
 - Hardware: `{"host":"runnervm35a4x","platform":"linux","arch":"x64","osVersion":"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026","cpuModel":"AMD EPYC 7763 64-Core Processor","cpuCount":4,"memoryGiB":15.62,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
 - Owner: `Gaetano Comparcola (PossumX)`
 - Role: `Program Originator, Systems Architect, and Engineering Lead`
 - Website: `https://PossumX.dev`
-- Benchmark artifact: `immaculate-immaculate-benchmark-2026-04-14T21-39-04-451Z:v0`
+- Benchmark artifact: `immaculate-immaculate-benchmark-2026-04-15T02-38-57-685Z:v0`
 - Artifact aliases: `latest`
 
 ### Substrate Readiness
 
-- Suite: `immaculate-benchmark-2026-04-14T21-39-03-837Z`
-- Run ID: `ecp0r6zu`
-- Run name: `immaculate-benchmark-2026-04-14T21-39-03-837Z`
-- Run URL: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/ecp0r6zu
+- Suite: `immaculate-benchmark-2026-04-15T02-38-57-041Z`
+- Run ID: `7mnwkzgp`
+- Run name: `immaculate-benchmark-2026-04-15T02-38-57-041Z`
+- Run URL: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/7mnwkzgp
 - State: `finished`
-- Generated: `2026-04-14T21:39:03.837Z`
-- Published: `2026-04-14T21:39:35.956304+00:00`
+- Generated: `2026-04-15T02:38:57.041Z`
+- Published: `2026-04-15T02:39:17.880399+00:00`
 - Failed assertions: `0`
 - Run kind: `smoke`
 - Integrity: `verified`
 - Stage: `smoke benchmark on linux-x64 (4 cores)`
 - Planned duration: `12800` ms
-- Wall-clock duration: `590.98` ms
+- Wall-clock duration: `621.28` ms
 - Hardware: `{"host":"runnervm35a4x","platform":"linux","arch":"x64","osVersion":"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026","cpuModel":"AMD EPYC 7763 64-Core Processor","cpuCount":4,"memoryGiB":15.62,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
 - Owner: `Gaetano Comparcola (PossumX)`
 - Role: `Program Originator, Systems Architect, and Engineering Lead`
 - Website: `https://PossumX.dev`
-- Benchmark artifact: `immaculate-immaculate-benchmark-2026-04-14T21-39-03-837Z:v0`
+- Benchmark artifact: `immaculate-immaculate-benchmark-2026-04-15T02-38-57-041Z:v0`
 - Artifact aliases: `latest`
 
 ### Durability Torture
