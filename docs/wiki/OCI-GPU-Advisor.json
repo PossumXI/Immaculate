@@ -48,13 +48,13 @@
     "Keep the cloud lane as not-configured until a subscribed region shows verified GPU-capable shapes."
   ],
   "materializedEnvUpdates": {},
-  "generatedAt": "2026-04-15T15:19:56Z",
+  "generatedAt": "2026-04-15T15:42:55Z",
   "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "e04cfc5b068fa28427931ec3ed049a8c95ddfca8",
-    "gitShortSha": "e04cfc5",
-    "buildId": "0.1.0+e04cfc5"
+    "gitSha": "e03c70332d8d860f36399f46b3201bfeb3ec6e5c",
+    "gitShortSha": "e03c703",
+    "buildId": "0.1.0+e03c703"
   },
   "output": {
     "jsonPath": "docs/wiki/OCI-GPU-Advisor.json",

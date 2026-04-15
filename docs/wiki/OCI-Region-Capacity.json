@@ -1,13 +1,17 @@
 {
-  "generatedAt": "2026-04-15T15:19:36Z",
+  "generatedAt": "2026-04-15T15:42:22Z",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "e04cfc5b068fa28427931ec3ed049a8c95ddfca8",
-    "gitShortSha": "e04cfc5",
-    "buildId": "0.1.0+e04cfc5"
+    "gitSha": "e03c70332d8d860f36399f46b3201bfeb3ec6e5c",
+    "gitShortSha": "e03c703",
+    "buildId": "0.1.0+e03c703"
   },
   "controllerRegion": "us-ashburn-1",
   "tenancyId": "ocid1.tenancy.oc1..aaaaaaaaajrnaanoycyyhq5caorcxc2puwaqf55ldw3ywzgqja6iwrs7a3jq",
+  "cloudTrainingLanes": [
+    "Q",
+    "Immaculate"
+  ],
   "subscribedRegionsBefore": [
     {
       "regionKey": "IAD",
@@ -47,12 +51,40 @@
       "isHomeRegion": true
     }
   ],
+  "limit": {
+    "serviceName": "regions",
+    "definitionName": "subscribed-region-count",
+    "description": "Subscribed region count",
+    "eligibleForIncrease": true,
+    "scopeType": "GLOBAL",
+    "currentValue": 1
+  },
+  "support": {
+    "userOcid": "ocid1.user.oc1..aaaaaaaaa5t2xrtks2kkb7sbspvttl6jqebgquj7lnpvme7l6ijtu7qb2t3q",
+    "validUser": true,
+    "validationError": null,
+    "generalValidation": {
+      "validUser": true,
+      "writePermittedUserGroups": [
+        {
+          "userGroupId": "300008982576335",
+          "userGroupName": "arobi-node-UserGroup"
+        }
+      ]
+    },
+    "regionSubscriptionLimitFound": true,
+    "limitCatalogError": null,
+    "createPossible": false,
+    "createBlockedReason": "CSI is required by `oci support incident create` and is not present in the local controller config or workspace.",
+    "incident": null,
+    "incidentError": null
+  },
   "summary": {
     "latestAttemptStatus": "blocked",
     "latestAttemptCode": "TenantCapacityExceeded",
     "latestAttemptMessage": "You have exceeded the maximum number of allowed subscribed regions. Please see the Limits, Quotas and Usage page for more detail.",
     "subscriptionLimitReached": true,
-    "recommendedNextStep": "Increase the tenancy's allowed subscribed-region limit or upgrade the OCI tenancy tier, then rerun the bench-v2 doctor."
+    "recommendedNextStep": "Provide the tenancy CSI to `oci support incident create` for `regions.subscribed-region-count`, then rerun the bench-v2 doctor for the Q and Immaculate cloud lanes."
   },
   "output": {
     "jsonPath": "docs/wiki/OCI-Region-Capacity.json",

@@ -1,11 +1,12 @@
 # OCI Region Capacity
 
-This page records the real OCI region-capacity move for the active Q cloud-training lane.
+This page records the real OCI region-capacity move for the active Q cloud-training lane and the paired Immaculate cloud bundle.
 
-- Generated: `2026-04-15T15:19:36Z`
-- Release: `0.1.0+e04cfc5`
+- Generated: `2026-04-15T15:42:22Z`
+- Release: `0.1.0+e03c703`
 - Controller region: `us-ashburn-1`
 - Tenancy id: `ocid1.tenancy.oc1..aaaaaaaaajrnaanoycyyhq5caorcxc2puwaqf55ldw3ywzgqja6iwrs7a3jq`
+- Cloud training lanes: `Q, Immaculate`
 
 ## Subscribed Regions Before
 
@@ -31,7 +32,24 @@ This page records the real OCI region-capacity move for the active Q cloud-train
 
 - Latest attempt status: `blocked`
 - Subscription limit reached: `True`
-- Recommended next step: Increase the tenancy's allowed subscribed-region limit or upgrade the OCI tenancy tier, then rerun the bench-v2 doctor.
+- Recommended next step: Provide the tenancy CSI to `oci support incident create` for `regions.subscribed-region-count`, then rerun the bench-v2 doctor for the Q and Immaculate cloud lanes.
+
+## Live Limit Surface
+
+- Limit definition: `subscribed-region-count`
+- Current limit value: `1`
+- Eligible for limit increase: `True`
+- Scope type: `GLOBAL`
+
+## Support CLI Path
+
+- Support user valid generally: `True`
+- Support user valid for LIMIT: `True`
+- Write-permitted support groups: `1`
+- LIMIT catalog includes region-subscription-limits: `True`
+- CLI create possible with local data: `False`
+- CLI create blocker: CSI is required by `oci support incident create` and is not present in the local controller config or workspace.
+- Incident created: `False`
 
 ## Output
 

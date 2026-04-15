@@ -2,12 +2,12 @@
 
 This page records one hybrid Q training session. In plain English: it ties the Q fine-tune lane and the Immaculate orchestration-improvement lane into one stamped session, then tells you exactly which parts are ready or missing.
 
-- Generated: `2026-04-15T15:19:56Z`
-- Release: `0.1.0+e04cfc5`
+- Generated: `2026-04-15T15:42:55Z`
+- Release: `0.1.0+e03c703`
 - Session id: `q-hybrid-cur-fnv1a-8f551a5c-bench-v2`
 - Q training bundle: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e`
 - Dataset rows: `1070`
-- Immaculate orchestration bundle: `immaculate-orchestration-e04cfc5-3dd4365f`
+- Immaculate orchestration bundle: `immaculate-orchestration-e03c703-3dd4365f`
 - OCI GPU advisor: `docs/wiki/OCI-GPU-Advisor.md`
 - OCI region capacity probe: `docs/wiki/OCI-Region-Capacity.md`
 
@@ -39,9 +39,9 @@ This page records one hybrid Q training session. In plain English: it ties the Q
 
 ## Cloud Bundle
 
-- Bundle id: `q-hybrid-cur-fnv1a-8f551a5c-bench-v2-e04cfc5`
+- Bundle id: `q-hybrid-cur-fnv1a-8f551a5c-bench-v2-e03c703`
 - Archive: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/cloud-bundle/q-hybrid-cur-fnv1a-8f551a5c-bench-v2-cloud-bundle.tar.gz`
-- Archive SHA-256: `c58a945e20dcf4023e7909afd9e49940af39697d2d36e5eec86ac58f09106c3f`
+- Archive SHA-256: `facc194ad925ac1bc5a26a2f8345fbf3a5bce8416b9021bd8cd6913f4ab9f00e`
 - Bundle manifest: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/cloud-bundle/bundle-manifest.json`
 - Included file count: `10`
 
@@ -91,7 +91,7 @@ This page records one hybrid Q training session. In plain English: it ties the Q
 
 - Latest attempt status: `blocked`
 - Subscription limit reached: `True`
-- Recommended next step: Increase the tenancy's allowed subscribed-region limit or upgrade the OCI tenancy tier, then rerun the bench-v2 doctor.
+- Recommended next step: Provide the tenancy CSI to `oci support incident create` for `regions.subscribed-region-count`, then rerun the bench-v2 doctor for the Q and Immaculate cloud lanes.
 
 ## Truth Boundary
 

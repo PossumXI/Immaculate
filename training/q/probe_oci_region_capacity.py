@@ -65,6 +65,17 @@ def parse_tenancy_id(config_path: Path) -> str:
     raise ValueError(f"Unable to resolve tenancy from {config_path}.")
 
 
+def parse_config_value(config_path: Path, field_name: str) -> str:
+    for raw_line in config_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.lower().startswith(field_name.lower()):
+            _, _, value = raw_line.partition("=")
+            return value.strip()
+    return ""
+
+
 def parse_service_error(text: str) -> dict:
     start = text.find("{")
     end = text.rfind("}")
@@ -105,6 +116,13 @@ def run_oci_json(oci_bin: str, config_file: Path, profile: str, args: list[str])
     return payload
 
 
+def run_oci_json_or_error(oci_bin: str, config_file: Path, profile: str, args: list[str]) -> tuple[dict | None, dict | None]:
+    try:
+        return run_oci_json(oci_bin, config_file, profile, args), None
+    except RuntimeError as error:
+        return None, json.loads(str(error))
+
+
 def format_region_label(region_name: str, region_key: str, is_home_region: bool = False) -> str:
     label = region_name
     if region_key:
@@ -119,17 +137,20 @@ def render_markdown(report: dict) -> str:
     subscribed_after = report.get("subscribedRegionsAfter", [])
     attempts = report.get("candidateAttempts", [])
     summary = report.get("summary", {})
+    limit = report.get("limit", {})
+    support = report.get("support", {})
     output = report.get("output", {})
 
     lines = [
         "# OCI Region Capacity",
         "",
-        "This page records the real OCI region-capacity move for the active Q cloud-training lane.",
+        "This page records the real OCI region-capacity move for the active Q cloud-training lane and the paired Immaculate cloud bundle.",
         "",
         f"- Generated: `{report.get('generatedAt', 'n/a')}`",
         f"- Release: `{report.get('release', {}).get('buildId', 'n/a') if isinstance(report.get('release', {}), dict) else 'n/a'}`",
         f"- Controller region: `{report.get('controllerRegion', 'n/a')}`",
         f"- Tenancy id: `{report.get('tenancyId', 'n/a')}`",
+        f"- Cloud training lanes: `{', '.join(report.get('cloudTrainingLanes', [])) or 'n/a'}`",
         "",
         "## Subscribed Regions Before",
         "",
@@ -180,6 +201,23 @@ def render_markdown(report: dict) -> str:
             f"- Subscription limit reached: `{summary.get('subscriptionLimitReached', False)}`",
             f"- Recommended next step: {summary.get('recommendedNextStep', 'n/a')}",
             "",
+            "## Live Limit Surface",
+            "",
+            f"- Limit definition: `{limit.get('definitionName', 'n/a')}`",
+            f"- Current limit value: `{limit.get('currentValue', 'n/a')}`",
+            f"- Eligible for limit increase: `{limit.get('eligibleForIncrease', False)}`",
+            f"- Scope type: `{limit.get('scopeType', 'n/a')}`",
+            "",
+            "## Support CLI Path",
+            "",
+            f"- Support user valid generally: `{support.get('generalValidation', {}).get('validUser', False)}`",
+            f"- Support user valid for LIMIT: `{support.get('validUser', False)}`",
+            f"- Write-permitted support groups: `{len(support.get('generalValidation', {}).get('writePermittedUserGroups', []))}`",
+            f"- LIMIT catalog includes region-subscription-limits: `{support.get('regionSubscriptionLimitFound', False)}`",
+            f"- CLI create possible with local data: `{support.get('createPossible', False)}`",
+            f"- CLI create blocker: {support.get('createBlockedReason', 'n/a')}",
+            f"- Incident created: `{bool(support.get('incident'))}`",
+            "",
             "## Output",
             "",
             f"- JSON: `{output.get('jsonPath', 'n/a')}`",
@@ -221,6 +259,8 @@ def main() -> None:
     parser.add_argument("--config-file", default=str(root / ".training-output" / "q" / "oci-controller" / "DEFAULT.config"))
     parser.add_argument("--profile", default="DEFAULT")
     parser.add_argument("--tenancy-id", default="")
+    parser.add_argument("--csi", default="")
+    parser.add_argument("--create-limit-request", action="store_true")
     parser.add_argument("--region-key", action="append", dest="region_keys")
     parser.add_argument("--output-json", default=str(root / "docs" / "wiki" / "OCI-Region-Capacity.json"))
     parser.add_argument("--output-markdown", default=str(root / "docs" / "wiki" / "OCI-Region-Capacity.md"))
@@ -235,7 +275,82 @@ def main() -> None:
         raise ValueError(f"OCI config file not found: {config_file}")
 
     tenancy_id = args.tenancy_id.strip() or parse_tenancy_id(config_file)
+    user_ocid = parse_config_value(config_file, "user")
+    csi = args.csi.strip()
     region_keys = [key.strip().upper() for key in (args.region_keys or ["PHX", "SJC", "ORD"]) if key.strip()]
+
+    limit_definitions_payload = run_oci_json(
+        oci_bin,
+        config_file,
+        args.profile,
+        ["limits", "definition", "list", "--compartment-id", tenancy_id, "--service-name", "regions", "--all"],
+    )
+    limit_values_payload = run_oci_json(
+        oci_bin,
+        config_file,
+        args.profile,
+        ["limits", "value", "list", "--compartment-id", tenancy_id, "--service-name", "regions", "--all"],
+    )
+    limit_definition = next(
+        (
+            entry
+            for entry in limit_definitions_payload.get("data", [])
+            if isinstance(entry, dict) and str(entry.get("name", "")).strip() == "subscribed-region-count"
+        ),
+        {},
+    )
+    limit_value = next(
+        (
+            entry
+            for entry in limit_values_payload.get("data", [])
+            if isinstance(entry, dict) and str(entry.get("name", "")).strip() == "subscribed-region-count"
+        ),
+        {},
+    )
+
+    support_validation_payload, support_validation_error = run_oci_json_or_error(
+        oci_bin,
+        config_file,
+        args.profile,
+        ["support", "validation-response", "validate-user", "--ocid", user_ocid],
+    )
+    limit_validation_payload, limit_validation_error = run_oci_json_or_error(
+        oci_bin,
+        config_file,
+        args.profile,
+        ["support", "validation-response", "validate-user", "--ocid", user_ocid, "--problem-type", "LIMIT"],
+    )
+    support_catalog_payload, support_catalog_error = run_oci_json_or_error(
+        oci_bin,
+        config_file,
+        args.profile,
+        [
+            "support",
+            "incident-resource-type",
+            "list",
+            "--problem-type",
+            "LIMIT",
+            "--compartment-id",
+            tenancy_id,
+            "--ocid",
+            user_ocid,
+            "--all",
+        ],
+    )
+    support_catalog_entries = support_catalog_payload.get("data", []) if isinstance(support_catalog_payload, dict) else []
+    region_subscription_catalog_entry = next(
+        (
+            entry
+            for entry in support_catalog_entries
+            if isinstance(entry, dict) and str(entry.get("resource-type-key", "")).strip() == "region-subscription"
+        ),
+        {},
+    )
+    region_subscription_limit_found = any(
+        isinstance(category, dict) and str(category.get("limit-id", "")).strip() == "region-subscription-limits"
+        for category in region_subscription_catalog_entry.get("service-category-list", [])
+        if isinstance(region_subscription_catalog_entry, dict)
+    )
 
     public_regions_payload = run_oci_json(oci_bin, config_file, args.profile, ["iam", "region", "list", "--all"])
     public_regions = {entry["regionKey"]: entry for entry in normalize_region_entries(public_regions_payload)}
@@ -300,22 +415,106 @@ def main() -> None:
     subscribed_after = normalize_region_entries(after_payload)
     latest_attempt = attempts[-1] if attempts else {}
     subscription_limit_reached = any(str(entry.get("code", "")).strip() == "TenantCapacityExceeded" for entry in attempts)
+    create_possible = bool(csi and region_subscription_limit_found and not support_catalog_error)
+    create_blocked_reason = ""
+    incident_payload = None
+    incident_error = None
+    if not csi:
+        create_blocked_reason = "CSI is required by `oci support incident create` and is not present in the local controller config or workspace."
+    elif not region_subscription_limit_found:
+        create_blocked_reason = "OCI support LIMIT catalog did not expose `region-subscription-limits` for this controller identity."
+    elif support_catalog_error:
+        create_blocked_reason = str(support_catalog_error.get("message", "OCI support LIMIT catalog lookup failed.")).strip()
+
+    if args.create_limit_request and create_possible:
+        incident_title = "OCI subscribed region limit increase for Q and Immaculate cloud training"
+        incident_description = (
+            "Need an increase to regions.subscribed-region-count so the tenancy can subscribe a GPU-capable region for the "
+            "Q hybrid training session and the paired Immaculate cloud-training bundle. Current create_region_subscription "
+            "attempts for PHX, SJC, and ORD return TenantCapacityExceeded."
+        )
+        incident_payload, incident_error = run_oci_json_or_error(
+            oci_bin,
+            config_file,
+            args.profile,
+            [
+                "support",
+                "incident",
+                "create",
+                "--compartment-id",
+                tenancy_id,
+                "--csi",
+                csi,
+                "--problem-type",
+                "LIMIT",
+                "--severity",
+                "LOW",
+                "--title",
+                incident_title,
+                "--description",
+                incident_description,
+                "--ocid",
+                user_ocid,
+            ],
+        )
+
+    write_permitted_groups = []
+    if isinstance(support_validation_payload, dict):
+        raw_groups = support_validation_payload.get("data", {}).get("write-permitted-user-group-infos", [])
+        if isinstance(raw_groups, list):
+            for group in raw_groups:
+                if not isinstance(group, dict):
+                    continue
+                write_permitted_groups.append(
+                    {
+                        "userGroupId": str(group.get("user-group-id", "")).strip(),
+                        "userGroupName": str(group.get("user-group-name", "")).strip(),
+                    }
+                )
 
     report = {
         "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
         "release": build_release_summary(root),
         "controllerRegion": next((entry["regionName"] for entry in subscribed_after if entry.get("isHomeRegion")), subscribed_after[0]["regionName"] if subscribed_after else "unknown"),
         "tenancyId": tenancy_id,
+        "cloudTrainingLanes": ["Q", "Immaculate"],
         "subscribedRegionsBefore": subscribed_before,
         "candidateAttempts": attempts,
         "subscribedRegionsAfter": subscribed_after,
+        "limit": {
+            "serviceName": "regions",
+            "definitionName": str(limit_definition.get("name", "")).strip() or "subscribed-region-count",
+            "description": str(limit_definition.get("description", "")).strip() or "Subscribed region count",
+            "eligibleForIncrease": bool(limit_definition.get("is-eligible-for-limit-increase", False)),
+            "scopeType": str(limit_definition.get("scope-type", "")).strip() or "GLOBAL",
+            "currentValue": limit_value.get("value"),
+        },
+        "support": {
+            "userOcid": user_ocid,
+            "validUser": bool(limit_validation_payload.get("data", {}).get("is-valid-user", False)) if isinstance(limit_validation_payload, dict) else False,
+            "validationError": limit_validation_error,
+            "generalValidation": {
+                "validUser": bool(support_validation_payload.get("data", {}).get("is-valid-user", False)) if isinstance(support_validation_payload, dict) else False,
+                "writePermittedUserGroups": write_permitted_groups,
+            },
+            "regionSubscriptionLimitFound": region_subscription_limit_found,
+            "limitCatalogError": support_catalog_error,
+            "createPossible": create_possible,
+            "createBlockedReason": create_blocked_reason or None,
+            "incident": incident_payload.get("data") if isinstance(incident_payload, dict) else None,
+            "incidentError": incident_error,
+        },
         "summary": {
             "latestAttemptStatus": str(latest_attempt.get("status", "none")).strip() or "none",
             "latestAttemptCode": str(latest_attempt.get("code", "")).strip() or None,
             "latestAttemptMessage": str(latest_attempt.get("message", "")).strip() or None,
             "subscriptionLimitReached": subscription_limit_reached,
             "recommendedNextStep": (
-                "Increase the tenancy's allowed subscribed-region limit or upgrade the OCI tenancy tier, then rerun the bench-v2 doctor."
+                (
+                    "Provide the tenancy CSI to `oci support incident create` for `regions.subscribed-region-count`, then rerun the bench-v2 doctor for the Q and Immaculate cloud lanes."
+                    if bool(limit_definition.get("is-eligible-for-limit-increase", False)) and not create_possible
+                    else "Create the support-backed limit increase for `regions.subscribed-region-count`, then rerun the bench-v2 doctor for the Q and Immaculate cloud lanes."
+                )
                 if subscription_limit_reached
                 else (
                     "Rerun the bench-v2 doctor so the OCI advisor can promote the new target region and shape."

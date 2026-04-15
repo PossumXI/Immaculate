@@ -1,6 +1,6 @@
 # OCI Q Training
 
-This page documents the OCI cloud-training bundle for `Q`.
+This page documents the OCI cloud-training bundle for `Q` and the paired Immaculate orchestration lane that ships in the same hybrid session.
 
 In plain English, this is the launch path that turns one tracked hybrid session
 into a real OCI GPU training attempt without pretending the cloud lane is ready
@@ -71,6 +71,8 @@ That page is where the repo records:
 - whether the next blocker is missing capacity, missing subscription, or missing env wiring
 - the public expansion candidates that are discoverable but not yet verified for capacity
 - the actual tenancy response when the controller tries to subscribe the next GPU-candidate region
+- the live `regions.subscribed-region-count` limit object when OCI exposes it
+- whether OCI Support exposes `region-subscription-limits` for this tenancy and whether a local CLI-created limit request is blocked by missing CSI
 
 ## Truth Boundary
 
@@ -78,3 +80,4 @@ That page is where the repo records:
 - It does not claim OCI auth exists on this machine unless the doctor reports a concrete controller auth mode and config path.
 - It does not claim the Q cloud lane is safe just because a GPU node can be launched; the session still has to carry the exact locked dataset and config.
 - It does not claim public OCI regions have verified GPU capacity until the advisor proves a subscribed region can actually expose GPU-capable shapes to the current controller auth.
+- It does not claim the CLI can raise the subscribed-region ceiling by itself; if OCI Support requires `--csi` and CSI is not present locally, that remains an external operator boundary.
