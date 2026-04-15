@@ -37,6 +37,7 @@ This repository is prepared for public collaboration under the Apache 2.0 licens
 - Q benchmark promotion: [docs/wiki/Q-Benchmark-Promotion.md](docs/wiki/Q-Benchmark-Promotion.md)
 - hybrid Q training session: [docs/wiki/Q-Hybrid-Training.md](docs/wiki/Q-Hybrid-Training.md)
 - OCI Q training bundle: [docs/wiki/OCI-Q-Training.md](docs/wiki/OCI-Q-Training.md)
+- product and release packaging plan: [docs/wiki/Product-Release-Plan.md](docs/wiki/Product-Release-Plan.md)
 - direct Q readiness gate: [docs/wiki/Q-Readiness-Gate.md](docs/wiki/Q-Readiness-Gate.md)
 - dedicated Q gateway validation: [docs/wiki/Q-Gateway-Validation.md](docs/wiki/Q-Gateway-Validation.md)
 - W&B pull-back committed into git: [docs/wiki/Benchmark-Wandb-Export.md](docs/wiki/Benchmark-Wandb-Export.md)

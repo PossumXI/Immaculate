@@ -52,6 +52,7 @@ If you only read one generated page before diving deeper, read [[Release-Surface
 - [[Harbor-Terminal-Bench]] records the repo-local Harbor task pack, the executed Q gateway scores, and the latest Harbor truth boundary
 - [[Q-Hybrid-Training]] records the latest tracked hybrid training session for `Q` plus the paired Immaculate orchestration bundle and cloud-readiness truth
 - [[OCI-Q-Training]] tracks the OCI cloud launcher, bundle-staging path, and Vault-oriented training boundary for the Q fine-tune lane
+- [[Product-Release-Plan]] records the smallest truthful product and service packaging plan the repo can ship soon
 - [[Model-Benchmark-Comparison]] carries the live direct-Q structured contract benchmark plus the latest orchestrator baseline readout
 - [[BridgeBench]] carries the live bridge/control-plane Q benchmark alongside the real bridge runtime assertions
 - [[Q-Gateway-Validation]] carries the live dedicated-gateway contract proof for `Q`: health, auth, model listing, served completion, and concurrency rejection

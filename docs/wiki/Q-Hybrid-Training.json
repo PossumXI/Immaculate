@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-04-15T04:23:00Z",
+  "generatedAt": "2026-04-15T04:37:43Z",
   "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v1",
   "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/hybrid-session.manifest.json",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "c962654c79212b424620c7fa91c0a59ecef545b4",
-    "gitShortSha": "c962654",
-    "buildId": "0.1.0+c962654"
+    "gitSha": "c532f3e7200e9a222acb4e62e60a05a4839f7eb8",
+    "gitShortSha": "c532f3e",
+    "buildId": "0.1.0+c532f3e"
   },
   "q": {
     "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1-5e51e00-e16a056e",
@@ -23,15 +23,15 @@
     "failureCorpusPath": "docs/wiki/Q-Failure-Corpus.json"
   },
   "immaculate": {
-    "bundleId": "immaculate-orchestration-c962654-3dd4365f",
+    "bundleId": "immaculate-orchestration-c532f3e-3dd4365f",
     "bundlePath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-cur-fnv1a-8f551a5c-bench-v1.json",
     "signalCount": 14
   },
   "cloudBundle": {
-    "bundleId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v1-c962654",
+    "bundleId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v1-c532f3e",
     "archivePath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/cloud-bundle/q-hybrid-cur-fnv1a-8f551a5c-bench-v1-cloud-bundle.tar.gz",
-    "archiveSha256": "e3460dd0cde36f0857ec08fd117eac27d5abe9f7da4f0fa2c3dd6fef655e8bd0",
-    "archiveSizeBytes": 2211316,
+    "archiveSha256": "74f95331c00e8612f0c924bf403c6a46265b972f7477fc1d784bf665fa6821d3",
+    "archiveSizeBytes": 2211318,
     "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/cloud-bundle/bundle-manifest.json",
     "fileCount": 10,
     "repoRemoteUrl": "https://github.com/PossumXI/Immaculate.git"
@@ -69,13 +69,13 @@
         "WANDB_MODE"
       ],
       "requiredEnv": {
-        "OCI_COMPARTMENT_OCID": false,
-        "OCI_SUBNET_OCID": false,
-        "OCI_AVAILABILITY_DOMAIN": false,
-        "OCI_IMAGE_OCID": false,
+        "OCI_COMPARTMENT_OCID": true,
+        "OCI_SUBNET_OCID": true,
+        "OCI_AVAILABILITY_DOMAIN": true,
+        "OCI_IMAGE_OCID": true,
         "OCI_SHAPE": false,
-        "OCI_OBJECT_STORAGE_NAMESPACE": false,
-        "OCI_OBJECT_STORAGE_BUCKET": false
+        "OCI_OBJECT_STORAGE_NAMESPACE": true,
+        "OCI_OBJECT_STORAGE_BUCKET": true
       },
       "optionalEnv": {
         "HF_TOKEN": true,
@@ -93,13 +93,13 @@
         "WANDB_MODE": true
       },
       "launchTarget": {
-        "OCI_COMPARTMENT_OCID": false,
-        "OCI_SUBNET_OCID": false,
-        "OCI_AVAILABILITY_DOMAIN": false,
-        "OCI_IMAGE_OCID": false,
+        "OCI_COMPARTMENT_OCID": true,
+        "OCI_SUBNET_OCID": true,
+        "OCI_AVAILABILITY_DOMAIN": true,
+        "OCI_IMAGE_OCID": true,
         "OCI_SHAPE": false,
-        "OCI_OBJECT_STORAGE_NAMESPACE": false,
-        "OCI_OBJECT_STORAGE_BUCKET": false
+        "OCI_OBJECT_STORAGE_NAMESPACE": true,
+        "OCI_OBJECT_STORAGE_BUCKET": true
       },
       "launchCommandConfigured": true,
       "launchCommand": [
@@ -121,8 +121,11 @@
       "authKeyRepaired": false,
       "sessionEnvPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/oci-cloud.env",
       "sessionEnvUpdated": true,
+      "region": "us-ashburn-1",
+      "availableGpuShapes": [],
       "reasons": [
-        "Missing cloud launch target env: OCI_COMPARTMENT_OCID, OCI_SUBNET_OCID, OCI_AVAILABILITY_DOMAIN, OCI_IMAGE_OCID, OCI_SHAPE, OCI_OBJECT_STORAGE_NAMESPACE, OCI_OBJECT_STORAGE_BUCKET"
+        "Missing cloud launch target env: OCI_SHAPE",
+        "No GPU shapes are available in OCI region us-ashburn-1 for the current controller auth."
       ],
       "canonicalSources": {
         "HF_TOKEN": "HF_TOKEN",

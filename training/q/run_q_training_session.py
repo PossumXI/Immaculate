@@ -401,6 +401,61 @@ def bootstrap_oci_controller_auth(
     return bootstrap
 
 
+def resolve_oci_controller_identity(canonical_env: dict[str, str]) -> dict[str, str]:
+    config_file_value = str(canonical_env.get("OCI_CLI_CONFIG_FILE", "")).strip()
+    profile_name = str(canonical_env.get("OCI_CLI_PROFILE", "DEFAULT")).strip() or "DEFAULT"
+    if config_file_value:
+        config_path = Path(config_file_value).expanduser()
+        if not config_path.is_absolute():
+            config_path = (repo_root() / config_path).resolve()
+        if config_path.exists():
+            profiles = parse_ini_like_config(config_path)
+            profile_values = profiles.get(profile_name) or profiles.get("DEFAULT") or {}
+            return {
+                "configPath": str(config_path.resolve()).replace("\\", "/"),
+                "profile": profile_name,
+                "region": str(profile_values.get("region", "")).strip(),
+                "tenancy": str(profile_values.get("tenancy", "")).strip(),
+            }
+    return {
+        "configPath": config_file_value,
+        "profile": profile_name,
+        "region": str(canonical_env.get("OCI_CLI_REGION", "")).strip(),
+        "tenancy": str(canonical_env.get("OCI_CLI_TENANCY", "")).strip(),
+    }
+
+
+def list_available_oci_gpu_shapes(oci_cli_bin: str, canonical_env: dict[str, str]) -> list[str]:
+    identity = resolve_oci_controller_identity(canonical_env)
+    tenancy = identity.get("tenancy", "")
+    if not tenancy:
+        return []
+    command = [oci_cli_bin, "compute", "shape", "list"]
+    auth_mode = str(canonical_env.get("OCI_CLI_AUTH", "")).strip()
+    if auth_mode:
+        command.extend(["--auth", auth_mode])
+    config_path = identity.get("configPath", "")
+    if config_path:
+        command.extend(["--config-file", config_path])
+    profile_name = identity.get("profile", "")
+    if profile_name:
+        command.extend(["--profile", profile_name])
+    command.extend(["--compartment-id", tenancy, "--all", "--output", "json"])
+    result = subprocess.run(command, check=False, capture_output=True, text=True)
+    if result.returncode != 0 or not result.stdout.strip():
+        return []
+    try:
+        payload = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return []
+    shapes = {
+        str(entry.get("shape", "")).strip()
+        for entry in payload.get("data", [])
+        if str(entry.get("shape", "")).startswith(("VM.GPU", "BM.GPU"))
+    }
+    return sorted(shape for shape in shapes if shape)
+
+
 def read_secret_value(env_map: dict[str, str], base_name: str) -> tuple[str | None, str | None]:
     file_var_name = f"{base_name}_FILE"
     file_path_value = str(env_map.get(file_var_name, "")).strip()
@@ -586,6 +641,8 @@ def render_markdown(summary: dict) -> str:
         f"- OCI auth key path: `{doctor['cloud']['authKeyPath'] or 'n/a'}`",
         f"- OCI auth key repaired: `{doctor['cloud']['authKeyRepaired']}`",
         f"- OCI session env updated: `{doctor['cloud']['sessionEnvUpdated']}`",
+        f"- OCI region: `{doctor['cloud']['region'] or 'n/a'}`",
+        f"- OCI GPU shapes visible: `{', '.join(doctor['cloud']['availableGpuShapes']) if doctor['cloud']['availableGpuShapes'] else 'none'}`",
         f"- Cloud ready: `{doctor['cloud']['ready']}`",
         *[
             f"- Env file: `{entry['path']}` exists `{entry['exists']}`"
@@ -845,6 +902,12 @@ def main() -> None:
     elif all(bool(str(canonical_cloud_env.get(name, "")).strip()) for name in ("OCI_CLI_USER", "OCI_CLI_TENANCY", "OCI_CLI_FINGERPRINT", "OCI_CLI_REGION")):
         oci_auth_mode = "explicit_identity"
     oci_auth_ready = oci_auth_mode != "missing"
+    oci_identity = resolve_oci_controller_identity(canonical_cloud_env) if cloud_provider == "oci" else {}
+    oci_available_gpu_shapes = (
+        list_available_oci_gpu_shapes(oci_cli_bin, canonical_cloud_env)
+        if cloud_provider == "oci" and oci_cli_available and oci_auth_ready
+        else []
+    )
 
     hf_source = "missing"
     hf_ready = False
@@ -905,6 +968,14 @@ def main() -> None:
                 )
             elif oci_bootstrap.get("reason") and not oci_bootstrap.get("sessionEnvUpdated"):
                 cloud_reasons.append(str(oci_bootstrap["reason"]))
+            elif not oci_available_gpu_shapes:
+                cloud_reasons.append(
+                    f"No GPU shapes are available in OCI region {oci_identity.get('region', 'unknown')} for the current controller auth."
+                )
+            elif str(canonical_cloud_env.get('OCI_SHAPE', '')).strip() and str(canonical_cloud_env.get('OCI_SHAPE', '')).strip() not in oci_available_gpu_shapes:
+                cloud_reasons.append(
+                    f"Configured OCI_SHAPE={canonical_cloud_env.get('OCI_SHAPE')} is not available in OCI region {oci_identity.get('region', 'unknown')}."
+                )
         if not hf_ready:
             cloud_reasons.append(
                 "Hugging Face auth is not configured through HF_TOKEN/HUGGINGFACE_TOKEN, HF_TOKEN_FILE, or OCI_Q_TRAINING_HF_TOKEN_SECRET_OCID."
@@ -1003,6 +1074,8 @@ def main() -> None:
                 "authKeyRepaired": oci_bootstrap.get("keyPathRepaired"),
                 "sessionEnvPath": oci_bootstrap.get("sessionEnvPath"),
                 "sessionEnvUpdated": oci_bootstrap.get("sessionEnvUpdated"),
+                "region": oci_identity.get("region"),
+                "availableGpuShapes": oci_available_gpu_shapes,
                 "reasons": cloud_reasons,
                 "canonicalSources": canonical_sources,
             },
