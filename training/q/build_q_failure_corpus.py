@@ -14,9 +14,9 @@ def load_json(path: Path):
 
 
 def normalize_q_model(model: dict) -> bool:
-    label = str(model.get("truthfulLabel", ""))
+    label = str(model.get("truthfulLabel", "")).strip()
     requested = str(model.get("requestedModel", ""))
-    return label.startswith("Q ") or requested.strip().lower() == "q"
+    return label == "Q" or label.startswith("Q ") or requested.strip().lower() == "q"
 
 
 def build_failure_text(source: str, task: dict) -> str:

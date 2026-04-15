@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-04-15T02:32:43Z",
+  "generatedAt": "2026-04-15T03:28:31Z",
   "sessionId": "q-hybrid-cur-fnv1a-8f551a5c",
   "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/hybrid-session.manifest.json",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "194a8fc18d1f5e54a2f88108827bbe632cd791c6",
-    "gitShortSha": "194a8fc",
-    "buildId": "0.1.0+194a8fc"
+    "gitSha": "bd38ceffdd4e588f48df31e00461c2682ee9383f",
+    "gitShortSha": "bd38cef",
+    "buildId": "0.1.0+bd38cef"
   },
   "q": {
     "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5",
@@ -17,20 +17,23 @@
     "trainDatasetRowCount": 1013,
     "mixManifestPath": ".training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c.manifest.json",
     "curationRunId": "cur-fnv1a-8f551a5c",
+    "benchmarkCorpusPath": "docs/wiki/Q-Benchmark-Corpus.json",
+    "benchmarkCorpusJsonlPath": ".training-output/q/q-benchmark-corpus.jsonl",
+    "benchmarkCorpusRecordCount": 10,
     "failureCorpusPath": "docs/wiki/Q-Failure-Corpus.json"
   },
   "immaculate": {
-    "bundleId": "immaculate-orchestration-194a8fc-4ec92803",
+    "bundleId": "immaculate-orchestration-bd38cef-3dd4365f",
     "bundlePath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-cur-fnv1a-8f551a5c.json",
     "signalCount": 14
   },
   "cloudBundle": {
-    "bundleId": "q-hybrid-cur-fnv1a-8f551a5c-194a8fc",
+    "bundleId": "q-hybrid-cur-fnv1a-8f551a5c-bd38cef",
     "archivePath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/cloud-bundle/q-hybrid-cur-fnv1a-8f551a5c-cloud-bundle.tar.gz",
-    "archiveSha256": "c19325917b18a86cbb98b6204c646f7fa85da3c4f68eb7c5d9ab046770635774",
-    "archiveSizeBytes": 2209523,
+    "archiveSha256": "3eb5d29e795c30bf167c2e444d963ce37a03438c4ecd24ae9eb080c83ed3f3fe",
+    "archiveSizeBytes": 2211069,
     "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/cloud-bundle/bundle-manifest.json",
-    "fileCount": 8,
+    "fileCount": 10,
     "repoRemoteUrl": "https://github.com/PossumXI/Immaculate.git"
   },
   "doctor": {

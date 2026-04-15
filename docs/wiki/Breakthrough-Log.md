@@ -21,6 +21,33 @@ For each breakthrough, record:
 
 ### 2026-04-14
 
+#### Q now has a tracked benchmark corpus surface, and the hybrid training path can point to it directly instead of inferring corpus state from raw benchmark pages
+
+What changed:
+- the repo now generates `docs/wiki/Q-Benchmark-Corpus.md` and `docs/wiki/Q-Benchmark-Corpus.json` from the executed Q-only benchmark/report surfaces
+- the new corpus builder turns successful direct-Q and Harbor Q decision rows into a tracked JSONL export under `.training-output/q/q-benchmark-corpus.jsonl`
+- the hybrid session runner now materializes that benchmark corpus automatically, stamps it into the Q fine-tune lane, and stages it into the cloud bundle next to the lock, config, dataset, and Immaculate orchestration bundle
+- the release surface, README, wiki home, and training docs now link the benchmark-derived corpus explicitly instead of leaving it implicit inside raw report pages
+
+Why it matters:
+- the missed pattern was that the repo had a strict failure-only surface but no first-class way to reuse successful executed Q decisions without scraping multiple benchmark pages by hand
+- a tracked benchmark corpus keeps the truth boundary clean: successful benchmark-derived rows and failure-only rows are now separate surfaces with different meanings
+- staging the benchmark corpus through the hybrid session means the cloud lane can see the same tracked benchmark-derived evidence as the local lane instead of depending on whichever docs happened to be copied over
+- this gives the training path a higher-signal self-distillation lane for route/reason/commit consistency without pretending those rows replace broader curation
+
+Evidence:
+- `npm run q:benchmark:corpus` now emits `.training-output/q/q-benchmark-corpus.jsonl` plus `docs/wiki/Q-Benchmark-Corpus.md` and `docs/wiki/Q-Benchmark-Corpus.json`
+- `training/q/run_q_training_session.py` now carries `benchmarkCorpusPath` in the Q session summary and includes the benchmark corpus in the staged cloud bundle
+- `apps/harness/src/release-surface.ts` now stamps the benchmark corpus under `## Current Evidence Surfaces`
+- the README and wiki home now expose the benchmark corpus as a first-class tracked Q training surface
+
+What this unlocks next:
+- the hybrid session can now hand a remote GPU lane the current benchmark-derived Q corpus without a second manual export step
+- future benchmark reruns can refresh the Q training support surface directly, not just the human-readable report pages
+- the repo can keep Q-Failure-Corpus strict while still carrying a tracked success/stability corpus for Q training work
+
+### 2026-04-14
+
 #### The hybrid session can now carry a real OCI cloud-launch path, and the hidden controller/runtime mismatch is closed instead of hand-entered each run
 
 What changed:

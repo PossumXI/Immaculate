@@ -2,12 +2,12 @@
 
 This page records one hybrid Q training session. In plain English: it ties the Q fine-tune lane and the Immaculate orchestration-improvement lane into one stamped session, then tells you exactly which parts are ready or missing.
 
-- Generated: `2026-04-15T02:32:43Z`
-- Release: `0.1.0+194a8fc`
+- Generated: `2026-04-15T03:28:31Z`
+- Release: `0.1.0+bd38cef`
 - Session id: `q-hybrid-cur-fnv1a-8f551a5c`
 - Q training bundle: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5`
 - Dataset rows: `1013`
-- Immaculate orchestration bundle: `immaculate-orchestration-194a8fc-4ec92803`
+- Immaculate orchestration bundle: `immaculate-orchestration-bd38cef-3dd4365f`
 
 ## Plain English Status
 
@@ -23,6 +23,9 @@ This page records one hybrid Q training session. In plain English: it ties the Q
 - Dataset: `.training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c.jsonl`
 - Mix manifest: `.training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c.manifest.json`
 - Curation run: `cur-fnv1a-8f551a5c`
+- Benchmark corpus: `docs/wiki/Q-Benchmark-Corpus.json`
+- Benchmark corpus JSONL: `.training-output/q/q-benchmark-corpus.jsonl`
+- Benchmark corpus records: `10`
 - Failure corpus: `docs/wiki/Q-Failure-Corpus.json`
 - Local command: `C:\Users\Knight\AppData\Local\Microsoft\WindowsApps\python.EXE C:\Users\Knight\Desktop\Immaculate\Immaculate-q-gateway\training\q\train_q_lora_unsloth.py --config C:\Users\Knight\Desktop\Immaculate\Immaculate-q-gateway\.training-output\q\q-lora-config-longctx-cur-fnv1a-8f551a5c.json --session-manifest C:\Users\Knight\Desktop\Immaculate\Immaculate-q-gateway\.training-output\q\sessions\q-hybrid-cur-fnv1a-8f551a5c\hybrid-session.manifest.json --dry-run`
 
@@ -34,11 +37,11 @@ This page records one hybrid Q training session. In plain English: it ties the Q
 
 ## Cloud Bundle
 
-- Bundle id: `q-hybrid-cur-fnv1a-8f551a5c-194a8fc`
+- Bundle id: `q-hybrid-cur-fnv1a-8f551a5c-bd38cef`
 - Archive: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/cloud-bundle/q-hybrid-cur-fnv1a-8f551a5c-cloud-bundle.tar.gz`
-- Archive SHA-256: `c19325917b18a86cbb98b6204c646f7fa85da3c4f68eb7c5d9ab046770635774`
+- Archive SHA-256: `3eb5d29e795c30bf167c2e444d963ce37a03438c4ecd24ae9eb080c83ed3f3fe`
 - Bundle manifest: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/cloud-bundle/bundle-manifest.json`
-- Included file count: `8`
+- Included file count: `10`
 
 ## Cloud Doctor
 

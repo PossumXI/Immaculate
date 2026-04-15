@@ -57,6 +57,7 @@ If you only read one generated page before diving deeper, read [[Release-Surface
 - [[Q-Gateway-Validation]] carries the live dedicated-gateway contract proof for `Q`: health, auth, model listing, served completion, and concurrency rejection
 - [[Q-Gateway-Architecture]] tracks the dedicated private OCI-first gateway boundary for `Q`, separate from the full harness
 - [[Q-Readiness-Gate]] keeps the direct-Q structured contract honest and is currently green: direct `Q` is release-eligible on the tracked local contract lane on this machine
+- [[Q-Benchmark-Corpus]] records the tracked benchmark-derived corpus surface for `Q`, including current record counts, source benchmark pages, and export path
 - [[Q-Failure-Corpus]] is now a strict failure-only export and currently records zero live failure seeds; resolved successes are no longer mixed into that surface
 - the Q training path now also carries a richer coding/long-context supplement plus an `8192`-token long-context LoRA config, so the next cloud run can target code repair and repo-horizon reasoning instead of only bridge/control-plane seeds
 - [[Live-Validation-2026-04-13]] records the latest fresh machine-run validation pass, including the current `60s` benchmark regression instead of hiding it

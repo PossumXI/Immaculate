@@ -5,6 +5,8 @@
     "configPath": "training/q/q_lora_config.long_context.example.json",
     "mixManifestPath": ".training-output/q/q-mix-longctx-v2.manifest.json",
     "curationRunPath": ".training-output/training-data/runs/<run-id>/run.json",
+    "benchmarkCorpusPath": "docs/wiki/Q-Benchmark-Corpus.json",
+    "benchmarkCorpusJsonlPath": ".training-output/q/q-benchmark-corpus.jsonl",
     "failureCorpusPath": "docs/wiki/Q-Failure-Corpus.json"
   },
   "immaculate": {

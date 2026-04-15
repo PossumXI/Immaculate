@@ -245,6 +245,23 @@ def git_remote_url(root: Path) -> str:
     return git_value(root, "remote", "get-url", "origin")
 
 
+def materialize_json_surface(script_path: Path, *args: str) -> None:
+    subprocess.run([sys.executable, str(script_path), *args], cwd=str(repo_root()), check=True)
+
+
+def resolve_surface_jsonl_path(manifest_path: Path) -> Path | None:
+    if not manifest_path.exists():
+        return None
+    try:
+        payload = load_json(manifest_path)
+    except Exception:
+        return None
+    output = payload.get("output", {})
+    if not isinstance(output, dict):
+        return None
+    return resolve_repo_path(str(output.get("jsonlPath", "")).strip())
+
+
 def build_cloud_bundle(
     *,
     root: Path,
@@ -257,6 +274,8 @@ def build_cloud_bundle(
     curation_run_path: Path,
     dataset_path: Path,
     failure_corpus_path: Path | None,
+    benchmark_corpus_path: Path | None,
+    benchmark_corpus_jsonl_path: Path | None,
     immaculate_bundle_output: Path,
     release_summary: dict,
 ) -> dict:
@@ -276,6 +295,10 @@ def build_cloud_bundle(
     ]
     if failure_corpus_path is not None and failure_corpus_path.exists():
         source_paths.append(failure_corpus_path)
+    if benchmark_corpus_path is not None and benchmark_corpus_path.exists():
+        source_paths.append(benchmark_corpus_path)
+    if benchmark_corpus_jsonl_path is not None and benchmark_corpus_jsonl_path.exists():
+        source_paths.append(benchmark_corpus_jsonl_path)
 
     source_entries = [
         {
@@ -358,6 +381,9 @@ def render_markdown(summary: dict) -> str:
         f"- Dataset: `{q['trainDatasetPath']}`",
         f"- Mix manifest: `{q['mixManifestPath']}`",
         f"- Curation run: `{q['curationRunId']}`",
+        f"- Benchmark corpus: `{q['benchmarkCorpusPath']}`",
+        f"- Benchmark corpus JSONL: `{q['benchmarkCorpusJsonlPath']}`",
+        f"- Benchmark corpus records: `{q['benchmarkCorpusRecordCount']}`",
         f"- Failure corpus: `{q['failureCorpusPath']}`",
         f"- Local command: `{' '.join(local_lane['command']) if local_lane['command'] else 'n/a'}`",
         "",
@@ -459,6 +485,31 @@ def main() -> None:
     failure_corpus_path = resolve_repo_path(str(q_manifest.get("failureCorpusPath", "")).strip()) or (
         root / "docs" / "wiki" / "Q-Failure-Corpus.json"
     )
+    benchmark_corpus_path = resolve_repo_path(str(q_manifest.get("benchmarkCorpusPath", "")).strip()) or (
+        root / "docs" / "wiki" / "Q-Benchmark-Corpus.json"
+    )
+    benchmark_corpus_jsonl_path = resolve_repo_path(str(q_manifest.get("benchmarkCorpusJsonlPath", "")).strip()) or (
+        root / ".training-output" / "q" / "q-benchmark-corpus.jsonl"
+    )
+
+    materialize_json_surface(
+        root / "training" / "q" / "build_q_failure_corpus.py",
+        "--manifest",
+        str(failure_corpus_path),
+    )
+    materialize_json_surface(
+        root / "training" / "q" / "build_q_benchmark_corpus.py",
+        "--manifest",
+        str(benchmark_corpus_path),
+        "--output",
+        str(benchmark_corpus_jsonl_path),
+    )
+
+    if benchmark_corpus_jsonl_path is None or not benchmark_corpus_jsonl_path.exists():
+        resolved_benchmark_jsonl = resolve_surface_jsonl_path(benchmark_corpus_path)
+        if resolved_benchmark_jsonl is not None:
+            benchmark_corpus_jsonl_path = resolved_benchmark_jsonl
+    benchmark_corpus_summary = load_json(benchmark_corpus_path) if benchmark_corpus_path.exists() else {}
 
     artifacts = manifest.get("artifacts", {})
     if not isinstance(artifacts, dict):
@@ -551,6 +602,8 @@ def main() -> None:
         curation_run_path=curation_run_path,
         dataset_path=dataset_path,
         failure_corpus_path=failure_corpus_path if failure_corpus_path.exists() else None,
+        benchmark_corpus_path=benchmark_corpus_path if benchmark_corpus_path.exists() else None,
+        benchmark_corpus_jsonl_path=benchmark_corpus_jsonl_path if benchmark_corpus_jsonl_path and benchmark_corpus_jsonl_path.exists() else None,
         immaculate_bundle_output=immaculate_bundle_output,
         release_summary=release_summary,
     )
@@ -673,6 +726,8 @@ def main() -> None:
             "IMMACULATE_Q_TRAINING_MIX_MANIFEST_PATH": str(mix_manifest_path),
             "IMMACULATE_Q_TRAINING_CURATION_RUN_PATH": str(curation_run_path),
             "IMMACULATE_Q_TRAINING_DATASET_PATH": str(dataset_path),
+            "IMMACULATE_Q_BENCHMARK_CORPUS_PATH": str(benchmark_corpus_path),
+            "IMMACULATE_Q_BENCHMARK_CORPUS_JSONL_PATH": str(benchmark_corpus_jsonl_path or ""),
             "IMMACULATE_Q_FAILURE_CORPUS_PATH": str(failure_corpus_path),
             "IMMACULATE_Q_TRAINING_BUNDLE_ID": str(training_lock.get("bundleId", "")),
             "IMMACULATE_Q_IMMACULATE_BUNDLE_PATH": str(immaculate_bundle_output),
@@ -700,6 +755,9 @@ def main() -> None:
             "trainDatasetRowCount": count_jsonl_rows(dataset_path),
             "mixManifestPath": relative_path(root, mix_manifest_path),
             "curationRunId": training_lock.get("curation", {}).get("runId"),
+            "benchmarkCorpusPath": relative_path(root, benchmark_corpus_path) if benchmark_corpus_path.exists() else str(benchmark_corpus_path),
+            "benchmarkCorpusJsonlPath": relative_path(root, benchmark_corpus_jsonl_path) if benchmark_corpus_jsonl_path and benchmark_corpus_jsonl_path.exists() else str(benchmark_corpus_jsonl_path),
+            "benchmarkCorpusRecordCount": benchmark_corpus_summary.get("recordCount", 0),
             "failureCorpusPath": relative_path(root, failure_corpus_path) if failure_corpus_path.exists() else str(failure_corpus_path),
         },
         "immaculate": {

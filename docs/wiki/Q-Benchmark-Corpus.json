@@ -1,0 +1,27 @@
+{
+  "generatedAt": "2026-04-15T03:28:28Z",
+  "release": {
+    "packageVersion": "0.1.0",
+    "gitSha": "bd38ceffdd4e588f48df31e00461c2682ee9383f",
+    "gitShortSha": "bd38cef",
+    "buildId": "0.1.0+bd38cef",
+    "qTrainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5"
+  },
+  "rowType": "decision_triplet",
+  "recordCount": 10,
+  "sourceCounts": {
+    "model-comparison": 4,
+    "bridgebench": 4,
+    "harbor-terminal-bench": 2
+  },
+  "sources": {
+    "model-comparison": "docs/wiki/Model-Benchmark-Comparison.json",
+    "bridgebench": "docs/wiki/BridgeBench.json",
+    "harbor-terminal-bench": "docs/wiki/Harbor-Terminal-Bench.json"
+  },
+  "output": {
+    "jsonlPath": ".training-output/q/q-benchmark-corpus.jsonl",
+    "manifestPath": "docs/wiki/Q-Benchmark-Corpus.json",
+    "markdownPath": "docs/wiki/Q-Benchmark-Corpus.md"
+  }
+}

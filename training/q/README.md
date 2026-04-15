@@ -34,6 +34,8 @@ python training/q/build_q_text_dataset.py --input .training-output/training-data
 python training/q/build_q_mixture.py --base .training-output/q/q-train-<run-id>.jsonl --supplemental training/q/bridgebench_seed.json --supplemental training/q/coding_long_context_seed.json --output .training-output/q/q-mix-<run-id>.jsonl
 ```
 
+When `.training-output/q/q-benchmark-corpus.jsonl` exists, treat it as another tracked `--supplemental` on the next mixture pass so benchmark-derived Q decision rows enter through the same manifest-recorded seam.
+
 4. Generate the tracked training lock so the future fine-tune can be replayed exactly:
 
 ```powershell
@@ -56,26 +58,36 @@ The failure export is now strict failure-only. When the direct Q lane is green,
 this surface stays empty rather than mixing resolved successes into a fake
 failure bucket.
 
-7. Copy `hybrid_training_session.example.json` and point it at the concrete lock/config files for the run, or create a concrete session manifest under `.training-output/q/sessions/<session-id>/`.
-8. Run the hybrid session doctor:
+7. Convert the executed Q benchmark successes into a tracked benchmark-derived corpus:
+
+```powershell
+npm run q:benchmark:corpus
+```
+
+This surface complements the strict failure-only export. It captures current successful
+Q benchmark decision triplets so the hybrid session can stage them directly instead of
+inferring corpus state from raw benchmark pages.
+
+8. Copy `hybrid_training_session.example.json` and point it at the concrete lock/config files for the run, or create a concrete session manifest under `.training-output/q/sessions/<session-id>/`.
+9. Run the hybrid session doctor:
 
 ```powershell
 npm run q:training:doctor -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json
 ```
 
-9. Validate or launch the local and cloud lanes from the same tracked session:
+10. Validate or launch the local and cloud lanes from the same tracked session:
 
 ```powershell
 npm run q:training:session -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --launch
 ```
 
-10. Validate the config and dataset shape before a GPU run:
+11. Validate the config and dataset shape before a GPU run:
 
 ```powershell
 python training/q/train_q_lora_unsloth.py --config training/q/q_lora_config.example.json --dry-run
 ```
 
-11. Launch `train_q_lora_unsloth.py` on a GPU instance with the required Python packages installed if the session doctor marks the cloud lane ready.
+12. Launch `train_q_lora_unsloth.py` on a GPU instance with the required Python packages installed if the session doctor marks the cloud lane ready.
 
 For the OCI controller path specifically:
 
