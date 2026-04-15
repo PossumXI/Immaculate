@@ -1,41 +1,47 @@
 {
-  "generatedAt": "2026-04-15T03:29:48.502Z",
+  "generatedAt": "2026-04-15T03:41:14.690Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "d15afb8f948372547d9dd0a767e12211d27112dd",
-    "gitShortSha": "d15afb8",
+    "gitSha": "d6927bb939197f5fec712a11eb3684958027e940",
+    "gitShortSha": "d6927bb",
     "gitBranch": "detached",
-    "buildId": "0.1.0+d15afb8",
+    "buildId": "0.1.0+d6927bb",
     "q": {
       "alias": "Q",
       "providerModel": "Q",
       "truthfulLabel": "Q",
       "trainingLock": {
-        "generatedAt": "2026-04-14T15:26:05Z",
+        "generatedAt": "2026-04-15T03:40:51Z",
         "lockVersion": 1,
-        "bundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5",
-        "runName": "q-defsec-code-longctx-cur-fnv1a-8f551a5c",
+        "bundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1-d6927bb-e16a056e",
+        "runName": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1",
         "aliasName": "Q",
-        "trainDatasetPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c.jsonl",
-        "trainDatasetSha256": "5c329cc58772a0dc52e12dafcc421caa5458c6a7c37b96f2970d8a04e937c64f",
-        "trainDatasetRowCount": 1013,
-        "mixManifestPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c.manifest.json",
-        "mixManifestSha256": "3f2210e752c4407ab8baf87fbd686e40ef17b1571e87811bc04b92199d080ec7",
+        "trainDatasetPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c-bench-v1.jsonl",
+        "trainDatasetSha256": "e16a056eaf28580a4a91630e9313799d95be945660b7c57bb409710fe8eed676",
+        "trainDatasetRowCount": 1023,
+        "mixManifestPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c-bench-v1.manifest.json",
+        "mixManifestSha256": "27c9c67ffe90055d44012a255c8626920d31bf7f62b66e4abbe74994e07b536e",
+        "mixSupplementalCount": 3,
+        "mixSupplementalPaths": [
+          "training/q/bridgebench_seed.json",
+          "training/q/coding_long_context_seed.json",
+          ".training-output/q/q-benchmark-corpus.jsonl"
+        ],
         "curationRunPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\training-data\\runs\\cur-fnv1a-8f551a5c\\run.json",
         "curationRunId": "cur-fnv1a-8f551a5c",
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-15T03:29:31Z",
-        "sessionId": "q-hybrid-cur-fnv1a-8f551a5c",
-        "sessionPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/hybrid-session.json",
+        "generatedAt": "2026-04-15T03:41:00Z",
+        "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v1",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/hybrid-session.json",
         "localStatus": "ready",
         "cloudStatus": "not-configured",
         "cloudProvider": "oci",
-        "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5",
-        "immaculateBundleId": "immaculate-orchestration-d15afb8-3dd4365f"
+        "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1-d6927bb-e16a056e",
+        "immaculateBundleId": "immaculate-orchestration-d6927bb-3dd4365f"
       }
     }
   },
@@ -63,12 +69,12 @@
     {
       "label": "Q hybrid training",
       "path": "docs\\wiki\\Q-Hybrid-Training.json",
-      "generatedAt": "2026-04-15T03:29:31Z"
+      "generatedAt": "2026-04-15T03:41:00Z"
     },
     {
       "label": "Q benchmark corpus",
       "path": "docs\\wiki\\Q-Benchmark-Corpus.json",
-      "generatedAt": "2026-04-15T03:29:28Z"
+      "generatedAt": "2026-04-15T03:40:56Z"
     },
     {
       "label": "W&B benchmark export",

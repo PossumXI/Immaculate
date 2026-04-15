@@ -1,21 +1,21 @@
 {
-  "generatedAt": "2026-04-15T03:29:31Z",
-  "sessionId": "q-hybrid-cur-fnv1a-8f551a5c",
-  "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/hybrid-session.manifest.json",
+  "generatedAt": "2026-04-15T03:41:00Z",
+  "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v1",
+  "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/hybrid-session.manifest.json",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "d15afb8f948372547d9dd0a767e12211d27112dd",
-    "gitShortSha": "d15afb8",
-    "buildId": "0.1.0+d15afb8"
+    "gitSha": "d6927bb939197f5fec712a11eb3684958027e940",
+    "gitShortSha": "d6927bb",
+    "buildId": "0.1.0+d6927bb"
   },
   "q": {
-    "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5",
+    "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1-d6927bb-e16a056e",
     "trainingLockPath": ".training-output/q/latest-training-lock.json",
-    "configPath": ".training-output/q/q-lora-config-longctx-cur-fnv1a-8f551a5c.json",
+    "configPath": ".training-output/q/q-lora-config-longctx-cur-fnv1a-8f551a5c-bench-v1.json",
     "modelId": "Q",
-    "trainDatasetPath": ".training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c.jsonl",
-    "trainDatasetRowCount": 1013,
-    "mixManifestPath": ".training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c.manifest.json",
+    "trainDatasetPath": ".training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c-bench-v1.jsonl",
+    "trainDatasetRowCount": 1023,
+    "mixManifestPath": ".training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c-bench-v1.manifest.json",
     "curationRunId": "cur-fnv1a-8f551a5c",
     "benchmarkCorpusPath": "docs/wiki/Q-Benchmark-Corpus.json",
     "benchmarkCorpusJsonlPath": ".training-output/q/q-benchmark-corpus.jsonl",
@@ -23,16 +23,16 @@
     "failureCorpusPath": "docs/wiki/Q-Failure-Corpus.json"
   },
   "immaculate": {
-    "bundleId": "immaculate-orchestration-d15afb8-3dd4365f",
-    "bundlePath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-cur-fnv1a-8f551a5c.json",
+    "bundleId": "immaculate-orchestration-d6927bb-3dd4365f",
+    "bundlePath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-cur-fnv1a-8f551a5c-bench-v1.json",
     "signalCount": 14
   },
   "cloudBundle": {
-    "bundleId": "q-hybrid-cur-fnv1a-8f551a5c-d15afb8",
-    "archivePath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/cloud-bundle/q-hybrid-cur-fnv1a-8f551a5c-cloud-bundle.tar.gz",
-    "archiveSha256": "8c5cbf9620eaa8bb8e0c4393da3a4bbb39ad1a210daf7f8de96a35754211df47",
-    "archiveSizeBytes": 2211082,
-    "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/cloud-bundle/bundle-manifest.json",
+    "bundleId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v1-d6927bb",
+    "archivePath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/cloud-bundle/q-hybrid-cur-fnv1a-8f551a5c-bench-v1-cloud-bundle.tar.gz",
+    "archiveSha256": "c889312f206a62fe5b0be200771f5764947ada056eab094c6ddd2099b1ede936",
+    "archiveSizeBytes": 2211300,
+    "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/cloud-bundle/bundle-manifest.json",
     "fileCount": 10,
     "repoRemoteUrl": "https://github.com/PossumXI/Immaculate.git"
   },
@@ -61,7 +61,7 @@
           "exists": true
         },
         {
-          "path": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/oci-cloud.env",
+          "path": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/oci-cloud.env",
           "exists": true
         }
       ],
@@ -106,11 +106,11 @@
         "bash",
         "deploy/oci-training/scripts/launch-oci-q-training.sh",
         "--session-manifest",
-        ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/hybrid-session.manifest.json",
+        ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/hybrid-session.manifest.json",
         "--env-file",
         "C:/Users/Knight/Desktop/cheeks/Asgard/.env",
         "--env-file",
-        ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/oci-cloud.env"
+        ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/oci-cloud.env"
       ],
       "cliBin": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.tools/oci-cli-venv/Scripts/oci.exe",
       "authMode": "missing",
@@ -144,9 +144,9 @@
         "C:\\Users\\Knight\\AppData\\Local\\Microsoft\\WindowsApps\\python.EXE",
         "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\training\\q\\train_q_lora_unsloth.py",
         "--config",
-        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-lora-config-longctx-cur-fnv1a-8f551a5c.json",
+        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-lora-config-longctx-cur-fnv1a-8f551a5c-bench-v1.json",
         "--session-manifest",
-        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\sessions\\q-hybrid-cur-fnv1a-8f551a5c\\hybrid-session.manifest.json",
+        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\sessions\\q-hybrid-cur-fnv1a-8f551a5c-bench-v1\\hybrid-session.manifest.json",
         "--dry-run"
       ]
     },
@@ -159,17 +159,17 @@
         "bash",
         "deploy/oci-training/scripts/launch-oci-q-training.sh",
         "--session-manifest",
-        ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/hybrid-session.manifest.json",
+        ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/hybrid-session.manifest.json",
         "--env-file",
         "C:/Users/Knight/Desktop/cheeks/Asgard/.env",
         "--env-file",
-        ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/oci-cloud.env"
+        ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/oci-cloud.env"
       ]
     }
   },
   "output": {
-    "sessionJsonPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/hybrid-session.json",
-    "sessionMarkdownPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/hybrid-session.md",
+    "sessionJsonPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/hybrid-session.json",
+    "sessionMarkdownPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/hybrid-session.md",
     "wikiJsonPath": "docs/wiki/Q-Hybrid-Training.json",
     "wikiMarkdownPath": "docs/wiki/Q-Hybrid-Training.md"
   }

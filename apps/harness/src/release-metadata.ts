@@ -16,6 +16,8 @@ export type QTrainingLockSummary = {
   trainDatasetRowCount?: number;
   mixManifestPath?: string;
   mixManifestSha256?: string;
+  mixSupplementalCount?: number;
+  mixSupplementalPaths?: string[];
   curationRunPath?: string;
   curationRunId?: string;
   lockPath: string;
@@ -80,6 +82,9 @@ type QTrainingLockFile = {
   mixManifest?: {
     path?: string;
     sha256?: string;
+    supplemental?: Array<{
+      path?: string;
+    }>;
   };
   curation?: {
     runPath?: string;
@@ -137,6 +142,15 @@ async function readVersion(filePath: string): Promise<string> {
   return payload?.version?.trim() || "0.0.0";
 }
 
+function normalizeReportedPath(pathValue: string | undefined): string | undefined {
+  const trimmed = pathValue?.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+  const candidate = path.isAbsolute(trimmed) ? trimmed : path.join(REPO_ROOT, trimmed);
+  return path.relative(REPO_ROOT, candidate).replaceAll("\\", "/");
+}
+
 async function resolveLatestTrainingLockPath(): Promise<string | undefined> {
   if (existsSync(Q_LATEST_LOCK_PATH)) {
     return Q_LATEST_LOCK_PATH;
@@ -175,6 +189,10 @@ async function readTrainingLockSummary(): Promise<QTrainingLockSummary | undefin
     trainDatasetRowCount: payload.run?.trainDatasetRowCount,
     mixManifestPath: payload.mixManifest?.path,
     mixManifestSha256: payload.mixManifest?.sha256,
+    mixSupplementalCount: payload.mixManifest?.supplemental?.length ?? 0,
+    mixSupplementalPaths: payload.mixManifest?.supplemental
+      ?.map((entry) => normalizeReportedPath(entry.path))
+      .filter((entry): entry is string => Boolean(entry)),
     curationRunPath: payload.curation?.runPath,
     curationRunId: payload.curation?.runId,
     lockPath: path.relative(REPO_ROOT, lockPath).replaceAll("\\", "/")

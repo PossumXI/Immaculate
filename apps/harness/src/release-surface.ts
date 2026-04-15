@@ -111,6 +111,8 @@ function renderMarkdown(report: ReleaseSurfaceReport): string {
     `- Training dataset rows: \`${trainingLock?.trainDatasetRowCount ?? "n/a"}\``,
     `- Training dataset SHA-256: \`${trainingLock?.trainDatasetSha256 ?? "n/a"}\``,
     `- Mix manifest: \`${trainingLock?.mixManifestPath ?? "n/a"}\``,
+    `- Mix supplemental count: \`${trainingLock?.mixSupplementalCount ?? "n/a"}\``,
+    `- Mix supplementals: \`${trainingLock?.mixSupplementalPaths?.join(", ") ?? "n/a"}\``,
     `- Curation run: \`${trainingLock?.curationRunId ?? "n/a"}\``,
     "",
     "## Hybrid Training Session",

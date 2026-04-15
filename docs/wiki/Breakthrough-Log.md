@@ -21,6 +21,33 @@ For each breakthrough, record:
 
 ### 2026-04-14
 
+#### The benchmark-derived Q corpus is now part of the tracked locked mix, not just a side surface
+
+What changed:
+- the next Q mix now includes `.training-output/q/q-benchmark-corpus.jsonl` as a real supplemental alongside the BridgeBench seed set and the coding/long-context seed set
+- the repo generated a new versioned mix, config, and lock under the `bench-v1` lineage instead of mutating the earlier long-context lock in place
+- the latest hybrid session now points at that expanded `1023`-row Q dataset and stages the benchmark corpus into the cloud bundle as part of the tracked bench-v1 session
+- the release surface now exposes the mix supplemental count and the exact supplemental paths carried by the current Q training lock
+
+Why it matters:
+- the missed pattern was that a benchmark-derived corpus page alone still leaves a gap between published evidence and the locked training inputs that a future local or cloud run will actually consume
+- by moving the benchmark corpus into the real mix seam, the repo now closes that gap with one reproducible path: benchmark surface -> JSONL supplemental -> mix manifest -> versioned lock -> hybrid session bundle
+- versioning this as `bench-v1` preserves the earlier long-context lock as a historical artifact while making the stronger dataset lineage explicit
+- this gives the next Q fine-tune pass a higher-signal stability supplement without pretending those benchmark rows replace the governed curated base corpus
+
+Evidence:
+- `.training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c-bench-v1.manifest.json` now records three supplemental inputs, including `.training-output/q/q-benchmark-corpus.jsonl`
+- `.training-output/q/locks/q-training-lock-q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1.json` now binds the bench-v1 mix hash, config hash, and curation provenance into one versioned lock
+- `docs/wiki/Q-Hybrid-Training.md` now shows the bench-v1 session, `1023` dataset rows, and the benchmark corpus as part of the same tracked Q fine-tune lane
+- `docs/wiki/Release-Surface.md` now stamps the new Q bundle id and lists the benchmark corpus supplemental in the Q training bundle section
+
+What this unlocks next:
+- the next local or cloud Q run can train against the benchmark-expanded locked mix without a second manual “add the benchmark rows” step
+- future benchmark corpus refreshes can be promoted into new lock versions cleanly instead of overwriting one ambiguous latest mix
+- the cloud lane now has a stronger staged input set ready the moment OCI auth and launch-target OCIDs are actually present
+
+### 2026-04-14
+
 #### Q now has a tracked benchmark corpus surface, and the hybrid training path can point to it directly instead of inferring corpus state from raw benchmark pages
 
 What changed:

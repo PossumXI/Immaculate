@@ -2,12 +2,12 @@
 
 This page records one hybrid Q training session. In plain English: it ties the Q fine-tune lane and the Immaculate orchestration-improvement lane into one stamped session, then tells you exactly which parts are ready or missing.
 
-- Generated: `2026-04-15T03:29:31Z`
-- Release: `0.1.0+d15afb8`
-- Session id: `q-hybrid-cur-fnv1a-8f551a5c`
-- Q training bundle: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5`
-- Dataset rows: `1013`
-- Immaculate orchestration bundle: `immaculate-orchestration-d15afb8-3dd4365f`
+- Generated: `2026-04-15T03:41:00Z`
+- Release: `0.1.0+d6927bb`
+- Session id: `q-hybrid-cur-fnv1a-8f551a5c-bench-v1`
+- Q training bundle: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1-d6927bb-e16a056e`
+- Dataset rows: `1023`
+- Immaculate orchestration bundle: `immaculate-orchestration-d6927bb-3dd4365f`
 
 ## Plain English Status
 
@@ -19,28 +19,28 @@ This page records one hybrid Q training session. In plain English: it ties the Q
 ## Q Fine-Tune Lane
 
 - Training lock: `.training-output/q/latest-training-lock.json`
-- Config: `.training-output/q/q-lora-config-longctx-cur-fnv1a-8f551a5c.json`
-- Dataset: `.training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c.jsonl`
-- Mix manifest: `.training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c.manifest.json`
+- Config: `.training-output/q/q-lora-config-longctx-cur-fnv1a-8f551a5c-bench-v1.json`
+- Dataset: `.training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c-bench-v1.jsonl`
+- Mix manifest: `.training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c-bench-v1.manifest.json`
 - Curation run: `cur-fnv1a-8f551a5c`
 - Benchmark corpus: `docs/wiki/Q-Benchmark-Corpus.json`
 - Benchmark corpus JSONL: `.training-output/q/q-benchmark-corpus.jsonl`
 - Benchmark corpus records: `10`
 - Failure corpus: `docs/wiki/Q-Failure-Corpus.json`
-- Local command: `C:\Users\Knight\AppData\Local\Microsoft\WindowsApps\python.EXE C:\Users\Knight\Desktop\Immaculate\Immaculate-q-gateway\training\q\train_q_lora_unsloth.py --config C:\Users\Knight\Desktop\Immaculate\Immaculate-q-gateway\.training-output\q\q-lora-config-longctx-cur-fnv1a-8f551a5c.json --session-manifest C:\Users\Knight\Desktop\Immaculate\Immaculate-q-gateway\.training-output\q\sessions\q-hybrid-cur-fnv1a-8f551a5c\hybrid-session.manifest.json --dry-run`
+- Local command: `C:\Users\Knight\AppData\Local\Microsoft\WindowsApps\python.EXE C:\Users\Knight\Desktop\Immaculate\Immaculate-q-gateway\training\q\train_q_lora_unsloth.py --config C:\Users\Knight\Desktop\Immaculate\Immaculate-q-gateway\.training-output\q\q-lora-config-longctx-cur-fnv1a-8f551a5c-bench-v1.json --session-manifest C:\Users\Knight\Desktop\Immaculate\Immaculate-q-gateway\.training-output\q\sessions\q-hybrid-cur-fnv1a-8f551a5c-bench-v1\hybrid-session.manifest.json --dry-run`
 
 ## Immaculate Orchestration Lane
 
-- Bundle path: `.training-output/immaculate/immaculate-training-bundle-q-hybrid-cur-fnv1a-8f551a5c.json`
+- Bundle path: `.training-output/immaculate/immaculate-training-bundle-q-hybrid-cur-fnv1a-8f551a5c-bench-v1.json`
 - Signal count: `14`
 - This lane improves Immaculate through benchmark and orchestration evidence while keeping the tracked Q lineage as the only model-training lane in scope.
 
 ## Cloud Bundle
 
-- Bundle id: `q-hybrid-cur-fnv1a-8f551a5c-d15afb8`
-- Archive: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/cloud-bundle/q-hybrid-cur-fnv1a-8f551a5c-cloud-bundle.tar.gz`
-- Archive SHA-256: `8c5cbf9620eaa8bb8e0c4393da3a4bbb39ad1a210daf7f8de96a35754211df47`
-- Bundle manifest: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/cloud-bundle/bundle-manifest.json`
+- Bundle id: `q-hybrid-cur-fnv1a-8f551a5c-bench-v1-d6927bb`
+- Archive: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/cloud-bundle/q-hybrid-cur-fnv1a-8f551a5c-bench-v1-cloud-bundle.tar.gz`
+- Archive SHA-256: `c889312f206a62fe5b0be200771f5764947ada056eab094c6ddd2099b1ede936`
+- Bundle manifest: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/cloud-bundle/bundle-manifest.json`
 - Included file count: `10`
 
 ## Cloud Doctor
@@ -51,7 +51,7 @@ This page records one hybrid Q training session. In plain English: it ties the Q
 - OCI auth mode: `missing`
 - Cloud ready: `False`
 - Env file: `C:/Users/Knight/Desktop/cheeks/Asgard/.env` exists `True`
-- Env file: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/oci-cloud.env` exists `True`
+- Env file: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/oci-cloud.env` exists `True`
 - Launch target `OCI_COMPARTMENT_OCID`: `False`
 - Launch target `OCI_SUBNET_OCID`: `False`
 - Launch target `OCI_AVAILABILITY_DOMAIN`: `False`
