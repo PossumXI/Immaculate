@@ -147,7 +147,15 @@ function normalizeReportedPath(pathValue: string | undefined): string | undefine
   if (!trimmed) {
     return undefined;
   }
-  const candidate = path.isAbsolute(trimmed) ? trimmed : path.join(REPO_ROOT, trimmed);
+  const candidate = path.isAbsolute(trimmed) ? path.resolve(trimmed) : path.resolve(REPO_ROOT, trimmed);
+  const repoMarkers = [".training-output", "training", "docs", "deploy", "benchmarks"];
+  const parts = candidate.split(path.sep);
+  for (const marker of repoMarkers) {
+    const markerIndex = parts.indexOf(marker);
+    if (markerIndex >= 0) {
+      return path.join(...parts.slice(markerIndex)).replaceAll("\\", "/");
+    }
+  }
   return path.relative(REPO_ROOT, candidate).replaceAll("\\", "/");
 }
 

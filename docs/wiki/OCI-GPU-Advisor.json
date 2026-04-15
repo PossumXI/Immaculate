@@ -1,0 +1,63 @@
+{
+  "probeScope": "verified-subscribed-regions-only",
+  "controllerRegion": "us-ashburn-1",
+  "configuredTargetRegion": "us-ashburn-1",
+  "configuredShape": null,
+  "configuredObjectStorageRegion": null,
+  "verifiedInventory": [
+    {
+      "region": "us-ashburn-1",
+      "regionKey": "IAD",
+      "isHomeRegion": true,
+      "subscriptionStatus": "READY",
+      "probeStatus": "verified",
+      "gpuShapes": [],
+      "gpuShapeCount": 0,
+      "reason": "No GPU-capable shapes are visible for the current controller auth."
+    }
+  ],
+  "publicExpansionCandidates": [
+    {
+      "region": "us-chicago-1",
+      "regionKey": "ORD",
+      "reason": "Public OCI region candidate. GPU capacity is not verified until the tenancy subscribes it."
+    },
+    {
+      "region": "us-phoenix-1",
+      "regionKey": "PHX",
+      "reason": "Public OCI region candidate. GPU capacity is not verified until the tenancy subscribes it."
+    },
+    {
+      "region": "us-sanjose-1",
+      "regionKey": "SJC",
+      "reason": "Public OCI region candidate. GPU capacity is not verified until the tenancy subscribes it."
+    }
+  ],
+  "recommendedLaunchTarget": {
+    "status": "none",
+    "region": null,
+    "regionKey": null,
+    "isHomeRegion": false,
+    "shape": null,
+    "reason": "No subscribed OCI region currently exposes GPU-capable shapes for the current controller auth."
+  },
+  "suggestedEnvUpdates": {},
+  "actions": [
+    "Only one subscribed OCI region is visible right now: us-ashburn-1 (IAD) [home].",
+    "Next capacity move is to subscribe an additional nearby public region such as: us-chicago-1 (ORD), us-phoenix-1 (PHX), us-sanjose-1 (SJC).",
+    "Keep the cloud lane as not-configured until a subscribed region shows verified GPU-capable shapes."
+  ],
+  "materializedEnvUpdates": {},
+  "generatedAt": "2026-04-15T14:02:12Z",
+  "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
+  "release": {
+    "packageVersion": "0.1.0",
+    "gitSha": "a96bf4245129d0d5959c8c85f10188bf51041ed9",
+    "gitShortSha": "a96bf42",
+    "buildId": "0.1.0+a96bf42"
+  },
+  "output": {
+    "jsonPath": "docs/wiki/OCI-GPU-Advisor.json",
+    "markdownPath": "docs/wiki/OCI-GPU-Advisor.md"
+  }
+}

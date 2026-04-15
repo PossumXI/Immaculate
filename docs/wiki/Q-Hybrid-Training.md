@@ -2,16 +2,17 @@
 
 This page records one hybrid Q training session. In plain English: it ties the Q fine-tune lane and the Immaculate orchestration-improvement lane into one stamped session, then tells you exactly which parts are ready or missing.
 
-- Generated: `2026-04-15T12:38:12Z`
-- Release: `0.1.0+3ce07ac`
+- Generated: `2026-04-15T14:02:12Z`
+- Release: `0.1.0+a96bf42`
 - Session id: `q-hybrid-cur-fnv1a-8f551a5c-bench-v2`
-- Q training bundle: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-3ce07ac-cee52e2d`
+- Q training bundle: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e`
 - Dataset rows: `1070`
-- Immaculate orchestration bundle: `immaculate-orchestration-3ce07ac-3dd4365f`
+- Immaculate orchestration bundle: `immaculate-orchestration-a96bf42-3dd4365f`
+- OCI GPU advisor: `docs/wiki/OCI-GPU-Advisor.md`
 
 ## Plain English Status
 
-- Local lane: `completed` in mode `dry-run`
+- Local lane: `ready` in mode `dry-run`
 - Cloud lane: `not-configured` on provider `oci` in mode `launch`
 - Hugging Face token or secret path ready: `True` via `HF_TOKEN`
 - W&B state ready: `True` via `WANDB_MODE=offline`
@@ -27,7 +28,7 @@ This page records one hybrid Q training session. In plain English: it ties the Q
 - Benchmark corpus JSONL: `.training-output/q/q-benchmark-corpus.jsonl`
 - Benchmark corpus records: `57`
 - Failure corpus: `docs/wiki/Q-Failure-Corpus.json`
-- Local command: `C:\Users\Knight\AppData\Local\Microsoft\WindowsApps\python.EXE C:\Users\Knight\Desktop\Immaculate\Immaculate-q-gateway-push-bench-v2-clean\training\q\train_q_lora_unsloth.py --config C:\Users\Knight\Desktop\Immaculate\Immaculate-q-gateway-push-bench-v2-clean\.training-output\q\q-lora-config-longctx-cur-fnv1a-8f551a5c-bench-v2.json --session-manifest C:\Users\Knight\Desktop\Immaculate\Immaculate-q-gateway-push-bench-v2-clean\.training-output\q\sessions\q-hybrid-cur-fnv1a-8f551a5c-bench-v2\hybrid-session.manifest.json --dry-run`
+- Local command: `C:\Users\Knight\AppData\Local\Microsoft\WindowsApps\python.EXE C:\Users\Knight\Desktop\Immaculate\Immaculate-q-gateway-push-oci-advisor\training\q\train_q_lora_unsloth.py --config C:\Users\Knight\Desktop\Immaculate\Immaculate-q-gateway-push-oci-advisor\.training-output\q\q-lora-config-longctx-cur-fnv1a-8f551a5c-bench-v2.json --session-manifest C:\Users\Knight\Desktop\Immaculate\Immaculate-q-gateway-push-oci-advisor\.training-output\q\sessions\q-hybrid-cur-fnv1a-8f551a5c-bench-v2\hybrid-session.manifest.json --dry-run`
 
 ## Immaculate Orchestration Lane
 
@@ -37,9 +38,9 @@ This page records one hybrid Q training session. In plain English: it ties the Q
 
 ## Cloud Bundle
 
-- Bundle id: `q-hybrid-cur-fnv1a-8f551a5c-bench-v2-3ce07ac`
+- Bundle id: `q-hybrid-cur-fnv1a-8f551a5c-bench-v2-a96bf42`
 - Archive: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/cloud-bundle/q-hybrid-cur-fnv1a-8f551a5c-bench-v2-cloud-bundle.tar.gz`
-- Archive SHA-256: `fa7a6d51804b493756344cbb27e905ab6e96d98108e34326088ca5692207f3a4`
+- Archive SHA-256: `b518ae62d408153e0d738c1b4422a38c050f53cbd7b9d55282c69f3cff112bad`
 - Bundle manifest: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/cloud-bundle/bundle-manifest.json`
 - Included file count: `10`
 
@@ -58,6 +59,8 @@ This page records one hybrid Q training session. In plain English: it ties the Q
 - OCI region: `us-ashburn-1`
 - OCI subscribed regions: `us-ashburn-1 (IAD) [home]`
 - OCI GPU shapes visible: `none`
+- OCI target region: `us-ashburn-1`
+- OCI Object Storage region: `us-ashburn-1`
 - Cloud ready: `False`
 - Env file: `C:/Users/Knight/Desktop/cheeks/Asgard/.env` exists `True`
 - Env file: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/oci-cloud.env` exists `True`
@@ -68,9 +71,19 @@ This page records one hybrid Q training session. In plain English: it ties the Q
 - Launch target `OCI_SHAPE`: `False`
 - Launch target `OCI_OBJECT_STORAGE_NAMESPACE`: `True`
 - Launch target `OCI_OBJECT_STORAGE_BUCKET`: `True`
+- Launch target `OCI_TARGET_REGION`: `False`
+- Launch target `OCI_OBJECT_STORAGE_REGION`: `False`
 - Cloud note: Missing cloud launch target env: OCI_SHAPE
 - Cloud note: Only subscribed OCI region visible to this tenancy is us-ashburn-1 (IAD) [home].
-- Cloud note: No GPU shapes are available in OCI region us-ashburn-1 for the current controller auth.
+- Cloud note: No subscribed OCI region currently exposes GPU-capable shapes for the current controller auth.
+
+## OCI GPU Advisor
+
+- Recommendation status: `none`
+- Recommended region: `n/a`
+- Recommended shape: `n/a`
+- Recommendation reason: No subscribed OCI region currently exposes GPU-capable shapes for the current controller auth.
+- Public expansion candidates: `us-chicago-1 (ORD), us-phoenix-1 (PHX), us-sanjose-1 (SJC)`
 
 ## Truth Boundary
 

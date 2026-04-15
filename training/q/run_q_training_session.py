@@ -442,11 +442,15 @@ def resolve_oci_controller_identity(canonical_env: dict[str, str]) -> dict[str, 
     }
 
 
-def list_available_oci_gpu_shapes(oci_cli_bin: str, canonical_env: dict[str, str]) -> list[str]:
+def list_available_oci_gpu_shapes(
+    oci_cli_bin: str,
+    canonical_env: dict[str, str],
+    region_name: str | None = None,
+) -> tuple[list[str], str | None]:
     identity = resolve_oci_controller_identity(canonical_env)
     tenancy = identity.get("tenancy", "")
     if not tenancy:
-        return []
+        return [], "OCI tenancy was not resolved from the current controller auth."
     command = [oci_cli_bin, "compute", "shape", "list"]
     auth_mode = str(canonical_env.get("OCI_CLI_AUTH", "")).strip()
     if auth_mode:
@@ -457,20 +461,24 @@ def list_available_oci_gpu_shapes(oci_cli_bin: str, canonical_env: dict[str, str
     profile_name = identity.get("profile", "")
     if profile_name:
         command.extend(["--profile", profile_name])
+    if region_name:
+        command.extend(["--region", region_name])
     command.extend(["--compartment-id", tenancy, "--all", "--output", "json"])
     result = subprocess.run(command, check=False, capture_output=True, text=True)
     if result.returncode != 0 or not result.stdout.strip():
-        return []
+        probe_region = region_name or identity.get("region", "unknown")
+        return [], f"OCI shape probe failed in region {probe_region}."
     try:
         payload = json.loads(result.stdout)
     except json.JSONDecodeError:
-        return []
+        probe_region = region_name or identity.get("region", "unknown")
+        return [], f"OCI shape probe returned unreadable JSON in region {probe_region}."
     shapes = {
         str(entry.get("shape", "")).strip()
         for entry in payload.get("data", [])
         if str(entry.get("shape", "")).startswith(("VM.GPU", "BM.GPU"))
     }
-    return sorted(shape for shape in shapes if shape)
+    return sorted(shape for shape in shapes if shape), None
 
 
 def list_subscribed_oci_regions(oci_cli_bin: str, canonical_env: dict[str, str]) -> list[dict[str, object]]:
@@ -507,6 +515,198 @@ def list_subscribed_oci_regions(oci_cli_bin: str, canonical_env: dict[str, str])
             }
         )
     return regions
+
+
+def list_public_oci_regions(oci_cli_bin: str, canonical_env: dict[str, str]) -> list[dict[str, object]]:
+    identity = resolve_oci_controller_identity(canonical_env)
+    command = [oci_cli_bin, "iam", "region", "list"]
+    auth_mode = str(canonical_env.get("OCI_CLI_AUTH", "")).strip()
+    if auth_mode:
+        command.extend(["--auth", auth_mode])
+    config_path = identity.get("configPath", "")
+    if config_path:
+        command.extend(["--config-file", config_path])
+    profile_name = identity.get("profile", "")
+    if profile_name:
+        command.extend(["--profile", profile_name])
+    command.extend(["--output", "json"])
+    result = subprocess.run(command, check=False, capture_output=True, text=True)
+    if result.returncode != 0 or not result.stdout.strip():
+        return []
+    try:
+        payload = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return []
+    regions: list[dict[str, object]] = []
+    for entry in payload.get("data", []):
+        region_name = str(entry.get("name", "")).strip()
+        if not region_name:
+            continue
+        regions.append(
+            {
+                "name": region_name,
+                "key": str(entry.get("key", "")).strip(),
+            }
+        )
+    return regions
+
+
+def region_group(region_name: str) -> str:
+    return region_name.split("-", 1)[0].strip().lower()
+
+
+def format_region_label(entry: dict[str, object]) -> str:
+    name = str(entry.get("name", "")).strip() or str(entry.get("region", "")).strip()
+    key = str(entry.get("key", "")).strip() or str(entry.get("regionKey", "")).strip()
+    home_suffix = " [home]" if bool(entry.get("isHomeRegion", False)) else ""
+    return f"{name} ({key}){home_suffix}".strip() if key else f"{name}{home_suffix}".strip()
+
+
+def build_oci_gpu_inventory(
+    oci_cli_bin: str,
+    canonical_env: dict[str, str],
+    subscribed_regions: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    inventory: list[dict[str, object]] = []
+    ordered_regions = sorted(
+        subscribed_regions,
+        key=lambda entry: (not bool(entry.get("isHomeRegion", False)), str(entry.get("name", "")).strip()),
+    )
+    for entry in ordered_regions:
+        region_name = str(entry.get("name", "")).strip()
+        if not region_name:
+            continue
+        gpu_shapes, probe_reason = list_available_oci_gpu_shapes(oci_cli_bin, canonical_env, region_name)
+        inventory.append(
+            {
+                "region": region_name,
+                "regionKey": str(entry.get("key", "")).strip(),
+                "isHomeRegion": bool(entry.get("isHomeRegion", False)),
+                "subscriptionStatus": str(entry.get("status", "")).strip() or "unknown",
+                "probeStatus": "verified" if probe_reason is None else "probe-failed",
+                "gpuShapes": gpu_shapes,
+                "gpuShapeCount": len(gpu_shapes),
+                "reason": probe_reason or ("GPU-capable shapes visible." if gpu_shapes else "No GPU-capable shapes are visible for the current controller auth."),
+            }
+        )
+    return inventory
+
+
+def build_oci_gpu_advisor(
+    *,
+    canonical_env: dict[str, str],
+    oci_identity: dict[str, str],
+    subscribed_regions: list[dict[str, object]],
+    public_regions: list[dict[str, object]],
+    gpu_inventory: list[dict[str, object]],
+) -> dict[str, object]:
+    controller_region = str(oci_identity.get("region", "")).strip()
+    configured_target_region = str(canonical_env.get("OCI_TARGET_REGION", "")).strip() or controller_region
+    configured_shape = str(canonical_env.get("OCI_SHAPE", "")).strip()
+    configured_object_storage_region = str(canonical_env.get("OCI_OBJECT_STORAGE_REGION", "")).strip()
+    subscribed_region_names = {str(entry.get("name", "")).strip() for entry in subscribed_regions if str(entry.get("name", "")).strip()}
+
+    available_targets = [entry for entry in gpu_inventory if int(entry.get("gpuShapeCount", 0)) > 0]
+    preferred_target: dict[str, object] | None = None
+    if configured_target_region:
+        preferred_target = next((entry for entry in available_targets if str(entry.get("region", "")).strip() == configured_target_region), None)
+    if preferred_target is None:
+        preferred_target = next((entry for entry in available_targets if bool(entry.get("isHomeRegion", False))), None)
+    if preferred_target is None and available_targets:
+        preferred_target = sorted(available_targets, key=lambda entry: str(entry.get("region", "")).strip())[0]
+
+    controller_group = region_group(controller_region) if controller_region else ""
+    public_expansion_candidates = [
+        entry
+        for entry in public_regions
+        if str(entry.get("name", "")).strip() not in subscribed_region_names
+        and (not controller_group or region_group(str(entry.get("name", "")).strip()) == controller_group)
+    ]
+    if not public_expansion_candidates:
+        public_expansion_candidates = [
+            entry for entry in public_regions if str(entry.get("name", "")).strip() not in subscribed_region_names
+        ]
+    public_expansion_candidates = public_expansion_candidates[:5]
+
+    recommended_launch_target: dict[str, object] = {
+        "status": "none",
+        "region": None,
+        "regionKey": None,
+        "isHomeRegion": False,
+        "shape": None,
+        "reason": "No subscribed OCI region currently exposes GPU-capable shapes for the current controller auth.",
+    }
+    suggested_env_updates: dict[str, str] = {}
+    actions: list[str] = []
+
+    if preferred_target is not None:
+        gpu_shapes = [str(entry).strip() for entry in preferred_target.get("gpuShapes", []) if str(entry).strip()]
+        recommended_shape = configured_shape if configured_shape and configured_shape in gpu_shapes else (gpu_shapes[0] if gpu_shapes else "")
+        recommended_launch_target = {
+            "status": "available",
+            "region": str(preferred_target.get("region", "")).strip(),
+            "regionKey": str(preferred_target.get("regionKey", "")).strip(),
+            "isHomeRegion": bool(preferred_target.get("isHomeRegion", False)),
+            "shape": recommended_shape or None,
+            "reason": (
+                "Configured OCI target already matches a verified GPU-capable region."
+                if configured_target_region and configured_target_region == str(preferred_target.get("region", "")).strip()
+                else "This is the first verified subscribed OCI region with GPU-capable shapes."
+            ),
+        }
+        if recommended_shape:
+            suggested_env_updates["OCI_TARGET_REGION"] = str(preferred_target.get("region", "")).strip()
+            suggested_env_updates["OCI_SHAPE"] = recommended_shape
+            if (
+                controller_region
+                and str(preferred_target.get("region", "")).strip() != controller_region
+                and not configured_object_storage_region
+            ):
+                suggested_env_updates["OCI_OBJECT_STORAGE_REGION"] = controller_region
+        actions.append(
+            f"Verified launch target available: {format_region_label({'name': preferred_target.get('region'), 'key': preferred_target.get('regionKey'), 'isHomeRegion': preferred_target.get('isHomeRegion', False)})} with shape {recommended_shape or 'unknown'}."
+        )
+        if configured_target_region and configured_target_region != str(preferred_target.get("region", "")).strip():
+            actions.append(
+                f"Configured target region {configured_target_region} does not match the current verified GPU-capable recommendation {preferred_target.get('region')}."
+            )
+        if str(preferred_target.get("region", "")).strip() != controller_region and not configured_object_storage_region:
+            actions.append(
+                "Cross-region launch also needs OCI_OBJECT_STORAGE_REGION so the remote node can fetch the staged bundle from the correct bucket region."
+            )
+    else:
+        if len(subscribed_regions) == 1:
+            actions.append(
+                f"Only one subscribed OCI region is visible right now: {format_region_label(subscribed_regions[0])}."
+            )
+        if public_expansion_candidates:
+            candidate_labels = [format_region_label(entry) for entry in public_expansion_candidates]
+            actions.append(
+                f"Next capacity move is to subscribe an additional nearby public region such as: {', '.join(candidate_labels)}."
+            )
+        actions.append(
+            "Keep the cloud lane as not-configured until a subscribed region shows verified GPU-capable shapes."
+        )
+
+    return {
+        "probeScope": "verified-subscribed-regions-only",
+        "controllerRegion": controller_region or None,
+        "configuredTargetRegion": configured_target_region or None,
+        "configuredShape": configured_shape or None,
+        "configuredObjectStorageRegion": configured_object_storage_region or None,
+        "verifiedInventory": gpu_inventory,
+        "publicExpansionCandidates": [
+            {
+                "region": str(entry.get("name", "")).strip(),
+                "regionKey": str(entry.get("key", "")).strip(),
+                "reason": "Public OCI region candidate. GPU capacity is not verified until the tenancy subscribes it."
+            }
+            for entry in public_expansion_candidates
+        ],
+        "recommendedLaunchTarget": recommended_launch_target,
+        "suggestedEnvUpdates": suggested_env_updates,
+        "actions": actions,
+    }
 
 
 def read_secret_value(env_map: dict[str, str], base_name: str) -> tuple[str | None, str | None]:
@@ -629,6 +829,113 @@ def build_cloud_bundle(
     }
 
 
+def render_oci_gpu_advisor_markdown(report: dict[str, object]) -> str:
+    verified_inventory = report.get("verifiedInventory", [])
+    if not isinstance(verified_inventory, list):
+        verified_inventory = []
+    public_expansion_candidates = report.get("publicExpansionCandidates", [])
+    if not isinstance(public_expansion_candidates, list):
+        public_expansion_candidates = []
+    recommended_launch_target = report.get("recommendedLaunchTarget", {})
+    if not isinstance(recommended_launch_target, dict):
+        recommended_launch_target = {}
+    actions = report.get("actions", [])
+    if not isinstance(actions, list):
+        actions = []
+    output = report.get("output", {})
+    if not isinstance(output, dict):
+        output = {}
+
+    lines = [
+        "# OCI GPU Advisor",
+        "",
+        "This page records the current OCI GPU launch advice for the active Q hybrid training session.",
+        "",
+        f"- Generated: `{report.get('generatedAt', 'n/a')}`",
+        f"- Release: `{report.get('release', {}).get('buildId', 'n/a') if isinstance(report.get('release', {}), dict) else 'n/a'}`",
+        f"- Session id: `{report.get('sessionId', 'n/a')}`",
+        f"- Probe scope: `{report.get('probeScope', 'n/a')}`",
+        f"- Controller region: `{report.get('controllerRegion') or 'n/a'}`",
+        f"- Configured target region: `{report.get('configuredTargetRegion') or 'n/a'}`",
+        f"- Configured shape: `{report.get('configuredShape') or 'n/a'}`",
+        f"- Object Storage region: `{report.get('configuredObjectStorageRegion') or 'n/a'}`",
+        "",
+        "## Verified Subscribed Regions",
+        "",
+    ]
+
+    if verified_inventory:
+        for entry in verified_inventory:
+            if not isinstance(entry, dict):
+                continue
+            label = format_region_label(
+                {
+                    "name": entry.get("region"),
+                    "key": entry.get("regionKey"),
+                    "isHomeRegion": entry.get("isHomeRegion", False),
+                }
+            )
+            gpu_shapes = entry.get("gpuShapes", [])
+            if not isinstance(gpu_shapes, list):
+                gpu_shapes = []
+            lines.extend(
+                [
+                    f"- {label}: probe `{entry.get('probeStatus', 'unknown')}`, gpu shapes `{', '.join(str(shape) for shape in gpu_shapes) if gpu_shapes else 'none'}`",
+                    f"  Reason: {entry.get('reason', 'n/a')}",
+                ]
+            )
+    else:
+        lines.append("- No subscribed OCI regions could be verified.")
+
+    lines.extend(
+        [
+            "",
+            "## Recommended Launch Target",
+            "",
+            f"- Status: `{recommended_launch_target.get('status', 'none')}`",
+            f"- Region: `{recommended_launch_target.get('region') or 'n/a'}`",
+            f"- Shape: `{recommended_launch_target.get('shape') or 'n/a'}`",
+            f"- Reason: {recommended_launch_target.get('reason', 'n/a')}",
+            "",
+            "## Public Expansion Candidates",
+            "",
+        ]
+    )
+
+    if public_expansion_candidates:
+        for entry in public_expansion_candidates:
+            if not isinstance(entry, dict):
+                continue
+            label = format_region_label(
+                {
+                    "name": entry.get("region"),
+                    "key": entry.get("regionKey"),
+                }
+            )
+            lines.append(f"- {label}: {entry.get('reason', 'n/a')}")
+    else:
+        lines.append("- No additional public region candidates were discovered.")
+
+    lines.extend(
+        [
+            "",
+            "## Next Actions",
+            "",
+            *[f"- {str(action)}" for action in actions],
+            "",
+            "## Output",
+            "",
+            f"- JSON: `{output.get('jsonPath', 'n/a')}`",
+            f"- Markdown: `{output.get('markdownPath', 'n/a')}`",
+            "",
+            "## Truth Boundary",
+            "",
+            "- Verified inventory only covers subscribed OCI regions that the current controller auth could query.",
+            "- Public expansion candidates are discoverability hints, not proof of available GPU capacity.",
+            "- A launch target is only considered real when the session doctor marks it ready and the cloud launcher can execute with concrete region, shape, and bundle settings.",
+        ]
+    )
+    return "\n".join(lines) + "\n"
 def render_markdown(summary: dict) -> str:
     q = summary["q"]
     immaculate = summary["immaculate"]
@@ -636,6 +943,9 @@ def render_markdown(summary: dict) -> str:
     cloud_lane = summary["lanes"]["cloud"]
     doctor = summary["doctor"]
     cloud_bundle = summary["cloudBundle"]
+    oci_gpu_advisor = summary.get("ociGpuAdvisor", {})
+    recommended_launch_target = oci_gpu_advisor.get("recommendedLaunchTarget", {}) if isinstance(oci_gpu_advisor, dict) else {}
+    public_expansion_candidates = oci_gpu_advisor.get("publicExpansionCandidates", []) if isinstance(oci_gpu_advisor, dict) else []
     lines = [
         "# Q Hybrid Training",
         "",
@@ -647,6 +957,7 @@ def render_markdown(summary: dict) -> str:
         f"- Q training bundle: `{q['trainingBundleId']}`",
         f"- Dataset rows: `{q['trainDatasetRowCount']}`",
         f"- Immaculate orchestration bundle: `{immaculate['bundleId']}`",
+        f"- OCI GPU advisor: `{summary['output'].get('ociGpuAdvisorMarkdownPath', 'docs/wiki/OCI-GPU-Advisor.md')}`",
         "",
         "## Plain English Status",
         "",
@@ -697,6 +1008,8 @@ def render_markdown(summary: dict) -> str:
         f"- OCI region: `{doctor['cloud']['region'] or 'n/a'}`",
         f"- OCI subscribed regions: `{', '.join(doctor['cloud']['subscribedRegionNames']) if doctor['cloud']['subscribedRegionNames'] else 'none discovered'}`",
         f"- OCI GPU shapes visible: `{', '.join(doctor['cloud']['availableGpuShapes']) if doctor['cloud']['availableGpuShapes'] else 'none'}`",
+        f"- OCI target region: `{doctor['cloud'].get('targetRegion') or 'n/a'}`",
+        f"- OCI Object Storage region: `{doctor['cloud'].get('objectStorageRegion') or 'n/a'}`",
         f"- Cloud ready: `{doctor['cloud']['ready']}`",
         *[
             f"- Env file: `{entry['path']}` exists `{entry['exists']}`"
@@ -707,6 +1020,14 @@ def render_markdown(summary: dict) -> str:
             for name, present in doctor["cloud"]["launchTarget"].items()
         ],
         *[f"- Cloud note: {reason}" for reason in doctor["cloud"]["reasons"]],
+        "",
+        "## OCI GPU Advisor",
+        "",
+        f"- Recommendation status: `{recommended_launch_target.get('status', 'none')}`",
+        f"- Recommended region: `{recommended_launch_target.get('region') or 'n/a'}`",
+        f"- Recommended shape: `{recommended_launch_target.get('shape') or 'n/a'}`",
+        f"- Recommendation reason: {recommended_launch_target.get('reason', 'n/a')}",
+        f"- Public expansion candidates: `{', '.join(format_region_label({'name': entry.get('region'), 'key': entry.get('regionKey')}) for entry in public_expansion_candidates if isinstance(entry, dict)) if public_expansion_candidates else 'none'}`",
         "",
         "## Truth Boundary",
         "",
@@ -816,6 +1137,12 @@ def main() -> None:
     )
     wiki_markdown_path = resolve_repo_path(str(artifacts.get("wikiMarkdownPath", "")).strip()) or (
         root / "docs" / "wiki" / "Q-Hybrid-Training.md"
+    )
+    oci_gpu_advisor_json_path = resolve_repo_path(str(artifacts.get("ociGpuAdvisorJsonPath", "")).strip()) or (
+        root / "docs" / "wiki" / "OCI-GPU-Advisor.json"
+    )
+    oci_gpu_advisor_markdown_path = resolve_repo_path(str(artifacts.get("ociGpuAdvisorMarkdownPath", "")).strip()) or (
+        root / "docs" / "wiki" / "OCI-GPU-Advisor.md"
     )
 
     policy = manifest.get("policy", {})
@@ -940,14 +1267,6 @@ def main() -> None:
 
     required_env = [str(entry) for entry in cloud_manifest.get("requiredEnv", default_cloud_env(cloud_provider))]
     optional_env = [str(entry) for entry in cloud_manifest.get("optionalEnv", [])]
-    required_env_state = {name: bool(str(canonical_cloud_env.get(name, "")).strip()) for name in required_env}
-    optional_env_state = {name: bool(str(canonical_cloud_env.get(name, "")).strip()) for name in optional_env}
-
-    launch_target_state = {
-        name: bool(str(canonical_cloud_env.get(name, "")).strip())
-        for name in default_cloud_env(cloud_provider)
-    }
-
     oci_cli_bin = str(canonical_cloud_env.get("OCI_CLI_BIN", "")).strip() or shutil.which("oci") or "oci"
     oci_cli_available = bool(shutil.which(oci_cli_bin) or Path(oci_cli_bin).exists())
     oci_auth_mode = "missing"
@@ -959,25 +1278,104 @@ def main() -> None:
         oci_auth_mode = "explicit_identity"
     oci_auth_ready = oci_auth_mode != "missing"
     oci_identity = resolve_oci_controller_identity(canonical_cloud_env) if cloud_provider == "oci" else {}
-    oci_available_gpu_shapes = (
-        list_available_oci_gpu_shapes(oci_cli_bin, canonical_cloud_env)
-        if cloud_provider == "oci" and oci_cli_available and oci_auth_ready
-        else []
-    )
     oci_subscribed_regions = (
         list_subscribed_oci_regions(oci_cli_bin, canonical_cloud_env)
         if cloud_provider == "oci" and oci_cli_available and oci_auth_ready
         else []
     )
+    oci_public_regions = (
+        list_public_oci_regions(oci_cli_bin, canonical_cloud_env)
+        if cloud_provider == "oci" and oci_cli_available and oci_auth_ready
+        else []
+    )
     oci_subscribed_region_names = [
-        (
-            f"{str(entry.get('name', '')).strip()} "
-            f"({str(entry.get('key', '')).strip()})"
-            f"{' [home]' if bool(entry.get('isHomeRegion', False)) else ''}"
-        ).strip()
+        format_region_label(entry)
         for entry in oci_subscribed_regions
         if str(entry.get("name", "")).strip()
     ]
+    oci_gpu_inventory = (
+        build_oci_gpu_inventory(oci_cli_bin, canonical_cloud_env, oci_subscribed_regions)
+        if cloud_provider == "oci" and oci_cli_available and oci_auth_ready
+        else []
+    )
+    current_region_inventory = next(
+        (entry for entry in oci_gpu_inventory if str(entry.get("region", "")).strip() == str(oci_identity.get("region", "")).strip()),
+        None,
+    )
+    oci_available_gpu_shapes = (
+        [str(shape) for shape in current_region_inventory.get("gpuShapes", []) if str(shape).strip()]
+        if isinstance(current_region_inventory, dict)
+        else []
+    )
+    oci_gpu_advisor = (
+        build_oci_gpu_advisor(
+            canonical_env=canonical_cloud_env,
+            oci_identity=oci_identity,
+            subscribed_regions=oci_subscribed_regions,
+            public_regions=oci_public_regions,
+            gpu_inventory=oci_gpu_inventory,
+        )
+        if cloud_provider == "oci" and oci_cli_available and oci_auth_ready
+        else {
+            "probeScope": "verified-subscribed-regions-only",
+            "controllerRegion": None,
+            "configuredTargetRegion": None,
+            "configuredShape": None,
+            "configuredObjectStorageRegion": None,
+            "verifiedInventory": [],
+            "publicExpansionCandidates": [],
+            "recommendedLaunchTarget": {
+                "status": "none",
+                "region": None,
+                "regionKey": None,
+                "isHomeRegion": False,
+                "shape": None,
+                "reason": "OCI GPU advisor is unavailable until OCI auth and CLI are ready.",
+            },
+            "suggestedEnvUpdates": {},
+            "actions": [],
+        }
+    )
+    advisor_env_updates: dict[str, str] = {}
+    if cloud_provider == "oci":
+        session_env_path = resolve_repo_path(str(oci_bootstrap.get("sessionEnvPath", "")).strip())
+        recommended_target = oci_gpu_advisor.get("recommendedLaunchTarget", {}) if isinstance(oci_gpu_advisor, dict) else {}
+        suggested_env_updates = oci_gpu_advisor.get("suggestedEnvUpdates", {}) if isinstance(oci_gpu_advisor, dict) else {}
+        if (
+            isinstance(session_env_path, Path)
+            and isinstance(recommended_target, dict)
+            and isinstance(suggested_env_updates, dict)
+            and str(recommended_target.get("status", "")).strip() == "available"
+        ):
+            if not str(canonical_cloud_env.get("OCI_TARGET_REGION", "")).strip() and str(suggested_env_updates.get("OCI_TARGET_REGION", "")).strip():
+                advisor_env_updates["OCI_TARGET_REGION"] = str(suggested_env_updates["OCI_TARGET_REGION"]).strip()
+            if not str(canonical_cloud_env.get("OCI_SHAPE", "")).strip() and str(suggested_env_updates.get("OCI_SHAPE", "")).strip():
+                advisor_env_updates["OCI_SHAPE"] = str(suggested_env_updates["OCI_SHAPE"]).strip()
+            if (
+                not str(canonical_cloud_env.get("OCI_OBJECT_STORAGE_REGION", "")).strip()
+                and str(suggested_env_updates.get("OCI_OBJECT_STORAGE_REGION", "")).strip()
+            ):
+                advisor_env_updates["OCI_OBJECT_STORAGE_REGION"] = str(suggested_env_updates["OCI_OBJECT_STORAGE_REGION"]).strip()
+            if advisor_env_updates:
+                save_env_file(session_env_path, advisor_env_updates)
+                effective_cloud_env.update(advisor_env_updates)
+                canonical_cloud_env.update(advisor_env_updates)
+                for key in advisor_env_updates:
+                    canonical_sources.setdefault(key, "oci_gpu_advisor")
+        if isinstance(oci_gpu_advisor, dict):
+            oci_gpu_advisor["materializedEnvUpdates"] = advisor_env_updates
+
+    required_env_state = {name: bool(str(canonical_cloud_env.get(name, "")).strip()) for name in required_env}
+    optional_env_state = {name: bool(str(canonical_cloud_env.get(name, "")).strip()) for name in optional_env}
+
+    launch_target_names = list(default_cloud_env(cloud_provider))
+    for extra_name in ("OCI_TARGET_REGION", "OCI_OBJECT_STORAGE_REGION"):
+        if extra_name not in launch_target_names:
+            launch_target_names.append(extra_name)
+    launch_target_state = {
+        name: bool(str(canonical_cloud_env.get(name, "")).strip())
+        for name in launch_target_names
+    }
 
     hf_source = "missing"
     hf_ready = False
@@ -1044,13 +1442,32 @@ def main() -> None:
                 cloud_reasons.append(
                     f"Only subscribed OCI region visible to this tenancy is {oci_subscribed_region_names[0]}."
                 )
-            if oci_auth_ready and not oci_available_gpu_shapes:
+            configured_target_region = str(canonical_cloud_env.get("OCI_TARGET_REGION", "")).strip() or str(oci_identity.get("region", "")).strip()
+            configured_target_inventory = next(
+                (entry for entry in oci_gpu_inventory if str(entry.get("region", "")).strip() == configured_target_region),
+                None,
+            )
+            verified_gpu_targets = [entry for entry in oci_gpu_inventory if int(entry.get("gpuShapeCount", 0)) > 0]
+            if oci_auth_ready and not verified_gpu_targets:
                 cloud_reasons.append(
-                    f"No GPU shapes are available in OCI region {oci_identity.get('region', 'unknown')} for the current controller auth."
+                    "No subscribed OCI region currently exposes GPU-capable shapes for the current controller auth."
                 )
-            elif str(canonical_cloud_env.get('OCI_SHAPE', '')).strip() and str(canonical_cloud_env.get('OCI_SHAPE', '')).strip() not in oci_available_gpu_shapes:
+            elif configured_target_region and configured_target_inventory is None:
                 cloud_reasons.append(
-                    f"Configured OCI_SHAPE={canonical_cloud_env.get('OCI_SHAPE')} is not available in OCI region {oci_identity.get('region', 'unknown')}."
+                    f"Configured OCI target region {configured_target_region} is not among the subscribed OCI regions visible to this controller auth."
+                )
+            elif str(canonical_cloud_env.get("OCI_SHAPE", "")).strip() and isinstance(configured_target_inventory, dict) and str(canonical_cloud_env.get("OCI_SHAPE", "")).strip() not in [str(shape) for shape in configured_target_inventory.get("gpuShapes", [])]:
+                cloud_reasons.append(
+                    f"Configured OCI_SHAPE={canonical_cloud_env.get('OCI_SHAPE')} is not available in OCI region {configured_target_region}."
+                )
+            if (
+                configured_target_region
+                and str(oci_identity.get("region", "")).strip()
+                and configured_target_region != str(oci_identity.get("region", "")).strip()
+                and not str(canonical_cloud_env.get("OCI_OBJECT_STORAGE_REGION", "")).strip()
+            ):
+                cloud_reasons.append(
+                    "Cross-region OCI launch requires OCI_OBJECT_STORAGE_REGION so the staged bundle can be fetched from the correct bucket region."
                 )
         if not hf_ready:
             cloud_reasons.append(
@@ -1150,10 +1567,15 @@ def main() -> None:
                 "authKeyRepaired": oci_bootstrap.get("keyPathRepaired"),
                 "sessionEnvPath": oci_bootstrap.get("sessionEnvPath"),
                 "sessionEnvUpdated": oci_bootstrap.get("sessionEnvUpdated"),
+                "advisorEnvUpdated": bool(advisor_env_updates),
                 "region": oci_identity.get("region"),
+                "targetRegion": str(canonical_cloud_env.get("OCI_TARGET_REGION", "")).strip() or oci_identity.get("region"),
+                "objectStorageRegion": str(canonical_cloud_env.get("OCI_OBJECT_STORAGE_REGION", "")).strip() or oci_identity.get("region"),
                 "subscribedRegions": oci_subscribed_regions,
                 "subscribedRegionNames": oci_subscribed_region_names,
                 "availableGpuShapes": oci_available_gpu_shapes,
+                "gpuInventory": oci_gpu_inventory,
+                "recommendedLaunchTarget": oci_gpu_advisor.get("recommendedLaunchTarget") if isinstance(oci_gpu_advisor, dict) else {},
                 "reasons": cloud_reasons,
                 "canonicalSources": canonical_sources,
             },
@@ -1167,6 +1589,16 @@ def main() -> None:
                 "entityPresent": bool(str(canonical_cloud_env.get("WANDB_ENTITY", "")).strip()),
                 "projectPresent": bool(str(canonical_cloud_env.get("WANDB_PROJECT", "")).strip()),
                 "mode": wandb_mode or "online",
+            },
+        },
+        "ociGpuAdvisor": {
+            **oci_gpu_advisor,
+            "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
+            "sessionId": session_id,
+            "release": release_summary,
+            "output": {
+                "jsonPath": relative_path(root, oci_gpu_advisor_json_path),
+                "markdownPath": relative_path(root, oci_gpu_advisor_markdown_path),
             },
         },
         "lanes": {
@@ -1189,6 +1621,8 @@ def main() -> None:
             "sessionMarkdownPath": relative_path(root, session_markdown_path),
             "wikiJsonPath": relative_path(root, wiki_json_path),
             "wikiMarkdownPath": relative_path(root, wiki_markdown_path),
+            "ociGpuAdvisorJsonPath": relative_path(root, oci_gpu_advisor_json_path),
+            "ociGpuAdvisorMarkdownPath": relative_path(root, oci_gpu_advisor_markdown_path),
         },
     }
 
@@ -1215,9 +1649,12 @@ def main() -> None:
     save_json(session_json_path, summary)
     save_json(latest_session_path, summary)
     markdown = render_markdown(summary)
+    advisor_markdown = render_oci_gpu_advisor_markdown(summary["ociGpuAdvisor"])
     save_markdown(session_markdown_path, markdown)
     save_json(wiki_json_path, summary)
     save_markdown(wiki_markdown_path, markdown)
+    save_json(oci_gpu_advisor_json_path, summary["ociGpuAdvisor"])
+    save_markdown(oci_gpu_advisor_markdown_path, advisor_markdown)
 
     print(json.dumps(summary, indent=2))
 

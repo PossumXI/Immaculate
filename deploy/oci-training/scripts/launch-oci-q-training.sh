@@ -77,6 +77,8 @@ SESSION_REPO_PATH="${IMMACULATE_Q_HYBRID_SESSION_REPO_PATH:-}"
 DISPLAY_NAME_PREFIX="${OCI_Q_TRAINING_DISPLAY_NAME_PREFIX:-immaculate-q-train}"
 OCI_OBJECT_STORAGE_NAMESPACE="${OCI_OBJECT_STORAGE_NAMESPACE:-}"
 OCI_OBJECT_STORAGE_BUCKET="${OCI_OBJECT_STORAGE_BUCKET:-}"
+OCI_OBJECT_STORAGE_REGION="${OCI_OBJECT_STORAGE_REGION:-}"
+OCI_TARGET_REGION="${OCI_TARGET_REGION:-}"
 OCI_Q_TRAINING_BUNDLE_OBJECT="${OCI_Q_TRAINING_BUNDLE_OBJECT:-}"
 GIT_REMOTE_URL_VALUE="${GIT_REMOTE_URL:-}"
 if [[ -z "${GIT_REMOTE_URL_VALUE}" || "${GIT_REMOTE_URL_VALUE}" == "unknown" ]]; then
@@ -159,6 +161,8 @@ shape=${OCI_SHAPE:-}
 object_namespace=${OCI_OBJECT_STORAGE_NAMESPACE}
 object_bucket=${OCI_OBJECT_STORAGE_BUCKET}
 bundle_object=${OCI_Q_TRAINING_BUNDLE_OBJECT:-}
+target_region=${OCI_TARGET_REGION:-}
+object_storage_region=${OCI_OBJECT_STORAGE_REGION:-}
 EOF
   exit 0
 fi
@@ -180,6 +184,16 @@ fi
 if [[ ! -x "${OCI_BIN}" ]] && ! command -v "${OCI_BIN}" >/dev/null 2>&1; then
   echo "OCI CLI not found: ${OCI_BIN}" >&2
   exit 1
+fi
+
+OCI_OBJECT_REGION_ARGS=()
+if [[ -n "${OCI_OBJECT_STORAGE_REGION}" ]]; then
+  OCI_OBJECT_REGION_ARGS+=(--region "${OCI_OBJECT_STORAGE_REGION}")
+fi
+
+OCI_COMPUTE_REGION_ARGS=()
+if [[ -n "${OCI_TARGET_REGION}" ]]; then
+  OCI_COMPUTE_REGION_ARGS+=(--region "${OCI_TARGET_REGION}")
 fi
 
 tmp_dir="$(mktemp -d)"
@@ -232,6 +246,7 @@ export SESSION_REPO_PATH
 
 "${OCI_BIN}" os object put \
   "${OCI_BASE_ARGS[@]}" \
+  "${OCI_OBJECT_REGION_ARGS[@]}" \
   --namespace-name "${OCI_OBJECT_STORAGE_NAMESPACE}" \
   --bucket-name "${OCI_OBJECT_STORAGE_BUCKET}" \
   --name "${OCI_Q_TRAINING_BUNDLE_OBJECT}" \
@@ -247,8 +262,10 @@ fi
 sed \
   -e "s|__REPO_URL__|$(printf '%s' "${GIT_REMOTE_URL_VALUE}" | sed 's/[&|]/\\&/g')|g" \
   -e "s|__GIT_SHA__|$(printf '%s' "${IMMACULATE_RELEASE_GIT_SHA:-main}" | sed 's/[&|]/\\&/g')|g" \
+  -e "s|__TARGET_REGION__|$(printf '%s' "${OCI_TARGET_REGION}" | sed 's/[&|]/\\&/g')|g" \
   -e "s|__OBJECT_NAMESPACE__|$(printf '%s' "${OCI_OBJECT_STORAGE_NAMESPACE}" | sed 's/[&|]/\\&/g')|g" \
   -e "s|__OBJECT_BUCKET__|$(printf '%s' "${OCI_OBJECT_STORAGE_BUCKET}" | sed 's/[&|]/\\&/g')|g" \
+  -e "s|__OBJECT_REGION__|$(printf '%s' "${OCI_OBJECT_STORAGE_REGION}" | sed 's/[&|]/\\&/g')|g" \
   -e "s|__OBJECT_NAME__|$(printf '%s' "${OCI_Q_TRAINING_BUNDLE_OBJECT}" | sed 's/[&|]/\\&/g')|g" \
   -e "s|__SESSION_REPO_PATH__|$(printf '%s' "${SESSION_REPO_PATH}" | sed 's/[&|]/\\&/g')|g" \
   -e "s|__HF_SECRET_OCID__|$(printf '%s' "${OCI_Q_TRAINING_HF_TOKEN_SECRET_OCID:-}" | sed 's/[&|]/\\&/g')|g" \
@@ -277,6 +294,7 @@ PY
 
 "${OCI_BIN}" compute instance launch \
   "${OCI_BASE_ARGS[@]}" \
+  "${OCI_COMPUTE_REGION_ARGS[@]}" \
   --compartment-id "${OCI_COMPARTMENT_OCID}" \
   --availability-domain "${OCI_AVAILABILITY_DOMAIN}" \
   --subnet-id "${OCI_SUBNET_OCID}" \

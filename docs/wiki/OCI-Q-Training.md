@@ -39,6 +39,8 @@ The hybrid session now supports:
 - `cloud.envFilePath`
 - `cloud.inlineEnv`
 - `cloud.launchCommand`
+- `OCI_TARGET_REGION`
+- `OCI_OBJECT_STORAGE_REGION`
 
 That means the same session can carry:
 
@@ -56,8 +58,20 @@ session-local controller config and wire it into the session-local
 `oci-cloud.env` instead of editing the operator's home-directory config in
 place.
 
+The current live capacity advice now has its own generated surface:
+
+- `[[OCI-GPU-Advisor]]`
+
+That page is where the repo records:
+
+- the verified GPU-capable shapes visible in subscribed OCI regions
+- the difference between controller auth region and launch target region
+- whether the next blocker is missing capacity, missing subscription, or missing env wiring
+- the public expansion candidates that are discoverable but not yet verified for capacity
+
 ## Truth Boundary
 
 - This bundle does not claim a real cloud fine-tune happened unless the hybrid session says the cloud lane launched or completed.
 - It does not claim OCI auth exists on this machine unless the doctor reports a concrete controller auth mode and config path.
 - It does not claim the Q cloud lane is safe just because a GPU node can be launched; the session still has to carry the exact locked dataset and config.
+- It does not claim public OCI regions have verified GPU capacity until the advisor proves a subscribed region can actually expose GPU-capable shapes to the current controller auth.

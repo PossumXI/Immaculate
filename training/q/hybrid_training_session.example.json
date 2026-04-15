@@ -40,6 +40,8 @@
       "OCI_CLI_AUTH",
       "OCI_CLI_CONFIG_FILE",
       "OCI_CLI_PROFILE",
+      "OCI_TARGET_REGION",
+      "OCI_OBJECT_STORAGE_REGION",
       "OCI_CONFIG_FILE",
       "OCI_PROFILE",
       "OCI_Q_TRAINING_HF_TOKEN_SECRET_OCID",
@@ -60,7 +62,7 @@
       "--env-file",
       "deploy/oci-training/env/immaculate-q-training.env.example"
     ],
-    "notes": "Fill the OCI launch target OCIDs plus local controller auth through OCI_CLI_CONFIG_FILE/OCI_CLI_PROFILE for API-key launches. The session doctor can materialize a corrected session-local controller config from ~/.oci/config when it exists. Prefer OCI Vault secret OCIDs over plain-text tokens, and keep the launched OCI node on instance principal auth."
+    "notes": "Fill the OCI launch target OCIDs plus local controller auth through OCI_CLI_CONFIG_FILE/OCI_CLI_PROFILE for API-key launches. OCI_TARGET_REGION lets the compute launch differ from the controller region, and OCI_OBJECT_STORAGE_REGION keeps staged bundle fetches explicit when that happens. The session doctor can materialize a corrected session-local controller config from ~/.oci/config when it exists. Prefer OCI Vault secret OCIDs over plain-text tokens, and keep the launched OCI node on instance principal auth."
   },
   "artifacts": {
     "sessionRoot": ".training-output/q/sessions/q-hybrid-session-example",

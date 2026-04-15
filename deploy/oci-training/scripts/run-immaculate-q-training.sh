@@ -64,6 +64,30 @@ load_secret_file() {
   export "${value_name}=${value}"
 }
 
+validate_bundle_archive() {
+  local archive_path="$1"
+  local entry=""
+  while IFS= read -r entry; do
+    [[ -z "${entry}" ]] && continue
+    if [[ "${entry}" == /* || "${entry}" == *"\\"* ]]; then
+      echo "Unsafe bundle entry path: ${entry}" >&2
+      exit 1
+    fi
+    if [[ "${entry}" == ".." || "${entry}" == ../* || "${entry}" == *"/../"* || "${entry}" == *"/.." ]]; then
+      echo "Bundle entry escapes repo root: ${entry}" >&2
+      exit 1
+    fi
+    case "${entry}" in
+      bundle-manifest.json|.training-output/*|docs/*|training/*)
+        ;;
+      *)
+        echo "Bundle entry is outside the allowed repo surface: ${entry}" >&2
+        exit 1
+        ;;
+    esac
+  done < <(tar -tzf "${archive_path}")
+}
+
 IMMACULATE_REPO_ROOT="${IMMACULATE_REPO_ROOT:-/opt/immaculate/src}"
 IMMACULATE_Q_TRAINING_PYTHON="${IMMACULATE_Q_TRAINING_PYTHON:-python3}"
 IMMACULATE_Q_TRAINING_RUNTIME_DIR="${IMMACULATE_Q_TRAINING_RUNTIME_DIR:-/var/lib/immaculate/q-training}"
@@ -72,6 +96,8 @@ IMMACULATE_Q_TRAINING_BUNDLE_PATH="${IMMACULATE_Q_TRAINING_BUNDLE_PATH:-/var/lib
 IMMACULATE_Q_TRAINING_DRY_RUN="${IMMACULATE_Q_TRAINING_DRY_RUN:-false}"
 SESSION_REPO_PATH="${IMMACULATE_Q_HYBRID_SESSION_REPO_PATH:-}"
 OCI_BIN="${OCI_CLI_BIN:-oci}"
+OCI_TARGET_REGION="${OCI_TARGET_REGION:-}"
+OCI_OBJECT_STORAGE_REGION="${OCI_OBJECT_STORAGE_REGION:-}"
 
 if [[ "${PRINT_CONFIG}" == "true" ]]; then
   cat <<EOF
@@ -81,6 +107,8 @@ bundle=${IMMACULATE_Q_TRAINING_BUNDLE_PATH}
 runtime_dir=${IMMACULATE_Q_TRAINING_RUNTIME_DIR}
 log_dir=${IMMACULATE_Q_TRAINING_LOG_DIR}
 session_repo_path=${SESSION_REPO_PATH}
+target_region=${OCI_TARGET_REGION}
+object_storage_region=${OCI_OBJECT_STORAGE_REGION}
 EOF
   exit 0
 fi
@@ -103,8 +131,13 @@ if [[ ! -f "${IMMACULATE_Q_TRAINING_BUNDLE_PATH}" ]]; then
     echo "OCI CLI is required to download the training bundle." >&2
     exit 1
   fi
+  OCI_OBJECT_GET_REGION_ARGS=()
+  if [[ -n "${OCI_OBJECT_STORAGE_REGION}" ]]; then
+    OCI_OBJECT_GET_REGION_ARGS+=(--region "${OCI_OBJECT_STORAGE_REGION}")
+  fi
   "${OCI_BIN}" os object get \
     --auth "${OCI_CLI_AUTH:-instance_principal}" \
+    "${OCI_OBJECT_GET_REGION_ARGS[@]}" \
     --namespace-name "${OCI_OBJECT_STORAGE_NAMESPACE}" \
     --bucket-name "${OCI_OBJECT_STORAGE_BUCKET}" \
     --name "${OCI_Q_TRAINING_BUNDLE_OBJECT}" \
@@ -118,6 +151,7 @@ fi
 
 print_banner
 
+validate_bundle_archive "${IMMACULATE_Q_TRAINING_BUNDLE_PATH}"
 tar -xzf "${IMMACULATE_Q_TRAINING_BUNDLE_PATH}" -C "${IMMACULATE_REPO_ROOT}"
 
 if [[ -z "${SESSION_REPO_PATH}" ]]; then

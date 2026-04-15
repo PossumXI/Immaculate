@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-04-15T12:38:12Z",
+  "generatedAt": "2026-04-15T14:02:12Z",
   "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
   "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.manifest.json",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "3ce07ac73710752a703f3510c3b93949bf69f7b4",
-    "gitShortSha": "3ce07ac",
-    "buildId": "0.1.0+3ce07ac"
+    "gitSha": "a96bf4245129d0d5959c8c85f10188bf51041ed9",
+    "gitShortSha": "a96bf42",
+    "buildId": "0.1.0+a96bf42"
   },
   "q": {
-    "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-3ce07ac-cee52e2d",
+    "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e",
     "trainingLockPath": ".training-output/q/latest-training-lock.json",
     "configPath": ".training-output/q/q-lora-config-longctx-cur-fnv1a-8f551a5c-bench-v2.json",
     "modelId": "Q",
@@ -23,15 +23,15 @@
     "failureCorpusPath": "docs/wiki/Q-Failure-Corpus.json"
   },
   "immaculate": {
-    "bundleId": "immaculate-orchestration-3ce07ac-3dd4365f",
+    "bundleId": "immaculate-orchestration-a96bf42-3dd4365f",
     "bundlePath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-cur-fnv1a-8f551a5c-bench-v2.json",
     "signalCount": 14
   },
   "cloudBundle": {
-    "bundleId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2-3ce07ac",
+    "bundleId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2-a96bf42",
     "archivePath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/cloud-bundle/q-hybrid-cur-fnv1a-8f551a5c-bench-v2-cloud-bundle.tar.gz",
-    "archiveSha256": "fa7a6d51804b493756344cbb27e905ab6e96d98108e34326088ca5692207f3a4",
-    "archiveSizeBytes": 2218401,
+    "archiveSha256": "b518ae62d408153e0d738c1b4422a38c050f53cbd7b9d55282c69f3cff112bad",
+    "archiveSizeBytes": 2218412,
     "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/cloud-bundle/bundle-manifest.json",
     "fileCount": 10,
     "repoRemoteUrl": "https://github.com/PossumXI/Immaculate.git"
@@ -99,7 +99,9 @@
         "OCI_IMAGE_OCID": true,
         "OCI_SHAPE": false,
         "OCI_OBJECT_STORAGE_NAMESPACE": true,
-        "OCI_OBJECT_STORAGE_BUCKET": true
+        "OCI_OBJECT_STORAGE_BUCKET": true,
+        "OCI_TARGET_REGION": false,
+        "OCI_OBJECT_STORAGE_REGION": false
       },
       "launchCommandConfigured": true,
       "launchCommand": [
@@ -121,7 +123,10 @@
       "authKeyRepaired": false,
       "sessionEnvPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/oci-cloud.env",
       "sessionEnvUpdated": true,
+      "advisorEnvUpdated": false,
       "region": "us-ashburn-1",
+      "targetRegion": "us-ashburn-1",
+      "objectStorageRegion": "us-ashburn-1",
       "subscribedRegions": [
         {
           "name": "us-ashburn-1",
@@ -134,10 +139,30 @@
         "us-ashburn-1 (IAD) [home]"
       ],
       "availableGpuShapes": [],
+      "gpuInventory": [
+        {
+          "region": "us-ashburn-1",
+          "regionKey": "IAD",
+          "isHomeRegion": true,
+          "subscriptionStatus": "READY",
+          "probeStatus": "verified",
+          "gpuShapes": [],
+          "gpuShapeCount": 0,
+          "reason": "No GPU-capable shapes are visible for the current controller auth."
+        }
+      ],
+      "recommendedLaunchTarget": {
+        "status": "none",
+        "region": null,
+        "regionKey": null,
+        "isHomeRegion": false,
+        "shape": null,
+        "reason": "No subscribed OCI region currently exposes GPU-capable shapes for the current controller auth."
+      },
       "reasons": [
         "Missing cloud launch target env: OCI_SHAPE",
         "Only subscribed OCI region visible to this tenancy is us-ashburn-1 (IAD) [home].",
-        "No GPU shapes are available in OCI region us-ashburn-1 for the current controller auth."
+        "No subscribed OCI region currently exposes GPU-capable shapes for the current controller auth."
       ],
       "canonicalSources": {
         "HF_TOKEN": "HF_TOKEN",
@@ -159,21 +184,83 @@
       "mode": "offline"
     }
   },
+  "ociGpuAdvisor": {
+    "probeScope": "verified-subscribed-regions-only",
+    "controllerRegion": "us-ashburn-1",
+    "configuredTargetRegion": "us-ashburn-1",
+    "configuredShape": null,
+    "configuredObjectStorageRegion": null,
+    "verifiedInventory": [
+      {
+        "region": "us-ashburn-1",
+        "regionKey": "IAD",
+        "isHomeRegion": true,
+        "subscriptionStatus": "READY",
+        "probeStatus": "verified",
+        "gpuShapes": [],
+        "gpuShapeCount": 0,
+        "reason": "No GPU-capable shapes are visible for the current controller auth."
+      }
+    ],
+    "publicExpansionCandidates": [
+      {
+        "region": "us-chicago-1",
+        "regionKey": "ORD",
+        "reason": "Public OCI region candidate. GPU capacity is not verified until the tenancy subscribes it."
+      },
+      {
+        "region": "us-phoenix-1",
+        "regionKey": "PHX",
+        "reason": "Public OCI region candidate. GPU capacity is not verified until the tenancy subscribes it."
+      },
+      {
+        "region": "us-sanjose-1",
+        "regionKey": "SJC",
+        "reason": "Public OCI region candidate. GPU capacity is not verified until the tenancy subscribes it."
+      }
+    ],
+    "recommendedLaunchTarget": {
+      "status": "none",
+      "region": null,
+      "regionKey": null,
+      "isHomeRegion": false,
+      "shape": null,
+      "reason": "No subscribed OCI region currently exposes GPU-capable shapes for the current controller auth."
+    },
+    "suggestedEnvUpdates": {},
+    "actions": [
+      "Only one subscribed OCI region is visible right now: us-ashburn-1 (IAD) [home].",
+      "Next capacity move is to subscribe an additional nearby public region such as: us-chicago-1 (ORD), us-phoenix-1 (PHX), us-sanjose-1 (SJC).",
+      "Keep the cloud lane as not-configured until a subscribed region shows verified GPU-capable shapes."
+    ],
+    "materializedEnvUpdates": {},
+    "generatedAt": "2026-04-15T14:02:12Z",
+    "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
+    "release": {
+      "packageVersion": "0.1.0",
+      "gitSha": "a96bf4245129d0d5959c8c85f10188bf51041ed9",
+      "gitShortSha": "a96bf42",
+      "buildId": "0.1.0+a96bf42"
+    },
+    "output": {
+      "jsonPath": "docs/wiki/OCI-GPU-Advisor.json",
+      "markdownPath": "docs/wiki/OCI-GPU-Advisor.md"
+    }
+  },
   "lanes": {
     "local": {
       "enabled": true,
       "mode": "dry-run",
-      "status": "completed",
+      "status": "ready",
       "command": [
         "C:\\Users\\Knight\\AppData\\Local\\Microsoft\\WindowsApps\\python.EXE",
-        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway-push-bench-v2-clean\\training\\q\\train_q_lora_unsloth.py",
+        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway-push-oci-advisor\\training\\q\\train_q_lora_unsloth.py",
         "--config",
-        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway-push-bench-v2-clean\\.training-output\\q\\q-lora-config-longctx-cur-fnv1a-8f551a5c-bench-v2.json",
+        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway-push-oci-advisor\\.training-output\\q\\q-lora-config-longctx-cur-fnv1a-8f551a5c-bench-v2.json",
         "--session-manifest",
-        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway-push-bench-v2-clean\\.training-output\\q\\sessions\\q-hybrid-cur-fnv1a-8f551a5c-bench-v2\\hybrid-session.manifest.json",
+        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway-push-oci-advisor\\.training-output\\q\\sessions\\q-hybrid-cur-fnv1a-8f551a5c-bench-v2\\hybrid-session.manifest.json",
         "--dry-run"
-      ],
-      "exitCode": 0
+      ]
     },
     "cloud": {
       "enabled": true,
@@ -196,6 +283,8 @@
     "sessionJsonPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.json",
     "sessionMarkdownPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.md",
     "wikiJsonPath": "docs/wiki/Q-Hybrid-Training.json",
-    "wikiMarkdownPath": "docs/wiki/Q-Hybrid-Training.md"
+    "wikiMarkdownPath": "docs/wiki/Q-Hybrid-Training.md",
+    "ociGpuAdvisorJsonPath": "docs/wiki/OCI-GPU-Advisor.json",
+    "ociGpuAdvisorMarkdownPath": "docs/wiki/OCI-GPU-Advisor.md"
   }
 }

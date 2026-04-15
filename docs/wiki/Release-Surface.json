@@ -1,28 +1,28 @@
 {
-  "generatedAt": "2026-04-15T12:40:31.823Z",
+  "generatedAt": "2026-04-15T14:02:02.119Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "3ce07ac73710752a703f3510c3b93949bf69f7b4",
-    "gitShortSha": "3ce07ac",
+    "gitSha": "a96bf4245129d0d5959c8c85f10188bf51041ed9",
+    "gitShortSha": "a96bf42",
     "gitBranch": "detached",
-    "buildId": "0.1.0+3ce07ac",
+    "buildId": "0.1.0+a96bf42",
     "q": {
       "alias": "Q",
       "providerModel": "Q",
       "truthfulLabel": "Q",
       "trainingLock": {
-        "generatedAt": "2026-04-15T12:37:51Z",
+        "generatedAt": "2026-04-15T12:25:00Z",
         "lockVersion": 1,
-        "bundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-3ce07ac-cee52e2d",
+        "bundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e",
         "runName": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2",
         "aliasName": "Q",
         "trainDatasetPath": ".training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c-bench-v2.jsonl",
-        "trainDatasetSha256": "cee52e2de30959b11f98d58c7ca93b57e81302c5e098d44698fa2d07960feaa1",
+        "trainDatasetSha256": "6207dd5ea8c567b6b38d53089aa88d50c1760d4491f3fee9fa9816a9ada5c9d8",
         "trainDatasetRowCount": 1070,
         "mixManifestPath": ".training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c-bench-v2.manifest.json",
-        "mixManifestSha256": "eeddd24f663f294595557b816575bf9e0a26edb322430d09dd57d94b62725354",
+        "mixManifestSha256": "bcb246fa22d73970adeaf5d44d0aacc5e45d06c22615a09e859e0a070ea8db34",
         "mixSupplementalCount": 3,
         "mixSupplementalPaths": [
           "training/q/bridgebench_seed.json",
@@ -34,14 +34,14 @@
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-15T12:38:12Z",
+        "generatedAt": "2026-04-15T13:58:47Z",
         "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
         "sessionPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.json",
         "localStatus": "completed",
         "cloudStatus": "not-configured",
         "cloudProvider": "oci",
-        "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-3ce07ac-cee52e2d",
-        "immaculateBundleId": "immaculate-orchestration-3ce07ac-3dd4365f"
+        "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e",
+        "immaculateBundleId": "immaculate-orchestration-a96bf42-3dd4365f"
       }
     }
   },
@@ -74,12 +74,17 @@
     {
       "label": "Q hybrid training",
       "path": "docs\\wiki\\Q-Hybrid-Training.json",
-      "generatedAt": "2026-04-15T12:38:12Z"
+      "generatedAt": "2026-04-15T13:58:47Z"
+    },
+    {
+      "label": "OCI GPU advisor",
+      "path": "docs\\wiki\\OCI-GPU-Advisor.json",
+      "generatedAt": "2026-04-15T13:58:47Z"
     },
     {
       "label": "Q benchmark corpus",
       "path": "docs\\wiki\\Q-Benchmark-Corpus.json",
-      "generatedAt": "2026-04-15T12:38:04Z"
+      "generatedAt": "2026-04-15T14:02:01Z"
     },
     {
       "label": "Q benchmark promotion",
@@ -89,7 +94,7 @@
     {
       "label": "W&B benchmark export",
       "path": "docs\\wiki\\Benchmark-Wandb-Export.json",
-      "generatedAt": "2026-04-15T08:28:56.441816+00:00"
+      "generatedAt": "2026-04-15T12:43:00.582955+00:00"
     },
     {
       "label": "Harbor terminal bench soak",

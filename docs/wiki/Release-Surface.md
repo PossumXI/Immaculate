@@ -2,23 +2,23 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-04-15T12:40:31.823Z
-- Immaculate release: `0.1.0+3ce07ac`
-- Repo commit: `3ce07ac73710752a703f3510c3b93949bf69f7b4`
+- Generated: 2026-04-15T14:02:02.119Z
+- Immaculate release: `0.1.0+a96bf42`
+- Repo commit: `a96bf4245129d0d5959c8c85f10188bf51041ed9`
 - Branch: `detached`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
 - Core package version: `0.1.0`
 - Q serving label: `Q`
 - Q alias: `Q`
-- Q training bundle: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-3ce07ac-cee52e2d`
+- Q training bundle: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e`
 - Q hybrid session: `q-hybrid-cur-fnv1a-8f551a5c-bench-v2`
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+3ce07ac` is the current repo build stamp.
+- Immaculate build `0.1.0+a96bf42` is the current repo build stamp.
 - Q is served and benchmarked as `Q` across the current repo surfaces.
-- The latest tracked Q training bundle is `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-3ce07ac-cee52e2d`, tied to dataset `.training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c-bench-v2.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
+- The latest tracked Q training bundle is `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e`, tied to dataset `.training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c-bench-v2.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
 - The latest hybrid session is `q-hybrid-cur-fnv1a-8f551a5c-bench-v2`, with local lane `completed` and cloud lane `not-configured` on provider `oci`.
 
 ## Current Evidence Surfaces
@@ -28,20 +28,21 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Q structured contract benchmark: `2026-04-15T02:25:01.093Z` via `docs/wiki/Model-Benchmark-Comparison.json`
 - Q readiness gate: `2026-04-15T02:35:16.060Z` via `docs/wiki/Q-Readiness-Gate.json`
 - Q gateway validation: `2026-04-15T02:32:19.275Z` via `docs/wiki/Q-Gateway-Validation.json`
-- Q hybrid training: `2026-04-15T12:38:12Z` via `docs/wiki/Q-Hybrid-Training.json`
-- Q benchmark corpus: `2026-04-15T12:38:04Z` via `docs/wiki/Q-Benchmark-Corpus.json`
+- Q hybrid training: `2026-04-15T13:58:47Z` via `docs/wiki/Q-Hybrid-Training.json`
+- OCI GPU advisor: `2026-04-15T13:58:47Z` via `docs/wiki/OCI-GPU-Advisor.json`
+- Q benchmark corpus: `2026-04-15T14:02:01Z` via `docs/wiki/Q-Benchmark-Corpus.json`
 - Q benchmark promotion: `2026-04-15T12:37:51Z` via `docs/wiki/Q-Benchmark-Promotion.json`
-- W&B benchmark export: `2026-04-15T08:28:56.441816+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
+- W&B benchmark export: `2026-04-15T12:43:00.582955+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
 - Harbor terminal bench soak: `2026-04-15T08:22:53.565Z` via `docs/wiki/Harbor-Terminal-Bench-Soak.json`
 - Q benchmark sweep (60m): `2026-04-15T08:24:47.464Z` via `docs/wiki/Q-Benchmark-Sweep-60m.json`
 
 ## Q Training Bundle
 
 - Lock path: `.training-output/q/latest-training-lock.json`
-- Lock generated: `2026-04-15T12:37:51Z`
+- Lock generated: `2026-04-15T12:25:00Z`
 - Run name: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2`
 - Training dataset rows: `1070`
-- Training dataset SHA-256: `cee52e2de30959b11f98d58c7ca93b57e81302c5e098d44698fa2d07960feaa1`
+- Training dataset SHA-256: `6207dd5ea8c567b6b38d53089aa88d50c1760d4491f3fee9fa9816a9ada5c9d8`
 - Mix manifest: `.training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c-bench-v2.manifest.json`
 - Mix supplemental count: `3`
 - Mix supplementals: `training/q/bridgebench_seed.json, training/q/coding_long_context_seed.json, .training-output/q/q-benchmark-corpus.jsonl`
@@ -50,11 +51,11 @@ This page is generated from repo state. It is the plain-English answer to a simp
 ## Hybrid Training Session
 
 - Session path: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.json`
-- Session generated: `2026-04-15T12:38:12Z`
+- Session generated: `2026-04-15T13:58:47Z`
 - Local lane status: `completed`
 - Cloud lane status: `not-configured`
 - Cloud provider: `oci`
-- Immaculate orchestration bundle: `immaculate-orchestration-3ce07ac-3dd4365f`
+- Immaculate orchestration bundle: `immaculate-orchestration-a96bf42-3dd4365f`
 
 ## Truth Boundary
 
