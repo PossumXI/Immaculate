@@ -13,6 +13,7 @@ The bundle lives under:
 - `deploy/oci-training/scripts/fetch-oci-training-secrets.sh`
 - `deploy/oci-training/scripts/run-immaculate-q-training.sh`
 - `deploy/oci-training/scripts/launch-oci-q-training.sh`
+- `training/q/create_oci_region_limit_request.py`
 
 ## What It Actually Does
 
@@ -63,6 +64,11 @@ The current live capacity advice now has its own generated surface:
 
 - `[[OCI-GPU-Advisor]]`
 - `[[OCI-Region-Capacity]]`
+
+The repo-local helper for the support-backed region-limit request is:
+
+- `python training/q/create_oci_region_limit_request.py --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --check`
+- it will not create the incident unless CSI is present through `--csi` or `OCI_SUPPORT_CSI`
 
 That page is where the repo records:
 

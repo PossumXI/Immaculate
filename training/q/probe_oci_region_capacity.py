@@ -1,5 +1,6 @@
 import argparse
 import json
+import shutil
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -52,6 +53,21 @@ def build_release_summary(root: Path) -> dict:
         "gitShortSha": git_short_sha,
         "buildId": f"{package_version}+{git_short_sha}",
     }
+
+
+def resolve_oci_bin(root: Path, raw_value: str) -> str:
+    raw = raw_value.strip()
+    if raw:
+        return str(Path(raw).expanduser().resolve(strict=False))
+    candidates = [
+        root / ".tools" / "oci-cli-venv" / "Scripts" / "oci.exe",
+        root.parent / ".tools" / "oci-cli-venv" / "Scripts" / "oci.exe",
+        root.parent / "Immaculate-q-gateway" / ".tools" / "oci-cli-venv" / "Scripts" / "oci.exe",
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return str(candidate.resolve(strict=False))
+    return shutil.which("oci") or "oci"
 
 
 def parse_tenancy_id(config_path: Path) -> str:
@@ -217,6 +233,8 @@ def render_markdown(report: dict) -> str:
             f"- CLI create possible with local data: `{support.get('createPossible', False)}`",
             f"- CLI create blocker: {support.get('createBlockedReason', 'n/a')}",
             f"- Incident created: `{bool(support.get('incident'))}`",
+            f"- Helper path: `{support.get('helperPath', 'training/q/create_oci_region_limit_request.py')}`",
+            f"- Helper check command: `{support.get('helperCheckCommand', 'python training/q/create_oci_region_limit_request.py --check')}`",
             "",
             "## Output",
             "",
@@ -255,7 +273,7 @@ def normalize_region_entries(payload: dict) -> list[dict]:
 def main() -> None:
     root = repo_root()
     parser = argparse.ArgumentParser(description="Attempt OCI region subscriptions and publish a stamped capacity report.")
-    parser.add_argument("--oci-bin", default=str(root / ".tools" / "oci-cli-venv" / "Scripts" / "oci.exe"))
+    parser.add_argument("--oci-bin", default="")
     parser.add_argument("--config-file", default=str(root / ".training-output" / "q" / "oci-controller" / "DEFAULT.config"))
     parser.add_argument("--profile", default="DEFAULT")
     parser.add_argument("--tenancy-id", default="")
@@ -266,7 +284,7 @@ def main() -> None:
     parser.add_argument("--output-markdown", default=str(root / "docs" / "wiki" / "OCI-Region-Capacity.md"))
     args = parser.parse_args()
 
-    oci_bin = str(Path(args.oci_bin).expanduser().resolve(strict=False))
+    oci_bin = resolve_oci_bin(root, args.oci_bin)
     config_file = Path(args.config_file).expanduser().resolve(strict=False)
     output_json_path = Path(args.output_json).expanduser().resolve(strict=False)
     output_markdown_path = Path(args.output_markdown).expanduser().resolve(strict=False)
@@ -503,6 +521,8 @@ def main() -> None:
             "createBlockedReason": create_blocked_reason or None,
             "incident": incident_payload.get("data") if isinstance(incident_payload, dict) else None,
             "incidentError": incident_error,
+            "helperPath": "training/q/create_oci_region_limit_request.py",
+            "helperCheckCommand": "python training/q/create_oci_region_limit_request.py --check",
         },
         "summary": {
             "latestAttemptStatus": str(latest_attempt.get("status", "none")).strip() or "none",

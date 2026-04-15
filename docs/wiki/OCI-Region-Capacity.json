@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-04-15T15:42:22Z",
+  "generatedAt": "2026-04-15T15:58:59Z",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "e03c70332d8d860f36399f46b3201bfeb3ec6e5c",
-    "gitShortSha": "e03c703",
-    "buildId": "0.1.0+e03c703"
+    "gitSha": "e968b0c35bbf758450a01bd79fe294e71c53916b",
+    "gitShortSha": "e968b0c",
+    "buildId": "0.1.0+e968b0c"
   },
   "controllerRegion": "us-ashburn-1",
   "tenancyId": "ocid1.tenancy.oc1..aaaaaaaaajrnaanoycyyhq5caorcxc2puwaqf55ldw3ywzgqja6iwrs7a3jq",
@@ -77,7 +77,9 @@
     "createPossible": false,
     "createBlockedReason": "CSI is required by `oci support incident create` and is not present in the local controller config or workspace.",
     "incident": null,
-    "incidentError": null
+    "incidentError": null,
+    "helperPath": "training/q/create_oci_region_limit_request.py",
+    "helperCheckCommand": "python training/q/create_oci_region_limit_request.py --check"
   },
   "summary": {
     "latestAttemptStatus": "blocked",

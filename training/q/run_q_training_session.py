@@ -981,6 +981,8 @@ def render_markdown(summary: dict) -> str:
     recommended_launch_target = oci_gpu_advisor.get("recommendedLaunchTarget", {}) if isinstance(oci_gpu_advisor, dict) else {}
     public_expansion_candidates = oci_gpu_advisor.get("publicExpansionCandidates", []) if isinstance(oci_gpu_advisor, dict) else []
     latest_capacity_summary = oci_region_capacity.get("summary", {}) if isinstance(oci_region_capacity, dict) else {}
+    support_capacity = oci_region_capacity.get("support", {}) if isinstance(oci_region_capacity, dict) else {}
+    limit_request_helper_command = f"python training/q/create_oci_region_limit_request.py --session {summary['manifestPath']} --check"
     lines = [
         "# Q Hybrid Training",
         "",
@@ -1070,6 +1072,9 @@ def render_markdown(summary: dict) -> str:
         f"- Latest attempt status: `{latest_capacity_summary.get('latestAttemptStatus', 'unknown')}`",
         f"- Subscription limit reached: `{latest_capacity_summary.get('subscriptionLimitReached', False)}`",
         f"- Recommended next step: {latest_capacity_summary.get('recommendedNextStep', 'n/a')}",
+        f"- OCI support create possible now: `{support_capacity.get('createPossible', False)}`",
+        f"- OCI support create blocker: {support_capacity.get('createBlockedReason', 'n/a')}",
+        f"- Prepared limit-request helper: `{limit_request_helper_command}`",
         "",
         "## Truth Boundary",
         "",

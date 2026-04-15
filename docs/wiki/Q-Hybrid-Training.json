@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-04-15T15:42:55Z",
+  "generatedAt": "2026-04-15T15:59:19Z",
   "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
   "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.manifest.json",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "e03c70332d8d860f36399f46b3201bfeb3ec6e5c",
-    "gitShortSha": "e03c703",
-    "buildId": "0.1.0+e03c703"
+    "gitSha": "e968b0c35bbf758450a01bd79fe294e71c53916b",
+    "gitShortSha": "e968b0c",
+    "buildId": "0.1.0+e968b0c"
   },
   "q": {
     "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e",
@@ -23,15 +23,15 @@
     "failureCorpusPath": "docs/wiki/Q-Failure-Corpus.json"
   },
   "immaculate": {
-    "bundleId": "immaculate-orchestration-e03c703-3dd4365f",
+    "bundleId": "immaculate-orchestration-e968b0c-3dd4365f",
     "bundlePath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-cur-fnv1a-8f551a5c-bench-v2.json",
     "signalCount": 14
   },
   "cloudBundle": {
-    "bundleId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2-e03c703",
+    "bundleId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2-e968b0c",
     "archivePath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/cloud-bundle/q-hybrid-cur-fnv1a-8f551a5c-bench-v2-cloud-bundle.tar.gz",
-    "archiveSha256": "facc194ad925ac1bc5a26a2f8345fbf3a5bce8416b9021bd8cd6913f4ab9f00e",
-    "archiveSizeBytes": 2218412,
+    "archiveSha256": "12a9cc4a26429fce09ca7560bd95a8b5b67ecf7992fa0574b36b450b37161057",
+    "archiveSizeBytes": 2218408,
     "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/cloud-bundle/bundle-manifest.json",
     "fileCount": 10,
     "repoRemoteUrl": "https://github.com/PossumXI/Immaculate.git"
@@ -235,13 +235,13 @@
       "Keep the cloud lane as not-configured until a subscribed region shows verified GPU-capable shapes."
     ],
     "materializedEnvUpdates": {},
-    "generatedAt": "2026-04-15T15:42:55Z",
+    "generatedAt": "2026-04-15T15:59:19Z",
     "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
     "release": {
       "packageVersion": "0.1.0",
-      "gitSha": "e03c70332d8d860f36399f46b3201bfeb3ec6e5c",
-      "gitShortSha": "e03c703",
-      "buildId": "0.1.0+e03c703"
+      "gitSha": "e968b0c35bbf758450a01bd79fe294e71c53916b",
+      "gitShortSha": "e968b0c",
+      "buildId": "0.1.0+e968b0c"
     },
     "output": {
       "jsonPath": "docs/wiki/OCI-GPU-Advisor.json",
@@ -249,12 +249,12 @@
     }
   },
   "ociRegionCapacity": {
-    "generatedAt": "2026-04-15T15:42:22Z",
+    "generatedAt": "2026-04-15T15:58:59Z",
     "release": {
       "packageVersion": "0.1.0",
-      "gitSha": "e03c70332d8d860f36399f46b3201bfeb3ec6e5c",
-      "gitShortSha": "e03c703",
-      "buildId": "0.1.0+e03c703"
+      "gitSha": "e968b0c35bbf758450a01bd79fe294e71c53916b",
+      "gitShortSha": "e968b0c",
+      "buildId": "0.1.0+e968b0c"
     },
     "controllerRegion": "us-ashburn-1",
     "tenancyId": "ocid1.tenancy.oc1..aaaaaaaaajrnaanoycyyhq5caorcxc2puwaqf55ldw3ywzgqja6iwrs7a3jq",
@@ -327,7 +327,9 @@
       "createPossible": false,
       "createBlockedReason": "CSI is required by `oci support incident create` and is not present in the local controller config or workspace.",
       "incident": null,
-      "incidentError": null
+      "incidentError": null,
+      "helperPath": "training/q/create_oci_region_limit_request.py",
+      "helperCheckCommand": "python training/q/create_oci_region_limit_request.py --check"
     },
     "summary": {
       "latestAttemptStatus": "blocked",

@@ -2,12 +2,12 @@
 
 This page records one hybrid Q training session. In plain English: it ties the Q fine-tune lane and the Immaculate orchestration-improvement lane into one stamped session, then tells you exactly which parts are ready or missing.
 
-- Generated: `2026-04-15T15:42:55Z`
-- Release: `0.1.0+e03c703`
+- Generated: `2026-04-15T15:59:19Z`
+- Release: `0.1.0+e968b0c`
 - Session id: `q-hybrid-cur-fnv1a-8f551a5c-bench-v2`
 - Q training bundle: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e`
 - Dataset rows: `1070`
-- Immaculate orchestration bundle: `immaculate-orchestration-e03c703-3dd4365f`
+- Immaculate orchestration bundle: `immaculate-orchestration-e968b0c-3dd4365f`
 - OCI GPU advisor: `docs/wiki/OCI-GPU-Advisor.md`
 - OCI region capacity probe: `docs/wiki/OCI-Region-Capacity.md`
 
@@ -39,9 +39,9 @@ This page records one hybrid Q training session. In plain English: it ties the Q
 
 ## Cloud Bundle
 
-- Bundle id: `q-hybrid-cur-fnv1a-8f551a5c-bench-v2-e03c703`
+- Bundle id: `q-hybrid-cur-fnv1a-8f551a5c-bench-v2-e968b0c`
 - Archive: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/cloud-bundle/q-hybrid-cur-fnv1a-8f551a5c-bench-v2-cloud-bundle.tar.gz`
-- Archive SHA-256: `facc194ad925ac1bc5a26a2f8345fbf3a5bce8416b9021bd8cd6913f4ab9f00e`
+- Archive SHA-256: `12a9cc4a26429fce09ca7560bd95a8b5b67ecf7992fa0574b36b450b37161057`
 - Bundle manifest: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/cloud-bundle/bundle-manifest.json`
 - Included file count: `10`
 
@@ -92,6 +92,9 @@ This page records one hybrid Q training session. In plain English: it ties the Q
 - Latest attempt status: `blocked`
 - Subscription limit reached: `True`
 - Recommended next step: Provide the tenancy CSI to `oci support incident create` for `regions.subscribed-region-count`, then rerun the bench-v2 doctor for the Q and Immaculate cloud lanes.
+- OCI support create possible now: `False`
+- OCI support create blocker: CSI is required by `oci support incident create` and is not present in the local controller config or workspace.
+- Prepared limit-request helper: `python training/q/create_oci_region_limit_request.py --session .training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.manifest.json --check`
 
 ## Truth Boundary
 
