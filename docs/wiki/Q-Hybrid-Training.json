@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-04-15T03:43:38Z",
+  "generatedAt": "2026-04-15T04:23:00Z",
   "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v1",
   "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/hybrid-session.manifest.json",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "5e51e002d467540876a634002a9951c0eec64479",
-    "gitShortSha": "5e51e00",
-    "buildId": "0.1.0+5e51e00"
+    "gitSha": "c962654c79212b424620c7fa91c0a59ecef545b4",
+    "gitShortSha": "c962654",
+    "buildId": "0.1.0+c962654"
   },
   "q": {
     "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1-5e51e00-e16a056e",
@@ -23,15 +23,15 @@
     "failureCorpusPath": "docs/wiki/Q-Failure-Corpus.json"
   },
   "immaculate": {
-    "bundleId": "immaculate-orchestration-5e51e00-3dd4365f",
+    "bundleId": "immaculate-orchestration-c962654-3dd4365f",
     "bundlePath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-cur-fnv1a-8f551a5c-bench-v1.json",
     "signalCount": 14
   },
   "cloudBundle": {
-    "bundleId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v1-5e51e00",
+    "bundleId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v1-c962654",
     "archivePath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/cloud-bundle/q-hybrid-cur-fnv1a-8f551a5c-bench-v1-cloud-bundle.tar.gz",
-    "archiveSha256": "dc7add0deb35abd873cac83826c5054e17dc1764a7a729dea1742762c3b019f0",
-    "archiveSizeBytes": 2211303,
+    "archiveSha256": "e3460dd0cde36f0857ec08fd117eac27d5abe9f7da4f0fa2c3dd6fef655e8bd0",
+    "archiveSizeBytes": 2211316,
     "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/cloud-bundle/bundle-manifest.json",
     "fileCount": 10,
     "repoRemoteUrl": "https://github.com/PossumXI/Immaculate.git"
@@ -83,9 +83,9 @@
         "WANDB_API_KEY": false,
         "WANDB_ENTITY": false,
         "WANDB_PROJECT": false,
-        "OCI_CLI_AUTH": false,
-        "OCI_CLI_CONFIG_FILE": false,
-        "OCI_CLI_PROFILE": false,
+        "OCI_CLI_AUTH": true,
+        "OCI_CLI_CONFIG_FILE": true,
+        "OCI_CLI_PROFILE": true,
         "OCI_CONFIG_FILE": false,
         "OCI_PROFILE": false,
         "OCI_Q_TRAINING_HF_TOKEN_SECRET_OCID": false,
@@ -113,14 +113,23 @@
         ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/oci-cloud.env"
       ],
       "cliBin": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.tools/oci-cli-venv/Scripts/oci.exe",
-      "authMode": "missing",
+      "authMode": "config_file",
+      "authSource": "OCI_CLI_CONFIG_FILE",
+      "authConfigPath": ".training-output/q/oci-controller/DEFAULT.config",
+      "authProfile": "DEFAULT",
+      "authKeyPath": "C:/Users/Knight/.oci/oci_api_key.pem",
+      "authKeyRepaired": false,
+      "sessionEnvPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/oci-cloud.env",
+      "sessionEnvUpdated": true,
       "reasons": [
-        "Missing cloud launch target env: OCI_COMPARTMENT_OCID, OCI_SUBNET_OCID, OCI_AVAILABILITY_DOMAIN, OCI_IMAGE_OCID, OCI_SHAPE, OCI_OBJECT_STORAGE_NAMESPACE, OCI_OBJECT_STORAGE_BUCKET",
-        "OCI auth is not configured through OCI_CLI_AUTH=instance_principal, OCI_CLI_CONFIG_FILE, or explicit OCI_CLI_* identity variables."
+        "Missing cloud launch target env: OCI_COMPARTMENT_OCID, OCI_SUBNET_OCID, OCI_AVAILABILITY_DOMAIN, OCI_IMAGE_OCID, OCI_SHAPE, OCI_OBJECT_STORAGE_NAMESPACE, OCI_OBJECT_STORAGE_BUCKET"
       ],
       "canonicalSources": {
         "HF_TOKEN": "HF_TOKEN",
-        "WANDB_MODE": "WANDB_MODE"
+        "WANDB_MODE": "WANDB_MODE",
+        "OCI_CLI_AUTH": "OCI_CLI_AUTH",
+        "OCI_CLI_CONFIG_FILE": "OCI_CLI_CONFIG_FILE",
+        "OCI_CLI_PROFILE": "OCI_CLI_PROFILE"
       }
     },
     "huggingFace": {

@@ -3,10 +3,10 @@
 This page is generated from the tracked Q training state.
 It records whether the latest benchmark corpus has already been promoted into the active locked Q bundle. It does not claim a fine-tune or cloud launch happened.
 
-- Generated: `2026-04-15T04:09:10Z`
+- Generated: `2026-04-15T04:23:08Z`
 - Status: `already-current`
-- Release: `0.1.0+c4cbb0a`
-- Repo commit: `c4cbb0a`
+- Release: `0.1.0+c962654`
+- Repo commit: `c962654`
 - Benchmark corpus JSONL: `.training-output/q/q-benchmark-corpus.jsonl`
 - Benchmark corpus SHA-256: `8eba105be5172066bafddad02fe1f92f2549e909afabb879dc46bbe67fec56b6`
 - Benchmark corpus rows: `10`

@@ -60,7 +60,7 @@
       "--env-file",
       "deploy/oci-training/env/immaculate-q-training.env.example"
     ],
-    "notes": "Fill the OCI launch target OCIDs plus either OCI_CLI_AUTH=instance_principal on a controller node or OCI_CLI_CONFIG_FILE/OCI_CLI_PROFILE for local API-key auth. Prefer OCI Vault secret OCIDs over plain-text tokens."
+    "notes": "Fill the OCI launch target OCIDs plus local controller auth through OCI_CLI_CONFIG_FILE/OCI_CLI_PROFILE for API-key launches. The session doctor can materialize a corrected session-local controller config from ~/.oci/config when it exists. Prefer OCI Vault secret OCIDs over plain-text tokens, and keep the launched OCI node on instance principal auth."
   },
   "artifacts": {
     "sessionRoot": ".training-output/q/sessions/q-hybrid-session-example",

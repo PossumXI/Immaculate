@@ -43,13 +43,19 @@ normalize_path() {
   printf '%s' "${raw_path}"
 }
 
-for env_file in "${ENV_FILES[@]}"; do
-  if [[ -f "${env_file}" ]]; then
-    set -a
-    # shellcheck disable=SC1090
-    . "${env_file}"
-    set +a
+source_env_file() {
+  local env_file="$1"
+  if [[ ! -f "${env_file}" ]]; then
+    return 0
   fi
+  set -a
+  # shellcheck disable=SC1090,SC1091
+  . <(tr -d '\r' < "${env_file}")
+  set +a
+}
+
+for env_file in "${ENV_FILES[@]}"; do
+  source_env_file "${env_file}"
 done
 
 PYTHON_BIN="${IMMACULATE_Q_TRAINING_CONTROLLER_PYTHON:-}"
@@ -120,11 +126,31 @@ if [[ ! -f "${BUNDLE_PATH}" ]]; then
   exit 1
 fi
 
+OCI_AUTH_MODE="${OCI_CLI_AUTH:-}"
+if [[ -z "${OCI_AUTH_MODE}" ]]; then
+  if [[ -n "${OCI_CLI_CONFIG_FILE:-}" || -n "${OCI_CLI_PROFILE:-}" || -n "${OCI_CLI_USER:-}" || -n "${OCI_CLI_TENANCY:-}" || -n "${OCI_CLI_FINGERPRINT:-}" || -n "${OCI_CLI_REGION:-}" ]]; then
+    OCI_AUTH_MODE="api_key"
+  else
+    OCI_AUTH_MODE="instance_principal"
+  fi
+fi
+
+OCI_BASE_ARGS=(--auth "${OCI_AUTH_MODE}")
+if [[ -n "${OCI_CLI_CONFIG_FILE:-}" ]]; then
+  OCI_BASE_ARGS+=(--config-file "$(normalize_path "${OCI_CLI_CONFIG_FILE}")")
+fi
+if [[ -n "${OCI_CLI_PROFILE:-}" ]]; then
+  OCI_BASE_ARGS+=(--profile "${OCI_CLI_PROFILE}")
+fi
+
 if [[ "${CHECK_ONLY}" == "true" ]]; then
   cat <<EOF
 session_manifest=${SESSION_MANIFEST}
 bundle_path=${BUNDLE_PATH}
 oci_bin=${OCI_BIN}
+auth_mode=${OCI_AUTH_MODE}
+config_file=${OCI_CLI_CONFIG_FILE:-}
+profile=${OCI_CLI_PROFILE:-}
 compartment=${OCI_COMPARTMENT_OCID:-}
 subnet=${OCI_SUBNET_OCID:-}
 availability_domain=${OCI_AVAILABILITY_DOMAIN:-}
@@ -205,6 +231,7 @@ PY
 export SESSION_REPO_PATH
 
 "${OCI_BIN}" os object put \
+  "${OCI_BASE_ARGS[@]}" \
   --namespace-name "${OCI_OBJECT_STORAGE_NAMESPACE}" \
   --bucket-name "${OCI_OBJECT_STORAGE_BUCKET}" \
   --name "${OCI_Q_TRAINING_BUNDLE_OBJECT}" \
@@ -249,6 +276,7 @@ metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
 PY
 
 "${OCI_BIN}" compute instance launch \
+  "${OCI_BASE_ARGS[@]}" \
   --compartment-id "${OCI_COMPARTMENT_OCID}" \
   --availability-domain "${OCI_AVAILABILITY_DOMAIN}" \
   --subnet-id "${OCI_SUBNET_OCID}" \

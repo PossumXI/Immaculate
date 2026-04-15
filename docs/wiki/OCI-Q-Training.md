@@ -49,8 +49,15 @@ That means the same session can carry:
 
 without depending on whatever happened to already be exported in the shell.
 
+For local controller auth, the expected shape is API-key auth through
+`OCI_CLI_CONFIG_FILE` plus `OCI_CLI_PROFILE`. When a workstation already has a
+real `~/.oci/config`, the session doctor can materialize a corrected
+session-local controller config and wire it into the session-local
+`oci-cloud.env` instead of editing the operator's home-directory config in
+place.
+
 ## Truth Boundary
 
 - This bundle does not claim a real cloud fine-tune happened unless the hybrid session says the cloud lane launched or completed.
-- It does not claim OCI auth exists on this machine when the doctor still reports it missing.
+- It does not claim OCI auth exists on this machine unless the doctor reports a concrete controller auth mode and config path.
 - It does not claim the Q cloud lane is safe just because a GPU node can be launched; the session still has to carry the exact locked dataset and config.

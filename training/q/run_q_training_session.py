@@ -187,6 +187,29 @@ def load_env_file(path_value: Path) -> dict[str, str]:
     return values
 
 
+def save_env_file(path_value: Path, updates: dict[str, str]) -> None:
+    path_value.parent.mkdir(parents=True, exist_ok=True)
+    existing_lines = path_value.read_text(encoding="utf-8").splitlines() if path_value.exists() else []
+    remaining = dict(updates)
+    rendered_lines: list[str] = []
+    for raw_line in existing_lines:
+        match = ENV_LINE_PATTERN.match(raw_line)
+        if not match:
+            rendered_lines.append(raw_line)
+            continue
+        key = match.group(1).strip()
+        if key not in remaining:
+            rendered_lines.append(raw_line)
+            continue
+        rendered_lines.append(f"{key}={remaining.pop(key)}")
+    if rendered_lines and rendered_lines[-1].strip():
+        rendered_lines.append("")
+    for key, value in remaining.items():
+        rendered_lines.append(f"{key}={value}")
+    with path_value.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write("\n".join(rendered_lines).rstrip() + "\n")
+
+
 def build_effective_env(env_file_paths: list[Path], inline_env: object) -> tuple[dict[str, str], list[dict[str, object]]]:
     effective_env = dict(os.environ)
     env_file_summaries: list[dict[str, object]] = []
@@ -226,6 +249,156 @@ def canonicalize_env(env_map: dict[str, str]) -> tuple[dict[str, str], dict[str,
             canonical_env[canonical_name] = value
             sources[canonical_name] = source_name
     return canonical_env, sources
+
+
+def parse_ini_like_config(path_value: Path) -> dict[str, dict[str, str]]:
+    profiles: dict[str, dict[str, str]] = {}
+    current_profile: str | None = None
+    for raw_line in path_value.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or line.startswith(";"):
+            continue
+        if line.startswith("[") and line.endswith("]"):
+            current_profile = line[1:-1].strip()
+            if current_profile:
+                profiles.setdefault(current_profile, {})
+            continue
+        if current_profile is None or "=" not in raw_line:
+            continue
+        key, value = raw_line.split("=", 1)
+        profiles[current_profile][key.strip()] = strip_optional_quotes(value.strip())
+    return profiles
+
+
+def find_session_oci_env_path(session_root: Path, env_file_paths: list[Path]) -> Path:
+    expected = (session_root / "oci-cloud.env").resolve()
+    for env_path in env_file_paths:
+        try:
+            if env_path.resolve() == expected:
+                return expected
+        except FileNotFoundError:
+            if env_path == expected:
+                return expected
+    return expected
+
+
+def resolve_candidate_oci_config_path(env_map: dict[str, str]) -> tuple[Path | None, str]:
+    for alias in CANONICAL_ENV_ALIASES["OCI_CLI_CONFIG_FILE"]:
+        value = str(env_map.get(alias, "")).strip()
+        if not value:
+            continue
+        candidate = Path(value).expanduser()
+        if not candidate.is_absolute():
+            candidate = (repo_root() / candidate).resolve()
+        return candidate, alias
+    default_path = Path.home() / ".oci" / "config"
+    return (default_path.resolve() if default_path.exists() else None), "default"
+
+
+def resolve_candidate_oci_profile(env_map: dict[str, str]) -> str:
+    for alias in CANONICAL_ENV_ALIASES["OCI_CLI_PROFILE"]:
+        value = str(env_map.get(alias, "")).strip()
+        if value:
+            return value
+    return "DEFAULT"
+
+
+def resolve_candidate_oci_key_path(config_path: Path, key_file_value: str) -> tuple[Path | None, bool]:
+    if not key_file_value.strip():
+        return None, False
+    key_candidate = Path(key_file_value).expanduser()
+    if not key_candidate.is_absolute():
+        key_candidate = (config_path.parent / key_candidate).resolve()
+    if key_candidate.exists():
+        return key_candidate.resolve(), False
+    fallback = (config_path.parent / Path(key_file_value).name).resolve()
+    if fallback.exists():
+        return fallback, True
+    return None, False
+
+
+def materialize_oci_controller_config(
+    root: Path,
+    profile_name: str,
+    source_values: dict[str, str],
+    key_file_path: Path,
+) -> Path:
+    target_dir = root / ".training-output" / "q" / "oci-controller"
+    target_dir.mkdir(parents=True, exist_ok=True)
+    safe_profile = re.sub(r"[^A-Za-z0-9._-]+", "-", profile_name.strip() or "DEFAULT")
+    target_path = target_dir / f"{safe_profile}.config"
+    ordered_keys = ("user", "fingerprint", "tenancy", "region", "pass_phrase", "security_token_file")
+    lines = [f"[{profile_name}]"]
+    for key in ordered_keys:
+        value = str(source_values.get(key, "")).strip()
+        if value:
+            lines.append(f"{key}={value}")
+    lines.append(f"key_file={str(key_file_path.resolve()).replace('\\', '/')}")
+    target_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return target_path
+
+
+def bootstrap_oci_controller_auth(
+    *,
+    root: Path,
+    session_root: Path,
+    env_file_paths: list[Path],
+    effective_env: dict[str, str],
+) -> dict[str, object]:
+    bootstrap: dict[str, object] = {
+        "source": "missing",
+        "configPath": None,
+        "profile": None,
+        "keyPath": None,
+        "keyPathRepaired": False,
+        "sessionEnvPath": None,
+        "sessionEnvUpdated": False,
+        "reason": None,
+    }
+    config_path, source = resolve_candidate_oci_config_path(effective_env)
+    bootstrap["source"] = source
+    if config_path is None or not config_path.exists():
+        bootstrap["reason"] = "No OCI config file was found for controller auth."
+        return bootstrap
+
+    profile_name = resolve_candidate_oci_profile(effective_env)
+    profiles = parse_ini_like_config(config_path)
+    profile_values = profiles.get(profile_name) or profiles.get("DEFAULT")
+    if profile_values is None:
+        bootstrap["reason"] = f"Profile {profile_name} was not found in {config_path.name}."
+        return bootstrap
+
+    required_keys = ("user", "fingerprint", "tenancy", "region", "key_file")
+    missing_keys = [key for key in required_keys if not str(profile_values.get(key, "")).strip()]
+    if missing_keys:
+        bootstrap["reason"] = f"OCI config profile {profile_name} is missing: {', '.join(missing_keys)}"
+        return bootstrap
+
+    key_path, key_repaired = resolve_candidate_oci_key_path(config_path, str(profile_values.get("key_file", "")))
+    if key_path is None or not key_path.exists():
+        bootstrap["reason"] = f"OCI key file could not be resolved from {config_path.name}."
+        return bootstrap
+
+    materialized_config_path = materialize_oci_controller_config(root, profile_name, profile_values, key_path)
+    session_env_path = find_session_oci_env_path(session_root, env_file_paths)
+    env_updates = {
+        "OCI_CLI_AUTH": "api_key",
+        "OCI_CLI_CONFIG_FILE": str(materialized_config_path.resolve()).replace("\\", "/"),
+        "OCI_CLI_PROFILE": profile_name,
+    }
+    save_env_file(session_env_path, env_updates)
+
+    bootstrap.update(
+        {
+            "configPath": relative_path(root, materialized_config_path),
+            "profile": profile_name,
+            "keyPath": relative_path(root, key_path),
+            "keyPathRepaired": key_repaired,
+            "sessionEnvPath": relative_path(root, session_env_path),
+            "sessionEnvUpdated": True,
+        }
+    )
+    return bootstrap
 
 
 def read_secret_value(env_map: dict[str, str], base_name: str) -> tuple[str | None, str | None]:
@@ -407,6 +580,12 @@ def render_markdown(summary: dict) -> str:
         f"- Launch command configured: `{doctor['cloud']['launchCommandConfigured']}`",
         f"- OCI CLI path: `{doctor['cloud']['cliBin']}`",
         f"- OCI auth mode: `{doctor['cloud']['authMode']}`",
+        f"- OCI auth source: `{doctor['cloud']['authSource']}`",
+        f"- OCI auth config: `{doctor['cloud']['authConfigPath'] or 'n/a'}`",
+        f"- OCI auth profile: `{doctor['cloud']['authProfile'] or 'n/a'}`",
+        f"- OCI auth key path: `{doctor['cloud']['authKeyPath'] or 'n/a'}`",
+        f"- OCI auth key repaired: `{doctor['cloud']['authKeyRepaired']}`",
+        f"- OCI session env updated: `{doctor['cloud']['sessionEnvUpdated']}`",
         f"- Cloud ready: `{doctor['cloud']['ready']}`",
         *[
             f"- Env file: `{entry['path']}` exists `{entry['exists']}`"
@@ -619,6 +798,32 @@ def main() -> None:
     cloud_inline_env = cloud_manifest.get("inlineEnv", {})
     effective_cloud_env, env_file_summaries = build_effective_env(cloud_env_file_paths, cloud_inline_env)
     canonical_cloud_env, canonical_sources = canonicalize_env(effective_cloud_env)
+    oci_bootstrap = {
+        "source": "n/a",
+        "configPath": None,
+        "profile": None,
+        "keyPath": None,
+        "keyPathRepaired": False,
+        "sessionEnvPath": None,
+        "sessionEnvUpdated": False,
+        "reason": None,
+    }
+    if cloud_provider == "oci":
+        oci_bootstrap = bootstrap_oci_controller_auth(
+            root=root,
+            session_root=session_root,
+            env_file_paths=cloud_env_file_paths,
+            effective_env=effective_cloud_env,
+        )
+        if bool(oci_bootstrap.get("sessionEnvUpdated")):
+            session_env_path = resolve_repo_path(str(oci_bootstrap.get("sessionEnvPath", "")).strip())
+            if session_env_path is not None and all(path.resolve() != session_env_path.resolve() for path in cloud_env_file_paths):
+                cloud_env_file_paths.append(session_env_path)
+            effective_cloud_env, env_file_summaries = build_effective_env(cloud_env_file_paths, cloud_inline_env)
+            canonical_cloud_env, canonical_sources = canonicalize_env(effective_cloud_env)
+            canonical_sources.setdefault("OCI_CLI_AUTH", "session_oci_env")
+            canonical_sources.setdefault("OCI_CLI_CONFIG_FILE", "session_oci_env")
+            canonical_sources.setdefault("OCI_CLI_PROFILE", "session_oci_env")
 
     required_env = [str(entry) for entry in cloud_manifest.get("requiredEnv", default_cloud_env(cloud_provider))]
     optional_env = [str(entry) for entry in cloud_manifest.get("optionalEnv", [])]
@@ -698,6 +903,8 @@ def main() -> None:
                 cloud_reasons.append(
                     "OCI auth is not configured through OCI_CLI_AUTH=instance_principal, OCI_CLI_CONFIG_FILE, or explicit OCI_CLI_* identity variables."
                 )
+            elif oci_bootstrap.get("reason") and not oci_bootstrap.get("sessionEnvUpdated"):
+                cloud_reasons.append(str(oci_bootstrap["reason"]))
         if not hf_ready:
             cloud_reasons.append(
                 "Hugging Face auth is not configured through HF_TOKEN/HUGGINGFACE_TOKEN, HF_TOKEN_FILE, or OCI_Q_TRAINING_HF_TOKEN_SECRET_OCID."
@@ -789,6 +996,13 @@ def main() -> None:
                 "launchCommand": cloud_launch_command,
                 "cliBin": oci_cli_bin,
                 "authMode": oci_auth_mode if cloud_provider == "oci" else "n/a",
+                "authSource": oci_bootstrap.get("source"),
+                "authConfigPath": oci_bootstrap.get("configPath"),
+                "authProfile": oci_bootstrap.get("profile"),
+                "authKeyPath": oci_bootstrap.get("keyPath"),
+                "authKeyRepaired": oci_bootstrap.get("keyPathRepaired"),
+                "sessionEnvPath": oci_bootstrap.get("sessionEnvPath"),
+                "sessionEnvUpdated": oci_bootstrap.get("sessionEnvUpdated"),
                 "reasons": cloud_reasons,
                 "canonicalSources": canonical_sources,
             },

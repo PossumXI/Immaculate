@@ -103,6 +103,8 @@ python training/q/train_q_lora_unsloth.py --config training/q/q_lora_config.exam
 For the OCI controller path specifically:
 
 - use `deploy/oci-training/env/immaculate-q-training.env.example` as the controller and remote-launch template
+- local controller launches should use `OCI_CLI_CONFIG_FILE` plus `OCI_CLI_PROFILE` for API-key auth, while the launched OCI node should stay on instance-principal auth
+- when a local `~/.oci/config` exists, the hybrid session doctor can materialize a corrected controller config and wire it into the session-local `oci-cloud.env`
 - put the OCI launch target OCIDs in that env file or a session-local overlay env file
 - prefer `OCI_Q_TRAINING_HF_TOKEN_SECRET_OCID` and `OCI_Q_TRAINING_WANDB_API_KEY_SECRET_OCID` over plain-text token exports
 - use `deploy/oci-training/scripts/launch-oci-q-training.sh --check` to verify the launch-target shape before a real billable launch

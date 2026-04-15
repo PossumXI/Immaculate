@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-15T04:09:30.304Z",
+  "generatedAt": "2026-04-15T04:23:13.163Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "c4cbb0a5d68b6d0592a2325664014fefefc30422",
-    "gitShortSha": "c4cbb0a",
+    "gitSha": "c962654c79212b424620c7fa91c0a59ecef545b4",
+    "gitShortSha": "c962654",
     "gitBranch": "detached",
-    "buildId": "0.1.0+c4cbb0a",
+    "buildId": "0.1.0+c962654",
     "q": {
       "alias": "Q",
       "providerModel": "Q",
@@ -34,14 +34,14 @@
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-15T03:43:38Z",
+        "generatedAt": "2026-04-15T04:23:00Z",
         "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v1",
         "sessionPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/hybrid-session.json",
         "localStatus": "ready",
         "cloudStatus": "not-configured",
         "cloudProvider": "oci",
         "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1-5e51e00-e16a056e",
-        "immaculateBundleId": "immaculate-orchestration-5e51e00-3dd4365f"
+        "immaculateBundleId": "immaculate-orchestration-c962654-3dd4365f"
       }
     }
   },
@@ -69,22 +69,22 @@
     {
       "label": "Q hybrid training",
       "path": "docs\\wiki\\Q-Hybrid-Training.json",
-      "generatedAt": "2026-04-15T03:43:38Z"
+      "generatedAt": "2026-04-15T04:23:00Z"
     },
     {
       "label": "Q benchmark corpus",
       "path": "docs\\wiki\\Q-Benchmark-Corpus.json",
-      "generatedAt": "2026-04-15T03:43:35Z"
+      "generatedAt": "2026-04-15T04:22:57Z"
     },
     {
       "label": "Q benchmark promotion",
       "path": "docs\\wiki\\Q-Benchmark-Promotion.json",
-      "generatedAt": "2026-04-15T04:09:10Z"
+      "generatedAt": "2026-04-15T04:23:08Z"
     },
     {
       "label": "W&B benchmark export",
       "path": "docs\\wiki\\Benchmark-Wandb-Export.json",
-      "generatedAt": "2026-04-15T03:31:24.375275+00:00"
+      "generatedAt": "2026-04-15T03:45:13.508412+00:00"
     }
   ],
   "output": {

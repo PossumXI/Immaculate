@@ -24,8 +24,8 @@ done
 
 if [[ -f "${DEFAULT_ENV_FILE}" ]]; then
   set -a
-  # shellcheck disable=SC1090
-  . "${DEFAULT_ENV_FILE}"
+  # shellcheck disable=SC1090,SC1091
+  . <(tr -d '\r' < "${DEFAULT_ENV_FILE}")
   set +a
 fi
 

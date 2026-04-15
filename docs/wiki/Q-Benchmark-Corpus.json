@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-04-15T03:43:35Z",
+  "generatedAt": "2026-04-15T04:22:57Z",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "5e51e002d467540876a634002a9951c0eec64479",
-    "gitShortSha": "5e51e00",
-    "buildId": "0.1.0+5e51e00",
+    "gitSha": "c962654c79212b424620c7fa91c0a59ecef545b4",
+    "gitShortSha": "c962654",
+    "buildId": "0.1.0+c962654",
     "qTrainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1-5e51e00-e16a056e"
   },
   "rowType": "decision_triplet",
