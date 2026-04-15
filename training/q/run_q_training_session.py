@@ -766,8 +766,10 @@ def main() -> None:
     if dataset_path is None or not dataset_path.exists():
         raise ValueError("The resolved train_dataset_path does not exist.")
 
-    locked_dataset_path = Path(training_lock.get("run", {}).get("trainDatasetPath", "")).resolve()
-    if str(dataset_path.resolve()) != str(locked_dataset_path):
+    locked_dataset_path = resolve_repo_path(str(training_lock.get("run", {}).get("trainDatasetPath", "")).strip())
+    if locked_dataset_path is None:
+        raise ValueError("Training lock does not carry a resolvable trainDatasetPath.")
+    if str(dataset_path.resolve()) != str(locked_dataset_path.resolve()):
         raise ValueError("Session config and training lock disagree on the dataset path.")
     if str(config.get("base_model")) != str(training_lock.get("run", {}).get("baseModel")):
         raise ValueError("Session config and training lock disagree on the Q lineage source.")

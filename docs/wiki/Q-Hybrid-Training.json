@@ -1,38 +1,38 @@
 {
-  "generatedAt": "2026-04-15T04:39:39Z",
-  "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v1",
-  "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/hybrid-session.manifest.json",
+  "generatedAt": "2026-04-15T12:38:12Z",
+  "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
+  "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.manifest.json",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "72ce54cf603255b8e2d36265eb5fa20a4e48ff07",
-    "gitShortSha": "72ce54c",
-    "buildId": "0.1.0+72ce54c"
+    "gitSha": "3ce07ac73710752a703f3510c3b93949bf69f7b4",
+    "gitShortSha": "3ce07ac",
+    "buildId": "0.1.0+3ce07ac"
   },
   "q": {
-    "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1-5e51e00-e16a056e",
+    "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-3ce07ac-cee52e2d",
     "trainingLockPath": ".training-output/q/latest-training-lock.json",
-    "configPath": ".training-output/q/q-lora-config-longctx-cur-fnv1a-8f551a5c-bench-v1.json",
+    "configPath": ".training-output/q/q-lora-config-longctx-cur-fnv1a-8f551a5c-bench-v2.json",
     "modelId": "Q",
-    "trainDatasetPath": ".training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c-bench-v1.jsonl",
-    "trainDatasetRowCount": 1023,
-    "mixManifestPath": ".training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c-bench-v1.manifest.json",
+    "trainDatasetPath": ".training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c-bench-v2.jsonl",
+    "trainDatasetRowCount": 1070,
+    "mixManifestPath": ".training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c-bench-v2.manifest.json",
     "curationRunId": "cur-fnv1a-8f551a5c",
     "benchmarkCorpusPath": "docs/wiki/Q-Benchmark-Corpus.json",
     "benchmarkCorpusJsonlPath": ".training-output/q/q-benchmark-corpus.jsonl",
-    "benchmarkCorpusRecordCount": 10,
+    "benchmarkCorpusRecordCount": 57,
     "failureCorpusPath": "docs/wiki/Q-Failure-Corpus.json"
   },
   "immaculate": {
-    "bundleId": "immaculate-orchestration-72ce54c-3dd4365f",
-    "bundlePath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-cur-fnv1a-8f551a5c-bench-v1.json",
+    "bundleId": "immaculate-orchestration-3ce07ac-3dd4365f",
+    "bundlePath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-cur-fnv1a-8f551a5c-bench-v2.json",
     "signalCount": 14
   },
   "cloudBundle": {
-    "bundleId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v1-72ce54c",
-    "archivePath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/cloud-bundle/q-hybrid-cur-fnv1a-8f551a5c-bench-v1-cloud-bundle.tar.gz",
-    "archiveSha256": "41d2d559a4e228c52de7190f1e3ce9f28b9487ea528eb929ad67e33cfaf78b99",
-    "archiveSizeBytes": 2211313,
-    "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/cloud-bundle/bundle-manifest.json",
+    "bundleId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2-3ce07ac",
+    "archivePath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/cloud-bundle/q-hybrid-cur-fnv1a-8f551a5c-bench-v2-cloud-bundle.tar.gz",
+    "archiveSha256": "fa7a6d51804b493756344cbb27e905ab6e96d98108e34326088ca5692207f3a4",
+    "archiveSizeBytes": 2218401,
+    "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/cloud-bundle/bundle-manifest.json",
     "fileCount": 10,
     "repoRemoteUrl": "https://github.com/PossumXI/Immaculate.git"
   },
@@ -61,7 +61,7 @@
           "exists": true
         },
         {
-          "path": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/oci-cloud.env",
+          "path": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/oci-cloud.env",
           "exists": true
         }
       ],
@@ -106,11 +106,11 @@
         "bash",
         "deploy/oci-training/scripts/launch-oci-q-training.sh",
         "--session-manifest",
-        ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/hybrid-session.manifest.json",
+        ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.manifest.json",
         "--env-file",
         "C:/Users/Knight/Desktop/cheeks/Asgard/.env",
         "--env-file",
-        ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/oci-cloud.env"
+        ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/oci-cloud.env"
       ],
       "cliBin": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.tools/oci-cli-venv/Scripts/oci.exe",
       "authMode": "config_file",
@@ -119,12 +119,24 @@
       "authProfile": "DEFAULT",
       "authKeyPath": "C:/Users/Knight/.oci/oci_api_key.pem",
       "authKeyRepaired": false,
-      "sessionEnvPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/oci-cloud.env",
+      "sessionEnvPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/oci-cloud.env",
       "sessionEnvUpdated": true,
       "region": "us-ashburn-1",
+      "subscribedRegions": [
+        {
+          "name": "us-ashburn-1",
+          "key": "IAD",
+          "isHomeRegion": true,
+          "status": "READY"
+        }
+      ],
+      "subscribedRegionNames": [
+        "us-ashburn-1 (IAD) [home]"
+      ],
       "availableGpuShapes": [],
       "reasons": [
         "Missing cloud launch target env: OCI_SHAPE",
+        "Only subscribed OCI region visible to this tenancy is us-ashburn-1 (IAD) [home].",
         "No GPU shapes are available in OCI region us-ashburn-1 for the current controller auth."
       ],
       "canonicalSources": {
@@ -151,16 +163,17 @@
     "local": {
       "enabled": true,
       "mode": "dry-run",
-      "status": "ready",
+      "status": "completed",
       "command": [
         "C:\\Users\\Knight\\AppData\\Local\\Microsoft\\WindowsApps\\python.EXE",
-        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\training\\q\\train_q_lora_unsloth.py",
+        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway-push-bench-v2-clean\\training\\q\\train_q_lora_unsloth.py",
         "--config",
-        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-lora-config-longctx-cur-fnv1a-8f551a5c-bench-v1.json",
+        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway-push-bench-v2-clean\\.training-output\\q\\q-lora-config-longctx-cur-fnv1a-8f551a5c-bench-v2.json",
         "--session-manifest",
-        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\sessions\\q-hybrid-cur-fnv1a-8f551a5c-bench-v1\\hybrid-session.manifest.json",
+        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway-push-bench-v2-clean\\.training-output\\q\\sessions\\q-hybrid-cur-fnv1a-8f551a5c-bench-v2\\hybrid-session.manifest.json",
         "--dry-run"
-      ]
+      ],
+      "exitCode": 0
     },
     "cloud": {
       "enabled": true,
@@ -171,17 +184,17 @@
         "bash",
         "deploy/oci-training/scripts/launch-oci-q-training.sh",
         "--session-manifest",
-        ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/hybrid-session.manifest.json",
+        ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.manifest.json",
         "--env-file",
         "C:/Users/Knight/Desktop/cheeks/Asgard/.env",
         "--env-file",
-        ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/oci-cloud.env"
+        ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/oci-cloud.env"
       ]
     }
   },
   "output": {
-    "sessionJsonPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/hybrid-session.json",
-    "sessionMarkdownPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/hybrid-session.md",
+    "sessionJsonPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.json",
+    "sessionMarkdownPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.md",
     "wikiJsonPath": "docs/wiki/Q-Hybrid-Training.json",
     "wikiMarkdownPath": "docs/wiki/Q-Hybrid-Training.md"
   }

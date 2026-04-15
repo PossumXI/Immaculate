@@ -3,11 +3,11 @@
 This page is generated from the tracked Q benchmark/report surfaces.
 It records the benchmark-derived corpus currently attached to Q. It is not a readiness gate and it does not replace the strict failure-only Q-Failure-Corpus surface.
 
-- Generated: `2026-04-15T04:39:33Z`
-- Release: `0.1.0+72ce54c`
-- Repo commit: `72ce54c`
-- Q training bundle: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1-5e51e00-e16a056e`
-- Records: `10`
+- Generated: `2026-04-15T12:38:04Z`
+- Release: `0.1.0+3ce07ac`
+- Repo commit: `3ce07ac`
+- Q training bundle: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-3ce07ac-cee52e2d`
+- Records: `57`
 - Row type: `decision_triplet`
 - JSONL: `.training-output/q/q-benchmark-corpus.jsonl`
 
@@ -16,6 +16,8 @@ It records the benchmark-derived corpus currently attached to Q. It is not a rea
 - model-comparison: `4` via `docs/wiki/Model-Benchmark-Comparison.json`
 - bridgebench: `4` via `docs/wiki/BridgeBench.json`
 - harbor-terminal-bench: `2` via `docs/wiki/Harbor-Terminal-Bench.json`
+- bridgebench-soak: `1` via `docs/wiki/BridgeBench-Soak.json`
+- harbor-terminal-bench-soak: `46` via `docs/wiki/Harbor-Terminal-Bench-Soak.json`
 
 ## Truth Boundary
 

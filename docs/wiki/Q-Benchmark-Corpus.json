@@ -1,23 +1,27 @@
 {
-  "generatedAt": "2026-04-15T04:39:33Z",
+  "generatedAt": "2026-04-15T12:38:04Z",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "72ce54cf603255b8e2d36265eb5fa20a4e48ff07",
-    "gitShortSha": "72ce54c",
-    "buildId": "0.1.0+72ce54c",
-    "qTrainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1-5e51e00-e16a056e"
+    "gitSha": "3ce07ac73710752a703f3510c3b93949bf69f7b4",
+    "gitShortSha": "3ce07ac",
+    "buildId": "0.1.0+3ce07ac",
+    "qTrainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-3ce07ac-cee52e2d"
   },
   "rowType": "decision_triplet",
-  "recordCount": 10,
+  "recordCount": 57,
   "sourceCounts": {
     "model-comparison": 4,
     "bridgebench": 4,
-    "harbor-terminal-bench": 2
+    "harbor-terminal-bench": 2,
+    "bridgebench-soak": 1,
+    "harbor-terminal-bench-soak": 46
   },
   "sources": {
     "model-comparison": "docs/wiki/Model-Benchmark-Comparison.json",
     "bridgebench": "docs/wiki/BridgeBench.json",
-    "harbor-terminal-bench": "docs/wiki/Harbor-Terminal-Bench.json"
+    "harbor-terminal-bench": "docs/wiki/Harbor-Terminal-Bench.json",
+    "bridgebench-soak": "docs/wiki/BridgeBench-Soak.json",
+    "harbor-terminal-bench-soak": "docs/wiki/Harbor-Terminal-Bench-Soak.json"
   },
   "output": {
     "jsonlPath": ".training-output/q/q-benchmark-corpus.jsonl",

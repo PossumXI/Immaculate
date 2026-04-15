@@ -184,16 +184,16 @@ async function readTrainingLockSummary(): Promise<QTrainingLockSummary | undefin
     bundleId: payload.bundleId,
     runName: payload.run?.runName,
     aliasName: payload.run?.aliasName,
-    trainDatasetPath: payload.run?.trainDatasetPath,
+    trainDatasetPath: normalizeReportedPath(payload.run?.trainDatasetPath),
     trainDatasetSha256: payload.run?.trainDatasetSha256,
     trainDatasetRowCount: payload.run?.trainDatasetRowCount,
-    mixManifestPath: payload.mixManifest?.path,
+    mixManifestPath: normalizeReportedPath(payload.mixManifest?.path),
     mixManifestSha256: payload.mixManifest?.sha256,
     mixSupplementalCount: payload.mixManifest?.supplemental?.length ?? 0,
     mixSupplementalPaths: payload.mixManifest?.supplemental
       ?.map((entry) => normalizeReportedPath(entry.path))
       .filter((entry): entry is string => Boolean(entry)),
-    curationRunPath: payload.curation?.runPath,
+    curationRunPath: normalizeReportedPath(payload.curation?.runPath),
     curationRunId: payload.curation?.runId,
     lockPath: path.relative(REPO_ROOT, lockPath).replaceAll("\\", "/")
   };

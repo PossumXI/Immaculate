@@ -2,6 +2,37 @@ import argparse
 import json
 from pathlib import Path
 
+
+def repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def rebase_repo_owned_path(root: Path, candidate: Path) -> Path:
+    resolved = candidate.expanduser().resolve(strict=False)
+    try:
+        resolved.relative_to(root.resolve())
+        return resolved
+    except ValueError:
+        pass
+    repo_markers = (".training-output", "training", "docs", "deploy", "benchmarks")
+    parts = list(resolved.parts)
+    for marker in repo_markers:
+        if marker not in parts:
+            continue
+        marker_index = parts.index(marker)
+        return (root / Path(*parts[marker_index:])).resolve(strict=False)
+    return resolved
+
+
+def resolve_repo_path(path_value: str | None) -> Path | None:
+    if not path_value:
+        return None
+    candidate = Path(path_value).expanduser()
+    if candidate.is_absolute():
+        return rebase_repo_owned_path(repo_root(), candidate)
+    return (repo_root() / candidate).resolve(strict=False)
+
+
 def load_config(path_value: str) -> dict:
     return json.loads(Path(path_value).read_text(encoding="utf-8"))
 
@@ -61,8 +92,9 @@ def main() -> None:
             "Run build_q_text_dataset.py and build_q_mixture.py before training."
         )
     if training_lock:
-        locked_dataset_path = training_lock.get("run", {}).get("trainDatasetPath")
-        if locked_dataset_path and str(Path(locked_dataset_path).resolve()) != str(Path(dataset_path).resolve()):
+        locked_dataset_path = resolve_repo_path(training_lock.get("run", {}).get("trainDatasetPath"))
+        resolved_dataset_path = resolve_repo_path(str(dataset_path))
+        if locked_dataset_path and resolved_dataset_path and str(locked_dataset_path.resolve()) != str(resolved_dataset_path.resolve()):
             raise ValueError("training_lock_path does not match train_dataset_path.")
         locked_base_model = training_lock.get("run", {}).get("baseModel")
         if locked_base_model and locked_base_model != config.get("base_model"):
@@ -73,8 +105,9 @@ def main() -> None:
             expected_bundle_id = session_q.get("trainingBundleId")
             if expected_bundle_id and training_lock and expected_bundle_id != training_lock.get("bundleId"):
                 raise ValueError("session-manifest trainingBundleId does not match training_lock_path.")
-            expected_config = session_q.get("configPath")
-            if expected_config and str(Path(expected_config).resolve()) != str(Path(args.config).resolve()):
+            expected_config = resolve_repo_path(session_q.get("configPath"))
+            resolved_config_path = resolve_repo_path(args.config)
+            if expected_config and resolved_config_path and str(expected_config.resolve()) != str(resolved_config_path.resolve()):
                 raise ValueError("session-manifest configPath does not match --config.")
         session_id = session_manifest.get("sessionId")
         if not session_id:
