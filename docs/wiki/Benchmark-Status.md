@@ -6,7 +6,7 @@ This page is the tracked public benchmark surface for Immaculate.
 - Owner: Gaetano Comparcola (PossumX)
 - Role: Program Originator, Systems Architect, and Engineering Lead
 - Website: https://PossumX.dev
-- Updated: 2026-04-15T15:45:51.619009+00:00
+- Updated: 2026-04-15T16:01:44.803311+00:00
 
 Raw benchmark ledgers remain generated runtime artifacts under `benchmarks/` and stay out of git.
 This page only carries the public summary and links for the latest published run per pack.
@@ -15,48 +15,48 @@ This page only carries the public summary and links for the latest published run
 
 ### Latency Smoke
 
-- Suite: `immaculate-benchmark-2026-04-15T15-45-27-433Z`
-- Generated: `2026-04-15T15:45:27.433Z`
-- Published: `2026-04-15T15:45:33.694485+00:00`
+- Suite: `immaculate-benchmark-2026-04-15T16-01-16-893Z`
+- Generated: `2026-04-15T16:01:16.893Z`
+- Published: `2026-04-15T16:01:23.306054+00:00`
 - Assertions: `117/117` passed
 - Run kind: `smoke`
 - Integrity: `verified`
 - Recovery mode: `checkpoint`
 - Planned duration: `12800` ms
-- Wall-clock duration: `407.24` ms
+- Wall-clock duration: `403.59` ms
 - Hardware: `{"host":"runnervm35a4x","platform":"linux","arch":"x64","osVersion":"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026","cpuModel":"AMD EPYC 7763 64-Core Processor","cpuCount":4,"memoryGiB":15.62,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
-- W&B run: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/1mnu40nk
-- W&B artifact: `immaculate-immaculate-benchmark-2026-04-15T15-45-27-433Z` (`benchmark-report`)
+- W&B run: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/cfctrjr7
+- W&B artifact: `immaculate-immaculate-benchmark-2026-04-15T16-01-16-893Z` (`benchmark-report`)
 
 ### Durability Recovery
 
-- Suite: `immaculate-benchmark-2026-04-15T15-45-26-986Z`
-- Generated: `2026-04-15T15:45:26.986Z`
-- Published: `2026-04-15T15:45:42.741330+00:00`
+- Suite: `immaculate-benchmark-2026-04-15T16-01-16-459Z`
+- Generated: `2026-04-15T16:01:16.459Z`
+- Published: `2026-04-15T16:01:34.629860+00:00`
 - Assertions: `117/117` passed
 - Run kind: `smoke`
 - Integrity: `verified`
 - Recovery mode: `checkpoint`
 - Planned duration: `20800` ms
-- Wall-clock duration: `431.87` ms
+- Wall-clock duration: `419.41` ms
 - Hardware: `{"host":"runnervm35a4x","platform":"linux","arch":"x64","osVersion":"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026","cpuModel":"AMD EPYC 7763 64-Core Processor","cpuCount":4,"memoryGiB":15.62,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
-- W&B run: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/nah21bu4
-- W&B artifact: `immaculate-immaculate-benchmark-2026-04-15T15-45-26-986Z` (`benchmark-report`)
+- W&B run: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/f4b78ixu
+- W&B artifact: `immaculate-immaculate-benchmark-2026-04-15T16-01-16-459Z` (`benchmark-report`)
 
 ### Substrate Readiness
 
-- Suite: `immaculate-benchmark-2026-04-15T15-45-26-331Z`
-- Generated: `2026-04-15T15:45:26.331Z`
-- Published: `2026-04-15T15:45:51.618987+00:00`
+- Suite: `immaculate-benchmark-2026-04-15T16-01-15-831Z`
+- Generated: `2026-04-15T16:01:15.831Z`
+- Published: `2026-04-15T16:01:44.803294+00:00`
 - Assertions: `117/117` passed
 - Run kind: `smoke`
 - Integrity: `verified`
 - Recovery mode: `checkpoint`
 - Planned duration: `12800` ms
-- Wall-clock duration: `629.35` ms
+- Wall-clock duration: `602.81` ms
 - Hardware: `{"host":"runnervm35a4x","platform":"linux","arch":"x64","osVersion":"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026","cpuModel":"AMD EPYC 7763 64-Core Processor","cpuCount":4,"memoryGiB":15.62,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
-- W&B run: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/y2mg49a0
-- W&B artifact: `immaculate-immaculate-benchmark-2026-04-15T15-45-26-331Z` (`benchmark-report`)
+- W&B run: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/u95njlls
+- W&B artifact: `immaculate-immaculate-benchmark-2026-04-15T16-01-15-831Z` (`benchmark-report`)
 
 ### Durability Torture
 
