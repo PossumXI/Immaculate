@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-04-15T19:46:41.746458+00:00",
+  "exportedAt": "2026-04-15T19:51:54.430383+00:00",
   "entity": "arobi-arobi-technology-alliance",
   "project": "immaculate",
   "projectUrl": "https://wandb.ai/arobi-arobi-technology-alliance/immaculate",
@@ -10,12 +10,12 @@
     {
       "packId": "latency-soak",
       "packLabel": "Latency Smoke",
-      "suiteId": "immaculate-benchmark-2026-04-15T19-46-02-636Z",
-      "generatedAt": "2026-04-15T19:46:02.636Z",
-      "publishedAt": "2026-04-15T19:46:08.338772+00:00",
-      "runId": "883enjbt",
-      "runName": "immaculate-benchmark-2026-04-15T19-46-02-636Z",
-      "runUrl": "https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/883enjbt",
+      "suiteId": "immaculate-benchmark-2026-04-15T19-51-06-982Z",
+      "generatedAt": "2026-04-15T19:51:06.982Z",
+      "publishedAt": "2026-04-15T19:51:12.499643+00:00",
+      "runId": "zmx6q5ct",
+      "runName": "immaculate-benchmark-2026-04-15T19-51-06-982Z",
+      "runUrl": "https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/zmx6q5ct",
       "runState": "finished",
       "summary": {
         "benchmark/run_kind": "smoke",
@@ -23,14 +23,14 @@
         "benchmark/failed_assertions": 0,
         "benchmark/integrity_status": "verified",
         "benchmark/planned_duration_ms": 12800,
-        "benchmark/wall_clock_duration_ms": 397.09,
-        "benchmark/hardware": "{\"host\":\"runnervmeorf1\",\"platform\":\"linux\",\"arch\":\"x64\",\"osVersion\":\"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026\",\"cpuModel\":\"AMD EPYC 9V74 80-Core Processor\",\"cpuCount\":4,\"memoryGiB\":15.61,\"diskKind\":\"HDD (Virtual Disk)\",\"nodeVersion\":\"v22.22.2\"}",
+        "benchmark/wall_clock_duration_ms": 438.11,
+        "benchmark/hardware": "{\"host\":\"runnervm35a4x\",\"platform\":\"linux\",\"arch\":\"x64\",\"osVersion\":\"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026\",\"cpuModel\":\"AMD EPYC 9V74 80-Core Processor\",\"cpuCount\":4,\"memoryGiB\":15.61,\"diskKind\":\"HDD (Virtual Disk)\",\"nodeVersion\":\"v22.22.2\"}",
         "benchmark/owner": "Gaetano Comparcola (PossumX)",
         "benchmark/role": "Program Originator, Systems Architect, and Engineering Lead",
         "benchmark/website": "https://PossumX.dev"
       },
       "artifact": {
-        "name": "immaculate-immaculate-benchmark-2026-04-15T19-46-02-636Z:v0",
+        "name": "immaculate-immaculate-benchmark-2026-04-15T19-51-06-982Z:v0",
         "type": "benchmark-report",
         "aliases": [
           "latest"
@@ -42,7 +42,7 @@
           "website": "https://PossumX.dev",
           "hardware": {
             "arch": "x64",
-            "host": "runnervmeorf1",
+            "host": "runnervm35a4x",
             "cpuCount": 4,
             "cpuModel": "AMD EPYC 9V74 80-Core Processor",
             "diskKind": "HDD (Virtual Disk)",
@@ -52,9 +52,9 @@
             "nodeVersion": "v22.22.2"
           },
           "run_kind": "smoke",
-          "suite_id": "immaculate-benchmark-2026-04-15T19-46-02-636Z",
+          "suite_id": "immaculate-benchmark-2026-04-15T19-51-06-982Z",
           "pack_label": "Latency Smoke",
-          "generated_at": "2026-04-15T19:46:02.636Z",
+          "generated_at": "2026-04-15T19:51:06.982Z",
           "contributions": [
             "Defined the three-plane orchestration model across reflex, cognitive, and offline execution.",
             "Set the requirement that Immaculate be observable, replayable, benchmarked, and durable before it scales outward.",
@@ -62,7 +62,7 @@
           ],
           "recovery_mode": "checkpoint",
           "integrity_status": "verified",
-          "total_duration_ms": 397.09,
+          "total_duration_ms": 438.11,
           "planned_duration_ms": 12800
         }
       }
@@ -70,12 +70,12 @@
     {
       "packId": "durability-recovery",
       "packLabel": "Durability Recovery",
-      "suiteId": "immaculate-benchmark-2026-04-15T19-46-02-196Z",
-      "generatedAt": "2026-04-15T19:46:02.196Z",
-      "publishedAt": "2026-04-15T19:46:25.431965+00:00",
-      "runId": "a40vpc6c",
-      "runName": "immaculate-benchmark-2026-04-15T19-46-02-196Z",
-      "runUrl": "https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/a40vpc6c",
+      "suiteId": "immaculate-benchmark-2026-04-15T19-51-06-548Z",
+      "generatedAt": "2026-04-15T19:51:06.548Z",
+      "publishedAt": "2026-04-15T19:51:20.445916+00:00",
+      "runId": "mdlq3nji",
+      "runName": "immaculate-benchmark-2026-04-15T19-51-06-548Z",
+      "runUrl": "https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/mdlq3nji",
       "runState": "finished",
       "summary": {
         "benchmark/run_kind": "smoke",
@@ -83,14 +83,14 @@
         "benchmark/failed_assertions": 0,
         "benchmark/integrity_status": "verified",
         "benchmark/planned_duration_ms": 20800,
-        "benchmark/wall_clock_duration_ms": 423.38,
-        "benchmark/hardware": "{\"host\":\"runnervmeorf1\",\"platform\":\"linux\",\"arch\":\"x64\",\"osVersion\":\"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026\",\"cpuModel\":\"AMD EPYC 9V74 80-Core Processor\",\"cpuCount\":4,\"memoryGiB\":15.61,\"diskKind\":\"HDD (Virtual Disk)\",\"nodeVersion\":\"v22.22.2\"}",
+        "benchmark/wall_clock_duration_ms": 416.31,
+        "benchmark/hardware": "{\"host\":\"runnervm35a4x\",\"platform\":\"linux\",\"arch\":\"x64\",\"osVersion\":\"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026\",\"cpuModel\":\"AMD EPYC 9V74 80-Core Processor\",\"cpuCount\":4,\"memoryGiB\":15.61,\"diskKind\":\"HDD (Virtual Disk)\",\"nodeVersion\":\"v22.22.2\"}",
         "benchmark/owner": "Gaetano Comparcola (PossumX)",
         "benchmark/role": "Program Originator, Systems Architect, and Engineering Lead",
         "benchmark/website": "https://PossumX.dev"
       },
       "artifact": {
-        "name": "immaculate-immaculate-benchmark-2026-04-15T19-46-02-196Z:v0",
+        "name": "immaculate-immaculate-benchmark-2026-04-15T19-51-06-548Z:v0",
         "type": "benchmark-report",
         "aliases": [
           "latest"
@@ -102,7 +102,7 @@
           "website": "https://PossumX.dev",
           "hardware": {
             "arch": "x64",
-            "host": "runnervmeorf1",
+            "host": "runnervm35a4x",
             "cpuCount": 4,
             "cpuModel": "AMD EPYC 9V74 80-Core Processor",
             "diskKind": "HDD (Virtual Disk)",
@@ -112,9 +112,9 @@
             "nodeVersion": "v22.22.2"
           },
           "run_kind": "smoke",
-          "suite_id": "immaculate-benchmark-2026-04-15T19-46-02-196Z",
+          "suite_id": "immaculate-benchmark-2026-04-15T19-51-06-548Z",
           "pack_label": "Durability Recovery",
-          "generated_at": "2026-04-15T19:46:02.196Z",
+          "generated_at": "2026-04-15T19:51:06.548Z",
           "contributions": [
             "Defined the three-plane orchestration model across reflex, cognitive, and offline execution.",
             "Set the requirement that Immaculate be observable, replayable, benchmarked, and durable before it scales outward.",
@@ -122,7 +122,7 @@
           ],
           "recovery_mode": "checkpoint",
           "integrity_status": "verified",
-          "total_duration_ms": 423.38,
+          "total_duration_ms": 416.31,
           "planned_duration_ms": 20800
         }
       }
@@ -130,12 +130,12 @@
     {
       "packId": "substrate-readiness",
       "packLabel": "Substrate Readiness",
-      "suiteId": "immaculate-benchmark-2026-04-15T19-46-01-566Z",
-      "generatedAt": "2026-04-15T19:46:01.566Z",
-      "publishedAt": "2026-04-15T19:46:32.687640+00:00",
-      "runId": "gy88j8rd",
-      "runName": "immaculate-benchmark-2026-04-15T19-46-01-566Z",
-      "runUrl": "https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/gy88j8rd",
+      "suiteId": "immaculate-benchmark-2026-04-15T19-51-05-928Z",
+      "generatedAt": "2026-04-15T19:51:05.928Z",
+      "publishedAt": "2026-04-15T19:51:33.460398+00:00",
+      "runId": "dc12gk3c",
+      "runName": "immaculate-benchmark-2026-04-15T19-51-05-928Z",
+      "runUrl": "https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/dc12gk3c",
       "runState": "finished",
       "summary": {
         "benchmark/run_kind": "smoke",
@@ -143,14 +143,14 @@
         "benchmark/failed_assertions": 0,
         "benchmark/integrity_status": "verified",
         "benchmark/planned_duration_ms": 12800,
-        "benchmark/wall_clock_duration_ms": 606.76,
-        "benchmark/hardware": "{\"host\":\"runnervmeorf1\",\"platform\":\"linux\",\"arch\":\"x64\",\"osVersion\":\"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026\",\"cpuModel\":\"AMD EPYC 9V74 80-Core Processor\",\"cpuCount\":4,\"memoryGiB\":15.61,\"diskKind\":\"HDD (Virtual Disk)\",\"nodeVersion\":\"v22.22.2\"}",
+        "benchmark/wall_clock_duration_ms": 596.5,
+        "benchmark/hardware": "{\"host\":\"runnervm35a4x\",\"platform\":\"linux\",\"arch\":\"x64\",\"osVersion\":\"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026\",\"cpuModel\":\"AMD EPYC 9V74 80-Core Processor\",\"cpuCount\":4,\"memoryGiB\":15.61,\"diskKind\":\"HDD (Virtual Disk)\",\"nodeVersion\":\"v22.22.2\"}",
         "benchmark/owner": "Gaetano Comparcola (PossumX)",
         "benchmark/role": "Program Originator, Systems Architect, and Engineering Lead",
         "benchmark/website": "https://PossumX.dev"
       },
       "artifact": {
-        "name": "immaculate-immaculate-benchmark-2026-04-15T19-46-01-566Z:v0",
+        "name": "immaculate-immaculate-benchmark-2026-04-15T19-51-05-928Z:v0",
         "type": "benchmark-report",
         "aliases": [
           "latest"
@@ -162,7 +162,7 @@
           "website": "https://PossumX.dev",
           "hardware": {
             "arch": "x64",
-            "host": "runnervmeorf1",
+            "host": "runnervm35a4x",
             "cpuCount": 4,
             "cpuModel": "AMD EPYC 9V74 80-Core Processor",
             "diskKind": "HDD (Virtual Disk)",
@@ -172,9 +172,9 @@
             "nodeVersion": "v22.22.2"
           },
           "run_kind": "smoke",
-          "suite_id": "immaculate-benchmark-2026-04-15T19-46-01-566Z",
+          "suite_id": "immaculate-benchmark-2026-04-15T19-51-05-928Z",
           "pack_label": "Substrate Readiness",
-          "generated_at": "2026-04-15T19:46:01.566Z",
+          "generated_at": "2026-04-15T19:51:05.928Z",
           "contributions": [
             "Defined the three-plane orchestration model across reflex, cognitive, and offline execution.",
             "Set the requirement that Immaculate be observable, replayable, benchmarked, and durable before it scales outward.",
@@ -182,7 +182,7 @@
           ],
           "recovery_mode": "checkpoint",
           "integrity_status": "verified",
-          "total_duration_ms": 606.76,
+          "total_duration_ms": 596.5,
           "planned_duration_ms": 12800
         }
       }
