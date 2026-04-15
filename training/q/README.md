@@ -137,6 +137,14 @@ The active workaround cloud lane can also run through Hugging Face Jobs:
 - treat `docs/wiki/HF-Jobs-Training.md` as the truth surface for auth, staged bundle state, visible hardware, and any billing blocker
 - keep the session doctor as the source of truth for whether the HF Jobs lane is actually ready to launch
 
+The active session can also emit a free supplemental Colab lane:
+
+- use `deploy/colab/env/immaculate-q-colab.env.example` as the non-secret reference
+- export the tracked notebook with `npm run q:colab:export -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json`
+- provide `HF_TOKEN` in Colab so the staged bundle can be pulled from the tracked dataset repo
+- let the notebook rebuild the Immaculate bundle and run the Q dry-run on any runtime, then only allow the bounded Q micro-train when Colab exposes a large enough GPU
+- treat `docs/wiki/Colab-Free-Training.md` as the truth surface for what the free lane can honestly do
+
 ## Stronger Current Training Direction
 
 The next truthful Q run should emphasize:

@@ -58,6 +58,7 @@ If you only read one generated page before diving deeper, read [[Release-Surface
 - [[Q-Benchmark-Sweep-60m]] records the stitched 60-minute Q and Immaculate benchmark surface across W&B, BridgeBench, and Harbor
 - [[Q-Hybrid-Training]] records the latest tracked hybrid training session for `Q` plus the paired Immaculate orchestration bundle and cloud-readiness truth
 - [[HF-Jobs-Training]] records the authenticated Hugging Face Jobs cloud lane, staged bundle path, visible hardware, and any billing blocker without pretending a cloud run happened
+- [[Colab-Free-Training]] records the free supplemental Colab lane that replays the same session bundle for doctoring, Immaculate bundle regeneration, and bounded Q micro-trains
 - [[OCI-GPU-Advisor]] records the verified subscribed-region OCI GPU inventory plus the next launch recommendation for the active Q session
 - [[OCI-Region-Capacity]] records the real tenancy-level OCI region subscription attempts and any hard subscribed-region ceiling blocking the next GPU move
 - [[OCI-Q-Training]] tracks the OCI cloud launcher, bundle-staging path, and Vault-oriented training boundary for the Q fine-tune lane

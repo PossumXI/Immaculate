@@ -1008,6 +1008,7 @@ def render_markdown(summary: dict) -> str:
     doctor = summary["doctor"]
     cloud_bundle = summary["cloudBundle"]
     hf_jobs = summary.get("hfJobsTraining", {})
+    colab_free = summary.get("colabFreeTraining", {})
     oci_gpu_advisor = summary.get("ociGpuAdvisor", {})
     oci_region_capacity = summary.get("ociRegionCapacity", {})
     recommended_launch_target = oci_gpu_advisor.get("recommendedLaunchTarget", {}) if isinstance(oci_gpu_advisor, dict) else {}
@@ -1027,6 +1028,7 @@ def render_markdown(summary: dict) -> str:
         f"- Dataset rows: `{q['trainDatasetRowCount']}`",
         f"- Immaculate orchestration bundle: `{immaculate['bundleId']}`",
         f"- HF Jobs training surface: `{summary['output'].get('hfJobsTrainingMarkdownPath', 'docs/wiki/HF-Jobs-Training.md')}`",
+        f"- Colab free training surface: `{summary['output'].get('colabFreeTrainingMarkdownPath', 'docs/wiki/Colab-Free-Training.md')}`",
         f"- OCI GPU advisor: `{summary['output'].get('ociGpuAdvisorMarkdownPath', 'docs/wiki/OCI-GPU-Advisor.md')}`",
         f"- OCI region capacity probe: `{summary['output'].get('ociRegionCapacityMarkdownPath', 'docs/wiki/OCI-Region-Capacity.md')}`",
         "",
@@ -1095,6 +1097,15 @@ def render_markdown(summary: dict) -> str:
                 f"- Recommended next step: {hf_jobs.get('summary', {}).get('recommendedNextStep', 'n/a') if isinstance(hf_jobs, dict) else 'n/a'}",
                 f"- Staged archive path: `{hf_jobs.get('stagedBundle', {}).get('archiveRepoPath', 'n/a') if isinstance(hf_jobs, dict) else 'n/a'}`",
                 f"- Staged manifest path: `{hf_jobs.get('stagedBundle', {}).get('manifestRepoPath', 'n/a') if isinstance(hf_jobs, dict) else 'n/a'}`",
+                "",
+                "## Colab Free Surface",
+                "",
+                f"- Recommended next step: {colab_free.get('summary', {}).get('recommendedNextStep', 'n/a') if isinstance(colab_free, dict) else 'n/a'}",
+                f"- Notebook path: `{colab_free.get('notebook', {}).get('path', 'n/a') if isinstance(colab_free, dict) else 'n/a'}`",
+                f"- Open in Colab: `{colab_free.get('notebook', {}).get('openInColabUrl', 'n/a') if isinstance(colab_free, dict) else 'n/a'}`",
+                f"- Micro-train max steps: `{colab_free.get('microTrain', {}).get('maxSteps', 'n/a') if isinstance(colab_free, dict) else 'n/a'}`",
+                f"- Micro-train max sequence length: `{colab_free.get('microTrain', {}).get('maxSeqLength', 'n/a') if isinstance(colab_free, dict) else 'n/a'}`",
+                f"- Minimum GPU memory for real train: `{colab_free.get('microTrain', {}).get('minGpuMemoryGb', 'n/a')} GB`" if isinstance(colab_free, dict) else "- Minimum GPU memory for real train: `n/a`",
             ]
         )
     else:
@@ -1258,6 +1269,12 @@ def main() -> None:
     hf_jobs_training_markdown_path = resolve_repo_path(str(artifacts.get("hfJobsTrainingMarkdownPath", "")).strip()) or (
         root / "docs" / "wiki" / "HF-Jobs-Training.md"
     )
+    colab_free_training_json_path = resolve_repo_path(str(artifacts.get("colabFreeTrainingJsonPath", "")).strip()) or (
+        root / "docs" / "wiki" / "Colab-Free-Training.json"
+    )
+    colab_free_training_markdown_path = resolve_repo_path(str(artifacts.get("colabFreeTrainingMarkdownPath", "")).strip()) or (
+        root / "docs" / "wiki" / "Colab-Free-Training.md"
+    )
     oci_gpu_advisor_json_path = resolve_repo_path(str(artifacts.get("ociGpuAdvisorJsonPath", "")).strip()) or (
         root / "docs" / "wiki" / "OCI-GPU-Advisor.json"
     )
@@ -1403,6 +1420,7 @@ def main() -> None:
     hf_jobs_summary = hf_jobs_report.get("summary", {}) if isinstance(hf_jobs_report, dict) else {}
     hf_jobs_hardware = hf_jobs_report.get("hardware", []) if isinstance(hf_jobs_report, dict) else []
     hf_jobs_gpu_shapes = hf_gpu_flavor_names(hf_jobs_hardware)
+    colab_free_report = try_load_json(colab_free_training_json_path) or {}
     oci_cli_bin = str(canonical_cloud_env.get("OCI_CLI_BIN", "")).strip() or shutil.which("oci") or "oci"
     oci_cli_available = bool(shutil.which(oci_cli_bin) or Path(oci_cli_bin).exists())
     oci_auth_mode = "missing"
@@ -1814,6 +1832,13 @@ def main() -> None:
                 "markdownPath": relative_path(root, hf_jobs_training_markdown_path),
             },
         } if isinstance(hf_jobs_report, dict) and hf_jobs_report else {},
+        "colabFreeTraining": {
+            **colab_free_report,
+            "output": {
+                "jsonPath": relative_path(root, colab_free_training_json_path),
+                "markdownPath": relative_path(root, colab_free_training_markdown_path),
+            },
+        } if isinstance(colab_free_report, dict) and colab_free_report else {},
         "lanes": {
             "local": {
                 "enabled": local_enabled,
@@ -1836,6 +1861,8 @@ def main() -> None:
             "wikiMarkdownPath": relative_path(root, wiki_markdown_path),
             "hfJobsTrainingJsonPath": relative_path(root, hf_jobs_training_json_path),
             "hfJobsTrainingMarkdownPath": relative_path(root, hf_jobs_training_markdown_path),
+            "colabFreeTrainingJsonPath": relative_path(root, colab_free_training_json_path),
+            "colabFreeTrainingMarkdownPath": relative_path(root, colab_free_training_markdown_path),
             "ociGpuAdvisorJsonPath": relative_path(root, oci_gpu_advisor_json_path),
             "ociGpuAdvisorMarkdownPath": relative_path(root, oci_gpu_advisor_markdown_path),
             "ociRegionCapacityJsonPath": relative_path(root, oci_region_capacity_json_path),

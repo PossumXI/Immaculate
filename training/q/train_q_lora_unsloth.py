@@ -34,13 +34,19 @@ def resolve_repo_path(path_value: str | None) -> Path | None:
 
 
 def load_config(path_value: str) -> dict:
-    return json.loads(Path(path_value).read_text(encoding="utf-8"))
+    resolved = resolve_repo_path(path_value)
+    if resolved is None or not resolved.exists():
+        raise FileNotFoundError(f"Config path does not exist: {path_value}")
+    return json.loads(resolved.read_text(encoding="utf-8"))
 
 
 def inspect_jsonl_dataset(path_value: str) -> tuple[int, list[str]]:
+    resolved = resolve_repo_path(path_value)
+    if resolved is None or not resolved.exists():
+        raise FileNotFoundError(f"Training dataset path does not exist: {path_value}")
     columns = set()
     row_count = 0
-    with Path(path_value).open("r", encoding="utf-8") as handle:
+    with resolved.open("r", encoding="utf-8") as handle:
         for line in handle:
             line = line.strip()
             if not line:
@@ -55,13 +61,19 @@ def inspect_jsonl_dataset(path_value: str) -> tuple[int, list[str]]:
 def load_training_lock(path_value: str | None) -> dict | None:
     if not path_value:
         return None
-    return json.loads(Path(path_value).read_text(encoding="utf-8"))
+    resolved = resolve_repo_path(path_value)
+    if resolved is None or not resolved.exists():
+        raise FileNotFoundError(f"Training lock path does not exist: {path_value}")
+    return json.loads(resolved.read_text(encoding="utf-8"))
 
 
 def load_session_manifest(path_value: str | None) -> dict | None:
     if not path_value:
         return None
-    return json.loads(Path(path_value).read_text(encoding="utf-8"))
+    resolved = resolve_repo_path(path_value)
+    if resolved is None or not resolved.exists():
+        raise FileNotFoundError(f"Session manifest path does not exist: {path_value}")
+    return json.loads(resolved.read_text(encoding="utf-8"))
 
 
 def main() -> None:
@@ -79,6 +91,8 @@ def main() -> None:
     args = parser.parse_args()
 
     config = load_config(args.config)
+    colab_micro_profile = config.get("colab_micro_profile", {})
+    colab_micro_enabled = isinstance(colab_micro_profile, dict) and bool(colab_micro_profile.get("enabled"))
     dataset_path = config.get("train_dataset_path") or config.get("curated_dataset_path")
     if not dataset_path:
         raise ValueError("Config requires train_dataset_path or curated_dataset_path.")
@@ -108,7 +122,8 @@ def main() -> None:
             expected_config = resolve_repo_path(session_q.get("configPath"))
             resolved_config_path = resolve_repo_path(args.config)
             if expected_config and resolved_config_path and str(expected_config.resolve()) != str(resolved_config_path.resolve()):
-                raise ValueError("session-manifest configPath does not match --config.")
+                if not colab_micro_enabled:
+                    raise ValueError("session-manifest configPath does not match --config.")
         session_id = session_manifest.get("sessionId")
         if not session_id:
             raise ValueError("session-manifest requires sessionId.")
@@ -167,6 +182,7 @@ def main() -> None:
             per_device_train_batch_size=config["per_device_train_batch_size"],
             gradient_accumulation_steps=config["gradient_accumulation_steps"],
             num_train_epochs=config["num_train_epochs"],
+            max_steps=int(config.get("max_steps", -1)),
             learning_rate=config["learning_rate"],
             warmup_ratio=config["warmup_ratio"],
             lr_scheduler_type=config["lr_scheduler_type"],

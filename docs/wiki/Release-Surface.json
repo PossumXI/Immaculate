@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-15T18:58:12.873Z",
+  "generatedAt": "2026-04-15T19:43:54.574Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "bb5d74917c953b52af2f71057a4d1cb7cdcd39a4",
-    "gitShortSha": "bb5d749",
+    "gitSha": "58a73db5bd8dd3cd645a88be1d60c23871dd3f6f",
+    "gitShortSha": "58a73db",
     "gitBranch": "detached",
-    "buildId": "0.1.0+bb5d749",
+    "buildId": "0.1.0+58a73db",
     "q": {
       "alias": "Q",
       "providerModel": "Q",
@@ -34,14 +34,14 @@
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-15T18:57:50Z",
+        "generatedAt": "2026-04-15T19:43:42Z",
         "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
         "sessionPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.json",
         "localStatus": "ready",
         "cloudStatus": "not-configured",
         "cloudProvider": "hf_jobs",
         "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e",
-        "immaculateBundleId": "immaculate-orchestration-bb5d749-3dd4365f"
+        "immaculateBundleId": "immaculate-orchestration-58a73db-3dd4365f"
       }
     }
   },
@@ -74,7 +74,7 @@
     {
       "label": "Q hybrid training",
       "path": "docs\\wiki\\Q-Hybrid-Training.json",
-      "generatedAt": "2026-04-15T18:57:50Z"
+      "generatedAt": "2026-04-15T19:43:42Z"
     },
     {
       "label": "HF Jobs training",
@@ -82,9 +82,14 @@
       "generatedAt": "2026-04-15T18:57:58Z"
     },
     {
+      "label": "Colab free training",
+      "path": "docs\\wiki\\Colab-Free-Training.json",
+      "generatedAt": "2026-04-15T19:43:02Z"
+    },
+    {
       "label": "OCI GPU advisor",
       "path": "docs\\wiki\\OCI-GPU-Advisor.json",
-      "generatedAt": "2026-04-15T18:57:50Z"
+      "generatedAt": "2026-04-15T19:43:42Z"
     },
     {
       "label": "OCI region capacity",
@@ -94,7 +99,7 @@
     {
       "label": "Q benchmark corpus",
       "path": "docs\\wiki\\Q-Benchmark-Corpus.json",
-      "generatedAt": "2026-04-15T18:57:45Z"
+      "generatedAt": "2026-04-15T19:43:30Z"
     },
     {
       "label": "Q benchmark promotion",
@@ -104,7 +109,7 @@
     {
       "label": "W&B benchmark export",
       "path": "docs\\wiki\\Benchmark-Wandb-Export.json",
-      "generatedAt": "2026-04-15T16:01:53.511299+00:00"
+      "generatedAt": "2026-04-15T17:09:38.535415+00:00"
     },
     {
       "label": "Harbor terminal bench soak",

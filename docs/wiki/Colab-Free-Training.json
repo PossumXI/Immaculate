@@ -1,0 +1,50 @@
+{
+  "generatedAt": "2026-04-15T19:43:02Z",
+  "release": {
+    "packageVersion": "0.1.0",
+    "gitSha": "58a73db5bd8dd3cd645a88be1d60c23871dd3f6f",
+    "gitShortSha": "58a73db",
+    "buildId": "0.1.0+58a73db"
+  },
+  "repo": {
+    "slug": "PossumXI/Immaculate"
+  },
+  "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
+  "session": {
+    "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.manifest.json",
+    "configPath": ".training-output/q/q-lora-config-longctx-cur-fnv1a-8f551a5c-bench-v2.json",
+    "trainingLockPath": ".training-output/q/latest-training-lock.json",
+    "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e",
+    "immaculateBundleOutputPath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-cur-fnv1a-8f551a5c-bench-v2.json"
+  },
+  "bundle": {
+    "sourceType": "hf_dataset",
+    "repoId": "TruLumecreator/immaculate-q-cloud-bundles",
+    "archiveRepoPath": "sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/q-hybrid-cur-fnv1a-8f551a5c-bench-v2-cloud-bundle.tar.gz",
+    "manifestRepoPath": "sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/bundle-manifest.json",
+    "staged": true
+  },
+  "microTrain": {
+    "configPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/colab/q-colab-micro-config.json",
+    "maxSteps": 24,
+    "maxSeqLength": 2048,
+    "minGpuMemoryGb": 20,
+    "wandbOptional": true
+  },
+  "notebook": {
+    "path": "deploy/colab/notebooks/q-hybrid-cur-fnv1a-8f551a5c-bench-v2-colab-free.ipynb",
+    "fileName": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2-colab-free.ipynb",
+    "openInColabUrl": "https://colab.research.google.com/github/PossumXI/Immaculate/blob/main/deploy/colab/notebooks/q-hybrid-cur-fnv1a-8f551a5c-bench-v2-colab-free.ipynb"
+  },
+  "summary": {
+    "provider": "colab_free",
+    "ready": true,
+    "recommendedNextStep": "Open the notebook in Colab, provide HF_TOKEN, and use the free runtime for doctor plus dry-run or a bounded Q micro-train when a large enough GPU appears."
+  },
+  "output": {
+    "sessionJsonPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/colab-free-export.json",
+    "wikiJsonPath": "docs/wiki/Colab-Free-Training.json",
+    "wikiMarkdownPath": "docs/wiki/Colab-Free-Training.md",
+    "notebookPath": "deploy/colab/notebooks/q-hybrid-cur-fnv1a-8f551a5c-bench-v2-colab-free.ipynb"
+  }
+}

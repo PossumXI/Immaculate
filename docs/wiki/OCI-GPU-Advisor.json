@@ -16,13 +16,13 @@
   },
   "suggestedEnvUpdates": {},
   "actions": [],
-  "generatedAt": "2026-04-15T18:57:50Z",
+  "generatedAt": "2026-04-15T19:43:42Z",
   "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "bb5d74917c953b52af2f71057a4d1cb7cdcd39a4",
-    "gitShortSha": "bb5d749",
-    "buildId": "0.1.0+bb5d749"
+    "gitSha": "58a73db5bd8dd3cd645a88be1d60c23871dd3f6f",
+    "gitShortSha": "58a73db",
+    "buildId": "0.1.0+58a73db"
   },
   "output": {
     "jsonPath": "docs/wiki/OCI-GPU-Advisor.json",

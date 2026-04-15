@@ -2,9 +2,9 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-04-15T18:58:12.873Z
-- Immaculate release: `0.1.0+bb5d749`
-- Repo commit: `bb5d74917c953b52af2f71057a4d1cb7cdcd39a4`
+- Generated: 2026-04-15T19:43:54.574Z
+- Immaculate release: `0.1.0+58a73db`
+- Repo commit: `58a73db5bd8dd3cd645a88be1d60c23871dd3f6f`
 - Branch: `detached`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+bb5d749` is the current repo build stamp.
+- Immaculate build `0.1.0+58a73db` is the current repo build stamp.
 - Q is served and benchmarked as `Q` across the current repo surfaces.
 - The latest tracked Q training bundle is `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e`, tied to dataset `.training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c-bench-v2.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
 - The latest hybrid session is `q-hybrid-cur-fnv1a-8f551a5c-bench-v2`, with local lane `ready` and cloud lane `not-configured` on provider `hf_jobs`.
@@ -28,13 +28,14 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Q structured contract benchmark: `2026-04-15T02:25:01.093Z` via `docs/wiki/Model-Benchmark-Comparison.json`
 - Q readiness gate: `2026-04-15T02:35:16.060Z` via `docs/wiki/Q-Readiness-Gate.json`
 - Q gateway validation: `2026-04-15T02:32:19.275Z` via `docs/wiki/Q-Gateway-Validation.json`
-- Q hybrid training: `2026-04-15T18:57:50Z` via `docs/wiki/Q-Hybrid-Training.json`
+- Q hybrid training: `2026-04-15T19:43:42Z` via `docs/wiki/Q-Hybrid-Training.json`
 - HF Jobs training: `2026-04-15T18:57:58Z` via `docs/wiki/HF-Jobs-Training.json`
-- OCI GPU advisor: `2026-04-15T18:57:50Z` via `docs/wiki/OCI-GPU-Advisor.json`
+- Colab free training: `2026-04-15T19:43:02Z` via `docs/wiki/Colab-Free-Training.json`
+- OCI GPU advisor: `2026-04-15T19:43:42Z` via `docs/wiki/OCI-GPU-Advisor.json`
 - OCI region capacity: `2026-04-15T17:06:51Z` via `docs/wiki/OCI-Region-Capacity.json`
-- Q benchmark corpus: `2026-04-15T18:57:45Z` via `docs/wiki/Q-Benchmark-Corpus.json`
+- Q benchmark corpus: `2026-04-15T19:43:30Z` via `docs/wiki/Q-Benchmark-Corpus.json`
 - Q benchmark promotion: `2026-04-15T12:37:51Z` via `docs/wiki/Q-Benchmark-Promotion.json`
-- W&B benchmark export: `2026-04-15T16:01:53.511299+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
+- W&B benchmark export: `2026-04-15T17:09:38.535415+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
 - Harbor terminal bench soak: `2026-04-15T08:22:53.565Z` via `docs/wiki/Harbor-Terminal-Bench-Soak.json`
 - Q benchmark sweep (60m): `2026-04-15T08:24:47.464Z` via `docs/wiki/Q-Benchmark-Sweep-60m.json`
 
@@ -53,11 +54,11 @@ This page is generated from repo state. It is the plain-English answer to a simp
 ## Hybrid Training Session
 
 - Session path: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.json`
-- Session generated: `2026-04-15T18:57:50Z`
+- Session generated: `2026-04-15T19:43:42Z`
 - Local lane status: `ready`
 - Cloud lane status: `not-configured`
 - Cloud provider: `hf_jobs`
-- Immaculate orchestration bundle: `immaculate-orchestration-bb5d749-3dd4365f`
+- Immaculate orchestration bundle: `immaculate-orchestration-58a73db-3dd4365f`
 
 ## Truth Boundary
 
