@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-15T04:39:47.301Z",
+  "generatedAt": "2026-04-15T08:24:55.665Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "72ce54cf603255b8e2d36265eb5fa20a4e48ff07",
-    "gitShortSha": "72ce54c",
+    "gitSha": "dd31cfa695aef206c7a96a3040cb32a383b573e5",
+    "gitShortSha": "dd31cfa",
     "gitBranch": "detached",
-    "buildId": "0.1.0+72ce54c",
+    "buildId": "0.1.0+dd31cfa",
     "q": {
       "alias": "Q",
       "providerModel": "Q",
@@ -34,14 +34,14 @@
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-15T04:39:39Z",
+        "generatedAt": "2026-04-15T04:58:40Z",
         "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v1",
         "sessionPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/hybrid-session.json",
         "localStatus": "ready",
         "cloudStatus": "not-configured",
         "cloudProvider": "oci",
         "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1-5e51e00-e16a056e",
-        "immaculateBundleId": "immaculate-orchestration-72ce54c-3dd4365f"
+        "immaculateBundleId": "immaculate-orchestration-f818284-3dd4365f"
       }
     }
   },
@@ -49,7 +49,12 @@
     {
       "label": "BridgeBench",
       "path": "docs\\wiki\\BridgeBench.json",
-      "generatedAt": "2026-04-15T02:35:08.392Z"
+      "generatedAt": "2026-04-15T06:15:54.185Z"
+    },
+    {
+      "label": "BridgeBench soak",
+      "path": "docs\\wiki\\BridgeBench-Soak.json",
+      "generatedAt": "2026-04-15T06:15:54.188Z"
     },
     {
       "label": "Q structured contract benchmark",
@@ -69,12 +74,12 @@
     {
       "label": "Q hybrid training",
       "path": "docs\\wiki\\Q-Hybrid-Training.json",
-      "generatedAt": "2026-04-15T04:39:39Z"
+      "generatedAt": "2026-04-15T04:58:40Z"
     },
     {
       "label": "Q benchmark corpus",
       "path": "docs\\wiki\\Q-Benchmark-Corpus.json",
-      "generatedAt": "2026-04-15T04:39:33Z"
+      "generatedAt": "2026-04-15T04:58:32Z"
     },
     {
       "label": "Q benchmark promotion",
@@ -84,7 +89,17 @@
     {
       "label": "W&B benchmark export",
       "path": "docs\\wiki\\Benchmark-Wandb-Export.json",
-      "generatedAt": "2026-04-15T03:45:13.508412+00:00"
+      "generatedAt": "2026-04-15T04:26:03.415957+00:00"
+    },
+    {
+      "label": "Harbor terminal bench soak",
+      "path": "docs\\wiki\\Harbor-Terminal-Bench-Soak.json",
+      "generatedAt": "2026-04-15T08:22:53.565Z"
+    },
+    {
+      "label": "Q benchmark sweep (60m)",
+      "path": "docs\\wiki\\Q-Benchmark-Sweep-60m.json",
+      "generatedAt": "2026-04-15T08:24:47.464Z"
     }
   ],
   "output": {

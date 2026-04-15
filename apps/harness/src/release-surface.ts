@@ -29,6 +29,10 @@ const SURFACE_FILES: SurfaceTimestamp[] = [
     path: path.join("docs", "wiki", "BridgeBench.json")
   },
   {
+    label: "BridgeBench soak",
+    path: path.join("docs", "wiki", "BridgeBench-Soak.json")
+  },
+  {
     label: "Q structured contract benchmark",
     path: path.join("docs", "wiki", "Model-Benchmark-Comparison.json")
   },
@@ -55,6 +59,14 @@ const SURFACE_FILES: SurfaceTimestamp[] = [
   {
     label: "W&B benchmark export",
     path: path.join("docs", "wiki", "Benchmark-Wandb-Export.json")
+  },
+  {
+    label: "Harbor terminal bench soak",
+    path: path.join("docs", "wiki", "Harbor-Terminal-Bench-Soak.json")
+  },
+  {
+    label: "Q benchmark sweep (60m)",
+    path: path.join("docs", "wiki", "Q-Benchmark-Sweep-60m.json")
   }
 ];
 

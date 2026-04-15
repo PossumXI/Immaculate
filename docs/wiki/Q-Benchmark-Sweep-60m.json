@@ -1,0 +1,3188 @@
+{
+  "generatedAt": "2026-04-15T08:24:47.464Z",
+  "release": {
+    "packageVersion": "0.1.0",
+    "harnessVersion": "0.1.0",
+    "coreVersion": "0.1.0",
+    "gitSha": "dd31cfa695aef206c7a96a3040cb32a383b573e5",
+    "gitShortSha": "dd31cfa",
+    "gitBranch": "detached",
+    "buildId": "0.1.0+dd31cfa",
+    "q": {
+      "alias": "Q",
+      "providerModel": "Q",
+      "truthfulLabel": "Q",
+      "trainingLock": {
+        "generatedAt": "2026-04-15T03:43:15Z",
+        "lockVersion": 1,
+        "bundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1-5e51e00-e16a056e",
+        "runName": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1",
+        "aliasName": "Q",
+        "trainDatasetPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c-bench-v1.jsonl",
+        "trainDatasetSha256": "e16a056eaf28580a4a91630e9313799d95be945660b7c57bb409710fe8eed676",
+        "trainDatasetRowCount": 1023,
+        "mixManifestPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c-bench-v1.manifest.json",
+        "mixManifestSha256": "27c9c67ffe90055d44012a255c8626920d31bf7f62b66e4abbe74994e07b536e",
+        "mixSupplementalCount": 3,
+        "mixSupplementalPaths": [
+          "training/q/bridgebench_seed.json",
+          "training/q/coding_long_context_seed.json",
+          ".training-output/q/q-benchmark-corpus.jsonl"
+        ],
+        "curationRunPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\training-data\\runs\\cur-fnv1a-8f551a5c\\run.json",
+        "curationRunId": "cur-fnv1a-8f551a5c",
+        "lockPath": ".training-output/q/latest-training-lock.json"
+      },
+      "hybridSession": {
+        "generatedAt": "2026-04-15T04:58:40Z",
+        "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v1",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/hybrid-session.json",
+        "localStatus": "ready",
+        "cloudStatus": "not-configured",
+        "cloudProvider": "oci",
+        "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1-5e51e00-e16a056e",
+        "immaculateBundleId": "immaculate-orchestration-f818284-3dd4365f"
+      }
+    }
+  },
+  "bridgeBenchSoak": {
+    "generatedAt": "2026-04-15T06:15:54.188Z",
+    "startedAt": "2026-04-15T05:15:20.696Z",
+    "completedAt": "2026-04-15T06:15:54.188Z",
+    "durationSeconds": 3600,
+    "durationMs": 3633492.04,
+    "deadlineAt": "2026-04-15T06:15:20.696Z",
+    "runCount": 56,
+    "successfulRunCount": 56,
+    "failedRunCount": 0,
+    "taskCount": 224,
+    "parseSuccessCount": 224,
+    "parseSuccessRate": 1,
+    "averageLatencyMs": 15252.4,
+    "p95LatencyMs": 21327.47,
+    "minLatencyMs": 11448.82,
+    "maxLatencyMs": 46594.64,
+    "medianLatencyMs": 15493.94,
+    "averageRunLatencyMs": 15252.4,
+    "p95RunLatencyMs": 19741.32,
+    "bridgeRuntimeFailedAssertionsTotal": 0,
+    "bridgeRuntimeFailedAssertionRuns": 0,
+    "qAlias": "Q",
+    "truthfulModelLabel": "Q",
+    "release": {
+      "packageVersion": "0.1.0",
+      "harnessVersion": "0.1.0",
+      "coreVersion": "0.1.0",
+      "gitSha": "f81828483be6900e5c27c6b3d9e73d10224c93c9",
+      "gitShortSha": "f818284",
+      "gitBranch": "detached",
+      "buildId": "0.1.0+f818284",
+      "q": {
+        "alias": "Q",
+        "providerModel": "Q",
+        "truthfulLabel": "Q",
+        "trainingLock": {
+          "generatedAt": "2026-04-15T03:43:15Z",
+          "lockVersion": 1,
+          "bundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1-5e51e00-e16a056e",
+          "runName": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1",
+          "aliasName": "Q",
+          "trainDatasetPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c-bench-v1.jsonl",
+          "trainDatasetSha256": "e16a056eaf28580a4a91630e9313799d95be945660b7c57bb409710fe8eed676",
+          "trainDatasetRowCount": 1023,
+          "mixManifestPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c-bench-v1.manifest.json",
+          "mixManifestSha256": "27c9c67ffe90055d44012a255c8626920d31bf7f62b66e4abbe74994e07b536e",
+          "mixSupplementalCount": 3,
+          "mixSupplementalPaths": [
+            "training/q/bridgebench_seed.json",
+            "training/q/coding_long_context_seed.json",
+            ".training-output/q/q-benchmark-corpus.jsonl"
+          ],
+          "curationRunPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\training-data\\runs\\cur-fnv1a-8f551a5c\\run.json",
+          "curationRunId": "cur-fnv1a-8f551a5c",
+          "lockPath": ".training-output/q/latest-training-lock.json"
+        },
+        "hybridSession": {
+          "generatedAt": "2026-04-15T04:58:40Z",
+          "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v1",
+          "sessionPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/hybrid-session.json",
+          "localStatus": "ready",
+          "cloudStatus": "not-configured",
+          "cloudProvider": "oci",
+          "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1-5e51e00-e16a056e",
+          "immaculateBundleId": "immaculate-orchestration-f818284-3dd4365f"
+        }
+      }
+    },
+    "runs": [
+      {
+        "attempt": 1,
+        "startedAt": "2026-04-15T05:15:20.696Z",
+        "completedAt": "2026-04-15T05:16:52.697Z",
+        "durationMs": 92001.38,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-16-47-465Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 21605.93,
+        "p95LatencyMs": 46594.64,
+        "minLatencyMs": 12071.77,
+        "maxLatencyMs": 46594.64,
+        "medianLatencyMs": 12468,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 2,
+        "startedAt": "2026-04-15T05:16:52.698Z",
+        "completedAt": "2026-04-15T05:17:50.773Z",
+        "durationMs": 58075.62,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-17-47-767Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 13748.9,
+        "p95LatencyMs": 15767.7,
+        "minLatencyMs": 11773.2,
+        "maxLatencyMs": 15767.7,
+        "medianLatencyMs": 12076.59,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 3,
+        "startedAt": "2026-04-15T05:17:50.774Z",
+        "completedAt": "2026-04-15T05:18:51.063Z",
+        "durationMs": 60289.1,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-18-48-312Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14369.35,
+        "p95LatencyMs": 16690.14,
+        "minLatencyMs": 12157.88,
+        "maxLatencyMs": 16690.14,
+        "medianLatencyMs": 12895.87,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 4,
+        "startedAt": "2026-04-15T05:18:51.063Z",
+        "completedAt": "2026-04-15T05:19:50.632Z",
+        "durationMs": 59569.8,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-19-47-671Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14136.07,
+        "p95LatencyMs": 16158.93,
+        "minLatencyMs": 12043.31,
+        "maxLatencyMs": 16158.93,
+        "medianLatencyMs": 12565.79,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 5,
+        "startedAt": "2026-04-15T05:19:50.632Z",
+        "completedAt": "2026-04-15T05:20:51.423Z",
+        "durationMs": 60790.91,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-20-48-531Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14458.35,
+        "p95LatencyMs": 16920.71,
+        "minLatencyMs": 12267.16,
+        "maxLatencyMs": 16920.71,
+        "medianLatencyMs": 12552.98,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 6,
+        "startedAt": "2026-04-15T05:20:51.424Z",
+        "completedAt": "2026-04-15T05:21:53.037Z",
+        "durationMs": 61613.31,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-21-49-729Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14559.05,
+        "p95LatencyMs": 16371.86,
+        "minLatencyMs": 12305.01,
+        "maxLatencyMs": 16371.86,
+        "medianLatencyMs": 13378.67,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 7,
+        "startedAt": "2026-04-15T05:21:53.037Z",
+        "completedAt": "2026-04-15T05:22:59.284Z",
+        "durationMs": 66247.1,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-22-56-139Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 15754.23,
+        "p95LatencyMs": 18409.11,
+        "minLatencyMs": 13521.54,
+        "maxLatencyMs": 18409.11,
+        "medianLatencyMs": 13915.1,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 8,
+        "startedAt": "2026-04-15T05:22:59.284Z",
+        "completedAt": "2026-04-15T05:24:00.724Z",
+        "durationMs": 61439.55,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-23-57-816Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14613.28,
+        "p95LatencyMs": 17266.76,
+        "minLatencyMs": 12129.22,
+        "maxLatencyMs": 17266.76,
+        "medianLatencyMs": 12846.73,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 9,
+        "startedAt": "2026-04-15T05:24:00.724Z",
+        "completedAt": "2026-04-15T05:25:00.362Z",
+        "durationMs": 59638.56,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-24-57-622Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14210.48,
+        "p95LatencyMs": 16237.67,
+        "minLatencyMs": 11880.46,
+        "maxLatencyMs": 16237.67,
+        "medianLatencyMs": 12525.2,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 10,
+        "startedAt": "2026-04-15T05:25:00.363Z",
+        "completedAt": "2026-04-15T05:26:00.088Z",
+        "durationMs": 59725.31,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-25-57-328Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14227.35,
+        "p95LatencyMs": 16164.1,
+        "minLatencyMs": 11900.41,
+        "maxLatencyMs": 16164.1,
+        "medianLatencyMs": 13236.85,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 11,
+        "startedAt": "2026-04-15T05:26:00.088Z",
+        "completedAt": "2026-04-15T05:27:01.012Z",
+        "durationMs": 60923.2,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-26-58-036Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14464.78,
+        "p95LatencyMs": 16254.32,
+        "minLatencyMs": 12746.71,
+        "maxLatencyMs": 16254.32,
+        "medianLatencyMs": 12791.81,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 12,
+        "startedAt": "2026-04-15T05:27:01.012Z",
+        "completedAt": "2026-04-15T05:28:08.372Z",
+        "durationMs": 67360.81,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-28-05-684Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 16152.53,
+        "p95LatencyMs": 19990.29,
+        "minLatencyMs": 13146.22,
+        "maxLatencyMs": 19990.29,
+        "medianLatencyMs": 14699.43,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 13,
+        "startedAt": "2026-04-15T05:28:08.372Z",
+        "completedAt": "2026-04-15T05:29:08.284Z",
+        "durationMs": 59911.8,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-29-05-614Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14295.67,
+        "p95LatencyMs": 16243.23,
+        "minLatencyMs": 11896.13,
+        "maxLatencyMs": 16243.23,
+        "medianLatencyMs": 13018.94,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 14,
+        "startedAt": "2026-04-15T05:29:08.284Z",
+        "completedAt": "2026-04-15T05:30:13.458Z",
+        "durationMs": 65174.05,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-30-10-525Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 15541.5,
+        "p95LatencyMs": 18688.78,
+        "minLatencyMs": 11916.4,
+        "maxLatencyMs": 18688.78,
+        "medianLatencyMs": 15125.71,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 15,
+        "startedAt": "2026-04-15T05:30:13.459Z",
+        "completedAt": "2026-04-15T05:31:14.130Z",
+        "durationMs": 60671.45,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-31-11-101Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14387.64,
+        "p95LatencyMs": 17630.29,
+        "minLatencyMs": 11710.58,
+        "maxLatencyMs": 17630.29,
+        "medianLatencyMs": 12136.55,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 16,
+        "startedAt": "2026-04-15T05:31:14.130Z",
+        "completedAt": "2026-04-15T05:32:16.478Z",
+        "durationMs": 62347.9,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-32-13-487Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14820.27,
+        "p95LatencyMs": 18581.51,
+        "minLatencyMs": 12720.18,
+        "maxLatencyMs": 18581.51,
+        "medianLatencyMs": 12933.18,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 17,
+        "startedAt": "2026-04-15T05:32:16.478Z",
+        "completedAt": "2026-04-15T05:33:20.580Z",
+        "durationMs": 64102.56,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-33-17-615Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 15263.46,
+        "p95LatencyMs": 17443.79,
+        "minLatencyMs": 12708.85,
+        "maxLatencyMs": 17443.79,
+        "medianLatencyMs": 13683.75,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 18,
+        "startedAt": "2026-04-15T05:33:20.580Z",
+        "completedAt": "2026-04-15T05:34:19.074Z",
+        "durationMs": 58493.37,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-34-16-249Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 13902.35,
+        "p95LatencyMs": 15643.74,
+        "minLatencyMs": 12031.95,
+        "maxLatencyMs": 15643.74,
+        "medianLatencyMs": 12473.51,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 19,
+        "startedAt": "2026-04-15T05:34:19.074Z",
+        "completedAt": "2026-04-15T05:35:18.505Z",
+        "durationMs": 59432.5,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-35-15-857Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14176.68,
+        "p95LatencyMs": 16567.39,
+        "minLatencyMs": 11980.04,
+        "maxLatencyMs": 16567.39,
+        "medianLatencyMs": 12328.73,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 20,
+        "startedAt": "2026-04-15T05:35:18.505Z",
+        "completedAt": "2026-04-15T05:36:17.235Z",
+        "durationMs": 58729.39,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-36-14-627Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14012.41,
+        "p95LatencyMs": 16815.02,
+        "minLatencyMs": 11687.78,
+        "maxLatencyMs": 16815.02,
+        "medianLatencyMs": 12111.52,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 21,
+        "startedAt": "2026-04-15T05:36:17.235Z",
+        "completedAt": "2026-04-15T05:37:15.190Z",
+        "durationMs": 57954.17,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-37-12-484Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 13790.03,
+        "p95LatencyMs": 16049.77,
+        "minLatencyMs": 11625.22,
+        "maxLatencyMs": 16049.77,
+        "medianLatencyMs": 11893.86,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 22,
+        "startedAt": "2026-04-15T05:37:15.190Z",
+        "completedAt": "2026-04-15T05:38:15.015Z",
+        "durationMs": 59824.71,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-38-12-177Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14222.74,
+        "p95LatencyMs": 16279.02,
+        "minLatencyMs": 12133.54,
+        "maxLatencyMs": 16279.02,
+        "medianLatencyMs": 12430.15,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 23,
+        "startedAt": "2026-04-15T05:38:15.015Z",
+        "completedAt": "2026-04-15T05:39:18.088Z",
+        "durationMs": 63073,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-39-15-394Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 15072.71,
+        "p95LatencyMs": 17557.26,
+        "minLatencyMs": 11963.13,
+        "maxLatencyMs": 17557.26,
+        "medianLatencyMs": 13422.52,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 24,
+        "startedAt": "2026-04-15T05:39:18.088Z",
+        "completedAt": "2026-04-15T05:40:21.941Z",
+        "durationMs": 63852.46,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-40-18-537Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 15081.72,
+        "p95LatencyMs": 17514.98,
+        "minLatencyMs": 11748.82,
+        "maxLatencyMs": 17514.98,
+        "medianLatencyMs": 14015.08,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 25,
+        "startedAt": "2026-04-15T05:40:21.941Z",
+        "completedAt": "2026-04-15T05:41:21.790Z",
+        "durationMs": 59849.06,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-41-18-975Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14225.85,
+        "p95LatencyMs": 16399.48,
+        "minLatencyMs": 11729.55,
+        "maxLatencyMs": 16399.48,
+        "medianLatencyMs": 12496.57,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 26,
+        "startedAt": "2026-04-15T05:41:21.790Z",
+        "completedAt": "2026-04-15T05:42:21.506Z",
+        "durationMs": 59716.05,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-42-18-781Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14226.48,
+        "p95LatencyMs": 16245.47,
+        "minLatencyMs": 12203.06,
+        "maxLatencyMs": 16245.47,
+        "medianLatencyMs": 12750.32,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 27,
+        "startedAt": "2026-04-15T05:42:21.506Z",
+        "completedAt": "2026-04-15T05:43:19.468Z",
+        "durationMs": 57962.45,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-43-16-867Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 13818.63,
+        "p95LatencyMs": 16342.86,
+        "minLatencyMs": 11487.96,
+        "maxLatencyMs": 16342.86,
+        "medianLatencyMs": 11756.46,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 28,
+        "startedAt": "2026-04-15T05:43:19.468Z",
+        "completedAt": "2026-04-15T05:44:16.179Z",
+        "durationMs": 56710.99,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-44-13-571Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 13502.82,
+        "p95LatencyMs": 15493.94,
+        "minLatencyMs": 11573.37,
+        "maxLatencyMs": 15493.94,
+        "medianLatencyMs": 11853.05,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 29,
+        "startedAt": "2026-04-15T05:44:16.179Z",
+        "completedAt": "2026-04-15T05:45:15.369Z",
+        "durationMs": 59189.51,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-45-12-719Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14107.55,
+        "p95LatencyMs": 15780.15,
+        "minLatencyMs": 12139.85,
+        "maxLatencyMs": 15780.15,
+        "medianLatencyMs": 12736.52,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 30,
+        "startedAt": "2026-04-15T05:45:15.369Z",
+        "completedAt": "2026-04-15T05:46:16.555Z",
+        "durationMs": 61186.66,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-46-13-943Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14620.64,
+        "p95LatencyMs": 17259.87,
+        "minLatencyMs": 12828.17,
+        "maxLatencyMs": 17259.87,
+        "medianLatencyMs": 12930.09,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 31,
+        "startedAt": "2026-04-15T05:46:16.555Z",
+        "completedAt": "2026-04-15T05:47:15.013Z",
+        "durationMs": 58457.79,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-47-12-382Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 13925.82,
+        "p95LatencyMs": 15786.04,
+        "minLatencyMs": 12108.81,
+        "maxLatencyMs": 15786.04,
+        "medianLatencyMs": 12320.56,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 32,
+        "startedAt": "2026-04-15T05:47:15.013Z",
+        "completedAt": "2026-04-15T05:48:14.412Z",
+        "durationMs": 59398.68,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-48-11-735Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14160.8,
+        "p95LatencyMs": 17291.56,
+        "minLatencyMs": 11741.86,
+        "maxLatencyMs": 17291.56,
+        "medianLatencyMs": 12451.63,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 33,
+        "startedAt": "2026-04-15T05:48:14.412Z",
+        "completedAt": "2026-04-15T05:49:11.850Z",
+        "durationMs": 57437.76,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-49-09-220Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 13668.54,
+        "p95LatencyMs": 15574.06,
+        "minLatencyMs": 11521.34,
+        "maxLatencyMs": 15574.06,
+        "medianLatencyMs": 12068.36,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 34,
+        "startedAt": "2026-04-15T05:49:11.850Z",
+        "completedAt": "2026-04-15T05:50:08.491Z",
+        "durationMs": 56641.26,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-50-05-826Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 13477.27,
+        "p95LatencyMs": 15360.14,
+        "minLatencyMs": 11515.09,
+        "maxLatencyMs": 15360.14,
+        "medianLatencyMs": 11854.64,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 35,
+        "startedAt": "2026-04-15T05:50:08.491Z",
+        "completedAt": "2026-04-15T05:51:08.230Z",
+        "durationMs": 59738.8,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-51-05-579Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14237.35,
+        "p95LatencyMs": 16110.2,
+        "minLatencyMs": 12352.01,
+        "maxLatencyMs": 16110.2,
+        "medianLatencyMs": 12497.29,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 36,
+        "startedAt": "2026-04-15T05:51:08.230Z",
+        "completedAt": "2026-04-15T05:52:07.772Z",
+        "durationMs": 59542.52,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-52-05-110Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14200.41,
+        "p95LatencyMs": 15855.44,
+        "minLatencyMs": 12097.9,
+        "maxLatencyMs": 15855.44,
+        "medianLatencyMs": 13095.74,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 37,
+        "startedAt": "2026-04-15T05:52:07.772Z",
+        "completedAt": "2026-04-15T05:53:08.043Z",
+        "durationMs": 60270.25,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-53-05-376Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14366.47,
+        "p95LatencyMs": 17319.09,
+        "minLatencyMs": 11550.25,
+        "maxLatencyMs": 17319.09,
+        "medianLatencyMs": 12517.07,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 38,
+        "startedAt": "2026-04-15T05:53:08.043Z",
+        "completedAt": "2026-04-15T05:54:07.993Z",
+        "durationMs": 59949.47,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-54-05-145Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14250.05,
+        "p95LatencyMs": 17199.01,
+        "minLatencyMs": 11573.24,
+        "maxLatencyMs": 17199.01,
+        "medianLatencyMs": 12296.68,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 39,
+        "startedAt": "2026-04-15T05:54:07.993Z",
+        "completedAt": "2026-04-15T05:55:08.347Z",
+        "durationMs": 60354.55,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-55-05-342Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14303.15,
+        "p95LatencyMs": 17187.15,
+        "minLatencyMs": 11868.81,
+        "maxLatencyMs": 17187.15,
+        "medianLatencyMs": 11918.1,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 40,
+        "startedAt": "2026-04-15T05:55:08.347Z",
+        "completedAt": "2026-04-15T05:56:10.821Z",
+        "durationMs": 62473.15,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-56-07-887Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14869.1,
+        "p95LatencyMs": 18842.55,
+        "minLatencyMs": 12149.84,
+        "maxLatencyMs": 18842.55,
+        "medianLatencyMs": 12851.53,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 41,
+        "startedAt": "2026-04-15T05:56:10.821Z",
+        "completedAt": "2026-04-15T05:57:09.988Z",
+        "durationMs": 59167.17,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-57-07-201Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14058.63,
+        "p95LatencyMs": 16061.11,
+        "minLatencyMs": 12212.25,
+        "maxLatencyMs": 16061.11,
+        "medianLatencyMs": 12220.43,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 42,
+        "startedAt": "2026-04-15T05:57:09.988Z",
+        "completedAt": "2026-04-15T05:58:08.623Z",
+        "durationMs": 58636.02,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-58-06-018Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 13982.79,
+        "p95LatencyMs": 16066.83,
+        "minLatencyMs": 12185.07,
+        "maxLatencyMs": 16066.83,
+        "medianLatencyMs": 12569.66,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 43,
+        "startedAt": "2026-04-15T05:58:08.623Z",
+        "completedAt": "2026-04-15T05:59:12.117Z",
+        "durationMs": 63493.21,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T05-59-09-213Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 15111.73,
+        "p95LatencyMs": 17247.94,
+        "minLatencyMs": 13325.91,
+        "maxLatencyMs": 17247.94,
+        "medianLatencyMs": 13486.74,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 44,
+        "startedAt": "2026-04-15T05:59:12.117Z",
+        "completedAt": "2026-04-15T06:00:13.826Z",
+        "durationMs": 61708.73,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T06-00-11-021Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14700.72,
+        "p95LatencyMs": 17327.06,
+        "minLatencyMs": 12702.22,
+        "maxLatencyMs": 17327.06,
+        "medianLatencyMs": 12860.65,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 45,
+        "startedAt": "2026-04-15T06:00:13.826Z",
+        "completedAt": "2026-04-15T06:01:11.350Z",
+        "durationMs": 57524.41,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T06-01-08-696Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 13680.32,
+        "p95LatencyMs": 16415.1,
+        "minLatencyMs": 11448.82,
+        "maxLatencyMs": 16415.1,
+        "medianLatencyMs": 11706.46,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 46,
+        "startedAt": "2026-04-15T06:01:11.350Z",
+        "completedAt": "2026-04-15T06:02:10.786Z",
+        "durationMs": 59435.98,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T06-02-07-990Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14133.13,
+        "p95LatencyMs": 16325.58,
+        "minLatencyMs": 12000.95,
+        "maxLatencyMs": 16325.58,
+        "medianLatencyMs": 12328.12,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 47,
+        "startedAt": "2026-04-15T06:02:10.786Z",
+        "completedAt": "2026-04-15T06:03:10.250Z",
+        "durationMs": 59463.41,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T06-03-07-436Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 14129.64,
+        "p95LatencyMs": 16922.68,
+        "minLatencyMs": 11944.75,
+        "maxLatencyMs": 16922.68,
+        "medianLatencyMs": 12618.12,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 48,
+        "startedAt": "2026-04-15T06:03:10.250Z",
+        "completedAt": "2026-04-15T06:04:13.885Z",
+        "durationMs": 63634.97,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T06-04-10-881Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 15124.98,
+        "p95LatencyMs": 17224.8,
+        "minLatencyMs": 12822.72,
+        "maxLatencyMs": 17224.8,
+        "medianLatencyMs": 13614.08,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 49,
+        "startedAt": "2026-04-15T06:04:13.885Z",
+        "completedAt": "2026-04-15T06:05:37.102Z",
+        "durationMs": 83217.52,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T06-05-28-615Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 18577.29,
+        "p95LatencyMs": 21526.39,
+        "minLatencyMs": 15673.96,
+        "maxLatencyMs": 21526.39,
+        "medianLatencyMs": 17200.2,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 50,
+        "startedAt": "2026-04-15T06:05:37.102Z",
+        "completedAt": "2026-04-15T06:07:37.266Z",
+        "durationMs": 120162.92,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T06-07-11-605Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 23484.68,
+        "p95LatencyMs": 29491.92,
+        "minLatencyMs": 20138.19,
+        "maxLatencyMs": 29491.92,
+        "medianLatencyMs": 21420.46,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 51,
+        "startedAt": "2026-04-15T06:07:37.266Z",
+        "completedAt": "2026-04-15T06:09:01.688Z",
+        "durationMs": 84423.23,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T06-08-56-517Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 19741.32,
+        "p95LatencyMs": 22105.49,
+        "minLatencyMs": 16071.26,
+        "maxLatencyMs": 22105.49,
+        "medianLatencyMs": 18901.06,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 52,
+        "startedAt": "2026-04-15T06:09:01.688Z",
+        "completedAt": "2026-04-15T06:10:21.288Z",
+        "durationMs": 79599.44,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T06-10-15-741Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 18460.36,
+        "p95LatencyMs": 20803.71,
+        "minLatencyMs": 15787.62,
+        "maxLatencyMs": 20803.71,
+        "medianLatencyMs": 16466.54,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 53,
+        "startedAt": "2026-04-15T06:10:21.288Z",
+        "completedAt": "2026-04-15T06:11:43.125Z",
+        "durationMs": 81837.54,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T06-11-36-903Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 18814.82,
+        "p95LatencyMs": 21327.47,
+        "minLatencyMs": 16258.1,
+        "maxLatencyMs": 21327.47,
+        "medianLatencyMs": 16663.28,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 54,
+        "startedAt": "2026-04-15T06:11:43.125Z",
+        "completedAt": "2026-04-15T06:13:14.032Z",
+        "durationMs": 90905.92,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T06-13-01-802Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 19598.71,
+        "p95LatencyMs": 23262.7,
+        "minLatencyMs": 16354.8,
+        "maxLatencyMs": 23262.7,
+        "medianLatencyMs": 16565.38,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 55,
+        "startedAt": "2026-04-15T06:13:14.032Z",
+        "completedAt": "2026-04-15T06:14:35.464Z",
+        "durationMs": 81431.84,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T06-14-30-568Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 19065.88,
+        "p95LatencyMs": 21937.08,
+        "minLatencyMs": 16375.7,
+        "maxLatencyMs": 21937.08,
+        "medianLatencyMs": 16868.04,
+        "bridgeRuntimeFailedAssertions": 0
+      },
+      {
+        "attempt": 56,
+        "startedAt": "2026-04-15T06:14:35.464Z",
+        "completedAt": "2026-04-15T06:15:54.188Z",
+        "durationMs": 78723.65,
+        "status": "completed",
+        "bridgeSuiteId": "immaculate-benchmark-2026-04-15T06-15-50-221Z",
+        "bridgePackId": "substrate-readiness",
+        "parseSuccessCount": 4,
+        "taskCount": 4,
+        "parseSuccessRate": 1,
+        "averageLatencyMs": 18640.88,
+        "p95LatencyMs": 22764.64,
+        "minLatencyMs": 13895.2,
+        "maxLatencyMs": 22764.64,
+        "medianLatencyMs": 17279.42,
+        "bridgeRuntimeFailedAssertions": 0
+      }
+    ],
+    "markdownSummaryLines": [
+      "# BridgeBench Soak",
+      "",
+      "- Generated: `2026-04-15T06:15:54.188Z`",
+      "- Duration: `3600s`",
+      "- Runs: `56` attempted / `56` completed / `0` failed",
+      "- Parse success: `224/224` (1)",
+      "- Latency ms: avg `15252.4` / p95 `21327.47` / min `11448.82` / max `46594.64` / median `15493.94`",
+      "- Run latency ms: avg `15252.4` / p95 `19741.32`",
+      "- Bridge runtime failed assertions: `0` across `0` runs",
+      "- Q alias: `Q`",
+      "- Truthful model label: `Q`"
+    ],
+    "markdownSummary": "# BridgeBench Soak\n\n- Generated: `2026-04-15T06:15:54.188Z`\n- Duration: `3600s`\n- Runs: `56` attempted / `56` completed / `0` failed\n- Parse success: `224/224` (1)\n- Latency ms: avg `15252.4` / p95 `21327.47` / min `11448.82` / max `46594.64` / median `15493.94`\n- Run latency ms: avg `15252.4` / p95 `19741.32`\n- Bridge runtime failed assertions: `0` across `0` runs\n- Q alias: `Q`\n- Truthful model label: `Q`",
+    "output": {
+      "jsonPath": "docs\\wiki\\BridgeBench-Soak.json"
+    }
+  },
+  "harborSoak": {
+    "generatedAt": "2026-04-15T08:22:53.565Z",
+    "state": "completed",
+    "startedAt": "2026-04-15T03:36:39.719958",
+    "finishedAt": "2026-04-15T04:07:11.653011",
+    "durationSeconds": 3600,
+    "elapsedSeconds": 1831.93,
+    "deadlineAt": "2026-04-15T09:22:53.248Z",
+    "runtimeRoot": ".runtime/harbor-soak/2026-04-15T07-36-33-729Z",
+    "release": {
+      "packageVersion": "0.1.0",
+      "harnessVersion": "0.1.0",
+      "coreVersion": "0.1.0",
+      "gitSha": "dd31cfa695aef206c7a96a3040cb32a383b573e5",
+      "gitShortSha": "dd31cfa",
+      "gitBranch": "detached",
+      "buildId": "0.1.0+dd31cfa",
+      "q": {
+        "alias": "Q",
+        "providerModel": "Q",
+        "truthfulLabel": "Q",
+        "trainingLock": {
+          "generatedAt": "2026-04-15T03:43:15Z",
+          "lockVersion": 1,
+          "bundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1-5e51e00-e16a056e",
+          "runName": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1",
+          "aliasName": "Q",
+          "trainDatasetPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c-bench-v1.jsonl",
+          "trainDatasetSha256": "e16a056eaf28580a4a91630e9313799d95be945660b7c57bb409710fe8eed676",
+          "trainDatasetRowCount": 1023,
+          "mixManifestPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c-bench-v1.manifest.json",
+          "mixManifestSha256": "27c9c67ffe90055d44012a255c8626920d31bf7f62b66e4abbe74994e07b536e",
+          "mixSupplementalCount": 3,
+          "mixSupplementalPaths": [
+            "training/q/bridgebench_seed.json",
+            "training/q/coding_long_context_seed.json",
+            ".training-output/q/q-benchmark-corpus.jsonl"
+          ],
+          "curationRunPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\training-data\\runs\\cur-fnv1a-8f551a5c\\run.json",
+          "curationRunId": "cur-fnv1a-8f551a5c",
+          "lockPath": ".training-output/q/latest-training-lock.json"
+        },
+        "hybridSession": {
+          "generatedAt": "2026-04-15T04:58:40Z",
+          "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v1",
+          "sessionPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/hybrid-session.json",
+          "localStatus": "ready",
+          "cloudStatus": "not-configured",
+          "cloudProvider": "oci",
+          "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1-5e51e00-e16a056e",
+          "immaculateBundleId": "immaculate-orchestration-f818284-3dd4365f"
+        }
+      }
+    },
+    "gatewayModel": "Q",
+    "taskPack": {
+      "id": "q-only-harbor-task-pack",
+      "label": "Q-only Harbor task pack",
+      "taskIds": [
+        "q-structured-contract",
+        "immaculate-bridge-fail-closed"
+      ]
+    },
+    "summary": {
+      "totalRuns": 90,
+      "oracle": {
+        "runs": 45,
+        "scoredRuns": 45,
+        "scoreAverage": 1,
+        "scoreMin": 1,
+        "scoreMax": 1,
+        "durationAverageSec": 8.989,
+        "durationMinSec": 7.41,
+        "durationMaxSec": 15.68,
+        "durationTotalSec": 404.5
+      },
+      "q": {
+        "runs": 45,
+        "scoredRuns": 45,
+        "scoreAverage": 1,
+        "scoreMin": 1,
+        "scoreMax": 1,
+        "durationAverageSec": 17.493,
+        "durationMinSec": 13.47,
+        "durationMaxSec": 22.66,
+        "durationTotalSec": 787.17
+      },
+      "overall": {
+        "runs": 90,
+        "scoredRuns": 90,
+        "scoreAverage": 1,
+        "scoreMin": 1,
+        "scoreMax": 1,
+        "durationAverageSec": 13.241,
+        "durationMinSec": 7.41,
+        "durationMaxSec": 22.66,
+        "durationTotalSec": 1191.67
+      },
+      "tasks": [
+        {
+          "taskId": "q-structured-contract",
+          "taskLabel": "Q structured contract",
+          "oracle": {
+            "runs": 23,
+            "scoredRuns": 23,
+            "scoreAverage": 1,
+            "scoreMin": 1,
+            "scoreMax": 1,
+            "durationAverageSec": 9.09,
+            "durationMinSec": 7.49,
+            "durationMaxSec": 15.68,
+            "durationTotalSec": 209.06
+          },
+          "q": {
+            "runs": 23,
+            "scoredRuns": 23,
+            "scoreAverage": 1,
+            "scoreMin": 1,
+            "scoreMax": 1,
+            "durationAverageSec": 17.187,
+            "durationMinSec": 13.47,
+            "durationMaxSec": 22.66,
+            "durationTotalSec": 395.29
+          }
+        },
+        {
+          "taskId": "immaculate-bridge-fail-closed",
+          "taskLabel": "Immaculate bridge fail-closed",
+          "oracle": {
+            "runs": 22,
+            "scoredRuns": 22,
+            "scoreAverage": 1,
+            "scoreMin": 1,
+            "scoreMax": 1,
+            "durationAverageSec": 8.884,
+            "durationMinSec": 7.41,
+            "durationMaxSec": 14.19,
+            "durationTotalSec": 195.44
+          },
+          "q": {
+            "runs": 22,
+            "scoredRuns": 22,
+            "scoreAverage": 1,
+            "scoreMin": 1,
+            "scoreMax": 1,
+            "durationAverageSec": 17.813,
+            "durationMinSec": 15.98,
+            "durationMaxSec": 21.14,
+            "durationTotalSec": 391.88
+          }
+        }
+      ]
+    },
+    "runs": [
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "oracle",
+        "iteration": 1,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0001",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/oracle/iter-0001/harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0001",
+        "startedAt": "2026-04-15T03:37:12.923012",
+        "finishedAt": "2026-04-15T03:37:21.866247",
+        "durationSec": 8.94,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__kMX5Mye",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "q",
+        "iteration": 1,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-q-iter-0001",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/q/iter-0001/harbor-soak-immaculate-bridge-fail-closed-q-iter-0001",
+        "startedAt": "2026-04-15T03:37:28.700063",
+        "finishedAt": "2026-04-15T03:37:45.667726",
+        "durationSec": 16.97,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__jCcmr6z",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The stale ACK and nonce replay suggest unreliable bridge state data.",
+          "commit": "Use the direct HTTP/2 path as the trusted source for current state."
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "oracle",
+        "iteration": 1,
+        "jobName": "harbor-soak-q-structured-contract-oracle-iter-0001",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/oracle/iter-0001/harbor-soak-q-structured-contract-oracle-iter-0001",
+        "startedAt": "2026-04-15T03:36:39.719958",
+        "finishedAt": "2026-04-15T03:36:47.288944",
+        "durationSec": 7.57,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__AugLrae",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "q",
+        "iteration": 1,
+        "jobName": "harbor-soak-q-structured-contract-q-iter-0001",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/q/iter-0001/harbor-soak-q-structured-contract-q-iter-0001",
+        "startedAt": "2026-04-15T03:36:53.972143",
+        "finishedAt": "2026-04-15T03:37:07.447991",
+        "durationSec": 13.47,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__zrNtLXY",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The mismatched ACK nonce and timeout suggest an unreliable path requiring caution.",
+          "commit": "Proceed with guarded mode until the acknowledgment path is fully verified."
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "oracle",
+        "iteration": 2,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0002",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/oracle/iter-0002/harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0002",
+        "startedAt": "2026-04-15T03:38:33.047174",
+        "finishedAt": "2026-04-15T03:38:40.684128",
+        "durationSec": 7.64,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__F9DvuUo",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "q",
+        "iteration": 2,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-q-iter-0002",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/q/iter-0002/harbor-soak-immaculate-bridge-fail-closed-q-iter-0002",
+        "startedAt": "2026-04-15T03:38:47.838357",
+        "finishedAt": "2026-04-15T03:39:03.816915",
+        "durationSec": 15.98,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__G9h4DgR",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The stale ACK and nonce replay suggest unreliable bridge state data.",
+          "commit": "Use the direct HTTP/2 path while maintaining the guarded state."
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "oracle",
+        "iteration": 2,
+        "jobName": "harbor-soak-q-structured-contract-oracle-iter-0002",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/oracle/iter-0002/harbor-soak-q-structured-contract-oracle-iter-0002",
+        "startedAt": "2026-04-15T03:37:52.866412",
+        "finishedAt": "2026-04-15T03:38:02.316243",
+        "durationSec": 9.45,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__AuBUW2q",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "q",
+        "iteration": 2,
+        "jobName": "harbor-soak-q-structured-contract-q-iter-0002",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/q/iter-0002/harbor-soak-q-structured-contract-q-iter-0002",
+        "startedAt": "2026-04-15T03:38:08.571847",
+        "finishedAt": "2026-04-15T03:38:26.005822",
+        "durationSec": 17.43,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__7UqtXLi",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The mismatched ACK nonce and timeout suggest an unreliable path requiring caution.",
+          "commit": "Maintain fail-closed behavior until the acknowledgment path is fully verified."
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "oracle",
+        "iteration": 3,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0003",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/oracle/iter-0003/harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0003",
+        "startedAt": "2026-04-15T03:40:06.292741",
+        "finishedAt": "2026-04-15T03:40:15.369237",
+        "durationSec": 9.08,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__2uhgRFD",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "q",
+        "iteration": 3,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-q-iter-0003",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/q/iter-0003/harbor-soak-immaculate-bridge-fail-closed-q-iter-0003",
+        "startedAt": "2026-04-15T03:40:22.241336",
+        "finishedAt": "2026-04-15T03:40:38.851527",
+        "durationSec": 16.61,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__MGGHYqy",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The stale ACK and untrusted bridge path necessitate a cautious, verified route.",
+          "commit": "Proceed via the healthy direct HTTP/2 path to maintain service integrity."
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "oracle",
+        "iteration": 3,
+        "jobName": "harbor-soak-q-structured-contract-oracle-iter-0003",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/oracle/iter-0003/harbor-soak-q-structured-contract-oracle-iter-0003",
+        "startedAt": "2026-04-15T03:39:10.883582",
+        "finishedAt": "2026-04-15T03:39:22.496053",
+        "durationSec": 11.61,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__QzHK4F9",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "q",
+        "iteration": 3,
+        "jobName": "harbor-soak-q-structured-contract-q-iter-0003",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/q/iter-0003/harbor-soak-q-structured-contract-q-iter-0003",
+        "startedAt": "2026-04-15T03:39:36.527334",
+        "finishedAt": "2026-04-15T03:39:59.187796",
+        "durationSec": 22.66,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__2wYhohg",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The mismatched ACK nonce and timeout suggest a need for cautious, verified state management.",
+          "commit": "Maintain fail-closed behavior until the acknowledgment path is fully validated."
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "oracle",
+        "iteration": 4,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0004",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/oracle/iter-0004/harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0004",
+        "startedAt": "2026-04-15T03:41:24.460879",
+        "finishedAt": "2026-04-15T03:41:32.150964",
+        "durationSec": 7.69,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__6astj3M",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "q",
+        "iteration": 4,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-q-iter-0004",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/q/iter-0004/harbor-soak-immaculate-bridge-fail-closed-q-iter-0004",
+        "startedAt": "2026-04-15T03:41:39.937193",
+        "finishedAt": "2026-04-15T03:41:56.430858",
+        "durationSec": 16.49,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__yEq9krG",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The stale ACK and untrusted bridge path necessitate a cautious, verified route.",
+          "commit": "Proceed via the healthy direct HTTP/2 path to maintain service integrity."
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "oracle",
+        "iteration": 4,
+        "jobName": "harbor-soak-q-structured-contract-oracle-iter-0004",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/oracle/iter-0004/harbor-soak-q-structured-contract-oracle-iter-0004",
+        "startedAt": "2026-04-15T03:40:45.997369",
+        "finishedAt": "2026-04-15T03:40:54.676708",
+        "durationSec": 8.68,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__ndaNRCu",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "q",
+        "iteration": 4,
+        "jobName": "harbor-soak-q-structured-contract-q-iter-0004",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/q/iter-0004/harbor-soak-q-structured-contract-q-iter-0004",
+        "startedAt": "2026-04-15T03:40:59.920712",
+        "finishedAt": "2026-04-15T03:41:17.146950",
+        "durationSec": 17.23,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__u2jyR4Y",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The mismatched ACK nonce and timeout suggest a need for cautious, verified state management.",
+          "commit": "Maintain fail-closed behavior until the acknowledgment path is fully validated."
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "oracle",
+        "iteration": 5,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0005",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/oracle/iter-0005/harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0005",
+        "startedAt": "2026-04-15T03:42:42.711608",
+        "finishedAt": "2026-04-15T03:42:51.693939",
+        "durationSec": 8.98,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__f8mCgqQ",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "q",
+        "iteration": 5,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-q-iter-0005",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/q/iter-0005/harbor-soak-immaculate-bridge-fail-closed-q-iter-0005",
+        "startedAt": "2026-04-15T03:42:57.196461",
+        "finishedAt": "2026-04-15T03:43:14.629974",
+        "durationSec": 17.43,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__gRYPscA",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The stale ACK and nonce replay suggest unreliable bridge state data.",
+          "commit": "Use the direct HTTP/2 path as the trusted source for current state."
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "oracle",
+        "iteration": 5,
+        "jobName": "harbor-soak-q-structured-contract-oracle-iter-0005",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/oracle/iter-0005/harbor-soak-q-structured-contract-oracle-iter-0005",
+        "startedAt": "2026-04-15T03:42:03.325571",
+        "finishedAt": "2026-04-15T03:42:12.318191",
+        "durationSec": 8.99,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__ZfoLHiV",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "q",
+        "iteration": 5,
+        "jobName": "harbor-soak-q-structured-contract-q-iter-0005",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/q/iter-0005/harbor-soak-q-structured-contract-q-iter-0005",
+        "startedAt": "2026-04-15T03:42:19.113237",
+        "finishedAt": "2026-04-15T03:42:35.340738",
+        "durationSec": 16.23,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__7hizUeX",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The mismatched ACK nonce and timeout suggest a need for cautious, verified state management.",
+          "commit": "Maintain fail-closed behavior until the acknowledgment path is fully validated."
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "oracle",
+        "iteration": 6,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0006",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/oracle/iter-0006/harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0006",
+        "startedAt": "2026-04-15T03:44:00.100904",
+        "finishedAt": "2026-04-15T03:44:09.170198",
+        "durationSec": 9.07,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__YXAfjXL",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "q",
+        "iteration": 6,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-q-iter-0006",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/q/iter-0006/harbor-soak-immaculate-bridge-fail-closed-q-iter-0006",
+        "startedAt": "2026-04-15T03:44:16.302109",
+        "finishedAt": "2026-04-15T03:44:32.637299",
+        "durationSec": 16.34,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__f4ztc4r",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The stale ACK and untrusted bridge path necessitate a cautious, verified route.",
+          "commit": "Proceed via the healthy direct HTTP/2 path to maintain system integrity."
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "oracle",
+        "iteration": 6,
+        "jobName": "harbor-soak-q-structured-contract-oracle-iter-0006",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/oracle/iter-0006/harbor-soak-q-structured-contract-oracle-iter-0006",
+        "startedAt": "2026-04-15T03:43:21.020333",
+        "finishedAt": "2026-04-15T03:43:30.056805",
+        "durationSec": 9.04,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__JnGDoXo",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "q",
+        "iteration": 6,
+        "jobName": "harbor-soak-q-structured-contract-q-iter-0006",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/q/iter-0006/harbor-soak-q-structured-contract-q-iter-0006",
+        "startedAt": "2026-04-15T03:43:35.967957",
+        "finishedAt": "2026-04-15T03:43:53.014898",
+        "durationSec": 17.05,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__VSTAbp9",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The mismatched ACK nonce and timeout suggest a need for cautious, verified state management.",
+          "commit": "Maintain fail-closed behavior until the acknowledgment path is fully validated."
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "oracle",
+        "iteration": 7,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0007",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/oracle/iter-0007/harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0007",
+        "startedAt": "2026-04-15T03:45:17.722045",
+        "finishedAt": "2026-04-15T03:45:26.682133",
+        "durationSec": 8.96,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__QZfBPkx",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "q",
+        "iteration": 7,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-q-iter-0007",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/q/iter-0007/harbor-soak-immaculate-bridge-fail-closed-q-iter-0007",
+        "startedAt": "2026-04-15T03:45:33.631469",
+        "finishedAt": "2026-04-15T03:45:50.124074",
+        "durationSec": 16.49,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__CbaoGRk",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The stale ACK and nonce replay suggest unreliable bridge state data.",
+          "commit": "Use the direct HTTP/2 path as the trusted source for current state."
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "oracle",
+        "iteration": 7,
+        "jobName": "harbor-soak-q-structured-contract-oracle-iter-0007",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/oracle/iter-0007/harbor-soak-q-structured-contract-oracle-iter-0007",
+        "startedAt": "2026-04-15T03:44:39.748673",
+        "finishedAt": "2026-04-15T03:44:47.236997",
+        "durationSec": 7.49,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__TRJXqaw",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "q",
+        "iteration": 7,
+        "jobName": "harbor-soak-q-structured-contract-q-iter-0007",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/q/iter-0007/harbor-soak-q-structured-contract-q-iter-0007",
+        "startedAt": "2026-04-15T03:44:54.174048",
+        "finishedAt": "2026-04-15T03:45:11.999256",
+        "durationSec": 17.82,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__Pb6Z5CK",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The mismatched ACK nonce and timeout suggest a need for cautious, verified state management.",
+          "commit": "Maintain fail-closed behavior until the acknowledgment path is fully validated."
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "oracle",
+        "iteration": 8,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0008",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/oracle/iter-0008/harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0008",
+        "startedAt": "2026-04-15T03:46:35.490258",
+        "finishedAt": "2026-04-15T03:46:42.903604",
+        "durationSec": 7.41,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__sU5FD9B",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "q",
+        "iteration": 8,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-q-iter-0008",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/q/iter-0008/harbor-soak-immaculate-bridge-fail-closed-q-iter-0008",
+        "startedAt": "2026-04-15T03:46:50.007489",
+        "finishedAt": "2026-04-15T03:47:07.580582",
+        "durationSec": 17.57,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__jWbNA2H",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The stale ACK and untrusted bridge state mandate a cautious, verified path.",
+          "commit": "Proceed via the known healthy direct HTTP/2 path for reliable state updates."
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "oracle",
+        "iteration": 8,
+        "jobName": "harbor-soak-q-structured-contract-oracle-iter-0008",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/oracle/iter-0008/harbor-soak-q-structured-contract-oracle-iter-0008",
+        "startedAt": "2026-04-15T03:45:57.188669",
+        "finishedAt": "2026-04-15T03:46:06.078426",
+        "durationSec": 8.89,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__99iEoGa",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "q",
+        "iteration": 8,
+        "jobName": "harbor-soak-q-structured-contract-q-iter-0008",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/q/iter-0008/harbor-soak-q-structured-contract-q-iter-0008",
+        "startedAt": "2026-04-15T03:46:11.625621",
+        "finishedAt": "2026-04-15T03:46:28.709754",
+        "durationSec": 17.08,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__xQp26Z2",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The mismatched ACK nonce and timeout suggest a need for cautious, verified state management.",
+          "commit": "Maintain fail-closed behavior until the acknowledgment path is fully validated."
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "oracle",
+        "iteration": 9,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0009",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/oracle/iter-0009/harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0009",
+        "startedAt": "2026-04-15T03:47:52.423278",
+        "finishedAt": "2026-04-15T03:48:01.340507",
+        "durationSec": 8.92,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__stbL4C2",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "q",
+        "iteration": 9,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-q-iter-0009",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/q/iter-0009/harbor-soak-immaculate-bridge-fail-closed-q-iter-0009",
+        "startedAt": "2026-04-15T03:48:07.122860",
+        "finishedAt": "2026-04-15T03:48:25.019819",
+        "durationSec": 17.9,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__C8uAKGL",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The ACK arrived late and replayed a nonce, making the bridge untrustworthy.",
+          "commit": "Use the healthy direct HTTP/2 path for reliable state updates."
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "oracle",
+        "iteration": 9,
+        "jobName": "harbor-soak-q-structured-contract-oracle-iter-0009",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/oracle/iter-0009/harbor-soak-q-structured-contract-oracle-iter-0009",
+        "startedAt": "2026-04-15T03:47:13.161727",
+        "finishedAt": "2026-04-15T03:47:22.067196",
+        "durationSec": 8.91,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__CoZ5R9e",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "q",
+        "iteration": 9,
+        "jobName": "harbor-soak-q-structured-contract-q-iter-0009",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/q/iter-0009/harbor-soak-q-structured-contract-q-iter-0009",
+        "startedAt": "2026-04-15T03:47:29.150510",
+        "finishedAt": "2026-04-15T03:47:45.129580",
+        "durationSec": 15.98,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__VBawzuy",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The mismatched ACK nonce and timeout suggest a need for cautious, verified state management.",
+          "commit": "Maintain fail-closed behavior until the acknowledgment path is fully validated."
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "oracle",
+        "iteration": 10,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0010",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/oracle/iter-0010/harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0010",
+        "startedAt": "2026-04-15T03:49:09.796830",
+        "finishedAt": "2026-04-15T03:49:23.982918",
+        "durationSec": 14.19,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__XjVgdcY",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "q",
+        "iteration": 10,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-q-iter-0010",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/q/iter-0010/harbor-soak-immaculate-bridge-fail-closed-q-iter-0010",
+        "startedAt": "2026-04-15T03:49:32.253277",
+        "finishedAt": "2026-04-15T03:49:51.858466",
+        "durationSec": 19.61,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__iWn5GYS",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The stale ACK and nonce replay suggest the bridge path is unreliable for state.",
+          "commit": "Use the healthy direct HTTP/2 path for all current operations."
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "oracle",
+        "iteration": 10,
+        "jobName": "harbor-soak-q-structured-contract-oracle-iter-0010",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/oracle/iter-0010/harbor-soak-q-structured-contract-oracle-iter-0010",
+        "startedAt": "2026-04-15T03:48:32.094177",
+        "finishedAt": "2026-04-15T03:48:39.672450",
+        "durationSec": 7.58,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__zjJRtsx",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "q",
+        "iteration": 10,
+        "jobName": "harbor-soak-q-structured-contract-q-iter-0010",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/q/iter-0010/harbor-soak-q-structured-contract-q-iter-0010",
+        "startedAt": "2026-04-15T03:48:46.760160",
+        "finishedAt": "2026-04-15T03:49:02.655676",
+        "durationSec": 15.89,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__aAsveAz",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The mismatched ACK nonce and timeout suggest a need for cautious, verified state management.",
+          "commit": "Maintain fail-closed behavior until the acknowledgment path is fully validated."
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "oracle",
+        "iteration": 11,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0011",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/oracle/iter-0011/harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0011",
+        "startedAt": "2026-04-15T03:50:49.570423",
+        "finishedAt": "2026-04-15T03:50:57.139563",
+        "durationSec": 7.57,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__zeUy5py",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "q",
+        "iteration": 11,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-q-iter-0011",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/q/iter-0011/harbor-soak-immaculate-bridge-fail-closed-q-iter-0011",
+        "startedAt": "2026-04-15T03:51:06.958342",
+        "finishedAt": "2026-04-15T03:51:28.097291",
+        "durationSec": 21.14,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__GWmPzXm",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The stale ACK and untrusted bridge path necessitate a cautious, verified route.",
+          "commit": "Proceed via the healthy direct HTTP/2 path to maintain system integrity."
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "oracle",
+        "iteration": 11,
+        "jobName": "harbor-soak-q-structured-contract-oracle-iter-0011",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/oracle/iter-0011/harbor-soak-q-structured-contract-oracle-iter-0011",
+        "startedAt": "2026-04-15T03:50:02.076071",
+        "finishedAt": "2026-04-15T03:50:17.757338",
+        "durationSec": 15.68,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__2hStFNr",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "q",
+        "iteration": 11,
+        "jobName": "harbor-soak-q-structured-contract-q-iter-0011",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/q/iter-0011/harbor-soak-q-structured-contract-q-iter-0011",
+        "startedAt": "2026-04-15T03:50:26.253811",
+        "finishedAt": "2026-04-15T03:50:42.547575",
+        "durationSec": 16.29,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__W8YN2mD",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The mismatched ACK nonce and timeout suggest a need for cautious, verified state management.",
+          "commit": "Maintain fail-closed behavior until the acknowledgment path is fully validated."
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "oracle",
+        "iteration": 12,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0012",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/oracle/iter-0012/harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0012",
+        "startedAt": "2026-04-15T03:52:15.625964",
+        "finishedAt": "2026-04-15T03:52:23.468271",
+        "durationSec": 7.84,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__KhR5EVD",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "q",
+        "iteration": 12,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-q-iter-0012",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/q/iter-0012/harbor-soak-immaculate-bridge-fail-closed-q-iter-0012",
+        "startedAt": "2026-04-15T03:52:30.454885",
+        "finishedAt": "2026-04-15T03:52:48.323621",
+        "durationSec": 17.87,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__D9odTGi",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The stale ACK and untrusted bridge path necessitate a cautious, verified route.",
+          "commit": "Proceed via the known healthy direct HTTP/2 path for reliable state updates."
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "oracle",
+        "iteration": 12,
+        "jobName": "harbor-soak-q-structured-contract-oracle-iter-0012",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/oracle/iter-0012/harbor-soak-q-structured-contract-oracle-iter-0012",
+        "startedAt": "2026-04-15T03:51:35.766849",
+        "finishedAt": "2026-04-15T03:51:44.751053",
+        "durationSec": 8.98,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__xKPT2eN",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "q",
+        "iteration": 12,
+        "jobName": "harbor-soak-q-structured-contract-q-iter-0012",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/q/iter-0012/harbor-soak-q-structured-contract-q-iter-0012",
+        "startedAt": "2026-04-15T03:51:52.097541",
+        "finishedAt": "2026-04-15T03:52:08.189094",
+        "durationSec": 16.09,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__68JK2jT",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The mismatched ACK nonce and timeout suggest a need for cautious, verified state management.",
+          "commit": "Maintain fail-closed behavior until the acknowledgment path is fully validated."
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "oracle",
+        "iteration": 13,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0013",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/oracle/iter-0013/harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0013",
+        "startedAt": "2026-04-15T03:53:34.429842",
+        "finishedAt": "2026-04-15T03:53:43.664414",
+        "durationSec": 9.23,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__q9sBAM5",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "q",
+        "iteration": 13,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-q-iter-0013",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/q/iter-0013/harbor-soak-immaculate-bridge-fail-closed-q-iter-0013",
+        "startedAt": "2026-04-15T03:53:49.590881",
+        "finishedAt": "2026-04-15T03:54:08.461891",
+        "durationSec": 18.87,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__AUKm4UK",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The stale ACK and untrusted bridge path necessitate a cautious, verified route.",
+          "commit": "Proceed via the known healthy direct HTTP/2 path for reliable state transfer."
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "oracle",
+        "iteration": 13,
+        "jobName": "harbor-soak-q-structured-contract-oracle-iter-0013",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/oracle/iter-0013/harbor-soak-q-structured-contract-oracle-iter-0013",
+        "startedAt": "2026-04-15T03:52:53.947932",
+        "finishedAt": "2026-04-15T03:53:02.807492",
+        "durationSec": 8.86,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__bsvMQRS",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "q",
+        "iteration": 13,
+        "jobName": "harbor-soak-q-structured-contract-q-iter-0013",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/q/iter-0013/harbor-soak-q-structured-contract-q-iter-0013",
+        "startedAt": "2026-04-15T03:53:10.117744",
+        "finishedAt": "2026-04-15T03:53:26.830646",
+        "durationSec": 16.71,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__UG8tkGi",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The mismatched ACK nonce and timeout suggest a need for cautious, verified state management.",
+          "commit": "Maintain fail-closed behavior until the acknowledgment path is fully validated."
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "oracle",
+        "iteration": 14,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0014",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/oracle/iter-0014/harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0014",
+        "startedAt": "2026-04-15T03:54:55.915334",
+        "finishedAt": "2026-04-15T03:55:05.223491",
+        "durationSec": 9.31,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__sKQKfto",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "q",
+        "iteration": 14,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-q-iter-0014",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/q/iter-0014/harbor-soak-immaculate-bridge-fail-closed-q-iter-0014",
+        "startedAt": "2026-04-15T03:55:12.839408",
+        "finishedAt": "2026-04-15T03:55:29.558117",
+        "durationSec": 16.72,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__hCQ9ptA",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The stale ACK and nonce replay suggest unreliable bridge state data.",
+          "commit": "Use the healthy direct HTTP/2 path for current operations."
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "oracle",
+        "iteration": 14,
+        "jobName": "harbor-soak-q-structured-contract-oracle-iter-0014",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/oracle/iter-0014/harbor-soak-q-structured-contract-oracle-iter-0014",
+        "startedAt": "2026-04-15T03:54:15.966798",
+        "finishedAt": "2026-04-15T03:54:23.886198",
+        "durationSec": 7.92,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__oXKDxbV",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "q",
+        "iteration": 14,
+        "jobName": "harbor-soak-q-structured-contract-q-iter-0014",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/q/iter-0014/harbor-soak-q-structured-contract-q-iter-0014",
+        "startedAt": "2026-04-15T03:54:31.423539",
+        "finishedAt": "2026-04-15T03:54:48.239902",
+        "durationSec": 16.82,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__b3N82eu",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The mismatched ACK nonce and timeout suggest a need for cautious, verified state management.",
+          "commit": "Maintain fail-closed behavior until the acknowledgment path is fully validated."
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "oracle",
+        "iteration": 15,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0015",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/oracle/iter-0015/harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0015",
+        "startedAt": "2026-04-15T03:56:17.060741",
+        "finishedAt": "2026-04-15T03:56:26.513190",
+        "durationSec": 9.45,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__SEoS88D",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "q",
+        "iteration": 15,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-q-iter-0015",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/q/iter-0015/harbor-soak-immaculate-bridge-fail-closed-q-iter-0015",
+        "startedAt": "2026-04-15T03:56:34.367029",
+        "finishedAt": "2026-04-15T03:56:52.271790",
+        "durationSec": 17.9,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__mRj45Lq",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The bridge ACK is suspect due to nonce replay, favoring the direct HTTP/2 path.",
+          "commit": "Proceed via the direct HTTP/2 path while maintaining the guarded state."
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "oracle",
+        "iteration": 15,
+        "jobName": "harbor-soak-q-structured-contract-oracle-iter-0015",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/oracle/iter-0015/harbor-soak-q-structured-contract-oracle-iter-0015",
+        "startedAt": "2026-04-15T03:55:37.038208",
+        "finishedAt": "2026-04-15T03:55:44.623387",
+        "durationSec": 7.58,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__sipGpuY",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "q",
+        "iteration": 15,
+        "jobName": "harbor-soak-q-structured-contract-q-iter-0015",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/q/iter-0015/harbor-soak-q-structured-contract-q-iter-0015",
+        "startedAt": "2026-04-15T03:55:52.560107",
+        "finishedAt": "2026-04-15T03:56:10.815419",
+        "durationSec": 18.25,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__jZXbLvZ",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The mismatched ACK nonce and timeout suggest a need for cautious, verified state management.",
+          "commit": "Maintain fail-closed behavior until the acknowledgment path is fully validated."
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "oracle",
+        "iteration": 16,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0016",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/oracle/iter-0016/harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0016",
+        "startedAt": "2026-04-15T03:57:39.838053",
+        "finishedAt": "2026-04-15T03:57:49.161049",
+        "durationSec": 9.32,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__voVkYoh",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "q",
+        "iteration": 16,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-q-iter-0016",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/q/iter-0016/harbor-soak-immaculate-bridge-fail-closed-q-iter-0016",
+        "startedAt": "2026-04-15T03:57:56.781735",
+        "finishedAt": "2026-04-15T03:58:14.661202",
+        "durationSec": 17.88,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__LtTf69A",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The stale ACK and untrusted bridge path necessitate a cautious, verified route.",
+          "commit": "Proceed via the healthy direct HTTP/2 path to maintain system integrity."
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "oracle",
+        "iteration": 16,
+        "jobName": "harbor-soak-q-structured-contract-oracle-iter-0016",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/oracle/iter-0016/harbor-soak-q-structured-contract-oracle-iter-0016",
+        "startedAt": "2026-04-15T03:57:00.102535",
+        "finishedAt": "2026-04-15T03:57:07.921799",
+        "durationSec": 7.82,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__KrR8iUH",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "q",
+        "iteration": 16,
+        "jobName": "harbor-soak-q-structured-contract-q-iter-0016",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/q/iter-0016/harbor-soak-q-structured-contract-q-iter-0016",
+        "startedAt": "2026-04-15T03:57:15.539464",
+        "finishedAt": "2026-04-15T03:57:33.829373",
+        "durationSec": 18.29,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__SWo23qf",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The mismatched ACK nonce and timeout suggest a need for cautious, verified state management.",
+          "commit": "Maintain fail-closed behavior until the acknowledgment path is fully validated."
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "oracle",
+        "iteration": 17,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0017",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/oracle/iter-0017/harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0017",
+        "startedAt": "2026-04-15T03:59:02.183896",
+        "finishedAt": "2026-04-15T03:59:11.727675",
+        "durationSec": 9.54,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__JFBqh3X",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "q",
+        "iteration": 17,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-q-iter-0017",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/q/iter-0017/harbor-soak-immaculate-bridge-fail-closed-q-iter-0017",
+        "startedAt": "2026-04-15T03:59:19.364661",
+        "finishedAt": "2026-04-15T03:59:36.556231",
+        "durationSec": 17.19,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__a9BCqxH",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The stale ACK and nonce replay suggest unreliable bridge state information.",
+          "commit": "Use the healthy direct HTTP/2 path for reliable state updates."
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "oracle",
+        "iteration": 17,
+        "jobName": "harbor-soak-q-structured-contract-oracle-iter-0017",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/oracle/iter-0017/harbor-soak-q-structured-contract-oracle-iter-0017",
+        "startedAt": "2026-04-15T03:58:22.342168",
+        "finishedAt": "2026-04-15T03:58:31.515500",
+        "durationSec": 9.17,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__Cr9XTSq",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "q",
+        "iteration": 17,
+        "jobName": "harbor-soak-q-structured-contract-q-iter-0017",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/q/iter-0017/harbor-soak-q-structured-contract-q-iter-0017",
+        "startedAt": "2026-04-15T03:58:37.700035",
+        "finishedAt": "2026-04-15T03:58:55.918596",
+        "durationSec": 18.22,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__X5VVnRp",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The mismatched ACK nonce and timeout suggest a need for cautious, verified state management.",
+          "commit": "Maintain fail-closed behavior until the acknowledgment path is fully validated."
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "oracle",
+        "iteration": 18,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0018",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/oracle/iter-0018/harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0018",
+        "startedAt": "2026-04-15T04:00:26.286295",
+        "finishedAt": "2026-04-15T04:00:34.238302",
+        "durationSec": 7.95,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__oFXcFdn",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "q",
+        "iteration": 18,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-q-iter-0018",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/q/iter-0018/harbor-soak-immaculate-bridge-fail-closed-q-iter-0018",
+        "startedAt": "2026-04-15T04:00:41.887305",
+        "finishedAt": "2026-04-15T04:00:59.642900",
+        "durationSec": 17.75,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__wuX699F",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The stale ACK and untrusted bridge path mandate a cautious, verified route.",
+          "commit": "Proceed via the healthy direct HTTP/2 path to maintain service integrity."
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "oracle",
+        "iteration": 18,
+        "jobName": "harbor-soak-q-structured-contract-oracle-iter-0018",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/oracle/iter-0018/harbor-soak-q-structured-contract-oracle-iter-0018",
+        "startedAt": "2026-04-15T03:59:44.276257",
+        "finishedAt": "2026-04-15T03:59:53.622182",
+        "durationSec": 9.35,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__fpnyEff",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "q",
+        "iteration": 18,
+        "jobName": "harbor-soak-q-structured-contract-q-iter-0018",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/q/iter-0018/harbor-soak-q-structured-contract-q-iter-0018",
+        "startedAt": "2026-04-15T03:59:59.883679",
+        "finishedAt": "2026-04-15T04:00:18.381686",
+        "durationSec": 18.5,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__yfnZth2",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The mismatched ACK nonce and timeout suggest a need for cautious, verified state management.",
+          "commit": "Maintain fail-closed behavior until the acknowledgment path is fully validated."
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "oracle",
+        "iteration": 19,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0019",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/oracle/iter-0019/harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0019",
+        "startedAt": "2026-04-15T04:01:49.128871",
+        "finishedAt": "2026-04-15T04:01:56.943597",
+        "durationSec": 7.82,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__MPsh7Ay",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "q",
+        "iteration": 19,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-q-iter-0019",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/q/iter-0019/harbor-soak-immaculate-bridge-fail-closed-q-iter-0019",
+        "startedAt": "2026-04-15T04:02:04.674571",
+        "finishedAt": "2026-04-15T04:02:22.571817",
+        "durationSec": 17.9,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__EgR7Z9Y",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The stale ACK and untrusted bridge path necessitate a cautious, verified route.",
+          "commit": "Proceed via the known healthy direct HTTP/2 path for reliable state updates."
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "oracle",
+        "iteration": 19,
+        "jobName": "harbor-soak-q-structured-contract-oracle-iter-0019",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/oracle/iter-0019/harbor-soak-q-structured-contract-oracle-iter-0019",
+        "startedAt": "2026-04-15T04:01:07.341703",
+        "finishedAt": "2026-04-15T04:01:16.640488",
+        "durationSec": 9.3,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__4a4cLGD",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "q",
+        "iteration": 19,
+        "jobName": "harbor-soak-q-structured-contract-q-iter-0019",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/q/iter-0019/harbor-soak-q-structured-contract-q-iter-0019",
+        "startedAt": "2026-04-15T04:01:24.291483",
+        "finishedAt": "2026-04-15T04:01:41.324241",
+        "durationSec": 17.03,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__cHEgaNm",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The mismatched ACK nonce and timeout suggest a need for cautious, verified state management.",
+          "commit": "Maintain fail-closed behavior until the acknowledgment path is fully validated."
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "oracle",
+        "iteration": 20,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0020",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/oracle/iter-0020/harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0020",
+        "startedAt": "2026-04-15T04:03:12.088998",
+        "finishedAt": "2026-04-15T04:03:19.856995",
+        "durationSec": 7.77,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__gZzjtmx",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "q",
+        "iteration": 20,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-q-iter-0020",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/q/iter-0020/harbor-soak-immaculate-bridge-fail-closed-q-iter-0020",
+        "startedAt": "2026-04-15T04:03:27.460910",
+        "finishedAt": "2026-04-15T04:03:46.406843",
+        "durationSec": 18.95,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__GophhF3",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The stale ACK and untrusted bridge state mandate caution despite the direct path.",
+          "commit": "Proceed via the healthy HTTP/2 path while logging the bridge anomaly."
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "oracle",
+        "iteration": 20,
+        "jobName": "harbor-soak-q-structured-contract-oracle-iter-0020",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/oracle/iter-0020/harbor-soak-q-structured-contract-oracle-iter-0020",
+        "startedAt": "2026-04-15T04:02:30.403353",
+        "finishedAt": "2026-04-15T04:02:39.830044",
+        "durationSec": 9.43,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__QAeBo23",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "q",
+        "iteration": 20,
+        "jobName": "harbor-soak-q-structured-contract-q-iter-0020",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/q/iter-0020/harbor-soak-q-structured-contract-q-iter-0020",
+        "startedAt": "2026-04-15T04:02:47.366711",
+        "finishedAt": "2026-04-15T04:03:04.377539",
+        "durationSec": 17.01,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__inPcFSf",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The mismatched ACK nonce and timeout suggest a need for cautious, verified state management.",
+          "commit": "Maintain fail-closed behavior until the acknowledgment path is fully validated."
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "oracle",
+        "iteration": 21,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0021",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/oracle/iter-0021/harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0021",
+        "startedAt": "2026-04-15T04:04:34.254823",
+        "finishedAt": "2026-04-15T04:04:43.661726",
+        "durationSec": 9.41,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__RRUSEjC",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "q",
+        "iteration": 21,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-q-iter-0021",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/q/iter-0021/harbor-soak-immaculate-bridge-fail-closed-q-iter-0021",
+        "startedAt": "2026-04-15T04:04:49.886657",
+        "finishedAt": "2026-04-15T04:05:09.170822",
+        "durationSec": 19.28,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__Y8oTQPw",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The stale ACK and untrusted bridge path necessitate a cautious, verified route.",
+          "commit": "Proceed via the known healthy direct HTTP/2 path for reliable state updates."
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "oracle",
+        "iteration": 21,
+        "jobName": "harbor-soak-q-structured-contract-oracle-iter-0021",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/oracle/iter-0021/harbor-soak-q-structured-contract-oracle-iter-0021",
+        "startedAt": "2026-04-15T04:03:52.822396",
+        "finishedAt": "2026-04-15T04:04:02.119851",
+        "durationSec": 9.3,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__KsgQzEe",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "q",
+        "iteration": 21,
+        "jobName": "harbor-soak-q-structured-contract-q-iter-0021",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/q/iter-0021/harbor-soak-q-structured-contract-q-iter-0021",
+        "startedAt": "2026-04-15T04:04:09.760053",
+        "finishedAt": "2026-04-15T04:04:26.523176",
+        "durationSec": 16.76,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__qH4GZES",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The mismatched ACK nonce and timeout suggest a need for cautious, verified state management.",
+          "commit": "Maintain fail-closed behavior until the acknowledgment path is fully validated."
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "oracle",
+        "iteration": 22,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0022",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/oracle/iter-0022/harbor-soak-immaculate-bridge-fail-closed-oracle-iter-0022",
+        "startedAt": "2026-04-15T04:05:58.045248",
+        "finishedAt": "2026-04-15T04:06:07.390674",
+        "durationSec": 9.35,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__LgHpfgu",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "immaculate-bridge-fail-closed",
+        "taskLabel": "Immaculate bridge fail-closed",
+        "agent": "q",
+        "iteration": 22,
+        "jobName": "harbor-soak-immaculate-bridge-fail-closed-q-iter-0022",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/immaculate-bridge-fail-closed/q/iter-0022/harbor-soak-immaculate-bridge-fail-closed-q-iter-0022",
+        "startedAt": "2026-04-15T04:06:12.430158",
+        "finishedAt": "2026-04-15T04:06:31.470153",
+        "durationSec": 19.04,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__p9m5vTN",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The stale ACK and untrusted bridge path necessitate a cautious, verified route.",
+          "commit": "Proceed via the healthy direct HTTP/2 path to maintain service continuity."
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "oracle",
+        "iteration": 22,
+        "jobName": "harbor-soak-q-structured-contract-oracle-iter-0022",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/oracle/iter-0022/harbor-soak-q-structured-contract-oracle-iter-0022",
+        "startedAt": "2026-04-15T04:05:15.582488",
+        "finishedAt": "2026-04-15T04:05:24.949349",
+        "durationSec": 9.37,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__N5iCXBf",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "q",
+        "iteration": 22,
+        "jobName": "harbor-soak-q-structured-contract-q-iter-0022",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/q/iter-0022/harbor-soak-q-structured-contract-q-iter-0022",
+        "startedAt": "2026-04-15T04:05:32.473172",
+        "finishedAt": "2026-04-15T04:05:50.234851",
+        "durationSec": 17.76,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__RSHqKHv",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The mismatched ACK nonce and timeout suggest a need for cautious, verified state management.",
+          "commit": "Maintain fail-closed behavior until the acknowledgment path is fully validated."
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "oracle",
+        "iteration": 23,
+        "jobName": "harbor-soak-q-structured-contract-oracle-iter-0023",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/oracle/iter-0023/harbor-soak-q-structured-contract-oracle-iter-0023",
+        "startedAt": "2026-04-15T04:06:39.147348",
+        "finishedAt": "2026-04-15T04:06:47.234958",
+        "durationSec": 8.09,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__3VRpze3",
+        "reward": {
+          "reward": 1
+        }
+      },
+      {
+        "taskId": "q-structured-contract",
+        "taskLabel": "Q structured contract",
+        "agent": "q",
+        "iteration": 23,
+        "jobName": "harbor-soak-q-structured-contract-q-iter-0023",
+        "jobPath": "C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway/.runtime/harbor-soak/2026-04-15T07-36-33-729Z/q-structured-contract/q/iter-0023/harbor-soak-q-structured-contract-q-iter-0023",
+        "startedAt": "2026-04-15T04:06:54.935452",
+        "finishedAt": "2026-04-15T04:07:11.653011",
+        "durationSec": 16.72,
+        "score": 1,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__gPXumMa",
+        "reward": {
+          "reward": 1
+        },
+        "response": {
+          "route": "guarded",
+          "reason": "The mismatched ACK nonce and timeout suggest a need for cautious, verified state management.",
+          "commit": "Maintain fail-closed behavior until the acknowledgment path is fully validated."
+        }
+      }
+    ],
+    "output": {
+      "jsonPath": "docs/wiki/Harbor-Terminal-Bench-Soak.json",
+      "markdownPath": "docs/wiki/Harbor-Terminal-Bench-Soak.md"
+    }
+  },
+  "wandbSoak": {
+    "suiteId": "immaculate-benchmark-2026-04-12T21-48-36-880Z",
+    "packId": "latency-soak-60m",
+    "packLabel": "Latency Soak (60m)",
+    "runKind": "soak",
+    "generatedAt": "2026-04-12T21:48:36.880Z",
+    "publishedAt": "2026-04-12T22:53:03.131108+00:00",
+    "entity": "arobi-arobi-technology-alliance",
+    "project": "immaculate",
+    "projectUrl": "https://wandb.ai/arobi-arobi-technology-alliance/immaculate",
+    "runUrl": "https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/5dnpoes7",
+    "artifactName": "immaculate-immaculate-benchmark-2026-04-12T21-48-36-880Z",
+    "artifactType": "benchmark-report",
+    "integrityStatus": "verified",
+    "recoveryMode": "checkpoint",
+    "plannedDurationMs": 3600000,
+    "failedAssertions": 0,
+    "totalAssertions": 99,
+    "totalDurationMs": 3600967.49,
+    "hardwareContext": {
+      "host": "knightly",
+      "platform": "win32",
+      "arch": "x64",
+      "osVersion": "Windows 11 Pro",
+      "cpuModel": "AMD Ryzen 7 7735HS with Radeon Graphics",
+      "cpuCount": 16,
+      "memoryGiB": 23.29,
+      "diskKind": "SSD",
+      "nodeVersion": "v22.13.1"
+    },
+    "owner": "Gaetano Comparcola (PossumX)",
+    "role": "Program Originator, Systems Architect, and Engineering Lead",
+    "website": "https://PossumX.dev"
+  },
+  "output": {
+    "jsonPath": "docs\\wiki\\Q-Benchmark-Sweep-60m.json",
+    "markdownPath": "docs\\wiki\\Q-Benchmark-Sweep-60m.md"
+  }
+}

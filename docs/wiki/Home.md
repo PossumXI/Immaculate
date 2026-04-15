@@ -54,11 +54,14 @@ If you only read one generated page before diving deeper, read [[Release-Surface
 - [[Benchmark-Status]] points to the live public W&B project plus the latest published benchmark runs by pack
 - [[Benchmark-Wandb-Export]] is the committed pull-back from W&B itself, so benchmark results live in git wiki even when the W&B project stays private
 - [[Harbor-Terminal-Bench]] records the repo-local Harbor task pack, the executed Q gateway scores, and the latest Harbor truth boundary
+- [[Harbor-Terminal-Bench-Soak]] records the repeated Q-only Harbor hour-lane with oracle/Q side-by-side task scores
+- [[Q-Benchmark-Sweep-60m]] records the stitched 60-minute Q and Immaculate benchmark surface across W&B, BridgeBench, and Harbor
 - [[Q-Hybrid-Training]] records the latest tracked hybrid training session for `Q` plus the paired Immaculate orchestration bundle and cloud-readiness truth
 - [[OCI-Q-Training]] tracks the OCI cloud launcher, bundle-staging path, and Vault-oriented training boundary for the Q fine-tune lane
 - [[Product-Release-Plan]] records the smallest truthful product and service packaging plan the repo can ship soon
 - [[Model-Benchmark-Comparison]] carries the live direct-Q structured contract benchmark plus the latest orchestrator baseline readout
 - [[BridgeBench]] carries the live bridge/control-plane Q benchmark alongside the real bridge runtime assertions
+- [[BridgeBench-Soak]] carries the repeated one-hour Q-only BridgeBench lane
 - [[Q-Gateway-Validation]] carries the live dedicated-gateway contract proof for `Q`: health, auth, model listing, served completion, and concurrency rejection
 - [[Q-Gateway-Architecture]] tracks the dedicated private OCI-first gateway boundary for `Q`, separate from the full harness
 - [[Q-Readiness-Gate]] keeps the direct-Q structured contract honest and is currently green: direct `Q` is release-eligible on the tracked local contract lane on this machine
