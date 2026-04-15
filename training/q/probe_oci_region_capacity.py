@@ -139,6 +139,36 @@ def run_oci_json_or_error(oci_bin: str, config_file: Path, profile: str, args: l
         return None, json.loads(str(error))
 
 
+def discover_domain(oci_bin: str, config_file: Path, profile: str, tenancy_id: str) -> tuple[dict | None, dict | None]:
+    payload, error = run_oci_json_or_error(
+        oci_bin,
+        config_file,
+        profile,
+        ["iam", "domain", "list", "--compartment-id", tenancy_id, "--all"],
+    )
+    entries = payload.get("data", []) if isinstance(payload, dict) else []
+    preferred = next(
+        (
+            entry
+            for entry in entries
+            if isinstance(entry, dict)
+            and str(entry.get("lifecycle-state", "")).strip() == "ACTIVE"
+            and str(entry.get("type", "")).strip() == "DEFAULT"
+        ),
+        None,
+    )
+    if preferred is None:
+        preferred = next(
+            (
+                entry
+                for entry in entries
+                if isinstance(entry, dict) and str(entry.get("lifecycle-state", "")).strip() == "ACTIVE"
+            ),
+            None,
+        )
+    return preferred, error
+
+
 def format_region_label(region_name: str, region_key: str, is_home_region: bool = False) -> str:
     label = region_name
     if region_key:
@@ -230,9 +260,12 @@ def render_markdown(report: dict) -> str:
             f"- Support user valid for LIMIT: `{support.get('validUser', False)}`",
             f"- Write-permitted support groups: `{len(support.get('generalValidation', {}).get('writePermittedUserGroups', []))}`",
             f"- LIMIT catalog includes region-subscription-limits: `{support.get('regionSubscriptionLimitFound', False)}`",
-            f"- CLI create possible with local data: `{support.get('createPossible', False)}`",
+            f"- CLI support create ready now: `{support.get('createPossible', False)}`",
             f"- CLI create blocker: {support.get('createBlockedReason', 'n/a')}",
+            f"- Discovered support-domain candidate: `{support.get('domainDisplayName') or support.get('domainId') or 'n/a'}`",
+            f"- Support-domain binding verified: `{support.get('domainBindingVerified') if support.get('domainBindingVerified') is not None else 'unknown'}`",
             f"- Incident created: `{bool(support.get('incident'))}`",
+            f"- Incident error: {support.get('incidentError', {}).get('message', 'n/a') if isinstance(support.get('incidentError'), dict) else 'n/a'}",
             f"- Helper path: `{support.get('helperPath', 'training/q/create_oci_region_limit_request.py')}`",
             f"- Helper check command: `{support.get('helperCheckCommand', 'python training/q/create_oci_region_limit_request.py --check')}`",
             "",
@@ -369,6 +402,9 @@ def main() -> None:
         for category in region_subscription_catalog_entry.get("service-category-list", [])
         if isinstance(region_subscription_catalog_entry, dict)
     )
+    domain_entry, domain_error = discover_domain(oci_bin, config_file, args.profile, tenancy_id)
+    domain_id = str(domain_entry.get("id", "")).strip() if isinstance(domain_entry, dict) else ""
+    domain_display_name = str(domain_entry.get("display-name", "")).strip() if isinstance(domain_entry, dict) else ""
 
     public_regions_payload = run_oci_json(oci_bin, config_file, args.profile, ["iam", "region", "list", "--all"])
     public_regions = {entry["regionKey"]: entry for entry in normalize_region_entries(public_regions_payload)}
@@ -433,8 +469,10 @@ def main() -> None:
     subscribed_after = normalize_region_entries(after_payload)
     latest_attempt = attempts[-1] if attempts else {}
     subscription_limit_reached = any(str(entry.get("code", "")).strip() == "TenantCapacityExceeded" for entry in attempts)
-    create_possible = bool(csi and region_subscription_limit_found and not support_catalog_error)
+    create_prerequisites_met = bool(csi and region_subscription_limit_found and not support_catalog_error)
+    create_possible = create_prerequisites_met
     create_blocked_reason = ""
+    domain_binding_verified = None
     incident_payload = None
     incident_error = None
     if not csi:
@@ -473,8 +511,18 @@ def main() -> None:
                 incident_description,
                 "--ocid",
                 user_ocid,
+                *(["--domainid", domain_id] if domain_id else []),
             ],
         )
+        if isinstance(incident_payload, dict) and incident_payload.get("data"):
+            domain_binding_verified = True
+        elif isinstance(incident_error, dict):
+            create_possible = False
+            create_blocked_reason = str(
+                incident_error.get("message", "OCI support incident creation failed for this controller identity.")
+            ).strip() or "OCI support incident creation failed for this controller identity."
+            if str(incident_error.get("code", "")).strip() in {"DOMAIN_NOT_FOUND", "USER_OR_DOMAIN_NOT_FOUND"}:
+                domain_binding_verified = False
 
     write_permitted_groups = []
     if isinstance(support_validation_payload, dict):
@@ -517,8 +565,13 @@ def main() -> None:
             },
             "regionSubscriptionLimitFound": region_subscription_limit_found,
             "limitCatalogError": support_catalog_error,
+            "createPrerequisitesMet": create_prerequisites_met,
             "createPossible": create_possible,
             "createBlockedReason": create_blocked_reason or None,
+            "domainId": domain_id or None,
+            "domainDisplayName": domain_display_name or None,
+            "domainBindingVerified": domain_binding_verified,
+            "domainError": domain_error,
             "incident": incident_payload.get("data") if isinstance(incident_payload, dict) else None,
             "incidentError": incident_error,
             "helperPath": "training/q/create_oci_region_limit_request.py",
@@ -531,9 +584,13 @@ def main() -> None:
             "subscriptionLimitReached": subscription_limit_reached,
             "recommendedNextStep": (
                 (
-                    "Provide the tenancy CSI to `oci support incident create` for `regions.subscribed-region-count`, then rerun the bench-v2 doctor for the Q and Immaculate cloud lanes."
-                    if bool(limit_definition.get("is-eligible-for-limit-increase", False)) and not create_possible
-                    else "Create the support-backed limit increase for `regions.subscribed-region-count`, then rerun the bench-v2 doctor for the Q and Immaculate cloud lanes."
+                    f"OCI support incident creation is still blocked for this controller identity. Current error: {str(incident_error.get('message', '')).strip()}. Open the limit increase manually in OCI/My Oracle Support or fix the support-account identity binding, then rerun the bench-v2 doctor for the Q and Immaculate cloud lanes."
+                    if isinstance(incident_error, dict)
+                    else (
+                        "Provide the tenancy CSI to `oci support incident create` for `regions.subscribed-region-count`, then rerun the bench-v2 doctor for the Q and Immaculate cloud lanes."
+                        if bool(limit_definition.get("is-eligible-for-limit-increase", False)) and not create_possible
+                        else "Create the support-backed limit increase for `regions.subscribed-region-count`, then rerun the bench-v2 doctor for the Q and Immaculate cloud lanes."
+                    )
                 )
                 if subscription_limit_reached
                 else (

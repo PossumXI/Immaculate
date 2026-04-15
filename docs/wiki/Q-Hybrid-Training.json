@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-04-15T15:59:19Z",
+  "generatedAt": "2026-04-15T17:07:28Z",
   "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
   "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.manifest.json",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "e968b0c35bbf758450a01bd79fe294e71c53916b",
-    "gitShortSha": "e968b0c",
-    "buildId": "0.1.0+e968b0c"
+    "gitSha": "967ff9319e4a15e6acd9913bf16251b1d42d2fb6",
+    "gitShortSha": "967ff93",
+    "buildId": "0.1.0+967ff93"
   },
   "q": {
     "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e",
@@ -23,15 +23,15 @@
     "failureCorpusPath": "docs/wiki/Q-Failure-Corpus.json"
   },
   "immaculate": {
-    "bundleId": "immaculate-orchestration-e968b0c-3dd4365f",
+    "bundleId": "immaculate-orchestration-967ff93-3dd4365f",
     "bundlePath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-cur-fnv1a-8f551a5c-bench-v2.json",
     "signalCount": 14
   },
   "cloudBundle": {
-    "bundleId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2-e968b0c",
+    "bundleId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2-967ff93",
     "archivePath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/cloud-bundle/q-hybrid-cur-fnv1a-8f551a5c-bench-v2-cloud-bundle.tar.gz",
-    "archiveSha256": "12a9cc4a26429fce09ca7560bd95a8b5b67ecf7992fa0574b36b450b37161057",
-    "archiveSizeBytes": 2218408,
+    "archiveSha256": "373e1cabdee6ee89b766fdaa282f065251ce6b862e78c1f03f6b1f71f7059e48",
+    "archiveSizeBytes": 2218409,
     "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/cloud-bundle/bundle-manifest.json",
     "fileCount": 10,
     "repoRemoteUrl": "https://github.com/PossumXI/Immaculate.git"
@@ -235,13 +235,13 @@
       "Keep the cloud lane as not-configured until a subscribed region shows verified GPU-capable shapes."
     ],
     "materializedEnvUpdates": {},
-    "generatedAt": "2026-04-15T15:59:19Z",
+    "generatedAt": "2026-04-15T17:07:28Z",
     "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
     "release": {
       "packageVersion": "0.1.0",
-      "gitSha": "e968b0c35bbf758450a01bd79fe294e71c53916b",
-      "gitShortSha": "e968b0c",
-      "buildId": "0.1.0+e968b0c"
+      "gitSha": "967ff9319e4a15e6acd9913bf16251b1d42d2fb6",
+      "gitShortSha": "967ff93",
+      "buildId": "0.1.0+967ff93"
     },
     "output": {
       "jsonPath": "docs/wiki/OCI-GPU-Advisor.json",
@@ -249,12 +249,12 @@
     }
   },
   "ociRegionCapacity": {
-    "generatedAt": "2026-04-15T15:58:59Z",
+    "generatedAt": "2026-04-15T17:06:51Z",
     "release": {
       "packageVersion": "0.1.0",
-      "gitSha": "e968b0c35bbf758450a01bd79fe294e71c53916b",
-      "gitShortSha": "e968b0c",
-      "buildId": "0.1.0+e968b0c"
+      "gitSha": "967ff9319e4a15e6acd9913bf16251b1d42d2fb6",
+      "gitShortSha": "967ff93",
+      "buildId": "0.1.0+967ff93"
     },
     "controllerRegion": "us-ashburn-1",
     "tenancyId": "ocid1.tenancy.oc1..aaaaaaaaajrnaanoycyyhq5caorcxc2puwaqf55ldw3ywzgqja6iwrs7a3jq",
@@ -324,10 +324,18 @@
       },
       "regionSubscriptionLimitFound": true,
       "limitCatalogError": null,
+      "createPrerequisitesMet": true,
       "createPossible": false,
-      "createBlockedReason": "CSI is required by `oci support incident create` and is not present in the local controller config or workspace.",
+      "createBlockedReason": "The Requested Domain was not found or not Authorized",
+      "domainId": "ocid1.domain.oc1..aaaaaaaafcdpyfzwyywdasbyz7rl4lwsmnyixs765ws2g2hu6khcxev3q27a",
+      "domainDisplayName": "Default",
+      "domainBindingVerified": false,
+      "domainError": null,
       "incident": null,
-      "incidentError": null,
+      "incidentError": {
+        "code": "DOMAIN_NOT_FOUND",
+        "message": "The Requested Domain was not found or not Authorized"
+      },
       "helperPath": "training/q/create_oci_region_limit_request.py",
       "helperCheckCommand": "python training/q/create_oci_region_limit_request.py --check"
     },
@@ -336,7 +344,7 @@
       "latestAttemptCode": "TenantCapacityExceeded",
       "latestAttemptMessage": "You have exceeded the maximum number of allowed subscribed regions. Please see the Limits, Quotas and Usage page for more detail.",
       "subscriptionLimitReached": true,
-      "recommendedNextStep": "Provide the tenancy CSI to `oci support incident create` for `regions.subscribed-region-count`, then rerun the bench-v2 doctor for the Q and Immaculate cloud lanes."
+      "recommendedNextStep": "OCI support incident creation is still blocked for this controller identity. Current error: The Requested Domain was not found or not Authorized. Open the limit increase manually in OCI/My Oracle Support or fix the support-account identity binding, then rerun the bench-v2 doctor for the Q and Immaculate cloud lanes."
     },
     "output": {
       "jsonPath": "docs/wiki/OCI-Region-Capacity.json",

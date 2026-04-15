@@ -3,9 +3,9 @@
 This page is generated from the tracked Q benchmark/report surfaces.
 It records the benchmark-derived corpus currently attached to Q. It is not a readiness gate and it does not replace the strict failure-only Q-Failure-Corpus surface.
 
-- Generated: `2026-04-15T15:59:08Z`
-- Release: `0.1.0+e968b0c`
-- Repo commit: `e968b0c`
+- Generated: `2026-04-15T17:07:14Z`
+- Release: `0.1.0+967ff93`
+- Repo commit: `967ff93`
 - Q training bundle: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e`
 - Records: `57`
 - Row type: `decision_triplet`

@@ -2,12 +2,12 @@
 
 This page records one hybrid Q training session. In plain English: it ties the Q fine-tune lane and the Immaculate orchestration-improvement lane into one stamped session, then tells you exactly which parts are ready or missing.
 
-- Generated: `2026-04-15T15:59:19Z`
-- Release: `0.1.0+e968b0c`
+- Generated: `2026-04-15T17:07:28Z`
+- Release: `0.1.0+967ff93`
 - Session id: `q-hybrid-cur-fnv1a-8f551a5c-bench-v2`
 - Q training bundle: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e`
 - Dataset rows: `1070`
-- Immaculate orchestration bundle: `immaculate-orchestration-e968b0c-3dd4365f`
+- Immaculate orchestration bundle: `immaculate-orchestration-967ff93-3dd4365f`
 - OCI GPU advisor: `docs/wiki/OCI-GPU-Advisor.md`
 - OCI region capacity probe: `docs/wiki/OCI-Region-Capacity.md`
 
@@ -39,9 +39,9 @@ This page records one hybrid Q training session. In plain English: it ties the Q
 
 ## Cloud Bundle
 
-- Bundle id: `q-hybrid-cur-fnv1a-8f551a5c-bench-v2-e968b0c`
+- Bundle id: `q-hybrid-cur-fnv1a-8f551a5c-bench-v2-967ff93`
 - Archive: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/cloud-bundle/q-hybrid-cur-fnv1a-8f551a5c-bench-v2-cloud-bundle.tar.gz`
-- Archive SHA-256: `12a9cc4a26429fce09ca7560bd95a8b5b67ecf7992fa0574b36b450b37161057`
+- Archive SHA-256: `373e1cabdee6ee89b766fdaa282f065251ce6b862e78c1f03f6b1f71f7059e48`
 - Bundle manifest: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/cloud-bundle/bundle-manifest.json`
 - Included file count: `10`
 
@@ -91,9 +91,12 @@ This page records one hybrid Q training session. In plain English: it ties the Q
 
 - Latest attempt status: `blocked`
 - Subscription limit reached: `True`
-- Recommended next step: Provide the tenancy CSI to `oci support incident create` for `regions.subscribed-region-count`, then rerun the bench-v2 doctor for the Q and Immaculate cloud lanes.
-- OCI support create possible now: `False`
-- OCI support create blocker: CSI is required by `oci support incident create` and is not present in the local controller config or workspace.
+- Recommended next step: OCI support incident creation is still blocked for this controller identity. Current error: The Requested Domain was not found or not Authorized. Open the limit increase manually in OCI/My Oracle Support or fix the support-account identity binding, then rerun the bench-v2 doctor for the Q and Immaculate cloud lanes.
+- OCI support create ready now: `False`
+- OCI support create blocker: The Requested Domain was not found or not Authorized
+- OCI discovered support-domain candidate: `Default`
+- OCI support-domain binding verified: `False`
+- OCI support incident error: The Requested Domain was not found or not Authorized
 - Prepared limit-request helper: `python training/q/create_oci_region_limit_request.py --session .training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.manifest.json --check`
 
 ## Truth Boundary

@@ -147,6 +147,36 @@ def run_oci_json_or_error(oci_bin: str, config_file: Path, profile: str, args: l
         return None, json.loads(str(error))
 
 
+def discover_domain(oci_bin: str, config_file: Path, profile: str, tenancy_id: str) -> tuple[dict | None, dict | None]:
+    payload, error = run_oci_json_or_error(
+        oci_bin,
+        config_file,
+        profile,
+        ["iam", "domain", "list", "--compartment-id", tenancy_id, "--all"],
+    )
+    entries = payload.get("data", []) if isinstance(payload, dict) else []
+    preferred = next(
+        (
+            entry
+            for entry in entries
+            if isinstance(entry, dict)
+            and str(entry.get("lifecycle-state", "")).strip() == "ACTIVE"
+            and str(entry.get("type", "")).strip() == "DEFAULT"
+        ),
+        None,
+    )
+    if preferred is None:
+        preferred = next(
+            (
+                entry
+                for entry in entries
+                if isinstance(entry, dict) and str(entry.get("lifecycle-state", "")).strip() == "ACTIVE"
+            ),
+            None,
+        )
+    return preferred, error
+
+
 def main() -> None:
     root = repo_root()
     parser = argparse.ArgumentParser(description="Prepare or create the OCI support limit request for subscribed-region-count.")
@@ -249,6 +279,9 @@ def main() -> None:
         )
         for entry in support_catalog_entries
     )
+    domain_entry, domain_error = discover_domain(oci_bin, resolved_config_path, resolved_profile, tenancy_id)
+    domain_id = str(domain_entry.get("id", "")).strip() if isinstance(domain_entry, dict) else ""
+    domain_display_name = str(domain_entry.get("display-name", "")).strip() if isinstance(domain_entry, dict) else ""
 
     title = f"OCI subscribed region limit increase for {session_id}"
     description_parts = [
@@ -265,8 +298,10 @@ def main() -> None:
     description = " ".join(description_parts)
 
     csi_value = args.csi.strip()
-    create_possible = bool(csi_value and region_subscription_limit_found and not support_catalog_error)
+    create_prerequisites_met = bool(csi_value and region_subscription_limit_found and not support_catalog_error)
+    create_possible = create_prerequisites_met
     create_blocked_reason = None
+    domain_binding_verified = None
     if not csi_value:
         create_blocked_reason = "CSI is missing. Set --csi or OCI_SUPPORT_CSI before creating the OCI support incident."
     elif not region_subscription_limit_found:
@@ -298,6 +333,8 @@ def main() -> None:
         "--ocid",
         user_ocid,
     ]
+    if domain_id:
+        create_command_redacted.extend(["--domainid", domain_id])
 
     default_output_path = (
         session_path.parent / "oci-region-limit-request.json"
@@ -334,8 +371,18 @@ def main() -> None:
                     description,
                     "--ocid",
                     user_ocid,
+                    *(["--domainid", domain_id] if domain_id else []),
                 ],
             )
+            if isinstance(incident_payload, dict) and incident_payload.get("data"):
+                domain_binding_verified = True
+            elif isinstance(incident_error, dict):
+                create_possible = False
+                create_blocked_reason = str(
+                    incident_error.get("message", "OCI support incident creation failed for this controller identity.")
+                ).strip() or "OCI support incident creation failed for this controller identity."
+                if str(incident_error.get("code", "")).strip() in {"DOMAIN_NOT_FOUND", "USER_OR_DOMAIN_NOT_FOUND"}:
+                    domain_binding_verified = False
 
     payload = {
         "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
@@ -354,6 +401,11 @@ def main() -> None:
             "validationError": support_validation_error,
             "regionSubscriptionLimitFound": region_subscription_limit_found,
             "catalogError": support_catalog_error,
+            "createPrerequisitesMet": create_prerequisites_met,
+            "domainId": domain_id or None,
+            "domainDisplayName": domain_display_name or None,
+            "domainBindingVerified": domain_binding_verified,
+            "domainError": domain_error,
             "csiProvided": bool(csi_value),
             "createPossible": create_possible,
             "createBlockedReason": create_blocked_reason,
@@ -364,6 +416,7 @@ def main() -> None:
             "severity": args.severity.strip().upper(),
             "problemType": "LIMIT",
             "createCommandRedacted": create_command_redacted,
+            "createAttempted": bool(args.create),
             "created": bool(incident_payload and incident_payload.get("data")),
             "incident": incident_payload.get("data") if isinstance(incident_payload, dict) else None,
             "incidentError": incident_error,
