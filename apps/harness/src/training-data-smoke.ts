@@ -54,8 +54,8 @@ async function main(): Promise<void> {
       manifestPath,
       JSON.stringify(
         {
-          id: "gemma4-defensive-security-smoke",
-          name: "Gemma 4 Defensive Security Smoke",
+          id: "q-defensive-security-smoke",
+          name: "Q Defensive Security Smoke",
           createdAt: new Date().toISOString(),
           createdBy: "smoke-test",
           purposeTags: ["coding", "security", "ops"],

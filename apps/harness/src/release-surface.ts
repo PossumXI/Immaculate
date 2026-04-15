@@ -29,7 +29,7 @@ const SURFACE_FILES: SurfaceTimestamp[] = [
     path: path.join("docs", "wiki", "BridgeBench.json")
   },
   {
-    label: "Model comparison",
+    label: "Q structured contract benchmark",
     path: path.join("docs", "wiki", "Model-Benchmark-Comparison.json")
   },
   {
@@ -79,14 +79,13 @@ function renderMarkdown(report: ReleaseSurfaceReport): string {
     `- Core package version: \`${report.release.coreVersion}\``,
     `- Q serving label: \`${report.release.q.truthfulLabel}\``,
     `- Q alias: \`${report.release.q.alias}\``,
-    `- Q provider model: \`${report.release.q.providerModel}\``,
     `- Q training bundle: \`${trainingLock?.bundleId ?? "none generated yet"}\``,
     `- Q hybrid session: \`${hybridSession?.sessionId ?? "none generated yet"}\``,
     "",
     "## What This Means In Plain English",
     "",
     `- Immaculate build \`${report.release.buildId}\` is the current repo build stamp.`,
-    `- Q is still served as \`${report.release.q.truthfulLabel}\`, not a mystery renamed model.`,
+    `- Q is served and benchmarked as \`${report.release.q.truthfulLabel}\` across the current repo surfaces.`,
     trainingLock
       ? `- The latest tracked Q training bundle is \`${trainingLock.bundleId}\`, tied to dataset \`${trainingLock.trainDatasetPath ?? "unknown"}\` and config/provenance captured in \`${trainingLock.lockPath}\`.`
       : "- No tracked Q training bundle has been generated yet in this checkout.",
@@ -105,7 +104,6 @@ function renderMarkdown(report: ReleaseSurfaceReport): string {
     `- Lock path: \`${trainingLock?.lockPath ?? "none"}\``,
     `- Lock generated: \`${trainingLock?.generatedAt ?? "n/a"}\``,
     `- Run name: \`${trainingLock?.runName ?? "n/a"}\``,
-    `- Base model: \`${trainingLock?.baseModel ?? report.release.q.providerModel}\``,
     `- Training dataset rows: \`${trainingLock?.trainDatasetRowCount ?? "n/a"}\``,
     `- Training dataset SHA-256: \`${trainingLock?.trainDatasetSha256 ?? "n/a"}\``,
     `- Mix manifest: \`${trainingLock?.mixManifestPath ?? "n/a"}\``,

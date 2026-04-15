@@ -4,6 +4,11 @@ function normalize(value: string): string {
   return value.trim().toLowerCase();
 }
 
+function canonicalModelReference(value: string | undefined): string {
+  const normalized = normalize(value ?? "");
+  return normalized.endsWith(":latest") ? normalized.slice(0, -"latest".length - 1) : normalized;
+}
+
 export function getQModelAlias(): string {
   return resolveQAliasSpecification().displayName;
 }
@@ -14,14 +19,15 @@ export function getQModelTarget(): string {
 
 export function isQAlias(value: string | undefined): boolean {
   const specification = resolveQAliasSpecification();
+  const candidate = canonicalModelReference(value);
   return (
-    normalize(value ?? "") === normalize(specification.alias) ||
-    normalize(value ?? "") === normalize(specification.displayName)
+    candidate === canonicalModelReference(specification.alias) ||
+    candidate === canonicalModelReference(specification.displayName)
   );
 }
 
 export function isQTargetModel(value: string | undefined): boolean {
-  return normalize(value ?? "") === normalize(resolveQAliasSpecification().baseModel);
+  return canonicalModelReference(value) === canonicalModelReference(resolveQAliasSpecification().baseModel);
 }
 
 export function resolveQModel(value: string | undefined): string | undefined {
@@ -40,16 +46,21 @@ export function displayModelName(value: string | undefined): string {
     : value.trim();
 }
 
+export function matchesModelReference(left: string | undefined, right: string | undefined): boolean {
+  return canonicalModelReference(resolveQModel(left) ?? left) === canonicalModelReference(resolveQModel(right) ?? right);
+}
+
 export function truthfulModelLabel(value: string | undefined): string {
   const actual = resolveQModel(value) ?? resolveQAliasSpecification().baseModel;
-  return isQTargetModel(actual) ? `${resolveQAliasSpecification().displayName} (${actual})` : actual;
+  return isQTargetModel(actual) ? resolveQAliasSpecification().displayName : actual;
 }
 
 export function vendorForModel(value: string | undefined): string {
-  const normalized = normalize(resolveQModel(value) ?? "");
-  if (normalized.includes("gemma")) {
-    return "Google DeepMind";
+  const actual = resolveQModel(value) ?? "";
+  if (isQTargetModel(actual) || isQAlias(value)) {
+    return "Immaculate";
   }
+  const normalized = normalize(actual);
   if (normalized.includes("qwen")) {
     return "Alibaba Cloud";
   }
@@ -65,5 +76,5 @@ export function vendorForModel(value: string | undefined): string {
   if (normalized.includes("temporal")) {
     return "Temporal Technologies";
   }
-  return "Unknown";
+  return "External";
 }

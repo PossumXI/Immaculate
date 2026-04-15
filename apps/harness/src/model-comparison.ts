@@ -10,6 +10,7 @@ import { resolveQAliasSpecification } from "./ollama-alias.js";
 import { resolveReleaseMetadata, type ReleaseMetadata } from "./release-metadata.js";
 import {
   displayModelName,
+  matchesModelReference,
   resolveQModel,
   truthfulModelLabel,
   vendorForModel
@@ -96,7 +97,7 @@ type OrchestratorComparison = {
 
 export type ModelComparisonReport = {
   generatedAt: string;
-  surface: "direct-local-ollama-structured-contract";
+  surface: "direct-q-structured-contract";
   ollamaBaseUrl: string;
   release: ReleaseMetadata;
   qAlias: {
@@ -198,18 +199,13 @@ function captureHardwareContext(): HardwareContext {
 function buildComparisonModels(installedModelNames: string[]): string[] {
   const qAlias = resolveQAliasSpecification();
   const requested = (
-    process.env.IMMACULATE_MODEL_COMPARISON_SET?.split(",").map((entry) => entry.trim()) ?? [
-      qAlias.alias,
-      "qwen3:8b",
-      "gemma3:4b"
-    ]
+    process.env.IMMACULATE_MODEL_COMPARISON_SET?.split(",").map((entry) => entry.trim()) ?? [qAlias.alias]
   ).filter(Boolean);
 
   return Array.from(
     new Set(
       requested.filter((candidate) => {
-        const actual = resolveQModel(candidate) ?? candidate;
-        return installedModelNames.includes(actual);
+        return installedModelNames.some((installedModelName) => matchesModelReference(installedModelName, candidate));
       })
     )
   );
@@ -392,23 +388,23 @@ async function loadOrchestratorComparison(): Promise<OrchestratorComparison | un
 
 function renderMarkdown(report: ModelComparisonReport): string {
   const lines = [
-    "# Model and Orchestrator Comparison",
+    "# Q Structured Contract Benchmark",
     "",
-    "This page is generated from direct local Ollama structured-contract runs plus the latest published orchestrator benchmark packs that exist on this machine.",
-    "It does not measure the served Q gateway edge. It measures the underlying local model path that the gateway depends on.",
+    "This page is generated from direct local Q structured-contract runs plus the latest published Immaculate orchestrator benchmark packs that exist on this machine.",
+    "It does not measure the served Q gateway edge. It measures the direct Q execution lane that the gateway depends on.",
     "",
     `- Generated: ${report.generatedAt}`,
     `- Release: ${report.release.buildId}`,
     `- Repo commit: ${report.release.gitShortSha}`,
     `- Surface: ${report.surface}`,
     `- Ollama endpoint: ${report.ollamaBaseUrl}`,
-    `- Q alias: ${report.qAlias.alias.toUpperCase()} -> ${report.qAlias.actualModel}`,
+    `- Q lane: ${report.qAlias.alias.toUpperCase()}`,
     `- Q training bundle: ${report.release.q.trainingLock?.bundleId ?? "none generated yet"}`,
     `- Hardware: ${JSON.stringify(report.hardwareContext)}`,
     ""
   ];
 
-  lines.push("## Live Model Results", "");
+  lines.push("## Live Q Results", "");
   for (const model of report.models) {
     lines.push(`### ${model.truthfulLabel}`, "");
     lines.push(`- Vendor: ${model.vendor}`);
@@ -483,7 +479,7 @@ export async function runModelComparison(): Promise<ModelComparisonReport> {
   const installedModelNames = installed.map((model) => model.name);
   const requestedModels = buildComparisonModels(installedModelNames);
   if (requestedModels.length === 0) {
-    throw new Error("No configured comparison models are installed in local Ollama.");
+    throw new Error("The configured Q model is not installed in local Ollama.");
   }
 
   const models: ModelSummary[] = [];
@@ -501,12 +497,12 @@ export async function runModelComparison(): Promise<ModelComparisonReport> {
 
   const report: ModelComparisonReport = {
     generatedAt,
-    surface: "direct-local-ollama-structured-contract",
+    surface: "direct-q-structured-contract",
     ollamaBaseUrl: DEFAULT_OLLAMA_URL,
     release: await resolveReleaseMetadata(),
     qAlias: {
       alias: resolveQAliasSpecification().displayName,
-      actualModel: resolveQAliasSpecification().baseModel,
+      actualModel: resolveQAliasSpecification().displayName,
       truthfulLabel: truthfulModelLabel(resolveQAliasSpecification().baseModel)
     },
     hardwareContext: captureHardwareContext(),

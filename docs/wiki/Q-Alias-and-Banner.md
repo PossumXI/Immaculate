@@ -4,15 +4,15 @@ This page documents the isolated `Q` alias and controlled startup banner slice t
 
 In plain English:
 
-- `Q` is the friendly name used inside the repo for the current Gemma 4 local model lane
+- `Q` is the stable name used inside the repo for the current Q local model lane
 - the README homepage carries the static banner block for GitHub readers
 - the live terminal banner carries the truecolor 6-row splash for operators at runtime
 
 ## What It Adds
 
-- A local Ollama alias path so Gemma 4 can be addressed as `Q`
+- A local Ollama alias path so the current Q lineage can be addressed as `Q`
 - A controlled 6-row ANSI Shadow startup banner for the harness with a lavender-to-ocean truecolor gradient
-- Alias-aware Ollama discovery so `Q` still resolves as a Gemma-family model
+- Alias-aware Ollama discovery so `Q` still resolves as the current local Q lineage
 
 ## Local Ollama Alias
 
@@ -20,7 +20,7 @@ Default alias behavior:
 
 - alias: `q`
 - display name: `Q`
-- base model: `gemma4:e4b`
+- lineage source: `Q` or `IMMACULATE_OLLAMA_Q_BASE_MODEL`
 
 Create the local alias:
 
@@ -34,10 +34,10 @@ Preview the generated Modelfile without installing:
 npm run ollama:alias:q -- --print-only
 ```
 
-Override the base model:
+Override the Q lineage source:
 
 ```powershell
-$env:IMMACULATE_OLLAMA_Q_BASE_MODEL="gemma4:31b"
+$env:IMMACULATE_OLLAMA_Q_BASE_MODEL="Q-LINEAGE-SOURCE"
 npm run ollama:alias:q -- --force
 ```
 
@@ -48,7 +48,7 @@ Tracked reference template:
 Security posture:
 
 - The alias only renames the local Ollama model handle
-- The generated Modelfile uses `FROM <base model>` only
+- The generated Modelfile uses `FROM <Q lineage source>` only
 - No benchmark, W&B, federation, or deployment path is modified by the alias install flow
 
 ## Harness Startup Banner
@@ -72,7 +72,7 @@ The banner prints:
 - tick rate
 - local Ollama endpoint
 - current configured model
-- the `Q` alias mapping
+- the active `Q` lane
 
 The banner is cosmetic only. It does not change runtime governance, routing, or benchmark behavior.
 

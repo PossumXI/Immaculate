@@ -341,7 +341,6 @@ def render_markdown(summary: dict) -> str:
         f"- Release: `{summary['release']['buildId']}`",
         f"- Session id: `{summary['sessionId']}`",
         f"- Q training bundle: `{q['trainingBundleId']}`",
-        f"- Base model: `{q['baseModel']}`",
         f"- Dataset rows: `{q['trainDatasetRowCount']}`",
         f"- Immaculate orchestration bundle: `{immaculate['bundleId']}`",
         "",
@@ -366,7 +365,7 @@ def render_markdown(summary: dict) -> str:
         "",
         f"- Bundle path: `{immaculate['bundlePath']}`",
         f"- Signal count: `{immaculate['signalCount']}`",
-        "- This lane improves Immaculate through benchmark and orchestration evidence, not by pretending Immaculate is a separate base model.",
+        "- This lane improves Immaculate through benchmark and orchestration evidence while keeping the tracked Q lineage as the only model-training lane in scope.",
         "",
         "## Cloud Bundle",
         "",
@@ -455,7 +454,7 @@ def main() -> None:
     if str(dataset_path.resolve()) != str(locked_dataset_path):
         raise ValueError("Session config and training lock disagree on the dataset path.")
     if str(config.get("base_model")) != str(training_lock.get("run", {}).get("baseModel")):
-        raise ValueError("Session config and training lock disagree on the base model.")
+        raise ValueError("Session config and training lock disagree on the Q lineage source.")
 
     failure_corpus_path = resolve_repo_path(str(q_manifest.get("failureCorpusPath", "")).strip()) or (
         root / "docs" / "wiki" / "Q-Failure-Corpus.json"
@@ -696,7 +695,7 @@ def main() -> None:
             "trainingBundleId": training_lock.get("bundleId"),
             "trainingLockPath": relative_path(root, training_lock_path),
             "configPath": relative_path(root, config_path),
-            "baseModel": config.get("base_model"),
+            "modelId": config.get("alias_name", "Q"),
             "trainDatasetPath": relative_path(root, dataset_path),
             "trainDatasetRowCount": count_jsonl_rows(dataset_path),
             "mixManifestPath": relative_path(root, mix_manifest_path),

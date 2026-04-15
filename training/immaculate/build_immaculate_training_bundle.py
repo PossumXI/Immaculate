@@ -52,7 +52,7 @@ def pick_q_model(report: dict) -> dict | None:
         requested = str(model.get("requestedModel", "")).strip().lower()
         display = str(model.get("displayName", "")).strip()
         truthful = str(model.get("truthfulLabel", "")).strip()
-        if requested == "q" or display == "Q" or truthful.startswith("Q ("):
+        if requested == "q" or display == "Q" or truthful == "Q" or truthful.startswith("Q"):
             return model
     return None
 
@@ -195,7 +195,7 @@ def build_bundle(
         {"label": "Harbor terminal bench", "path": relative_path(root, harbor_path), "generatedAt": harbor.get("generatedAt")},
         {"label": "BridgeBench", "path": relative_path(root, bridgebench_path), "generatedAt": bridgebench.get("generatedAt")},
         {
-            "label": "Model comparison",
+            "label": "Q structured contract benchmark",
             "path": relative_path(root, comparison_path),
             "generatedAt": comparison.get("generatedAt"),
         },
@@ -238,7 +238,7 @@ def build_bundle(
         "signals": signals,
         "truthBoundary": [
             "This bundle is for improving Immaculate orchestration logic, evals, and routing policy review.",
-            "It does not claim Immaculate itself is a base model or that this repo runs a separate Immaculate weight fine-tune.",
+            "It does not claim a second separate weight family outside the tracked Q training lane.",
         ],
     }
 

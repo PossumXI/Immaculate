@@ -25,7 +25,6 @@
     "ollama:alias:q": "tsx ./apps/harness/src/q-alias-cli.ts --",
     "banner": "npm run banner -w @immaculate/harness",
     "q:gateway": "tsx ./apps/harness/src/q-gateway.ts",
-    "q:gateway:fallback:smoke": "tsx ./apps/harness/src/q-gateway-fallback-smoke.ts",
     "q:gateway:validate": "tsx ./apps/harness/src/q-gateway-validate.ts",
     "q:release-gate": "tsx ./apps/harness/src/q-release-gate.ts",
     "release:surface": "tsx ./apps/harness/src/release-surface.ts",

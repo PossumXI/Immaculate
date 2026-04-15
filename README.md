@@ -12,7 +12,7 @@
 Immaculate is software for running AI and automation carefully.
 In plain English: it helps a system decide what to do next, checks whether that action is allowed, records what happened, and publishes real benchmarks instead of hand-wavy claims.
 
-`Q` is the repo's local reasoning-model lane. Right now it is a truthful alias over `gemma4:e4b`, wrapped in a dedicated gateway, measured with structured tasks, and tied to a reproducible training-bundle path.
+`Q` is the repo's local reasoning-model lane. It is served, benchmarked, and trained here as `Q`, wrapped in a dedicated gateway, measured with structured tasks, and tied to a reproducible training-bundle path.
 
 Gaetano Comparcola, operating publicly as `PossumX`, is the program owner, systems architect, and engineering lead for Immaculate. `PossumX.dev` is the public profile site attached to benchmark attribution, architecture ownership, and published results.
 
@@ -30,7 +30,7 @@ This repository is prepared for public collaboration under the Apache 2.0 licens
 ## Current Build And Evidence
 
 - current release surface: [docs/wiki/Release-Surface.md](docs/wiki/Release-Surface.md)
-- live model comparison: [docs/wiki/Model-Benchmark-Comparison.md](docs/wiki/Model-Benchmark-Comparison.md)
+- live Q structured contract benchmark: [docs/wiki/Model-Benchmark-Comparison.md](docs/wiki/Model-Benchmark-Comparison.md)
 - live BridgeBench: [docs/wiki/BridgeBench.md](docs/wiki/BridgeBench.md)
 - Harbor terminal bench: [docs/wiki/Harbor-Terminal-Bench.md](docs/wiki/Harbor-Terminal-Bench.md)
 - hybrid Q training session: [docs/wiki/Q-Hybrid-Training.md](docs/wiki/Q-Hybrid-Training.md)
@@ -62,7 +62,7 @@ The tracked public benchmark surface lives at `docs/wiki/Benchmark-Status.md`.
 
 ## Training Data Curation
 
-Immaculate now includes a policy-aware training-data curation factory for defensive Gemma-style corpus work.
+Immaculate now includes a policy-aware training-data curation factory for defensive Q corpus work.
 It is built to make dataset assembly reproducible and auditable before any fine-tune run starts.
 
 What it does today:
@@ -93,10 +93,10 @@ npm run training-data:smoke
 Run a real curation pass from a manifest:
 
 ```powershell
-npm run training-data:curate -- fixtures/training/gemma4-defsec-curation.example.json
+npm run training-data:curate -- fixtures/training/q-defsec-curation.example.json
 ```
 
-The tracked example manifest lives at [fixtures/training/gemma4-defsec-curation.example.json](fixtures/training/gemma4-defsec-curation.example.json).
+The tracked example manifest lives at [fixtures/training/q-defsec-curation.example.json](fixtures/training/q-defsec-curation.example.json).
 The default generated output root is `.training-output/`, which is intentionally ignored by git.
 
 For the `Q` fine-tune path specifically:
@@ -106,7 +106,6 @@ For the `Q` fine-tune path specifically:
 - gateway architecture: [docs/wiki/Q-Gateway-Architecture.md](docs/wiki/Q-Gateway-Architecture.md)
 - release/build identity: [docs/wiki/Release-Surface.md](docs/wiki/Release-Surface.md)
 - direct readiness gate: [docs/wiki/Q-Readiness-Gate.md](docs/wiki/Q-Readiness-Gate.md)
-- gateway fallback smoke: [docs/wiki/Q-Gateway-Fallback-Smoke.md](docs/wiki/Q-Gateway-Fallback-Smoke.md)
 - failure corpus: [docs/wiki/Q-Failure-Corpus.md](docs/wiki/Q-Failure-Corpus.md)
 - hybrid training session surface: [docs/wiki/Q-Hybrid-Training.md](docs/wiki/Q-Hybrid-Training.md)
 - model/training manifest: [fixtures/training/q-defsec-curation.example.json](fixtures/training/q-defsec-curation.example.json)
@@ -120,12 +119,10 @@ For the `Q` fine-tune path specifically:
 - OCI controller launch script: `bash deploy/oci-training/scripts/launch-oci-q-training.sh --session-manifest .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --env-file deploy/oci-training/env/immaculate-q-training.env.example`
 
 As of `2026-04-14`, the direct `Q` structured-contract lane is green on this machine:
-`Q (gemma4:e4b)` is `4/4` on both
+`Q` is `4/4` on both
 [docs/wiki/Model-Benchmark-Comparison.md](docs/wiki/Model-Benchmark-Comparison.md) and
 [docs/wiki/BridgeBench.md](docs/wiki/BridgeBench.md), and the tracked
 [docs/wiki/Q-Readiness-Gate.md](docs/wiki/Q-Readiness-Gate.md) is `ready: true`.
-The fallback smoke remains in the repo as an optional continuity proof, not the
-primary explanation for why `Q` works.
 
 ## Security Monitoring
 
@@ -189,11 +186,10 @@ For the dedicated Q gateway:
 
 - start it with `npm run q:gateway`
 - validate it with `npm run q:gateway:validate -- --gateway-url=http://127.0.0.1:8897`
-- optionally prove the fallback lane with `npm run q:gateway:fallback:smoke`
 - it serves `GET /health`, `GET /api/q/info`, `GET /v1/models`, and `POST /v1/chat/completions`
 - it accepts only Q API keys, not the harness admin key
 - the latest loopback validation is green on auth, model listing, served completion, and `429` concurrency rejection
-- it can also trip open on repeated primary-model failures and serve through a configured fallback model without hiding which provider actually answered
+- it fail-closes on repeated primary-model failures instead of masking a broken upstream with a second model lane
 - it is designed for private OCI deployment, not public internet exposure by default
 
 ## Benchmark
@@ -253,7 +249,7 @@ Run the honest Temporal comparison lane:
 npm run benchmark:temporal -w @immaculate/harness
 ```
 
-Run the live local model comparison across `Q` and the other installed Ollama models:
+Run the live direct Q structured contract benchmark:
 
 ```powershell
 npm run compare:models
@@ -314,11 +310,10 @@ Current benchmark publication surfaces:
 - tracked repo/wiki status: [docs/wiki/Benchmark-Status.md](docs/wiki/Benchmark-Status.md)
 - tracked repo/wiki W&B export: [docs/wiki/Benchmark-Wandb-Export.md](docs/wiki/Benchmark-Wandb-Export.md)
 - tracked repo/wiki live validation: [docs/wiki/Live-Validation-2026-04-13.md](docs/wiki/Live-Validation-2026-04-13.md)
-- tracked repo/wiki model comparison: [docs/wiki/Model-Benchmark-Comparison.md](docs/wiki/Model-Benchmark-Comparison.md)
+- tracked repo/wiki Q structured contract benchmark: [docs/wiki/Model-Benchmark-Comparison.md](docs/wiki/Model-Benchmark-Comparison.md)
 - tracked repo/wiki BridgeBench surface: [docs/wiki/BridgeBench.md](docs/wiki/BridgeBench.md)
 - tracked repo/wiki Q API and hosting guide: [docs/wiki/Q-API-Hosting.md](docs/wiki/Q-API-Hosting.md)
 - tracked repo/wiki Q gateway validation: [docs/wiki/Q-Gateway-Validation.md](docs/wiki/Q-Gateway-Validation.md)
-- tracked repo/wiki Q gateway fallback smoke: [docs/wiki/Q-Gateway-Fallback-Smoke.md](docs/wiki/Q-Gateway-Fallback-Smoke.md)
 - tracked repo/wiki Q gateway architecture: [docs/wiki/Q-Gateway-Architecture.md](docs/wiki/Q-Gateway-Architecture.md)
 - tracked repo/wiki Q readiness gate: [docs/wiki/Q-Readiness-Gate.md](docs/wiki/Q-Readiness-Gate.md)
 - tracked repo/wiki Q failure-only corpus: [docs/wiki/Q-Failure-Corpus.md](docs/wiki/Q-Failure-Corpus.md)
@@ -353,7 +348,7 @@ Tier 2 spectral confidence is now benchmarked directly:
 
 - artifact-band detection on `45-65 Hz` contamination windows
 - spectral-confidence suppression for artifact-heavy live frames
-- backward-compatible amplitude fallback when spectral bands are unavailable
+- backward-compatible amplitude continuity when spectral bands are unavailable
 - routing-pressure assertions that prove contaminated windows de-escalate before outward action
 - worker-assignment lease coverage that proves remote placement is reserved and duplicate assignment pressure is visible
 - locality-aware worker placement coverage that proves same-locality remote workers outrank cross-rack candidates when capability and health are otherwise equal
@@ -379,9 +374,9 @@ Benchmark packs currently include:
 - NWB time-series scanning and neuro-session registration into `synchronize` and `decode`
 - replayed NWB frame windows ingested into live `synchronize` and `decode` state
 - live socket neuro frames ingested into the same durable `synchronize` and `decode` path
-- first local Ollama/Gemma cognition backend wired into `route`, `reason`, and `commit`
+- first local Q cognition backend wired into `route`, `reason`, and `commit`
 - W&B benchmark publication backend wired to the existing benchmark artifact ledger
-- policy-aware training-data curation with manifest-driven source intake, license gating, secret scanning, dedup, provenance hashes, and JSONL shard export for Gemma-style fine-tuning corpora
+- policy-aware training-data curation with manifest-driven source intake, license gating, secret scanning, dedup, provenance hashes, and JSONL shard export for Q fine-tuning corpora
 - keyboard-first TUI and Next.js dashboard over the same live harness
 - internal benchmark publication for repeatable functional testing
 - benchmark execution offloaded from the live harness event loop into a worker job
@@ -394,7 +389,7 @@ Benchmark packs currently include:
 - Tier 2 spectral confidence now treats `45-65 Hz` contamination as explicit artifact power, penalizes contaminated live windows, and pushes artifact-heavy frames onto safer routes before dispatch
 - governed actuation dispatch and actuation output readback now make the feedback plane an explicit durable surface
 - adapter-backed actuation delivery now routes visual, haptic, and stim outputs through channel-specific policy lanes with durable delivery logs
-- governed websocket actuation device links now negotiate protocol/capabilities and provide acked bridge delivery with file fallback when no live transport is attached
+- governed websocket actuation device links now negotiate protocol/capabilities and provide acked bridge delivery with file continuity when no live transport is attached
 - concrete UDP/OSC actuation transports can now be registered as durable protocol-aware device endpoints for visual lanes
 - supervised serial vendor transports now support heartbeat health, capability health, stale-device isolation, and controlled recovery
 - HTTP/2 direct device transports now provide typed RPC-class delivery with response telemetry and durable operator visibility
@@ -536,7 +531,7 @@ Sensitive read surfaces now split into two modes:
 - background federation refresh, lease renewal, and internal repair now evict remote node and worker state when trust expires, while worker placement consumes peer lease freshness, peer-smoothed latency, repair state, and remote execution failure pressure directly before selecting a remote endpoint
 - there is intentionally no public `/api/federation/repair` endpoint; repair stays inside the existing signed membership and lease-renew control paths so failed peers recover only through the same authenticated surfaces that established trust in the first place
 - actuation device transports now open with a protocol-negotiation handshake on `WS /stream/actuation/device`; device clients send `actuation-device-hello` before dispatch starts, then acknowledge deliveries with `actuation-ack`
-- UDP/OSC actuation endpoints can be registered through `POST /api/actuation/transports/udp/register`; when present, dispatch prefers that concrete transport before bridge or file fallback
+- UDP/OSC actuation endpoints can be registered through `POST /api/actuation/transports/udp/register`; when present, dispatch prefers that concrete transport before bridge or file continuity
 - serial vendor transports can be registered through `POST /api/actuation/transports/serial/register`; they require heartbeats on `POST /api/actuation/transports/:transportId/heartbeat`, isolate on stale liveness, and can be cleared through `POST /api/actuation/transports/:transportId/reset`
 - HTTP/2 direct device transports can be registered through `POST /api/actuation/transports/http2/register`; successful responses feed liveness and capability telemetry back into transport health and routing preference
 - every governed actuation dispatch now emits a durable routing decision into the snapshot and event spine, including mode, target node, transport rank, governance pressure, and rationale

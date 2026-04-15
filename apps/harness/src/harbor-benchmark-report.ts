@@ -284,6 +284,7 @@ function renderMarkdown(report: HarborBenchmarkReport): string {
 
 async function main(): Promise<void> {
   const release = await resolveReleaseMetadata();
+  const llmJudgeAttempts = await readJsonFile<JudgeAttemptFile>(JUDGE_ATTEMPTS_PATH);
   const tasks = await Promise.all(
     TASKS.map(async (task) => ({
       id: task.id,
@@ -297,7 +298,12 @@ async function main(): Promise<void> {
     release,
     gatewayModel: release.q.truthfulLabel,
     tasks,
-    llmJudge: await readJsonFile<JudgeAttemptFile>(JUDGE_ATTEMPTS_PATH),
+    llmJudge: llmJudgeAttempts
+      ? {
+          ...llmJudgeAttempts,
+          attempts: (llmJudgeAttempts.attempts ?? []).filter((attempt) => /\bq\b/i.test(attempt.provider))
+        }
+      : undefined,
     transportFix: await readJsonFile<TransportFixFile>(TRANSPORT_FIX_PATH),
     output: {
       jsonPath: path.join("docs", "wiki", "Harbor-Terminal-Bench.json"),

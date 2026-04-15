@@ -1,24 +1,23 @@
 {
-  "generatedAt": "2026-04-14T20:23:55.268Z",
+  "generatedAt": "2026-04-15T02:27:36.196Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "fee4fd5d77973c9775867997ea6e2147d59eea3a",
-    "gitShortSha": "fee4fd5",
+    "gitSha": "194a8fc18d1f5e54a2f88108827bbe632cd791c6",
+    "gitShortSha": "194a8fc",
     "gitBranch": "detached",
-    "buildId": "0.1.0+fee4fd5",
+    "buildId": "0.1.0+194a8fc",
     "q": {
       "alias": "Q",
-      "providerModel": "gemma4:e4b",
-      "truthfulLabel": "Q (gemma4:e4b)",
+      "providerModel": "Q",
+      "truthfulLabel": "Q",
       "trainingLock": {
         "generatedAt": "2026-04-14T15:26:05Z",
         "lockVersion": 1,
         "bundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5",
         "runName": "q-defsec-code-longctx-cur-fnv1a-8f551a5c",
         "aliasName": "Q",
-        "baseModel": "unsloth/gemma-4-31B-it",
         "trainDatasetPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c.jsonl",
         "trainDatasetSha256": "5c329cc58772a0dc52e12dafcc421caa5458c6a7c37b96f2970d8a04e937c64f",
         "trainDatasetRowCount": 1013,
@@ -27,10 +26,20 @@
         "curationRunPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\training-data\\runs\\cur-fnv1a-8f551a5c\\run.json",
         "curationRunId": "cur-fnv1a-8f551a5c",
         "lockPath": ".training-output/q/latest-training-lock.json"
+      },
+      "hybridSession": {
+        "generatedAt": "2026-04-14T21:35:43Z",
+        "sessionId": "q-hybrid-cur-fnv1a-8f551a5c",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/hybrid-session.json",
+        "localStatus": "ready",
+        "cloudStatus": "not-configured",
+        "cloudProvider": "oci",
+        "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5",
+        "immaculateBundleId": "immaculate-orchestration-36fc9bb-4c759c95"
       }
     }
   },
-  "gatewayModel": "Q (gemma4:e4b)",
+  "gatewayModel": "Q",
   "tasks": [
     {
       "id": "q-structured-contract",
@@ -109,21 +118,6 @@
   ],
   "llmJudge": {
     "attempts": [
-      {
-        "error": "{\"error\":\"\\\"gemma3:4b\\\" does not support thinking\"}",
-        "id": "ollama-gemma3",
-        "provider": "ollama/gemma3:4b",
-        "status": "failed",
-        "summary": "RewardKit judge could not start because the Ollama backend rejected thinking for gemma3:4b."
-      },
-      {
-        "status": "failed",
-        "provider": "ollama/qwen3:8b",
-        "summary": "RewardKit judge timed out before returning a score.",
-        "durationSec": 221.511,
-        "error": "litellm.Timeout after 221.511 seconds with timeout=240",
-        "id": "ollama-qwen3"
-      },
       {
         "status": "failed",
         "provider": "openai/Q via Q gateway",

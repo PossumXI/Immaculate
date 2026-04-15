@@ -50,9 +50,9 @@ function parseArgs(argv: string[]): ParsedArgs {
 function printUsage(): void {
   process.stdout.write(
     [
-      "Usage: tsx src/q-alias-cli.ts [--alias=q] [--base=gemma4:e4b] [--output=<Modelfile path>] [--print-only] [--force]",
+      "Usage: tsx src/q-alias-cli.ts [--alias=q] [--base=<q-lineage-source>] [--output=<Modelfile path>] [--print-only] [--force]",
       "",
-      "Creates or previews a local Ollama alias so Immaculate can refer to Gemma 4 as Q."
+      "Creates or previews a local Ollama alias so Immaculate can keep the stable Q name over the current Q lineage source."
     ].join("\n")
   );
 }

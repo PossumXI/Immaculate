@@ -1,7 +1,7 @@
 [
   {
     "id": "bridge-ack-timeout",
-    "text": "Q defensive engineering corpus\nsource=bridgebench-seed\nlanguage=text\npath=bridgebench/bridge-ack-timeout\ntags=bridgebench,security,ops\n\nOBJECTIVE\nA haptic bridge timed out waiting for device ACK and then emitted a late acknowledgment.\n\nRESPONSE CONTRACT\nROUTE: one sentence.\nREASON: one sentence.\nCOMMIT: one sentence.\n\nREFERENCE RESPONSE\nROUTE: guarded-fallback via a non-bridge lane until a fresh authenticated bridge session is re-established.\nREASON: Late ACKs cannot be treated as truthful delivery because they break the bounded bridge timeout contract.\nCOMMIT: Record the timeout, reject the stale ACK, and route the next actuation pass through the safest verified transport."
+    "text": "Q defensive engineering corpus\nsource=bridgebench-seed\nlanguage=text\npath=bridgebench/bridge-ack-timeout\ntags=bridgebench,security,ops\n\nOBJECTIVE\nA haptic bridge timed out waiting for device ACK and then emitted a late acknowledgment.\n\nRESPONSE CONTRACT\nROUTE: one sentence.\nREASON: one sentence.\nCOMMIT: one sentence.\n\nREFERENCE RESPONSE\nROUTE: keep the bridge fail-closed and shift the next pass onto the healthiest verified lane until a fresh authenticated bridge session is re-established.\nREASON: Late ACKs cannot be treated as truthful delivery because they break the bounded bridge timeout contract.\nCOMMIT: Record the timeout, reject the stale ACK, and route the next actuation pass through the safest verified transport."
   },
   {
     "id": "bridge-nonce-forgery",

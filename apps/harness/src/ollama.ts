@@ -295,23 +295,17 @@ function pickPreferredModel(
       const scale = parseModelScale(model);
       let score = 0;
 
-      if (/gemma4/.test(search)) {
+      if (search.includes(resolveQAliasSpecification().alias.toLowerCase())) {
         score += 12;
-      }
-      if (/gemma|qwen|mistral|llama|deepseek/.test(search)) {
-        score += 6;
       }
 
       if (role === "soul") {
         if (/large|27b|32b|70b/.test(search) || scale >= 24) {
           score += 40;
         }
-        if (/gemma|mistral|llama/.test(search)) {
-          score += 12;
-        }
         score += Math.min(scale, 40);
       } else if (role === "reasoner") {
-        if (/reason|r1|deepseek|qwen/.test(search)) {
+        if (/reason|r1/.test(search)) {
           score += 42;
         }
         if (/14b|12b|32b/.test(search) || scale >= 12) {
@@ -321,12 +315,9 @@ function pickPreferredModel(
         if (/mini|small|3b|4b|7b|8b/.test(search) || (scale > 0 && scale <= 8)) {
           score += 28;
         }
-        if (/gemma|qwen|llama|mistral/.test(search)) {
-          score += 8;
-        }
         score -= Math.max(0, scale - 10) * 0.8;
       } else {
-        if (/gemma4|gemma3|qwen/.test(search)) {
+        if (search.includes(resolveQAliasSpecification().alias.toLowerCase())) {
           score += 24;
         }
         if (/9b|12b|14b/.test(search) || (scale >= 8 && scale <= 16)) {

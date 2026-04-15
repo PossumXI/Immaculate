@@ -1,7 +1,7 @@
 {
   "id": "q-defensive-security-v1",
   "name": "Q Defensive Security Corpus",
-  "description": "Manifest-first corpus for Q, the Immaculate Gemma 4 defensive-security adapter.",
+  "description": "Manifest-first corpus for Q, the Immaculate defensive-security training lane.",
   "createdAt": "2026-04-13T00:00:00.000Z",
   "createdBy": "PossumX",
   "purposeTags": [

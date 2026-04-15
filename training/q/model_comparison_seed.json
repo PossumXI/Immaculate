@@ -48,7 +48,7 @@
     "objective": "An orchestration routing request asks Q to prioritize sensor-array data for immediate stabilization.",
     "reference_route": "Route through the most stable control path and keep the sensor-array lane visible to the operator.",
     "reference_reason": "A structured timeout should not be interpreted as agreement, so the route must remain conservative and explicit.",
-    "reference_commit": "Commit to the verified stabilizing path, preserve the contract failure, and avoid silent fallback.",
+    "reference_commit": "Commit to the verified stabilizing path, preserve the contract failure, and avoid silent drift.",
     "tags": ["q", "model-comparison", "routing", "eval-seed"]
   }
 ]

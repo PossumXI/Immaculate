@@ -15,7 +15,7 @@ import {
   type OllamaChatMessage
 } from "./ollama.js";
 import { resolveReleaseMetadata } from "./release-metadata.js";
-import { getQModelAlias, getQModelTarget, isQAlias, isQTargetModel, truthfulModelLabel } from "./q-model.js";
+import { getQModelAlias, getQModelTarget, isQAlias, isQTargetModel, matchesModelReference, truthfulModelLabel } from "./q-model.js";
 import { createFailureCircuitBreaker } from "./q-resilience.js";
 
 type GatewayPrincipal = {
@@ -59,13 +59,6 @@ const DEFAULT_TIMEOUT_MS = Math.max(
     120_000
 );
 const PRIMARY_MODEL = getQModelTarget();
-const FALLBACK_MODEL = process.env.IMMACULATE_Q_GATEWAY_FALLBACK_MODEL?.trim();
-const FALLBACK_ENABLED = Boolean(FALLBACK_MODEL && FALLBACK_MODEL !== PRIMARY_MODEL);
-const FALLBACK_TIMEOUT_MS = Math.max(
-  1_000,
-  Number(process.env.IMMACULATE_Q_GATEWAY_FALLBACK_TIMEOUT_MS ?? Math.min(DEFAULT_TIMEOUT_MS, 90_000)) ||
-    Math.min(DEFAULT_TIMEOUT_MS, 90_000)
-);
 const PRIMARY_FAILURE_THRESHOLD = Math.max(
   1,
   Number(process.env.IMMACULATE_Q_GATEWAY_PRIMARY_FAILURE_THRESHOLD ?? 2) || 2
@@ -357,9 +350,7 @@ app.get("/health", async () => {
     gateway: "q",
     alias: getQModelAlias(),
     model: truthfulModelLabel(PRIMARY_MODEL),
-    modelReady: installedModelNames.includes(PRIMARY_MODEL),
-    fallbackModel: FALLBACK_ENABLED ? truthfulModelLabel(FALLBACK_MODEL) : undefined,
-    fallbackReady: FALLBACK_ENABLED ? installedModelNames.includes(FALLBACK_MODEL ?? "") : false,
+    modelReady: installedModelNames.some((installedModelName) => matchesModelReference(installedModelName, PRIMARY_MODEL)),
     circuit,
     authMode: "api-key",
     host: GATEWAY_HOST,
@@ -385,7 +376,6 @@ app.get("/api/q/info", async (request, reply) => {
       gitShortSha: releaseMetadata.gitShortSha,
       qTrainingBundleId: releaseMetadata.q.trainingLock?.bundleId
     },
-    fallbackModel: FALLBACK_ENABLED ? truthfulModelLabel(FALLBACK_MODEL) : undefined,
     circuit: qPrimaryCircuit.snapshot(),
     authMode: "api-key",
     keyId: principal.key.keyId,
@@ -402,8 +392,7 @@ app.get("/v1/models", async () => ({
       object: "model",
       owned_by: "immaculate",
       metadata: {
-        providerModel: truthfulModelLabel(PRIMARY_MODEL),
-        fallbackModel: FALLBACK_ENABLED ? truthfulModelLabel(FALLBACK_MODEL) : undefined
+        providerModel: truthfulModelLabel(PRIMARY_MODEL)
       }
     }
   ]
@@ -439,7 +428,6 @@ app.post("/v1/chat/completions", async (request, reply) => {
   let primaryFailureClass: string | undefined = primaryDecision.reason;
   let servedModel = primaryModel;
   let servedResult: OllamaChatCompletionResult | undefined;
-  let fallbackUsed = false;
 
   if (primaryDecision.allowPrimary) {
     primaryResult = await runGatewayChatAttempt({
@@ -458,23 +446,10 @@ app.post("/v1/chat/completions", async (request, reply) => {
     }
   }
 
-  if (!servedResult && FALLBACK_ENABLED && FALLBACK_MODEL) {
-    servedModel = FALLBACK_MODEL;
-    fallbackUsed = true;
-    servedResult = await runGatewayChatAttempt({
-      model: FALLBACK_MODEL,
-      messages,
-      temperature,
-      maxTokens,
-      timeoutMs: FALLBACK_TIMEOUT_MS
-    });
-  }
-
   const circuit = qPrimaryCircuit.snapshot();
   reply.header("x-q-alias", getQModelAlias());
   reply.header("x-q-primary-model", truthfulModelLabel(primaryModel));
   reply.header("x-provider-model", truthfulModelLabel(servedModel));
-  reply.header("x-q-fallback-used", fallbackUsed ? "true" : "false");
   reply.header("x-q-circuit-state", circuit.state);
   if (primaryFailureClass) {
     reply.header("x-q-primary-failure-class", primaryFailureClass);
@@ -495,7 +470,6 @@ app.post("/v1/chat/completions", async (request, reply) => {
       model: getQModelAlias(),
       providerModel: truthfulModelLabel(servedModel),
       primaryModel: truthfulModelLabel(primaryModel),
-      fallbackUsed,
       circuitState: circuit.state,
       primaryFailureClass,
       latencyMs: servedResult?.latencyMs ?? primaryResult?.latencyMs ?? 0,
@@ -512,7 +486,6 @@ app.post("/v1/chat/completions", async (request, reply) => {
     model: getQModelAlias(),
     providerModel: truthfulModelLabel(servedModel),
     primaryModel: truthfulModelLabel(primaryModel),
-    fallbackUsed,
     primaryFailureClass,
     circuitState: circuit.state,
     latencyMs: servedResult.latencyMs,

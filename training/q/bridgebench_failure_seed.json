@@ -39,13 +39,13 @@
     "tags": ["q", "bridgebench", "ops", "eval-seed"]
   },
   {
-    "id": "bridge-fallback-routing",
+    "id": "bridge-continuity-routing",
     "source_surface": "BridgeBench",
-    "scenario_id": "bridge-fallback-routing",
-    "label": "Bridge fallback routing",
+    "scenario_id": "bridge-continuity-routing",
+    "label": "Bridge continuity routing",
     "split": "eval",
     "failure_class": "transport_timeout",
-    "objective": "A bridge fallback request asks Q to choose a healthier transport when the websocket lane is degraded.",
+    "objective": "A bridge continuity request asks Q to choose a healthier transport when the websocket lane is degraded.",
     "reference_route": "Use the healthiest direct transport instead of pretending the degraded bridge remains primary.",
     "reference_reason": "Elevated control pressure should favor the lane with the most truthful verified delivery path.",
     "reference_commit": "Rank transports by verified health, record the bridge degradation, and dispatch through the direct path.",

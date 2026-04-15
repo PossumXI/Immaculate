@@ -27,7 +27,7 @@ Release/build identity for the current repo state lives in:
 - bounded chat-completion request validation
 - a narrow OpenAI-compatible surface for `Q`
 - direct private execution against the configured Ollama backend
-- a bounded primary-model circuit breaker plus explicit fallback-model service continuity
+- a bounded primary-model circuit breaker with explicit fail-closed behavior
 - private OCI deployment glue for that narrow process
 
 ## What Stays Private In Immaculate
@@ -53,7 +53,7 @@ The dedicated gateway is safer than exposing the harness directly because:
 - it keeps the Q key store hashed on disk
 - it enforces per-key rate and concurrency limits before model execution
 - it can stop hammering a failing primary model by opening the primary circuit
-  and serving through an explicitly configured fallback lane
+  and failing closed instead of silently swapping models
 - it is designed for private OCI deployment with no public ingress by default
 
 ## OCI Shape
@@ -91,8 +91,8 @@ Safe claims:
 - the OCI bundle now targets that dedicated gateway process, not an NGINX-only
   reverse proxy
 - the gateway is private-OCI-first and narrower than the harness
-- the gateway now has a live fallback continuity path with explicit headers and
-  response metadata when the primary model is degraded
+- the gateway now has a live primary-failure circuit with explicit headers and
+  response metadata when the Q lane is degraded
 
 Claims this page does not make:
 

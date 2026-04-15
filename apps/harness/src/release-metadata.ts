@@ -11,7 +11,6 @@ export type QTrainingLockSummary = {
   bundleId: string;
   runName?: string;
   aliasName?: string;
-  baseModel?: string;
   trainDatasetPath?: string;
   trainDatasetSha256?: string;
   trainDatasetRowCount?: number;
@@ -171,7 +170,6 @@ async function readTrainingLockSummary(): Promise<QTrainingLockSummary | undefin
     bundleId: payload.bundleId,
     runName: payload.run?.runName,
     aliasName: payload.run?.aliasName,
-    baseModel: payload.run?.baseModel,
     trainDatasetPath: payload.run?.trainDatasetPath,
     trainDatasetSha256: payload.run?.trainDatasetSha256,
     trainDatasetRowCount: payload.run?.trainDatasetRowCount,
@@ -230,7 +228,7 @@ export async function resolveReleaseMetadata(): Promise<ReleaseMetadata> {
     buildId: `${packageVersion}+${gitShortSha}`,
     q: {
       alias: getQModelAlias(),
-      providerModel: getQModelTarget(),
+      providerModel: getQModelAlias(),
       truthfulLabel: truthfulModelLabel(getQModelTarget()),
       trainingLock,
       hybridSession

@@ -1397,7 +1397,7 @@ export async function runPublishedBenchmark(
     id: "benchmark-layer",
     name: "Benchmark Reasoner Layer",
     backend: "ollama",
-    model: "gemma4:e4b",
+    model: "Q",
     role: "reasoner",
     status: "ready",
     endpoint: "http://127.0.0.1:11434",
@@ -1407,7 +1407,7 @@ export async function runPublishedBenchmark(
     id: "benchmark-layer-mid",
     name: "Benchmark Mid Layer",
     backend: "ollama",
-    model: "gemma4:e4b",
+    model: "Q",
     role: "mid",
     status: "ready",
     endpoint: "http://127.0.0.1:11434",
@@ -1417,7 +1417,7 @@ export async function runPublishedBenchmark(
     id: "benchmark-layer-guard",
     name: "Benchmark Guard Layer",
     backend: "ollama",
-    model: "gemma4:e4b",
+    model: "Q",
     role: "guard",
     status: "ready",
     endpoint: "http://127.0.0.1:11434",
@@ -1427,7 +1427,7 @@ export async function runPublishedBenchmark(
     id: "benchmark-layer-soul",
     name: "Benchmark Soul Layer",
     backend: "ollama",
-    model: "gemma4:e4b",
+    model: "Q",
     role: "soul",
     status: "ready",
     endpoint: "http://127.0.0.1:11434",
@@ -1443,7 +1443,7 @@ export async function runPublishedBenchmark(
   const syntheticExecution: CognitiveExecution = {
     id: `cog-${suiteId}-synthetic`,
     layerId: benchmarkLayer.id,
-    model: "gemma4:e4b",
+    model: "Q",
     objective: "Benchmark synthetic cognition trace for consent projection validation.",
     status: "completed",
     latencyMs: 42,
@@ -4237,7 +4237,7 @@ export async function runPublishedBenchmark(
         bridgeDispatches[0]?.protocolId === "immaculate.haptic.rig.v1",
       "one bridge dispatch / protocol-aware bridge transport / acknowledged",
       `${bridgeDispatches.length} dispatches / ${bridgeDispatchResult.delivery.transport} / ${bridgeDispatchResult.delivery.policyNote}`,
-      "the first concrete hardware-transport slice should prove protocol-aware acked bridge delivery instead of only file fallback"
+      "the first concrete hardware-transport slice should prove protocol-aware acked bridge delivery instead of only file continuity"
     ),
     createAssertion(
       "actuation-udp-transport-registered",
@@ -4333,14 +4333,14 @@ export async function runPublishedBenchmark(
     ),
     createAssertion(
       "actuation-serial-isolation",
-      "Stale serial heartbeat isolates only the affected device and forces fallback",
+      "Stale serial heartbeat isolates only the affected device and forces continuity routing",
       isolatedSerialTransport.health === "isolated" &&
         isolatedSerialTransport.isolationActive &&
         isolatedSerialTransport.isolationReason === "heartbeat_timeout" &&
         isolatedDispatchResult.delivery.transport === "file" &&
         isolatedDispatchResult.delivery.policyNote.includes("direct_transport_heartbeat_timeout") &&
         isolatedDispatchResult.delivery.policyNote.includes("file_fallback"),
-      "isolated transport with file fallback on stale heartbeat",
+      "isolated transport with file continuity on stale heartbeat",
       `${isolatedSerialTransport.health} / ${isolatedSerialTransport.isolationReason ?? "none"} / ${isolatedDispatchResult.delivery.transport}`,
       "per-device fault isolation should contain a stale device without suppressing the rest of the adapter lane"
     ),

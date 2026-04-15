@@ -1,6 +1,6 @@
 # Immaculate Training Bundle
 
-`Immaculate` is not a base model in this repo.
+`Immaculate` is not a separate model-weight lane in this repo.
 In plain English, this folder is the training-and-improvement lane for the orchestration system itself: benchmark traces, gateway checks, Harbor tasks, and release signals that can be fed back into routing logic, evals, and policy hardening.
 
 ## What This Bundle Does

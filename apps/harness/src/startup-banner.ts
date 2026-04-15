@@ -72,7 +72,7 @@ function renderInfoLines(options: StartupBannerOptions): string[] {
     `${applyColor("lavender-to-ocean truecolor banner", INFO_ACCENT)} ${applyColor("|", INFO_DIM)} ${applyColor("Q cognition alias", INFO_DIM)}`,
     `${applyColor("endpoint", INFO_PRIMARY)} ${options.host}:${options.port} ${applyColor("| ticks", INFO_PRIMARY)} ${options.tickIntervalMs}ms`,
     `${applyColor("ollama", INFO_PRIMARY)} ${options.ollamaUrl} ${applyColor("| model", INFO_PRIMARY)} ${modelLabel}`,
-    `${applyColor("Q alias", INFO_ACCENT)} ${qAlias.alias} -> ${qAlias.baseModel} ${applyColor("| banner", INFO_PRIMARY)} ${bannerMode()}`
+    `${applyColor("Q lane", INFO_ACCENT)} ${qAlias.alias} ${applyColor("| banner", INFO_PRIMARY)} ${bannerMode()}`
   ];
 }
 

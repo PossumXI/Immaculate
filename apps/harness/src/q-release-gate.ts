@@ -129,8 +129,8 @@ async function main(): Promise<void> {
   const modelComparison = await readJson<ModelComparisonReport>(comparisonPath);
   const bridgeBench = await readJson<BridgeBenchReport>(bridgeBenchPath);
 
-  const qComparison = modelComparison?.models.find((model) => model.truthfulLabel.startsWith("Q "));
-  const qBridgeBench = bridgeBench?.models.find((model) => model.truthfulLabel.startsWith("Q "));
+  const qComparison = modelComparison?.models.find((model) => model.truthfulLabel.trim().startsWith("Q"));
+  const qBridgeBench = bridgeBench?.models.find((model) => model.truthfulLabel.trim().startsWith("Q"));
 
   const reasons: string[] = [];
   if (!qComparison) {

@@ -20,7 +20,6 @@
     "banner": "tsx src/banner.ts",
     "ollama:alias:q": "tsx src/q-alias-cli.ts --",
     "q:gateway": "tsx src/q-gateway.ts",
-    "q:gateway:fallback:smoke": "tsx src/q-gateway-fallback-smoke.ts",
     "q:gateway:validate": "tsx src/q-gateway-validate.ts",
     "q:release-gate": "tsx src/q-release-gate.ts",
     "release:surface": "tsx src/release-surface.ts",

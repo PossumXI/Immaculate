@@ -2,13 +2,12 @@
 
 This page records one hybrid Q training session. In plain English: it ties the Q fine-tune lane and the Immaculate orchestration-improvement lane into one stamped session, then tells you exactly which parts are ready or missing.
 
-- Generated: `2026-04-14T21:35:43Z`
-- Release: `0.1.0+36fc9bb`
+- Generated: `2026-04-15T02:32:43Z`
+- Release: `0.1.0+194a8fc`
 - Session id: `q-hybrid-cur-fnv1a-8f551a5c`
 - Q training bundle: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5`
-- Base model: `unsloth/gemma-4-31B-it`
 - Dataset rows: `1013`
-- Immaculate orchestration bundle: `immaculate-orchestration-36fc9bb-4c759c95`
+- Immaculate orchestration bundle: `immaculate-orchestration-194a8fc-4ec92803`
 
 ## Plain English Status
 
@@ -31,13 +30,13 @@ This page records one hybrid Q training session. In plain English: it ties the Q
 
 - Bundle path: `.training-output/immaculate/immaculate-training-bundle-q-hybrid-cur-fnv1a-8f551a5c.json`
 - Signal count: `14`
-- This lane improves Immaculate through benchmark and orchestration evidence, not by pretending Immaculate is a separate base model.
+- This lane improves Immaculate through benchmark and orchestration evidence while keeping the tracked Q lineage as the only model-training lane in scope.
 
 ## Cloud Bundle
 
-- Bundle id: `q-hybrid-cur-fnv1a-8f551a5c-36fc9bb`
+- Bundle id: `q-hybrid-cur-fnv1a-8f551a5c-194a8fc`
 - Archive: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/cloud-bundle/q-hybrid-cur-fnv1a-8f551a5c-cloud-bundle.tar.gz`
-- Archive SHA-256: `19b5f006583797e26668dc90bc6f816474defdb702f2089326715dc650d54c84`
+- Archive SHA-256: `c19325917b18a86cbb98b6204c646f7fa85da3c4f68eb7c5d9ab046770635774`
 - Bundle manifest: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/cloud-bundle/bundle-manifest.json`
 - Included file count: `8`
 

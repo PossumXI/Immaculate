@@ -1,6 +1,6 @@
 # Q Training Bundle
 
-`Q` is the truthful Immaculate alias for the local Gemma 4 base model used in the current harness path.
+`Q` is the tracked Immaculate reasoning lane used throughout the current harness, benchmark, and hybrid training path.
 
 In plain English, this folder is the “make the next Q training run repeatable” bundle.
 It does not pretend the model is already fully retrained. It makes sure the next run can be tied back to exact files, hashes, and configs.

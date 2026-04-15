@@ -1,27 +1,26 @@
 {
-  "generatedAt": "2026-04-14T15:45:30.608Z",
-  "gatewayUrl": "http://127.0.0.1:8905",
+  "generatedAt": "2026-04-15T02:32:19.275Z",
+  "gatewayUrl": "http://127.0.0.1:8915",
   "alias": "Q",
-  "providerModel": "Q (gemma4:e4b)",
+  "qServingLabel": "Q",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "f3886f2118cc44447ac7a27c82593d6a6f6e89fa",
-    "gitShortSha": "f3886f2",
+    "gitSha": "194a8fc18d1f5e54a2f88108827bbe632cd791c6",
+    "gitShortSha": "194a8fc",
     "gitBranch": "detached",
-    "buildId": "0.1.0+f3886f2",
+    "buildId": "0.1.0+194a8fc",
     "q": {
       "alias": "Q",
-      "providerModel": "gemma4:e4b",
-      "truthfulLabel": "Q (gemma4:e4b)",
+      "providerModel": "Q",
+      "truthfulLabel": "Q",
       "trainingLock": {
         "generatedAt": "2026-04-14T15:26:05Z",
         "lockVersion": 1,
         "bundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5",
         "runName": "q-defsec-code-longctx-cur-fnv1a-8f551a5c",
         "aliasName": "Q",
-        "baseModel": "unsloth/gemma-4-31B-it",
         "trainDatasetPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c.jsonl",
         "trainDatasetSha256": "5c329cc58772a0dc52e12dafcc421caa5458c6a7c37b96f2970d8a04e937c64f",
         "trainDatasetRowCount": 1013,
@@ -30,6 +29,16 @@
         "curationRunPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\training-data\\runs\\cur-fnv1a-8f551a5c\\run.json",
         "curationRunId": "cur-fnv1a-8f551a5c",
         "lockPath": ".training-output/q/latest-training-lock.json"
+      },
+      "hybridSession": {
+        "generatedAt": "2026-04-14T21:35:43Z",
+        "sessionId": "q-hybrid-cur-fnv1a-8f551a5c",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/hybrid-session.json",
+        "localStatus": "ready",
+        "cloudStatus": "not-configured",
+        "cloudProvider": "oci",
+        "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5",
+        "immaculateBundleId": "immaculate-orchestration-36fc9bb-4c759c95"
       }
     }
   },
@@ -49,31 +58,30 @@
       "body": {
         "ok": true,
         "release": {
-          "buildId": "0.1.0+f3886f2",
-          "gitShortSha": "f3886f2"
+          "buildId": "0.1.0+194a8fc",
+          "gitShortSha": "194a8fc"
         },
         "gateway": "q",
         "alias": "Q",
-        "model": "Q (gemma4:e4b)",
+        "model": "Q",
         "modelReady": true,
-        "fallbackReady": false,
         "circuit": {
           "state": "closed",
           "consecutiveFailures": 0
         },
         "authMode": "api-key",
         "host": "127.0.0.1",
-        "port": 8905
+        "port": 8915
       },
       "headers": {
         "connection": "keep-alive",
-        "content-length": "269",
+        "content-length": "234",
         "content-type": "application/json; charset=utf-8",
-        "date": "Tue, 14 Apr 2026 15:45:27 GMT",
+        "date": "Wed, 15 Apr 2026 02:32:16 GMT",
         "keep-alive": "timeout=72",
         "vary": "Origin"
       },
-      "wallLatencyMs": 44.27
+      "wallLatencyMs": 19.97
     },
     "unauthorizedChat": {
       "status": 401,
@@ -85,21 +93,21 @@
         "connection": "keep-alive",
         "content-length": "91",
         "content-type": "application/json; charset=utf-8",
-        "date": "Tue, 14 Apr 2026 15:45:27 GMT",
+        "date": "Wed, 15 Apr 2026 02:32:16 GMT",
         "keep-alive": "timeout=72",
         "vary": "Origin"
       },
-      "wallLatencyMs": 8.16
+      "wallLatencyMs": 6.55
     },
     "info": {
       "status": 200,
       "body": {
         "enabled": true,
         "alias": "Q",
-        "model": "Q (gemma4:e4b)",
+        "model": "Q",
         "release": {
-          "buildId": "0.1.0+f3886f2",
-          "gitShortSha": "f3886f2",
+          "buildId": "0.1.0+194a8fc",
+          "gitShortSha": "194a8fc",
           "qTrainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5"
         },
         "circuit": {
@@ -107,7 +115,7 @@
           "consecutiveFailures": 0
         },
         "authMode": "api-key",
-        "keyId": "qkey-mnysmdl0-23ca4f8b",
+        "keyId": "qkey-mnzfq6u9-8f90a02c",
         "rateLimit": {
           "requestsPerMinute": 30,
           "burst": 30,
@@ -122,16 +130,16 @@
       },
       "headers": {
         "connection": "keep-alive",
-        "content-length": "447",
+        "content-length": "434",
         "content-type": "application/json; charset=utf-8",
-        "date": "Tue, 14 Apr 2026 15:45:27 GMT",
+        "date": "Wed, 15 Apr 2026 02:32:16 GMT",
         "keep-alive": "timeout=72",
         "vary": "Origin",
         "x-ratelimit-limit": "30",
         "x-ratelimit-remaining": "29",
         "x-ratelimit-reset-ms": "0"
       },
-      "wallLatencyMs": 89.21
+      "wallLatencyMs": 76.32
     },
     "models": {
       "status": 200,
@@ -143,36 +151,35 @@
             "object": "model",
             "owned_by": "immaculate",
             "metadata": {
-              "providerModel": "Q (gemma4:e4b)"
+              "providerModel": "Q"
             }
           }
         ]
       },
       "headers": {
         "connection": "keep-alive",
-        "content-length": "124",
+        "content-length": "111",
         "content-type": "application/json; charset=utf-8",
-        "date": "Tue, 14 Apr 2026 15:45:27 GMT",
+        "date": "Wed, 15 Apr 2026 02:32:16 GMT",
         "keep-alive": "timeout=72",
         "vary": "Origin",
         "x-ratelimit-limit": "30",
         "x-ratelimit-remaining": "28",
         "x-ratelimit-reset-ms": "0"
       },
-      "wallLatencyMs": 90.62
+      "wallLatencyMs": 73.78
     },
     "authorizedChat": {
       "status": 200,
       "body": {
-        "id": "chatcmpl-mnysmeoc",
+        "id": "chatcmpl-mnzfq7r2",
         "object": "chat.completion",
-        "created": 1776181528,
+        "created": 1776220337,
         "model": "Q",
-        "providerModel": "Q (gemma4:e4b)",
-        "primaryModel": "Q (gemma4:e4b)",
-        "fallbackUsed": false,
+        "providerModel": "Q",
+        "primaryModel": "Q",
         "circuitState": "closed",
-        "latencyMs": 1002.25,
+        "latencyMs": 857.33,
         "thinkingDetected": false,
         "choices": [
           {
@@ -192,23 +199,22 @@
       },
       "headers": {
         "connection": "keep-alive",
-        "content-length": "430",
+        "content-length": "382",
         "content-type": "application/json; charset=utf-8",
-        "date": "Tue, 14 Apr 2026 15:45:28 GMT",
+        "date": "Wed, 15 Apr 2026 02:32:17 GMT",
         "keep-alive": "timeout=72",
         "vary": "Origin",
-        "x-provider-model": "Q (gemma4:e4b)",
+        "x-provider-model": "Q",
         "x-q-alias": "Q",
         "x-q-circuit-state": "closed",
-        "x-q-fallback-used": "false",
-        "x-q-primary-latency-ms": "1002.25",
-        "x-q-primary-model": "Q (gemma4:e4b)",
+        "x-q-primary-latency-ms": "857.33",
+        "x-q-primary-model": "Q",
         "x-ratelimit-limit": "30",
         "x-ratelimit-remaining": "27",
         "x-ratelimit-reset-ms": "0",
-        "x-upstream-latency-ms": "1002.25"
+        "x-upstream-latency-ms": "857.33"
       },
-      "wallLatencyMs": 1117.09
+      "wallLatencyMs": 941.53
     },
     "concurrentRejection": {
       "status": 429,
@@ -221,7 +227,7 @@
         "connection": "keep-alive",
         "content-length": "101",
         "content-type": "application/json; charset=utf-8",
-        "date": "Tue, 14 Apr 2026 15:45:28 GMT",
+        "date": "Wed, 15 Apr 2026 02:32:17 GMT",
         "keep-alive": "timeout=72",
         "retry-after": "1",
         "vary": "Origin",
@@ -229,19 +235,19 @@
         "x-ratelimit-remaining": "26",
         "x-ratelimit-reset-ms": "1000"
       },
-      "wallLatencyMs": 102.58
+      "wallLatencyMs": 78.93
     }
   },
   "directOllama": {
-    "latencyMs": 981.13,
-    "wallLatencyMs": 995.66,
+    "latencyMs": 873.3,
+    "wallLatencyMs": 892.16,
     "responsePreview": "Gateway reports healthy status."
   },
   "comparison": {
-    "gatewayEndToEndLatencyMs": 1117.09,
-    "gatewayUpstreamLatencyMs": 1002.25,
-    "gatewayAddedLatencyMs": 114.84,
-    "directOllamaLatencyMs": 981.13
+    "gatewayEndToEndLatencyMs": 941.53,
+    "gatewayUpstreamLatencyMs": 857.33,
+    "gatewayAddedLatencyMs": 84.2,
+    "directOllamaLatencyMs": 873.3
   },
   "output": {
     "jsonPath": "docs\\wiki\\Q-Gateway-Validation.json",

@@ -7,7 +7,7 @@ import { createEngine, type BenchmarkAssertion, type BenchmarkReport, type Gover
 import { runPublishedBenchmark, loadLatestBenchmarkReportForPack } from "./benchmark.js";
 import { listOllamaModels, runOllamaExecution } from "./ollama.js";
 import { resolveReleaseMetadata, type ReleaseMetadata } from "./release-metadata.js";
-import { getQModelAlias, resolveQModel, truthfulModelLabel, vendorForModel } from "./q-model.js";
+import { getQModelAlias, matchesModelReference, resolveQModel, truthfulModelLabel, vendorForModel } from "./q-model.js";
 
 type BridgeBenchScenario = {
   id: string;
@@ -64,7 +64,7 @@ type TemporalSummary = {
 
 export type BridgeBenchReport = {
   generatedAt: string;
-  modelLaneSurface: "direct-local-ollama-structured-contract";
+  modelLaneSurface: "direct-q-structured-contract";
   ollamaBaseUrl: string;
   release: ReleaseMetadata;
   qAlias: string;
@@ -124,12 +124,12 @@ const BRIDGEBENCH_SCENARIOS: BridgeBenchScenario[] = [
     governancePressure: "clear"
   },
   {
-    id: "bridge-fallback-routing",
-    label: "Bridge fallback routing",
+    id: "bridge-continuity-routing",
+    label: "Bridge continuity routing",
     objective:
       "Transport health is mixed: the websocket bridge is degraded, HTTP/2 direct is healthy, and governance pressure is elevated. Pick the next route.",
     context:
-      "Prefer the safest truthful outward lane without pretending the bridge is still primary.",
+      "Prefer the safest truthful outward lane without pretending the bridge is still healthy.",
     role: "mid",
     governancePressure: "elevated"
   }
@@ -168,18 +168,13 @@ function captureHardwareContext() {
 
 function buildBridgeBenchModels(installedModelNames: string[]): string[] {
   const requested = (
-    process.env.IMMACULATE_BRIDGEBENCH_MODEL_SET?.split(",").map((entry) => entry.trim()) ?? [
-      getQModelAlias(),
-      "gemma3:4b",
-      "qwen3:8b"
-    ]
+    process.env.IMMACULATE_BRIDGEBENCH_MODEL_SET?.split(",").map((entry) => entry.trim()) ?? [getQModelAlias()]
   ).filter(Boolean);
 
   return Array.from(
     new Set(
       requested.filter((candidate) => {
-        const actual = resolveQModel(candidate) ?? candidate;
-        return installedModelNames.includes(actual);
+        return installedModelNames.some((installedModelName) => matchesModelReference(installedModelName, candidate));
       })
     )
   );
@@ -290,9 +285,9 @@ function buildMarkdown(report: BridgeBenchReport): string {
   lines.push(`Repo commit: \`${report.release.gitShortSha}\``);
   lines.push(`Model lane surface: \`${report.modelLaneSurface}\``);
   lines.push(`Q training bundle: \`${report.release.q.trainingLock?.bundleId ?? "none generated yet"}\``);
-  lines.push("The model lane below measures direct local Ollama structured-contract behavior, not the served Q gateway edge.");
+  lines.push("The Q lane below measures direct local Q structured-contract behavior, not the served Q gateway edge.");
   lines.push("");
-  lines.push("## Model Lane");
+  lines.push("## Q Lane");
   lines.push("");
   for (const model of report.models) {
     lines.push(`### ${model.truthfulLabel}`);
@@ -348,7 +343,7 @@ export async function runBridgeBench(): Promise<BridgeBenchReport> {
 
   const report: BridgeBenchReport = {
     generatedAt: new Date().toISOString(),
-    modelLaneSurface: "direct-local-ollama-structured-contract",
+    modelLaneSurface: "direct-q-structured-contract",
     ollamaBaseUrl: DEFAULT_OLLAMA_URL,
     release: await resolveReleaseMetadata(),
     qAlias: getQModelAlias(),

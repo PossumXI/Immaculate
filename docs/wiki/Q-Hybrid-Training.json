@@ -1,18 +1,18 @@
 {
-  "generatedAt": "2026-04-14T21:35:43Z",
+  "generatedAt": "2026-04-15T02:32:43Z",
   "sessionId": "q-hybrid-cur-fnv1a-8f551a5c",
   "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/hybrid-session.manifest.json",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "36fc9bbfa404854aff675903b649dac1dd00ec82",
-    "gitShortSha": "36fc9bb",
-    "buildId": "0.1.0+36fc9bb"
+    "gitSha": "194a8fc18d1f5e54a2f88108827bbe632cd791c6",
+    "gitShortSha": "194a8fc",
+    "buildId": "0.1.0+194a8fc"
   },
   "q": {
     "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5",
     "trainingLockPath": ".training-output/q/latest-training-lock.json",
     "configPath": ".training-output/q/q-lora-config-longctx-cur-fnv1a-8f551a5c.json",
-    "baseModel": "unsloth/gemma-4-31B-it",
+    "modelId": "Q",
     "trainDatasetPath": ".training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c.jsonl",
     "trainDatasetRowCount": 1013,
     "mixManifestPath": ".training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c.manifest.json",
@@ -20,15 +20,15 @@
     "failureCorpusPath": "docs/wiki/Q-Failure-Corpus.json"
   },
   "immaculate": {
-    "bundleId": "immaculate-orchestration-36fc9bb-4c759c95",
+    "bundleId": "immaculate-orchestration-194a8fc-4ec92803",
     "bundlePath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-cur-fnv1a-8f551a5c.json",
     "signalCount": 14
   },
   "cloudBundle": {
-    "bundleId": "q-hybrid-cur-fnv1a-8f551a5c-36fc9bb",
+    "bundleId": "q-hybrid-cur-fnv1a-8f551a5c-194a8fc",
     "archivePath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/cloud-bundle/q-hybrid-cur-fnv1a-8f551a5c-cloud-bundle.tar.gz",
-    "archiveSha256": "19b5f006583797e26668dc90bc6f816474defdb702f2089326715dc650d54c84",
-    "archiveSizeBytes": 2209485,
+    "archiveSha256": "c19325917b18a86cbb98b6204c646f7fa85da3c4f68eb7c5d9ab046770635774",
+    "archiveSizeBytes": 2209523,
     "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/cloud-bundle/bundle-manifest.json",
     "fileCount": 8,
     "repoRemoteUrl": "https://github.com/PossumXI/Immaculate.git"

@@ -1,6 +1,6 @@
 # Training Data Factory
 
-This page tracks the real dataset-capture path for Gemma-style defensive fine-tuning work inside Immaculate.
+This page tracks the real dataset-capture path for defensive Q fine-tuning work inside Immaculate.
 
 The goal is not "scrape everything."
 The goal is a reproducible corpus assembly path with explicit policy, provenance, and security checks.
@@ -71,7 +71,7 @@ npm run training-data:smoke
 Real curation run:
 
 ```powershell
-npm run training-data:curate -- fixtures/training/gemma4-defsec-curation.example.json
+npm run training-data:curate -- fixtures/training/q-defsec-curation.example.json
 ```
 
 List prior runs:

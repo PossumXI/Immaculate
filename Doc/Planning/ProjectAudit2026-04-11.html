@@ -210,10 +210,10 @@
         <span class="badge-yellow px-3 py-1 rounded-full text-xs font-bold">YELLOW</span>
       </div>
       <div class="space-y-1 text-xs text-yellow-300">
-        <p>✅ Model priority list (gemma4 → gemma → qwen → first) is sensible.</p>
+        <p>✅ Q-first model priority is sensible for the current local intelligence lane.</p>
         <p>✅ Busy-state tracking prevents double-submission to the same layer.</p>
         <p>🟡 No limit on concurrent <code>/api/intelligence/run</code> calls — can stack up Ollama requests.</p>
-        <p>🟡 Dashboard button label says "Run local Gemma pass" — hardcoded name not reflecting actual registered model.</p>
+        <p>🟡 Dashboard button label says "Run local Q pass" — hardcoded name still needs to stay aligned with the active registered lane.</p>
         <p>🟡 <code>/api/intelligence/ollama/models</code> and <code>/api/intelligence/ollama/register</code> exist but are never surfaced in the Dashboard or TUI.</p>
         <p>🟡 Ollama timeout env var <code>IMMACULATE_OLLAMA_TIMEOUT_MS</code> defaults to 120 000 ms — no user feedback during that wait.</p>
       </div>
@@ -320,7 +320,7 @@
       </thead>
       <tbody>
         <tr><td class="p-3"><code>GET /api/health</code></td><td class="p-3 text-yellow-300">No UI (infra only)</td><td class="p-3 text-green-400">Clean</td><td class="p-3">Good smoke-test endpoint. Not surfaced in Dashboard or TUI — consider adding a status dot.</td></tr>
-        <tr><td class="p-3"><code>GET /api/snapshot</code></td><td class="p-3 text-green-400">Dashboard (boot)</td><td class="p-3 text-green-400">Clean</td><td class="p-3">Used on initial mount. Could also be polled as fallback when WS drops.</td></tr>
+        <tr><td class="p-3"><code>GET /api/snapshot</code></td><td class="p-3 text-green-400">Dashboard (boot)</td><td class="p-3 text-green-400">Clean</td><td class="p-3">Used on initial mount. Could also be polled as a continuity path when WS drops.</td></tr>
         <tr><td class="p-3"><code>GET /api/history</code></td><td class="p-3 text-green-400">Dashboard (poll)</td><td class="p-3 text-green-400">Clean</td><td class="p-3">Polled every 2 s. Sliced to 8 rows in UI.</td></tr>
         <tr><td class="p-3"><code>GET /api/persistence</code></td><td class="p-3 text-green-400">Dashboard + TUI (poll)</td><td class="p-3 text-green-400">Clean</td><td class="p-3">Polled every 2 s from both clients.</td></tr>
         <tr><td class="p-3"><code>GET /api/events</code></td><td class="p-3 text-red-400">ORPHANED</td><td class="p-3 text-red-400">Dead</td><td class="p-3">Returns full event log. Never called from Dashboard or TUI. Potentially expensive if log is large.</td></tr>
@@ -413,7 +413,7 @@
         <span class="badge-yellow px-2 py-0.5 rounded text-xs font-bold">P1 — HIGH</span>
         <strong>W&amp;B Python path is Windows-only; CI runs Linux</strong>
       </div>
-      <p class="text-sm text-gray-300"><code>LOCAL_VENV_PYTHON</code> = <code>…/.tools/wandb-venv/Scripts/python.exe</code>. The GitHub Actions job runs <code>ubuntu-latest</code>. The fallback (<code>"python"</code>) will fail unless <code>wandb</code> is pre-installed in the runner's system Python. The <code>wandb:bootstrap</code> script is PowerShell — it can't run on Linux. The CI step <code>npm run benchmark:gate:all</code> will fail if any benchmark tries to publish to W&amp;B.</p>
+      <p class="text-sm text-gray-300"><code>LOCAL_VENV_PYTHON</code> = <code>…/.tools/wandb-venv/Scripts/python.exe</code>. The GitHub Actions job runs <code>ubuntu-latest</code>. The continuity default (<code>"python"</code>) will fail unless <code>wandb</code> is pre-installed in the runner's system Python. The <code>wandb:bootstrap</code> script is PowerShell — it can't run on Linux. The CI step <code>npm run benchmark:gate:all</code> will fail if any benchmark tries to publish to W&amp;B.</p>
       <p class="text-xs text-gray-500 mt-1">Affects: wandb.ts:39, .github/workflows/benchmark-gate.yml, scripts/bootstrap-wandb.ps1</p>
     </div>
 

@@ -1,26 +1,25 @@
 {
-  "generatedAt": "2026-04-14T15:37:16.626Z",
+  "generatedAt": "2026-04-15T02:35:16.060Z",
   "threshold": 0.75,
   "ready": true,
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "f3886f2118cc44447ac7a27c82593d6a6f6e89fa",
-    "gitShortSha": "f3886f2",
+    "gitSha": "194a8fc18d1f5e54a2f88108827bbe632cd791c6",
+    "gitShortSha": "194a8fc",
     "gitBranch": "detached",
-    "buildId": "0.1.0+f3886f2",
+    "buildId": "0.1.0+194a8fc",
     "q": {
       "alias": "Q",
-      "providerModel": "gemma4:e4b",
-      "truthfulLabel": "Q (gemma4:e4b)",
+      "providerModel": "Q",
+      "truthfulLabel": "Q",
       "trainingLock": {
         "generatedAt": "2026-04-14T15:26:05Z",
         "lockVersion": 1,
         "bundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5",
         "runName": "q-defsec-code-longctx-cur-fnv1a-8f551a5c",
         "aliasName": "Q",
-        "baseModel": "unsloth/gemma-4-31B-it",
         "trainDatasetPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c.jsonl",
         "trainDatasetSha256": "5c329cc58772a0dc52e12dafcc421caa5458c6a7c37b96f2970d8a04e937c64f",
         "trainDatasetRowCount": 1013,
@@ -29,13 +28,23 @@
         "curationRunPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\training-data\\runs\\cur-fnv1a-8f551a5c\\run.json",
         "curationRunId": "cur-fnv1a-8f551a5c",
         "lockPath": ".training-output/q/latest-training-lock.json"
+      },
+      "hybridSession": {
+        "generatedAt": "2026-04-15T02:32:43Z",
+        "sessionId": "q-hybrid-cur-fnv1a-8f551a5c",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/hybrid-session.json",
+        "localStatus": "ready",
+        "cloudStatus": "not-configured",
+        "cloudProvider": "oci",
+        "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5",
+        "immaculateBundleId": "immaculate-orchestration-194a8fc-4ec92803"
       }
     }
   },
   "reasons": [],
   "sources": {
-    "modelComparisonGeneratedAt": "2026-04-14T15:27:29.352Z",
-    "bridgeBenchGeneratedAt": "2026-04-14T15:37:11.471Z"
+    "modelComparisonGeneratedAt": "2026-04-15T02:25:01.093Z",
+    "bridgeBenchGeneratedAt": "2026-04-15T02:35:08.392Z"
   },
   "q": {
     "modelComparison": {

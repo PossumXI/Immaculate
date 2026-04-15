@@ -11,7 +11,10 @@ export type OllamaAliasSpecification = {
 };
 
 const DEFAULT_Q_ALIAS = "q";
-const DEFAULT_Q_BASE_MODEL = process.env.IMMACULATE_OLLAMA_Q_BASE_MODEL ?? "gemma4:e4b";
+const DEFAULT_Q_BASE_MODEL =
+  process.env.IMMACULATE_OLLAMA_Q_BASE_MODEL ??
+  process.env.IMMACULATE_OLLAMA_Q_MODEL ??
+  DEFAULT_Q_ALIAS.toUpperCase();
 
 function normalizeToken(value: string): string {
   return value.trim().toLowerCase();
@@ -36,10 +39,10 @@ function defaultQTerms(baseModel: string): string[] {
     normalizedBase,
     baseWithoutTag,
     baseWithoutTag.replace(/[^a-z0-9]+/g, ""),
-    "gemma4",
-    "gemma-4",
-    "gemma 4",
-    "gemma"
+    DEFAULT_Q_ALIAS,
+    DEFAULT_Q_ALIAS.toUpperCase(),
+    "immaculate q",
+    "q lane"
   ]);
 }
 
@@ -144,8 +147,8 @@ export function matchAliasedOllamaModel<T extends OllamaAliasCandidate>(
 
 export function buildQAliasModelfile(specification = resolveQAliasSpecification()): string {
   return [
-    `# Local Immaculate alias for ${specification.displayName}`,
-    "# This preserves the base model and only changes the local Ollama model name.",
+    `# Local Immaculate identity for ${specification.displayName}`,
+    "# This keeps the current Q lineage bound to the stable local Q model name.",
     `FROM ${specification.baseModel}`,
     ""
   ].join("\n");

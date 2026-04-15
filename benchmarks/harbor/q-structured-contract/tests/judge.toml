@@ -1,5 +1,5 @@
 [judge]
-judge = "ollama/gemma3:4b"
+judge = "ollama/Q"
 files = ["/app/incident.json", "/app/response.json"]
 reference = "/app/reference.json"
 timeout = 120

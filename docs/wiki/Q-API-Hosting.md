@@ -47,7 +47,7 @@ This gateway is the safer deployment surface for external Q users because it:
 - exposes only four routes
 - keeps federation, actuation, benchmarks, and operator APIs off the public edge
 - uses the same hashed Q key store and per-key rate/concurrency limits
-- can trip open on repeated primary-model failures and use an explicit fallback model as optional continuity without lying about the provider that answered
+- trips open on repeated primary-model failures and fail-closes instead of silently switching the user onto a second model lane
 
 If you want one sentence: the gateway is the “public front desk” for Q, while the harness route is the “staff-only back room” inside the full control plane.
 
@@ -114,29 +114,14 @@ Tracked evidence lives in:
 
 - [[Q-Gateway-Validation]]
 
-## Fallback Control Loop
+## Primary Failure Control Loop
 
-The dedicated gateway now has a second live control loop for upstream failure:
+The dedicated gateway now has one honest upstream-failure loop:
 
-- the primary Q model can accumulate consecutive failures
+- the primary Q lane can accumulate consecutive failures
 - once the configured threshold is reached, the primary circuit opens
 - while the circuit is open, requests stop hammering the dead primary
-- if a fallback model is configured, the gateway can serve through that model as
-  optional continuity and
-  exposes the truth in headers and response metadata
-
-Fresh fallback smoke on `2026-04-14` against `http://127.0.0.1:8898` proved:
-
-- the intentionally invalid primary model surfaced as `modelReady: false`
-- the configured fallback `gemma3:4b` surfaced as `fallbackReady: true`
-- the first keyed request returned `200` through the fallback with
-  `x-q-primary-failure-class: http_error`
-- the second keyed request returned `200` through the fallback again with
-  `x-q-primary-failure-class: circuit_open`
-
-Tracked evidence lives in:
-
-- [[Q-Gateway-Fallback-Smoke]]
+- the gateway stays explicit about the failure class instead of silently switching the request onto a different model lane
 
 ## OCI Private Hosting
 
@@ -163,11 +148,8 @@ serves the full private harness.
 - The dedicated Q gateway is real and lives in `apps/harness/src/q-gateway.ts`.
 - The harness Q edge is also still real and still private.
 - The gateway is private-OCI-first, not internet-public by default.
-- The gateway can now serve through a configured fallback model when the direct
-  Q upstream fails, but it keeps that fact explicit in headers and response
-  metadata.
+- The gateway fail-closes on direct-Q upstream failures and keeps that fact explicit in headers and response metadata.
 - No real OCI instance was launched from this pass.
 - No completed cloud fine-tune run for `Q` is claimed from this pass.
 - Direct `Q` is now green on the structured route/reason/commit readiness gate
-  on this machine, and the fallback lane remains optional continuity rather
-  than the primary story.
+  on this machine.

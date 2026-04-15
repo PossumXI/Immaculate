@@ -52,7 +52,7 @@ function connect() {
   // … attach other handlers
 }
 ```
-Also call `GET /api/snapshot` as fallback when the socket is down.
+Also call `GET /api/snapshot` as a continuity path when the socket is down.
 
 ---
 

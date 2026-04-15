@@ -37,7 +37,7 @@ type QGatewayValidationReport = {
   generatedAt: string;
   gatewayUrl: string;
   alias: string;
-  providerModel: string;
+  qServingLabel: string;
   release: ReleaseMetadata;
   hardwareContext: HardwareContext;
   checks: {
@@ -152,14 +152,14 @@ function renderMarkdown(report: QGatewayValidationReport): string {
   return [
     "# Q Gateway Validation",
     "",
-    "This page is generated from a real live loopback validation pass against the dedicated Q gateway process, plus a direct Ollama call against the same provider model.",
+    "This page is generated from a real live loopback validation pass against the dedicated Q gateway process, plus a direct Ollama call against the same Q lane.",
     "",
     `- Generated: ${report.generatedAt}`,
     `- Release: ${report.release.buildId}`,
     `- Repo commit: ${report.release.gitShortSha}`,
     `- Gateway URL: ${report.gatewayUrl}`,
     `- Alias: ${report.alias}`,
-    `- Provider model: ${report.providerModel}`,
+    `- Q serving label: ${report.qServingLabel}`,
     `- Q training bundle: ${report.release.q.trainingLock?.bundleId ?? "none generated yet"}`,
     `- Hardware: ${JSON.stringify(report.hardwareContext)}`,
     "",
@@ -288,7 +288,7 @@ async function main(): Promise<void> {
       generatedAt: new Date().toISOString(),
       gatewayUrl,
       alias: getQModelAlias(),
-      providerModel: truthfulModelLabel(getQModelTarget()),
+      qServingLabel: truthfulModelLabel(getQModelTarget()),
       release: await resolveReleaseMetadata(),
       hardwareContext: captureHardwareContext(),
       checks: {

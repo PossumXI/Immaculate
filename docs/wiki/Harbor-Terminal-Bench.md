@@ -2,10 +2,10 @@
 
 This page records the repo-local Harbor task pack for Immaculate and Q. It is a real executed benchmark surface, not a claim about leaderboard submission.
 
-- Generated: `2026-04-14T20:23:55.268Z`
-- Release: `0.1.0+fee4fd5`
-- Repo commit: `fee4fd5d77973c9775867997ea6e2147d59eea3a`
-- Q serving label: `Q (gemma4:e4b)`
+- Generated: `2026-04-15T02:27:36.196Z`
+- Release: `0.1.0+194a8fc`
+- Repo commit: `194a8fc18d1f5e54a2f88108827bbe632cd791c6`
+- Q serving label: `Q`
 - Q training bundle: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5`
 
 ## What Ran
@@ -46,8 +46,6 @@ This page records the repo-local Harbor task pack for Immaculate and Q. It is a 
 
 ## LLM Judge Attempts
 
-- `ollama/gemma3:4b`: `failed`. RewardKit judge could not start because the Ollama backend rejected thinking for gemma3:4b. Error: `{"error":"\"gemma3:4b\" does not support thinking"}`
-- `ollama/qwen3:8b`: `failed` in `221.511` s. RewardKit judge timed out before returning a score. Error: `litellm.Timeout after 221.511 seconds with timeout=240`
 - `openai/Q via Q gateway`: `failed` in `667.100` s. RewardKit judge reached the repaired Q gateway but returned malformed non-schema JSON, so the score was not accepted. Error: `JSONDecodeError while parsing judge response under LITELLM_DROP_PARAMS=1`
 
 ## Truth Boundary

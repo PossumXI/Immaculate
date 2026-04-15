@@ -159,7 +159,7 @@ What this unlocks next:
 #### Q gained a second serving control loop, and the direct model is now green under the readiness gate after the structured-contract fix
 
 What changed:
-- the dedicated Q gateway now carries a real primary-model circuit breaker plus an explicit fallback lane
+- the dedicated Q gateway now carries a real primary-model circuit breaker with fail-closed behavior
 - repeated primary failures can open the circuit and stop the gateway from hammering a dead upstream
 - the repo now carries a direct-Q readiness gate that reads the tracked `Model-Benchmark-Comparison` and `BridgeBench` surfaces instead of inferring readiness from the gateway transport
 - the direct-Q execution path now uses a Q-specific structured output budget and tail normalization so final route/reason/commit lines survive instead of dying inside self-commentary
@@ -167,14 +167,14 @@ What changed:
 Why it matters:
 - the missed systems pattern was that model readiness and serving-edge health are two different control problems
 - a public-ish inference edge needs a continuity path when the preferred model degrades, but that continuity path must not be allowed to masquerade as model readiness
-- once the readiness gate and fallback lane are separated, the repo can keep the API truthful for users without pretending the underlying model is already release-clean
+- once the readiness gate and primary-failure circuit are separated, the repo can keep the API truthful for users without pretending the runtime is already release-clean
 - the missed model-side pattern was that `Q` was spending too much of its output budget on meta reasoning before emitting the usable final answer, so the serving edge looked healthier than the direct contract lane
 
 Evidence:
 - `docs/wiki/Q-Readiness-Gate.json` now shows `ready: true` at threshold `0.75`
 - `docs/wiki/Model-Benchmark-Comparison.json` now shows direct `Q` at `4/4` parse success
 - `docs/wiki/BridgeBench.json` now also shows direct `Q` at `4/4` parse success with the bridge-runtime lane still green
-- `docs/wiki/Q-Gateway-Fallback-Smoke.json` proves the dedicated gateway served through `gemma3:4b` after an intentional dead-primary failure and then reused the open circuit on the second request with `x-q-primary-failure-class: circuit_open`
+- the dedicated gateway now records primary failure class and open-circuit state directly instead of hiding a broken Q lane behind a second model surface
 - `docs/wiki/Q-Gateway-Validation.json` still shows the normal direct Q gateway path green on auth, concurrency control, and sanitized output when the primary model is healthy enough for the short-form request
 
 What this unlocks next:
@@ -228,7 +228,7 @@ Evidence:
 - `npx tsx apps/harness/src/q-gateway-validate.ts --gateway-url=http://127.0.0.1:8899 --runtime-dir=... --keys-path=...` passed on `2026-04-14`
 - the dedicated gateway returned `200` on `/health`, `401` without a key on `/v1/chat/completions`, `200` on authenticated `/api/q/info` and `/v1/models`, and `429 concurrency_limited` on the second overlapping keyed request
 - the live gateway response was sanitized to `Gateway operational, all good.` with only about `95.83 ms` of overhead above upstream latency on the latest loopback pass
-- `npm run compare:models` now records the harsher truth after the metric fix: `Q (gemma4:e4b)` is at `0/4` structured-contract success with `transport_timeout` on each task
+- `npm run compare:models` now records the harsher truth after the metric fix when direct `Q` regresses under `transport_timeout`
 - `npm run bridgebench` still passed the bridge-runtime lane with `0` failed assertions while the direct-Q model lane also sits at `0/4` parse success with `transport_timeout`
 - `npm run benchmark:gate:all` passed again at `2026-04-14T01:47:25.513Z` with `runCount: 3` and `violationCount: 0`
 
@@ -269,9 +269,9 @@ What this unlocks next:
 #### Q became a truthful alias, the local comparison surface went live, and the latest regression stayed published
 
 What changed:
-- Immaculate now has a real local Ollama alias path so the current Gemma 4 model can be addressed as `Q` without hiding the underlying base model
-- the harness now emits a controlled yellow/ocean-blue startup banner and surfaces the `Q -> gemma4:e4b` mapping at boot
-- the repo now carries a live local model-comparison page that runs `Q`, `gemma3:4b`, and `qwen3:8b` through the same structured route/reason/commit contract and publishes the measured outputs into the wiki
+- Immaculate now has a real local Ollama alias path so the current Q lineage can be addressed as `Q`
+- the harness now emits a controlled yellow/ocean-blue startup banner and surfaces the active `Q` lane at boot
+- the repo now carries a live direct-Q structured-contract page that publishes the measured outputs into the wiki
 - the `Q` fine-tune path now has a tracked curation manifest, a text-dataset shaper, and an Unsloth launch bundle wired back to the training-data factory
 - the repo now also carries a hardened OCI private deployment bundle and a live validation page that records both the successful Temporal rerun and the failed fresh `60s` benchmark rerun
 
@@ -284,8 +284,8 @@ Evidence:
 - `npm run ollama:alias:q -- --force` succeeded and installed `q:latest`
 - `npm run benchmark:temporal` passed on `2026-04-13` with suite `immaculate-benchmark-2026-04-13T22-40-03-299Z`
 - `npm run benchmark:latency:60s` completed on `2026-04-13` with suite `immaculate-benchmark-2026-04-13T22-41-40-475Z` and `3` failing assertions, which are now published in `docs/wiki/Live-Validation-2026-04-13.md`
-- `npm run compare:models` generated `docs/wiki/Model-Benchmark-Comparison.md` and showed `gemma3:4b` at `4/4` parse success while `Q` and `qwen3:8b` both failed the structured contract on this machine
-- the follow-up live server drill kept one more ugly truth on record: `Q` failed closed with `No response returned by Ollama.`, and a governed `gemma3:4b` run started but still had no completion record at the last log read even while `/api/health` stayed healthy
+- `npm run compare:models` generated `docs/wiki/Model-Benchmark-Comparison.md` and kept the direct-Q regression on record when the structured contract failed on this machine
+- the follow-up live server drill kept one more ugly truth on record: `Q` failed closed with `No response returned by Ollama.` while `/api/health` stayed healthy
 - `npm run training-data:curate -- fixtures/training/q-defsec-curation.example.json` produced run `cur-fnv1a-b7a9289b` with `969` accepted files, and `python training/q/build_q_text_dataset.py ...` shaped those records into `.training-output/q/q-train-cur-fnv1a-b7a9289b.jsonl`
 
 What this unlocks next:
@@ -296,7 +296,7 @@ What this unlocks next:
 #### Training-data curation stopped being a notebook idea and became a governed factory surface
 
 What changed:
-- Immaculate now has a manifest-first training-data curation path for Gemma-style defensive fine-tuning corpora instead of relying on ad hoc one-off scripts
+- Immaculate now has a manifest-first training-data curation path for defensive Q fine-tuning corpora instead of relying on ad hoc one-off scripts
 - the curation engine materializes local or remote git sources, applies explicit allow/review/reject license policy, scans accepted candidates for likely secrets, deduplicates repeated content, and emits curated JSONL shards plus a run manifest
 - every curated source now carries explicit provenance fields including raw-content hash, processed-content hash, policy flags, and a Blake2-style chain hash over the run lineage
 - the default output root is generated state outside git, and CI now runs a dedicated smoke that proves license rejection, secret detection, dedup behavior, and provenance emission on every benchmark-gate and benchmark-publication pass
@@ -309,7 +309,7 @@ Why it matters:
 Evidence:
 - `npm run typecheck -w @immaculate/core`, `npm run typecheck -w @immaculate/harness`, `npm run build -w @immaculate/core`, `npm run build -w @immaculate/harness`, and `npm run training-data:smoke` all passed on `2026-04-13`
 - the smoke now proves four concrete properties together: unknown-license source rejection, secret finding emission, duplicate-content suppression, and provenance-record generation
-- the tracked example manifest in `fixtures/training/gemma4-defsec-curation.example.json` plus the generated run schema in the core package establish a repeatable contract instead of an unversioned local script pile
+- the tracked example manifest in `fixtures/training/q-defsec-curation.example.json` plus the generated run schema in the core package establish a repeatable contract instead of an unversioned local script pile
 
 What this unlocks next:
 - governed read APIs and operator surfaces over curated training runs without leaking raw generated output into git
@@ -434,7 +434,7 @@ Why it matters:
 Evidence:
 - signed membership export/import is now part of the public progress surface
 - remote node and worker identity is verified before placement decisions are accepted
-- the peer-sync drill finished with the expected high-level outcome: authenticated coordination succeeded and placement followed the locality plus observed-latency path rather than a naive remote-first fallback
+- the peer-sync drill finished with the expected high-level outcome: authenticated coordination succeeded and placement followed the locality plus observed-latency path rather than a naive remote-first continuity route
 
 What this unlocks next:
 - broader multi-node federation that can grow from authenticated membership instead of ad hoc discovery
@@ -696,10 +696,10 @@ What this unlocks next:
 #### Spectral confidence became a real control signal instead of a decorative neuro metric
 
 What changed:
-- live neuro ingest now computes confidence from band structure when band power is available, with explicit `45-65 Hz` artifact detection and a clean fallback to the legacy amplitude path when spectral bands are unavailable
+- live neuro ingest now computes confidence from band structure when band power is available, with explicit `45-65 Hz` artifact detection and a clean continuity path to the legacy amplitude read when spectral bands are unavailable
 - contamination is now represented directly in the core neuro schema and neural-coupling state through artifact power, total power, and artifact ratio
 - routing now reads spectral pressure directly from the incoming frame or the persisted coupling state, so contaminated windows de-escalate before outward action instead of merely being tagged after the fact
-- the benchmark now proves three cases: backward-compatible amplitude fallback, artifact-window suppression, and spectral routing pressure that pushes contaminated windows onto safer lanes
+- the benchmark now proves three cases: backward-compatible amplitude continuity, artifact-window suppression, and spectral routing pressure that pushes contaminated windows onto safer lanes
 
 Why it matters:
 - this closes a hidden but serious systems bug: a neuro-orchestration controller that rewards amplitude before it recognizes contamination can treat noise as agency
@@ -709,7 +709,7 @@ Why it matters:
 Evidence:
 - `npm run typecheck`, `npm run build`, and `npm run benchmark:gate:all` all passed after the spectral pass
 - the benchmark gate now includes artifact suppression and spectral route-pressure assertions
-- live harness smoke on an isolated runtime showed a `60 Hz` artifact window ingest at `decodeConfidence: 0` and dispatch through `guarded-fallback / visual / file`
+- live harness smoke on an isolated runtime showed a `60 Hz` artifact window ingest at `decodeConfidence: 0` and dispatch through `guarded continuity / visual / file`
 - W&B offline publication captured the new benchmark surface in `wandb/offline-run-20260412_084945-s0i1clym/files`
 
 What this unlocks next:
@@ -878,7 +878,7 @@ Why it matters:
 
 Evidence:
 - benchmark gate passed with zero violations after adding execution arbitration
-- live mediation smoke returned `cognitive-escalation`, ran cognition, and then produced a guarded fallback route decision
+- live mediation smoke returned `cognitive-escalation`, ran cognition, and then produced a guarded continuity route decision
 - `GET /api/intelligence/arbitrations` exposes the durable arbitration ledger
 
 What this unlocks next:
@@ -940,7 +940,7 @@ What this unlocks next:
 What changed:
 - Immaculate now records durable routing decisions in the shared snapshot and event spine instead of leaving route choice implicit inside the actuation path
 - route selection now combines transport health, transport rank, decode confidence, cognitive state, and governance pressure into an explicit decision record
-- the benchmark now proves two route modes: reflex-direct over the healthiest haptic lane and guarded-fallback over the visual safety lane under critical governance pressure
+- the benchmark now proves two route modes: reflex-direct over the healthiest haptic lane and guarded continuity over the visual safety lane under critical governance pressure
 - the dashboard and TUI now surface the latest route decision directly so operators can inspect the system's current choice without reverse-engineering it from downstream effects
 
 Why it matters:
@@ -949,7 +949,7 @@ Why it matters:
 
 Evidence:
 - benchmark gate passed with zero violations after adding routing-decision persistence and assertions
-- the benchmark now proves reflex-direct HTTP/2 haptic routing when governance is clear and guarded-fallback UDP/OSC visual routing when governance pressure is critical
+- the benchmark now proves reflex-direct HTTP/2 haptic routing when governance is clear and guarded continuity UDP/OSC visual routing when governance pressure is critical
 - live operator surfaces now expose `snapshot.routingDecisions[0]`
 
 What this unlocks next:
