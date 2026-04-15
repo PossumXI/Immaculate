@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-04-15T04:37:43Z",
+  "generatedAt": "2026-04-15T04:39:39Z",
   "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v1",
   "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/hybrid-session.manifest.json",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "c532f3e7200e9a222acb4e62e60a05a4839f7eb8",
-    "gitShortSha": "c532f3e",
-    "buildId": "0.1.0+c532f3e"
+    "gitSha": "72ce54cf603255b8e2d36265eb5fa20a4e48ff07",
+    "gitShortSha": "72ce54c",
+    "buildId": "0.1.0+72ce54c"
   },
   "q": {
     "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1-5e51e00-e16a056e",
@@ -23,15 +23,15 @@
     "failureCorpusPath": "docs/wiki/Q-Failure-Corpus.json"
   },
   "immaculate": {
-    "bundleId": "immaculate-orchestration-c532f3e-3dd4365f",
+    "bundleId": "immaculate-orchestration-72ce54c-3dd4365f",
     "bundlePath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-cur-fnv1a-8f551a5c-bench-v1.json",
     "signalCount": 14
   },
   "cloudBundle": {
-    "bundleId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v1-c532f3e",
+    "bundleId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v1-72ce54c",
     "archivePath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/cloud-bundle/q-hybrid-cur-fnv1a-8f551a5c-bench-v1-cloud-bundle.tar.gz",
-    "archiveSha256": "74f95331c00e8612f0c924bf403c6a46265b972f7477fc1d784bf665fa6821d3",
-    "archiveSizeBytes": 2211318,
+    "archiveSha256": "41d2d559a4e228c52de7190f1e3ce9f28b9487ea528eb929ad67e33cfaf78b99",
+    "archiveSizeBytes": 2211313,
     "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/cloud-bundle/bundle-manifest.json",
     "fileCount": 10,
     "repoRemoteUrl": "https://github.com/PossumXI/Immaculate.git"

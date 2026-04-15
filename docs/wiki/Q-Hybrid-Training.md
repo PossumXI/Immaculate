@@ -2,12 +2,12 @@
 
 This page records one hybrid Q training session. In plain English: it ties the Q fine-tune lane and the Immaculate orchestration-improvement lane into one stamped session, then tells you exactly which parts are ready or missing.
 
-- Generated: `2026-04-15T04:37:43Z`
-- Release: `0.1.0+c532f3e`
+- Generated: `2026-04-15T04:39:39Z`
+- Release: `0.1.0+72ce54c`
 - Session id: `q-hybrid-cur-fnv1a-8f551a5c-bench-v1`
 - Q training bundle: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1-5e51e00-e16a056e`
 - Dataset rows: `1023`
-- Immaculate orchestration bundle: `immaculate-orchestration-c532f3e-3dd4365f`
+- Immaculate orchestration bundle: `immaculate-orchestration-72ce54c-3dd4365f`
 
 ## Plain English Status
 
@@ -37,9 +37,9 @@ This page records one hybrid Q training session. In plain English: it ties the Q
 
 ## Cloud Bundle
 
-- Bundle id: `q-hybrid-cur-fnv1a-8f551a5c-bench-v1-c532f3e`
+- Bundle id: `q-hybrid-cur-fnv1a-8f551a5c-bench-v1-72ce54c`
 - Archive: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/cloud-bundle/q-hybrid-cur-fnv1a-8f551a5c-bench-v1-cloud-bundle.tar.gz`
-- Archive SHA-256: `74f95331c00e8612f0c924bf403c6a46265b972f7477fc1d784bf665fa6821d3`
+- Archive SHA-256: `41d2d559a4e228c52de7190f1e3ce9f28b9487ea528eb929ad67e33cfaf78b99`
 - Bundle manifest: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v1/cloud-bundle/bundle-manifest.json`
 - Included file count: `10`
 
