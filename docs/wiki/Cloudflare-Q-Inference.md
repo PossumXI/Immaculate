@@ -2,8 +2,8 @@
 
 This page records the Cloudflare deploy and evaluation lane for Q-only inference.
 
-- Generated: `2026-04-15T22:58:49Z`
-- Release: `0.1.0+544c920`
+- Generated: `2026-04-15T22:59:47Z`
+- Release: `0.1.0+4e0638e`
 - Session id: `q-hybrid-cur-fnv1a-8f551a5c-bench-v2`
 - Worker config: `deploy/cloudflare/wrangler.toml`
 - Worker typecheck ready: `True`
