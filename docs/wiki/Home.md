@@ -7,6 +7,10 @@ It helps a machine decide what to do next, checks whether that action is allowed
 
 `Q` is the local reasoning-model lane inside that system. It is served through a bounded gateway, trained through a tracked hybrid session path, and published here simply as `Q`.
 
+Public website:
+
+- [https://iorch.net](https://iorch.net)
+
 If you only read one generated page before diving deeper, read [[Release-Surface]]. It tells you exactly which build, commit, and Q training bundle the current docs refer to.
 
 ## What This Project Actually Prioritizes

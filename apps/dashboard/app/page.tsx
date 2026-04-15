@@ -1,5 +1,5 @@
-import { DashboardClient } from "./ui/dashboard-client";
+import { LandingPage } from "./ui/landing-page";
 
 export default function Page() {
-  return <DashboardClient />;
+  return <LandingPage />;
 }

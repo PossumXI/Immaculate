@@ -18,6 +18,11 @@ Gaetano Comparcola, operating publicly as `PossumX`, is the program owner, syste
 
 This repository is prepared for public collaboration under the Apache 2.0 license. Community contributions are welcome, but the project keeps a hard line on governance, reproducibility, and security.
 
+## Public Site
+
+- live website: [iorch.net](https://iorch.net)
+- company profile: [Aura Genesis / Arobi](https://aura-genesis.org)
+
 ## What It Does Today
 
 - runs multi-step orchestration across fast reflex paths, deeper reasoning paths, and offline work
@@ -29,6 +34,7 @@ This repository is prepared for public collaboration under the Apache 2.0 licens
 
 ## Current Build And Evidence
 
+- public website: [iorch.net](https://iorch.net)
 - current release surface: [docs/wiki/Release-Surface.md](docs/wiki/Release-Surface.md)
 - live Q structured contract benchmark: [docs/wiki/Model-Benchmark-Comparison.md](docs/wiki/Model-Benchmark-Comparison.md)
 - live BridgeBench: [docs/wiki/BridgeBench.md](docs/wiki/BridgeBench.md)

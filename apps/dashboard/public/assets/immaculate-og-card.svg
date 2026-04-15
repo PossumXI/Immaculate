@@ -1,0 +1,30 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#071019"/>
+  <rect x="34" y="34" width="1132" height="562" rx="32" stroke="#4FB9FF" stroke-opacity="0.18" stroke-width="2"/>
+  <circle cx="184" cy="118" r="220" fill="url(#paint0_radial_3_2)" fill-opacity="0.36"/>
+  <circle cx="1016" cy="508" r="240" fill="url(#paint1_radial_3_2)" fill-opacity="0.26"/>
+  <path d="M828 115L937 247L828 379L719 247L828 115Z" fill="url(#paint2_linear_3_2)"/>
+  <path d="M828 220L899 305L828 390L757 305L828 220Z" fill="#F5FBFF"/>
+  <path d="M82 476H510" stroke="#4FB9FF" stroke-opacity="0.46" stroke-width="2"/>
+  <path d="M82 510H456" stroke="#FFD887" stroke-opacity="0.52" stroke-width="2"/>
+  <text x="82" y="182" fill="#FFD887" font-family="'IBM Plex Mono', monospace" font-size="20" letter-spacing="8">INTELLIGENT ORCHESTRATION</text>
+  <text x="82" y="272" fill="#F3FBFF" font-family="'Space Grotesk', sans-serif" font-size="86" font-weight="700">Immaculate</text>
+  <text x="82" y="348" fill="#D7E8F5" font-family="'Space Grotesk', sans-serif" font-size="38">Defense and healthcare.</text>
+  <text x="82" y="394" fill="#D7E8F5" font-family="'Space Grotesk', sans-serif" font-size="38">Clear control. Trusted action.</text>
+  <text x="82" y="440" fill="#D7E8F5" font-family="'Space Grotesk', sans-serif" font-size="38">Real evidence.</text>
+  <text x="82" y="548" fill="#8DA6BC" font-family="'IBM Plex Mono', monospace" font-size="18" letter-spacing="4">Q REASONS. IMMACULATE ORCHESTRATES.</text>
+  <defs>
+    <radialGradient id="paint0_radial_3_2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(184 118) rotate(90) scale(220)">
+      <stop stop-color="#4FB9FF"/>
+      <stop offset="1" stop-color="#4FB9FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="paint1_radial_3_2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1016 508) rotate(90) scale(240)">
+      <stop stop-color="#FFD887"/>
+      <stop offset="1" stop-color="#FFD887" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="paint2_linear_3_2" x1="828" y1="115" x2="828" y2="379" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4FB9FF"/>
+      <stop offset="1" stop-color="#BFEFFF"/>
+    </linearGradient>
+  </defs>
+</svg>

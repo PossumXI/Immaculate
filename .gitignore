@@ -25,11 +25,13 @@ benchmarks/index.json
 .tools/
 .cargo/
 .rustup/
+.netlify/
 desktop.ini
 
 # Generated build output
 apps/**/dist/
 packages/**/dist/
+apps/dashboard/out/
 
 # Local scratch and research artifacts
 tmp-probe.h5
