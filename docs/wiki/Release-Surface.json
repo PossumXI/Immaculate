@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-15T03:43:47.698Z",
+  "generatedAt": "2026-04-15T04:09:30.304Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "5e51e002d467540876a634002a9951c0eec64479",
-    "gitShortSha": "5e51e00",
+    "gitSha": "c4cbb0a5d68b6d0592a2325664014fefefc30422",
+    "gitShortSha": "c4cbb0a",
     "gitBranch": "detached",
-    "buildId": "0.1.0+5e51e00",
+    "buildId": "0.1.0+c4cbb0a",
     "q": {
       "alias": "Q",
       "providerModel": "Q",
@@ -75,6 +75,11 @@
       "label": "Q benchmark corpus",
       "path": "docs\\wiki\\Q-Benchmark-Corpus.json",
       "generatedAt": "2026-04-15T03:43:35Z"
+    },
+    {
+      "label": "Q benchmark promotion",
+      "path": "docs\\wiki\\Q-Benchmark-Promotion.json",
+      "generatedAt": "2026-04-15T04:09:10Z"
     },
     {
       "label": "W&B benchmark export",

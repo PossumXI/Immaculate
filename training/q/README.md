@@ -68,26 +68,37 @@ This surface complements the strict failure-only export. It captures current suc
 Q benchmark decision triplets so the hybrid session can stage them directly instead of
 inferring corpus state from raw benchmark pages.
 
-8. Copy `hybrid_training_session.example.json` and point it at the concrete lock/config files for the run, or create a concrete session manifest under `.training-output/q/sessions/<session-id>/`.
-9. Run the hybrid session doctor:
+8. Promote the current benchmark corpus into the next Q lineage when the active lock is stale against it:
+
+```powershell
+npm run q:training:promote-benchmark
+```
+
+This command no-ops honestly when the active Q bundle already carries the current
+benchmark corpus hash. When the benchmark corpus changed, it creates the next
+bench lineage, regenerates the lock, and restamps the hybrid session instead of
+requiring hand-edited config and session files.
+
+9. Copy `hybrid_training_session.example.json` and point it at the concrete lock/config files for the run, or create a concrete session manifest under `.training-output/q/sessions/<session-id>/`.
+10. Run the hybrid session doctor:
 
 ```powershell
 npm run q:training:doctor -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json
 ```
 
-10. Validate or launch the local and cloud lanes from the same tracked session:
+11. Validate or launch the local and cloud lanes from the same tracked session:
 
 ```powershell
 npm run q:training:session -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --launch
 ```
 
-11. Validate the config and dataset shape before a GPU run:
+12. Validate the config and dataset shape before a GPU run:
 
 ```powershell
 python training/q/train_q_lora_unsloth.py --config training/q/q_lora_config.example.json --dry-run
 ```
 
-12. Launch `train_q_lora_unsloth.py` on a GPU instance with the required Python packages installed if the session doctor marks the cloud lane ready.
+13. Launch `train_q_lora_unsloth.py` on a GPU instance with the required Python packages installed if the session doctor marks the cloud lane ready.
 
 For the OCI controller path specifically:
 

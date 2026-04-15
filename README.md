@@ -34,6 +34,7 @@ This repository is prepared for public collaboration under the Apache 2.0 licens
 - live BridgeBench: [docs/wiki/BridgeBench.md](docs/wiki/BridgeBench.md)
 - Harbor terminal bench: [docs/wiki/Harbor-Terminal-Bench.md](docs/wiki/Harbor-Terminal-Bench.md)
 - Q benchmark corpus: [docs/wiki/Q-Benchmark-Corpus.md](docs/wiki/Q-Benchmark-Corpus.md)
+- Q benchmark promotion: [docs/wiki/Q-Benchmark-Promotion.md](docs/wiki/Q-Benchmark-Promotion.md)
 - hybrid Q training session: [docs/wiki/Q-Hybrid-Training.md](docs/wiki/Q-Hybrid-Training.md)
 - OCI Q training bundle: [docs/wiki/OCI-Q-Training.md](docs/wiki/OCI-Q-Training.md)
 - direct Q readiness gate: [docs/wiki/Q-Readiness-Gate.md](docs/wiki/Q-Readiness-Gate.md)
@@ -108,6 +109,7 @@ For the `Q` fine-tune path specifically:
 - release/build identity: [docs/wiki/Release-Surface.md](docs/wiki/Release-Surface.md)
 - direct readiness gate: [docs/wiki/Q-Readiness-Gate.md](docs/wiki/Q-Readiness-Gate.md)
 - benchmark corpus: [docs/wiki/Q-Benchmark-Corpus.md](docs/wiki/Q-Benchmark-Corpus.md)
+- benchmark promotion flow: [docs/wiki/Q-Benchmark-Promotion.md](docs/wiki/Q-Benchmark-Promotion.md)
 - failure corpus: [docs/wiki/Q-Failure-Corpus.md](docs/wiki/Q-Failure-Corpus.md)
 - hybrid training session surface: [docs/wiki/Q-Hybrid-Training.md](docs/wiki/Q-Hybrid-Training.md)
 - model/training manifest: [fixtures/training/q-defsec-curation.example.json](fixtures/training/q-defsec-curation.example.json)
@@ -118,6 +120,7 @@ For the `Q` fine-tune path specifically:
 - training lock generator: `npm run q:training:lock`
 - hybrid session doctor: `npm run q:training:doctor -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json`
 - hybrid session launcher: `npm run q:training:session -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --launch`
+- benchmark promotion command: `npm run q:training:promote-benchmark`
 - OCI controller launch script: `bash deploy/oci-training/scripts/launch-oci-q-training.sh --session-manifest .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --env-file deploy/oci-training/env/immaculate-q-training.env.example`
 
 As of `2026-04-14`, the direct `Q` structured-contract lane is green on this machine:

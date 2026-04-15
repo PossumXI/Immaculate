@@ -21,6 +21,32 @@ For each breakthrough, record:
 
 ### 2026-04-14
 
+#### Q benchmark promotion is now a one-command truthful control loop instead of a manual file-edit ritual
+
+What changed:
+- the repo now carries `training/q/promote_q_benchmark_lineage.py` plus `npm run q:training:promote-benchmark`
+- that command checks whether the active locked Q bundle already carries the current benchmark corpus hash and only cuts a new bench lineage when the active lock is stale against it
+- the command now writes `docs/wiki/Q-Benchmark-Promotion.md` and `docs/wiki/Q-Benchmark-Promotion.json` so the repo publishes the automation state instead of leaving it implicit in operator notes
+- the release surface now stamps that promotion page as another tracked Q training evidence surface
+
+Why it matters:
+- the missed operational pattern was that benchmark promotion was technically reproducible but still fragile because it depended on hand-edited config, mix, and session files
+- a truthful promotion loop needs two modes: promote when the benchmark corpus changed, and explicitly no-op when the active bundle is already current
+- this closes the last manual gap between benchmark-derived Q evidence and the locked training lineage without encouraging fake bench-v2 churn when nothing actually changed
+- publishing the promotion state matters because a reproducible internal automation step is weaker if the repo cannot show whether it actually ran or whether it intentionally decided not to move
+
+Evidence:
+- `npm run q:training:promote-benchmark` now materializes `docs/wiki/Q-Benchmark-Promotion.md` and `docs/wiki/Q-Benchmark-Promotion.json`
+- the active bench-v1 lock already includes `.training-output/q/q-benchmark-corpus.jsonl`, so the promotion loop can now report `already-current` honestly instead of fabricating another lock version
+- `docs/wiki/Release-Surface.md` now includes the benchmark-promotion surface in the stamped evidence list
+
+What this unlocks next:
+- future benchmark corpus refreshes can roll into the next Q training lineage with one command instead of an error-prone series of copied files
+- operators can see immediately whether the locked Q bundle is stale against the benchmark corpus before they waste time on a local or cloud training run
+- the next real high-value move can shift from training prep mechanics back to actual local bench-v1 dry-run or cloud auth completion because the promotion seam is no longer hand-managed
+
+### 2026-04-14
+
 #### The benchmark-derived Q corpus is now part of the tracked locked mix, not just a side surface
 
 What changed:

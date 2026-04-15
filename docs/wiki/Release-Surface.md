@@ -2,9 +2,9 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-04-15T03:43:47.698Z
-- Immaculate release: `0.1.0+5e51e00`
-- Repo commit: `5e51e002d467540876a634002a9951c0eec64479`
+- Generated: 2026-04-15T04:09:30.304Z
+- Immaculate release: `0.1.0+c4cbb0a`
+- Repo commit: `c4cbb0a5d68b6d0592a2325664014fefefc30422`
 - Branch: `detached`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+5e51e00` is the current repo build stamp.
+- Immaculate build `0.1.0+c4cbb0a` is the current repo build stamp.
 - Q is served and benchmarked as `Q` across the current repo surfaces.
 - The latest tracked Q training bundle is `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1-5e51e00-e16a056e`, tied to dataset `C:\Users\Knight\Desktop\Immaculate\Immaculate-q-gateway\.training-output\q\q-mix-longctx-cur-fnv1a-8f551a5c-bench-v1.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
 - The latest hybrid session is `q-hybrid-cur-fnv1a-8f551a5c-bench-v1`, with local lane `ready` and cloud lane `not-configured` on provider `oci`.
@@ -29,6 +29,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Q gateway validation: `2026-04-15T02:32:19.275Z` via `docs/wiki/Q-Gateway-Validation.json`
 - Q hybrid training: `2026-04-15T03:43:38Z` via `docs/wiki/Q-Hybrid-Training.json`
 - Q benchmark corpus: `2026-04-15T03:43:35Z` via `docs/wiki/Q-Benchmark-Corpus.json`
+- Q benchmark promotion: `2026-04-15T04:09:10Z` via `docs/wiki/Q-Benchmark-Promotion.json`
 - W&B benchmark export: `2026-04-15T03:31:24.375275+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
 
 ## Q Training Bundle

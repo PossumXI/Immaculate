@@ -49,6 +49,10 @@ const SURFACE_FILES: SurfaceTimestamp[] = [
     path: path.join("docs", "wiki", "Q-Benchmark-Corpus.json")
   },
   {
+    label: "Q benchmark promotion",
+    path: path.join("docs", "wiki", "Q-Benchmark-Promotion.json")
+  },
+  {
     label: "W&B benchmark export",
     path: path.join("docs", "wiki", "Benchmark-Wandb-Export.json")
   }
