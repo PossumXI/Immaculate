@@ -22,7 +22,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: siteUrl,
   title: {
-    default: `${siteName} | Intelligent Orchestration`,
+    default: `${siteName} | Controlled Intelligence`,
     template: `%s | ${siteName}`
   },
   description: siteDescription,
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     canonical: "/"
   },
   openGraph: {
-    title: `${siteName} | Intelligent Orchestration`,
+    title: `${siteName} | Controlled Intelligence`,
     description: siteDescription,
     url: "/",
     siteName,
@@ -59,18 +59,18 @@ export const metadata: Metadata = {
     locale: "en_US",
     images: [
       {
-        url: "/assets/immaculate-og-card.svg",
-        width: 1200,
+        url: "/assets/immaculate-landing-preview.png",
+        width: 1600,
         height: 630,
-        alt: "Immaculate intelligent orchestration for defense and healthcare."
+        alt: "Immaculate landing page preview."
       }
     ]
   },
   twitter: {
     card: "summary_large_image",
-    title: `${siteName} | Intelligent Orchestration`,
+    title: `${siteName} | Controlled Intelligence`,
     description: siteDescription,
-    images: ["/assets/immaculate-og-card.svg"],
+    images: ["/assets/immaculate-landing-preview.png"],
     creator: "@aura_genesis"
   },
   robots: {
