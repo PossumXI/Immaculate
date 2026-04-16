@@ -56,6 +56,13 @@ This repository is prepared for public collaboration under the Apache 2.0 licens
 - dedicated Q gateway validation: [docs/wiki/Q-Gateway-Validation.md](docs/wiki/Q-Gateway-Validation.md)
 - W&B pull-back committed into git: [docs/wiki/Benchmark-Wandb-Export.md](docs/wiki/Benchmark-Wandb-Export.md)
 
+Latest plain-English readout:
+
+- on the current repo-local Harbor terminal task pack, oracle is `1.000` on both tasks
+- `Q` scored `0.717` on the Q structured-contract task and `0.750` on the Immaculate bridge fail-closed task
+- those Q scores break down into strong structure/programmatic passes (`0.933` and `1.000`) but weaker operator-wording/judgment scores (`0.500` on both tasks)
+- that means Q is following the JSON contract reliably, but it still needs sharper grounding and more precise operator language to match the oracle lane
+
 ## Workspace
 
 - `packages/core`: shared domain model, simulation engine, protocol types

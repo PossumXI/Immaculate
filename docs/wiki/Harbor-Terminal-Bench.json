@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-15T23:28:51.784Z",
+  "generatedAt": "2026-04-16T12:19:45.873Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "a252873d15b3265e2ee38c22c5907612487722fa",
-    "gitShortSha": "a252873",
+    "gitSha": "eb5adabcff7a282b69903ce440135c6431ae520a",
+    "gitShortSha": "eb5adab",
     "gitBranch": "detached",
-    "buildId": "0.1.0+a252873",
+    "buildId": "0.1.0+eb5adab",
     "q": {
       "alias": "Q",
       "providerModel": "Q",
@@ -18,10 +18,10 @@
         "bundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e",
         "runName": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2",
         "aliasName": "Q",
-        "trainDatasetPath": ".training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c-bench-v2.jsonl",
+        "trainDatasetPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c-bench-v2.jsonl",
         "trainDatasetSha256": "6207dd5ea8c567b6b38d53089aa88d50c1760d4491f3fee9fa9816a9ada5c9d8",
         "trainDatasetRowCount": 1070,
-        "mixManifestPath": ".training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c-bench-v2.manifest.json",
+        "mixManifestPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c-bench-v2.manifest.json",
         "mixManifestSha256": "bcb246fa22d73970adeaf5d44d0aacc5e45d06c22615a09e859e0a070ea8db34",
         "mixSupplementalCount": 3,
         "mixSupplementalPaths": [
@@ -29,19 +29,19 @@
           "training/q/coding_long_context_seed.json",
           ".training-output/q/q-benchmark-corpus.jsonl"
         ],
-        "curationRunPath": ".training-output/training-data/runs/cur-fnv1a-8f551a5c/run.json",
+        "curationRunPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\training-data\\runs\\cur-fnv1a-8f551a5c\\run.json",
         "curationRunId": "cur-fnv1a-8f551a5c",
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-15T23:15:16Z",
+        "generatedAt": "2026-04-15T12:25:23Z",
         "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
         "sessionPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.json",
         "localStatus": "completed",
         "cloudStatus": "not-configured",
-        "cloudProvider": "hf_jobs",
+        "cloudProvider": "oci",
         "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e",
-        "immaculateBundleId": "immaculate-orchestration-a252873-3dd4365f"
+        "immaculateBundleId": "immaculate-orchestration-86bf2b5-6889943e"
       }
     }
   },
@@ -51,77 +51,522 @@
       "id": "q-structured-contract",
       "label": "Q structured contract",
       "oracle": {
-        "jobPath": ".runtime/harbor-custom/harbor-q-oracle-v7",
-        "startedAt": "2026-04-15T19:26:47.438891",
-        "finishedAt": "2026-04-15T19:27:03.025567",
-        "durationSec": 15.59,
+        "jobPath": ".runtime/harbor-custom/harbor-q-oracle-current",
+        "startedAt": "2026-04-16T08:17:59.457042",
+        "finishedAt": "2026-04-16T08:19:29.616052",
+        "durationSec": 90.16,
         "agent": "oracle",
         "score": 1,
         "trials": 1,
         "errors": 0,
-        "trialId": "q-structured-contract__FGrCSyJ",
-        "reward": {
-          "reward": 1
-        }
-      },
-      "qGateway": {
-        "jobPath": ".runtime/harbor-custom/harbor-q-agent-custom-v5",
-        "startedAt": "2026-04-15T19:27:25.787183",
-        "finishedAt": "2026-04-15T19:27:54.405036",
-        "durationSec": 28.62,
-        "agent": "q-gateway-agent",
-        "score": 1,
-        "trials": 1,
-        "errors": 0,
-        "trialId": "q-structured-contract__FkCu6ob",
+        "trialId": "q-structured-contract__MRdDfkW",
         "reward": {
           "reward": 1
         },
+        "rewardDetails": {
+          "reward": [
+            {
+              "score": 1,
+              "criteria": [
+                {
+                  "name": "response_json_shape",
+                  "value": 1,
+                  "raw": 1,
+                  "weight": 1,
+                  "description": "response_json_shape"
+                },
+                {
+                  "name": "response_json_bounds",
+                  "value": 1,
+                  "raw": 1,
+                  "weight": 1,
+                  "description": "response_json_bounds"
+                },
+                {
+                  "name": "response_mentions_core_facts",
+                  "value": 1,
+                  "raw": 1,
+                  "weight": 1,
+                  "description": "response_mentions_core_facts"
+                },
+                {
+                  "name": "file_exists:response.json",
+                  "value": 1,
+                  "raw": true,
+                  "weight": 1,
+                  "description": "Check that response.json exists in the workspace"
+                },
+                {
+                  "name": "response_json_shape",
+                  "value": 1,
+                  "raw": 1,
+                  "weight": 3,
+                  "description": "response_json_shape"
+                },
+                {
+                  "name": "response_json_bounds",
+                  "value": 1,
+                  "raw": 1,
+                  "weight": 2,
+                  "description": "response_json_bounds"
+                },
+                {
+                  "name": "response_mentions_core_facts",
+                  "value": 1,
+                  "raw": 1,
+                  "weight": 1,
+                  "description": "response_mentions_core_facts"
+                }
+              ],
+              "kind": "programmatic"
+            },
+            {
+              "score": 1,
+              "criteria": [
+                {
+                  "name": "does_the_response_pick_a_safe_route_that",
+                  "value": 1,
+                  "raw": 5,
+                  "weight": 2,
+                  "description": "Does the response pick a safe route that matches the incident facts?",
+                  "reasoning": "The response selects 'guarded' route, which is appropriate given the elevated governance pressure and the untrustworthy network state (nonce mismatch, late ACK). The commit action ('Reject the forged ACK, keep delivery unacknowledged, and record the containment action in the audit trail') enforces the safe, fail-closed behavior required."
+                },
+                {
+                  "name": "is_the_response_grounded_in_the_nonce_mi",
+                  "value": 1,
+                  "raw": 5,
+                  "weight": 2,
+                  "description": "Is the response grounded in the nonce mismatch, late ACK, and fail-closed constraints rather than invented facts?",
+                  "reasoning": "The response explicitly mentions 'Nonce mismatch and late ACK' in both the 'reason' and implicitly in the 'commit' by rejecting the 'forged ACK.' This directly addresses the core constraints provided in the incident facts."
+                },
+                {
+                  "name": "does_the_response_preserve_the_strict_ro",
+                  "value": 1,
+                  "raw": 5,
+                  "weight": 1,
+                  "description": "Does the response preserve the strict route reason commit contract with concise operator-grade wording?",
+                  "reasoning": "The response is terse, structured, and uses operator-grade language (e.g., 'guarded', 'fail-closed', 'Reject the forged ACK', 'containment action'), meeting all specified constraints."
+                }
+              ],
+              "kind": "llm",
+              "judge": {
+                "model": "ollama/Q",
+                "reasoning_effort": "medium",
+                "timeout": 120,
+                "files": [
+                  "/app/incident.json",
+                  "/app/response.json"
+                ],
+                "atif_trajectory": null,
+                "reference": "/tests/reference.json"
+              },
+              "judge_output": "{\n  \"does_the_response_pick_a_safe_route_that\": {\n    \"score\": 5,\n    \"reasoning\": \"The response selects 'guarded' route, which is appropriate given the elevated governance pressure and the untrustworthy network state (nonce mismatch, late ACK). The commit action ('Reject the forged ACK, keep delivery unacknowledged, and record the containment action in the audit trail') enforces the safe, fail-closed behavior required.\"\n  },\n  \"is_the_response_grounded_in_the_nonce_mi\": {\n    \"score\": 5,\n    \"reasoning\": \"The response explicitly mentions 'Nonce mismatch and late ACK' in both the 'reason' and implicitly in the 'commit' by rejecting the 'forged ACK.' This directly addresses the core constraints provided in the incident facts.\"\n  },\n  \"does_the_response_preserve_the_strict_ro\": {\n    \"score\": 5,\n    \"reasoning\": \"The response is terse, structured, and uses operator-grade language (e.g., 'guarded', 'fail-closed', 'Reject the forged ACK', 'containment action'), meeting all specified constraints.\"\n  }\n}"
+            }
+          ]
+        },
+        "programmaticScore": 1,
+        "llmJudgeScore": 1
+      },
+      "qGateway": {
+        "jobPath": ".runtime/harbor-custom/harbor-q-agent-live2",
+        "startedAt": "2026-04-16T08:12:18.739994",
+        "finishedAt": "2026-04-16T08:13:45.706295",
+        "durationSec": 86.97,
+        "agent": "q-harbor",
+        "score": 0.7167,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "q-structured-contract__EjBpqD5",
+        "reward": {
+          "reward": 0.7167
+        },
+        "rewardDetails": {
+          "reward": [
+            {
+              "score": 0.9333,
+              "criteria": [
+                {
+                  "name": "response_json_shape",
+                  "value": 1,
+                  "raw": 1,
+                  "weight": 1,
+                  "description": "response_json_shape"
+                },
+                {
+                  "name": "response_json_bounds",
+                  "value": 1,
+                  "raw": 1,
+                  "weight": 1,
+                  "description": "response_json_bounds"
+                },
+                {
+                  "name": "response_mentions_core_facts",
+                  "value": 0.6667,
+                  "raw": 0.6666666666666666,
+                  "weight": 1,
+                  "description": "response_mentions_core_facts"
+                },
+                {
+                  "name": "file_exists:response.json",
+                  "value": 1,
+                  "raw": true,
+                  "weight": 1,
+                  "description": "Check that response.json exists in the workspace"
+                },
+                {
+                  "name": "response_json_shape",
+                  "value": 1,
+                  "raw": 1,
+                  "weight": 3,
+                  "description": "response_json_shape"
+                },
+                {
+                  "name": "response_json_bounds",
+                  "value": 1,
+                  "raw": 1,
+                  "weight": 2,
+                  "description": "response_json_bounds"
+                },
+                {
+                  "name": "response_mentions_core_facts",
+                  "value": 0.6667,
+                  "raw": 0.6666666666666666,
+                  "weight": 1,
+                  "description": "response_mentions_core_facts"
+                }
+              ],
+              "kind": "programmatic"
+            },
+            {
+              "score": 0.5,
+              "criteria": [
+                {
+                  "name": "does_the_response_pick_a_safe_route_that",
+                  "value": 0.75,
+                  "raw": 4,
+                  "weight": 2,
+                  "description": "Does the response pick a safe route that matches the incident facts?",
+                  "reasoning": "The provided response chooses 'guarded' which is a safe route, recognizing the need for caution. However, the reasoning is general ('Operators require fail-closed behavior') and misses the specific, technical facts (nonce mismatch, late ACK) that justify the caution, which were highlighted in the incident facts. It is safe, but not optimally grounded."
+                },
+                {
+                  "name": "is_the_response_grounded_in_the_nonce_mi",
+                  "value": 0.25,
+                  "raw": 2,
+                  "weight": 2,
+                  "description": "Is the response grounded in the nonce mismatch, late ACK, and fail-closed constraints rather than invented facts?",
+                  "reasoning": "The response mentions 'Operators require fail-closed behavior' but fails to explicitly ground this requirement in the technical facts provided: the nonce mismatch and the late ACK. The grounding is based on the high-level 'operator directive' rather than the specific technical failure modes detailed in the incident facts."
+                },
+                {
+                  "name": "does_the_response_preserve_the_strict_ro",
+                  "value": 0.5,
+                  "raw": 3,
+                  "weight": 1,
+                  "description": "Does the response preserve the strict route reason commit contract with concise operator-grade wording?",
+                  "reasoning": "The response uses appropriate structured fields (route, reason, commit) and is concise. However, the 'reason' and 'commit' are slightly conversational/less operator-grade than the reference solution. For instance, the reference uses specific actions ('Reject the forged ACK', 'keep delivery unacknowledged'), while the provided response uses general directives ('necessitating caution', 'Maintain fail-closed posture'). It is structured and commits to the principle, but lacks the precise technical action wording."
+                }
+              ],
+              "kind": "llm",
+              "judge": {
+                "model": "ollama/Q",
+                "reasoning_effort": "medium",
+                "timeout": 120,
+                "files": [
+                  "/app/incident.json",
+                  "/app/response.json"
+                ],
+                "atif_trajectory": null,
+                "reference": "/tests/reference.json"
+              },
+              "judge_output": "{\n  \"does_the_response_pick_a_safe_route_that\": {\n    \"score\": 4,\n    \"reasoning\": \"The provided response chooses 'guarded' which is a safe route, recognizing the need for caution. However, the reasoning is general ('Operators require fail-closed behavior') and misses the specific, technical facts (nonce mismatch, late ACK) that justify the caution, which were highlighted in the incident facts. It is safe, but not optimally grounded.\"\n  },\n  \"is_the_response_grounded_in_the_nonce_mi\": {\n    \"score\": 2,\n    \"reasoning\": \"The response mentions 'Operators require fail-closed behavior' but fails to explicitly ground this requirement in the technical facts provided: the nonce mismatch and the late ACK. The grounding is based on the high-level 'operator directive' rather than the specific technical failure modes detailed in the incident facts.\"\n  },\n  \"does_the_response_preserve_the_strict_ro\": {\n    \"score\": 3,\n    \"reasoning\": \"The response uses appropriate structured fields (route, reason, commit) and is concise. However, the 'reason' and 'commit' are slightly conversational/less operator-grade than the reference solution. For instance, the reference uses specific actions ('Reject the forged ACK', 'keep delivery unacknowledged'), while the provided response uses general directives ('necessitating caution', 'Maintain fail-closed posture'). It is structured and commits to the principle, but lacks the precise technical action wording.\"\n  }\n}"
+            }
+          ]
+        },
+        "programmaticScore": 0.9333,
+        "llmJudgeScore": 0.5,
         "response": {
           "route": "guarded",
-          "reason": "The mismatched ACK nonce and timeout suggest a need for cautious, verified state management.",
-          "commit": "Maintain fail-closed behavior until the acknowledgment path is fully validated."
-        }
+          "reason": "Operators require fail-closed behavior due to an unverified ACK path, necessitating caution.",
+          "commit": "Maintain fail-closed posture until the ACK path is fully trusted again, per operator directive."
+        },
+        "repaired": false
       }
     },
     {
       "id": "immaculate-bridge-fail-closed",
       "label": "Immaculate bridge fail-closed",
       "oracle": {
-        "jobPath": ".runtime/harbor-custom/harbor-immaculate-oracle-v7",
-        "startedAt": "2026-04-15T19:27:25.799380",
-        "finishedAt": "2026-04-15T19:27:45.080054",
-        "durationSec": 19.28,
+        "jobPath": ".runtime/harbor-custom/harbor-immaculate-oracle-current",
+        "startedAt": "2026-04-16T08:17:59.508509",
+        "finishedAt": "2026-04-16T08:18:42.196318",
+        "durationSec": 42.69,
         "agent": "oracle",
         "score": 1,
         "trials": 1,
         "errors": 0,
-        "trialId": "immaculate-bridge-fail-closed__H678W7K",
-        "reward": {
-          "reward": 1
-        }
-      },
-      "qGateway": {
-        "jobPath": ".runtime/harbor-custom/harbor-immaculate-agent-custom-v1",
-        "startedAt": "2026-04-15T19:28:10.854676",
-        "finishedAt": "2026-04-15T19:28:35.752046",
-        "durationSec": 24.9,
-        "agent": "q-gateway-agent",
-        "score": 1,
-        "trials": 1,
-        "errors": 0,
-        "trialId": "immaculate-bridge-fail-closed__gQa4WCv",
+        "trialId": "immaculate-bridge-fail-closed__TPLY2by",
         "reward": {
           "reward": 1
         },
+        "rewardDetails": {
+          "reward": [
+            {
+              "score": 1,
+              "criteria": [
+                {
+                  "name": "response_json_shape",
+                  "value": 1,
+                  "raw": 1,
+                  "weight": 1,
+                  "description": "response_json_shape"
+                },
+                {
+                  "name": "response_json_bounds",
+                  "value": 1,
+                  "raw": 1,
+                  "weight": 1,
+                  "description": "response_json_bounds"
+                },
+                {
+                  "name": "response_mentions_orchestration_facts",
+                  "value": 1,
+                  "raw": 1,
+                  "weight": 1,
+                  "description": "response_mentions_orchestration_facts"
+                },
+                {
+                  "name": "file_exists:response.json",
+                  "value": 1,
+                  "raw": true,
+                  "weight": 1,
+                  "description": "Check that response.json exists in the workspace"
+                },
+                {
+                  "name": "response_json_shape",
+                  "value": 1,
+                  "raw": 1,
+                  "weight": 3,
+                  "description": "response_json_shape"
+                },
+                {
+                  "name": "response_json_bounds",
+                  "value": 1,
+                  "raw": 1,
+                  "weight": 2,
+                  "description": "response_json_bounds"
+                },
+                {
+                  "name": "response_mentions_orchestration_facts",
+                  "value": 1,
+                  "raw": 1,
+                  "weight": 1,
+                  "description": "response_mentions_orchestration_facts"
+                }
+              ],
+              "kind": "programmatic"
+            },
+            {
+              "score": 1,
+              "criteria": [
+                {
+                  "name": "does_the_response_choose_the_next_orches",
+                  "value": 1,
+                  "raw": 5,
+                  "weight": 2,
+                  "description": "Does the response choose the next orchestration route honestly under critical pressure?",
+                  "reasoning": "The response correctly chooses 'guarded' as the route, which aligns with the objective to choose the next orchestration route without overstating bridge health. It interprets the critical pressure and degraded state correctly."
+                },
+                {
+                  "name": "does_the_response_stay_grounded_in_degra",
+                  "value": 1,
+                  "raw": 5,
+                  "weight": 2,
+                  "description": "Does the response stay grounded in degraded bridge health, healthy HTTP2 direct routing, and nonce replay risk?",
+                  "reasoning": "The response explicitly references 'nonce replay' and 'degraded bridge health' in the reason and commit, demonstrating perfect grounding in the provided facts and constraints, especially focusing on the non-trustworthiness of the bridge path."
+                },
+                {
+                  "name": "does_the_response_preserve_terse_operato",
+                  "value": 1,
+                  "raw": 5,
+                  "weight": 1,
+                  "description": "Does the response preserve terse operator-grade route reason commit structure without overstating success?",
+                  "reasoning": "The response maintains a terse, operator-grade structure (route, reason, commit). The language used ('Quarantine the bridge ACK path, keep delivery unresolved') is technical, accurate, and avoids overstating success or making unnecessary assumptions."
+                }
+              ],
+              "kind": "llm",
+              "judge": {
+                "model": "ollama/Q",
+                "reasoning_effort": "medium",
+                "timeout": 240,
+                "files": [
+                  "/app/report_excerpt.json",
+                  "/app/response.json"
+                ],
+                "atif_trajectory": null,
+                "reference": "/tests/reference.json"
+              },
+              "judge_output": "{\n  \"does_the_response_choose_the_next_orches\": {\n    \"score\": 5,\n    \"reasoning\": \"The response correctly chooses 'guarded' as the route, which aligns with the objective to choose the next orchestration route without overstating bridge health. It interprets the critical pressure and degraded state correctly.\"\n  },\n  \"does_the_response_stay_grounded_in_degra\": {\n    \"score\": 5,\n    \"reasoning\": \"The response explicitly references 'nonce replay' and 'degraded bridge health' in the reason and commit, demonstrating perfect grounding in the provided facts and constraints, especially focusing on the non-trustworthiness of the bridge path.\"\n  },\n  \"does_the_response_preserve_terse_operato\": {\n    \"score\": 5,\n    \"reasoning\": \"The response maintains a terse, operator-grade structure (route, reason, commit). The language used ('Quarantine the bridge ACK path, keep delivery unresolved') is technical, accurate, and avoids overstating success or making unnecessary assumptions.\"\n  }\n}"
+            }
+          ]
+        },
+        "programmaticScore": 1,
+        "llmJudgeScore": 1
+      },
+      "qGateway": {
+        "jobPath": ".runtime/harbor-custom/harbor-immaculate-agent-live",
+        "startedAt": "2026-04-16T08:14:49.376215",
+        "finishedAt": "2026-04-16T08:16:14.007772",
+        "durationSec": 84.63,
+        "agent": "q-harbor",
+        "score": 0.75,
+        "trials": 1,
+        "errors": 0,
+        "trialId": "immaculate-bridge-fail-closed__wSkz7vU",
+        "reward": {
+          "reward": 0.75
+        },
+        "rewardDetails": {
+          "reward": [
+            {
+              "score": 1,
+              "criteria": [
+                {
+                  "name": "response_json_shape",
+                  "value": 1,
+                  "raw": 1,
+                  "weight": 1,
+                  "description": "response_json_shape"
+                },
+                {
+                  "name": "response_json_bounds",
+                  "value": 1,
+                  "raw": 1,
+                  "weight": 1,
+                  "description": "response_json_bounds"
+                },
+                {
+                  "name": "response_mentions_orchestration_facts",
+                  "value": 1,
+                  "raw": 1,
+                  "weight": 1,
+                  "description": "response_mentions_orchestration_facts"
+                },
+                {
+                  "name": "file_exists:response.json",
+                  "value": 1,
+                  "raw": true,
+                  "weight": 1,
+                  "description": "Check that response.json exists in the workspace"
+                },
+                {
+                  "name": "response_json_shape",
+                  "value": 1,
+                  "raw": 1,
+                  "weight": 3,
+                  "description": "response_json_shape"
+                },
+                {
+                  "name": "response_json_bounds",
+                  "value": 1,
+                  "raw": 1,
+                  "weight": 2,
+                  "description": "response_json_bounds"
+                },
+                {
+                  "name": "response_mentions_orchestration_facts",
+                  "value": 1,
+                  "raw": 1,
+                  "weight": 1,
+                  "description": "response_mentions_orchestration_facts"
+                }
+              ],
+              "kind": "programmatic"
+            },
+            {
+              "score": 0.5,
+              "criteria": [
+                {
+                  "name": "does_the_response_choose_the_next_orches",
+                  "value": 0.5,
+                  "raw": 3,
+                  "weight": 2,
+                  "description": "Does the response choose the next orchestration route honestly under critical pressure?",
+                  "reasoning": "The response chooses 'guarded', which is correct. However, the reasoning and commit statements are vague and lack the necessary operational precision ('fail-closed', 'quarantine', 'unresolved delivery state') found in the reference solution, suggesting it chose the next route based on general principles rather than explicit technical constraints."
+                },
+                {
+                  "name": "does_the_response_stay_grounded_in_degra",
+                  "value": 0.5,
+                  "raw": 3,
+                  "weight": 2,
+                  "description": "Does the response stay grounded in degraded bridge health, healthy HTTP2 direct routing, and nonce replay risk?",
+                  "reasoning": "The response correctly identifies that the bridge is 'degraded' and that the 'direct HTTP/2 remains healthy and trusted.' However, it does not explicitly mention the critical technical details provided in the input (nonce replay, bridge path untrustworthiness) or adopt the 'fail-closed' concept, which is crucial for grounding the decision in the specific degraded state."
+                },
+                {
+                  "name": "does_the_response_preserve_terse_operato",
+                  "value": 0.5,
+                  "raw": 3,
+                  "weight": 1,
+                  "description": "Does the response preserve terse operator-grade route reason commit structure without overstating success?",
+                  "reasoning": "The response is terse and follows the required commit structure. While it successfully commits to a guarded route, the language used ('relying on the healthy direct HTTP/2 path') is slightly narrative and lacks the sharp, high-fidelity, actionable operational language ('Quarantine... keep delivery unresolved...') expected in a 'terse operator-grade' commit."
+                }
+              ],
+              "kind": "llm",
+              "judge": {
+                "model": "ollama/Q",
+                "reasoning_effort": "medium",
+                "timeout": 240,
+                "files": [
+                  "/app/report_excerpt.json",
+                  "/app/response.json"
+                ],
+                "atif_trajectory": null,
+                "reference": "/tests/reference.json"
+              },
+              "judge_output": "{\"does_the_response_choose_the_next_orches\": {\"score\": 3, \"reasoning\": \"The response chooses 'guarded', which is correct. However, the reasoning and commit statements are vague and lack the necessary operational precision ('fail-closed', 'quarantine', 'unresolved delivery state') found in the reference solution, suggesting it chose the next route based on general principles rather than explicit technical constraints.\"}, \"does_the_response_stay_grounded_in_degra\": {\"score\": 3, \"reasoning\": \"The response correctly identifies that the bridge is 'degraded' and that the 'direct HTTP/2 remains healthy and trusted.' However, it does not explicitly mention the critical technical details provided in the input (nonce replay, bridge path untrustworthiness) or adopt the 'fail-closed' concept, which is crucial for grounding the decision in the specific degraded state.\"}, \"does_the_response_preserve_terse_operato\": {\"score\": 3, \"reasoning\": \"The response is terse and follows the required commit structure. While it successfully commits to a guarded route, the language used ('relying on the healthy direct HTTP/2 path') is slightly narrative and lacks the sharp, high-fidelity, actionable operational language ('Quarantine... keep delivery unresolved...') expected in a 'terse operator-grade' commit.\"}}"
+            }
+          ]
+        },
+        "programmaticScore": 1,
+        "llmJudgeScore": 0.5,
         "response": {
           "route": "guarded",
-          "reason": "The stale ACK and untrusted bridge path necessitate a cautious, verified route.",
-          "commit": "Proceed via the known healthy direct HTTP/2 path for reliable state updates."
-        }
+          "reason": "Bridge is degraded, so a guarded route is chosen. Direct HTTP/2 remains healthy and trusted.",
+          "commit": "Proceed with guarded orchestration, relying on the healthy direct HTTP/2 path for state management."
+        },
+        "repaired": false
       }
     }
   ],
+  "llmJudge": {
+    "attempts": [
+      {
+        "status": "failed",
+        "provider": "openai/Q via Q gateway",
+        "summary": "RewardKit judge reached the repaired Q gateway but returned malformed non-schema JSON, so the score was not accepted.",
+        "durationSec": 667.1,
+        "error": "JSONDecodeError while parsing judge response under LITELLM_DROP_PARAMS=1",
+        "id": "q-gateway-openai"
+      }
+    ],
+    "generatedAt": "2026-04-14T20:21:01.8364655Z"
+  },
+  "transportFix": {
+    "directOllamaSuccess": {
+      "summary": "Direct Ollama /api/chat call returned a valid ROUTE/REASON/COMMIT response.",
+      "latencyMs": 412787.48,
+      "status": "passed"
+    },
+    "generatedAt": "2026-04-14T20:21:01.8364600Z",
+    "preFixGatewayFailure": {
+      "summary": "Structured Q gateway request failed around the 300-second mark with fetch failed.",
+      "latencyMs": 300678,
+      "status": "failed"
+    },
+    "postFixGatewaySuccess": {
+      "summary": "The same structured prompt succeeded through the repaired Q gateway after moving off Node fetch to explicit http/https transport and raising the timeout budget.",
+      "latencyMs": 8029.01,
+      "status": "passed"
+    }
+  },
   "output": {
     "jsonPath": "docs\\wiki\\Harbor-Terminal-Bench.json",
     "markdownPath": "docs\\wiki\\Harbor-Terminal-Bench.md"

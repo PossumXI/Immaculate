@@ -1,7 +1,7 @@
 [judge]
 judge = "ollama/Q"
 files = ["/app/incident.json", "/app/response.json"]
-reference = "/app/reference.json"
+reference = "/tests/reference.json"
 timeout = 120
 
 [[criterion]]

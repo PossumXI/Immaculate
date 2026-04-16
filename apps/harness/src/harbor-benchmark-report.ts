@@ -62,6 +62,31 @@ type HarborResponse = {
   commit?: string;
 };
 
+type RewardDetailsCriterion = {
+  name?: string;
+  value?: number;
+  raw?: unknown;
+  weight?: number;
+  description?: string;
+  reasoning?: string;
+};
+
+type RewardDetailsEntry = {
+  score?: number;
+  kind?: "programmatic" | "llm" | string;
+  criteria?: RewardDetailsCriterion[];
+};
+
+type RewardDetailsFile = {
+  reward?: RewardDetailsEntry[];
+};
+
+type HarborAgentOutput = {
+  repaired?: boolean;
+  structured?: HarborResponse;
+  rawOutput?: string;
+};
+
 type HarborJobSurface = {
   jobPath: string;
   startedAt?: string;
@@ -73,7 +98,11 @@ type HarborJobSurface = {
   errors: number;
   trialId?: string;
   reward?: Record<string, number>;
+  rewardDetails?: RewardDetailsFile;
+  programmaticScore?: number;
+  llmJudgeScore?: number;
   response?: HarborResponse;
+  repaired?: boolean;
 };
 
 type HarborTaskSurface = {
@@ -107,14 +136,14 @@ const TASKS = [
   {
     id: "q-structured-contract",
     label: "Q structured contract",
-    oracleJobPath: path.join(".runtime", "harbor-custom", "harbor-q-oracle-v7"),
-    qGatewayJobPath: path.join(".runtime", "harbor-custom", "harbor-q-agent-custom-v5")
+    oracleJobPath: path.join(".runtime", "harbor-custom", "harbor-q-oracle-current"),
+    qGatewayJobPath: path.join(".runtime", "harbor-custom", "harbor-q-agent-live2")
   },
   {
     id: "immaculate-bridge-fail-closed",
     label: "Immaculate bridge fail-closed",
-    oracleJobPath: path.join(".runtime", "harbor-custom", "harbor-immaculate-oracle-v7"),
-    qGatewayJobPath: path.join(".runtime", "harbor-custom", "harbor-immaculate-agent-custom-v1")
+    oracleJobPath: path.join(".runtime", "harbor-custom", "harbor-immaculate-oracle-current"),
+    qGatewayJobPath: path.join(".runtime", "harbor-custom", "harbor-immaculate-agent-live")
   }
 ];
 
@@ -180,6 +209,14 @@ async function loadHarborJobSurface(jobPath: string): Promise<HarborJobSurface> 
   const reward = trialRoot
     ? await readJsonFile<Record<string, number>>(path.join(trialRoot, "verifier", "reward.json"))
     : undefined;
+  const rewardDetails = trialRoot
+    ? await readJsonFile<RewardDetailsFile>(path.join(trialRoot, "verifier", "reward-details.json"))
+    : undefined;
+  const agentOutput = trialRoot
+    ? await readJsonFile<HarborAgentOutput>(path.join(trialRoot, "agent", "q-agent-output.json"))
+    : undefined;
+  const programmaticScore = rewardDetails?.reward?.find((entry) => entry.kind === "programmatic")?.score;
+  const llmJudgeScore = rewardDetails?.reward?.find((entry) => entry.kind === "llm")?.score;
 
   return {
     jobPath: jobPath.replaceAll("\\", "/"),
@@ -192,7 +229,11 @@ async function loadHarborJobSurface(jobPath: string): Promise<HarborJobSurface> 
     errors: evalStats.n_errors ?? 0,
     trialId,
     reward,
-    response
+    rewardDetails,
+    programmaticScore,
+    llmJudgeScore,
+    response: response ?? agentOutput?.structured,
+    repaired: agentOutput?.repaired
   };
 }
 
@@ -207,9 +248,13 @@ function renderTaskMarkdown(task: HarborTaskSurface): string[] {
   lines.push(`- Oracle score: \`${task.oracle.score?.toFixed(3) ?? "n/a"}\``);
   lines.push(`- Oracle duration: \`${formatDuration(task.oracle.durationSec)}\``);
   lines.push(`- Q gateway score: \`${task.qGateway.score?.toFixed(3) ?? "n/a"}\``);
+  lines.push(`- Q programmatic score: \`${task.qGateway.programmaticScore?.toFixed(3) ?? "n/a"}\``);
+  lines.push(`- Q LLM-judge score: \`${task.qGateway.llmJudgeScore?.toFixed(3) ?? "n/a"}\``);
   lines.push(`- Q gateway duration: \`${formatDuration(task.qGateway.durationSec)}\``);
   lines.push(`- Oracle job: \`${task.oracle.jobPath}\``);
   lines.push(`- Q gateway job: \`${task.qGateway.jobPath}\``);
+  lines.push(`- Reference visible to agent: \`no\``);
+  lines.push(`- Q self-repair needed: \`${task.qGateway.repaired ? "yes" : "no"}\``);
   if (task.qGateway.response) {
     lines.push(`- Q route: \`${task.qGateway.response.route ?? "n/a"}\``);
     lines.push(`- Q reason: ${task.qGateway.response.reason ?? "n/a"}`);
@@ -235,7 +280,8 @@ function renderMarkdown(report: HarborBenchmarkReport): string {
   lines.push("");
   lines.push("- Harbor ran in WSL on Docker Desktop.");
   lines.push("- Oracle validated both repo-local tasks before the Q lane was accepted.");
-  lines.push("- The published scores below come from RewardKit programmatic checks.");
+  lines.push("- The published Q scores below are the combined RewardKit result from programmatic checks plus the local Q LLM judge.");
+  lines.push("- The answer key now lives under `/tests/reference.json`, so the live agent cannot read it from `/app`.");
   lines.push("");
 
   for (const task of report.tasks) {
@@ -277,8 +323,8 @@ function renderMarkdown(report: HarborBenchmarkReport): string {
   lines.push("## Truth Boundary");
   lines.push("");
   lines.push("- This is a repo-local Harbor task pack, not a Terminal-Bench leaderboard submission.");
-  lines.push("- RewardKit programmatic checks are the current scoring gate for the published Harbor results.");
-  lines.push("- LLM judge attempts were executed and recorded, but they are not counted into the benchmark score until the judge path becomes stable.");
+  lines.push("- The current Harbor pack covers two structured operator tasks, not the full Terminal-Bench public corpus.");
+  lines.push("- The published Q scores are real runs against the real Q endpoint on the local Harbor gateway.");
   return `${lines.join("\n")}\n`;
 }
 

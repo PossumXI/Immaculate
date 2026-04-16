@@ -7,7 +7,7 @@ trap 'rm -rf "$tmp_tests_dir"' EXIT
 
 cp /tests/check.py "$tmp_tests_dir/check.py"
 
-if [ "${IMMACULATE_HARBOR_ENABLE_LLM_JUDGE:-0}" = "1" ]; then
+if [ "${IMMACULATE_HARBOR_ENABLE_LLM_JUDGE:-1}" = "1" ]; then
   cp /tests/judge.toml "$tmp_tests_dir/judge.toml"
 fi
 

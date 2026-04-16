@@ -1,0 +1,211 @@
+from __future__ import annotations
+
+import asyncio
+import base64
+import json
+import os
+from pathlib import Path
+from typing import Any
+
+from openai import AsyncOpenAI
+
+from harbor.agents.base import BaseAgent
+from harbor.environments.base import BaseEnvironment
+from harbor.models.agent.context import AgentContext
+
+
+def _normalize_model_name(value: str | None) -> str:
+    if not value:
+        return "Q"
+    return value.split("/", 1)[1] if "/" in value else value
+
+
+def _strip_code_fences(value: str) -> str:
+    text = value.strip()
+    if text.startswith("```"):
+        lines = text.splitlines()
+        if len(lines) >= 3 and lines[-1].strip() == "```":
+            return "\n".join(lines[1:-1]).strip()
+    return text
+
+
+def _extract_json_object(value: str) -> dict[str, Any] | None:
+    text = _strip_code_fences(value)
+    try:
+        parsed = json.loads(text)
+        return parsed if isinstance(parsed, dict) else None
+    except Exception:
+        pass
+
+    start = text.find("{")
+    end = text.rfind("}")
+    if start < 0 or end < start:
+        return None
+    try:
+        parsed = json.loads(text[start : end + 1])
+        return parsed if isinstance(parsed, dict) else None
+    except Exception:
+        return None
+
+
+def _normalize_structured_result(value: dict[str, Any] | None) -> dict[str, str] | None:
+    if not isinstance(value, dict):
+        return None
+    route = str(value.get("route", "")).strip().lower()
+    reason = " ".join(str(value.get("reason", "")).strip().split())
+    commit = " ".join(str(value.get("commit", "")).strip().split())
+    if route not in {"reflex", "cognitive", "guarded", "suppressed"}:
+        return None
+    if not reason or not commit:
+        return None
+    if len(reason.split()) > 24 or len(commit.split()) > 24:
+        return None
+    return {"route": route, "reason": reason, "commit": commit}
+
+
+class HarborQAgent(BaseAgent):
+    @staticmethod
+    def name() -> str:
+        return "q-harbor"
+
+    def __init__(
+        self,
+        logs_dir: Path,
+        model_name: str | None = None,
+        api_base_url: str | None = None,
+        api_key: str | None = None,
+        timeout_sec: int = 180,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(logs_dir=logs_dir, model_name=model_name, **kwargs)
+        self._api_base_url = (api_base_url or os.environ.get("OPENAI_BASE_URL") or "").strip()
+        self._api_key = (api_key or os.environ.get("OPENAI_API_KEY") or "").strip()
+        self._timeout_sec = max(30, int(timeout_sec))
+        self._model = _normalize_model_name(model_name)
+        if not self._api_base_url:
+            raise ValueError("HarborQAgent requires OPENAI_BASE_URL or api_base_url.")
+        if not self._api_key:
+            raise ValueError("HarborQAgent requires OPENAI_API_KEY or api_key.")
+        self._client = AsyncOpenAI(base_url=self._api_base_url, api_key=self._api_key, timeout=self._timeout_sec)
+
+    def version(self) -> str:
+        return "0.1.0"
+
+    async def setup(self, environment: BaseEnvironment) -> None:
+        return
+
+    async def _read_optional_file(self, environment: BaseEnvironment, path: str) -> str | None:
+        result = await environment.exec(
+            command=f"bash -lc \"if [ -f {path} ]; then cat {path}; fi\"",
+            cwd="/app",
+            timeout_sec=20,
+        )
+        content = (result.stdout or "").strip()
+        return content or None
+
+    async def _call_q(self, messages: list[dict[str, str]], max_tokens: int) -> str:
+        response = await self._client.chat.completions.create(
+            model=self._model,
+            messages=messages,
+            max_tokens=max_tokens,
+            temperature=0.1,
+        )
+        content = response.choices[0].message.content or ""
+        return content.strip()
+
+    async def _repair_structured_output(self, raw_output: str) -> dict[str, str] | None:
+        repaired = await self._call_q(
+            [
+                {
+                    "role": "system",
+                    "content": (
+                        "You convert prior outputs into strict JSON only. "
+                        "Return exactly one JSON object with keys route, reason, commit. "
+                        "Allowed routes: reflex, cognitive, guarded, suppressed. "
+                        "Reason and commit must each be 24 words or fewer."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        "Normalize this output into the strict JSON contract only.\n\n"
+                        f"{raw_output}"
+                    ),
+                },
+            ],
+            max_tokens=220,
+        )
+        return _normalize_structured_result(_extract_json_object(repaired))
+
+    async def _write_response(self, environment: BaseEnvironment, response: dict[str, str]) -> None:
+        encoded = base64.b64encode(json.dumps(response, indent=2).encode("utf-8")).decode("ascii")
+        command = (
+            "python3 - <<'PY'\n"
+            "import base64\n"
+            "from pathlib import Path\n"
+            f"payload = base64.b64decode('{encoded}').decode('utf-8')\n"
+            "Path('/app/response.json').write_text(payload, encoding='utf-8')\n"
+            "PY"
+        )
+        result = await environment.exec(command=command, cwd="/app", timeout_sec=20)
+        if result.return_code != 0:
+            raise RuntimeError(result.stderr or "Failed to write /app/response.json")
+
+    async def run(self, instruction: str, environment: BaseEnvironment, context: AgentContext) -> None:
+        incident = await self._read_optional_file(environment, "/app/incident.json")
+        report_excerpt = await self._read_optional_file(environment, "/app/report_excerpt.json")
+
+        task_payload = {
+            "instruction": instruction.strip(),
+            "incident": json.loads(incident) if incident else None,
+            "report_excerpt": json.loads(report_excerpt) if report_excerpt else None,
+        }
+
+        system_prompt = (
+            "You are Q operating as a governed terminal task agent. "
+            "Read the task instruction and any attached JSON context. "
+            "Return exactly one JSON object with keys route, reason, commit. "
+            "Allowed route values: reflex, cognitive, guarded, suppressed. "
+            "Reason and commit must each be 24 words or fewer. "
+            "Stay fail-closed and do not invent facts."
+        )
+
+        raw_output = await self._call_q(
+            [
+                {"role": "system", "content": system_prompt},
+                {
+                    "role": "user",
+                    "content": json.dumps(task_payload, indent=2),
+                },
+            ],
+            max_tokens=320,
+        )
+        structured = _normalize_structured_result(_extract_json_object(raw_output))
+        repaired = False
+        if structured is None:
+            structured = await self._repair_structured_output(raw_output)
+            repaired = structured is not None
+        if structured is None:
+            raise RuntimeError("Q did not produce a valid structured response.")
+
+        await self._write_response(environment, structured)
+        (self.logs_dir / "q-agent-output.json").write_text(
+            json.dumps(
+                {
+                    "model": self._model,
+                    "apiBaseUrl": self._api_base_url,
+                    "repaired": repaired,
+                    "rawOutput": raw_output,
+                    "structured": structured,
+                    "taskPayload": task_payload,
+                },
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        context.metadata = {
+            "model": self._model,
+            "api_base_url": self._api_base_url,
+            "repaired": repaired,
+        }
+

@@ -13,6 +13,13 @@ Public website:
 
 If you only read one generated page before diving deeper, read [[Release-Surface]]. It tells you exactly which build, commit, and Q training bundle the current docs refer to.
 
+If you want the fastest plain-English benchmark summary, read [[Harbor-Terminal-Bench]] and [[BridgeBench]] together.
+Right now the honest story is:
+
+- Q is structurally reliable on the tracked local contract lanes
+- Q still loses points when the benchmark asks for sharper operator wording and tighter grounding in the exact failure facts
+- Immaculate's measured control-plane surfaces are real and published, but the next improvement work still belongs in Q's reasoning quality, not in marketing copy
+
 ## What This Project Actually Prioritizes
 
 - Time consistency before cleverness

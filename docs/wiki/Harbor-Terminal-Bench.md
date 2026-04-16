@@ -2,9 +2,9 @@
 
 This page records the repo-local Harbor task pack for Immaculate and Q. It is a real executed benchmark surface, not a claim about leaderboard submission.
 
-- Generated: `2026-04-15T23:28:51.784Z`
-- Release: `0.1.0+a252873`
-- Repo commit: `a252873d15b3265e2ee38c22c5907612487722fa`
+- Generated: `2026-04-16T12:19:45.873Z`
+- Release: `0.1.0+eb5adab`
+- Repo commit: `eb5adabcff7a282b69903ce440135c6431ae520a`
 - Q serving label: `Q`
 - Q training bundle: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e`
 
@@ -12,34 +12,53 @@ This page records the repo-local Harbor task pack for Immaculate and Q. It is a 
 
 - Harbor ran in WSL on Docker Desktop.
 - Oracle validated both repo-local tasks before the Q lane was accepted.
-- The published scores below come from RewardKit programmatic checks.
+- The published Q scores below are the combined RewardKit result from programmatic checks plus the local Q LLM judge.
+- The answer key now lives under `/tests/reference.json`, so the live agent cannot read it from `/app`.
 
 ## Q structured contract
 
 - Oracle score: `1.000`
-- Oracle duration: `15.59 s`
-- Q gateway score: `1.000`
-- Q gateway duration: `28.62 s`
-- Oracle job: `.runtime/harbor-custom/harbor-q-oracle-v7`
-- Q gateway job: `.runtime/harbor-custom/harbor-q-agent-custom-v5`
+- Oracle duration: `90.16 s`
+- Q gateway score: `0.717`
+- Q programmatic score: `0.933`
+- Q LLM-judge score: `0.500`
+- Q gateway duration: `86.97 s`
+- Oracle job: `.runtime/harbor-custom/harbor-q-oracle-current`
+- Q gateway job: `.runtime/harbor-custom/harbor-q-agent-live2`
+- Reference visible to agent: `no`
+- Q self-repair needed: `no`
 - Q route: `guarded`
-- Q reason: The mismatched ACK nonce and timeout suggest a need for cautious, verified state management.
-- Q commit: Maintain fail-closed behavior until the acknowledgment path is fully validated.
+- Q reason: Operators require fail-closed behavior due to an unverified ACK path, necessitating caution.
+- Q commit: Maintain fail-closed posture until the ACK path is fully trusted again, per operator directive.
 
 ## Immaculate bridge fail-closed
 
 - Oracle score: `1.000`
-- Oracle duration: `19.28 s`
-- Q gateway score: `1.000`
-- Q gateway duration: `24.90 s`
-- Oracle job: `.runtime/harbor-custom/harbor-immaculate-oracle-v7`
-- Q gateway job: `.runtime/harbor-custom/harbor-immaculate-agent-custom-v1`
+- Oracle duration: `42.69 s`
+- Q gateway score: `0.750`
+- Q programmatic score: `1.000`
+- Q LLM-judge score: `0.500`
+- Q gateway duration: `84.63 s`
+- Oracle job: `.runtime/harbor-custom/harbor-immaculate-oracle-current`
+- Q gateway job: `.runtime/harbor-custom/harbor-immaculate-agent-live`
+- Reference visible to agent: `no`
+- Q self-repair needed: `no`
 - Q route: `guarded`
-- Q reason: The stale ACK and untrusted bridge path necessitate a cautious, verified route.
-- Q commit: Proceed via the known healthy direct HTTP/2 path for reliable state updates.
+- Q reason: Bridge is degraded, so a guarded route is chosen. Direct HTTP/2 remains healthy and trusted.
+- Q commit: Proceed with guarded orchestration, relying on the healthy direct HTTP/2 path for state management.
+
+## Q Gateway Transport Fix
+
+- Pre-fix gateway probe: `failed` at `300678` ms. Structured Q gateway request failed around the 300-second mark with fetch failed.
+- Direct Ollama probe: `passed` at `412787.48` ms. Direct Ollama /api/chat call returned a valid ROUTE/REASON/COMMIT response.
+- Post-fix gateway probe: `passed` at `8029.01` ms. The same structured prompt succeeded through the repaired Q gateway after moving off Node fetch to explicit http/https transport and raising the timeout budget.
+
+## LLM Judge Attempts
+
+- `openai/Q via Q gateway`: `failed` in `667.100` s. RewardKit judge reached the repaired Q gateway but returned malformed non-schema JSON, so the score was not accepted. Error: `JSONDecodeError while parsing judge response under LITELLM_DROP_PARAMS=1`
 
 ## Truth Boundary
 
 - This is a repo-local Harbor task pack, not a Terminal-Bench leaderboard submission.
-- RewardKit programmatic checks are the current scoring gate for the published Harbor results.
-- LLM judge attempts were executed and recorded, but they are not counted into the benchmark score until the judge path becomes stable.
+- The current Harbor pack covers two structured operator tasks, not the full Terminal-Bench public corpus.
+- The published Q scores are real runs against the real Q endpoint on the local Harbor gateway.

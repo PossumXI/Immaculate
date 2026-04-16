@@ -19,6 +19,33 @@ For each breakthrough, record:
 
 ## Current Entries
 
+### 2026-04-16
+
+#### Harbor now measures the real Q lane without leaking the answer key, and the results expose Q's actual weakness instead of flattering it
+
+What changed:
+- the repo-local Harbor task pack now hides the gold answer under `/tests/reference.json` instead of leaving `reference.json` in `/app`
+- the Harbor verifier path now runs RewardKit plus the local Q LLM judge by default on both structured tasks
+- the live Q lane now runs through a purpose-built Harbor agent that calls the real Q gateway directly and writes the task artifact into the workspace
+- the repo now publishes those measured Harbor results in `docs/wiki/Harbor-Terminal-Bench.md` and `docs/wiki/Harbor-Terminal-Bench.json`
+
+Why it matters:
+- the missed benchmark-integrity bug was that a live agent could read the answer key because the reference sat in the same workspace it was supposed to solve
+- fixing that changed the benchmark from a theater surface into a defensible one: oracle still scores `1.000`, but Q now has to earn its score without peeking
+- the new measured result is more valuable because it is worse: Q passes the structure/programmatic lane strongly while still underperforming on the operator-grade wording and grounding judged against the hidden reference
+- this is the kind of truth surface that actually helps training, because it tells you what to improve next instead of just proving the parser works
+
+Evidence:
+- `harbor-q-oracle-current` and `harbor-immaculate-oracle-current` both score `1.000` on the current hidden-reference task pack
+- `harbor-q-agent-live2` scores `0.7167` on the Q structured-contract task with `0.9333` programmatic and `0.5000` LLM-judge
+- `harbor-immaculate-agent-live` scores `0.7500` on the Immaculate bridge fail-closed task with `1.0000` programmatic and `0.5000` LLM-judge
+- `docs/wiki/Harbor-Terminal-Bench.md` now records the live jobs, durations, structured responses, and the benchmark truth boundary
+
+What this unlocks next:
+- Q fine-tuning can now target the real gap: operator precision and tighter fact-grounding, not just schema compliance
+- future Harbor packs can expand without leaking their own gold outputs into `/app`
+- the repo can publish Terminal-Bench-style results honestly while keeping the boundary explicit that this is still a repo-local Harbor pack, not a public leaderboard submission
+
 ### 2026-04-14
 
 #### Q benchmark promotion is now a one-command truthful control loop instead of a manual file-edit ritual
