@@ -43,6 +43,7 @@
     "q:gateway:validate": "tsx ./apps/harness/src/q-gateway-validate.ts",
     "q:release-gate": "tsx ./apps/harness/src/q-release-gate.ts",
     "release:surface": "tsx ./apps/harness/src/release-surface.ts",
+    "github:checks:receipt": "tsx ./apps/harness/src/github-checks-receipt.ts",
     "q:keys": "tsx ./apps/harness/src/q-api-key-cli.ts",
     "q:training:lock": "python ./training/q/build_q_training_lock.py",
     "q:training:doctor": "python ./training/q/run_q_training_session.py --doctor",

@@ -41,6 +41,7 @@ This repository is prepared for public collaboration under the Apache 2.0 licens
 - live BridgeBench soak: [docs/wiki/BridgeBench-Soak.md](docs/wiki/BridgeBench-Soak.md)
 - Harbor terminal bench: [docs/wiki/Harbor-Terminal-Bench.md](docs/wiki/Harbor-Terminal-Bench.md)
 - official Terminal-Bench public-task receipt: [docs/wiki/Terminal-Bench-Receipt.md](docs/wiki/Terminal-Bench-Receipt.md)
+- GitHub checks receipt: [docs/wiki/GitHub-Checks-Receipt.md](docs/wiki/GitHub-Checks-Receipt.md)
 - Harbor terminal bench soak: [docs/wiki/Harbor-Terminal-Bench-Soak.md](docs/wiki/Harbor-Terminal-Bench-Soak.md)
 - Q benchmark sweep (60m): [docs/wiki/Q-Benchmark-Sweep-60m.md](docs/wiki/Q-Benchmark-Sweep-60m.md)
 - Q benchmark corpus: [docs/wiki/Q-Benchmark-Corpus.md](docs/wiki/Q-Benchmark-Corpus.md)
@@ -174,6 +175,7 @@ As of `2026-04-14`, the direct `Q` structured-contract lane is green on this mac
 - `gitleaks` runs in CI for repository secret detection
 - Optional GitGuardian scanning is wired in `.github/workflows/gitguardian.yml`
   It activates when the repository secret `GITGUARDIAN_API_KEY` is configured.
+- use `npm run github:checks:receipt` to verify the current repo commit through GitHub's raw workflow-run and check-run APIs when classic status contexts are empty
 
 ## OCI Private Deployment
 

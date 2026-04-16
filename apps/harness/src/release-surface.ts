@@ -93,6 +93,10 @@ const SURFACE_FILES: SurfaceTimestamp[] = [
     path: path.join("docs", "wiki", "Terminal-Bench-Receipt.json")
   },
   {
+    label: "GitHub checks receipt",
+    path: path.join("docs", "wiki", "GitHub-Checks-Receipt.json")
+  },
+  {
     label: "Harbor terminal bench soak",
     path: path.join("docs", "wiki", "Harbor-Terminal-Bench-Soak.json")
   },

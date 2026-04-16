@@ -1,0 +1,126 @@
+{
+  "generatedAt": "2026-04-16T17:54:12.583Z",
+  "repo": {
+    "fullName": "PossumXI/Immaculate",
+    "htmlUrl": "https://github.com/PossumXI/Immaculate"
+  },
+  "targetCommit": {
+    "sha": "26d83eecc6eaea40cc4e400428c045b3d360b12a",
+    "shortSha": "26d83ee",
+    "htmlUrl": "https://github.com/PossumXI/Immaculate/commit/26d83eecc6eaea40cc4e400428c045b3d360b12a"
+  },
+  "release": {
+    "buildId": "0.1.0+26d83ee",
+    "branch": "harbor-q-push"
+  },
+  "verification": {
+    "source": "github-rest",
+    "classicStatusState": "pending",
+    "classicStatusContexts": 0,
+    "workflowRunCount": 4,
+    "checkRunCount": 6,
+    "allWorkflowRunsSuccessful": true,
+    "allCheckRunsSuccessful": true
+  },
+  "workflows": [
+    {
+      "name": "CI",
+      "runNumber": 73,
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/24524038804",
+      "createdAt": "2026-04-16T17:19:15Z",
+      "updatedAt": "2026-04-16T17:20:31Z"
+    },
+    {
+      "name": "Benchmark Publication",
+      "runNumber": 58,
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/24524038752",
+      "createdAt": "2026-04-16T17:19:15Z",
+      "updatedAt": "2026-04-16T17:20:56Z"
+    },
+    {
+      "name": "GitGuardian",
+      "runNumber": 67,
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/24524038540",
+      "createdAt": "2026-04-16T17:19:14Z",
+      "updatedAt": "2026-04-16T17:19:35Z"
+    },
+    {
+      "name": "Security",
+      "runNumber": 73,
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/24524038649",
+      "createdAt": "2026-04-16T17:19:14Z",
+      "updatedAt": "2026-04-16T17:21:47Z"
+    }
+  ],
+  "checkRuns": [
+    {
+      "name": "dependency-review",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/PossumXI/Immaculate/actions/runs/24524038649/job/71689286629",
+      "startedAt": "2026-04-16T17:19:15Z",
+      "completedAt": "2026-04-16T17:19:15Z"
+    },
+    {
+      "name": "benchmark-gate",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/PossumXI/Immaculate/actions/runs/24524038804/job/71689286614",
+      "startedAt": "2026-04-16T17:19:17Z",
+      "completedAt": "2026-04-16T17:20:31Z"
+    },
+    {
+      "name": "gitguardian",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/PossumXI/Immaculate/actions/runs/24524038540/job/71689286414",
+      "startedAt": "2026-04-16T17:19:18Z",
+      "completedAt": "2026-04-16T17:19:34Z"
+    },
+    {
+      "name": "publish-benchmarks",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/PossumXI/Immaculate/actions/runs/24524038752/job/71689286117",
+      "startedAt": "2026-04-16T17:19:17Z",
+      "completedAt": "2026-04-16T17:20:55Z"
+    },
+    {
+      "name": "codeql",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/PossumXI/Immaculate/actions/runs/24524038649/job/71689286106",
+      "startedAt": "2026-04-16T17:19:17Z",
+      "completedAt": "2026-04-16T17:21:46Z"
+    },
+    {
+      "name": "gitleaks",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/PossumXI/Immaculate/actions/runs/24524038649/job/71689286105",
+      "startedAt": "2026-04-16T17:19:19Z",
+      "completedAt": "2026-04-16T17:19:35Z"
+    }
+  ],
+  "truthBoundary": [
+    "GitHub Actions primarily publishes check-runs/check-suites, not classic commit status contexts.",
+    "An empty classic status list does not mean the commit had no successful Actions runs.",
+    "This receipt verifies the commit through raw GitHub REST workflow-run and check-run endpoints instead of a connector path that previously returned empty arrays."
+  ],
+  "output": {
+    "jsonPath": "docs\\wiki\\GitHub-Checks-Receipt.json",
+    "markdownPath": "docs\\wiki\\GitHub-Checks-Receipt.md"
+  }
+}

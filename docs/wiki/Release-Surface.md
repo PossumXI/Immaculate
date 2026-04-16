@@ -2,9 +2,9 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-04-16T17:15:51.019Z
-- Immaculate release: `0.1.0+293c63a`
-- Repo commit: `293c63a2b1fbe4b97f6099ae6f61e63b1523817c`
+- Generated: 2026-04-16T17:54:52.478Z
+- Immaculate release: `0.1.0+52791dc`
+- Repo commit: `52791dc79552d792290c495d5d75ecd32529f769`
 - Branch: `harbor-q-push`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+293c63a` is the current repo build stamp.
+- Immaculate build `0.1.0+52791dc` is the current repo build stamp.
 - Q is served and benchmarked as `Q` across the current repo surfaces.
 - No tracked Q training bundle has been generated yet in this checkout.
 - The latest hybrid session is `q-hybrid-cur-fnv1a-8f551a5c-bench-v3`, with local lane `dry-run` and cloud lane `not-configured` on provider `hf_jobs`.
@@ -37,9 +37,10 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Q benchmark corpus: `2026-04-16T17:14:38Z` via `docs/wiki/Q-Benchmark-Corpus.json`
 - Q failure corpus: `2026-04-16T17:14:38Z` via `docs/wiki/Q-Failure-Corpus.json`
 - Q benchmark promotion: `2026-04-16T00:01:59Z` via `docs/wiki/Q-Benchmark-Promotion.json`
-- W&B benchmark export: `2026-04-16T13:08:26.769568+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
+- W&B benchmark export: `2026-04-16T17:20:52.213333+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
 - Harbor terminal bench: `2026-04-16T13:05:23.427Z` via `docs/wiki/Harbor-Terminal-Bench.json`
 - Terminal-Bench receipt: `2026-04-16T16:09:51.838Z` via `docs/wiki/Terminal-Bench-Receipt.json`
+- GitHub checks receipt: `2026-04-16T17:54:12.583Z` via `docs/wiki/GitHub-Checks-Receipt.json`
 - Harbor terminal bench soak: `2026-04-16T13:05:24.510Z` via `docs/wiki/Harbor-Terminal-Bench-Soak.json`
 - Q benchmark sweep (60m): `2026-04-15T08:24:47.464Z` via `docs/wiki/Q-Benchmark-Sweep-60m.json`
 
