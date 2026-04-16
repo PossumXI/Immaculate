@@ -37,7 +37,12 @@ export const metadata: Metadata = {
     "healthcare systems",
     "operator-governed AI",
     "mission systems",
-    "evidence-driven AI"
+    "evidence-driven AI",
+    "BridgeBench",
+    "TerminalBench",
+    "RewardKit",
+    "Q benchmark",
+    "Harbor benchmark"
   ],
   authors: [{ name: "Arobi Technology Alliance" }],
   creator: "Arobi Technology Alliance",

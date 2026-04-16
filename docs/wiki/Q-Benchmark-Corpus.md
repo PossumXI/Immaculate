@@ -3,18 +3,18 @@
 This page is generated from the tracked Q benchmark/report surfaces.
 It records the benchmark-derived corpus currently attached to Q. It is not a readiness gate and it does not replace the strict failure-only Q-Failure-Corpus surface.
 
-- Generated: `2026-04-15T19:49:11Z`
-- Release: `0.1.0+43c035a`
-- Repo commit: `43c035a`
-- Q training bundle: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e`
-- Records: `57`
+- Generated: `2026-04-16T00:02:26Z`
+- Release: `0.1.0+a252873`
+- Repo commit: `a252873`
+- Q training bundle: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v3-a252873-f274e8c3`
+- Records: `56`
 - Row type: `decision_triplet`
 - JSONL: `.training-output/q/q-benchmark-corpus.jsonl`
 
 ## Sources
 
 - model-comparison: `4` via `docs/wiki/Model-Benchmark-Comparison.json`
-- bridgebench: `4` via `docs/wiki/BridgeBench.json`
+- bridgebench: `3` via `docs/wiki/BridgeBench.json`
 - harbor-terminal-bench: `2` via `docs/wiki/Harbor-Terminal-Bench.json`
 - bridgebench-soak: `1` via `docs/wiki/BridgeBench-Soak.json`
 - harbor-terminal-bench-soak: `46` via `docs/wiki/Harbor-Terminal-Bench-Soak.json`

@@ -15,6 +15,25 @@ const sectors = [
   }
 ];
 
+const proofCards = [
+  {
+    label: "BridgeBench",
+    body: "3 of 4 parsed clean. 1 timeout surfaced."
+  },
+  {
+    label: "TerminalBench",
+    body: "Harbor task lane held 1.000 and 1.000."
+  },
+  {
+    label: "30m Soak",
+    body: "1270.54 events per second. 2 integrity flags."
+  },
+  {
+    label: "Training",
+    body: "bench-v3 lock. 1069 rows. Q plus Immaculate."
+  }
+];
+
 export function LandingPage() {
   return (
     <main className="landing">
@@ -50,14 +69,15 @@ export function LandingPage() {
 
       <section className="landingHero">
         <div className="landingCopy">
-          <p className="landingEyebrow">INTELLIGENT ORCHESTRATION</p>
+          <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 15</p>
           <h1 className="landingHeadline">Controlled intelligence for critical operations.</h1>
-          <p className="landingLede">Defense and healthcare. Clear control. Trusted action. Real evidence.</p>
+          <p className="landingLede">Defense and healthcare. Evidence before action. Q only. Benchmarked. Locked.</p>
 
           <div className="landingPills">
             <span>Q only</span>
-            <span>Operator-governed</span>
-            <span>Evidence first</span>
+            <span>bench-v3 locked</span>
+            <span>Harbor 1.000 / 1.000</span>
+            <span>30m soak 1270.54/s</span>
           </div>
 
           <div className="landingSectorGrid">
@@ -65,6 +85,15 @@ export function LandingPage() {
               <article key={sector.label} className="landingSectorCard">
                 <p className="landingSectorLabel">{sector.label}</p>
                 <p className="landingSectorBody">{sector.body}</p>
+              </article>
+            ))}
+          </div>
+
+          <div className="landingEvidenceGrid">
+            {proofCards.map((card) => (
+              <article key={card.label} className="landingEvidenceCard">
+                <p className="landingEvidenceLabel">{card.label}</p>
+                <p className="landingEvidenceBody">{card.body}</p>
               </article>
             ))}
           </div>

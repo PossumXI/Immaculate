@@ -6,12 +6,27 @@ This page is the tracked public benchmark surface for Immaculate.
 - Owner: Gaetano Comparcola (PossumX)
 - Role: Program Originator, Systems Architect, and Engineering Lead
 - Website: https://PossumX.dev
-- Updated: 2026-04-15T23:01:11.671463+00:00
+- Updated: 2026-04-16T00:01:09.166759+00:00
 
 Raw benchmark ledgers remain generated runtime artifacts under `benchmarks/` and stay out of git.
 This page only carries the public summary and links for the latest published run per pack.
 
 ## Latest Public Runs By Pack
+
+### Latency Soak (30m)
+
+- Suite: `immaculate-benchmark-2026-04-15T23-30-50-517Z`
+- Generated: `2026-04-15T23:30:50.517Z`
+- Published: `2026-04-16T00:01:09.166729+00:00`
+- Assertions: `115/117` passed
+- Run kind: `benchmark`
+- Integrity: `verified`
+- Recovery mode: `checkpoint`
+- Planned duration: `1800000` ms
+- Wall-clock duration: `1800685.92` ms
+- Hardware: `{"host":"knightly","platform":"win32","arch":"x64","osVersion":"Windows 11 Pro","cpuModel":"AMD Ryzen 7 7735HS with Radeon Graphics","cpuCount":16,"memoryGiB":23.29,"diskKind":"SSD","nodeVersion":"v22.13.1"}`
+- W&B run: not available
+- W&B artifact: `immaculate-immaculate-benchmark-2026-04-15T23-30-50-517Z` (`benchmark-report`)
 
 ### Latency Smoke
 

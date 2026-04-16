@@ -1,10 +1,10 @@
 # Q Failure Corpus
 
-This page is generated from the tracked direct-Q report surfaces. The current live failure count is zero, so this failure-only export is empty. Resolved structured-contract rows are intentionally excluded from this surface.
+This page is generated from the tracked direct-Q report surfaces. It turns current failures into eval seeds first and keeps them separate from the resolved-success training path.
 
-- Generated: 2026-04-15T19:49:11Z
-- Records: `0`
-- Eval seeds: `0`
-- Resolved successes excluded: `8`
-- Failure classes: `{}`
+- Generated: 2026-04-16T00:02:26Z
+- Records: `1`
+- Eval seeds: `1`
+- Resolved successes excluded: `7`
+- Failure classes: `{"transport_timeout": 1}`
 - JSONL: `.training-output/q/q-failure-corpus.jsonl`

@@ -1,9 +1,11 @@
 {
-  "generatedAt": "2026-04-15T19:49:11Z",
-  "recordCount": 0,
-  "evalSeedCount": 0,
-  "resolvedSuccessCount": 8,
-  "failureClassCounts": {},
+  "generatedAt": "2026-04-16T00:02:26Z",
+  "recordCount": 1,
+  "evalSeedCount": 1,
+  "resolvedSuccessCount": 7,
+  "failureClassCounts": {
+    "transport_timeout": 1
+  },
   "sources": {
     "modelComparison": "Model-Benchmark-Comparison.json",
     "bridgeBench": "BridgeBench.json"

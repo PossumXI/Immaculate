@@ -1,41 +1,47 @@
 {
-  "generatedAt": "2026-04-15T02:27:36.196Z",
+  "generatedAt": "2026-04-15T23:28:51.784Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "194a8fc18d1f5e54a2f88108827bbe632cd791c6",
-    "gitShortSha": "194a8fc",
+    "gitSha": "a252873d15b3265e2ee38c22c5907612487722fa",
+    "gitShortSha": "a252873",
     "gitBranch": "detached",
-    "buildId": "0.1.0+194a8fc",
+    "buildId": "0.1.0+a252873",
     "q": {
       "alias": "Q",
       "providerModel": "Q",
       "truthfulLabel": "Q",
       "trainingLock": {
-        "generatedAt": "2026-04-14T15:26:05Z",
+        "generatedAt": "2026-04-15T12:25:00Z",
         "lockVersion": 1,
-        "bundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5",
-        "runName": "q-defsec-code-longctx-cur-fnv1a-8f551a5c",
+        "bundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e",
+        "runName": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2",
         "aliasName": "Q",
-        "trainDatasetPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c.jsonl",
-        "trainDatasetSha256": "5c329cc58772a0dc52e12dafcc421caa5458c6a7c37b96f2970d8a04e937c64f",
-        "trainDatasetRowCount": 1013,
-        "mixManifestPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c.manifest.json",
-        "mixManifestSha256": "3f2210e752c4407ab8baf87fbd686e40ef17b1571e87811bc04b92199d080ec7",
-        "curationRunPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\training-data\\runs\\cur-fnv1a-8f551a5c\\run.json",
+        "trainDatasetPath": ".training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c-bench-v2.jsonl",
+        "trainDatasetSha256": "6207dd5ea8c567b6b38d53089aa88d50c1760d4491f3fee9fa9816a9ada5c9d8",
+        "trainDatasetRowCount": 1070,
+        "mixManifestPath": ".training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c-bench-v2.manifest.json",
+        "mixManifestSha256": "bcb246fa22d73970adeaf5d44d0aacc5e45d06c22615a09e859e0a070ea8db34",
+        "mixSupplementalCount": 3,
+        "mixSupplementalPaths": [
+          "training/q/bridgebench_seed.json",
+          "training/q/coding_long_context_seed.json",
+          ".training-output/q/q-benchmark-corpus.jsonl"
+        ],
+        "curationRunPath": ".training-output/training-data/runs/cur-fnv1a-8f551a5c/run.json",
         "curationRunId": "cur-fnv1a-8f551a5c",
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-14T21:35:43Z",
-        "sessionId": "q-hybrid-cur-fnv1a-8f551a5c",
-        "sessionPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/hybrid-session.json",
-        "localStatus": "ready",
+        "generatedAt": "2026-04-15T23:15:16Z",
+        "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.json",
+        "localStatus": "completed",
         "cloudStatus": "not-configured",
-        "cloudProvider": "oci",
-        "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5",
-        "immaculateBundleId": "immaculate-orchestration-36fc9bb-4c759c95"
+        "cloudProvider": "hf_jobs",
+        "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e",
+        "immaculateBundleId": "immaculate-orchestration-a252873-3dd4365f"
       }
     }
   },
@@ -46,28 +52,28 @@
       "label": "Q structured contract",
       "oracle": {
         "jobPath": ".runtime/harbor-custom/harbor-q-oracle-v7",
-        "startedAt": "2026-04-14T15:01:23.468153",
-        "finishedAt": "2026-04-14T15:01:42.336525",
-        "durationSec": 18.87,
+        "startedAt": "2026-04-15T19:26:47.438891",
+        "finishedAt": "2026-04-15T19:27:03.025567",
+        "durationSec": 15.59,
         "agent": "oracle",
         "score": 1,
         "trials": 1,
         "errors": 0,
-        "trialId": "q-structured-contract__iTrY855",
+        "trialId": "q-structured-contract__FGrCSyJ",
         "reward": {
           "reward": 1
         }
       },
       "qGateway": {
         "jobPath": ".runtime/harbor-custom/harbor-q-agent-custom-v5",
-        "startedAt": "2026-04-14T15:57:57.433088",
-        "finishedAt": "2026-04-14T15:58:34.637955",
-        "durationSec": 37.2,
+        "startedAt": "2026-04-15T19:27:25.787183",
+        "finishedAt": "2026-04-15T19:27:54.405036",
+        "durationSec": 28.62,
         "agent": "q-gateway-agent",
         "score": 1,
         "trials": 1,
         "errors": 0,
-        "trialId": "q-structured-contract__Ph4yHXo",
+        "trialId": "q-structured-contract__FkCu6ob",
         "reward": {
           "reward": 1
         },
@@ -83,28 +89,28 @@
       "label": "Immaculate bridge fail-closed",
       "oracle": {
         "jobPath": ".runtime/harbor-custom/harbor-immaculate-oracle-v7",
-        "startedAt": "2026-04-14T15:01:23.132029",
-        "finishedAt": "2026-04-14T15:01:42.719378",
-        "durationSec": 19.59,
+        "startedAt": "2026-04-15T19:27:25.799380",
+        "finishedAt": "2026-04-15T19:27:45.080054",
+        "durationSec": 19.28,
         "agent": "oracle",
         "score": 1,
         "trials": 1,
         "errors": 0,
-        "trialId": "immaculate-bridge-fail-closed__yHCzLrU",
+        "trialId": "immaculate-bridge-fail-closed__H678W7K",
         "reward": {
           "reward": 1
         }
       },
       "qGateway": {
         "jobPath": ".runtime/harbor-custom/harbor-immaculate-agent-custom-v1",
-        "startedAt": "2026-04-14T16:00:11.807130",
-        "finishedAt": "2026-04-14T16:00:42.153857",
-        "durationSec": 30.35,
+        "startedAt": "2026-04-15T19:28:10.854676",
+        "finishedAt": "2026-04-15T19:28:35.752046",
+        "durationSec": 24.9,
         "agent": "q-gateway-agent",
         "score": 1,
         "trials": 1,
         "errors": 0,
-        "trialId": "immaculate-bridge-fail-closed__gc7r4xG",
+        "trialId": "immaculate-bridge-fail-closed__gQa4WCv",
         "reward": {
           "reward": 1
         },
@@ -116,37 +122,6 @@
       }
     }
   ],
-  "llmJudge": {
-    "attempts": [
-      {
-        "status": "failed",
-        "provider": "openai/Q via Q gateway",
-        "summary": "RewardKit judge reached the repaired Q gateway but returned malformed non-schema JSON, so the score was not accepted.",
-        "durationSec": 667.1,
-        "error": "JSONDecodeError while parsing judge response under LITELLM_DROP_PARAMS=1",
-        "id": "q-gateway-openai"
-      }
-    ],
-    "generatedAt": "2026-04-14T20:21:01.8364655Z"
-  },
-  "transportFix": {
-    "directOllamaSuccess": {
-      "summary": "Direct Ollama /api/chat call returned a valid ROUTE/REASON/COMMIT response.",
-      "latencyMs": 412787.48,
-      "status": "passed"
-    },
-    "generatedAt": "2026-04-14T20:21:01.8364600Z",
-    "preFixGatewayFailure": {
-      "summary": "Structured Q gateway request failed around the 300-second mark with fetch failed.",
-      "latencyMs": 300678,
-      "status": "failed"
-    },
-    "postFixGatewaySuccess": {
-      "summary": "The same structured prompt succeeded through the repaired Q gateway after moving off Node fetch to explicit http/https transport and raising the timeout budget.",
-      "latencyMs": 8029.01,
-      "status": "passed"
-    }
-  },
   "output": {
     "jsonPath": "docs\\wiki\\Harbor-Terminal-Bench.json",
     "markdownPath": "docs\\wiki\\Harbor-Terminal-Bench.md"

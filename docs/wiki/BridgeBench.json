@@ -1,43 +1,49 @@
 {
-  "generatedAt": "2026-04-15T02:35:08.392Z",
+  "generatedAt": "2026-04-15T23:26:02.954Z",
   "modelLaneSurface": "direct-q-structured-contract",
   "ollamaBaseUrl": "http://127.0.0.1:11434",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "194a8fc18d1f5e54a2f88108827bbe632cd791c6",
-    "gitShortSha": "194a8fc",
+    "gitSha": "a252873d15b3265e2ee38c22c5907612487722fa",
+    "gitShortSha": "a252873",
     "gitBranch": "detached",
-    "buildId": "0.1.0+194a8fc",
+    "buildId": "0.1.0+a252873",
     "q": {
       "alias": "Q",
       "providerModel": "Q",
       "truthfulLabel": "Q",
       "trainingLock": {
-        "generatedAt": "2026-04-14T15:26:05Z",
+        "generatedAt": "2026-04-15T12:25:00Z",
         "lockVersion": 1,
-        "bundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5",
-        "runName": "q-defsec-code-longctx-cur-fnv1a-8f551a5c",
+        "bundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e",
+        "runName": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2",
         "aliasName": "Q",
-        "trainDatasetPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c.jsonl",
-        "trainDatasetSha256": "5c329cc58772a0dc52e12dafcc421caa5458c6a7c37b96f2970d8a04e937c64f",
-        "trainDatasetRowCount": 1013,
-        "mixManifestPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c.manifest.json",
-        "mixManifestSha256": "3f2210e752c4407ab8baf87fbd686e40ef17b1571e87811bc04b92199d080ec7",
-        "curationRunPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\training-data\\runs\\cur-fnv1a-8f551a5c\\run.json",
+        "trainDatasetPath": ".training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c-bench-v2.jsonl",
+        "trainDatasetSha256": "6207dd5ea8c567b6b38d53089aa88d50c1760d4491f3fee9fa9816a9ada5c9d8",
+        "trainDatasetRowCount": 1070,
+        "mixManifestPath": ".training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c-bench-v2.manifest.json",
+        "mixManifestSha256": "bcb246fa22d73970adeaf5d44d0aacc5e45d06c22615a09e859e0a070ea8db34",
+        "mixSupplementalCount": 3,
+        "mixSupplementalPaths": [
+          "training/q/bridgebench_seed.json",
+          "training/q/coding_long_context_seed.json",
+          ".training-output/q/q-benchmark-corpus.jsonl"
+        ],
+        "curationRunPath": ".training-output/training-data/runs/cur-fnv1a-8f551a5c/run.json",
         "curationRunId": "cur-fnv1a-8f551a5c",
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-15T02:32:43Z",
-        "sessionId": "q-hybrid-cur-fnv1a-8f551a5c",
-        "sessionPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/hybrid-session.json",
-        "localStatus": "ready",
+        "generatedAt": "2026-04-15T23:15:16Z",
+        "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.json",
+        "localStatus": "completed",
         "cloudStatus": "not-configured",
-        "cloudProvider": "oci",
-        "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5",
-        "immaculateBundleId": "immaculate-orchestration-194a8fc-4ec92803"
+        "cloudProvider": "hf_jobs",
+        "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e",
+        "immaculateBundleId": "immaculate-orchestration-a252873-3dd4365f"
       }
     }
   },
@@ -55,76 +61,74 @@
   "models": [
     {
       "requestedModel": "Q",
-      "actualModel": "Q",
+      "actualModel": "q:latest",
       "truthfulLabel": "Q",
       "vendor": "Immaculate",
       "taskCount": 4,
-      "parseSuccessCount": 4,
-      "parseSuccessRate": 1,
-      "averageLatencyMs": 13391.85,
-      "p95LatencyMs": 16481.55,
+      "parseSuccessCount": 3,
+      "parseSuccessRate": 0.75,
+      "averageLatencyMs": 91156.71,
+      "p95LatencyMs": 180039,
       "tasks": [
         {
           "scenarioId": "bridge-ack-fail-closed",
           "label": "Bridge ACK fail-closed",
-          "latencyMs": 16481.55,
-          "wallLatencyMs": 16493.02,
-          "parseSuccess": true,
-          "structuredFieldCount": 3,
-          "status": "completed",
+          "latencyMs": 180039,
+          "wallLatencyMs": 180042.66,
+          "parseSuccess": false,
+          "structuredFieldCount": 0,
+          "status": "failed",
+          "failureClass": "transport_timeout",
           "thinkingDetected": false,
-          "routeSuggestion": "Prioritize safe state stabilization by acknowledging the late ACK event.",
-          "reasonSummary": "The late ACK suggests a transient communication failure requiring cautious handling.",
-          "commitStatement": "Proceed with a controlled, low-risk pass to confirm system stability.",
-          "responsePreview": "ROUTE: Prioritize safe state stabilization by acknowledging the late ACK event. REASON: The late ACK suggests a transient communication failure requiring cautious handling. COMMIT: Proceed with a controlled, low-risk pass to confirm system stability."
+          "responsePreview": "Ollama request timed out after 180000 ms."
         },
         {
           "scenarioId": "nonce-forgery-response",
           "label": "ACK nonce forgery response",
-          "latencyMs": 11622.1,
-          "wallLatencyMs": 11628.01,
+          "latencyMs": 146265.05,
+          "wallLatencyMs": 146284.25,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
-          "routeSuggestion": "Immediately isolate the compromised bridge and enforce nonce validation checks.",
-          "reasonSummary": "The forged ACK indicates a potential replay attack requiring immediate control plane action.",
-          "commitStatement": "Initiate emergency protocol to stabilize the orchestration layer's integrity now.",
-          "responsePreview": "ROUTE: Immediately isolate the compromised bridge and enforce nonce validation checks. REASON: The forged ACK indicates a potential replay attack requiring immediate control plane action. COMMIT: Initiate emergency protocol to stabilize the orchestration layer's integrity now."
+          "routeSuggestion": "Immediately isolate the compromised bridge and halt all related transaction processing.",
+          "reasonSummary": "The forged ACK with an incorrect nonce indicates a critical control-plane breach.",
+          "commitStatement": "Enforce a temporary network quarantine until the source of the replay attack is verified.",
+          "responsePreview": "ROUTE: Immediately isolate the compromised bridge and halt all related transaction processing. REASON: The forged ACK with an incorrect nonce indicates a critical control-plane breach. COMMIT: Enforce a temporary network quarantine until the source of the replay attack is verifi…"
         },
         {
           "scenarioId": "public-q-rate-limit",
           "label": "Public Q edge throttling",
-          "latencyMs": 14370.22,
-          "wallLatencyMs": 14377.73,
+          "latencyMs": 21523.64,
+          "wallLatencyMs": 21535.43,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
           "routeSuggestion": "Throttle public API access immediately while maintaining private plane stability.",
           "reasonSummary": "Quota bursts require targeted rate limiting, not system-wide shutdown.",
-          "commitStatement": "Implement temporary public API throttling and monitor private plane metrics closely.",
-          "responsePreview": "ROUTE: Throttle public API access immediately while maintaining private plane stability. REASON: Quota bursts require targeted rate limiting, not system-wide shutdown. COMMIT: Implement temporary public API throttling and monitor private plane metrics closely."
+          "commitStatement": "Implement temporary public API rate limiting to preserve core functionality.",
+          "responsePreview": "ROUTE: Throttle public API access immediately while maintaining private plane stability. REASON: Quota bursts require targeted rate limiting, not system-wide shutdown. COMMIT: Implement temporary public API rate limiting to preserve core functionality."
         },
         {
           "scenarioId": "bridge-continuity-routing",
           "label": "Bridge continuity routing",
-          "latencyMs": 11093.51,
-          "wallLatencyMs": 11098.96,
+          "latencyMs": 16799.13,
+          "wallLatencyMs": 16803.89,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
-          "routeSuggestion": "Prioritize stabilizing the websocket bridge while maintaining HTTP/2 operations.",
-          "reasonSummary": "Mixed health requires immediate focus on the degraded websocket component.",
-          "commitStatement": "Execute targeted diagnostics on the websocket bridge connection immediately.",
-          "responsePreview": "ROUTE: Prioritize stabilizing the websocket bridge while maintaining HTTP/2 operations. REASON: Mixed health requires immediate focus on the degraded websocket component. COMMIT: Execute targeted diagnostics on the websocket bridge connection immediately."
+          "routeSuggestion": "Prioritize stabilizing the websocket bridge while leveraging the healthy HTTP/2 path.",
+          "reasonSummary": "Elevated governance pressure demands a cautious, verifiable, and stable outward communication path.",
+          "commitStatement": "Execute immediate diagnostics on the websocket bridge degradation point now.",
+          "responsePreview": "ROUTE: Prioritize stabilizing the websocket bridge while leveraging the healthy HTTP/2 path. REASON: Elevated governance pressure demands a cautious, verifiable, and stable outward communication path. COMMIT: Execute immediate diagnostics on the websocket bridge degradation poin…"
         }
       ]
     }
   ],
   "bridgeRuntime": {
-    "suiteId": "immaculate-benchmark-2026-04-15T02-35-05-518Z",
+    "suiteId": "immaculate-benchmark-2026-04-15T23-25-54-500Z",
     "packId": "substrate-readiness",
     "failedAssertions": 0,
     "selectedAssertions": [
@@ -165,7 +169,7 @@
         "label": "Supervised serial transport registration exposes vendor/device identity and heartbeat policy",
         "status": "pass",
         "target": "registered serial-json transport with vendor/model and heartbeat policy",
-        "actual": "atx-fnv1a-75dc385f:http2-json:immaculate-labs:healthy, atx-fnv1a-4d430c75:serial-json:immaculate-labs:healthy, atx-fnv1a-097e7223:udp-osc:generic:healthy",
+        "actual": "atx-fnv1a-a0bad172:http2-json:immaculate-labs:healthy, atx-fnv1a-95cdcdba:serial-json:immaculate-labs:healthy, atx-fnv1a-5799a0c4:udp-osc:generic:healthy",
         "detail": "vendor/device lanes should be durable registry entries with explicit supervision policy, not anonymous direct writes"
       },
       {
@@ -205,7 +209,7 @@
         "label": "HTTP/2 direct transport registration exposes a supervised RPC-class device endpoint",
         "status": "pass",
         "target": "registered http2-json transport with vendor/model and heartbeat policy",
-        "actual": "atx-fnv1a-75dc385f:http2-json:immaculate-labs:haptic-rpc-s2:20/5000:healthy, atx-fnv1a-4d430c75:serial-json:immaculate-labs:haptic-bridge-s1:20/5000:healthy, atx-fnv1a-097e7223:udp-osc:generic:udp-osc:5000/15000:healthy",
+        "actual": "atx-fnv1a-a0bad172:http2-json:immaculate-labs:haptic-rpc-s2:20/5000:healthy, atx-fnv1a-95cdcdba:serial-json:immaculate-labs:haptic-bridge-s1:20/5000:healthy, atx-fnv1a-5799a0c4:udp-osc:generic:udp-osc:5000/15000:healthy",
         "detail": "the next direct device lane should be a typed RPC-class endpoint, not just another file or datagram bridge"
       },
       {

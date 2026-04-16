@@ -7,6 +7,7 @@
     "benchmark": "tsx src/benchmark-cli.ts",
     "benchmark:durability:torture": "tsx src/benchmark-cli.ts --pack=durability-torture",
     "benchmark:latency:60s": "tsx src/benchmark-cli.ts --pack=latency-benchmark-60s",
+    "benchmark:soak:30m": "tsx src/benchmark-cli.ts --pack=latency-soak-30m",
     "benchmark:gate": "tsx src/benchmark-gate-cli.ts",
     "benchmark:gate:all": "tsx src/benchmark-gate-cli.ts --all",
     "benchmark:harbor:report": "tsx src/harbor-benchmark-report.ts",

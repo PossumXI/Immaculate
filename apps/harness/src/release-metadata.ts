@@ -115,6 +115,28 @@ type QHybridTrainingSessionFile = {
   };
 };
 
+type QHybridTrainingWikiFile = {
+  generatedAt?: string;
+  sessionId?: string;
+  manifestPath?: string;
+  q?: {
+    trainingBundleId?: string;
+  };
+  immaculate?: {
+    bundleId?: string;
+  };
+  doctor?: {
+    local?: {
+      ready?: boolean;
+      mode?: string;
+    };
+    cloud?: {
+      ready?: boolean;
+      provider?: string;
+    };
+  };
+};
+
 async function readJsonFile<T>(filePath: string): Promise<T | undefined> {
   try {
     const payload = await readFile(filePath, "utf8");
@@ -208,6 +230,25 @@ async function readTrainingLockSummary(): Promise<QTrainingLockSummary | undefin
 }
 
 async function readHybridSessionSummary(): Promise<QHybridTrainingSessionSummary | undefined> {
+  const wikiPath = path.join(REPO_ROOT, "docs", "wiki", "Q-Hybrid-Training.json");
+  const wikiPayload = existsSync(wikiPath) ? await readJsonFile<QHybridTrainingWikiFile>(wikiPath) : undefined;
+  if (wikiPayload?.sessionId) {
+    return {
+      generatedAt: wikiPayload.generatedAt,
+      sessionId: wikiPayload.sessionId,
+      sessionPath:
+        normalizeReportedPath(wikiPayload.manifestPath)?.replace(/\.manifest\.json$/u, ".json") ||
+        path.relative(REPO_ROOT, wikiPath).replaceAll("\\", "/"),
+      localStatus: wikiPayload.doctor?.local?.ready
+        ? wikiPayload.doctor.local.mode || "ready"
+        : "failed",
+      cloudStatus: wikiPayload.doctor?.cloud?.ready ? "ready" : "not-configured",
+      cloudProvider: wikiPayload.doctor?.cloud?.provider,
+      trainingBundleId: wikiPayload.q?.trainingBundleId,
+      immaculateBundleId: wikiPayload.immaculate?.bundleId
+    };
+  }
+
   if (!existsSync(Q_LATEST_HYBRID_SESSION_PATH)) {
     return undefined;
   }
@@ -218,7 +259,8 @@ async function readHybridSessionSummary(): Promise<QHybridTrainingSessionSummary
   return {
     generatedAt: payload.generatedAt,
     sessionId: payload.sessionId,
-    sessionPath: payload.output?.sessionJsonPath || path.relative(REPO_ROOT, Q_LATEST_HYBRID_SESSION_PATH).replaceAll("\\", "/"),
+    sessionPath:
+      payload.output?.sessionJsonPath || path.relative(REPO_ROOT, Q_LATEST_HYBRID_SESSION_PATH).replaceAll("\\", "/"),
     localStatus: payload.lanes?.local?.status,
     cloudStatus: payload.lanes?.cloud?.status,
     cloudProvider: payload.lanes?.cloud?.provider,

@@ -258,7 +258,7 @@ a {
 
 .landingSectorGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
   margin-top: 10px;
 }
@@ -284,6 +284,39 @@ a {
   max-width: 11ch;
   font-size: 1.1rem;
   line-height: 1.2;
+}
+
+.landingEvidenceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.landingEvidenceCard {
+  padding: 18px;
+  min-height: 124px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.015)),
+    rgba(7, 16, 25, 0.74);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.24);
+}
+
+.landingEvidenceLabel {
+  color: var(--cool);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.landingEvidenceBody {
+  max-width: 20ch;
+  color: #edf7ff;
+  font-size: 1rem;
+  line-height: 1.35;
 }
 
 .landingVisual {
@@ -395,6 +428,10 @@ a {
   }
 
   .landingSectorGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .landingEvidenceGrid {
     grid-template-columns: 1fr;
   }
 

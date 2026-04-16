@@ -18,6 +18,7 @@
     "benchmark:harbor:soak": "npm run benchmark:harbor:soak -w @immaculate/harness",
     "benchmark:q:sweep:report": "npm run benchmark:q:sweep:report -w @immaculate/harness",
     "benchmark:publish:wandb": "npm run benchmark:publish:wandb -w @immaculate/harness",
+    "benchmark:soak:30m": "npm run benchmark -w @immaculate/harness -- --pack=latency-soak-30m",
     "benchmark:soak:60m": "npm run benchmark -w @immaculate/harness -- --pack=latency-soak-60m",
     "benchmark:temporal": "npm run benchmark -w @immaculate/harness -- --pack=temporal-baseline",
     "benchmark:export:wandb": "npm run benchmark:export:wandb -w @immaculate/harness",

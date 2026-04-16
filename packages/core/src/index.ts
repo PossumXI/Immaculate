@@ -163,6 +163,7 @@ export const benchmarkPackIds = [
   "durability-torture",
   "latency-soak",
   "latency-benchmark-60s",
+  "latency-soak-30m",
   "latency-soak-60m",
   "neurodata-external",
   "temporal-baseline"

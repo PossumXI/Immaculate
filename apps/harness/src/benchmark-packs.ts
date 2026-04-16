@@ -110,6 +110,24 @@ export const benchmarkPacks: BenchmarkPack[] = [
     percentRegressionTolerance: 5
   },
   {
+    id: "latency-soak-30m",
+    label: "Latency Soak (30m)",
+    description:
+      "Paced 30-minute heavy-load soak lane for sustained latency percentiles, event throughput, and durability under real wall-clock pressure.",
+    tickIntervalMs: 20,
+    maxTicks: 90000,
+    ciEligible: false,
+    completionStrategy: "full-duration",
+    realTimePacing: true,
+    persistEveryTicks: 50,
+    liveFramesPerTick: 12,
+    targetMeasuredEventThroughput: 1000,
+    reflexP95MaxMs: 100,
+    cognitiveP95MaxMs: 250,
+    maxRegressedSeries: 0,
+    percentRegressionTolerance: 5
+  },
+  {
     id: "latency-soak-60m",
     label: "Latency Soak (60m)",
     description:
