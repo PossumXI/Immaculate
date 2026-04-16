@@ -28,9 +28,15 @@ Implemented in code:
   - per-plan `workerReliabilityFloor`
   - ready/busy/degraded layer counts in the schedule ledger
 - [apps/harness/src/server.ts](/C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway-push-oci-advisor/apps/harness/src/server.ts)
+  - a shared work governor now gates benchmark and cognition admission before the expensive work fans out
+  - benchmark submission now fail-closes when the benchmark backlog is already saturated instead of quietly stacking more queued work
   - worker reservation now consumes the schedule governor state
   - swarm and single-layer reservations pass a reliability floor and required healthy-worker count
   - latency limits tighten automatically under elevated and critical backlog
+- [apps/harness/src/work-governor.ts](/C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway-push-oci-advisor/apps/harness/src/work-governor.ts)
+  - explicit weighted admission spans both the benchmark and cognition lanes
+  - lane-specific queue caps now reject overload early instead of letting it age into timeout-only failure
+  - the runtime now reports live `activeWeight`, `queueDepth`, and `queuedWeight` per lane
 - [apps/harness/src/workers.ts](/C:/Users/Knight/Desktop/Immaculate/Immaculate-q-gateway-push-oci-advisor/apps/harness/src/workers.ts)
   - assignment now fail-closes when there are not enough healthy workers for the requested batch
   - assignment now fail-closes when the winning worker does not clear the schedule’s reliability floor
@@ -50,6 +56,26 @@ The guiding model for this phase is simple:
 - fail-closed worker reservation when reliability falls below the floor
 
 This is the direct bridge from the stronger Apex scheduler/resource patterns into Immaculate’s current harness.
+
+## Operator Surface
+
+The live admission surface is now visible without reading the code:
+
+- `GET /api/health`
+  - includes the current `workGovernor` snapshot
+- `GET /api/work-governor`
+  - exposes the same snapshot directly for operator polling and dashboards
+
+The most important fields are:
+
+- `activeWeight`
+  - how much admitted work is currently executing
+- `queueDepth`
+  - how many requests are waiting for admission
+- `queuedWeight`
+  - the queued work pressure, not just the raw item count
+- per-lane `maxQueueDepth`
+  - the hard admission ceiling before the harness rejects more work
 
 ## What Still Needs To Land
 

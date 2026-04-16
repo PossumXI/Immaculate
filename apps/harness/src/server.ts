@@ -106,6 +106,7 @@ import {
   type IntelligenceWorkerAssignment,
   type IntelligenceWorkerExecutionProfile
 } from "./workers.js";
+import { createWorkGovernor, type WorkGovernorGrant } from "./work-governor.js";
 import { hashValue, resolvePathWithinAllowedRoot } from "./utils.js";
 import {
   deriveVisibilityScope,
@@ -217,6 +218,73 @@ const BENCHMARK_WORKER_PATH = path.join(
 );
 const benchmarkJobs = new Map<string, BenchmarkJob>();
 const MAX_BENCHMARK_JOBS = 12;
+const workGovernor = createWorkGovernor({
+  maxActiveWeight: Math.max(1, Number(process.env.IMMACULATE_WORK_GOVERNOR_MAX_WEIGHT ?? 6) || 6),
+  maxQueueDepth: Math.max(1, Number(process.env.IMMACULATE_WORK_GOVERNOR_MAX_QUEUE_DEPTH ?? 12) || 12),
+  lanes: {
+    benchmark: {
+      maxActiveWeight:
+        Math.max(1, Number(process.env.IMMACULATE_WORK_GOVERNOR_BENCHMARK_MAX_WEIGHT ?? 3) || 3),
+      maxQueueDepth:
+        Math.max(1, Number(process.env.IMMACULATE_WORK_GOVERNOR_BENCHMARK_MAX_QUEUE_DEPTH ?? 4) || 4)
+    },
+    cognitive: {
+      maxActiveWeight:
+        Math.max(1, Number(process.env.IMMACULATE_WORK_GOVERNOR_COGNITIVE_MAX_WEIGHT ?? 5) || 5),
+      maxQueueDepth:
+        Math.max(1, Number(process.env.IMMACULATE_WORK_GOVERNOR_COGNITIVE_MAX_QUEUE_DEPTH ?? 8) || 8)
+    }
+  }
+});
+
+function benchmarkGovernorWeight(packId?: BenchmarkPackId): number {
+  if (packId === "latency-soak-60m") {
+    return 3;
+  }
+  if (packId === "latency-soak-30m" || packId === "durability-torture") {
+    return 2;
+  }
+  return 1;
+}
+
+function benchmarkGovernorPriority(packId?: BenchmarkPackId): "low" | "normal" | "high" {
+  if (packId === "durability-torture") {
+    return "high";
+  }
+  if (packId === "latency-soak-30m" || packId === "latency-soak-60m") {
+    return "low";
+  }
+  return "normal";
+}
+
+function scheduleGovernorPriority(
+  schedule: ReturnType<typeof engine.getSnapshot>["executionSchedules"][number]
+): "critical" | "high" | "normal" {
+  if (schedule.backlogPressure === "critical" || schedule.mode === "guarded-swarm") {
+    return "critical";
+  }
+  if (schedule.executionTopology === "parallel" || schedule.parallelWidth > 1) {
+    return "high";
+  }
+  return "normal";
+}
+
+function effectiveScheduleParallelWidth(
+  schedule: ReturnType<typeof engine.getSnapshot>["executionSchedules"][number],
+  plannedWidth: number
+): number {
+  const scheduledWidth = (schedule.healthWeightedWidth ?? schedule.parallelWidth) || 1;
+  const baselineWidth = Math.max(1, Math.min(plannedWidth, scheduledWidth));
+  const governorSnapshot = workGovernor.snapshot();
+  const cognitiveLane = governorSnapshot.lanes.cognitive;
+  const laneNearSaturation =
+    cognitiveLane.activeWeight >= Math.max(1, cognitiveLane.maxActiveWeight - 1);
+
+  if (governorSnapshot.queueDepth > 0 || cognitiveLane.queueDepth > 0 || laneNearSaturation) {
+    return Math.max(1, baselineWidth - 1);
+  }
+  return baselineWidth;
+}
 
 const HARNESS_PORT = Number(process.env.IMMACULATE_HARNESS_PORT ?? 8787);
 const HARNESS_HOST = process.env.IMMACULATE_HARNESS_HOST ?? "127.0.0.1";
@@ -1850,6 +1918,12 @@ function trimBenchmarkJobs(): void {
   }
 }
 
+function activeBenchmarkBacklogDepth(): number {
+  return [...benchmarkJobs.values()].filter(
+    (job) => job.status === "queued" || job.status === "running"
+  ).length;
+}
+
 function startBenchmarkJob(options: {
   packId?: BenchmarkPackId;
   publishWandb: boolean;
@@ -1863,97 +1937,128 @@ function startBenchmarkJob(options: {
   };
   benchmarkJobs.set(job.id, job);
   trimBenchmarkJobs();
-
-  benchmarkJobs.set(job.id, {
-    ...job,
-    status: "running",
-    startedAt: new Date().toISOString()
-  });
-
-  const workerArgs: string[] = [];
-  if (options.packId) {
-    workerArgs.push("--packId", options.packId);
-  }
-  if (options.publishWandb) {
-    workerArgs.push("--publishWandb");
-  }
-
-  const isTsRuntime = import.meta.url.endsWith(".ts");
-  const command =
-    isTsRuntime && process.platform === "win32"
-      ? "cmd.exe"
-      : isTsRuntime
-        ? "npx"
-        : process.execPath;
-  const args =
-    isTsRuntime && process.platform === "win32"
-      ? [
-          "/d",
-          "/s",
-          "/c",
-          `npx tsx ${BENCHMARK_WORKER_PATH} ${workerArgs.join(" ")}`
-        ]
-      : isTsRuntime
-        ? ["tsx", BENCHMARK_WORKER_PATH, ...workerArgs]
-        : [BENCHMARK_WORKER_PATH, ...workerArgs];
-
-  const child = spawn(command, args, {
-    cwd: path.resolve(MODULE_ROOT, ".."),
-    env: process.env
-  });
-  let stdout = "";
-  let stderr = "";
-
-  child.stdout.on("data", (chunk: Buffer | string) => {
-    stdout += String(chunk);
-  });
-  child.stderr.on("data", (chunk: Buffer | string) => {
-    stderr += String(chunk);
-  });
-  child.on("error", (error: Error) => {
-    benchmarkJobs.set(job.id, {
-      ...benchmarkJobs.get(job.id)!,
-      status: "failed",
-      error: error.message,
-      completedAt: new Date().toISOString()
-    });
-  });
-  child.on("close", (code) => {
-    if (code !== 0) {
-      benchmarkJobs.set(job.id, {
-        ...benchmarkJobs.get(job.id)!,
-        status: "failed",
-        error:
-          stderr.trim() || stdout.trim() || `Benchmark worker exited with code ${code}.`,
-        completedAt: new Date().toISOString()
-      });
-      return;
-    }
-
+  void (async () => {
+    let grant: WorkGovernorGrant | undefined;
     try {
-      const payload = JSON.parse(stdout) as {
-        benchmark: BenchmarkReport;
-        wandb?: Awaited<ReturnType<typeof publishBenchmarkToWandb>>;
-      };
+      grant = await workGovernor.acquire({
+        lane: "benchmark",
+        priority: benchmarkGovernorPriority(options.packId),
+        weight: benchmarkGovernorWeight(options.packId),
+        maxQueueMs: 30_000,
+        label: options.packId ?? "benchmark"
+      });
       benchmarkJobs.set(job.id, {
         ...benchmarkJobs.get(job.id)!,
-        status: "completed",
-        benchmark: payload.benchmark,
-        wandb: payload.wandb,
-        completedAt: new Date().toISOString()
+        status: "running",
+        startedAt: new Date().toISOString()
+      });
+
+      const workerArgs: string[] = [];
+      if (options.packId) {
+        workerArgs.push("--packId", options.packId);
+      }
+      if (options.publishWandb) {
+        workerArgs.push("--publishWandb");
+      }
+
+      const isTsRuntime = import.meta.url.endsWith(".ts");
+      const command =
+        isTsRuntime && process.platform === "win32"
+          ? "cmd.exe"
+          : isTsRuntime
+            ? "npx"
+            : process.execPath;
+      const args =
+        isTsRuntime && process.platform === "win32"
+          ? [
+              "/d",
+              "/s",
+              "/c",
+              `npx tsx ${BENCHMARK_WORKER_PATH} ${workerArgs.join(" ")}`
+            ]
+          : isTsRuntime
+            ? ["tsx", BENCHMARK_WORKER_PATH, ...workerArgs]
+            : [BENCHMARK_WORKER_PATH, ...workerArgs];
+
+      const child = spawn(command, args, {
+        cwd: path.resolve(MODULE_ROOT, ".."),
+        env: process.env
+      });
+      let stdout = "";
+      let stderr = "";
+      const releaseOnce = (() => {
+        let released = false;
+        return () => {
+          if (released) {
+            return;
+          }
+          released = true;
+          grant?.release();
+        };
+      })();
+
+      child.stdout.on("data", (chunk: Buffer | string) => {
+        stdout += String(chunk);
+      });
+      child.stderr.on("data", (chunk: Buffer | string) => {
+        stderr += String(chunk);
+      });
+      child.on("error", (error: Error) => {
+        releaseOnce();
+        benchmarkJobs.set(job.id, {
+          ...benchmarkJobs.get(job.id)!,
+          status: "failed",
+          error: error.message,
+          completedAt: new Date().toISOString()
+        });
+      });
+      child.on("close", (code) => {
+        releaseOnce();
+        if (code !== 0) {
+          benchmarkJobs.set(job.id, {
+            ...benchmarkJobs.get(job.id)!,
+            status: "failed",
+            error:
+              stderr.trim() || stdout.trim() || `Benchmark worker exited with code ${code}.`,
+            completedAt: new Date().toISOString()
+          });
+          return;
+        }
+
+        try {
+          const payload = JSON.parse(stdout) as {
+            benchmark: BenchmarkReport;
+            wandb?: Awaited<ReturnType<typeof publishBenchmarkToWandb>>;
+          };
+          benchmarkJobs.set(job.id, {
+            ...benchmarkJobs.get(job.id)!,
+            status: "completed",
+            benchmark: payload.benchmark,
+            wandb: payload.wandb,
+            completedAt: new Date().toISOString()
+          });
+        } catch (error) {
+          benchmarkJobs.set(job.id, {
+            ...benchmarkJobs.get(job.id)!,
+            status: "failed",
+            error:
+              error instanceof Error
+                ? error.message
+                : "Unable to parse benchmark worker output.",
+            completedAt: new Date().toISOString()
+          });
+        }
       });
     } catch (error) {
+      grant?.release();
       benchmarkJobs.set(job.id, {
         ...benchmarkJobs.get(job.id)!,
         status: "failed",
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unable to parse benchmark worker output.",
+        error: error instanceof Error ? error.message : "Benchmark governor admission failed.",
         completedAt: new Date().toISOString()
       });
     }
-  });
+  })();
 
   return job;
 }
@@ -2999,70 +3104,162 @@ async function executeCognitiveSchedule(options: {
   const layers: IntelligenceLayer[] = [];
   const turns: ReturnType<typeof engine.getSnapshot>["conversations"][number]["turns"] = [];
   const responses: string[] = [];
+  let conversation: ReturnType<typeof buildConversationRecord> | undefined;
   const baseObjective = options.objective?.trim() || options.schedule.objective;
   let latestSnapshot = phaseSnapshotSchema.parse(engine.getSnapshot());
   const scheduleLayerOrder = new Map(
     options.schedule.layerIds.map((layerId, index) => [layerId, index] as const)
   );
-
-  if (options.schedule.shouldRunCognition && options.schedule.layerRoles.length > 0) {
-    await ensurePreferredIntelligenceLayers(options.schedule.layerRoles);
-    latestSnapshot = phaseSnapshotSchema.parse(engine.getSnapshot());
-  }
-
-  const scheduleLayerIds = new Set(options.schedule.layerIds);
-  const scheduledLayers = latestSnapshot.intelligenceLayers
-    .filter((layer) => layer.status !== "offline")
-    .filter((layer) => scheduleLayerIds.has(layer.id))
-    .sort(
-      (left, right) =>
-        (scheduleLayerOrder.get(left.id) ?? Number.MAX_SAFE_INTEGER) -
-        (scheduleLayerOrder.get(right.id) ?? Number.MAX_SAFE_INTEGER)
-    )
-    .slice(0, options.schedule.layerIds.length > 1 ? options.schedule.layerIds.length : 1);
-  const parallelEligible = isParallelScheduleMode(options.schedule.mode);
-  const guardLayer = scheduledLayers.find((layer) => layer.role === "guard");
-  const nonGuardLayers = scheduledLayers.filter((layer) => layer.role !== "guard");
-  const parallelBatchId =
-    parallelEligible && nonGuardLayers.length > 1
-      ? `swarm-${hashValue(`${options.schedule.id}:${options.sessionId ?? "system"}:${options.schedule.selectedAt}`)}`
-      : undefined;
-  const sharedSwarmContext =
-    parallelBatchId && nonGuardLayers.length > 1
-      ? buildSwarmSharedContext({
-          schedule: options.schedule,
-          objective: baseObjective,
-          layers: nonGuardLayers
+  const governorGrant =
+    options.schedule.layerRoles.length > 0
+      ? await workGovernor.acquire({
+          lane: "cognitive",
+          priority: scheduleGovernorPriority(options.schedule),
+          weight: Math.max(
+            1,
+            Math.min(4, (options.schedule.healthWeightedWidth ?? options.schedule.parallelWidth) || 1)
+          ),
+          maxQueueMs:
+            options.schedule.backlogPressure === "critical"
+              ? 4_000
+              : options.schedule.backlogPressure === "elevated"
+                ? 8_000
+                : 12_000,
+          label: options.schedule.mode
         })
       : undefined;
 
-  if (parallelEligible && nonGuardLayers.length > 1) {
-    const reservedAssignments = await reserveExecutionWorkerBatch({
-      layers: nonGuardLayers,
-      requestedExecutionDecision: options.requestedExecutionDecision,
-      targetPrefix: options.schedule.mode,
-      backlogPressure: options.schedule.backlogPressure,
-      reliabilityFloor: options.schedule.workerReliabilityFloor
-    });
-    const parallelResults = await Promise.all(
-      nonGuardLayers.map(async (layer, index) => {
+  try {
+    if (options.schedule.shouldRunCognition && options.schedule.layerRoles.length > 0) {
+      await ensurePreferredIntelligenceLayers(options.schedule.layerRoles);
+      latestSnapshot = phaseSnapshotSchema.parse(engine.getSnapshot());
+    }
+
+    const scheduleLayerIds = new Set(options.schedule.layerIds);
+    const scheduledLayers = latestSnapshot.intelligenceLayers
+      .filter((layer) => layer.status !== "offline")
+      .filter((layer) => scheduleLayerIds.has(layer.id))
+      .sort(
+        (left, right) =>
+          (scheduleLayerOrder.get(left.id) ?? Number.MAX_SAFE_INTEGER) -
+          (scheduleLayerOrder.get(right.id) ?? Number.MAX_SAFE_INTEGER)
+      )
+      .slice(0, options.schedule.layerIds.length > 1 ? options.schedule.layerIds.length : 1);
+    const parallelEligible = isParallelScheduleMode(options.schedule.mode);
+    const guardLayer = scheduledLayers.find((layer) => layer.role === "guard");
+    const nonGuardLayers = scheduledLayers.filter((layer) => layer.role !== "guard");
+    const admittedParallelWidth = effectiveScheduleParallelWidth(options.schedule, nonGuardLayers.length);
+    const admittedNonGuardLayers = nonGuardLayers.slice(0, admittedParallelWidth);
+    const parallelBatchId =
+      parallelEligible && admittedNonGuardLayers.length > 1
+        ? `swarm-${hashValue(`${options.schedule.id}:${options.sessionId ?? "system"}:${options.schedule.selectedAt}`)}`
+        : undefined;
+    const sharedSwarmContext =
+      parallelBatchId && admittedNonGuardLayers.length > 1
+        ? buildSwarmSharedContext({
+            schedule: options.schedule,
+            objective: baseObjective,
+            layers: admittedNonGuardLayers
+          })
+        : undefined;
+
+    if (parallelEligible && admittedNonGuardLayers.length > 1) {
+      const reservedAssignments = await reserveExecutionWorkerBatch({
+        layers: admittedNonGuardLayers,
+        requestedExecutionDecision: options.requestedExecutionDecision,
+        targetPrefix: options.schedule.mode,
+        backlogPressure: options.schedule.backlogPressure,
+        reliabilityFloor: options.schedule.workerReliabilityFloor
+      });
+      const parallelResults = await Promise.all(
+        admittedNonGuardLayers.map(async (layer, index) => {
+          const prompt = buildConversationObjective({
+            baseObjective,
+            role: layer.role,
+            priorTurns: [],
+            sharedContext: sharedSwarmContext
+          });
+          return executeScheduledCognitivePassWithRetry({
+            layer,
+            objective: prompt.objective,
+            context: prompt.context,
+            consentScope: options.consentScope,
+            sessionId: options.sessionId,
+            assignment: reservedAssignments[index],
+            executionTopology: options.schedule.executionTopology,
+            parallelBatchId,
+            parallelBatchSize: admittedNonGuardLayers.length,
+            parallelPosition: index + 1,
+            reservation: {
+              requestedExecutionDecision: options.requestedExecutionDecision,
+              target: `${options.schedule.mode}:${layer.role}`,
+              maxObservedLatencyMs:
+                options.schedule.backlogPressure === "critical"
+                  ? 120
+                  : options.schedule.backlogPressure === "elevated"
+                    ? 220
+                    : undefined,
+              requiredHealthyWorkerCount: Math.max(1, admittedNonGuardLayers.length - index),
+              backlogPressure: options.schedule.backlogPressure,
+              reliabilityFloor: options.schedule.workerReliabilityFloor,
+              preferredDeviceAffinityTags: [
+                layer.role,
+                ...(options.schedule.mode.includes("swarm") ? ["swarm"] : [])
+              ]
+            }
+          });
+        })
+      );
+
+      const orderedParallelResults = [...parallelResults].sort((left, right) => {
+        return (
+          (scheduleLayerOrder.get(left.layer.id) ?? Number.MAX_SAFE_INTEGER) -
+          (scheduleLayerOrder.get(right.layer.id) ?? Number.MAX_SAFE_INTEGER)
+        );
+      });
+
+      for (const result of orderedParallelResults) {
+        layers.push(result.layer);
+        executions.push(result.execution);
+        responses.push(result.response);
+        turns.push(
+          buildAgentTurn({
+            execution: result.execution,
+            layer: result.layer
+          })
+        );
+        latestSnapshot = result.snapshot;
+      }
+    } else {
+      for (const layer of admittedNonGuardLayers) {
+        const assignment = await reserveExecutionWorker({
+          layer,
+          requestedExecutionDecision: options.requestedExecutionDecision,
+          target: `${options.schedule.mode}:${layer.role}`,
+          requiredHealthyWorkerCount: 1,
+          backlogPressure: options.schedule.backlogPressure,
+          reliabilityFloor: options.schedule.workerReliabilityFloor,
+          maxObservedLatencyMs:
+            options.schedule.backlogPressure === "critical"
+              ? 120
+              : options.schedule.backlogPressure === "elevated"
+                ? 220
+                : undefined
+        });
         const prompt = buildConversationObjective({
           baseObjective,
           role: layer.role,
-          priorTurns: [],
+          priorTurns: turns,
           sharedContext: sharedSwarmContext
         });
-        return executeScheduledCognitivePassWithRetry({
+        const result = await executeScheduledCognitivePassWithRetry({
           layer,
           objective: prompt.objective,
           context: prompt.context,
           consentScope: options.consentScope,
           sessionId: options.sessionId,
-          assignment: reservedAssignments[index],
+          assignment,
           executionTopology: options.schedule.executionTopology,
-          parallelBatchId,
-          parallelBatchSize: nonGuardLayers.length,
-          parallelPosition: index + 1,
           reservation: {
             requestedExecutionDecision: options.requestedExecutionDecision,
             target: `${options.schedule.mode}:${layer.role}`,
@@ -3072,7 +3269,7 @@ async function executeCognitiveSchedule(options: {
                 : options.schedule.backlogPressure === "elevated"
                   ? 220
                   : undefined,
-            requiredHealthyWorkerCount: Math.max(1, nonGuardLayers.length - index),
+            requiredHealthyWorkerCount: 1,
             backlogPressure: options.schedule.backlogPressure,
             reliabilityFloor: options.schedule.workerReliabilityFloor,
             preferredDeviceAffinityTags: [
@@ -3081,34 +3278,25 @@ async function executeCognitiveSchedule(options: {
             ]
           }
         });
-      })
-    );
 
-    const orderedParallelResults = [...parallelResults].sort((left, right) => {
-      return (
-        (scheduleLayerOrder.get(left.layer.id) ?? Number.MAX_SAFE_INTEGER) -
-        (scheduleLayerOrder.get(right.layer.id) ?? Number.MAX_SAFE_INTEGER)
-      );
-    });
-
-    for (const result of orderedParallelResults) {
-      layers.push(result.layer);
-      executions.push(result.execution);
-      responses.push(result.response);
-      turns.push(
-        buildAgentTurn({
-          execution: result.execution,
-          layer: result.layer
-        })
-      );
-      latestSnapshot = result.snapshot;
+        layers.push(result.layer);
+        executions.push(result.execution);
+        responses.push(result.response);
+        turns.push(
+          buildAgentTurn({
+            execution: result.execution,
+            layer: result.layer
+          })
+        );
+        latestSnapshot = result.snapshot;
+      }
     }
-  } else {
-    for (const layer of nonGuardLayers) {
-      const assignment = await reserveExecutionWorker({
-        layer,
+
+    if (guardLayer) {
+      const guardAssignment = await reserveExecutionWorker({
+        layer: guardLayer,
         requestedExecutionDecision: options.requestedExecutionDecision,
-        target: `${options.schedule.mode}:${layer.role}`,
+        target: `${options.schedule.mode}:guard`,
         requiredHealthyWorkerCount: 1,
         backlogPressure: options.schedule.backlogPressure,
         reliabilityFloor: options.schedule.workerReliabilityFloor,
@@ -3121,21 +3309,21 @@ async function executeCognitiveSchedule(options: {
       });
       const prompt = buildConversationObjective({
         baseObjective,
-        role: layer.role,
+        role: guardLayer.role,
         priorTurns: turns,
         sharedContext: sharedSwarmContext
       });
-      const result = await executeScheduledCognitivePassWithRetry({
-        layer,
+      const guardResult = await executeScheduledCognitivePassWithRetry({
+        layer: guardLayer,
         objective: prompt.objective,
         context: prompt.context,
         consentScope: options.consentScope,
         sessionId: options.sessionId,
-        assignment,
+        assignment: guardAssignment,
         executionTopology: options.schedule.executionTopology,
         reservation: {
           requestedExecutionDecision: options.requestedExecutionDecision,
-          target: `${options.schedule.mode}:${layer.role}`,
+          target: `${options.schedule.mode}:guard`,
           maxObservedLatencyMs:
             options.schedule.backlogPressure === "critical"
               ? 120
@@ -3145,99 +3333,41 @@ async function executeCognitiveSchedule(options: {
           requiredHealthyWorkerCount: 1,
           backlogPressure: options.schedule.backlogPressure,
           reliabilityFloor: options.schedule.workerReliabilityFloor,
-          preferredDeviceAffinityTags: [
-            layer.role,
-            ...(options.schedule.mode.includes("swarm") ? ["swarm"] : [])
-          ]
+          preferredDeviceAffinityTags: [guardLayer.role]
         }
       });
 
-      layers.push(result.layer);
-      executions.push(result.execution);
-      responses.push(result.response);
+      layers.push(guardResult.layer);
+      executions.push(guardResult.execution);
+      responses.push(guardResult.response);
       turns.push(
         buildAgentTurn({
-          execution: result.execution,
-          layer: result.layer
+          execution: guardResult.execution,
+          layer: guardResult.layer
         })
       );
-      latestSnapshot = result.snapshot;
+      latestSnapshot = guardResult.snapshot;
     }
-  }
 
-  if (guardLayer) {
-    const guardAssignment = await reserveExecutionWorker({
-      layer: guardLayer,
-      requestedExecutionDecision: options.requestedExecutionDecision,
-      target: `${options.schedule.mode}:guard`,
-      requiredHealthyWorkerCount: 1,
-      backlogPressure: options.schedule.backlogPressure,
-      reliabilityFloor: options.schedule.workerReliabilityFloor,
-      maxObservedLatencyMs:
-        options.schedule.backlogPressure === "critical"
-          ? 120
-          : options.schedule.backlogPressure === "elevated"
-            ? 220
-            : undefined
-    });
-    const prompt = buildConversationObjective({
-      baseObjective,
-      role: guardLayer.role,
-      priorTurns: turns,
-      sharedContext: sharedSwarmContext
-    });
-    const guardResult = await executeScheduledCognitivePassWithRetry({
-      layer: guardLayer,
-      objective: prompt.objective,
-      context: prompt.context,
-      consentScope: options.consentScope,
-      sessionId: options.sessionId,
-      assignment: guardAssignment,
-      executionTopology: options.schedule.executionTopology,
-      reservation: {
-        requestedExecutionDecision: options.requestedExecutionDecision,
-        target: `${options.schedule.mode}:guard`,
-        maxObservedLatencyMs:
-          options.schedule.backlogPressure === "critical"
-            ? 120
-            : options.schedule.backlogPressure === "elevated"
-              ? 220
-              : undefined,
-        requiredHealthyWorkerCount: 1,
-        backlogPressure: options.schedule.backlogPressure,
-        reliabilityFloor: options.schedule.workerReliabilityFloor,
-        preferredDeviceAffinityTags: [guardLayer.role]
-      }
-    });
+    conversation =
+      turns.length > 0
+        ? buildConversationRecord({
+            sessionId: options.sessionId,
+            arbitrationId: options.arbitrationId,
+            schedule: options.schedule,
+            turns
+          })
+        : undefined;
 
-    layers.push(guardResult.layer);
-    executions.push(guardResult.execution);
-    responses.push(guardResult.response);
-    turns.push(
-      buildAgentTurn({
-        execution: guardResult.execution,
-        layer: guardResult.layer
-      })
-    );
-    latestSnapshot = guardResult.snapshot;
-  }
-
-  const conversation =
-    turns.length > 0
-      ? buildConversationRecord({
-          sessionId: options.sessionId,
-          arbitrationId: options.arbitrationId,
-          schedule: options.schedule,
-          turns
-        })
-      : undefined;
-
-  if (conversation) {
-    latestSnapshot = phaseSnapshotSchema.parse(
-      projectPhaseSnapshot(engine.recordConversation(conversation), options.consentScope)
-    );
-    await persistence.persist(engine.getDurableState());
-    emitSnapshot();
+    if (conversation) {
+      latestSnapshot = phaseSnapshotSchema.parse(
+        projectPhaseSnapshot(engine.recordConversation(conversation), options.consentScope)
+      );
+      await persistence.persist(engine.getDurableState());
+      emitSnapshot();
+    }
+  } finally {
+    governorGrant?.release();
   }
 
   return {
@@ -3396,7 +3526,12 @@ app.get("/api/health", async () => ({
   integrityStatus: persistence.getStatus().integrityStatus,
   integrityFindingCount: persistence.getStatus().integrityFindingCount,
   governanceMode: governance.getStatus().mode,
-  governanceDeniedCount: governance.getStatus().deniedCount
+  governanceDeniedCount: governance.getStatus().deniedCount,
+  workGovernor: workGovernor.snapshot()
+}));
+
+app.get("/api/work-governor", async () => ({
+  workGovernor: workGovernor.snapshot()
 }));
 
 app.get("/api/snapshot", async () => ({
@@ -6167,6 +6302,16 @@ app.post("/api/benchmarks/run", async (request, reply) => {
     return {
       error: "invalid_benchmark_pack",
       supported: listBenchmarkPacks().map((pack) => pack.id)
+    };
+  }
+  if (activeBenchmarkBacklogDepth() >= MAX_BENCHMARK_JOBS) {
+    reply.code(429);
+    return {
+      error: "benchmark_queue_full",
+      message: "Benchmark admission blocked because the benchmark backlog is saturated.",
+      activeQueueDepth: activeBenchmarkBacklogDepth(),
+      maxQueueDepth: MAX_BENCHMARK_JOBS,
+      workGovernor: workGovernor.snapshot()
     };
   }
 

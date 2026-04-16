@@ -64,7 +64,7 @@ If you only read one generated page before diving deeper, read [[Release-Surface
 - [[OCI-Region-Capacity]] records the real tenancy-level OCI region subscription attempts and any hard subscribed-region ceiling blocking the next GPU move
 - [[OCI-Q-Training]] tracks the OCI cloud launcher, bundle-staging path, and Vault-oriented training boundary for the Q fine-tune lane
 - [[Product-Release-Plan]] records the smallest truthful product and service packaging plan the repo can ship soon
-- [[Immaculate-Reliability-Plan]] records the current scheduler/resource hardening pass: admission control, backlog-aware width reduction, and health-weighted worker dispatch
+- [[Immaculate-Reliability-Plan]] records the current scheduler/resource hardening pass: shared work-governor admission, backlog-aware width reduction, health-weighted worker dispatch, and the live `/api/work-governor` operator surface
 - [[Model-Benchmark-Comparison]] carries the live direct-Q structured contract benchmark plus the latest orchestrator baseline readout
 - [[BridgeBench]] carries the live bridge/control-plane Q benchmark alongside the real bridge runtime assertions
 - [[BridgeBench-Soak]] carries the repeated one-hour Q-only BridgeBench lane
