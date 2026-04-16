@@ -21,25 +21,26 @@ For each breakthrough, record:
 
 ### 2026-04-16
 
-#### Harbor now measures the real Q lane without leaking the answer key, and the results expose Q's actual weakness instead of flattering it
+#### Harbor now measures the real Q lane against hidden-answer task images, and the post-fix results expose Q's real improvement ceiling
 
 What changed:
-- the repo-local Harbor task pack now hides the gold answer under `/tests/reference.json` instead of leaving `reference.json` in `/app`
+- the repo-local Harbor task pack now measures the real Q lane with RewardKit plus the local Q LLM judge on both structured tasks
+- the lingering `environment/reference.json` copy path is gone, so the published Harbor surface can truthfully claim the answer key is not present under `/app`
 - the Harbor verifier path now runs RewardKit plus the local Q LLM judge by default on both structured tasks
 - the live Q lane now runs through a purpose-built Harbor agent that calls the real Q gateway directly and writes the task artifact into the workspace
-- the repo now publishes those measured Harbor results in `docs/wiki/Harbor-Terminal-Bench.md` and `docs/wiki/Harbor-Terminal-Bench.json`
+- the repo now publishes the hardened-task Harbor results in `docs/wiki/Harbor-Terminal-Bench.md` and `docs/wiki/Harbor-Terminal-Bench.json`
 
 Why it matters:
-- the missed benchmark-integrity bug was that a live agent could read the answer key because the reference sat in the same workspace it was supposed to solve
-- fixing that changed the benchmark from a theater surface into a defensible one: oracle still scores `1.000`, but Q now has to earn its score without peeking
-- the new measured result is more valuable because it is worse: Q passes the structure/programmatic lane strongly while still underperforming on the operator-grade wording and grounding judged against the hidden reference
+- the missed benchmark-integrity bug was that the task image still had a path that could place the answer key inside `/app`, so the publication surface needed one more hardening pass before it was fully defensible
+- removing that last copy path changes the benchmark from a nearly-correct theater surface into a defensible one: oracle still scores `1.000`, and Q now has to earn its score without a co-located answer key
+- the new measured result is more valuable because it is better and still incomplete: Q passes the structure/programmatic lane strongly and improved its LLM-judged wording, but it still underperforms on the tightest operator-grade grounding
 - this is the kind of truth surface that actually helps training, because it tells you what to improve next instead of just proving the parser works
 
 Evidence:
-- `harbor-q-oracle-current` and `harbor-immaculate-oracle-current` both score `1.000` on the current hidden-reference task pack
-- `harbor-q-agent-live2` scores `0.7167` on the Q structured-contract task with `0.9333` programmatic and `0.5000` LLM-judge
-- `harbor-immaculate-agent-live` scores `0.7500` on the Immaculate bridge fail-closed task with `1.0000` programmatic and `0.5000` LLM-judge
-- `docs/wiki/Harbor-Terminal-Bench.md` now records the live jobs, durations, structured responses, and the benchmark truth boundary
+- `harbor-q-oracle-fixed` and `harbor-immaculate-oracle-fixed` both score `1.000` on the hidden-reference task pack
+- `harbor-q-agent-fixed` scores `0.8167` on the Q structured-contract task with `0.9333` programmatic and `0.7000` LLM-judge
+- `harbor-immaculate-agent-fixed` scores `0.8500` on the Immaculate bridge fail-closed task with `1.0000` programmatic and `0.7000` LLM-judge
+- `docs/wiki/Harbor-Terminal-Bench.md` now records the fixed live jobs, durations, structured responses, and the benchmark truth boundary
 
 What this unlocks next:
 - Q fine-tuning can now target the real gap: operator precision and tighter fact-grounding, not just schema compliance

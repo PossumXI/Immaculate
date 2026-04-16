@@ -180,23 +180,31 @@ function firstEvalEntry(result: HarborResultFile): [string, HarborEvalStats] | u
   return entries[0];
 }
 
-function firstTrialId(stats: HarborEvalStats | undefined): string | undefined {
+function requireSingleTrialId(stats: HarborEvalStats | undefined, jobDir: string): string {
   if (!stats) {
-    return undefined;
+    throw new Error(`Missing Harbor eval stats for ${jobDir}.`);
   }
+  const trialIds = new Set<string>();
   for (const scoreBucket of Object.values(stats.reward_stats ?? {})) {
-    for (const trialIds of Object.values(scoreBucket)) {
-      if (trialIds[0]) {
-        return trialIds[0];
+    for (const bucketTrialIds of Object.values(scoreBucket)) {
+      for (const trialId of bucketTrialIds) {
+        if (trialId) {
+          trialIds.add(trialId);
+        }
       }
     }
   }
-  for (const trialIds of Object.values(stats.exception_stats ?? {})) {
-    if (trialIds[0]) {
-      return trialIds[0];
+  for (const exceptionTrialIds of Object.values(stats.exception_stats ?? {})) {
+    for (const trialId of exceptionTrialIds) {
+      if (trialId) {
+        trialIds.add(trialId);
+      }
     }
   }
-  return undefined;
+  if (trialIds.size !== 1) {
+    throw new Error(`Expected exactly one Harbor trial id for ${jobDir}, found ${trialIds.size}.`);
+  }
+  return Array.from(trialIds)[0] as string;
 }
 
 function toSeconds(startedAt?: string, finishedAt?: string): number | undefined {
@@ -240,6 +248,7 @@ function deriveMarkdownPath(jsonPath: string): string {
 }
 
 function renderHarborSoakMarkdown(report: HarborSoakReport): string {
+  const metDurationTarget = report.elapsedSeconds >= report.durationSeconds;
   const lines: string[] = [
     "# Harbor Terminal Bench Soak",
     "",
@@ -251,6 +260,7 @@ function renderHarborSoakMarkdown(report: HarborSoakReport): string {
     `- Finished: \`${report.finishedAt ?? "n/a"}\``,
     `- Duration target: \`${report.durationSeconds}s\``,
     `- Elapsed seconds: \`${report.elapsedSeconds}\``,
+    `- Duration target met: \`${metDurationTarget ? "yes" : "no"}\``,
     `- Release: \`${report.release.buildId}\``,
     `- Repo commit: \`${report.release.gitShortSha}\``,
     `- Q serving label: \`${report.gatewayModel}\``,
@@ -280,7 +290,7 @@ function renderHarborSoakMarkdown(report: HarborSoakReport): string {
   lines.push("## Truth Boundary");
   lines.push("");
   lines.push("- Oracle and Q are measured on the same Harbor task pack, but this remains a repo-local task lane rather than a W&B publication lane.");
-  lines.push("- A `running` state means the soak was interrupted or is still in flight; a `completed` state means the runtime root was fully collected.");
+  lines.push("- A `running` state means the soak was interrupted or is still in flight; a `completed` state means the runtime root was fully collected, not that the duration target was necessarily met.");
   return `${lines.join("\n")}\n`;
 }
 
@@ -292,12 +302,12 @@ async function loadHarborRunRecord(
 ): Promise<HarborSoakRunRecord> {
   const resultPath = path.join(jobDir, "result.json");
   const result = await readJsonFile<HarborResultFile>(resultPath);
-  const evalStats = firstEvalEntry(result ?? {})?.[1] ?? {
-    n_trials: 0,
-    n_errors: 1,
-    metrics: []
-  };
-  const trialId = firstTrialId(evalStats);
+  const evalEntries = Object.entries(result?.stats?.evals ?? {});
+  if (evalEntries.length !== 1) {
+    throw new Error(`Expected exactly one Harbor eval entry for ${jobDir}, found ${evalEntries.length}.`);
+  }
+  const evalStats = evalEntries[0]?.[1];
+  const trialId = requireSingleTrialId(evalStats, jobDir);
   const trialRoot = trialId ? path.join(jobDir, trialId) : undefined;
   const response = trialRoot ? await readJsonFile<HarborResponse>(path.join(trialRoot, "agent", "response.json")) : undefined;
   const reward = trialRoot ? await readJsonFile<Record<string, number>>(path.join(trialRoot, "verifier", "reward.json")) : undefined;

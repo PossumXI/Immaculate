@@ -2,9 +2,9 @@
 
 This page records the repo-local Harbor task pack for Immaculate and Q. It is a real executed benchmark surface, not a claim about leaderboard submission.
 
-- Generated: `2026-04-16T12:19:45.873Z`
-- Release: `0.1.0+eb5adab`
-- Repo commit: `eb5adabcff7a282b69903ce440135c6431ae520a`
+- Generated: `2026-04-16T12:43:37.599Z`
+- Release: `0.1.0+eca7765`
+- Repo commit: `eca77656e19999c7a76388b1b8ffd2baee7f3c1a`
 - Q serving label: `Q`
 - Q training bundle: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e`
 
@@ -13,18 +13,18 @@ This page records the repo-local Harbor task pack for Immaculate and Q. It is a 
 - Harbor ran in WSL on Docker Desktop.
 - Oracle validated both repo-local tasks before the Q lane was accepted.
 - The published Q scores below are the combined RewardKit result from programmatic checks plus the local Q LLM judge.
-- The answer key now lives under `/tests/reference.json`, so the live agent cannot read it from `/app`.
+- The answer key is mounted only under `/tests/reference.json` in the task pack, so the live agent cannot read it from `/app`.
 
 ## Q structured contract
 
 - Oracle score: `1.000`
-- Oracle duration: `90.16 s`
-- Q gateway score: `0.717`
+- Oracle duration: `79.03 s`
+- Q gateway score: `0.817`
 - Q programmatic score: `0.933`
-- Q LLM-judge score: `0.500`
-- Q gateway duration: `86.97 s`
-- Oracle job: `.runtime/harbor-custom/harbor-q-oracle-current`
-- Q gateway job: `.runtime/harbor-custom/harbor-q-agent-live2`
+- Q LLM-judge score: `0.700`
+- Q gateway duration: `70.14 s`
+- Oracle job: `.runtime/harbor-custom/harbor-q-oracle-fixed`
+- Q gateway job: `.runtime/harbor-custom/harbor-q-agent-fixed`
 - Reference visible to agent: `no`
 - Q self-repair needed: `no`
 - Q route: `guarded`
@@ -34,18 +34,18 @@ This page records the repo-local Harbor task pack for Immaculate and Q. It is a 
 ## Immaculate bridge fail-closed
 
 - Oracle score: `1.000`
-- Oracle duration: `42.69 s`
-- Q gateway score: `0.750`
+- Oracle duration: `53.20 s`
+- Q gateway score: `0.850`
 - Q programmatic score: `1.000`
-- Q LLM-judge score: `0.500`
-- Q gateway duration: `84.63 s`
-- Oracle job: `.runtime/harbor-custom/harbor-immaculate-oracle-current`
-- Q gateway job: `.runtime/harbor-custom/harbor-immaculate-agent-live`
+- Q LLM-judge score: `0.700`
+- Q gateway duration: `80.76 s`
+- Oracle job: `.runtime/harbor-custom/harbor-immaculate-oracle-fixed`
+- Q gateway job: `.runtime/harbor-custom/harbor-immaculate-agent-fixed`
 - Reference visible to agent: `no`
 - Q self-repair needed: `no`
 - Q route: `guarded`
-- Q reason: Bridge is degraded, so a guarded route is chosen. Direct HTTP/2 remains healthy and trusted.
-- Q commit: Proceed with guarded orchestration, relying on the healthy direct HTTP/2 path for state management.
+- Q reason: Bridge is degraded, so a guarded route is chosen. The direct HTTP/2 path remains healthy and trustworthy.
+- Q commit: Proceed with guarded orchestration, relying on the healthy direct HTTP/2 path as per constraints.
 
 ## Q Gateway Transport Fix
 

@@ -2,14 +2,15 @@
 
 This page records the repeated Q-only Harbor task-pack lane. Oracle and Q run side by side on the same terminal tasks so the repo can keep the control truth and the Q truth in one surface.
 
-- Generated: `2026-04-15T08:22:53.565Z`
+- Generated: `2026-04-16T12:44:00.753Z`
 - State: `completed`
 - Started: `2026-04-15T03:36:39.719958`
 - Finished: `2026-04-15T04:07:11.653011`
 - Duration target: `3600s`
 - Elapsed seconds: `1831.93`
-- Release: `0.1.0+dd31cfa`
-- Repo commit: `dd31cfa`
+- Duration target met: `no`
+- Release: `0.1.0+eca7765`
+- Repo commit: `eca7765`
 - Q serving label: `Q`
 - Runtime root: `.runtime/harbor-soak/2026-04-15T07-36-33-729Z`
 - Total runs: `90`
@@ -33,4 +34,4 @@ This page records the repeated Q-only Harbor task-pack lane. Oracle and Q run si
 ## Truth Boundary
 
 - Oracle and Q are measured on the same Harbor task pack, but this remains a repo-local task lane rather than a W&B publication lane.
-- A `running` state means the soak was interrupted or is still in flight; a `completed` state means the runtime root was fully collected.
+- A `running` state means the soak was interrupted or is still in flight; a `completed` state means the runtime root was fully collected, not that the duration target was necessarily met.

@@ -59,8 +59,9 @@ This repository is prepared for public collaboration under the Apache 2.0 licens
 Latest plain-English readout:
 
 - on the current repo-local Harbor terminal task pack, oracle is `1.000` on both tasks
-- `Q` scored `0.717` on the Q structured-contract task and `0.750` on the Immaculate bridge fail-closed task
-- those Q scores break down into strong structure/programmatic passes (`0.933` and `1.000`) but weaker operator-wording/judgment scores (`0.500` on both tasks)
+- `Q` scored `0.817` on the Q structured-contract task and `0.850` on the Immaculate bridge fail-closed task
+- those Q scores break down into strong structure/programmatic passes (`0.933` and `1.000`) plus improved operator-wording/judgment scores (`0.700` on both tasks)
+- those Harbor runs now use task images where the answer key is kept under `/tests/reference.json`, not copied into `/app`
 - that means Q is following the JSON contract reliably, but it still needs sharper grounding and more precise operator language to match the oracle lane
 
 ## Workspace

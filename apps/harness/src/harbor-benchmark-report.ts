@@ -1,5 +1,5 @@
 import path from "node:path";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { resolveReleaseMetadata, type ReleaseMetadata } from "./release-metadata.js";
 
@@ -108,6 +108,7 @@ type HarborJobSurface = {
 type HarborTaskSurface = {
   id: string;
   label: string;
+  referenceVisibleToAgent: boolean;
   oracle: HarborJobSurface;
   qGateway: HarborJobSurface;
 };
@@ -136,14 +137,16 @@ const TASKS = [
   {
     id: "q-structured-contract",
     label: "Q structured contract",
-    oracleJobPath: path.join(".runtime", "harbor-custom", "harbor-q-oracle-current"),
-    qGatewayJobPath: path.join(".runtime", "harbor-custom", "harbor-q-agent-live2")
+    taskPath: path.join("benchmarks", "harbor", "q-structured-contract"),
+    oracleJobPath: path.join(".runtime", "harbor-custom", "harbor-q-oracle-fixed"),
+    qGatewayJobPath: path.join(".runtime", "harbor-custom", "harbor-q-agent-fixed")
   },
   {
     id: "immaculate-bridge-fail-closed",
     label: "Immaculate bridge fail-closed",
-    oracleJobPath: path.join(".runtime", "harbor-custom", "harbor-immaculate-oracle-current"),
-    qGatewayJobPath: path.join(".runtime", "harbor-custom", "harbor-immaculate-agent-live")
+    taskPath: path.join("benchmarks", "harbor", "immaculate-bridge-fail-closed"),
+    oracleJobPath: path.join(".runtime", "harbor-custom", "harbor-immaculate-oracle-fixed"),
+    qGatewayJobPath: path.join(".runtime", "harbor-custom", "harbor-immaculate-agent-fixed")
   }
 ];
 
@@ -166,42 +169,74 @@ function toSeconds(startedAt?: string, finishedAt?: string): number | undefined 
   return Number((elapsedMs / 1000).toFixed(2));
 }
 
-function firstEvalEntry(result: HarborResultFile): [string, HarborEvalStats] | undefined {
+function requireSingleEvalEntry(result: HarborResultFile, jobPath: string): [string, HarborEvalStats] {
   const entries = Object.entries(result.stats?.evals ?? {});
-  return entries[0];
+  if (entries.length !== 1) {
+    throw new Error(`Expected exactly one Harbor eval entry for ${jobPath}, found ${entries.length}.`);
+  }
+  return entries[0] as [string, HarborEvalStats];
 }
 
-function firstTrialId(stats: HarborEvalStats | undefined): string | undefined {
+function requireSingleTrialId(stats: HarborEvalStats | undefined, jobPath: string): string {
   if (!stats) {
-    return undefined;
+    throw new Error(`Missing Harbor eval stats for ${jobPath}.`);
   }
+  const seenTrialIds = new Set<string>();
   for (const scoreBucket of Object.values(stats.reward_stats ?? {})) {
-    for (const trialIds of Object.values(scoreBucket)) {
-      if (trialIds[0]) {
-        return trialIds[0];
+    for (const bucketTrialIds of Object.values(scoreBucket)) {
+      for (const trialId of bucketTrialIds) {
+        if (trialId) {
+          seenTrialIds.add(trialId);
+        }
       }
     }
   }
-  for (const trialIds of Object.values(stats.exception_stats ?? {})) {
-    if (trialIds[0]) {
-      return trialIds[0];
+  for (const exceptionTrialIds of Object.values(stats.exception_stats ?? {})) {
+    for (const trialId of exceptionTrialIds) {
+      if (trialId) {
+        seenTrialIds.add(trialId);
+      }
     }
   }
-  return undefined;
+  if (seenTrialIds.size !== 1) {
+    throw new Error(`Expected exactly one Harbor trial id for ${jobPath}, found ${seenTrialIds.size}.`);
+  }
+  return Array.from(seenTrialIds)[0] as string;
+}
+
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function detectReferenceVisibility(taskPath: string): Promise<boolean> {
+  const taskRoot = path.join(REPO_ROOT, taskPath);
+  const dockerfilePath = path.join(taskRoot, "environment", "Dockerfile");
+  const environmentReferencePath = path.join(taskRoot, "environment", "reference.json");
+  const dockerfile = await readFile(dockerfilePath, "utf8");
+  const copiesReferenceIntoApp = /COPY\s+reference\.json\s+\/app\/reference\.json/i.test(dockerfile);
+  return copiesReferenceIntoApp || (await fileExists(environmentReferencePath));
+}
+
+function renderReferenceBoundary(tasks: HarborTaskSurface[]): string {
+  if (tasks.some((task) => task.referenceVisibleToAgent)) {
+    return "At least one task image still exposes a reference file to `/app`, so this surface fails closed and does not claim a hidden answer key.";
+  }
+  return "The answer key is mounted only under `/tests/reference.json` in the task pack, so the live agent cannot read it from `/app`.";
 }
 
 async function loadHarborJobSurface(jobPath: string): Promise<HarborJobSurface> {
   const resultPath = path.join(REPO_ROOT, jobPath, "result.json");
   const result = await readJsonFile<HarborResultFile>(resultPath);
-  const [evalKey, evalStats] = firstEvalEntry(result ?? {}) ?? [
-    "unknown__adhoc",
-    {
-      n_trials: 0,
-      n_errors: 1,
-      metrics: []
-    } satisfies HarborEvalStats
-  ];
-  const trialId = firstTrialId(evalStats);
+  if (!result) {
+    throw new Error(`Harbor result not found for ${jobPath}.`);
+  }
+  const [evalKey, evalStats] = requireSingleEvalEntry(result, jobPath);
+  const trialId = requireSingleTrialId(evalStats, jobPath);
   const trialRoot = trialId ? path.join(REPO_ROOT, jobPath, trialId) : undefined;
   const response = trialRoot
     ? await readJsonFile<HarborResponse>(path.join(trialRoot, "agent", "response.json"))
@@ -253,7 +288,7 @@ function renderTaskMarkdown(task: HarborTaskSurface): string[] {
   lines.push(`- Q gateway duration: \`${formatDuration(task.qGateway.durationSec)}\``);
   lines.push(`- Oracle job: \`${task.oracle.jobPath}\``);
   lines.push(`- Q gateway job: \`${task.qGateway.jobPath}\``);
-  lines.push(`- Reference visible to agent: \`no\``);
+  lines.push(`- Reference visible to agent: \`${task.referenceVisibleToAgent ? "yes" : "no"}\``);
   lines.push(`- Q self-repair needed: \`${task.qGateway.repaired ? "yes" : "no"}\``);
   if (task.qGateway.response) {
     lines.push(`- Q route: \`${task.qGateway.response.route ?? "n/a"}\``);
@@ -281,7 +316,7 @@ function renderMarkdown(report: HarborBenchmarkReport): string {
   lines.push("- Harbor ran in WSL on Docker Desktop.");
   lines.push("- Oracle validated both repo-local tasks before the Q lane was accepted.");
   lines.push("- The published Q scores below are the combined RewardKit result from programmatic checks plus the local Q LLM judge.");
-  lines.push("- The answer key now lives under `/tests/reference.json`, so the live agent cannot read it from `/app`.");
+  lines.push(`- ${renderReferenceBoundary(report.tasks)}`);
   lines.push("");
 
   for (const task of report.tasks) {
@@ -335,6 +370,7 @@ async function main(): Promise<void> {
     TASKS.map(async (task) => ({
       id: task.id,
       label: task.label,
+      referenceVisibleToAgent: await detectReferenceVisibility(task.taskPath),
       oracle: await loadHarborJobSurface(task.oracleJobPath),
       qGateway: await loadHarborJobSurface(task.qGatewayJobPath)
     }))
