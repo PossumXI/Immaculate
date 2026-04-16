@@ -4606,6 +4606,34 @@ export async function runPublishedBenchmark(
       "cross-node latency and remote failure pressure should change the selected cognition formation itself, not only which worker wins after the plan is already fixed"
     ),
     createAssertion(
+      "execution-schedule-admission-control",
+      "Execution scheduling records explicit admission control and narrows width as backlog pressure rises",
+      federatedScheduleClearPlan.admissionState === "admit" &&
+        federatedScheduleClearPlan.backlogPressure === "clear" &&
+        federatedScheduleElevatedPlan.admissionState === "degrade" &&
+        federatedScheduleElevatedPlan.backlogPressure === "elevated" &&
+        federatedScheduleCriticalPlan.admissionState === "degrade" &&
+        federatedScheduleCriticalPlan.backlogPressure === "critical" &&
+        (federatedScheduleClearPlan.healthWeightedWidth ?? 0) >=
+          (federatedScheduleElevatedPlan.healthWeightedWidth ?? 0) &&
+        (federatedScheduleElevatedPlan.healthWeightedWidth ?? 0) >=
+          (federatedScheduleCriticalPlan.healthWeightedWidth ?? 0),
+      "admit under clear / degrade under elevated+critical / health width narrows",
+      `${federatedScheduleClearPlan.admissionState}:${federatedScheduleClearPlan.healthWeightedWidth} -> ${federatedScheduleElevatedPlan.admissionState}:${federatedScheduleElevatedPlan.healthWeightedWidth} -> ${federatedScheduleCriticalPlan.admissionState}:${federatedScheduleCriticalPlan.healthWeightedWidth}`,
+      "the scheduler needs an explicit admission ledger that shrinks concurrent width under backlog and federation pressure instead of always pretending the original swarm width is still safe"
+    ),
+    createAssertion(
+      "execution-schedule-reliability-floor",
+      "Execution scheduling raises the worker reliability floor as pressure increases",
+      (federatedScheduleClearPlan.workerReliabilityFloor ?? 0) <
+        (federatedScheduleElevatedPlan.workerReliabilityFloor ?? 0) &&
+        (federatedScheduleElevatedPlan.workerReliabilityFloor ?? 0) <=
+          (federatedScheduleCriticalPlan.workerReliabilityFloor ?? 0),
+      "clear floor < elevated floor <= critical floor",
+      `${federatedScheduleClearPlan.workerReliabilityFloor ?? "missing"} -> ${federatedScheduleElevatedPlan.workerReliabilityFloor ?? "missing"} -> ${federatedScheduleCriticalPlan.workerReliabilityFloor ?? "missing"}`,
+      "health-weighted dispatch is only real once the schedule carries a concrete reliability floor that tightens as pressure rises"
+    ),
+    createAssertion(
       "execution-schedule-ledger",
       "Execution scheduling persists as a durable snapshot ledger",
       executionSchedules.length >= 4 &&

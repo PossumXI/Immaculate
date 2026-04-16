@@ -377,6 +377,9 @@ type FederatedRetryReservation = {
   avoidPeerIds?: string[];
   maxObservedLatencyMs?: number;
   maxCostPerHourUsd?: number;
+  requiredHealthyWorkerCount?: number;
+  backlogPressure?: ReturnType<typeof engine.getSnapshot>["executionSchedules"][number]["backlogPressure"];
+  reliabilityFloor?: number;
 };
 type CognitivePassResult = {
   layer: IntelligenceLayer;
@@ -907,7 +910,10 @@ async function attemptAlternateFederatedExecution(options: {
       preferredDeviceAffinityTags: options.reservation.preferredDeviceAffinityTags,
       avoidPeerIds: [...new Set([...(options.reservation.avoidPeerIds ?? []), failedPeerId])],
       maxObservedLatencyMs: options.reservation.maxObservedLatencyMs,
-      maxCostPerHourUsd: options.reservation.maxCostPerHourUsd
+      maxCostPerHourUsd: options.reservation.maxCostPerHourUsd,
+      requiredHealthyWorkerCount: options.reservation.requiredHealthyWorkerCount,
+      backlogPressure: options.reservation.backlogPressure,
+      reliabilityFloor: options.reservation.reliabilityFloor
     });
     if (retryAssignment.peerId && retryAssignment.peerId === failedPeerId) {
       await releaseExecutionWorker(retryAssignment);
@@ -2038,6 +2044,9 @@ async function reserveExecutionWorker(options: {
   avoidPeerIds?: string[];
   maxObservedLatencyMs?: number;
   maxCostPerHourUsd?: number;
+  requiredHealthyWorkerCount?: number;
+  backlogPressure?: ReturnType<typeof engine.getSnapshot>["executionSchedules"][number]["backlogPressure"];
+  reliabilityFloor?: number;
 }): Promise<IntelligenceWorkerAssignment> {
   if (options.requestedExecutionDecision === "preflight_blocked") {
     throw new Error("Execution worker reservation blocked by preflight policy.");
@@ -2063,6 +2072,9 @@ async function reserveExecutionWorker(options: {
       [...new Set([options.layer.role, ...(options.target?.includes("swarm") ? ["swarm"] : [])])],
     maxObservedLatencyMs: options.maxObservedLatencyMs,
     maxCostPerHourUsd: options.maxCostPerHourUsd,
+    requiredHealthyWorkerCount: options.requiredHealthyWorkerCount,
+    backlogPressure: options.backlogPressure,
+    reliabilityFloor: options.reliabilityFloor,
     nodeViews: nodeState.nodes,
     peerViews,
     avoidPeerIds: options.avoidPeerIds,
@@ -2084,6 +2096,9 @@ async function reserveExecutionWorker(options: {
         [...new Set([options.layer.role, ...(options.target?.includes("swarm") ? ["swarm"] : [])])],
       maxObservedLatencyMs: options.maxObservedLatencyMs,
       maxCostPerHourUsd: options.maxCostPerHourUsd,
+      requiredHealthyWorkerCount: options.requiredHealthyWorkerCount,
+      backlogPressure: options.backlogPressure,
+      reliabilityFloor: options.reliabilityFloor,
       nodeViews: nodeState.nodes,
       peerViews,
       avoidPeerIds: options.avoidPeerIds,
@@ -2116,6 +2131,8 @@ async function reserveExecutionWorkerBatch(options: {
   layers: IntelligenceLayer[];
   requestedExecutionDecision?: RequestedExecutionDecision;
   targetPrefix: string;
+  backlogPressure?: ReturnType<typeof engine.getSnapshot>["executionSchedules"][number]["backlogPressure"];
+  reliabilityFloor?: number;
 }): Promise<IntelligenceWorkerAssignment[]> {
   const reservedAssignments: IntelligenceWorkerAssignment[] = [];
   const usedPeerIds = new Set<string>();
@@ -2127,6 +2144,9 @@ async function reserveExecutionWorkerBatch(options: {
         requestedExecutionDecision: options.requestedExecutionDecision,
         target: `${options.targetPrefix}:${layer.role}`,
         fallbackLocalPoolSize: options.layers.length,
+        requiredHealthyWorkerCount: Math.max(1, options.layers.length - reservedAssignments.length),
+        backlogPressure: options.backlogPressure,
+        reliabilityFloor: options.reliabilityFloor,
         preferredDeviceAffinityTags: [
           layer.role,
           ...(options.targetPrefix.includes("swarm") ? ["swarm"] : [])
@@ -2954,8 +2974,12 @@ function buildSwarmSharedContext(options: {
   return [
     `SWARM OBJECTIVE: ${options.objective}`,
     `SWARM MODE: ${options.schedule.mode}`,
+    `SWARM ADMISSION: ${options.schedule.admissionState ?? "admit"}`,
+    `SWARM BACKLOG: ${options.schedule.backlogPressure ?? "clear"} (${options.schedule.backlogScore ?? 0})`,
     `SWARM TOPOLOGY: ${options.schedule.executionTopology}`,
     `PARALLEL WIDTH: ${options.schedule.parallelWidth}`,
+    `HEALTH-WEIGHTED WIDTH: ${options.schedule.healthWeightedWidth ?? options.schedule.parallelWidth}`,
+    `WORKER RELIABILITY FLOOR: ${options.schedule.workerReliabilityFloor ?? 0}`,
     `FORMATION: ${roleChain || "none"}`,
     `PRIMARY ROLE: ${primaryRole}`,
     "COORDINATION RULE: you are one member of a simultaneous cognition batch operating over the same substrate state.",
@@ -3016,7 +3040,9 @@ async function executeCognitiveSchedule(options: {
     const reservedAssignments = await reserveExecutionWorkerBatch({
       layers: nonGuardLayers,
       requestedExecutionDecision: options.requestedExecutionDecision,
-      targetPrefix: options.schedule.mode
+      targetPrefix: options.schedule.mode,
+      backlogPressure: options.schedule.backlogPressure,
+      reliabilityFloor: options.schedule.workerReliabilityFloor
     });
     const parallelResults = await Promise.all(
       nonGuardLayers.map(async (layer, index) => {
@@ -3040,6 +3066,15 @@ async function executeCognitiveSchedule(options: {
           reservation: {
             requestedExecutionDecision: options.requestedExecutionDecision,
             target: `${options.schedule.mode}:${layer.role}`,
+            maxObservedLatencyMs:
+              options.schedule.backlogPressure === "critical"
+                ? 120
+                : options.schedule.backlogPressure === "elevated"
+                  ? 220
+                  : undefined,
+            requiredHealthyWorkerCount: Math.max(1, nonGuardLayers.length - index),
+            backlogPressure: options.schedule.backlogPressure,
+            reliabilityFloor: options.schedule.workerReliabilityFloor,
             preferredDeviceAffinityTags: [
               layer.role,
               ...(options.schedule.mode.includes("swarm") ? ["swarm"] : [])
@@ -3073,7 +3108,16 @@ async function executeCognitiveSchedule(options: {
       const assignment = await reserveExecutionWorker({
         layer,
         requestedExecutionDecision: options.requestedExecutionDecision,
-        target: `${options.schedule.mode}:${layer.role}`
+        target: `${options.schedule.mode}:${layer.role}`,
+        requiredHealthyWorkerCount: 1,
+        backlogPressure: options.schedule.backlogPressure,
+        reliabilityFloor: options.schedule.workerReliabilityFloor,
+        maxObservedLatencyMs:
+          options.schedule.backlogPressure === "critical"
+            ? 120
+            : options.schedule.backlogPressure === "elevated"
+              ? 220
+              : undefined
       });
       const prompt = buildConversationObjective({
         baseObjective,
@@ -3092,6 +3136,15 @@ async function executeCognitiveSchedule(options: {
         reservation: {
           requestedExecutionDecision: options.requestedExecutionDecision,
           target: `${options.schedule.mode}:${layer.role}`,
+          maxObservedLatencyMs:
+            options.schedule.backlogPressure === "critical"
+              ? 120
+              : options.schedule.backlogPressure === "elevated"
+                ? 220
+                : undefined,
+          requiredHealthyWorkerCount: 1,
+          backlogPressure: options.schedule.backlogPressure,
+          reliabilityFloor: options.schedule.workerReliabilityFloor,
           preferredDeviceAffinityTags: [
             layer.role,
             ...(options.schedule.mode.includes("swarm") ? ["swarm"] : [])
@@ -3116,7 +3169,16 @@ async function executeCognitiveSchedule(options: {
     const guardAssignment = await reserveExecutionWorker({
       layer: guardLayer,
       requestedExecutionDecision: options.requestedExecutionDecision,
-      target: `${options.schedule.mode}:guard`
+      target: `${options.schedule.mode}:guard`,
+      requiredHealthyWorkerCount: 1,
+      backlogPressure: options.schedule.backlogPressure,
+      reliabilityFloor: options.schedule.workerReliabilityFloor,
+      maxObservedLatencyMs:
+        options.schedule.backlogPressure === "critical"
+          ? 120
+          : options.schedule.backlogPressure === "elevated"
+            ? 220
+            : undefined
     });
     const prompt = buildConversationObjective({
       baseObjective,
@@ -3135,6 +3197,15 @@ async function executeCognitiveSchedule(options: {
       reservation: {
         requestedExecutionDecision: options.requestedExecutionDecision,
         target: `${options.schedule.mode}:guard`,
+        maxObservedLatencyMs:
+          options.schedule.backlogPressure === "critical"
+            ? 120
+            : options.schedule.backlogPressure === "elevated"
+              ? 220
+              : undefined,
+        requiredHealthyWorkerCount: 1,
+        backlogPressure: options.schedule.backlogPressure,
+        reliabilityFloor: options.schedule.workerReliabilityFloor,
         preferredDeviceAffinityTags: [guardLayer.role]
       }
     });

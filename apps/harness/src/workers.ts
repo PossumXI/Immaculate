@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import type { GovernancePressureLevel } from "@immaculate/core";
 import type { IntelligenceWorkerExecutionOutcomeSummary } from "./federation-pressure.js";
 import type { FederationPeerView } from "./federation-peers.js";
 import type { FederationSignatureAlgorithm } from "./federation.js";
@@ -73,6 +74,9 @@ export type IntelligenceWorkerAssignmentRequest = {
   avoidPeerIds?: string[];
   maxObservedLatencyMs?: number | null;
   maxCostPerHourUsd?: number | null;
+  requiredHealthyWorkerCount?: number | null;
+  backlogPressure?: GovernancePressureLevel;
+  reliabilityFloor?: number | null;
   nodeViews?: NodeView[];
   peerViews?: FederationPeerView[];
   executionOutcomeSummaries?: IntelligenceWorkerExecutionOutcomeSummary[];
@@ -678,6 +682,29 @@ function selectWorker(
 
   const views = workers.map((worker) => buildWorkerView(worker, now, resolvedRequest));
   const summary = summarizeWorkers(views);
+  const requiredHealthyWorkerCount =
+    typeof resolvedRequest.requiredHealthyWorkerCount === "number" &&
+    Number.isFinite(resolvedRequest.requiredHealthyWorkerCount) &&
+    resolvedRequest.requiredHealthyWorkerCount > 0
+      ? Math.floor(resolvedRequest.requiredHealthyWorkerCount)
+      : 0;
+  const eligibleHealthyWorkerCount = views.filter((worker) => worker.assignmentEligible).length;
+  const eligibleHealthyRemoteWorkerCount = views.filter(
+    (worker) => worker.assignmentEligible && worker.executionProfile === "remote"
+  ).length;
+  if (
+    requiredHealthyWorkerCount > 0 &&
+    ((resolvedRequest.requestedExecutionDecision === "remote_required" &&
+      eligibleHealthyRemoteWorkerCount < requiredHealthyWorkerCount) ||
+      (resolvedRequest.requestedExecutionDecision !== "remote_required" &&
+        eligibleHealthyWorkerCount < requiredHealthyWorkerCount))
+  ) {
+    return {
+      assignment: null,
+      workers: views,
+      summary
+    };
+  }
 
   const scored = views
     .filter((worker) => worker.assignmentEligible)
@@ -718,6 +745,8 @@ function selectWorker(
         score += 9;
         reasons.push("identity verified");
       }
+      score += Math.min(4, worker.leaseRemainingMs / 15_000);
+      reasons.push(`lease ${Math.max(1, Math.round(worker.leaseRemainingMs / 1_000))}s`);
       if (
         typeof worker.executionSuccessRatio === "number" &&
         Number.isFinite(worker.executionSuccessRatio)
@@ -747,6 +776,21 @@ function selectWorker(
       ) {
         score += 2;
         reasons.push("local-ready");
+      }
+      if (
+        resolvedRequest.backlogPressure === "critical" &&
+        resolvedRequest.requestedExecutionDecision !== "remote_required" &&
+        worker.executionProfile === "local"
+      ) {
+        score += 4;
+        reasons.push("critical-backlog local");
+      } else if (
+        resolvedRequest.backlogPressure === "elevated" &&
+        resolvedRequest.requestedExecutionDecision !== "remote_required" &&
+        worker.executionProfile === "local"
+      ) {
+        score += 2;
+        reasons.push("elevated-backlog local");
       }
       if (
         worker.executionProfile === "remote" &&
@@ -779,6 +823,11 @@ function selectWorker(
       if (typeof worker.observedLatencyMs === "number" && Number.isFinite(worker.observedLatencyMs)) {
         score += Math.max(0, 8 - worker.observedLatencyMs / 10);
         reasons.push(`latency ${worker.observedLatencyMs.toFixed(1)}ms`);
+        if (resolvedRequest.backlogPressure === "critical") {
+          score -= Math.min(8, worker.observedLatencyMs / 25);
+        } else if (resolvedRequest.backlogPressure === "elevated") {
+          score -= Math.min(4, worker.observedLatencyMs / 40);
+        }
       }
       if (
         typeof worker.executionSmoothedLatencyMs === "number" &&
@@ -786,6 +835,9 @@ function selectWorker(
       ) {
         score += Math.max(0, 4 - worker.executionSmoothedLatencyMs / 900);
         reasons.push(`exec-latency ${worker.executionSmoothedLatencyMs.toFixed(1)}ms`);
+        if (resolvedRequest.backlogPressure === "critical") {
+          score -= Math.min(6, worker.executionSmoothedLatencyMs / 300);
+        }
       }
       if (
         typeof worker.peerTrustRemainingMs === "number" &&
@@ -823,6 +875,19 @@ function selectWorker(
 
       const winner = scored[0];
   if (!winner) {
+    return {
+      assignment: null,
+      workers: views,
+      summary
+    };
+  }
+  const reliabilityFloor =
+    typeof resolvedRequest.reliabilityFloor === "number" &&
+    Number.isFinite(resolvedRequest.reliabilityFloor) &&
+    resolvedRequest.reliabilityFloor > 0
+      ? resolvedRequest.reliabilityFloor
+      : 0;
+  if (winner.score < reliabilityFloor) {
     return {
       assignment: null,
       workers: views,

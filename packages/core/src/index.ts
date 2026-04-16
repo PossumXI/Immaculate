@@ -730,6 +730,9 @@ export const executionScheduleModes = [
 ] as const;
 export type ExecutionScheduleMode = (typeof executionScheduleModes)[number];
 
+export const executionAdmissionStates = ["admit", "degrade", "hold"] as const;
+export type ExecutionAdmissionState = (typeof executionAdmissionStates)[number];
+
 export const executionTopologies = ["sequential", "parallel", "parallel-then-guard"] as const;
 export type ExecutionTopology = (typeof executionTopologies)[number];
 
@@ -806,6 +809,14 @@ export type ExecutionSchedule = {
   mode: ExecutionScheduleMode;
   executionTopology: ExecutionTopology;
   parallelWidth: number;
+  admissionState?: ExecutionAdmissionState;
+  backlogPressure?: GovernancePressureLevel;
+  backlogScore?: number;
+  healthWeightedWidth?: number;
+  readyLayerCount?: number;
+  busyLayerCount?: number;
+  degradedLayerCount?: number;
+  workerReliabilityFloor?: number;
   primaryLayerId?: string;
   layerIds: string[];
   layerRoles: IntelligenceLayerRole[];
@@ -1635,6 +1646,14 @@ export const executionScheduleSchema = z.object({
   mode: z.enum(executionScheduleModes),
   executionTopology: z.enum(executionTopologies).default("sequential"),
   parallelWidth: z.number().int().nonnegative().default(0),
+  admissionState: z.enum(executionAdmissionStates).optional(),
+  backlogPressure: z.enum(governancePressureLevels).optional(),
+  backlogScore: z.number().nonnegative().optional(),
+  healthWeightedWidth: z.number().int().nonnegative().optional(),
+  readyLayerCount: z.number().int().nonnegative().optional(),
+  busyLayerCount: z.number().int().nonnegative().optional(),
+  degradedLayerCount: z.number().int().nonnegative().optional(),
+  workerReliabilityFloor: z.number().nonnegative().optional(),
   primaryLayerId: z.string().optional(),
   layerIds: z.array(z.string()),
   layerRoles: z.array(z.enum(intelligenceLayerRoles)),
