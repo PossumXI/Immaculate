@@ -21,6 +21,31 @@ For each breakthrough, record:
 
 ### 2026-04-16
 
+#### The official Terminal-Bench receipt now feeds the Q repair loop instead of stopping at publication
+
+What changed:
+- the Q benchmark corpus builder now ingests `docs/wiki/Terminal-Bench-Receipt.json` as observation evidence instead of ignoring the official public receipt after publication
+- the strict Q failure corpus builder now turns the official public-task underperformance into a real eval seed alongside live direct-Q failures
+- the training docs and release index now reflect that the public receipt is part of the Q improvement loop, not just a public proof artifact
+
+Why it matters:
+- the missed systems pattern was that a public benchmark receipt is only half-useful if it proves the path is real but never enters the training/eval seam that should improve the model next
+- this closes that gap with a truthful split: the receipt enters the benchmark corpus as observation evidence and the failure corpus as a strict eval seed, without pretending it was a successful decision row
+- that makes the public proof path operationally useful, because the same official failure now feeds the next Q repair cycle instead of sitting in docs as static evidence
+
+Evidence:
+- `docs/wiki/Q-Benchmark-Corpus.md` now lists `terminal-bench-receipt` as a tracked source
+- `docs/wiki/Q-Failure-Corpus.md` now records `terminal_bench_public_task_underperforming` as a live eval seed
+- `.training-output/q/q-benchmark-corpus.jsonl` now includes `terminal-bench-receipt:aggregate`
+- `.training-output/q/q-failure-corpus.jsonl` now includes `terminal-bench-receipt:terminal-bench/make-mips-interpreter`
+
+What this unlocks next:
+- the next Q promotion or training session can consume official public-task evidence without a manual side export
+- future official Terminal-Bench receipts can accumulate into the same governed Q improvement loop instead of living only in one-off PR pages
+- the repo can now tell a cleaner story: public proof, eval seed, and training input are part of one chain instead of three disconnected surfaces
+
+### 2026-04-16
+
 #### Q now has a real official public-task Terminal-Bench receipt submission, not just repo-local Harbor proof
 
 What changed:

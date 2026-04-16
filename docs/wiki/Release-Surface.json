@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-16T16:10:51.625Z",
+  "generatedAt": "2026-04-16T17:15:51.019Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "f2a6393b575d1fe996fc26fc27e965a0b6bad0e0",
-    "gitShortSha": "f2a6393",
+    "gitSha": "293c63a2b1fbe4b97f6099ae6f61e63b1523817c",
+    "gitShortSha": "293c63a",
     "gitBranch": "harbor-q-push",
-    "buildId": "0.1.0+f2a6393",
+    "buildId": "0.1.0+293c63a",
     "q": {
       "alias": "Q",
       "providerModel": "Q",
@@ -83,7 +83,12 @@
     {
       "label": "Q benchmark corpus",
       "path": "docs\\wiki\\Q-Benchmark-Corpus.json",
-      "generatedAt": "2026-04-16T00:02:26Z"
+      "generatedAt": "2026-04-16T17:14:38Z"
+    },
+    {
+      "label": "Q failure corpus",
+      "path": "docs\\wiki\\Q-Failure-Corpus.json",
+      "generatedAt": "2026-04-16T17:14:38Z"
     },
     {
       "label": "Q benchmark promotion",
@@ -93,7 +98,7 @@
     {
       "label": "W&B benchmark export",
       "path": "docs\\wiki\\Benchmark-Wandb-Export.json",
-      "generatedAt": "2026-04-16T02:41:20.106697+00:00"
+      "generatedAt": "2026-04-16T13:08:26.769568+00:00"
     },
     {
       "label": "Harbor terminal bench",

@@ -2,9 +2,9 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-04-16T16:10:51.625Z
-- Immaculate release: `0.1.0+f2a6393`
-- Repo commit: `f2a6393b575d1fe996fc26fc27e965a0b6bad0e0`
+- Generated: 2026-04-16T17:15:51.019Z
+- Immaculate release: `0.1.0+293c63a`
+- Repo commit: `293c63a2b1fbe4b97f6099ae6f61e63b1523817c`
 - Branch: `harbor-q-push`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+f2a6393` is the current repo build stamp.
+- Immaculate build `0.1.0+293c63a` is the current repo build stamp.
 - Q is served and benchmarked as `Q` across the current repo surfaces.
 - No tracked Q training bundle has been generated yet in this checkout.
 - The latest hybrid session is `q-hybrid-cur-fnv1a-8f551a5c-bench-v3`, with local lane `dry-run` and cloud lane `not-configured` on provider `hf_jobs`.
@@ -34,9 +34,10 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Cloudflare Q inference: `2026-04-15T22:59:47Z` via `docs/wiki/Cloudflare-Q-Inference.json`
 - OCI GPU advisor: `2026-04-16T00:02:31Z` via `docs/wiki/OCI-GPU-Advisor.json`
 - OCI region capacity: `2026-04-15T17:06:51Z` via `docs/wiki/OCI-Region-Capacity.json`
-- Q benchmark corpus: `2026-04-16T00:02:26Z` via `docs/wiki/Q-Benchmark-Corpus.json`
+- Q benchmark corpus: `2026-04-16T17:14:38Z` via `docs/wiki/Q-Benchmark-Corpus.json`
+- Q failure corpus: `2026-04-16T17:14:38Z` via `docs/wiki/Q-Failure-Corpus.json`
 - Q benchmark promotion: `2026-04-16T00:01:59Z` via `docs/wiki/Q-Benchmark-Promotion.json`
-- W&B benchmark export: `2026-04-16T02:41:20.106697+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
+- W&B benchmark export: `2026-04-16T13:08:26.769568+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
 - Harbor terminal bench: `2026-04-16T13:05:23.427Z` via `docs/wiki/Harbor-Terminal-Bench.json`
 - Terminal-Bench receipt: `2026-04-16T16:09:51.838Z` via `docs/wiki/Terminal-Bench-Receipt.json`
 - Harbor terminal bench soak: `2026-04-16T13:05:24.510Z` via `docs/wiki/Harbor-Terminal-Bench-Soak.json`

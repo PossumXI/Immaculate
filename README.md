@@ -65,6 +65,7 @@ Latest plain-English readout:
 - those Harbor runs now use task images where the answer key is kept under `/tests/reference.json`, not copied into `/app`
 - that means Q is following the JSON contract reliably, but it still needs sharper grounding and more precise operator language to match the oracle lane
 - the repo now also carries an official public-task Terminal-Bench receipt submission PR for `terminal-bench/make-mips-interpreter`; it is a five-trial public receipt on the official leaderboard repo, not a full leaderboard sweep, and Q scored `0.000` on that official task
+- that official receipt now feeds the tracked Q benchmark corpus and the strict Q failure corpus, so the public proof path becomes a real training/eval input instead of a dead-end report page
 
 ## Workspace
 

@@ -180,6 +180,18 @@ def finalize_record(record: dict) -> dict:
     return record
 
 
+def summarize_row_type(records: list[dict]) -> str:
+    row_types = {
+        str(record.get("row_type", "decision_triplet")).strip() or "decision_triplet"
+        for record in records
+    }
+    if not row_types:
+        return "decision_triplet"
+    if len(row_types) == 1:
+        return next(iter(row_types))
+    return "mixed"
+
+
 def collect_model_records(surface_name: str, model: dict) -> list[dict]:
     records: list[dict] = []
     for task in model.get("tasks", []):
@@ -258,6 +270,77 @@ def collect_harbor_records(root: Path, harbor: dict) -> list[dict]:
         }
         records.append(finalize_record(record))
     return records
+
+
+def collect_terminal_bench_receipt_records(receipt: dict) -> list[dict]:
+    leaderboard = receipt.get("leaderboard", {})
+    harbor = receipt.get("harbor", {})
+    if not isinstance(leaderboard, dict) or not isinstance(harbor, dict):
+        return []
+
+    task_name = str(harbor.get("taskName", "")).strip()
+    dataset_name = str(harbor.get("datasetName", "")).strip()
+    discussion_url = str(leaderboard.get("discussionUrl", "")).strip()
+    commit_url = str(leaderboard.get("commitUrl", "")).strip()
+    attempts = int(harbor.get("attempts", 0) or 0)
+    trials = int(harbor.get("trials", 0) or 0)
+    mean_reward = float(harbor.get("meanReward", 0) or 0)
+
+    if not task_name or not dataset_name:
+        return []
+
+    pass_at_k = harbor.get("passAtK", {})
+    pass_at_k_lines = []
+    if isinstance(pass_at_k, dict):
+        for key in sorted(pass_at_k.keys(), key=lambda value: int(str(value)) if str(value).isdigit() else 9999):
+            pass_at_k_lines.append(f"pass@{key}: {pass_at_k[key]}")
+
+    record = {
+        "id": "terminal-bench-receipt:aggregate",
+        "row_type": "benchmark_observation",
+        "source_surface": "terminal-bench-receipt",
+        "row_id": "aggregate",
+        "label": "Official Terminal-Bench public-task receipt",
+        "objective": (
+            "Carry the official public-task Terminal-Bench receipt into the tracked Q improvement loop "
+            "without overstating it as a full leaderboard sweep."
+        ),
+        "facts": [
+            f"Dataset: {dataset_name}",
+            f"Task: {task_name}",
+            f"Attempts: {attempts}",
+            f"Trials: {trials}",
+            f"Mean reward: {mean_reward:.3f}",
+            f"Discussion state: {leaderboard.get('discussionState', 'unknown')}",
+            f"Merge state: {leaderboard.get('mergeState', 'unknown')}",
+        ],
+        "observation": [
+            (
+                f"Official public-task Terminal-Bench receipt submitted for {task_name} "
+                f"on {dataset_name} with {attempts} attempts and {trials} completed trials."
+            ),
+            (
+                f"Real Q lane measured mean reward {mean_reward:.3f} with "
+                + (", ".join(pass_at_k_lines) if pass_at_k_lines else "no pass@k data reported")
+                + "."
+            ),
+            (
+                f"Submission PR {discussion_url or '[missing discussion url]'} and verified commit "
+                f"{commit_url or '[missing commit url]'} prove the public receipt path is real."
+            ),
+        ],
+        "quality": {
+            "status": "completed" if mean_reward >= 1 else "degraded",
+            "parse_success": mean_reward > 0,
+            "structured_field_count": 0,
+            "thinking_detected": False,
+            "score": mean_reward,
+            "run_count": attempts,
+            "task_count": 1,
+            "average_duration_sec": float(harbor.get("durationSec", 0) or 0),
+        },
+    }
+    return [finalize_record(record)]
 
 
 def collect_bridgebench_soak_records(bridgebench_soak: dict) -> list[dict]:
@@ -490,6 +573,7 @@ def build_markdown(summary: dict) -> str:
             "## Truth Boundary",
             "",
             "- This surface records successful benchmark-derived decision rows for Q so the training path can reuse tracked outputs without scraping markdown by hand.",
+            "- The official public Terminal-Bench receipt is carried here as benchmark observation evidence, not as a fake successful decision-triplet row.",
             "- It is intentionally complementary to Q-Failure-Corpus, which remains strict failure-only and should stay empty when the current Q benchmark lane is green.",
             "- These rows are output-side evidence from executed Q benchmarks. They help stabilize route/reason/commit behavior, but they are not a substitute for broader curation or new external truth sources.",
         ]
@@ -516,6 +600,11 @@ def main() -> None:
         help="Path to Harbor-Terminal-Bench.json",
     )
     parser.add_argument(
+        "--terminal-bench-receipt",
+        default=str(root / "docs" / "wiki" / "Terminal-Bench-Receipt.json"),
+        help="Path to Terminal-Bench-Receipt.json",
+    )
+    parser.add_argument(
         "--bridgebench-soak",
         default=str(root / "docs" / "wiki" / "BridgeBench-Soak.json"),
         help="Path to BridgeBench-Soak.json",
@@ -540,6 +629,7 @@ def main() -> None:
     comparison_path = Path(args.comparison)
     bridgebench_path = Path(args.bridgebench)
     harbor_path = Path(args.harbor)
+    terminal_bench_receipt_path = Path(args.terminal_bench_receipt)
     bridgebench_soak_path = Path(args.bridgebench_soak)
     harbor_soak_path = Path(args.harbor_soak)
     output_path = Path(args.output)
@@ -549,6 +639,7 @@ def main() -> None:
     comparison = load_json(comparison_path)
     bridgebench = load_json(bridgebench_path)
     harbor = load_json(harbor_path)
+    terminal_bench_receipt = load_optional_json(terminal_bench_receipt_path)
     bridgebench_soak = load_optional_json(bridgebench_soak_path)
     harbor_soak = load_optional_json(harbor_soak_path)
 
@@ -561,6 +652,8 @@ def main() -> None:
     if bridgebench_model:
         records.extend(collect_model_records("bridgebench", bridgebench_model))
     records.extend(collect_harbor_records(root, harbor))
+    if terminal_bench_receipt:
+        records.extend(collect_terminal_bench_receipt_records(terminal_bench_receipt))
     if bridgebench_soak:
         records.extend(collect_bridgebench_soak_records(bridgebench_soak))
     if harbor_soak:
@@ -576,13 +669,18 @@ def main() -> None:
     summary = {
         "generatedAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "release": build_release_summary(root),
-        "rowType": "decision_triplet",
+        "rowType": summarize_row_type(records),
         "recordCount": len(records),
         "sourceCounts": dict(source_counts),
         "sources": {
             "model-comparison": relative_path(root, comparison_path),
             "bridgebench": relative_path(root, bridgebench_path),
             "harbor-terminal-bench": relative_path(root, harbor_path),
+            **(
+                {"terminal-bench-receipt": relative_path(root, terminal_bench_receipt_path)}
+                if terminal_bench_receipt
+                else {}
+            ),
             **(
                 {"bridgebench-soak": relative_path(root, bridgebench_soak_path)}
                 if bridgebench_soak

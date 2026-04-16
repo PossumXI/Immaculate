@@ -1,14 +1,16 @@
 {
-  "generatedAt": "2026-04-16T00:02:26Z",
-  "recordCount": 1,
-  "evalSeedCount": 1,
+  "generatedAt": "2026-04-16T17:14:38Z",
+  "recordCount": 2,
+  "evalSeedCount": 2,
   "resolvedSuccessCount": 7,
   "failureClassCounts": {
-    "transport_timeout": 1
+    "transport_timeout": 1,
+    "terminal_bench_public_task_underperforming": 1
   },
   "sources": {
     "modelComparison": "Model-Benchmark-Comparison.json",
-    "bridgeBench": "BridgeBench.json"
+    "bridgeBench": "BridgeBench.json",
+    "terminalBenchReceipt": "Terminal-Bench-Receipt.json"
   },
   "output": {
     "jsonlPath": ".training-output/q/q-failure-corpus.jsonl",

@@ -3,24 +3,25 @@
 This page is generated from the tracked Q benchmark/report surfaces.
 It records the benchmark-derived corpus currently attached to Q. It is not a readiness gate and it does not replace the strict failure-only Q-Failure-Corpus surface.
 
-- Generated: `2026-04-16T00:02:26Z`
-- Release: `0.1.0+a252873`
-- Repo commit: `a252873`
-- Q training bundle: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v3-a252873-f274e8c3`
-- Records: `56`
-- Row type: `decision_triplet`
+- Generated: `2026-04-16T17:14:38Z`
+- Release: `0.1.0+293c63a`
+- Repo commit: `293c63a`
+- Q training bundle: `none generated yet`
+- Records: `55`
+- Row type: `mixed`
 - JSONL: `.training-output/q/q-benchmark-corpus.jsonl`
 
 ## Sources
 
 - model-comparison: `4` via `docs/wiki/Model-Benchmark-Comparison.json`
 - bridgebench: `3` via `docs/wiki/BridgeBench.json`
-- harbor-terminal-bench: `2` via `docs/wiki/Harbor-Terminal-Bench.json`
+- terminal-bench-receipt: `1` via `docs/wiki/Terminal-Bench-Receipt.json`
 - bridgebench-soak: `1` via `docs/wiki/BridgeBench-Soak.json`
 - harbor-terminal-bench-soak: `46` via `docs/wiki/Harbor-Terminal-Bench-Soak.json`
 
 ## Truth Boundary
 
 - This surface records successful benchmark-derived decision rows for Q so the training path can reuse tracked outputs without scraping markdown by hand.
+- The official public Terminal-Bench receipt is carried here as benchmark observation evidence, not as a fake successful decision-triplet row.
 - It is intentionally complementary to Q-Failure-Corpus, which remains strict failure-only and should stay empty when the current Q benchmark lane is green.
 - These rows are output-side evidence from executed Q benchmarks. They help stabilize route/reason/commit behavior, but they are not a substitute for broader curation or new external truth sources.

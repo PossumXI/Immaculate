@@ -58,6 +58,10 @@ The failure export is now strict failure-only. When the direct Q lane is green,
 this surface stays empty rather than mixing resolved successes into a fake
 failure bucket.
 
+When `docs/wiki/Terminal-Bench-Receipt.json` exists and the official public-task
+receipt is still weak, that receipt now becomes a tracked eval seed here instead
+of staying trapped as a standalone public proof page.
+
 7. Convert the executed Q benchmark successes into a tracked benchmark-derived corpus:
 
 ```powershell
@@ -67,6 +71,11 @@ npm run q:benchmark:corpus
 This surface complements the strict failure-only export. It captures current successful
 Q benchmark decision triplets so the hybrid session can stage them directly instead of
 inferring corpus state from raw benchmark pages.
+
+When `docs/wiki/Terminal-Bench-Receipt.json` exists, this same build also carries
+the official public-task receipt as benchmark observation evidence, so the public
+proof surface enters the Q improvement loop without pretending it was a successful
+decision-triplet row.
 
 8. Promote the current benchmark corpus into the next Q lineage when the active lock is stale against it:
 

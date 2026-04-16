@@ -13,6 +13,13 @@ def load_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def load_optional_json(path: Path):
+    if not path.exists():
+        return None
+    payload = load_json(path)
+    return payload if isinstance(payload, dict) else None
+
+
 def normalize_q_model(model: dict) -> bool:
     label = str(model.get("truthfulLabel", "")).strip()
     requested = str(model.get("requestedModel", ""))
@@ -51,7 +58,65 @@ def build_failure_text(source: str, task: dict) -> str:
     )
 
 
-def collect_records(comparison: dict, bridgebench: dict):
+def build_terminal_bench_failure_text(receipt: dict) -> str:
+    leaderboard = receipt.get("leaderboard", {})
+    harbor = receipt.get("harbor", {})
+    task_name = str(harbor.get("taskName", "terminal-bench-task")).strip() or "terminal-bench-task"
+    preview = (
+        f"mean_reward={float(harbor.get('meanReward', 0) or 0):.3f}; "
+        f"trials={int(harbor.get('trials', 0) or 0)}; "
+        f"discussion={str(leaderboard.get('discussionUrl', '')).strip() or '[missing discussion url]'}"
+    )
+    return (
+        "Q defensive engineering failure corpus\n"
+        "source=terminal-bench-receipt\n"
+        "language=text\n"
+        f"path=terminal-bench-receipt/{task_name}\n"
+        "tags=q,failure-corpus,eval-seed,terminal-bench-public-receipt\n\n"
+        "OBJECTIVE\n"
+        f"{task_name}\n\n"
+        "OBSERVED FAILURE\n"
+        "failure_class=terminal_bench_public_task_underperforming\n"
+        "status=official-receipt\n"
+        f"preview={preview}\n\n"
+        "RESPONSE CONTRACT\n"
+        "ROUTE: one sentence.\n"
+        "REASON: one sentence.\n"
+        "COMMIT: one sentence.\n"
+    )
+
+
+def collect_terminal_bench_receipt_records(receipt: dict):
+    leaderboard = receipt.get("leaderboard", {})
+    harbor = receipt.get("harbor", {})
+    if not isinstance(leaderboard, dict) or not isinstance(harbor, dict):
+        return []
+    task_name = str(harbor.get("taskName", "")).strip()
+    dataset_name = str(harbor.get("datasetName", "")).strip()
+    mean_reward = float(harbor.get("meanReward", 0) or 0)
+    if not task_name or not dataset_name or mean_reward >= 1:
+        return []
+    trials = int(harbor.get("trials", 0) or 0)
+    preview = (
+        f"dataset={dataset_name}; mean_reward={mean_reward:.3f}; trials={trials}; "
+        f"discussion={str(leaderboard.get('discussionUrl', '')).strip() or '[missing discussion url]'}"
+    )
+    return [
+        {
+            "id": f"terminal-bench-receipt:{task_name}",
+            "source": "terminal-bench-receipt",
+            "label": f"Official Terminal-Bench receipt: {task_name}",
+            "status": "official-receipt",
+            "parseSuccess": False,
+            "failureClass": "terminal_bench_public_task_underperforming",
+            "responsePreview": preview,
+            "evalOnly": True,
+            "text": build_terminal_bench_failure_text(receipt),
+        }
+    ]
+
+
+def collect_records(comparison: dict, bridgebench: dict, terminal_bench_receipt: dict | None):
     records = []
     resolved_successes = 0
     failure_counter = Counter()
@@ -86,6 +151,14 @@ def collect_records(comparison: dict, bridgebench: dict):
             if failure_class:
                 failure_counter[failure_class] += 1
             records.append(record)
+
+    if terminal_bench_receipt:
+        receipt_records = collect_terminal_bench_receipt_records(terminal_bench_receipt)
+        records.extend(receipt_records)
+        for record in receipt_records:
+            failure_class = record.get("failureClass")
+            if failure_class:
+                failure_counter[str(failure_class)] += 1
 
     return records, resolved_successes, dict(failure_counter)
 
@@ -127,6 +200,11 @@ def main():
         help="Output JSONL path",
     )
     parser.add_argument(
+        "--terminal-bench-receipt",
+        default=str(repo_root() / "docs" / "wiki" / "Terminal-Bench-Receipt.json"),
+        help="Path to Terminal-Bench-Receipt.json",
+    )
+    parser.add_argument(
         "--manifest",
         default=str(repo_root() / "docs" / "wiki" / "Q-Failure-Corpus.json"),
         help="Summary manifest JSON path",
@@ -135,6 +213,7 @@ def main():
 
     comparison = load_json(Path(args.comparison))
     bridgebench = load_json(Path(args.bridgebench))
+    terminal_bench_receipt = load_optional_json(Path(args.terminal_bench_receipt))
     output_path = Path(args.output)
     manifest_path = Path(args.manifest)
     markdown_path = manifest_path.with_suffix(".md")
@@ -142,7 +221,7 @@ def main():
     output_path.parent.mkdir(parents=True, exist_ok=True)
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
 
-    records, resolved_successes, failure_counts = collect_records(comparison, bridgebench)
+    records, resolved_successes, failure_counts = collect_records(comparison, bridgebench, terminal_bench_receipt)
     eval_seed_count = len(records)
 
     with output_path.open("w", encoding="utf-8", newline="\n") as handle:
@@ -158,6 +237,7 @@ def main():
         "sources": {
             "modelComparison": Path(args.comparison).name,
             "bridgeBench": Path(args.bridgebench).name,
+            "terminalBenchReceipt": Path(args.terminal_bench_receipt).name if terminal_bench_receipt else None,
         },
         "output": {
             "jsonlPath": str(output_path.relative_to(repo_root())).replace("\\", "/"),
