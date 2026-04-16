@@ -1,0 +1,80 @@
+{
+  "generatedAt": "2026-04-16T16:09:51.838Z",
+  "release": {
+    "packageVersion": "0.1.0",
+    "harnessVersion": "0.1.0",
+    "coreVersion": "0.1.0",
+    "gitSha": "f2a6393b575d1fe996fc26fc27e965a0b6bad0e0",
+    "gitShortSha": "f2a6393",
+    "gitBranch": "harbor-q-push",
+    "buildId": "0.1.0+f2a6393",
+    "q": {
+      "alias": "Q",
+      "providerModel": "Q",
+      "truthfulLabel": "Q",
+      "hybridSession": {
+        "generatedAt": "2026-04-16T00:02:31Z",
+        "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v3",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v3/hybrid-session.json",
+        "localStatus": "dry-run",
+        "cloudStatus": "not-configured",
+        "cloudProvider": "hf_jobs",
+        "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v3-a252873-f274e8c3",
+        "immaculateBundleId": "immaculate-orchestration-a252873-56a2e925"
+      }
+    }
+  },
+  "leaderboard": {
+    "repo": "harborframework/terminal-bench-2-leaderboard",
+    "discussionUrl": "https://huggingface.co/datasets/harborframework/terminal-bench-2-leaderboard/discussions/140",
+    "commitUrl": "https://huggingface.co/datasets/harborframework/terminal-bench-2-leaderboard/commit/9a4ad15564f2a3c1303da7c89a08dc10cfec36c3",
+    "discussionState": "open",
+    "mergeState": "ready-to-merge",
+    "commitVerified": true
+  },
+  "harbor": {
+    "jobId": "e1bf3bc7-79d9-4f4c-98f5-d19da3d69d57",
+    "jobName": "q-terminal-bench-public-receipt",
+    "datasetName": "terminal-bench/terminal-bench-2",
+    "datasetRef": "sha256:c6fc2e2382c1dbae99b2d5ecd2f4f4a60c3c01e0d84642d69b4afd92e99d078b",
+    "taskName": "terminal-bench/make-mips-interpreter",
+    "harborAgentImportPath": "benchmarks.harbor.q_harbor_agent:HarborQAgent",
+    "harborModelName": "Q",
+    "attempts": 5,
+    "concurrentTrials": 1,
+    "timeoutMultiplier": 1,
+    "timeoutOverridesPresent": false,
+    "resourceOverridesPresent": false,
+    "startedAt": "2026-04-16T11:52:39.729045",
+    "finishedAt": "2026-04-16T12:00:16.281122",
+    "durationSec": 456.55,
+    "trials": 5,
+    "errors": 0,
+    "meanReward": 0,
+    "passAtK": {
+      "2": 0,
+      "4": 0,
+      "5": 0
+    },
+    "trialIds": [
+      "make-mips-interpreter__8rHSUQ2",
+      "make-mips-interpreter__Hho3A4K",
+      "make-mips-interpreter__MyvbUq7",
+      "make-mips-interpreter__UUSmarr",
+      "make-mips-interpreter__zYpyWMm"
+    ]
+  },
+  "submission": {
+    "agentUrl": "https://github.com/PossumXI/Immaculate",
+    "agentDisplayName": "Immaculate Q Harbor",
+    "agentOrgDisplayName": "PossumX.dev",
+    "modelName": "gemma4:e4b",
+    "modelProvider": "ollama",
+    "modelDisplayName": "Q (Gemma 4 E4B)",
+    "modelOrgDisplayName": "Google / Immaculate"
+  },
+  "output": {
+    "jsonPath": "docs\\wiki\\Terminal-Bench-Receipt.json",
+    "markdownPath": "docs\\wiki\\Terminal-Bench-Receipt.md"
+  }
+}

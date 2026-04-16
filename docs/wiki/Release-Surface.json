@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-16T13:05:25.131Z",
+  "generatedAt": "2026-04-16T16:10:51.625Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "555b65c753e642cbb1adb3082561f1cc92e7476b",
-    "gitShortSha": "555b65c",
+    "gitSha": "f2a6393b575d1fe996fc26fc27e965a0b6bad0e0",
+    "gitShortSha": "f2a6393",
     "gitBranch": "harbor-q-push",
-    "buildId": "0.1.0+555b65c",
+    "buildId": "0.1.0+f2a6393",
     "q": {
       "alias": "Q",
       "providerModel": "Q",
@@ -99,6 +99,11 @@
       "label": "Harbor terminal bench",
       "path": "docs\\wiki\\Harbor-Terminal-Bench.json",
       "generatedAt": "2026-04-16T13:05:23.427Z"
+    },
+    {
+      "label": "Terminal-Bench receipt",
+      "path": "docs\\wiki\\Terminal-Bench-Receipt.json",
+      "generatedAt": "2026-04-16T16:09:51.838Z"
     },
     {
       "label": "Harbor terminal bench soak",

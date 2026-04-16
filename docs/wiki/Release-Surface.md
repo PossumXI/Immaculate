@@ -2,9 +2,9 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-04-16T13:05:25.131Z
-- Immaculate release: `0.1.0+555b65c`
-- Repo commit: `555b65c753e642cbb1adb3082561f1cc92e7476b`
+- Generated: 2026-04-16T16:10:51.625Z
+- Immaculate release: `0.1.0+f2a6393`
+- Repo commit: `f2a6393b575d1fe996fc26fc27e965a0b6bad0e0`
 - Branch: `harbor-q-push`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+555b65c` is the current repo build stamp.
+- Immaculate build `0.1.0+f2a6393` is the current repo build stamp.
 - Q is served and benchmarked as `Q` across the current repo surfaces.
 - No tracked Q training bundle has been generated yet in this checkout.
 - The latest hybrid session is `q-hybrid-cur-fnv1a-8f551a5c-bench-v3`, with local lane `dry-run` and cloud lane `not-configured` on provider `hf_jobs`.
@@ -38,6 +38,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Q benchmark promotion: `2026-04-16T00:01:59Z` via `docs/wiki/Q-Benchmark-Promotion.json`
 - W&B benchmark export: `2026-04-16T02:41:20.106697+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
 - Harbor terminal bench: `2026-04-16T13:05:23.427Z` via `docs/wiki/Harbor-Terminal-Bench.json`
+- Terminal-Bench receipt: `2026-04-16T16:09:51.838Z` via `docs/wiki/Terminal-Bench-Receipt.json`
 - Harbor terminal bench soak: `2026-04-16T13:05:24.510Z` via `docs/wiki/Harbor-Terminal-Bench-Soak.json`
 - Q benchmark sweep (60m): `2026-04-15T08:24:47.464Z` via `docs/wiki/Q-Benchmark-Sweep-60m.json`
 

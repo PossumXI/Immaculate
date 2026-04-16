@@ -21,6 +21,33 @@ For each breakthrough, record:
 
 ### 2026-04-16
 
+#### Q now has a real official public-task Terminal-Bench receipt submission, not just repo-local Harbor proof
+
+What changed:
+- the real `Q` lane was run through Harbor against the official public Terminal-Bench task `terminal-bench/make-mips-interpreter`
+- the run used the real Harbor custom-agent import path `benchmarks.harbor.q_harbor_agent:HarborQAgent` and the real served `Q` endpoint, not the oracle lane and not a repo-local hidden task pack
+- a five-trial receipt package was assembled in the official leaderboard submission layout and submitted as a PR/discussion on the public `harborframework/terminal-bench-2-leaderboard` dataset repo
+- the repo now publishes that receipt separately in `docs/wiki/Terminal-Bench-Receipt.md` instead of blurring it into the repo-local Harbor page
+
+Why it matters:
+- this closes the last “prove it on the official path” gap for the current `Q` lane: the repo can now point to a real public-task submission receipt instead of only local Harbor evidence
+- it also keeps the truth boundary intact: official submission mechanics are now proven, but public-task performance is still poor and needs more model work
+- that distinction matters because a receipt proves the evaluation and packaging path is real, while the score still tells the hard truth about current model quality
+
+Evidence:
+- Hugging Face discussion/PR: `https://huggingface.co/datasets/harborframework/terminal-bench-2-leaderboard/discussions/140`
+- Hugging Face verified commit: `https://huggingface.co/datasets/harborframework/terminal-bench-2-leaderboard/commit/9a4ad15564f2a3c1303da7c89a08dc10cfec36c3`
+- official public task: `terminal-bench/make-mips-interpreter`
+- receipt trial count: `5`
+- official receipt mean reward: `0.000`
+
+What this unlocks next:
+- future Q improvement work can target a real public-task benchmark receipt instead of only a repo-local proxy
+- once Q improves, the same official packaging path can be reused for stronger public receipts or broader leaderboard submissions without rebuilding the tooling
+- the repo can now keep two benchmark languages honest at once: local Harbor task packs for targeted diagnosis, and official public-task receipts for public proof
+
+### 2026-04-16
+
 #### Harbor now measures the real Q lane against hidden-answer task images, and the post-fix results expose Q's real improvement ceiling
 
 What changed:

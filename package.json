@@ -16,6 +16,7 @@
     "benchmark:gate:all": "npm run benchmark:gate:all -w @immaculate/harness",
     "benchmark:harbor:report": "npm run benchmark:harbor:report -w @immaculate/harness",
     "benchmark:harbor:soak": "npm run benchmark:harbor:soak -w @immaculate/harness",
+    "benchmark:terminalbench:receipt": "npm run benchmark:terminalbench:receipt -w @immaculate/harness",
     "benchmark:q:sweep:report": "npm run benchmark:q:sweep:report -w @immaculate/harness",
     "benchmark:publish:wandb": "npm run benchmark:publish:wandb -w @immaculate/harness",
     "benchmark:soak:30m": "npm run benchmark -w @immaculate/harness -- --pack=latency-soak-30m",

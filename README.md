@@ -40,6 +40,7 @@ This repository is prepared for public collaboration under the Apache 2.0 licens
 - live BridgeBench: [docs/wiki/BridgeBench.md](docs/wiki/BridgeBench.md)
 - live BridgeBench soak: [docs/wiki/BridgeBench-Soak.md](docs/wiki/BridgeBench-Soak.md)
 - Harbor terminal bench: [docs/wiki/Harbor-Terminal-Bench.md](docs/wiki/Harbor-Terminal-Bench.md)
+- official Terminal-Bench public-task receipt: [docs/wiki/Terminal-Bench-Receipt.md](docs/wiki/Terminal-Bench-Receipt.md)
 - Harbor terminal bench soak: [docs/wiki/Harbor-Terminal-Bench-Soak.md](docs/wiki/Harbor-Terminal-Bench-Soak.md)
 - Q benchmark sweep (60m): [docs/wiki/Q-Benchmark-Sweep-60m.md](docs/wiki/Q-Benchmark-Sweep-60m.md)
 - Q benchmark corpus: [docs/wiki/Q-Benchmark-Corpus.md](docs/wiki/Q-Benchmark-Corpus.md)
@@ -63,6 +64,7 @@ Latest plain-English readout:
 - those Q scores break down into strong structure/programmatic passes (`0.933` and `1.000`) plus improved operator-wording/judgment scores (`0.700` on both tasks)
 - those Harbor runs now use task images where the answer key is kept under `/tests/reference.json`, not copied into `/app`
 - that means Q is following the JSON contract reliably, but it still needs sharper grounding and more precise operator language to match the oracle lane
+- the repo now also carries an official public-task Terminal-Bench receipt submission PR for `terminal-bench/make-mips-interpreter`; it is a five-trial public receipt on the official leaderboard repo, not a full leaderboard sweep, and Q scored `0.000` on that official task
 
 ## Workspace
 
