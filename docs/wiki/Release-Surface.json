@@ -1,47 +1,26 @@
 {
-  "generatedAt": "2026-04-16T12:54:09.435Z",
+  "generatedAt": "2026-04-16T12:58:38.826Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "eca77656e19999c7a76388b1b8ffd2baee7f3c1a",
-    "gitShortSha": "eca7765",
-    "gitBranch": "detached",
-    "buildId": "0.1.0+eca7765",
+    "gitSha": "b53a727b562abfdbd4eb9831364639dc018354b5",
+    "gitShortSha": "b53a727",
+    "gitBranch": "harbor-q-push",
+    "buildId": "0.1.0+b53a727",
     "q": {
       "alias": "Q",
       "providerModel": "Q",
       "truthfulLabel": "Q",
-      "trainingLock": {
-        "generatedAt": "2026-04-15T12:25:00Z",
-        "lockVersion": 1,
-        "bundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e",
-        "runName": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2",
-        "aliasName": "Q",
-        "trainDatasetPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c-bench-v2.jsonl",
-        "trainDatasetSha256": "6207dd5ea8c567b6b38d53089aa88d50c1760d4491f3fee9fa9816a9ada5c9d8",
-        "trainDatasetRowCount": 1070,
-        "mixManifestPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c-bench-v2.manifest.json",
-        "mixManifestSha256": "bcb246fa22d73970adeaf5d44d0aacc5e45d06c22615a09e859e0a070ea8db34",
-        "mixSupplementalCount": 3,
-        "mixSupplementalPaths": [
-          "training/q/bridgebench_seed.json",
-          "training/q/coding_long_context_seed.json",
-          ".training-output/q/q-benchmark-corpus.jsonl"
-        ],
-        "curationRunPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\training-data\\runs\\cur-fnv1a-8f551a5c\\run.json",
-        "curationRunId": "cur-fnv1a-8f551a5c",
-        "lockPath": ".training-output/q/latest-training-lock.json"
-      },
       "hybridSession": {
-        "generatedAt": "2026-04-15T12:25:23Z",
-        "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
-        "sessionPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.json",
-        "localStatus": "completed",
+        "generatedAt": "2026-04-16T00:02:31Z",
+        "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v3",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v3/hybrid-session.json",
+        "localStatus": "dry-run",
         "cloudStatus": "not-configured",
-        "cloudProvider": "oci",
-        "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e",
-        "immaculateBundleId": "immaculate-orchestration-86bf2b5-6889943e"
+        "cloudProvider": "hf_jobs",
+        "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v3-a252873-f274e8c3",
+        "immaculateBundleId": "immaculate-orchestration-a252873-56a2e925"
       }
     }
   },
@@ -49,7 +28,7 @@
     {
       "label": "BridgeBench",
       "path": "docs\\wiki\\BridgeBench.json",
-      "generatedAt": "2026-04-15T06:15:54.185Z"
+      "generatedAt": "2026-04-15T23:26:02.954Z"
     },
     {
       "label": "BridgeBench soak",
@@ -74,32 +53,57 @@
     {
       "label": "Q hybrid training",
       "path": "docs\\wiki\\Q-Hybrid-Training.json",
-      "generatedAt": "2026-04-15T12:25:23Z"
+      "generatedAt": "2026-04-16T00:02:31Z"
+    },
+    {
+      "label": "HF Jobs training",
+      "path": "docs\\wiki\\HF-Jobs-Training.json",
+      "generatedAt": "2026-04-15T18:57:58Z"
+    },
+    {
+      "label": "Colab free training",
+      "path": "docs\\wiki\\Colab-Free-Training.json",
+      "generatedAt": "2026-04-15T19:49:12Z"
+    },
+    {
+      "label": "Cloudflare Q inference",
+      "path": "docs\\wiki\\Cloudflare-Q-Inference.json",
+      "generatedAt": "2026-04-15T22:59:47Z"
+    },
+    {
+      "label": "OCI GPU advisor",
+      "path": "docs\\wiki\\OCI-GPU-Advisor.json",
+      "generatedAt": "2026-04-16T00:02:31Z"
+    },
+    {
+      "label": "OCI region capacity",
+      "path": "docs\\wiki\\OCI-Region-Capacity.json",
+      "generatedAt": "2026-04-15T17:06:51Z"
     },
     {
       "label": "Q benchmark corpus",
       "path": "docs\\wiki\\Q-Benchmark-Corpus.json",
-      "generatedAt": "2026-04-15T12:25:16Z"
+      "generatedAt": "2026-04-16T00:02:26Z"
     },
     {
       "label": "Q benchmark promotion",
       "path": "docs\\wiki\\Q-Benchmark-Promotion.json",
-      "generatedAt": "2026-04-15T12:25:00Z"
+      "generatedAt": "2026-04-16T00:01:59Z"
     },
     {
       "label": "W&B benchmark export",
       "path": "docs\\wiki\\Benchmark-Wandb-Export.json",
-      "generatedAt": "2026-04-15T04:26:03.415957+00:00"
+      "generatedAt": "2026-04-16T02:41:20.106697+00:00"
     },
     {
       "label": "Harbor terminal bench",
       "path": "docs\\wiki\\Harbor-Terminal-Bench.json",
-      "generatedAt": "2026-04-16T12:43:37.599Z"
+      "generatedAt": "2026-04-16T12:58:24.860Z"
     },
     {
       "label": "Harbor terminal bench soak",
       "path": "docs\\wiki\\Harbor-Terminal-Bench-Soak.json",
-      "generatedAt": "2026-04-16T12:44:00.753Z"
+      "generatedAt": "2026-04-16T12:58:34.013Z"
     },
     {
       "label": "Q benchmark sweep (60m)",

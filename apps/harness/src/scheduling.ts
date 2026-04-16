@@ -195,6 +195,19 @@ function classifyBacklogPressure(score: number): GovernancePressureLevel {
   return "clear";
 }
 
+function governancePressureRank(pressure: GovernancePressureLevel): number {
+  return pressure === "critical" ? 2 : pressure === "elevated" ? 1 : 0;
+}
+
+function maxGovernancePressure(
+  ...pressures: Array<GovernancePressureLevel | undefined>
+): GovernancePressureLevel {
+  const ranked = pressures
+    .filter((pressure): pressure is GovernancePressureLevel => pressure !== undefined)
+    .sort((left, right) => governancePressureRank(right) - governancePressureRank(left));
+  return ranked[0] ?? "clear";
+}
+
 function buildAdmissionState(options: {
   shouldRunCognition: boolean;
   selectedCount: number;
@@ -381,7 +394,10 @@ export function planExecutionSchedule(input: ExecutionSchedulePlanInput): Execut
       1.6
     ).toFixed(2)
   );
-  const backlogPressure = classifyBacklogPressure(backlogScore);
+  const backlogPressure = maxGovernancePressure(
+    classifyBacklogPressure(backlogScore),
+    federatedPressure?.pressure
+  );
   const admissionState = buildAdmissionState({
     shouldRunCognition: input.arbitration.shouldRunCognition,
     selectedCount: selectedLayers.length,

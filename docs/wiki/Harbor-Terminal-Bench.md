@@ -2,11 +2,11 @@
 
 This page records the repo-local Harbor task pack for Immaculate and Q. It is a real executed benchmark surface, not a claim about leaderboard submission.
 
-- Generated: `2026-04-16T12:43:37.599Z`
-- Release: `0.1.0+eca7765`
-- Repo commit: `eca77656e19999c7a76388b1b8ffd2baee7f3c1a`
+- Generated: `2026-04-16T12:58:24.860Z`
+- Release: `0.1.0+b53a727`
+- Repo commit: `b53a727b562abfdbd4eb9831364639dc018354b5`
 - Q serving label: `Q`
-- Q training bundle: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e`
+- Q training bundle: `none generated yet`
 
 ## What Ran
 
@@ -46,16 +46,6 @@ This page records the repo-local Harbor task pack for Immaculate and Q. It is a 
 - Q route: `guarded`
 - Q reason: Bridge is degraded, so a guarded route is chosen. The direct HTTP/2 path remains healthy and trustworthy.
 - Q commit: Proceed with guarded orchestration, relying on the healthy direct HTTP/2 path as per constraints.
-
-## Q Gateway Transport Fix
-
-- Pre-fix gateway probe: `failed` at `300678` ms. Structured Q gateway request failed around the 300-second mark with fetch failed.
-- Direct Ollama probe: `passed` at `412787.48` ms. Direct Ollama /api/chat call returned a valid ROUTE/REASON/COMMIT response.
-- Post-fix gateway probe: `passed` at `8029.01` ms. The same structured prompt succeeded through the repaired Q gateway after moving off Node fetch to explicit http/https transport and raising the timeout budget.
-
-## LLM Judge Attempts
-
-- `openai/Q via Q gateway`: `failed` in `667.100` s. RewardKit judge reached the repaired Q gateway but returned malformed non-schema JSON, so the score was not accepted. Error: `JSONDecodeError while parsing judge response under LITELLM_DROP_PARAMS=1`
 
 ## Truth Boundary
 

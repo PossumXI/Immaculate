@@ -1,47 +1,26 @@
 {
-  "generatedAt": "2026-04-16T12:43:37.599Z",
+  "generatedAt": "2026-04-16T12:58:24.860Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "eca77656e19999c7a76388b1b8ffd2baee7f3c1a",
-    "gitShortSha": "eca7765",
-    "gitBranch": "detached",
-    "buildId": "0.1.0+eca7765",
+    "gitSha": "b53a727b562abfdbd4eb9831364639dc018354b5",
+    "gitShortSha": "b53a727",
+    "gitBranch": "harbor-q-push",
+    "buildId": "0.1.0+b53a727",
     "q": {
       "alias": "Q",
       "providerModel": "Q",
       "truthfulLabel": "Q",
-      "trainingLock": {
-        "generatedAt": "2026-04-15T12:25:00Z",
-        "lockVersion": 1,
-        "bundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e",
-        "runName": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2",
-        "aliasName": "Q",
-        "trainDatasetPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c-bench-v2.jsonl",
-        "trainDatasetSha256": "6207dd5ea8c567b6b38d53089aa88d50c1760d4491f3fee9fa9816a9ada5c9d8",
-        "trainDatasetRowCount": 1070,
-        "mixManifestPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c-bench-v2.manifest.json",
-        "mixManifestSha256": "bcb246fa22d73970adeaf5d44d0aacc5e45d06c22615a09e859e0a070ea8db34",
-        "mixSupplementalCount": 3,
-        "mixSupplementalPaths": [
-          "training/q/bridgebench_seed.json",
-          "training/q/coding_long_context_seed.json",
-          ".training-output/q/q-benchmark-corpus.jsonl"
-        ],
-        "curationRunPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\training-data\\runs\\cur-fnv1a-8f551a5c\\run.json",
-        "curationRunId": "cur-fnv1a-8f551a5c",
-        "lockPath": ".training-output/q/latest-training-lock.json"
-      },
       "hybridSession": {
-        "generatedAt": "2026-04-15T12:25:23Z",
-        "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
-        "sessionPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.json",
-        "localStatus": "completed",
+        "generatedAt": "2026-04-16T00:02:31Z",
+        "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v3",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v3/hybrid-session.json",
+        "localStatus": "dry-run",
         "cloudStatus": "not-configured",
-        "cloudProvider": "oci",
-        "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e",
-        "immaculateBundleId": "immaculate-orchestration-86bf2b5-6889943e"
+        "cloudProvider": "hf_jobs",
+        "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v3-a252873-f274e8c3",
+        "immaculateBundleId": "immaculate-orchestration-a252873-56a2e925"
       }
     }
   },
@@ -538,37 +517,6 @@
       }
     }
   ],
-  "llmJudge": {
-    "attempts": [
-      {
-        "status": "failed",
-        "provider": "openai/Q via Q gateway",
-        "summary": "RewardKit judge reached the repaired Q gateway but returned malformed non-schema JSON, so the score was not accepted.",
-        "durationSec": 667.1,
-        "error": "JSONDecodeError while parsing judge response under LITELLM_DROP_PARAMS=1",
-        "id": "q-gateway-openai"
-      }
-    ],
-    "generatedAt": "2026-04-14T20:21:01.8364655Z"
-  },
-  "transportFix": {
-    "directOllamaSuccess": {
-      "summary": "Direct Ollama /api/chat call returned a valid ROUTE/REASON/COMMIT response.",
-      "latencyMs": 412787.48,
-      "status": "passed"
-    },
-    "generatedAt": "2026-04-14T20:21:01.8364600Z",
-    "preFixGatewayFailure": {
-      "summary": "Structured Q gateway request failed around the 300-second mark with fetch failed.",
-      "latencyMs": 300678,
-      "status": "failed"
-    },
-    "postFixGatewaySuccess": {
-      "summary": "The same structured prompt succeeded through the repaired Q gateway after moving off Node fetch to explicit http/https transport and raising the timeout budget.",
-      "latencyMs": 8029.01,
-      "status": "passed"
-    }
-  },
   "output": {
     "jsonPath": "docs\\wiki\\Harbor-Terminal-Bench.json",
     "markdownPath": "docs\\wiki\\Harbor-Terminal-Bench.md"

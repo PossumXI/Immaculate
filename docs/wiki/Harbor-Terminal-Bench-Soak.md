@@ -2,15 +2,15 @@
 
 This page records the repeated Q-only Harbor task-pack lane. Oracle and Q run side by side on the same terminal tasks so the repo can keep the control truth and the Q truth in one surface.
 
-- Generated: `2026-04-16T12:44:00.753Z`
+- Generated: `2026-04-16T12:58:34.013Z`
 - State: `completed`
 - Started: `2026-04-15T03:36:39.719958`
 - Finished: `2026-04-15T04:07:11.653011`
 - Duration target: `3600s`
 - Elapsed seconds: `1831.93`
 - Duration target met: `no`
-- Release: `0.1.0+eca7765`
-- Repo commit: `eca7765`
+- Release: `0.1.0+b53a727`
+- Repo commit: `b53a727`
 - Q serving label: `Q`
 - Runtime root: `.runtime/harbor-soak/2026-04-15T07-36-33-729Z`
 - Total runs: `90`
