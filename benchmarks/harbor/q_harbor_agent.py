@@ -108,7 +108,7 @@ class HarborQAgent(BaseAgent):
             model=self._model,
             messages=messages,
             max_tokens=max_tokens,
-            temperature=0.1,
+            temperature=0.0,
         )
         content = response.choices[0].message.content or ""
         return content.strip()
@@ -122,7 +122,8 @@ class HarborQAgent(BaseAgent):
                         "You convert prior outputs into strict JSON only. "
                         "Return exactly one JSON object with keys route, reason, commit. "
                         "Allowed routes: reflex, cognitive, guarded, suppressed. "
-                        "Reason and commit must each be 24 words or fewer."
+                        "Reason and commit must each be 24 words or fewer. "
+                        "Keep the decisive fault explicit and the control action concrete."
                     ),
                 },
                 {
@@ -167,18 +168,79 @@ class HarborQAgent(BaseAgent):
             "Return exactly one JSON object with keys route, reason, commit. "
             "Allowed route values: reflex, cognitive, guarded, suppressed. "
             "Reason and commit must each be 24 words or fewer. "
+            "Reason must name the decisive concrete fault or health signal from the provided facts. "
+            "Commit must state the concrete next operator action that keeps the ledger truthful. "
+            "If an ACK is late, mismatched, or replayed, say so explicitly instead of generic caution language. "
+            "If the bridge is degraded but direct HTTP/2 is healthy and policy-allowed, say that direct HTTP/2 is the trusted path. "
             "Stay fail-closed and do not invent facts."
         )
+        example_messages = [
+            {
+                "role": "user",
+                "content": json.dumps(
+                    {
+                        "instruction": "Choose the safest next route for the immediate remediation pass.",
+                        "incident": {
+                            "objective": "Choose the safest next route for the immediate remediation pass.",
+                            "facts": [
+                                "A bridge ACK arrived after the 2.5 second timeout window.",
+                                "The ACK nonce did not match the active delivery nonce.",
+                                "Operators require fail-closed behavior until the ACK path is trusted again."
+                            ],
+                        },
+                    },
+                    indent=2,
+                ),
+            },
+            {
+                "role": "assistant",
+                "content": json.dumps(
+                    {
+                        "route": "guarded",
+                        "reason": "Late ACK and nonce mismatch make the bridge acknowledgment untrustworthy.",
+                        "commit": "Reject the forged ACK, keep delivery unacknowledged, and record containment.",
+                    }
+                ),
+            },
+            {
+                "role": "user",
+                "content": json.dumps(
+                    {
+                        "instruction": "Choose the next orchestration route without overstating bridge health.",
+                        "report_excerpt": {
+                            "objective": "Choose the next orchestration route without overstating bridge health.",
+                            "facts": [
+                                "The ACK nonce replayed an older delivery nonce.",
+                                "The bridge path cannot be trusted for delivered state right now.",
+                                "The direct HTTP/2 path is healthy and still policy-allowed."
+                            ],
+                        },
+                    },
+                    indent=2,
+                ),
+            },
+            {
+                "role": "assistant",
+                "content": json.dumps(
+                    {
+                        "route": "guarded",
+                        "reason": "Nonce replay breaks bridge trust, while the direct HTTP/2 path remains healthy.",
+                        "commit": "Route through direct HTTP/2, keep the bridge untrusted, and preserve truthful state.",
+                    }
+                ),
+            },
+        ]
 
         raw_output = await self._call_q(
             [
                 {"role": "system", "content": system_prompt},
+                *example_messages,
                 {
                     "role": "user",
                     "content": json.dumps(task_payload, indent=2),
                 },
             ],
-            max_tokens=320,
+            max_tokens=220,
         )
         structured = _normalize_structured_result(_extract_json_object(raw_output))
         repaired = False
@@ -208,4 +270,3 @@ class HarborQAgent(BaseAgent):
             "api_base_url": self._api_base_url,
             "repaired": repaired,
         }
-

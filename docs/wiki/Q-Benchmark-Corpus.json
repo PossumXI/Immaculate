@@ -1,20 +1,21 @@
 {
-  "generatedAt": "2026-04-16T17:14:38Z",
+  "generatedAt": "2026-04-16T19:02:55Z",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "293c63a2b1fbe4b97f6099ae6f61e63b1523817c",
-    "gitShortSha": "293c63a",
-    "buildId": "0.1.0+293c63a",
-    "qTrainingBundleId": "none generated yet"
+    "gitSha": "2384cf5c3a0f09aa225bf8b2d5c561a13c4e2958",
+    "gitShortSha": "2384cf5",
+    "buildId": "0.1.0+2384cf5",
+    "qTrainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-2384cf5-57097d65"
   },
   "rowType": "mixed",
-  "recordCount": 55,
+  "recordCount": 19,
   "sourceCounts": {
     "model-comparison": 4,
-    "bridgebench": 3,
+    "bridgebench": 4,
+    "harbor-terminal-bench": 2,
     "terminal-bench-receipt": 1,
     "bridgebench-soak": 1,
-    "harbor-terminal-bench-soak": 46
+    "harbor-terminal-bench-soak": 7
   },
   "sources": {
     "model-comparison": "docs/wiki/Model-Benchmark-Comparison.json",

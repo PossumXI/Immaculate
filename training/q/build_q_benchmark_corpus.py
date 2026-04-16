@@ -5,6 +5,9 @@ from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
+MAX_BRIDGEBENCH_SOAK_DECISIONS_PER_SCENARIO = 3
+MAX_HARBOR_SOAK_DECISIONS_PER_TASK = 3
+
 
 def repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
@@ -60,6 +63,19 @@ def load_optional_json(path: Path) -> dict | None:
     return payload if isinstance(payload, dict) else None
 
 
+def evenly_sample_rows(rows: list[dict], limit: int, key_name: str) -> list[dict]:
+    if len(rows) <= limit:
+        return rows
+    ordered_rows = sorted(rows, key=lambda row: int(row.get(key_name, 0) or 0))
+    if limit <= 1:
+        return [ordered_rows[0]]
+    positions = {
+        round(index * (len(ordered_rows) - 1) / (limit - 1))
+        for index in range(limit)
+    }
+    return [ordered_rows[position] for position in sorted(positions)]
+
+
 def harbor_context(root: Path, task_id: str, fallback_label: str) -> tuple[str, list[str]]:
     context_map = {
         "q-structured-contract": root / "benchmarks" / "harbor" / "q-structured-contract" / "incident.json",
@@ -111,6 +127,40 @@ def build_quality_lines(record: dict) -> list[str]:
             continue
         lines.append(f"{key}={format_quality_value(quality[key])}")
     return lines
+
+
+def collect_reward_gap_notes(reward_details: dict | None) -> list[str]:
+    if not isinstance(reward_details, dict):
+        return []
+    notes: list[str] = []
+    seen: set[tuple[str, str, str]] = set()
+    for entry in reward_details.get("reward", []):
+        if not isinstance(entry, dict):
+            continue
+        kind = str(entry.get("kind", "unknown")).strip() or "unknown"
+        for criterion in entry.get("criteria", []):
+            if not isinstance(criterion, dict):
+                continue
+            raw_value = criterion.get("value")
+            try:
+                value = float(raw_value)
+            except (TypeError, ValueError):
+                continue
+            if value >= 0.999:
+                continue
+            description = " ".join(str(criterion.get("description", "")).strip().split())
+            reasoning = " ".join(str(criterion.get("reasoning", "")).strip().split())
+            if not description:
+                description = str(criterion.get("name", "criterion")).strip() or "criterion"
+            note_key = (kind, description, reasoning)
+            if note_key in seen:
+                continue
+            seen.add(note_key)
+            if reasoning:
+                notes.append(f"{kind}: {description} -> {reasoning}")
+            else:
+                notes.append(f"{kind}: {description} -> scored {value:.3f}")
+    return notes
 
 
 def build_decision_text(record: dict) -> str:
@@ -242,30 +292,58 @@ def collect_harbor_records(root: Path, harbor: dict) -> list[dict]:
         reason = str(response.get("reason", "")).strip()
         commit = str(response.get("commit", "")).strip()
         score = q_gateway.get("score")
-        if score != 1 or not route or not reason or not commit:
+        if not route or not reason or not commit:
             continue
         row_id = str(task.get("id") or task.get("label") or "unknown").strip()
         label = str(task.get("label", row_id)).strip() or row_id
         objective, facts = harbor_context(root, row_id, label)
+        gap_notes = collect_reward_gap_notes(q_gateway.get("rewardDetails"))
+        numeric_score = float(score or 0)
+        if numeric_score >= 0.999:
+            record = {
+                "id": f"harbor-terminal-bench:{row_id}",
+                "row_type": "decision_triplet",
+                "source_surface": "harbor-terminal-bench",
+                "row_id": row_id,
+                "label": label,
+                "objective": objective,
+                "facts": facts,
+                "output": {
+                    "route": route,
+                    "reason": reason,
+                    "commit": commit,
+                },
+                "quality": {
+                    "status": "completed",
+                    "parse_success": True,
+                    "structured_field_count": 3,
+                    "thinking_detected": False,
+                    "score": numeric_score,
+                },
+            }
+            records.append(finalize_record(record))
+            continue
         record = {
             "id": f"harbor-terminal-bench:{row_id}",
-            "row_type": "decision_triplet",
+            "row_type": "benchmark_observation",
             "source_surface": "harbor-terminal-bench",
             "row_id": row_id,
             "label": label,
             "objective": objective,
             "facts": facts,
-            "output": {
-                "route": route,
-                "reason": reason,
-                "commit": commit,
-            },
+            "observation": [
+                f"Q produced a parseable structured response, but the Harbor score held at {numeric_score:.3f} instead of 1.000.",
+                f"Observed route: {route}",
+                f"Observed reason: {reason}",
+                f"Observed commit: {commit}",
+                *gap_notes,
+            ],
             "quality": {
-                "status": "completed",
+                "status": "degraded",
                 "parse_success": True,
                 "structured_field_count": 3,
                 "thinking_detected": False,
-                "score": float(score),
+                "score": numeric_score,
             },
         }
         records.append(finalize_record(record))
@@ -347,43 +425,52 @@ def collect_bridgebench_soak_records(bridgebench_soak: dict) -> list[dict]:
     training_rows = bridgebench_soak.get("trainingRows", [])
     if isinstance(training_rows, list) and training_rows:
         records: list[dict] = []
+        rows_by_scenario: dict[str, list[dict]] = {}
         for row in training_rows:
             if not isinstance(row, dict):
                 continue
-            route = str(row.get("routeSuggestion", "")).strip()
-            reason = str(row.get("reasonSummary", "")).strip()
-            commit = str(row.get("commitStatement", "")).strip()
-            if not route or not reason or not commit:
-                continue
-            attempt = int(row.get("attempt", 0) or 0)
             scenario_id = str(row.get("scenarioId") or "unknown").strip()
-            label = str(row.get("label", scenario_id)).strip() or scenario_id
-            context = str(row.get("context", "")).strip()
-            facts = [context] if context else []
-            record = {
-                "id": f"bridgebench-soak:{scenario_id}:attempt-{attempt:04d}",
-                "row_type": "decision_triplet",
-                "source_surface": "bridgebench-soak",
-                "row_id": f"{scenario_id}/attempt-{attempt:04d}",
-                "label": f"{label} soak attempt {attempt:04d}",
-                "objective": str(row.get("objective", label)).strip() or label,
-                "facts": facts,
-                "output": {
-                    "route": route,
-                    "reason": reason,
-                    "commit": commit,
-                },
-                "quality": {
-                    "status": str(row.get("status", "completed")).strip() or "completed",
-                    "parse_success": bool(row.get("parseSuccess", False)),
-                    "structured_field_count": int(row.get("structuredFieldCount", 3) or 3),
-                    "thinking_detected": bool(row.get("thinkingDetected", False)),
-                    "score": 1.0,
-                    "iteration": attempt,
-                    "duration_sec": round(float(row.get("wallLatencyMs", 0) or 0) / 1000, 3),
-                },
-            }
-            records.append(finalize_record(record))
+            rows_by_scenario.setdefault(scenario_id, []).append(row)
+        for scenario_rows in rows_by_scenario.values():
+            for row in evenly_sample_rows(
+                scenario_rows,
+                MAX_BRIDGEBENCH_SOAK_DECISIONS_PER_SCENARIO,
+                "attempt"
+            ):
+                route = str(row.get("routeSuggestion", "")).strip()
+                reason = str(row.get("reasonSummary", "")).strip()
+                commit = str(row.get("commitStatement", "")).strip()
+                if not route or not reason or not commit:
+                    continue
+                attempt = int(row.get("attempt", 0) or 0)
+                scenario_id = str(row.get("scenarioId") or "unknown").strip()
+                label = str(row.get("label", scenario_id)).strip() or scenario_id
+                context = str(row.get("context", "")).strip()
+                facts = [context] if context else []
+                record = {
+                    "id": f"bridgebench-soak:{scenario_id}:attempt-{attempt:04d}",
+                    "row_type": "decision_triplet",
+                    "source_surface": "bridgebench-soak",
+                    "row_id": f"{scenario_id}/attempt-{attempt:04d}",
+                    "label": f"{label} soak attempt {attempt:04d}",
+                    "objective": str(row.get("objective", label)).strip() or label,
+                    "facts": facts,
+                    "output": {
+                        "route": route,
+                        "reason": reason,
+                        "commit": commit,
+                    },
+                    "quality": {
+                        "status": str(row.get("status", "completed")).strip() or "completed",
+                        "parse_success": bool(row.get("parseSuccess", False)),
+                        "structured_field_count": int(row.get("structuredFieldCount", 3) or 3),
+                        "thinking_detected": bool(row.get("thinkingDetected", False)),
+                        "score": 1.0,
+                        "iteration": attempt,
+                        "duration_sec": round(float(row.get("wallLatencyMs", 0) or 0) / 1000, 3),
+                    },
+                }
+                records.append(finalize_record(record))
         return records
 
     if int(bridgebench_soak.get("runCount", 0) or 0) <= 0:
@@ -487,6 +574,7 @@ def collect_harbor_soak_records(root: Path, harbor_soak: dict) -> list[dict]:
         }
         records.append(finalize_record(aggregate_record))
 
+    eligible_runs_by_task: dict[str, list[dict]] = {}
     for run in harbor_soak.get("runs", []):
         if not isinstance(run, dict):
             continue
@@ -498,38 +586,46 @@ def collect_harbor_soak_records(root: Path, harbor_soak: dict) -> list[dict]:
         route = str(response.get("route", "")).strip()
         reason = str(response.get("reason", "")).strip()
         commit = str(response.get("commit", "")).strip()
-        score = run.get("score")
-        if score != 1 or not route or not reason or not commit:
+        score = float(run.get("score", 0) or 0)
+        if score < 0.999 or not route or not reason or not commit:
             continue
         task_id = str(run.get("taskId") or "unknown").strip()
-        iteration = int(run.get("iteration", 0) or 0)
-        label = str(run.get("taskLabel", task_id)).strip() or task_id
-        objective, facts = harbor_context(root, task_id, label)
-        record = {
-            "id": f"harbor-terminal-bench-soak:{task_id}:iter-{iteration:04d}",
-            "row_type": "decision_triplet",
-            "source_surface": "harbor-terminal-bench-soak",
-            "row_id": f"{task_id}/iter-{iteration:04d}",
-            "label": f"{label} soak iteration {iteration:04d}",
-            "objective": objective,
-            "facts": facts,
-            "output": {
-                "route": route,
-                "reason": reason,
-                "commit": commit,
-            },
-            "quality": {
-                "status": "completed",
-                "parse_success": True,
-                "structured_field_count": 3,
-                "thinking_detected": False,
-                "score": float(score),
-                "agent": "q",
-                "iteration": iteration,
-                "duration_sec": float(run.get("durationSec", 0) or 0),
-            },
-        }
-        records.append(finalize_record(record))
+        eligible_runs_by_task.setdefault(task_id, []).append(run)
+
+    for task_id, task_runs in eligible_runs_by_task.items():
+        for run in evenly_sample_rows(task_runs, MAX_HARBOR_SOAK_DECISIONS_PER_TASK, "iteration"):
+            response = run.get("response", {})
+            route = str(response.get("route", "")).strip()
+            reason = str(response.get("reason", "")).strip()
+            commit = str(response.get("commit", "")).strip()
+            iteration = int(run.get("iteration", 0) or 0)
+            label = str(run.get("taskLabel", task_id)).strip() or task_id
+            objective, facts = harbor_context(root, task_id, label)
+            record = {
+                "id": f"harbor-terminal-bench-soak:{task_id}:iter-{iteration:04d}",
+                "row_type": "decision_triplet",
+                "source_surface": "harbor-terminal-bench-soak",
+                "row_id": f"{task_id}/iter-{iteration:04d}",
+                "label": f"{label} soak iteration {iteration:04d}",
+                "objective": objective,
+                "facts": facts,
+                "output": {
+                    "route": route,
+                    "reason": reason,
+                    "commit": commit,
+                },
+                "quality": {
+                    "status": "completed",
+                    "parse_success": True,
+                    "structured_field_count": 3,
+                    "thinking_detected": False,
+                    "score": float(run.get("score", 0) or 0),
+                    "agent": "q",
+                    "iteration": iteration,
+                    "duration_sec": float(run.get("durationSec", 0) or 0),
+                },
+            }
+            records.append(finalize_record(record))
     return records
 
 
@@ -573,6 +669,7 @@ def build_markdown(summary: dict) -> str:
             "## Truth Boundary",
             "",
             "- This surface records successful benchmark-derived decision rows for Q so the training path can reuse tracked outputs without scraping markdown by hand.",
+            "- Harbor rows that stayed parse-valid but underperformed are carried as benchmark observations so Q can learn the miss without promoting the weak wording as gold output.",
             "- The official public Terminal-Bench receipt is carried here as benchmark observation evidence, not as a fake successful decision-triplet row.",
             "- It is intentionally complementary to Q-Failure-Corpus, which remains strict failure-only and should stay empty when the current Q benchmark lane is green.",
             "- These rows are output-side evidence from executed Q benchmarks. They help stabilize route/reason/commit behavior, but they are not a substitute for broader curation or new external truth sources.",

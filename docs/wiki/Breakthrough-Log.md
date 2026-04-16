@@ -21,6 +21,32 @@ For each breakthrough, record:
 
 ### 2026-04-16
 
+#### Q's grounding pass now removes the BridgeBench timeout class and cuts the next locked training bundle straight from the repaired benchmark surfaces
+
+What changed:
+- the direct Q prompt path was tightened to force shorter grounded route/reason/commit outputs instead of long soft language
+- the Harbor Q agent prompt was tightened with real task-grounded examples so the model gets graded on the exact failure facts instead of generic caution
+- the Q benchmark corpus now keeps successful Harbor and BridgeBench evidence in a governed `19`-record corpus while the strict failure corpus now carries only `3` live eval seeds
+- the next locked Q bundle is now `q-defsec-code-longctx-harbor-opt-2384cf5-2384cf5-57097d65`, and the paired Immaculate orchestration bundle is now `immaculate-orchestration-2384cf5-497211ed`
+
+Why it matters:
+- the missed pattern was that the benchmark pages already told us what to optimize next, but the repo still had one timeout-class failure sitting in the direct Q lane and no clean lock tied to the repaired evidence
+- removing that timeout class matters because it converts BridgeBench from a parser-and-timeout story into a real structure-and-grounding story
+- the new lock matters because it ties the next Q run to the measured pages that actually improved, not to an older bench-v3 snapshot from another checkout
+
+Evidence:
+- `docs/wiki/Model-Benchmark-Comparison.md` now shows direct Q at `4/4` with `27913.26 ms` average latency and `51167.09 ms` P95
+- `docs/wiki/BridgeBench.md` now shows direct Q at `4/4` with `18661.35 ms` average latency, `21430.91 ms` P95, and `0` bridge-runtime assertion failures
+- `docs/wiki/Harbor-Terminal-Bench.md` now shows `0.950` on `q-structured-contract` and `0.925` on `immaculate-bridge-fail-closed`
+- `docs/wiki/Q-Benchmark-Corpus.md` now reports `19` records, and `docs/wiki/Q-Failure-Corpus.md` now reports `3` live eval seeds with `8` resolved successes excluded
+
+What this unlocks next:
+- the next Q cloud run can target a real repaired lock instead of a stale bench-v3 lineage
+- the next Immaculate orchestration pass can train against the current `14`-signal orchestration bundle instead of an older cross-checkout artifact
+- future benchmark regressions can be turned into either corpus observations or strict failure seeds immediately, instead of waiting for another manual bundle refresh
+
+### 2026-04-16
+
 #### The official Terminal-Bench receipt now feeds the Q repair loop instead of stopping at publication
 
 What changed:

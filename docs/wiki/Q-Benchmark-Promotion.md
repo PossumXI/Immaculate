@@ -3,35 +3,25 @@
 This page is generated from the tracked Q training state.
 It records whether the latest benchmark corpus has already been promoted into the active locked Q bundle. It does not claim a fine-tune or cloud launch happened.
 
-- Generated: `2026-04-16T00:01:59Z`
-- Status: `promoted`
-- Release: `0.1.0+a252873`
-- Repo commit: `a252873`
+- Generated: `2026-04-16T19:03:51Z`
+- Status: `already-current`
+- Release: `0.1.0+2384cf5`
+- Repo commit: `2384cf5`
 - Benchmark corpus JSONL: `.training-output/q/q-benchmark-corpus.jsonl`
-- Benchmark corpus SHA-256: `56d05da3a82be73b84c596df2ad67aead87372666505aa29efb252f85cf59ed1`
-- Benchmark corpus rows: `57`
-- Active Q bundle: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v3-a252873-f274e8c3`
-- Active run: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v3`
-- Active session: `q-hybrid-cur-fnv1a-8f551a5c-bench-v3`
+- Benchmark corpus SHA-256: `b5322794988792306dbbab8264ce800d91da9cc2681d9f1e84f6accfc36b0ce2`
+- Benchmark corpus rows: `19`
+- Active Q bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-2384cf5-57097d65`
+- Active run: `q-defsec-code-longctx-harbor-opt-2384cf5`
+- Active session: `q-hybrid-harbor-opt-2384cf5`
 
 ## Promotion State
 
 - Benchmark corpus already in active mix: `True`
-- Active mix rows: `1069`
-- Active mix manifest: `.training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c-bench-v3.manifest.json`
-- Active session manifest: `.training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v3/hybrid-session.manifest.json`
-- Next candidate run name: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v4`
-- Next candidate session id: `q-hybrid-cur-fnv1a-8f551a5c-bench-v4`
-
-## Latest Promotion
-
-- Promoted bundle: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v3-a252873-f274e8c3`
-- Promoted run: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v3`
-- Promoted session: `q-hybrid-cur-fnv1a-8f551a5c-bench-v3`
-- Dataset rows: `1069`
-- Mix manifest: `.training-output/q/q-mix-longctx-cur-fnv1a-8f551a5c-bench-v3.manifest.json`
-- Config: `.training-output/q/q-lora-config-longctx-cur-fnv1a-8f551a5c-bench-v3.json`
-- Lock: `.training-output/q/latest-training-lock.json`
+- Active mix rows: `31`
+- Active mix manifest: `.training-output/q/q-mix-longctx-harbor-opt-2384cf5.manifest.json`
+- Active session manifest: `.training-output/q/sessions/q-hybrid-harbor-opt-2384cf5/hybrid-session.manifest.json`
+- Next candidate run name: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v1`
+- Next candidate session id: `q-hybrid-harbor-opt-2384cf5-bench-v1`
 
 ## Truth Boundary
 

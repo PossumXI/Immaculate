@@ -18,19 +18,19 @@ const sectors = [
 const proofCards = [
   {
     label: "BridgeBench",
-    body: "3 of 4 parsed clean. 1 timeout surfaced."
+    body: "4 of 4 parsed clean. Bridge runtime lane stayed clean."
   },
   {
-    label: "TerminalBench",
-    body: "Harbor task lane held 1.000 and 1.000."
+    label: "Harbor",
+    body: "Q reached 0.950 and 0.925 on the governed operator pack."
   },
   {
-    label: "30m Soak",
-    body: "1270.54 events per second. 2 integrity flags."
+    label: "Public Receipt",
+    body: "Official public Terminal-Bench task still scores 0.000 and stays in eval."
   },
   {
     label: "Training",
-    body: "bench-v3 lock. 1069 rows. Q plus Immaculate."
+    body: "Current lock. 31 rows. 2 supplementals. Q plus Immaculate."
   }
 ];
 
@@ -69,15 +69,15 @@ export function LandingPage() {
 
       <section className="landingHero">
         <div className="landingCopy">
-          <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 15</p>
+          <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 16</p>
           <h1 className="landingHeadline">Controlled intelligence for critical operations.</h1>
-          <p className="landingLede">Defense and healthcare. Evidence before action. Q only. Benchmarked. Locked.</p>
+          <p className="landingLede">Defense and healthcare. Evidence before action. Q only. Benchmarked. Current lock.</p>
 
           <div className="landingPills">
-            <span>Q only</span>
-            <span>bench-v3 locked</span>
-            <span>Harbor 1.000 / 1.000</span>
-            <span>30m soak 1270.54/s</span>
+            <span>Q 4/4 structured</span>
+            <span>BridgeBench 4/4</span>
+            <span>Harbor 0.950 / 0.925</span>
+            <span>31-row lock</span>
           </div>
 
           <div className="landingSectorGrid">

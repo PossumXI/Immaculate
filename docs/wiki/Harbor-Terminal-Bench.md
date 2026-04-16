@@ -2,11 +2,11 @@
 
 This page records the repo-local Harbor task pack for Immaculate and Q. It is a real executed benchmark surface, not a claim about leaderboard submission.
 
-- Generated: `2026-04-16T13:05:23.427Z`
-- Release: `0.1.0+555b65c`
-- Repo commit: `555b65c753e642cbb1adb3082561f1cc92e7476b`
+- Generated: `2026-04-16T19:02:49.774Z`
+- Release: `0.1.0+2384cf5`
+- Repo commit: `2384cf5c3a0f09aa225bf8b2d5c561a13c4e2958`
 - Q serving label: `Q`
-- Q training bundle: `none generated yet`
+- Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-2384cf5-57097d65`
 
 ## What Ran
 
@@ -18,34 +18,34 @@ This page records the repo-local Harbor task pack for Immaculate and Q. It is a 
 ## Q structured contract
 
 - Oracle score: `1.000`
-- Oracle duration: `79.03 s`
-- Q gateway score: `0.817`
-- Q programmatic score: `0.933`
-- Q LLM-judge score: `0.700`
-- Q gateway duration: `70.14 s`
+- Oracle duration: `121.72 s`
+- Q gateway score: `0.950`
+- Q programmatic score: `1.000`
+- Q LLM-judge score: `0.900`
+- Q gateway duration: `121.27 s`
 - Oracle job: `.runtime/harbor-custom/harbor-q-oracle-fixed`
 - Q gateway job: `.runtime/harbor-custom/harbor-q-agent-fixed`
 - Reference visible to agent: `no`
 - Q self-repair needed: `no`
 - Q route: `guarded`
-- Q reason: Operators require fail-closed behavior due to an unverified ACK path, necessitating caution.
-- Q commit: Maintain fail-closed posture until the ACK path is fully trusted again, per operator directive.
+- Q reason: Late ACK and nonce mismatch violate ledger truthfulness; fail-closed is required.
+- Q commit: Ignore the invalid ACK, maintain the current delivery state, and await trusted confirmation.
 
 ## Immaculate bridge fail-closed
 
 - Oracle score: `1.000`
-- Oracle duration: `53.20 s`
-- Q gateway score: `0.850`
+- Oracle duration: `117.54 s`
+- Q gateway score: `0.925`
 - Q programmatic score: `1.000`
-- Q LLM-judge score: `0.700`
-- Q gateway duration: `80.76 s`
+- Q LLM-judge score: `0.850`
+- Q gateway duration: `173.12 s`
 - Oracle job: `.runtime/harbor-custom/harbor-immaculate-oracle-fixed`
 - Q gateway job: `.runtime/harbor-custom/harbor-immaculate-agent-fixed`
 - Reference visible to agent: `no`
 - Q self-repair needed: `no`
 - Q route: `guarded`
-- Q reason: Bridge is degraded, so a guarded route is chosen. The direct HTTP/2 path remains healthy and trustworthy.
-- Q commit: Proceed with guarded orchestration, relying on the healthy direct HTTP/2 path as per constraints.
+- Q reason: Bridge ACK is late and nonce replayed, but direct HTTP/2 is healthy and allowed.
+- Q commit: Use direct HTTP/2 for orchestration, maintaining fail-closed posture regarding the bridge.
 
 ## Truth Boundary
 

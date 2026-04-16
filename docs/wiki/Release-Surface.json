@@ -1,26 +1,45 @@
 {
-  "generatedAt": "2026-04-16T17:54:52.478Z",
+  "generatedAt": "2026-04-16T19:03:57.778Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "52791dc79552d792290c495d5d75ecd32529f769",
-    "gitShortSha": "52791dc",
+    "gitSha": "2384cf5c3a0f09aa225bf8b2d5c561a13c4e2958",
+    "gitShortSha": "2384cf5",
     "gitBranch": "harbor-q-push",
-    "buildId": "0.1.0+52791dc",
+    "buildId": "0.1.0+2384cf5",
     "q": {
       "alias": "Q",
       "providerModel": "Q",
       "truthfulLabel": "Q",
+      "trainingLock": {
+        "generatedAt": "2026-04-16T18:46:00Z",
+        "lockVersion": 1,
+        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-2384cf5-57097d65",
+        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5",
+        "aliasName": "Q",
+        "trainDatasetPath": ".training-output/q/q-mix-longctx-harbor-opt-2384cf5.jsonl",
+        "trainDatasetSha256": "57097d65714bd07c0ed6b08dbdd78e52effbcc3351bb0b3eb72c767e9eb0dc35",
+        "trainDatasetRowCount": 31,
+        "mixManifestPath": ".training-output/q/q-mix-longctx-harbor-opt-2384cf5.manifest.json",
+        "mixManifestSha256": "4a8345611c704e95c532a1f6a6be7807f405c8eab68c508fa2db34aa30b7bd06",
+        "mixSupplementalCount": 2,
+        "mixSupplementalPaths": [
+          "training/q/bridgebench_seed.json",
+          "training/q/coding_long_context_seed.json"
+        ],
+        "curationRunId": null,
+        "lockPath": ".training-output/q/latest-training-lock.json"
+      },
       "hybridSession": {
-        "generatedAt": "2026-04-16T00:02:31Z",
-        "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v3",
-        "sessionPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v3/hybrid-session.json",
+        "generatedAt": "2026-04-16T18:56:30Z",
+        "sessionId": "q-hybrid-harbor-opt-2384cf5",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5/hybrid-session.json",
         "localStatus": "dry-run",
         "cloudStatus": "not-configured",
         "cloudProvider": "hf_jobs",
-        "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v3-a252873-f274e8c3",
-        "immaculateBundleId": "immaculate-orchestration-a252873-56a2e925"
+        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-2384cf5-57097d65",
+        "immaculateBundleId": "immaculate-orchestration-2384cf5-497211ed"
       }
     }
   },
@@ -28,7 +47,7 @@
     {
       "label": "BridgeBench",
       "path": "docs\\wiki\\BridgeBench.json",
-      "generatedAt": "2026-04-15T23:26:02.954Z"
+      "generatedAt": "2026-04-16T19:02:39.556Z"
     },
     {
       "label": "BridgeBench soak",
@@ -38,7 +57,7 @@
     {
       "label": "Q structured contract benchmark",
       "path": "docs\\wiki\\Model-Benchmark-Comparison.json",
-      "generatedAt": "2026-04-15T02:25:01.093Z"
+      "generatedAt": "2026-04-16T18:59:16.535Z"
     },
     {
       "label": "Q readiness gate",
@@ -53,7 +72,7 @@
     {
       "label": "Q hybrid training",
       "path": "docs\\wiki\\Q-Hybrid-Training.json",
-      "generatedAt": "2026-04-16T00:02:31Z"
+      "generatedAt": "2026-04-16T18:56:30Z"
     },
     {
       "label": "HF Jobs training",
@@ -83,17 +102,17 @@
     {
       "label": "Q benchmark corpus",
       "path": "docs\\wiki\\Q-Benchmark-Corpus.json",
-      "generatedAt": "2026-04-16T17:14:38Z"
+      "generatedAt": "2026-04-16T19:02:55Z"
     },
     {
       "label": "Q failure corpus",
       "path": "docs\\wiki\\Q-Failure-Corpus.json",
-      "generatedAt": "2026-04-16T17:14:38Z"
+      "generatedAt": "2026-04-16T19:03:01Z"
     },
     {
       "label": "Q benchmark promotion",
       "path": "docs\\wiki\\Q-Benchmark-Promotion.json",
-      "generatedAt": "2026-04-16T00:01:59Z"
+      "generatedAt": "2026-04-16T19:03:51Z"
     },
     {
       "label": "W&B benchmark export",
@@ -103,12 +122,12 @@
     {
       "label": "Harbor terminal bench",
       "path": "docs\\wiki\\Harbor-Terminal-Bench.json",
-      "generatedAt": "2026-04-16T13:05:23.427Z"
+      "generatedAt": "2026-04-16T19:02:49.774Z"
     },
     {
       "label": "Terminal-Bench receipt",
       "path": "docs\\wiki\\Terminal-Bench-Receipt.json",
-      "generatedAt": "2026-04-16T16:09:51.838Z"
+      "generatedAt": "2026-04-16T19:02:50.028Z"
     },
     {
       "label": "GitHub checks receipt",

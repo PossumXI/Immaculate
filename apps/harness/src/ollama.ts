@@ -89,10 +89,10 @@ const DEFAULT_STRUCTURED_MAX_TOKENS = 120;
 const DEFAULT_STRUCTURED_TEMPERATURE = 0.2;
 const Q_STRUCTURED_MAX_TOKENS = Math.max(
   DEFAULT_STRUCTURED_MAX_TOKENS,
-  Number(process.env.IMMACULATE_OLLAMA_Q_EXECUTION_MAX_TOKENS ?? 640) || 640
+  Number(process.env.IMMACULATE_OLLAMA_Q_EXECUTION_MAX_TOKENS ?? 256) || 256
 );
 const Q_STRUCTURED_TEMPERATURE = Number(
-  process.env.IMMACULATE_OLLAMA_Q_EXECUTION_TEMPERATURE ?? 0.1
+  process.env.IMMACULATE_OLLAMA_Q_EXECUTION_TEMPERATURE ?? 0.05
 );
 
 function normalizeBaseUrl(baseUrl = DEFAULT_OLLAMA_URL): string {
@@ -444,16 +444,16 @@ function responseContract(role: IntelligenceLayerRole): string {
   if (role === "guard") {
     return `Return exactly:
 ROUTE: one sentence, max 18 words.
-REASON: one sentence, max 18 words.
-COMMIT: one sentence, max 18 words.
+REASON: one sentence, max 18 words, naming the decisive fault or health signal.
+COMMIT: one sentence, max 18 words, naming the concrete next control action.
 VERDICT: approved or blocked.
 No bullets. No preamble. No extra sections.`;
   }
 
   return `Return exactly:
 ROUTE: one sentence, max 18 words.
-REASON: one sentence, max 18 words.
-COMMIT: one sentence, max 18 words.
+REASON: one sentence, max 18 words, naming the decisive fault or health signal.
+COMMIT: one sentence, max 18 words, naming the concrete next control action.
 No bullets. No preamble. No extra sections.`;
 }
 
@@ -485,7 +485,8 @@ recent=${formatRecentExecutionSection(options.snapshot)}
 schedules=${formatScheduleSection(options.snapshot)}
 conversations=${formatConversationSection(options.snapshot)}
 context=${context}
-events=${options.snapshot.logTail.slice(0, 4).join(" | ") || "none"}`;
+events=${options.snapshot.logTail.slice(0, 4).join(" | ") || "none"}
+grounding=prefer explicit facts like late ACK, nonce mismatch/replay, degraded bridge, or healthy direct path over generic safety language`;
 }
 
 function parseGuardVerdict(value: string | undefined, role: IntelligenceLayerRole): GuardVerdict | undefined {
@@ -726,7 +727,7 @@ You convert state into route/reason/commit outputs for a durable orchestration s
     options.layer.role === "guard"
       ? " You must include VERDICT: approved or blocked."
       : ""
-  }`;
+  } Keep the reason grounded in the decisive concrete fault or health signal and keep the commit as the next truthful control action.`;
   const completion = await runOllamaChatCompletion({
     endpoint: options.layer.endpoint,
     model: options.layer.model,

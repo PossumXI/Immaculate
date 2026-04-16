@@ -275,6 +275,10 @@ def main() -> None:
     benchmark_included = False
     benchmark_sha_match = False
     supplemental_paths: list[Path] = []
+    current_base_path = resolve_repo_path(str(current_mix_manifest.get("base", {}).get("path", "")).strip())
+    if current_base_path is not None and relative_path(root, current_base_path) == benchmark_rel_path:
+        benchmark_included = True
+        benchmark_sha_match = sha256_file(current_base_path) == benchmark_sha
     for entry in current_supplemental:
         if not isinstance(entry, dict):
             continue

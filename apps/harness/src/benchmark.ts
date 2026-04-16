@@ -115,6 +115,32 @@ const BENCHMARK_ATTRIBUTION: BenchmarkAttribution = {
   ]
 };
 
+let benchmarkHistoryFromRunsCache: Promise<BenchmarkIndex> | null = null;
+let publishedBenchmarkIndexCache: Promise<BenchmarkIndex> | null = null;
+let latestPublishedBenchmarkReportCache: Promise<BenchmarkReport | null> | null = null;
+const benchmarkReportByPathCache = new Map<string, Promise<BenchmarkReport | null>>();
+
+function resetBenchmarkPublicationCaches(): void {
+  benchmarkHistoryFromRunsCache = null;
+  publishedBenchmarkIndexCache = null;
+  latestPublishedBenchmarkReportCache = null;
+  benchmarkReportByPathCache.clear();
+}
+
+function mergeBenchmarkIndexEntries(...entrySets: BenchmarkIndexEntry[][]): BenchmarkIndexEntry[] {
+  const entriesBySuiteId = new Map<string, BenchmarkIndexEntry>();
+  for (const entrySet of entrySets) {
+    for (const entry of entrySet) {
+      if (!entriesBySuiteId.has(entry.suiteId)) {
+        entriesBySuiteId.set(entry.suiteId, entry);
+      }
+    }
+  }
+  return Array.from(entriesBySuiteId.values())
+    .sort((left, right) => Date.parse(right.generatedAt) - Date.parse(left.generatedAt))
+    .slice(0, BENCHMARK_HISTORY_LIMIT);
+}
+
 function classifyBenchmarkRunKind(plannedDurationMs: number): BenchmarkRunKind {
   if (plannedDurationMs >= 3_600_000) {
     return "soak";
@@ -856,6 +882,18 @@ async function publishBenchmarkReport(report: BenchmarkReport): Promise<Benchmar
     writeFile(INDEX_JSON_PATH, JSON.stringify(nextIndex, null, 2), "utf8")
   ]);
 
+  resetBenchmarkPublicationCaches();
+  latestPublishedBenchmarkReportCache = Promise.resolve(publishedReport);
+  publishedBenchmarkIndexCache = Promise.resolve(nextIndex);
+  benchmarkReportByPathCache.set(runJsonRelativePath, Promise.resolve({
+    ...report,
+    publication: {
+      jsonPath: runJsonRelativePath,
+      markdownPath: runMarkdownRelativePath
+    }
+  }));
+  benchmarkReportByPathCache.set(toRelativePublicationPath(LATEST_JSON_PATH), Promise.resolve(publishedReport));
+
   return publishedReport;
 }
 
@@ -876,102 +914,150 @@ function toBenchmarkIndexEntry(report: BenchmarkReport): BenchmarkIndexEntry {
 }
 
 async function loadBenchmarkHistoryFromRuns(): Promise<BenchmarkIndex> {
-  try {
-    const files = await readdir(BENCHMARK_RUNS_DIR, {
-      withFileTypes: true
-    });
-    const entries = (
-      await Promise.all(
-        files
-          .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
-          .map(async (entry) => {
-            const filePath = path.join(BENCHMARK_RUNS_DIR, entry.name);
-            try {
-              const content = await readFile(filePath, "utf8");
-              const report = normalizeBenchmarkReportInput(JSON.parse(content));
-              return toBenchmarkIndexEntry({
-                ...report,
-                publication: {
-                  jsonPath: toRelativePublicationPath(filePath),
-                  markdownPath: toRelativePublicationPath(
-                    path.join(BENCHMARK_RUNS_DIR, `${report.suiteId}.md`)
-                  )
-                }
-              });
-            } catch {
-              return null;
-            }
-          })
-      )
-    )
-      .filter((entry): entry is BenchmarkIndexEntry => entry !== null)
-      .sort((left, right) => Date.parse(right.generatedAt) - Date.parse(left.generatedAt))
-      .slice(0, BENCHMARK_HISTORY_LIMIT);
+  if (benchmarkHistoryFromRunsCache) {
+    return benchmarkHistoryFromRunsCache;
+  }
 
-    return {
-      generatedAt: entries[0]?.generatedAt ?? new Date(0).toISOString(),
-      entries
-    };
-  } catch (error) {
-    const candidate = error as NodeJS.ErrnoException;
-    if (candidate.code === "ENOENT") {
+  benchmarkHistoryFromRunsCache = (async () => {
+    try {
+      const files = await readdir(BENCHMARK_RUNS_DIR, {
+        withFileTypes: true
+      });
+      const entries = (
+        await Promise.all(
+          files
+            .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
+            .map(async (entry) => {
+              const filePath = path.join(BENCHMARK_RUNS_DIR, entry.name);
+              try {
+                const content = await readFile(filePath, "utf8");
+                const report = normalizeBenchmarkReportInput(JSON.parse(content));
+                return toBenchmarkIndexEntry({
+                  ...report,
+                  publication: {
+                    jsonPath: toRelativePublicationPath(filePath),
+                    markdownPath: toRelativePublicationPath(
+                      path.join(BENCHMARK_RUNS_DIR, `${report.suiteId}.md`)
+                    )
+                  }
+                });
+              } catch {
+                return null;
+              }
+            })
+        )
+      )
+        .filter((entry): entry is BenchmarkIndexEntry => entry !== null)
+        .sort((left, right) => Date.parse(right.generatedAt) - Date.parse(left.generatedAt))
+        .slice(0, BENCHMARK_HISTORY_LIMIT);
+
       return {
-        generatedAt: new Date(0).toISOString(),
-        entries: []
+        generatedAt: entries[0]?.generatedAt ?? new Date(0).toISOString(),
+        entries
       };
+    } catch (error) {
+      const candidate = error as NodeJS.ErrnoException;
+      if (candidate.code === "ENOENT") {
+        return {
+          generatedAt: new Date(0).toISOString(),
+          entries: []
+        };
+      }
+      throw error;
     }
+  })();
+
+  try {
+    return await benchmarkHistoryFromRunsCache;
+  } catch (error) {
+    benchmarkHistoryFromRunsCache = null;
     throw error;
   }
 }
 
 export async function loadPublishedBenchmarkIndex(): Promise<BenchmarkIndex> {
-  const runHistory = await loadBenchmarkHistoryFromRuns();
-  try {
-    const content = await readFile(INDEX_JSON_PATH, "utf8");
-    const index = normalizeBenchmarkIndexInput(JSON.parse(content));
-    const mergedEntries = [...index.entries, ...runHistory.entries]
-      .filter(
-        (entry, indexValue, entries) =>
-          entries.findIndex((candidate) => candidate.suiteId === entry.suiteId) === indexValue
-      )
-      .sort((left, right) => Date.parse(right.generatedAt) - Date.parse(left.generatedAt))
-      .slice(0, BENCHMARK_HISTORY_LIMIT);
+  if (publishedBenchmarkIndexCache) {
+    return publishedBenchmarkIndexCache;
+  }
 
-    return {
-      generatedAt: mergedEntries[0]?.generatedAt ?? index.generatedAt,
-      entries: mergedEntries
-    };
-  } catch (error) {
-    const candidate = error as NodeJS.ErrnoException;
-    if (candidate.code === "ENOENT") {
-      return runHistory;
+  publishedBenchmarkIndexCache = (async () => {
+    const runHistory = await loadBenchmarkHistoryFromRuns();
+    try {
+      const content = await readFile(INDEX_JSON_PATH, "utf8");
+      const index = normalizeBenchmarkIndexInput(JSON.parse(content));
+      const mergedEntries = mergeBenchmarkIndexEntries(index.entries, runHistory.entries);
+
+      return {
+        generatedAt: mergedEntries[0]?.generatedAt ?? index.generatedAt,
+        entries: mergedEntries
+      };
+    } catch (error) {
+      const candidate = error as NodeJS.ErrnoException;
+      if (candidate.code === "ENOENT") {
+        return runHistory;
+      }
+      throw error;
     }
+  })();
+
+  try {
+    return await publishedBenchmarkIndexCache;
+  } catch (error) {
+    publishedBenchmarkIndexCache = null;
     throw error;
   }
 }
 
 export async function loadPublishedBenchmarkReport(): Promise<BenchmarkReport | null> {
-  try {
-    const content = await readFile(LATEST_JSON_PATH, "utf8");
-    return normalizeBenchmarkReportInput(JSON.parse(content));
-  } catch (error) {
-    const candidate = error as NodeJS.ErrnoException;
-    if (candidate.code === "ENOENT") {
-      return null;
+  if (latestPublishedBenchmarkReportCache) {
+    return latestPublishedBenchmarkReportCache;
+  }
+
+  latestPublishedBenchmarkReportCache = (async () => {
+    try {
+      const content = await readFile(LATEST_JSON_PATH, "utf8");
+      return normalizeBenchmarkReportInput(JSON.parse(content));
+    } catch (error) {
+      const candidate = error as NodeJS.ErrnoException;
+      if (candidate.code === "ENOENT") {
+        return null;
+      }
+      throw error;
     }
+  })();
+
+  try {
+    return await latestPublishedBenchmarkReportCache;
+  } catch (error) {
+    latestPublishedBenchmarkReportCache = null;
     throw error;
   }
 }
 
 async function loadBenchmarkReportFromRelativePath(relativePath: string): Promise<BenchmarkReport | null> {
-  try {
-    const content = await readFile(path.join(REPO_ROOT, relativePath), "utf8");
-    return normalizeBenchmarkReportInput(JSON.parse(content));
-  } catch (error) {
-    const candidate = error as NodeJS.ErrnoException;
-    if (candidate.code === "ENOENT") {
-      return null;
+  const normalizedRelativePath = relativePath.replace(/\\/g, "/");
+  const cached = benchmarkReportByPathCache.get(normalizedRelativePath);
+  if (cached) {
+    return cached;
+  }
+
+  const loader = (async () => {
+    try {
+      const content = await readFile(path.join(REPO_ROOT, normalizedRelativePath), "utf8");
+      return normalizeBenchmarkReportInput(JSON.parse(content));
+    } catch (error) {
+      const candidate = error as NodeJS.ErrnoException;
+      if (candidate.code === "ENOENT") {
+        return null;
+      }
+      throw error;
     }
+  })();
+  benchmarkReportByPathCache.set(normalizedRelativePath, loader);
+  try {
+    return await loader;
+  } catch (error) {
+    benchmarkReportByPathCache.delete(normalizedRelativePath);
     throw error;
   }
 }

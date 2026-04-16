@@ -20,6 +20,54 @@ def load_optional_json(path: Path):
     return payload if isinstance(payload, dict) else None
 
 
+def harbor_context(root: Path, task_id: str, fallback_label: str) -> tuple[str, list[str]]:
+    context_map = {
+        "q-structured-contract": root / "benchmarks" / "harbor" / "q-structured-contract" / "incident.json",
+        "immaculate-bridge-fail-closed": root / "benchmarks" / "harbor" / "immaculate-bridge-fail-closed" / "report_excerpt.json",
+    }
+    context_path = context_map.get(task_id)
+    if context_path is None or not context_path.exists():
+        return fallback_label, []
+    payload = load_json(context_path)
+    objective = str(payload.get("objective", "")).strip() or fallback_label
+    facts = [str(entry).strip() for entry in payload.get("facts", []) if str(entry).strip()]
+    return objective, facts
+
+
+def collect_reward_gap_notes(reward_details: dict | None) -> list[str]:
+    if not isinstance(reward_details, dict):
+        return []
+    notes: list[str] = []
+    seen: set[tuple[str, str, str]] = set()
+    for entry in reward_details.get("reward", []):
+        if not isinstance(entry, dict):
+            continue
+        kind = str(entry.get("kind", "unknown")).strip() or "unknown"
+        for criterion in entry.get("criteria", []):
+            if not isinstance(criterion, dict):
+                continue
+            raw_value = criterion.get("value")
+            try:
+                value = float(raw_value)
+            except (TypeError, ValueError):
+                continue
+            if value >= 0.999:
+                continue
+            description = " ".join(str(criterion.get("description", "")).strip().split())
+            reasoning = " ".join(str(criterion.get("reasoning", "")).strip().split())
+            if not description:
+                description = str(criterion.get("name", "criterion")).strip() or "criterion"
+            note_key = (kind, description, reasoning)
+            if note_key in seen:
+                continue
+            seen.add(note_key)
+            if reasoning:
+                notes.append(f"{kind}: {description} -> {reasoning}")
+            else:
+                notes.append(f"{kind}: {description} -> scored {value:.3f}")
+    return notes
+
+
 def normalize_q_model(model: dict) -> bool:
     label = str(model.get("truthfulLabel", "")).strip()
     requested = str(model.get("requestedModel", ""))
@@ -67,6 +115,30 @@ def build_terminal_bench_failure_text(receipt: dict) -> str:
         f"trials={int(harbor.get('trials', 0) or 0)}; "
         f"discussion={str(leaderboard.get('discussionUrl', '')).strip() or '[missing discussion url]'}"
     )
+
+
+def build_harbor_failure_text(
+    task: dict,
+    objective: str,
+    facts: list[str],
+    observed_lines: list[str]
+) -> str:
+    label = str(task.get("label", "")).strip()
+    task_id = str(task.get("id") or label.lower().replace(" ", "-")).strip()
+    lines = [
+        "Q defensive engineering failure corpus",
+        "source=harbor-terminal-bench",
+        "language=text",
+        f"path=harbor-terminal-bench/{task_id}",
+        "tags=q,failure-corpus,eval-seed,harbor-underperformance",
+        "",
+        "OBJECTIVE",
+        objective or label,
+    ]
+    if facts:
+        lines.extend(["", "REFERENCE FACTS", *facts])
+    lines.extend(["", "OBSERVED FAILURE", *observed_lines, "", "RESPONSE CONTRACT", "ROUTE: one sentence.", "REASON: one sentence.", "COMMIT: one sentence."])
+    return "\n".join(lines) + "\n"
     return (
         "Q defensive engineering failure corpus\n"
         "source=terminal-bench-receipt\n"
@@ -116,7 +188,57 @@ def collect_terminal_bench_receipt_records(receipt: dict):
     ]
 
 
-def collect_records(comparison: dict, bridgebench: dict, terminal_bench_receipt: dict | None):
+def collect_harbor_records(root: Path, harbor: dict):
+    records = []
+    for task in harbor.get("tasks", []):
+        if not isinstance(task, dict):
+            continue
+        q_gateway = task.get("qGateway", {})
+        if not isinstance(q_gateway, dict):
+            continue
+        score = float(q_gateway.get("score", 0) or 0)
+        if score >= 0.999:
+            continue
+        response = q_gateway.get("response", {})
+        if not isinstance(response, dict):
+            response = {}
+        route = str(response.get("route", "")).strip()
+        reason = str(response.get("reason", "")).strip()
+        commit = str(response.get("commit", "")).strip()
+        row_id = str(task.get("id") or task.get("label") or "unknown").strip()
+        label = str(task.get("label", row_id)).strip() or row_id
+        objective, facts = harbor_context(root, row_id, label)
+        gap_notes = collect_reward_gap_notes(q_gateway.get("rewardDetails"))
+        observed_lines = [
+            "failure_class=harbor_structured_underperforming",
+            "status=completed_but_under_target",
+            f"score={score:.3f}",
+            f"preview=route={route or '[missing]'}; reason={reason or '[missing]'}; commit={commit or '[missing]'}",
+            *gap_notes,
+        ]
+        records.append(
+            {
+                "id": f"harbor-terminal-bench:{row_id}",
+                "source": "harbor-terminal-bench",
+                "label": f"Harbor underperformance: {label}",
+                "status": "completed_but_under_target",
+                "parseSuccess": bool(route and reason and commit),
+                "failureClass": "harbor_structured_underperforming",
+                "responsePreview": "; ".join(observed_lines[:4]),
+                "evalOnly": True,
+                "text": build_harbor_failure_text(task, objective, facts, observed_lines),
+            }
+        )
+    return records
+
+
+def collect_records(
+    root: Path,
+    comparison: dict,
+    bridgebench: dict,
+    terminal_bench_receipt: dict | None,
+    harbor: dict | None
+):
     records = []
     resolved_successes = 0
     failure_counter = Counter()
@@ -160,6 +282,14 @@ def collect_records(comparison: dict, bridgebench: dict, terminal_bench_receipt:
             if failure_class:
                 failure_counter[str(failure_class)] += 1
 
+    if harbor:
+        harbor_records = collect_harbor_records(root, harbor)
+        records.extend(harbor_records)
+        for record in harbor_records:
+            failure_class = record.get("failureClass")
+            if failure_class:
+                failure_counter[str(failure_class)] += 1
+
     return records, resolved_successes, dict(failure_counter)
 
 
@@ -183,6 +313,7 @@ def build_intro(eval_seed_count: int, resolved_successes: int) -> str:
 
 
 def main():
+    root = repo_root()
     parser = argparse.ArgumentParser(description="Build Q failure corpus from live report surfaces.")
     parser.add_argument(
         "--comparison",
@@ -205,6 +336,11 @@ def main():
         help="Path to Terminal-Bench-Receipt.json",
     )
     parser.add_argument(
+        "--harbor",
+        default=str(repo_root() / "docs" / "wiki" / "Harbor-Terminal-Bench.json"),
+        help="Path to Harbor-Terminal-Bench.json",
+    )
+    parser.add_argument(
         "--manifest",
         default=str(repo_root() / "docs" / "wiki" / "Q-Failure-Corpus.json"),
         help="Summary manifest JSON path",
@@ -214,6 +350,7 @@ def main():
     comparison = load_json(Path(args.comparison))
     bridgebench = load_json(Path(args.bridgebench))
     terminal_bench_receipt = load_optional_json(Path(args.terminal_bench_receipt))
+    harbor = load_optional_json(Path(args.harbor))
     output_path = Path(args.output)
     manifest_path = Path(args.manifest)
     markdown_path = manifest_path.with_suffix(".md")
@@ -221,7 +358,13 @@ def main():
     output_path.parent.mkdir(parents=True, exist_ok=True)
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
 
-    records, resolved_successes, failure_counts = collect_records(comparison, bridgebench, terminal_bench_receipt)
+    records, resolved_successes, failure_counts = collect_records(
+        root,
+        comparison,
+        bridgebench,
+        terminal_bench_receipt,
+        harbor
+    )
     eval_seed_count = len(records)
 
     with output_path.open("w", encoding="utf-8", newline="\n") as handle:
@@ -238,11 +381,12 @@ def main():
             "modelComparison": Path(args.comparison).name,
             "bridgeBench": Path(args.bridgebench).name,
             "terminalBenchReceipt": Path(args.terminal_bench_receipt).name if terminal_bench_receipt else None,
+            "harborTerminalBench": Path(args.harbor).name if harbor else None,
         },
         "output": {
-            "jsonlPath": str(output_path.relative_to(repo_root())).replace("\\", "/"),
-            "manifestPath": str(manifest_path.relative_to(repo_root())).replace("\\", "/"),
-            "markdownPath": str(markdown_path.relative_to(repo_root())).replace("\\", "/"),
+            "jsonlPath": str(output_path.relative_to(root)).replace("\\", "/"),
+            "manifestPath": str(manifest_path.relative_to(root)).replace("\\", "/"),
+            "markdownPath": str(markdown_path.relative_to(root)).replace("\\", "/"),
         },
     }
 

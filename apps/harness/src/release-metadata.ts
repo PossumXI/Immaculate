@@ -230,9 +230,13 @@ async function readTrainingLockSummary(): Promise<QTrainingLockSummary | undefin
 }
 
 async function readHybridSessionSummary(): Promise<QHybridTrainingSessionSummary | undefined> {
+  const trainingLock = await readTrainingLockSummary();
   const wikiPath = path.join(REPO_ROOT, "docs", "wiki", "Q-Hybrid-Training.json");
   const wikiPayload = existsSync(wikiPath) ? await readJsonFile<QHybridTrainingWikiFile>(wikiPath) : undefined;
-  if (wikiPayload?.sessionId) {
+  const wikiBundleId = wikiPayload?.q?.trainingBundleId?.trim();
+  const lockBundleId = trainingLock?.bundleId?.trim();
+  const wikiMatchesCurrentLock = wikiBundleId && lockBundleId ? wikiBundleId === lockBundleId : Boolean(wikiPayload?.sessionId);
+  if (wikiPayload?.sessionId && wikiMatchesCurrentLock) {
     return {
       generatedAt: wikiPayload.generatedAt,
       sessionId: wikiPayload.sessionId,

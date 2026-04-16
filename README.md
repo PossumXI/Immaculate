@@ -60,13 +60,13 @@ This repository is prepared for public collaboration under the Apache 2.0 licens
 
 Latest plain-English readout:
 
-- on the current repo-local Harbor terminal task pack, oracle is `1.000` on both tasks
-- `Q` scored `0.817` on the Q structured-contract task and `0.850` on the Immaculate bridge fail-closed task
-- those Q scores break down into strong structure/programmatic passes (`0.933` and `1.000`) plus improved operator-wording/judgment scores (`0.700` on both tasks)
-- those Harbor runs now use task images where the answer key is kept under `/tests/reference.json`, not copied into `/app`
-- that means Q is following the JSON contract reliably, but it still needs sharper grounding and more precise operator language to match the oracle lane
-- the repo now also carries an official public-task Terminal-Bench receipt submission PR for `terminal-bench/make-mips-interpreter`; it is a five-trial public receipt on the official leaderboard repo, not a full leaderboard sweep, and Q scored `0.000` on that official task
-- that official receipt now feeds the tracked Q benchmark corpus and the strict Q failure corpus, so the public proof path becomes a real training/eval input instead of a dead-end report page
+- direct `Q` is `4/4` on the local structured lane and `4/4` on BridgeBench; current averages are `27913.26 ms` on Model-Benchmark-Comparison and `18661.35 ms` on BridgeBench, with `0` bridge-runtime assertion failures
+- on the current repo-local Harbor task pack, oracle is still `1.000` on both tasks
+- `Q` scored `0.950` on the Q structured-contract task and `0.925` on the Immaculate bridge fail-closed task
+- those Harbor scores break down into perfect programmatic passes (`1.000` on both tasks) plus improved operator-grade judge scores (`0.900` and `0.850`)
+- the current locked Q bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-2384cf5-57097d65`: `31` rows, `2` curated supplementals, and a matching Immaculate orchestration bundle `immaculate-orchestration-2384cf5-497211ed`
+- the tracked Q benchmark corpus now carries `19` records, and the strict failure corpus carries `3` live eval seeds with `8` resolved successes kept out of the failure lane
+- the official public-task Terminal-Bench receipt for `terminal-bench/make-mips-interpreter` is still `0.000`, and that underperformance now stays in the repair loop instead of living as a dead-end public artifact
 
 ## Workspace
 
@@ -162,7 +162,7 @@ For the `Q` fine-tune path specifically:
 - OCI region capacity probe: `npm run q:oci:capacity -- --oci-bin C:/path/to/oci.exe --config-file .training-output/q/oci-controller/DEFAULT.config --profile DEFAULT --region-key PHX`
 - OCI controller launch script: `bash deploy/oci-training/scripts/launch-oci-q-training.sh --session-manifest .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --env-file deploy/oci-training/env/immaculate-q-training.env.example`
 
-As of `2026-04-14`, the direct `Q` structured-contract lane is green on this machine:
+As of `2026-04-16`, the direct `Q` structured-contract lane is green on this machine:
 `Q` is `4/4` on both
 [docs/wiki/Model-Benchmark-Comparison.md](docs/wiki/Model-Benchmark-Comparison.md) and
 [docs/wiki/BridgeBench.md](docs/wiki/BridgeBench.md), and the tracked

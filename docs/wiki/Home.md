@@ -16,9 +16,10 @@ If you only read one generated page before diving deeper, read [[Release-Surface
 If you want the fastest plain-English benchmark summary, read [[Harbor-Terminal-Bench]] and [[BridgeBench]] together.
 Right now the honest story is:
 
-- Q is structurally reliable on the tracked local contract lanes
-- Q still loses points when the benchmark asks for sharper operator wording and tighter grounding in the exact failure facts
-- Immaculate's measured control-plane surfaces are real and published, but the next improvement work still belongs in Q's reasoning quality, not in marketing copy
+- Q parses both tracked local contract lanes cleanly: `4/4` on [[Model-Benchmark-Comparison]] and `4/4` on [[BridgeBench]]
+- Q is materially better on the Harbor operator pack, but it still loses points on grounding and operator wording: `0.950` on `q-structured-contract` and `0.925` on `immaculate-bridge-fail-closed`
+- the public Terminal-Bench receipt is still a real failing benchmark at `0.000`, and that failure now stays in the tracked Q repair loop instead of getting buried in marketing copy
+- the current Q improvement path is concrete: a `31`-row locked bundle, a `19`-record benchmark corpus, and a `3`-seed failure corpus built from the latest measured runs
 
 ## What This Project Actually Prioritizes
 
@@ -97,7 +98,9 @@ Right now the honest story is:
 - the `Q` training path now has a tracked manifest, dataset shaper, and Unsloth launch bundle tied back to that same curation/provenance spine instead of an unrelated notebook path
 - the `Q` training path now also has a tracked BridgeBench seed mix, a run-id-shaped dataset flow, and a dry-run validator so the repo can test the training path honestly before a GPU job starts
 - the live direct-Q benchmark surface now proves the repaired truth after the direct-Q fix: `Q` is `4/4` on the structured contract lane, matching the readiness gate instead of hiding behind the gateway
+- the live direct-Q benchmark surface now measures `4/4` at `27913.26 ms` average latency and `51167.09 ms` P95 on this machine
 - the live BridgeBench surface now also shows direct `Q` at `4/4` parse success with a clean bridge-runtime lane, so the bridge/control-plane benchmark and the Q contract benchmark agree again
+- the live BridgeBench surface now measures `4/4` at `18661.35 ms` average latency and `21430.91 ms` P95 on this machine
 - the live dedicated Q gateway drill still proves the serving edge itself is bounded correctly: `401` without a key, `429` on concurrent keyed pressure, a sanitized served response at `200`, and only ~`93 ms` of gateway overhead above upstream latency on the latest loopback pass
 - the live benchmark surface now includes a real `60s` paced benchmark lane and a real `60m` soak lane with published hardware context and wall-clock timing
 - the latest live validation page now also keeps the ugly part on record: the fresh `60s` benchmark rerun failed three assertions on `knightly`, so the throughput line is published as a regression signal rather than quietly replaced with an older clean run
