@@ -63,15 +63,17 @@ This repository is prepared for public collaboration under the Apache 2.0 licens
 
 Latest plain-English readout:
 
-- direct `Q` is `4/4` on the local structured lane and `4/4` on BridgeBench; current averages are `27913.26 ms` on Model-Benchmark-Comparison and `18661.35 ms` on BridgeBench, with `0` bridge-runtime assertion failures
-- the new `Q` substrate benchmark is green end to end: `0` failed assertions, `3` structured fields at P50, `29037.75 ms` gateway-latency P95, `77.04 ms` arbitration-latency P95, and `3` guard denials carried through the critical hold case
+- direct `Q` is `4/4` on the local structured lane and `4/4` on BridgeBench; current averages are `24527.89 ms` on Model-Benchmark-Comparison and `13108.23 ms` on BridgeBench, with `0` bridge-runtime assertion failures
+- the `Q` substrate benchmark is green end to end on the current `bench-v2` lock: `0` failed assertions, `3` structured fields at P50, `10400.27 ms` gateway-latency P95, `2.11 ms` arbitration-latency P95, and `3` guard denials carried through the critical hold case
+- the dedicated Q gateway is green on the live contract lane: `/health 200`, authenticated `/api/q/info 200`, authenticated `/v1/models 200`, authenticated chat `200`, concurrent rejection `429`, and only `80.64 ms` of measured gateway-added latency above upstream Ollama latency on the latest loopback pass
 - the live `Q` API audit loop is now real and writing back into training surfaces: `5` raw audit records currently exist, covering `transport_timeout`, `missing_prompt`, and `prompt_too_large`
 - on the current repo-local Harbor task pack, oracle is still `1.000` on both tasks
 - `Q` scored `0.950` on the Q structured-contract task and `0.925` on the Immaculate bridge fail-closed task
 - those Harbor scores break down into perfect programmatic passes (`1.000` on both tasks) plus improved operator-grade judge scores (`0.900` and `0.850`)
-- the current locked Q bundle is now `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v1-45280d5-a181f850`: `32` rows and `2` tracked supplementals; the paired Immaculate orchestration bundle is `immaculate-orchestration-45280d5-55187c4d`
-- the current HF Jobs lane is authenticated and staging the promoted bench-v1 bundle correctly, but the real blocker is Hugging Face prepaid credits, not missing auth or a fake session
-- the tracked Q benchmark corpus now carries `20` records, and the strict failure corpus carries `6` live eval seeds with `8` resolved successes kept out of the failure lane
+- the current locked Q bundle is now `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v2-3c3e41d-766c8ccf`: `31` rows and `2` tracked supplementals; the paired Immaculate orchestration bundle is `immaculate-orchestration-3c3e41d-7aa3136b`
+- the current HF Jobs lane is authenticated and staging the promoted `bench-v2` bundle correctly, but the real blocker is Hugging Face prepaid credits, not missing auth or fake session state
+- the current Cloudflare lane is honest and narrower: the eval bundle is ready, but auth, worker config, and adapter export are still blocked, so Cloudflare remains an inference/eval lane rather than a claimed training backend
+- the tracked Q benchmark corpus now carries `19` records, and the strict failure corpus carries `6` live eval seeds with `8` resolved successes kept out of the failure lane
 - the official public-task Terminal-Bench receipt for `terminal-bench/make-mips-interpreter` is still `0.000`, and that underperformance now stays in the repair loop instead of living as a dead-end public artifact
 
 ## Workspace
@@ -162,15 +164,15 @@ For the `Q` fine-tune path specifically:
 - hybrid session launcher: `npm run q:training:session -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --launch`
 - HF Jobs launcher: `npm run q:hf:jobs -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --env-file C:/path/to/cloud.env --check`
 - Colab free notebook exporter: `npm run q:colab:export -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json`
-- Cloudflare adapter export: `npm run q:cloudflare:adapter -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --check`
-- Cloudflare eval bundle: `npm run q:cloudflare:eval-bundle -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json`
-- Cloudflare inference controller: `npm run q:cloudflare:inference -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --env-file deploy/cloudflare/env/immaculate-q-cloudflare.env.example --check`
+- Cloudflare adapter export: `npm run q:cloudflare:adapter -- --check`
+- Cloudflare eval bundle: `npm run q:cloudflare:eval-bundle`
+- Cloudflare inference controller: `npm run q:cloudflare:inference -- --check`
 - Cloudflare worker typecheck: `npm run q:cloudflare:worker:typecheck`
 - benchmark promotion command: `npm run q:training:promote-benchmark`
 - OCI region capacity probe: `npm run q:oci:capacity -- --oci-bin C:/path/to/oci.exe --config-file .training-output/q/oci-controller/DEFAULT.config --profile DEFAULT --region-key PHX`
 - OCI controller launch script: `bash deploy/oci-training/scripts/launch-oci-q-training.sh --session-manifest .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --env-file deploy/oci-training/env/immaculate-q-training.env.example`
 
-As of `2026-04-16`, the direct `Q` structured-contract lane is green on this machine:
+As of `2026-04-17`, the direct `Q` structured-contract lane is green on this machine:
 `Q` is `4/4` on both
 [docs/wiki/Model-Benchmark-Comparison.md](docs/wiki/Model-Benchmark-Comparison.md) and
 [docs/wiki/BridgeBench.md](docs/wiki/BridgeBench.md), and the tracked

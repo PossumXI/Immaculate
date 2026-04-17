@@ -1,11 +1,17 @@
 import argparse
 import json
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
 
 def repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
+
+
+def default_latest_session_path(root: Path) -> Path | None:
+    candidate = root / ".training-output" / "q" / "latest-hybrid-session.json"
+    return candidate if candidate.exists() else None
 
 
 def rebase_repo_owned_path(root: Path, candidate: Path) -> Path:
@@ -55,6 +61,33 @@ def save_json(path_value: Path, payload: dict) -> None:
     path_value.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
 
+def selection_group(payload: dict) -> str:
+    source_surface = str(payload.get("source_surface", "benchmark")).strip() or "benchmark"
+    row_type = str(payload.get("row_type", "decision_triplet")).strip() or "decision_triplet"
+    quality = payload.get("quality")
+    status = str(quality.get("status", "unknown")).strip() if isinstance(quality, dict) else "unknown"
+    return f"{source_surface}:{row_type}:{status or 'unknown'}"
+
+
+def stratified_payloads(payloads: list[dict], limit: int) -> list[dict]:
+    if len(payloads) <= limit:
+        return payloads
+    grouped: dict[str, list[dict]] = {}
+    for payload in payloads:
+        grouped.setdefault(selection_group(payload), []).append(payload)
+    ordered_keys = sorted(grouped.keys(), key=lambda key: (-len(grouped[key]), key))
+    selected: list[dict] = []
+    while len(selected) < limit and any(grouped[key] for key in ordered_keys):
+        for key in ordered_keys:
+            bucket = grouped[key]
+            if not bucket:
+                continue
+            selected.append(bucket.pop(0))
+            if len(selected) >= limit:
+                break
+    return selected
+
+
 def main() -> None:
     root = repo_root()
     parser = argparse.ArgumentParser(description="Build a Cloudflare eval bundle from the tracked Q benchmark corpus.")
@@ -66,7 +99,7 @@ def main() -> None:
     args = parser.parse_args()
 
     session_arg = args.session_path or args.session
-    session_path = resolve_repo_path(session_arg) if session_arg else None
+    session_path = resolve_repo_path(session_arg) if session_arg else default_latest_session_path(root)
     session = load_json(session_path) if session_path and session_path.exists() else {}
     session_id = str(session.get("sessionId", "")).strip() or "standalone"
 
@@ -79,7 +112,7 @@ def main() -> None:
     jsonl_path = output_dir / "cloudflare-q-eval-bundle.jsonl"
     manifest_path = output_dir / "cloudflare-q-eval-bundle.json"
 
-    records: list[dict] = []
+    payloads: list[dict] = []
     with source_jsonl.open("r", encoding="utf-8") as handle:
         for raw_line in handle:
             line = raw_line.strip()
@@ -88,34 +121,43 @@ def main() -> None:
             payload = json.loads(line)
             if not isinstance(payload, dict):
                 continue
-            objective = str(payload.get("objective", "")).strip() or str(payload.get("label", "")).strip() or "Q task"
-            facts = payload.get("facts")
-            fact_lines = [str(entry).strip() for entry in facts] if isinstance(facts, list) else []
-            request_text = "\n".join(
-                part
-                for part in [
-                    f"Objective: {objective}",
-                    "Return a strict Q response with route, reason, and commit.",
-                    f"Facts: {'; '.join(fact_lines)}" if fact_lines else "",
-                ]
-                if part
-            )
-            records.append(
-                {
-                    "id": payload.get("id"),
-                    "model": "Q",
-                    "messages": [{"role": "user", "content": request_text}],
-                    "metadata": {
-                        "surface": str(payload.get("source_surface", "benchmark")),
-                        "rowId": str(payload.get("row_id", payload.get("id", "unknown"))),
-                        "session": session_id,
-                        "quality": str(payload.get("quality", {}).get("status", "unknown")) if isinstance(payload.get("quality"), dict) else "unknown",
-                    },
-                    "reference": payload.get("output"),
-                }
-            )
-            if len(records) >= max(args.limit, 1):
-                break
+            payloads.append(payload)
+
+    selected_payloads = stratified_payloads(payloads, max(args.limit, 1))
+    selected_source_counts = Counter(str(payload.get("source_surface", "benchmark")).strip() or "benchmark" for payload in selected_payloads)
+    selected_group_counts = Counter(selection_group(payload) for payload in selected_payloads)
+
+    records: list[dict] = []
+    for payload in selected_payloads:
+        objective = str(payload.get("objective", "")).strip() or str(payload.get("label", "")).strip() or "Q task"
+        facts = payload.get("facts")
+        fact_lines = [str(entry).strip() for entry in facts] if isinstance(facts, list) else []
+        group = selection_group(payload)
+        request_text = "\n".join(
+            part
+            for part in [
+                f"Objective: {objective}",
+                "Return a strict Q response with route, reason, and commit.",
+                f"Facts: {'; '.join(fact_lines)}" if fact_lines else "",
+            ]
+            if part
+        )
+        records.append(
+            {
+                "id": payload.get("id"),
+                "model": "Q",
+                "messages": [{"role": "user", "content": request_text}],
+                "metadata": {
+                    "surface": str(payload.get("source_surface", "benchmark")),
+                    "rowId": str(payload.get("row_id", payload.get("id", "unknown"))),
+                    "session": session_id,
+                    "rowType": str(payload.get("row_type", "decision_triplet")).strip() or "decision_triplet",
+                    "selectionGroup": group,
+                    "quality": str(payload.get("quality", {}).get("status", "unknown")) if isinstance(payload.get("quality"), dict) else "unknown",
+                },
+                "reference": payload.get("output"),
+            }
+        )
 
     with jsonl_path.open("w", encoding="utf-8") as handle:
         for record in records:
@@ -124,9 +166,13 @@ def main() -> None:
     manifest = {
         "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
         "sessionId": session_id,
+        "sessionPath": relative_path(root, session_path) if session_path else None,
         "sourceJsonlPath": relative_path(root, source_jsonl),
+        "availableRecordCount": len(payloads),
         "recordCount": len(records),
         "limit": max(args.limit, 1),
+        "sourceSurfaceCounts": dict(sorted(selected_source_counts.items())),
+        "selectionGroupCounts": dict(sorted(selected_group_counts.items())),
         "output": {
             "jsonlPath": relative_path(root, jsonl_path),
             "manifestPath": relative_path(root, manifest_path),

@@ -21,6 +21,37 @@ For each breakthrough, record:
 
 ### 2026-04-17
 
+#### The Q hot path now spends less time on disk and routing overhead, and the active training lock has moved forward to bench-v2
+
+What changed:
+- the dedicated Q gateway stopped rewriting its API-key store on every successful request and now only flushes usage metadata on a bounded cadence
+- that same key-store path now reloads and merges external key changes safely, so validator-created keys work across processes instead of being lost behind a stale in-memory cache
+- the direct Q path now uses keep-alive HTTP agents into Ollama, and the Q-specific prompt path is more compact and more grounded in explicit facts instead of wasting tokens on generic context
+- Immaculate worker selection now reuses node, peer, and execution-outcome views inside a batch instead of rebuilding that context for every reservation
+- the Cloudflare eval lane now follows the latest hybrid session automatically, builds a stratified eval bundle, and publishes explicit readiness buckets instead of one vague ready/not-ready flag
+- the active Q lock is now `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v2-3c3e41d-766c8ccf`, paired with Immaculate bundle `immaculate-orchestration-3c3e41d-7aa3136b`
+
+Why it matters:
+- the missed systems pattern was that Q already had the right structure contract, but too much latency and too much operator ambiguity were still coming from glue code around the model rather than the model alone
+- cutting repeated disk writes and repeated routing-context rebuilds matters because it removes avoidable latency tax from both the public Q edge and the governed Immaculate substrate seam
+- fixing cross-process key-store visibility matters because a gateway that cannot see newly created keys is not actually production-safe, even if its first validation pass looks green
+- promoting to `bench-v2` matters because the next training run now points at the repaired `19`-row benchmark corpus and the newest gateway/substrate truth instead of the older `bench-v1` snapshot
+
+Evidence:
+- `docs/wiki/Q-Gateway-Validation.md` now shows `/health 200`, authenticated `/api/q/info 200`, authenticated `/v1/models 200`, authenticated chat `200`, concurrent rejection `429`, and only `80.64 ms` gateway-added latency on the latest loopback pass
+- `docs/wiki/Q-Gateway-Substrate.md` now records `0` failed assertions, `10400.27 ms` gateway-latency P95, and `2.11 ms` arbitration-latency P95 on the current `bench-v2` lock
+- `docs/wiki/Model-Benchmark-Comparison.md` now records direct Q at `4/4` with `24527.89 ms` average latency and `51935 ms` P95
+- `docs/wiki/BridgeBench.md` now records direct Q at `4/4` with `13108.23 ms` average latency and `16837.2 ms` P95
+- `docs/wiki/Cloudflare-Q-Inference.md` now follows session `q-hybrid-harbor-opt-2384cf5-bench-v2` and publishes explicit `authReady`, `adapterReady`, `workerReady`, `evalBundleReady`, and `smokeReady` state
+- `docs/wiki/Release-Surface.md` now points at the promoted `bench-v2` Q bundle and the paired Immaculate orchestration bundle
+
+What this unlocks next:
+- the next Q fine-tune can target the real remaining gap, which is Harbor grounding and operator phrasing, without wasting effort on gateway or routing glue that is already tightened
+- the next Cloudflare pass can focus on auth and adapter artifact generation instead of fighting stale session selection and shallow readiness reporting
+- future live gateway validations can add or revoke keys during the run without breaking the gateway's own contract proof
+
+### 2026-04-17
+
 #### The OCI cloud lane moved past the missing-CSI blocker, and the next real limit is Oracle support-domain authorization
 
 What changed:

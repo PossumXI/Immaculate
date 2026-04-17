@@ -17,12 +17,13 @@ If you want the fastest plain-English benchmark summary, read [[Harbor-Terminal-
 Right now the honest story is:
 
 - Q parses both tracked local contract lanes cleanly: `4/4` on [[Model-Benchmark-Comparison]] and `4/4` on [[BridgeBench]]
-- the new `Q` substrate benchmark is fully green: the dedicated Q gateway stayed live, rejected unauthenticated traffic, preserved `ROUTE/REASON/COMMIT`, and handed the work back into Immaculate arbitration with `0` failed assertions
+- the new `Q` substrate benchmark is fully green: the dedicated Q gateway stayed live, rejected unauthenticated traffic, preserved `ROUTE/REASON/COMMIT`, and handed the work back into Immaculate arbitration with `0` failed assertions, `10400.27 ms` gateway-latency P95, and `2.11 ms` arbitration-latency P95
+- the dedicated Q gateway contract is also green: `/health 200`, authenticated `/api/q/info 200`, authenticated `/v1/models 200`, authenticated chat `200`, concurrent rejection `429`, and `80.64 ms` measured gateway-added latency on the latest loopback pass
 - the live `Q` API audit loop is now real: rejected and failed `/api/q/run` calls are written into a tracked audit spool, surfaced in [[Q-API-Audit]], and promoted into the strict failure corpus instead of being lost in runtime logs
 - Q is materially better on the Harbor operator pack, but it still loses points on grounding and operator wording: `0.950` on `q-structured-contract` and `0.925` on `immaculate-bridge-fail-closed`
 - the public Terminal-Bench receipt is still a real failing benchmark at `0.000`, and that failure now stays in the tracked Q repair loop instead of getting buried in marketing copy
-- the current Q improvement path is concrete: a promoted `32`-row locked bench-v1 bundle, a `20`-record benchmark corpus, a `6`-seed failure corpus, and a latest Immaculate orchestration bundle of `immaculate-orchestration-45280d5-55187c4d`
-- the current cloud truth is also concrete: the promoted HF Jobs bundle is staged and authenticated on the real account, and the blocker is now prepaid credit balance rather than missing auth or missing bundle state
+- the current Q improvement path is concrete: a promoted `31`-row locked `bench-v2` bundle, a `19`-record benchmark corpus, a `6`-seed failure corpus, and a latest Immaculate orchestration bundle of `immaculate-orchestration-3c3e41d-7aa3136b`
+- the current cloud truth is also concrete: the promoted HF Jobs bundle is staged and authenticated on the real account, the blocker there is prepaid credit balance, and the Cloudflare inference lane is still `auth-blocked` with the eval bundle ready but no live worker auth or adapter artifact yet
 
 ## What This Project Actually Prioritizes
 
@@ -81,12 +82,12 @@ Right now the honest story is:
 - [[Model-Benchmark-Comparison]] carries the live direct-Q structured contract benchmark plus the latest orchestrator baseline readout
 - [[BridgeBench]] carries the live bridge/control-plane Q benchmark alongside the real bridge runtime assertions
 - [[BridgeBench-Soak]] carries the repeated one-hour Q-only BridgeBench lane
-- [[Q-Gateway-Validation]] carries the live dedicated-gateway contract proof for `Q`: health, auth, model listing, served completion, and concurrency rejection
+- [[Q-Gateway-Validation]] carries the live dedicated-gateway contract proof for `Q`: health, auth, model listing, served completion, concurrency rejection, and measured gateway-added latency
 - [[Q-Gateway-Substrate]] carries the live seam benchmark where the dedicated `Q` gateway hands structured work back into Immaculate arbitration under real governance pressure
 - [[Q-API-Audit]] carries the live `/api/q/run` audit spool summary so Q failures on the private harness edge can feed the repair loop instead of staying trapped in logs
 - [[Q-Gateway-Architecture]] tracks the dedicated private OCI-first gateway boundary for `Q`, separate from the full harness
 - [[Q-Readiness-Gate]] keeps the direct-Q structured contract honest and is currently green: direct `Q` is release-eligible on the tracked local contract lane on this machine
-- [[Q-Benchmark-Corpus]] records the tracked benchmark-derived corpus surface for `Q`, including current record counts, source benchmark pages, the official Terminal-Bench receipt observation row, and export path
+- [[Q-Benchmark-Corpus]] records the tracked benchmark-derived corpus surface for `Q`, including current record counts, source benchmark pages, and export path
 - [[Q-Benchmark-Promotion]] records whether the active locked Q bundle already carries the current benchmark corpus or needs a new bench-lineage promotion
 - [[Q-Failure-Corpus]] is now a strict failure-only export and now carries live Q API failures, Harbor underperformance seeds, and the official Terminal-Bench public-task underperformance seed without mixing in resolved successes
 - the Q training path now also carries a richer coding/long-context supplement plus an `8192`-token long-context LoRA config, so the next cloud run can target code repair and repo-horizon reasoning instead of only bridge/control-plane seeds
@@ -103,10 +104,10 @@ Right now the honest story is:
 - the `Q` training path now has a tracked manifest, dataset shaper, and Unsloth launch bundle tied back to that same curation/provenance spine instead of an unrelated notebook path
 - the `Q` training path now also has a tracked BridgeBench seed mix, a run-id-shaped dataset flow, and a dry-run validator so the repo can test the training path honestly before a GPU job starts
 - the live direct-Q benchmark surface now proves the repaired truth after the direct-Q fix: `Q` is `4/4` on the structured contract lane, matching the readiness gate instead of hiding behind the gateway
-- the live direct-Q benchmark surface now measures `4/4` at `27913.26 ms` average latency and `51167.09 ms` P95 on this machine
+- the live direct-Q benchmark surface now measures `4/4` at `24527.89 ms` average latency and `51935 ms` P95 on this machine
 - the live BridgeBench surface now also shows direct `Q` at `4/4` parse success with a clean bridge-runtime lane, so the bridge/control-plane benchmark and the Q contract benchmark agree again
-- the live BridgeBench surface now measures `4/4` at `18661.35 ms` average latency and `21430.91 ms` P95 on this machine
-- the live dedicated Q gateway drill still proves the serving edge itself is bounded correctly: `401` without a key, `429` on concurrent keyed pressure, a sanitized served response at `200`, and only ~`93 ms` of gateway overhead above upstream latency on the latest loopback pass
+- the live BridgeBench surface now measures `4/4` at `13108.23 ms` average latency and `16837.2 ms` P95 on this machine
+- the live dedicated Q gateway drill still proves the serving edge itself is bounded correctly: `401` without a key, `429` on concurrent keyed pressure, a sanitized served response at `200`, and only `80.64 ms` of gateway overhead above upstream latency on the latest loopback pass
 - the live benchmark surface now includes a real `60s` paced benchmark lane and a real `60m` soak lane with published hardware context and wall-clock timing
 - the latest live validation page now also keeps the ugly part on record: the fresh `60s` benchmark rerun failed three assertions on `knightly`, so the throughput line is published as a regression signal rather than quietly replaced with an older clean run
 - the credibility stack now also includes a real crash-torture lane, a real OpenNeuro+DANDI ingest lane, and an honest Temporal side-by-side baseline instead of hiding those claims inside generic smoke runs

@@ -94,6 +94,16 @@ const Q_STRUCTURED_MAX_TOKENS = Math.max(
 const Q_STRUCTURED_TEMPERATURE = Number(
   process.env.IMMACULATE_OLLAMA_Q_EXECUTION_TEMPERATURE ?? 0.05
 );
+const HTTP_KEEP_ALIVE_AGENT = new http.Agent({
+  keepAlive: true,
+  keepAliveMsecs: 15_000,
+  maxSockets: 32
+});
+const HTTPS_KEEP_ALIVE_AGENT = new https.Agent({
+  keepAlive: true,
+  keepAliveMsecs: 15_000,
+  maxSockets: 32
+});
 
 function normalizeBaseUrl(baseUrl = DEFAULT_OLLAMA_URL): string {
   return baseUrl.replace(/\/+$/, "");
@@ -204,7 +214,8 @@ async function fetchJson<T>(
         url,
         {
           method,
-          headers: Object.fromEntries(headers.entries())
+          headers: Object.fromEntries(headers.entries()),
+          agent: url.protocol === "https:" ? HTTPS_KEEP_ALIVE_AGENT : HTTP_KEEP_ALIVE_AGENT
         },
         (response) => {
           const chunks: Buffer[] = [];
@@ -457,8 +468,52 @@ COMMIT: one sentence, max 18 words, naming the concrete next control action.
 No bullets. No preamble. No extra sections.`;
 }
 
+function collectGroundingFacts(
+  snapshot: PhaseSnapshot,
+  objective: string,
+  context: string,
+  governancePressure?: GovernancePressureLevel
+): string[] {
+  const haystack = [objective, context, snapshot.logTail.slice(0, 6).join(" | ")]
+    .join(" ")
+    .toLowerCase();
+  const facts: string[] = [];
+  const add = (fact: string, condition: boolean) => {
+    if (condition && !facts.includes(fact)) {
+      facts.push(fact);
+    }
+  };
+
+  add("late ACK present", /\blate ack\b/.test(haystack));
+  add(
+    "nonce replay or mismatch present",
+    /\bnonce\b.*\b(replay|mismatch)\b|\breplay\b.*\bnonce\b/.test(haystack)
+  );
+  add("bridge path degraded", /\bbridge\b.*\b(degraded|fault|unhealthy|late ack)\b/.test(haystack));
+  add("direct path healthy", /\bdirect\b.*\b(healthy|http\/2|allowed)\b/.test(haystack));
+  add("fail-closed semantics required", /\bfail-closed\b/.test(haystack));
+  add("lease jitter present", /\blease jitter\b/.test(haystack));
+  add("failed execution present", /\bfailed execution\b|\bone failed execution\b/.test(haystack));
+  add("repair window pending", /\brepair window\b|\brepair pending\b/.test(haystack));
+  add("same-origin operator access required", /\bsame-origin\b/.test(haystack));
+  add("bearer tokens must stay out of URLs", /\bbearer token\b|\bbearer tokens\b|\burl\b/.test(haystack));
+  add("mixed transport health", /\bmixed transport\b/.test(haystack));
+  add("guarded action preferred", /\bguard(ed|)\b/.test(haystack));
+  add("strong decode confidence present", snapshot.neuralCoupling.decodeConfidence >= 0.78);
+  add("critical governance pressure", governancePressure === "critical");
+  add("elevated governance pressure", governancePressure === "elevated");
+
+  if (facts.length === 0) {
+    add(`top status ${snapshot.status}`, true);
+    add(`latest event ${truncate(snapshot.logTail[0] ?? "none", 72)}`, true);
+  }
+
+  return facts.slice(0, 6);
+}
+
 export function buildImmaculatePrompt(options: {
   snapshot: PhaseSnapshot;
+  model?: string;
   role: IntelligenceLayerRole;
   objective?: string;
   governancePressure?: GovernancePressureLevel;
@@ -467,6 +522,27 @@ export function buildImmaculatePrompt(options: {
 }): string {
   const activeObjective = options.objective?.trim() || options.snapshot.objective;
   const context = options.context?.trim() || "none";
+  const qCompactPrompt = isQExecutionModel(options.model);
+  const groundingFacts = collectGroundingFacts(
+    options.snapshot,
+    activeObjective,
+    context,
+    options.governancePressure
+  );
+
+  if (qCompactPrompt) {
+    return `Immaculate compact cognition pass.
+${responseContract(options.role)}
+
+objective=${activeObjective}
+governance=${options.governancePressure ?? "clear"} pressure | ${options.recentDeniedCount ?? 0} denials
+status=${options.snapshot.status} cycle=${options.snapshot.cycle} epoch=${options.snapshot.epoch}
+metrics=reflex ${options.snapshot.metrics.reflexLatencyMs.toFixed(1)}ms | cognitive ${options.snapshot.metrics.cognitiveLatencyMs.toFixed(1)}ms | health ${options.snapshot.metrics.graphHealth.toFixed(3)} | coherence ${options.snapshot.metrics.coherence.toFixed(3)}
+grounding-facts=${groundingFacts.join(" | ") || "none"}
+recent=${formatRecentExecutionSection(options.snapshot)}
+context=${context}
+rules=use only the decisive grounded signal above; do not invent queue-time, backlog, or transport faults not present in grounding-facts`;
+  }
 
   return `Immaculate live cognition pass.
 ${responseContract(options.role)}
@@ -716,6 +792,7 @@ export async function runOllamaExecution(options: {
   const executionProfile = resolveStructuredExecutionProfile(options.layer.model);
   const prompt = buildImmaculatePrompt({
     snapshot: options.snapshot,
+    model: options.layer.model,
     role: options.layer.role,
     objective: options.objective,
     governancePressure: options.governancePressure,

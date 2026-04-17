@@ -2,11 +2,11 @@
 
 This page records the repo-local Harbor task pack for Immaculate and Q. It is a real executed benchmark surface, not a claim about leaderboard submission.
 
-- Generated: `2026-04-16T19:02:49.774Z`
-- Release: `0.1.0+2384cf5`
-- Repo commit: `2384cf5c3a0f09aa225bf8b2d5c561a13c4e2958`
+- Generated: `2026-04-17T02:45:25.427Z`
+- Release: `0.1.0+3c3e41d`
+- Repo commit: `3c3e41d99de4ee12273359707ffe5f0e2025e851`
 - Q serving label: `Q`
-- Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-2384cf5-57097d65`
+- Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v1-45280d5-a181f850`
 
 ## What Ran
 

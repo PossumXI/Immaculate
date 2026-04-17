@@ -13,6 +13,17 @@ type ReleaseSurfaceReport = {
   generatedAt: string;
   release: ReleaseMetadata;
   surfaces: SurfaceTimestamp[];
+  cloudflare?: {
+    generatedAt?: string;
+    sessionId?: string;
+    status?: string;
+    authReady?: boolean;
+    adapterReady?: boolean;
+    workerReady?: boolean;
+    evalBundleReady?: boolean;
+    smokeReady?: boolean;
+    recommendedNextStep?: string;
+  };
   output: {
     jsonPath: string;
     markdownPath: string;
@@ -126,9 +137,44 @@ async function readGeneratedAt(filePath: string): Promise<string | undefined> {
   }
 }
 
+async function readCloudflareSummary(): Promise<ReleaseSurfaceReport["cloudflare"]> {
+  const filePath = path.join(REPO_ROOT, "docs", "wiki", "Cloudflare-Q-Inference.json");
+  try {
+    const payload = JSON.parse(await readFile(filePath, "utf8")) as {
+      generatedAt?: string;
+      sessionId?: string;
+      readiness?: {
+        authReady?: boolean;
+        adapterReady?: boolean;
+        workerReady?: boolean;
+        evalBundleReady?: boolean;
+        smokeReady?: boolean;
+      };
+      summary?: {
+        status?: string;
+        recommendedNextStep?: string;
+      };
+    };
+    return {
+      generatedAt: payload.generatedAt,
+      sessionId: payload.sessionId,
+      status: payload.summary?.status,
+      authReady: payload.readiness?.authReady,
+      adapterReady: payload.readiness?.adapterReady,
+      workerReady: payload.readiness?.workerReady,
+      evalBundleReady: payload.readiness?.evalBundleReady,
+      smokeReady: payload.readiness?.smokeReady,
+      recommendedNextStep: payload.summary?.recommendedNextStep
+    };
+  } catch {
+    return undefined;
+  }
+}
+
 function renderMarkdown(report: ReleaseSurfaceReport): string {
   const trainingLock = report.release.q.trainingLock;
   const hybridSession = report.release.q.hybridSession;
+  const cloudflare = report.cloudflare;
   return [
     "# Release Surface",
     "",
@@ -156,6 +202,9 @@ function renderMarkdown(report: ReleaseSurfaceReport): string {
     hybridSession
       ? `- The latest hybrid session is \`${hybridSession.sessionId}\`, with local lane \`${hybridSession.localStatus ?? "unknown"}\` and cloud lane \`${hybridSession.cloudStatus ?? "unknown"}\` on provider \`${hybridSession.cloudProvider ?? "unknown"}\`.`
       : "- No tracked hybrid Q training session has been generated yet in this checkout.",
+    cloudflare
+      ? `- The Cloudflare inference lane is currently \`${cloudflare.status ?? "unknown"}\` for session \`${cloudflare.sessionId ?? "unknown"}\`, with auth \`${cloudflare.authReady}\`, adapter \`${cloudflare.adapterReady}\`, worker \`${cloudflare.workerReady}\`, eval bundle \`${cloudflare.evalBundleReady}\`, and smoke \`${cloudflare.smokeReady}\`.`
+      : "- No Cloudflare inference summary has been generated yet in this checkout.",
     "",
     "## Current Evidence Surfaces",
     "",
@@ -185,6 +234,18 @@ function renderMarkdown(report: ReleaseSurfaceReport): string {
     `- Immaculate orchestration bundle: \`${hybridSession?.immaculateBundleId ?? "n/a"}\``,
     `- Immaculate bundle source: \`${hybridSession?.immaculateBundlePath ?? "n/a"}\``,
     "",
+    "## Cloudflare Inference Lane",
+    "",
+    `- Session id: \`${cloudflare?.sessionId ?? "n/a"}\``,
+    `- Generated: \`${cloudflare?.generatedAt ?? "n/a"}\``,
+    `- Status: \`${cloudflare?.status ?? "n/a"}\``,
+    `- Auth ready: \`${cloudflare?.authReady ?? "n/a"}\``,
+    `- Adapter ready: \`${cloudflare?.adapterReady ?? "n/a"}\``,
+    `- Worker ready: \`${cloudflare?.workerReady ?? "n/a"}\``,
+    `- Eval bundle ready: \`${cloudflare?.evalBundleReady ?? "n/a"}\``,
+    `- Smoke ready: \`${cloudflare?.smokeReady ?? "n/a"}\``,
+    `- Recommended next step: ${cloudflare?.recommendedNextStep ?? "n/a"}`,
+    "",
     "## Truth Boundary",
     "",
     "- This page identifies the current build and bundle. It does not claim a cloud fine-tune or OCI deployment happened unless those surfaces say so explicitly.",
@@ -194,17 +255,21 @@ function renderMarkdown(report: ReleaseSurfaceReport): string {
 
 async function main(): Promise<void> {
   const release = await resolveReleaseMetadata();
-  const surfaces = await Promise.all(
+  const [surfaces, cloudflare] = await Promise.all([
+    Promise.all(
     SURFACE_FILES.map(async (surface) => ({
       ...surface,
       generatedAt: await readGeneratedAt(surface.path)
     }))
-  );
+    ),
+    readCloudflareSummary()
+  ]);
 
   const report: ReleaseSurfaceReport = {
     generatedAt: new Date().toISOString(),
     release,
     surfaces,
+    cloudflare,
     output: {
       jsonPath: path.join("docs", "wiki", "Release-Surface.json"),
       markdownPath: path.join("docs", "wiki", "Release-Surface.md")

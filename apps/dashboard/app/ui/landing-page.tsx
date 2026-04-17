@@ -18,11 +18,11 @@ const sectors = [
 const proofCards = [
   {
     label: "Q Substrate Benchmark",
-    body: "Gateway to Immaculate seam is green. Structured handoff survived arbitration with zero failed assertions."
+    body: "Gateway to Immaculate seam is green. Structured handoff survived arbitration with zero failed assertions and 2.11 ms arbitration P95."
   },
   {
-    label: "Q API Audit Loop",
-    body: "Live Q API failures are now captured, counted, and fed back into the repair corpus."
+    label: "Q Gateway Contract",
+    body: "The dedicated Q gateway is live and bounded: health 200, auth 401 without a key, chat 200 with a key, and concurrent pressure rejects at 429."
   },
   {
     label: "Harbor Operator Pack",
@@ -30,11 +30,11 @@ const proofCards = [
   },
   {
     label: "Training State",
-    body: "Q lock is now 32 rows with 2 supplementals. Benchmark corpus is 20 rows. Failure corpus is 6 seeds."
+    body: "Q lock is now bench-v2 with 31 rows and 2 supplementals. Benchmark corpus is 19 rows. Failure corpus is 6 seeds."
   },
   {
-    label: "Cloud Lane",
-    body: "HF Jobs auth and bundle staging are real on bench-v1. The blocker is prepaid credits, not missing session state."
+    label: "Cloud Lanes",
+    body: "HF Jobs auth and bundle staging are real on bench-v2, but launch is blocked by prepaid credits. Cloudflare is still blocked on auth and adapter export."
   }
 ];
 
@@ -73,7 +73,7 @@ export function LandingPage() {
 
       <section className="landingHero">
         <div className="landingCopy">
-          <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 16</p>
+          <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 17</p>
           <h1 className="landingHeadline">Controlled intelligence for critical operations.</h1>
           <p className="landingLede">Defense and healthcare. Evidence before action. Q only. Benchmarked. Gateway seam proven. Audit loop live.</p>
 
@@ -81,9 +81,10 @@ export function LandingPage() {
             <span>Q 4/4 structured</span>
             <span>BridgeBench 4/4</span>
             <span>Substrate seam green</span>
+            <span>Gateway +80.64 ms</span>
             <span>Harbor 0.950 / 0.925</span>
-            <span>32-row bench-v1 lock</span>
-            <span>20 benchmark rows</span>
+            <span>31-row bench-v2 lock</span>
+            <span>19 benchmark rows</span>
           </div>
 
           <div className="landingSectorGrid">

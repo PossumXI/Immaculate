@@ -9,6 +9,11 @@ def repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
+def default_latest_session_path(root: Path) -> Path | None:
+    candidate = root / ".training-output" / "q" / "latest-hybrid-session.json"
+    return candidate if candidate.exists() else None
+
+
 def rebase_repo_owned_path(root: Path, candidate: Path) -> Path:
     resolved = candidate.expanduser().resolve(strict=False)
     try:
@@ -75,7 +80,7 @@ def main() -> None:
     args = parser.parse_args()
 
     session_arg = args.session_path or args.session
-    session_path = resolve_repo_path(session_arg) if session_arg else None
+    session_path = resolve_repo_path(session_arg) if session_arg else default_latest_session_path(root)
     session = load_json(session_path) if session_path and session_path.exists() else {}
     session_id = str(session.get("sessionId", "")).strip() or "standalone"
 

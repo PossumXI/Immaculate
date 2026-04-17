@@ -53,6 +53,8 @@ export type QApiAuthenticatedKey = {
 
 const STORE_VERSION = 1;
 const DEFAULT_KEYS_FILENAME = "q-api-keys.json";
+const AUTH_METADATA_TOUCH_INTERVAL_MS = 15_000;
+const METADATA_FLUSH_DEBOUNCE_MS = 1_500;
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -183,6 +185,41 @@ function parseStoredStore(content: string | null): QApiKeyStore {
   }
 }
 
+function mergeKeyRecord(
+  preferred: StoredQApiKeyRecord,
+  incoming: StoredQApiKeyRecord
+): StoredQApiKeyRecord {
+  return {
+    ...incoming,
+    revokedAt: incoming.revokedAt ?? preferred.revokedAt,
+    lastUsedAt: preferred.lastUsedAt ?? incoming.lastUsedAt,
+    lastUsedIp: preferred.lastUsedIp ?? incoming.lastUsedIp
+  };
+}
+
+function mergeStores(preferred: QApiKeyStore, incoming: QApiKeyStore): QApiKeyStore {
+  const incomingById = new Map(incoming.keys.map((record) => [record.keyId, record]));
+  const mergedKeys: StoredQApiKeyRecord[] = [];
+  const seen = new Set<string>();
+
+  for (const record of preferred.keys) {
+    const incomingRecord = incomingById.get(record.keyId);
+    mergedKeys.push(incomingRecord ? mergeKeyRecord(record, incomingRecord) : record);
+    seen.add(record.keyId);
+  }
+
+  for (const record of incoming.keys) {
+    if (!seen.has(record.keyId)) {
+      mergedKeys.push(record);
+    }
+  }
+
+  return {
+    version: STORE_VERSION,
+    keys: mergedKeys
+  };
+}
+
 async function atomicWrite(filePath: string, content: string): Promise<void> {
   const tempPath = `${filePath}.${process.pid}.${Date.now()}.tmp`;
   await writeFile(tempPath, content, "utf8");
@@ -204,12 +241,14 @@ export async function createQApiKeyRegistry(options: {
   defaultRateLimit: QApiRateLimitPolicy;
 }) {
   const storePath = options.storePath?.trim() || defaultQApiKeysPath(options.rootDir);
+  let cachedStore: QApiKeyStore | undefined;
+  let metadataFlushTimer: NodeJS.Timeout | undefined;
 
   async function ensureRoot(): Promise<void> {
     await mkdir(path.dirname(storePath), { recursive: true });
   }
 
-  async function loadStore(): Promise<QApiKeyStore> {
+  async function readStoreFromDisk(): Promise<QApiKeyStore> {
     await ensureRoot();
     try {
       const content = await readFile(storePath, "utf8");
@@ -225,9 +264,45 @@ export async function createQApiKeyRegistry(options: {
     }
   }
 
-  async function saveStore(store: QApiKeyStore): Promise<void> {
+  async function writeStoreToDisk(store: QApiKeyStore): Promise<void> {
     await ensureRoot();
-    await atomicWrite(storePath, `${JSON.stringify(store, null, 2)}\n`);
+    const mergedStore = mergeStores(store, await readStoreFromDisk());
+    cachedStore = mergedStore;
+    const serialized = `${JSON.stringify(mergedStore, null, 2)}\n`;
+    await atomicWrite(storePath, serialized);
+  }
+
+  function clearMetadataFlushTimer(): void {
+    if (metadataFlushTimer) {
+      clearTimeout(metadataFlushTimer);
+      metadataFlushTimer = undefined;
+    }
+  }
+
+  function queueMetadataFlush(): void {
+    clearMetadataFlushTimer();
+    metadataFlushTimer = setTimeout(() => {
+      metadataFlushTimer = undefined;
+      if (!cachedStore) {
+        return;
+      }
+      void writeStoreToDisk(cachedStore).catch(() => undefined);
+    }, METADATA_FLUSH_DEBOUNCE_MS);
+    metadataFlushTimer.unref?.();
+  }
+
+  async function loadStore(forceReload = false): Promise<QApiKeyStore> {
+    if (cachedStore && !forceReload) {
+      return cachedStore;
+    }
+    cachedStore = await readStoreFromDisk();
+    return cachedStore;
+  }
+
+  async function saveStore(store: QApiKeyStore): Promise<void> {
+    cachedStore = store;
+    clearMetadataFlushTimer();
+    await writeStoreToDisk(store);
   }
 
   function generateKeyId(): string {
@@ -324,8 +399,13 @@ export async function createQApiKeyRegistry(options: {
         return null;
       }
 
-      const store = await loadStore();
-      const record = store.keys.find((candidate) => candidate.keyId === parsed.keyId);
+      let store = await loadStore();
+      let record = store.keys.find((candidate) => candidate.keyId === parsed.keyId);
+      if (!record) {
+        store = mergeStores(store, await readStoreFromDisk());
+        cachedStore = store;
+        record = store.keys.find((candidate) => candidate.keyId === parsed.keyId);
+      }
       if (!record || record.revokedAt) {
         return null;
       }
@@ -336,12 +416,32 @@ export async function createQApiKeyRegistry(options: {
 
       const computedHash = hashSecret(parsed.secret, record.salt);
       if (!timingSafeHexEqual(computedHash, record.hash)) {
-        return null;
+        store = mergeStores(store, await readStoreFromDisk());
+        cachedStore = store;
+        record = store.keys.find((candidate) => candidate.keyId === parsed.keyId);
+        if (!record || record.revokedAt) {
+          return null;
+        }
+        const refreshedHash = hashSecret(parsed.secret, record.salt);
+        if (!timingSafeHexEqual(refreshedHash, record.hash)) {
+          return null;
+        }
       }
 
+      const previousLastUsedAt = record.lastUsedAt;
+      const previousLastUsedIp = record.lastUsedIp;
+      const nextIp = options?.ip?.trim() || previousLastUsedIp;
+      const lastUsedAtMs = previousLastUsedAt ? Date.parse(previousLastUsedAt) : 0;
+      const shouldPersistMetadata =
+        !previousLastUsedAt ||
+        !Number.isFinite(lastUsedAtMs) ||
+        Date.now() - lastUsedAtMs >= AUTH_METADATA_TOUCH_INTERVAL_MS ||
+        nextIp !== previousLastUsedIp;
       record.lastUsedAt = nowIso();
-      record.lastUsedIp = options?.ip?.trim() || record.lastUsedIp;
-      await saveStore(store);
+      record.lastUsedIp = nextIp;
+      if (shouldPersistMetadata) {
+        queueMetadataFlush();
+      }
       return {
         key: toMetadata(record)
       };

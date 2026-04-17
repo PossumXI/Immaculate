@@ -2189,6 +2189,28 @@ async function ensureLocalExecutionWorkers(minCount = 1): Promise<void> {
 
 const DEFAULT_INTELLIGENCE_WORKER_LEASE_MS = 45_000;
 
+type ExecutionWorkerSelectionContext = {
+  localNode: Awaited<ReturnType<typeof nodeRegistry.ensureLocalNode>>;
+  nodeViews: Awaited<ReturnType<typeof nodeRegistry.listNodes>>["nodes"];
+  peerViews: Awaited<ReturnType<typeof listFederationPeerViews>>;
+  executionOutcomeSummaries: ReturnType<typeof remoteExecutionOutcomeSummaries>["workerSummaries"] extends Map<any, infer V>
+    ? V[]
+    : never;
+};
+
+async function buildExecutionWorkerSelectionContext(): Promise<ExecutionWorkerSelectionContext> {
+  const localNode = await nodeRegistry.ensureLocalNode();
+  const nodeState = await nodeRegistry.listNodes();
+  const peerViews = await listFederationPeerViews();
+  const executionOutcomes = remoteExecutionOutcomeSummaries();
+  return {
+    localNode,
+    nodeViews: nodeState.nodes,
+    peerViews,
+    executionOutcomeSummaries: [...executionOutcomes.workerSummaries.values()]
+  };
+}
+
 async function reserveExecutionWorker(options: {
   layer: IntelligenceLayer;
   requestedExecutionDecision?: RequestedExecutionDecision;
@@ -2201,16 +2223,14 @@ async function reserveExecutionWorker(options: {
   requiredHealthyWorkerCount?: number;
   backlogPressure?: ReturnType<typeof engine.getSnapshot>["executionSchedules"][number]["backlogPressure"];
   reliabilityFloor?: number;
+  selectionContext?: ExecutionWorkerSelectionContext;
 }): Promise<IntelligenceWorkerAssignment> {
   if (options.requestedExecutionDecision === "preflight_blocked") {
     throw new Error("Execution worker reservation blocked by preflight policy.");
   }
 
-  const localNode = await nodeRegistry.ensureLocalNode();
-  const nodeState = await nodeRegistry.listNodes();
-  const peerViews = await listFederationPeerViews();
-  const executionOutcomes = remoteExecutionOutcomeSummaries();
-  const executionOutcomeSummaries = [...executionOutcomes.workerSummaries.values()];
+  const selectionContext =
+    options.selectionContext ?? (await buildExecutionWorkerSelectionContext());
 
   let result = await intelligenceWorkerRegistry.assignWorker({
     requestedExecutionDecision: options.requestedExecutionDecision ?? "allow_local",
@@ -2219,8 +2239,8 @@ async function reserveExecutionWorker(options: {
     recommendedLayerId: options.layer.id,
     target: options.target ?? options.layer.role,
     preferredNodeId:
-      options.requestedExecutionDecision === "remote_required" ? undefined : localNode.nodeId,
-    preferredLocality: localNode.locality,
+      options.requestedExecutionDecision === "remote_required" ? undefined : selectionContext.localNode.nodeId,
+    preferredLocality: selectionContext.localNode.locality,
     preferredDeviceAffinityTags:
       options.preferredDeviceAffinityTags ??
       [...new Set([options.layer.role, ...(options.target?.includes("swarm") ? ["swarm"] : [])])],
@@ -2229,10 +2249,10 @@ async function reserveExecutionWorker(options: {
     requiredHealthyWorkerCount: options.requiredHealthyWorkerCount,
     backlogPressure: options.backlogPressure,
     reliabilityFloor: options.reliabilityFloor,
-    nodeViews: nodeState.nodes,
-    peerViews,
+    nodeViews: selectionContext.nodeViews,
+    peerViews: selectionContext.peerViews,
     avoidPeerIds: options.avoidPeerIds,
-    executionOutcomeSummaries
+    executionOutcomeSummaries: selectionContext.executionOutcomeSummaries
   });
 
   if (!result.assignment && options.requestedExecutionDecision !== "remote_required") {
@@ -2243,8 +2263,8 @@ async function reserveExecutionWorker(options: {
       preferredLayerIds: [options.layer.id],
       recommendedLayerId: options.layer.id,
       target: options.target ?? options.layer.role,
-      preferredNodeId: localNode.nodeId,
-      preferredLocality: localNode.locality,
+      preferredNodeId: selectionContext.localNode.nodeId,
+      preferredLocality: selectionContext.localNode.locality,
       preferredDeviceAffinityTags:
         options.preferredDeviceAffinityTags ??
         [...new Set([options.layer.role, ...(options.target?.includes("swarm") ? ["swarm"] : [])])],
@@ -2253,10 +2273,10 @@ async function reserveExecutionWorker(options: {
       requiredHealthyWorkerCount: options.requiredHealthyWorkerCount,
       backlogPressure: options.backlogPressure,
       reliabilityFloor: options.reliabilityFloor,
-      nodeViews: nodeState.nodes,
-      peerViews,
+      nodeViews: selectionContext.nodeViews,
+      peerViews: selectionContext.peerViews,
       avoidPeerIds: options.avoidPeerIds,
-      executionOutcomeSummaries
+      executionOutcomeSummaries: selectionContext.executionOutcomeSummaries
     });
   }
 
@@ -2290,6 +2310,7 @@ async function reserveExecutionWorkerBatch(options: {
 }): Promise<IntelligenceWorkerAssignment[]> {
   const reservedAssignments: IntelligenceWorkerAssignment[] = [];
   const usedPeerIds = new Set<string>();
+  const selectionContext = await buildExecutionWorkerSelectionContext();
 
   try {
     for (const layer of options.layers) {
@@ -2305,7 +2326,8 @@ async function reserveExecutionWorkerBatch(options: {
           layer.role,
           ...(options.targetPrefix.includes("swarm") ? ["swarm"] : [])
         ],
-        avoidPeerIds: [...usedPeerIds]
+        avoidPeerIds: [...usedPeerIds],
+        selectionContext
       });
       reservedAssignments.push(assignment);
       if (assignment.peerId) {

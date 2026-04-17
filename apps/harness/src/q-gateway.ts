@@ -67,6 +67,10 @@ const PRIMARY_COOLDOWN_MS = Math.max(
   5_000,
   Number(process.env.IMMACULATE_Q_GATEWAY_PRIMARY_COOLDOWN_MS ?? 120_000) || 120_000
 );
+const HEALTH_MODEL_CACHE_TTL_MS = Math.max(
+  1_000,
+  Number(process.env.IMMACULATE_Q_GATEWAY_HEALTH_CACHE_TTL_MS ?? 15_000) || 15_000
+);
 const DEFAULT_RATE_LIMIT = normalizeQApiRateLimitPolicy(
   {
     requestsPerMinute:
@@ -100,6 +104,12 @@ const qPrimaryCircuit = createFailureCircuitBreaker({
 });
 const releaseMetadata = await resolveReleaseMetadata();
 const principals = new WeakMap<object, GatewayPrincipal>();
+let cachedModelReadiness:
+  | {
+      expiresAtMs: number;
+      installedModelNames: string[];
+    }
+  | undefined;
 
 app.log.info(
   {
@@ -109,6 +119,19 @@ app.log.info(
   },
   "Q gateway configured"
 );
+
+async function getInstalledModelNames(forceRefresh = false): Promise<string[]> {
+  if (!forceRefresh && cachedModelReadiness && cachedModelReadiness.expiresAtMs > Date.now()) {
+    return cachedModelReadiness.installedModelNames;
+  }
+  const models = await listOllamaModels(OLLAMA_URL).catch(() => []);
+  const installedModelNames = models.map((model) => model.name || model.model || "").filter(Boolean);
+  cachedModelReadiness = {
+    expiresAtMs: Date.now() + HEALTH_MODEL_CACHE_TTL_MS,
+    installedModelNames
+  };
+  return installedModelNames;
+}
 
 function extractAuthorizationToken(headers: Record<string, string | string[] | undefined>): string | undefined {
   const explicitApiKey = headers["x-api-key"];
@@ -338,8 +361,7 @@ app.addHook("onRequest", async (request, reply) => {
 });
 
 app.get("/health", async () => {
-  const models = await listOllamaModels(OLLAMA_URL).catch(() => []);
-  const installedModelNames = models.map((model) => model.name || model.model || "").filter(Boolean);
+  const installedModelNames = await getInstalledModelNames();
   const circuit = qPrimaryCircuit.snapshot();
   return {
     ok: true,

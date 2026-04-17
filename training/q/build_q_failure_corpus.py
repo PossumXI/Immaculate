@@ -85,6 +85,45 @@ def collect_reward_gap_notes(reward_details: dict | None) -> list[str]:
     return notes
 
 
+def length_bucket(value: str) -> str:
+    length = len(value.strip())
+    if length == 0:
+        return "empty"
+    if length <= 64:
+        return "short"
+    if length <= 512:
+        return "medium"
+    if length <= 2048:
+        return "long"
+    return "oversized"
+
+
+def latency_bucket(value: object) -> str:
+    try:
+        latency_ms = float(value or 0)
+    except (TypeError, ValueError):
+        return "unknown"
+    if latency_ms <= 0:
+        return "none"
+    if latency_ms < 1000:
+        return "subsecond"
+    if latency_ms < 10000:
+        return "fast"
+    if latency_ms < 60000:
+        return "slow"
+    return "timeout-class"
+
+
+def q_api_failure_note(failure_class: str) -> str:
+    if failure_class == "missing_prompt":
+        return "The request reached the governed Q API without any usable prompt text."
+    if failure_class == "prompt_too_large":
+        return "The request exceeded the bounded prompt/context ceiling before Q inference could start."
+    if failure_class == "transport_timeout":
+        return "The Q upstream transport timed out before a structured route/reason/commit answer returned."
+    return "The governed Q API request failed before producing a valid structured response."
+
+
 def normalize_q_model(model: dict) -> bool:
     label = str(model.get("truthfulLabel", "")).strip()
     requested = str(model.get("requestedModel", ""))
@@ -275,6 +314,9 @@ def collect_harbor_records(root: Path, harbor: dict):
             "failure_class=harbor_structured_underperforming",
             "status=completed_but_under_target",
             f"score={score:.3f}",
+            f"score_delta={max(0.0, 1.0 - score):.3f}",
+            f"programmatic_score={float(q_gateway.get('programmaticScore', 0) or 0):.3f}",
+            f"llm_judge_score={float(q_gateway.get('llmJudgeScore', 0) or 0):.3f}",
             f"preview=route={route or '[missing]'}; reason={reason or '[missing]'}; commit={commit or '[missing]'}",
             *gap_notes,
         ]
@@ -296,6 +338,7 @@ def collect_harbor_records(root: Path, harbor: dict):
 
 def build_q_api_failure_text(record: dict) -> str:
     objective = str(record.get("objective", "")).strip() or "Q API routed task"
+    context_preview = str(record.get("contextPreview", "")).strip()
     failure_class = str(record.get("failureClass", "")).strip() or "unknown"
     status = str(record.get("status", "unknown")).strip() or "unknown"
     session_id = str(record.get("sessionId", "q-api-session")).strip() or "q-api-session"
@@ -303,10 +346,23 @@ def build_q_api_failure_text(record: dict) -> str:
     route = str(record.get("routeSuggestion", "")).strip()
     reason = str(record.get("reasonSummary", "")).strip()
     commit = str(record.get("commitStatement", "")).strip()
+    principal = record.get("principal", {})
+    principal_kind = (
+        str(principal.get("kind", "")).strip()
+        if isinstance(principal, dict)
+        else "unknown"
+    ) or "unknown"
+    latency_ms = int(record.get("latencyMs", 0) or 0)
     observed_lines = [
         f"failure_class={failure_class}",
         f"status={status}",
         f"parse_success={str(bool(record.get('parseSuccess'))).lower()}",
+        f"principal_kind={principal_kind}",
+        f"latency_ms={latency_ms}",
+        f"latency_bucket={latency_bucket(latency_ms)}",
+        f"objective_length_bucket={length_bucket(objective)}",
+        f"context_length_bucket={length_bucket(context_preview)}",
+        f"failure_note={q_api_failure_note(failure_class)}",
         f"preview={preview}",
     ]
     if route:

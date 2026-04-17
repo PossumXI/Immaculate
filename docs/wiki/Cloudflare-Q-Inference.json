@@ -1,12 +1,13 @@
 {
-  "generatedAt": "2026-04-15T22:59:47Z",
+  "generatedAt": "2026-04-17T02:46:23Z",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "4e0638eea5153e52514151f80c03c4f764f16e47",
-    "gitShortSha": "4e0638e",
-    "buildId": "0.1.0+4e0638e"
+    "gitSha": "3c3e41d99de4ee12273359707ffe5f0e2025e851",
+    "gitShortSha": "3c3e41d",
+    "buildId": "0.1.0+3c3e41d"
   },
-  "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
+  "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v2",
+  "sessionPath": ".training-output/q/latest-hybrid-session.json",
   "auth": {
     "accountIdReady": false,
     "apiTokenReady": false,
@@ -21,29 +22,47 @@
     "metadataLimit": 5
   },
   "adapter": {
-    "generatedAt": "2026-04-15T22:59:45Z",
-    "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
+    "generatedAt": "2026-04-17T02:46:22Z",
+    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v2",
     "ready": false,
     "checkOnly": true,
-    "sourceDir": ".training-output/q/runs/q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2",
+    "sourceDir": ".training-output/q/runs/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v2",
     "trainingLockPath": ".training-output/q/latest-training-lock.json",
     "adapterConfigPath": null,
     "adapterWeightsPath": null,
     "weightsSizeBytes": null,
     "weightsSizeMb": null,
-    "outputDir": ".training-output/q/cloudflare/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/adapter",
+    "outputDir": ".training-output/q/cloudflare/q-hybrid-harbor-opt-2384cf5-bench-v2/adapter",
     "exportedPaths": [],
     "blockers": [
-      "Adapter source directory is missing: .training-output/q/runs/q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2",
+      "Adapter source directory is missing: .training-output/q/runs/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v2",
       "adapter_config.json is missing from the candidate adapter source.",
       "adapter_model.safetensors is missing from the candidate adapter source."
     ]
   },
   "evalBundle": {
     "ready": true,
-    "recordCount": 24,
-    "jsonlPath": ".training-output/q/cloudflare/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/eval/cloudflare-q-eval-bundle.jsonl",
-    "manifestPath": ".training-output/q/cloudflare/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/eval/cloudflare-q-eval-bundle.json"
+    "recordCount": 19,
+    "availableRecordCount": 19,
+    "jsonlPath": ".training-output/q/cloudflare/q-hybrid-harbor-opt-2384cf5-bench-v2/eval/cloudflare-q-eval-bundle.jsonl",
+    "manifestPath": ".training-output/q/cloudflare/q-hybrid-harbor-opt-2384cf5-bench-v2/eval/cloudflare-q-eval-bundle.json",
+    "sourceSurfaceCounts": {
+      "bridgebench": 4,
+      "bridgebench-soak": 1,
+      "harbor-terminal-bench": 2,
+      "harbor-terminal-bench-soak": 7,
+      "model-comparison": 4,
+      "q-gateway-substrate": 1
+    },
+    "selectionGroupCounts": {
+      "bridgebench-soak:benchmark_observation:completed": 1,
+      "bridgebench:decision_triplet:completed": 4,
+      "harbor-terminal-bench-soak:benchmark_observation:completed": 1,
+      "harbor-terminal-bench-soak:decision_triplet:completed": 6,
+      "harbor-terminal-bench:benchmark_observation:degraded": 2,
+      "model-comparison:decision_triplet:completed": 4,
+      "q-gateway-substrate:benchmark_observation:completed": 1
+    }
   },
   "worker": {
     "packagePath": "deploy/cloudflare/worker",
@@ -57,19 +76,35 @@
     "baseModelReady": false,
     "loraReady": false
   },
+  "health": {
+    "attempted": false,
+    "ready": false,
+    "status": null,
+    "payload": null,
+    "blocker": null
+  },
   "smoke": {
     "attempted": false,
     "ready": false,
     "evaluatedRows": 0,
     "blocker": null
   },
+  "readiness": {
+    "authReady": false,
+    "adapterReady": false,
+    "workerReady": false,
+    "evalBundleReady": true,
+    "smokeReady": false
+  },
   "summary": {
     "provider": "cloudflare",
+    "role": "inference-eval-plane",
     "ready": false,
-    "recommendedNextStep": "Set CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN, CLOUDFLARE_Q_BASE_MODEL, and CLOUDFLARE_Q_LORA_NAME, then deploy the worker and run a smoke eval."
+    "status": "auth-blocked",
+    "recommendedNextStep": "Set CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN, then rerun the Cloudflare inference check."
   },
   "output": {
-    "sessionJsonPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/cloudflare-q-inference.json",
+    "sessionJsonPath": ".training-output/q/cloudflare-q-inference.json",
     "wikiJsonPath": "docs/wiki/Cloudflare-Q-Inference.json",
     "wikiMarkdownPath": "docs/wiki/Cloudflare-Q-Inference.md"
   }

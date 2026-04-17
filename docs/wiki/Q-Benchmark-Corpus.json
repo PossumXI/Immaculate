@@ -1,20 +1,19 @@
 {
-  "generatedAt": "2026-04-17T02:02:39Z",
+  "generatedAt": "2026-04-17T02:49:49Z",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "6190f6366cedf101b1612e2daa3429b4a180a4ff",
-    "gitShortSha": "6190f63",
-    "buildId": "0.1.0+6190f63",
-    "qTrainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v1-45280d5-a181f850"
+    "gitSha": "3c3e41d99de4ee12273359707ffe5f0e2025e851",
+    "gitShortSha": "3c3e41d",
+    "buildId": "0.1.0+3c3e41d",
+    "qTrainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v2-3c3e41d-766c8ccf"
   },
   "rowType": "mixed",
-  "recordCount": 20,
+  "recordCount": 19,
   "sourceCounts": {
     "model-comparison": 4,
     "bridgebench": 4,
     "harbor-terminal-bench": 2,
     "q-gateway-substrate": 1,
-    "terminal-bench-receipt": 1,
     "bridgebench-soak": 1,
     "harbor-terminal-bench-soak": 7
   },
@@ -23,7 +22,6 @@
     "bridgebench": "docs/wiki/BridgeBench.json",
     "harbor-terminal-bench": "docs/wiki/Harbor-Terminal-Bench.json",
     "q-gateway-substrate": "docs/wiki/Q-Gateway-Substrate.json",
-    "terminal-bench-receipt": "docs/wiki/Terminal-Bench-Receipt.json",
     "bridgebench-soak": "docs/wiki/BridgeBench-Soak.json",
     "harbor-terminal-bench-soak": "docs/wiki/Harbor-Terminal-Bench-Soak.json"
   },

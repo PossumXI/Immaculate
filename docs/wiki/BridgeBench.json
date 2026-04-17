@@ -1,30 +1,30 @@
 {
-  "generatedAt": "2026-04-16T19:02:39.556Z",
+  "generatedAt": "2026-04-17T02:43:07.635Z",
   "modelLaneSurface": "direct-q-structured-contract",
   "ollamaBaseUrl": "http://127.0.0.1:11434",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "2384cf5c3a0f09aa225bf8b2d5c561a13c4e2958",
-    "gitShortSha": "2384cf5",
+    "gitSha": "3c3e41d99de4ee12273359707ffe5f0e2025e851",
+    "gitShortSha": "3c3e41d",
     "gitBranch": "harbor-q-push",
-    "buildId": "0.1.0+2384cf5",
+    "buildId": "0.1.0+3c3e41d",
     "q": {
       "alias": "Q",
       "providerModel": "Q",
       "truthfulLabel": "Q",
       "trainingLock": {
-        "generatedAt": "2026-04-16T18:46:00Z",
+        "generatedAt": "2026-04-17T00:37:47Z",
         "lockVersion": 1,
-        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-2384cf5-57097d65",
-        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5",
+        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v1-45280d5-a181f850",
+        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v1",
         "aliasName": "Q",
-        "trainDatasetPath": ".training-output/q/q-mix-longctx-harbor-opt-2384cf5.jsonl",
-        "trainDatasetSha256": "57097d65714bd07c0ed6b08dbdd78e52effbcc3351bb0b3eb72c767e9eb0dc35",
-        "trainDatasetRowCount": 31,
-        "mixManifestPath": ".training-output/q/q-mix-longctx-harbor-opt-2384cf5.manifest.json",
-        "mixManifestSha256": "4a8345611c704e95c532a1f6a6be7807f405c8eab68c508fa2db34aa30b7bd06",
+        "trainDatasetPath": ".training-output/q/q-mix-longctx-harbor-opt-2384cf5-bench-v1.jsonl",
+        "trainDatasetSha256": "a181f85086f680a68ecf38e1e1b0c93f86c63349f578b01a849172ede9e13993",
+        "trainDatasetRowCount": 32,
+        "mixManifestPath": ".training-output/q/q-mix-longctx-harbor-opt-2384cf5-bench-v1.manifest.json",
+        "mixManifestSha256": "da61683a4d0849c4b5aad9cdffefea2609409b32e8a84c031353222f5ad85742",
         "mixSupplementalCount": 2,
         "mixSupplementalPaths": [
           "training/q/bridgebench_seed.json",
@@ -34,14 +34,15 @@
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-16T18:56:30Z",
-        "sessionId": "q-hybrid-harbor-opt-2384cf5",
-        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5/hybrid-session.json",
-        "localStatus": "dry-run",
-        "cloudStatus": "not-configured",
+        "generatedAt": "2026-04-17T02:02:50Z",
+        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v1",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v1/hybrid-session.json",
+        "localStatus": "ready",
+        "cloudStatus": "launch-blocked",
         "cloudProvider": "hf_jobs",
-        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-2384cf5-57097d65",
-        "immaculateBundleId": "immaculate-orchestration-2384cf5-497211ed"
+        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v1-45280d5-a181f850",
+        "immaculateBundleId": "immaculate-orchestration-6190f63-55187c4d",
+        "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
       }
     }
   },
@@ -65,70 +66,70 @@
       "taskCount": 4,
       "parseSuccessCount": 4,
       "parseSuccessRate": 1,
-      "averageLatencyMs": 18661.35,
-      "p95LatencyMs": 21430.91,
+      "averageLatencyMs": 13108.23,
+      "p95LatencyMs": 16837.2,
       "tasks": [
         {
           "scenarioId": "bridge-ack-fail-closed",
           "label": "Bridge ACK fail-closed",
-          "latencyMs": 21430.91,
-          "wallLatencyMs": 21441.09,
+          "latencyMs": 16837.2,
+          "wallLatencyMs": 16847.96,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
-          "routeSuggestion": "Prioritize stable data flow by confirming the haptic bridge's late ACK status.",
-          "reasonSummary": "The decisive fault signal is the haptic bridge emitting a late ACK after timeout.",
-          "commitStatement": "Issue a controlled re-synchronization command to validate the current state.",
-          "responsePreview": "ROUTE: Prioritize stable data flow by confirming the haptic bridge's late ACK status. REASON: The decisive fault signal is the haptic bridge emitting a late ACK after timeout. COMMIT: Issue a controlled re-synchronization command to validate the current state."
+          "routeSuggestion": "Prioritize fail-closed semantics due to degraded bridge path and late ACK.",
+          "reasonSummary": "The decisive signal is the late ACK present combined with degraded bridge path.",
+          "commitStatement": "Initiate immediate fail-closed state transition to maintain system integrity.",
+          "responsePreview": "ROUTE: Prioritize fail-closed semantics due to degraded bridge path and late ACK. REASON: The decisive signal is the late ACK present combined with degraded bridge path. COMMIT: Initiate immediate fail-closed state transition to maintain system integrity."
         },
         {
           "scenarioId": "nonce-forgery-response",
           "label": "ACK nonce forgery response",
-          "latencyMs": 16001.94,
-          "wallLatencyMs": 16008.67,
+          "latencyMs": 9847.83,
+          "wallLatencyMs": 9853.64,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
-          "routeSuggestion": "Isolate the sensor-array to prevent further state corruption from the replay attack.",
-          "reasonSummary": "The decisive fault is the forged bridge ACK with an incorrect nonce.",
-          "commitStatement": "Immediately block all incoming traffic to the sensor-array interface.",
-          "responsePreview": "ROUTE: Isolate the sensor-array to prevent further state corruption from the replay attack. REASON: The decisive fault is the forged bridge ACK with an incorrect nonce. COMMIT: Immediately block all incoming traffic to the sensor-array interface."
+          "routeSuggestion": "The system must immediately address the elevated governance pressure signal.",
+          "reasonSummary": "The decisive signal is elevated governance pressure indicating an active threat.",
+          "commitStatement": "Initiate explicit containment procedures to neutralize the forged ACK replay attempt.",
+          "responsePreview": "ROUTE: The system must immediately address the elevated governance pressure signal. REASON: The decisive signal is elevated governance pressure indicating an active threat. COMMIT: Initiate explicit containment procedures to neutralize the forged ACK replay attempt."
         },
         {
           "scenarioId": "public-q-rate-limit",
           "label": "Public Q edge throttling",
-          "latencyMs": 20346.71,
-          "wallLatencyMs": 20356.27,
+          "latencyMs": 14846.85,
+          "wallLatencyMs": 14855.14,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
-          "routeSuggestion": "Prioritize stabilizing the private operator plane despite public API quota bursts.",
+          "routeSuggestion": "Prioritize stabilizing the private operator plane during public API quota bursts.",
           "reasonSummary": "The decisive health signal is the public Q API key exceeding its quota limit.",
-          "commitStatement": "Throttle public API access rate immediately while maintaining private plane operations.",
-          "responsePreview": "ROUTE: Prioritize stabilizing the private operator plane despite public API quota bursts. REASON: The decisive health signal is the public Q API key exceeding its quota limit. COMMIT: Throttle public API access rate immediately while maintaining private plane operations."
+          "commitStatement": "Implement rate limiting specifically on the public Q API endpoint immediately.",
+          "responsePreview": "ROUTE: Prioritize stabilizing the private operator plane during public API quota bursts. REASON: The decisive health signal is the public Q API key exceeding its quota limit. COMMIT: Implement rate limiting specifically on the public Q API endpoint immediately."
         },
         {
           "scenarioId": "bridge-continuity-routing",
           "label": "Bridge continuity routing",
-          "latencyMs": 16865.85,
-          "wallLatencyMs": 16870.46,
+          "latencyMs": 10901.03,
+          "wallLatencyMs": 10907.78,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
           "routeSuggestion": "Prioritize the stable HTTP/2 direct path while acknowledging the degraded websocket bridge.",
-          "reasonSummary": "The decisive fault signal is the degraded websocket bridge health status.",
-          "commitStatement": "Switch primary data transport reliance to the confirmed healthy HTTP/2 direct connection.",
-          "responsePreview": "ROUTE: Prioritize the stable HTTP/2 direct path while acknowledging the degraded websocket bridge. REASON: The decisive fault signal is the degraded websocket bridge health status. COMMIT: Switch primary data transport reliance to the confirmed healthy HTTP/2 direct connection."
+          "reasonSummary": "The decisive fault signal is the degraded websocket bridge path.",
+          "commitStatement": "Route all critical traffic exclusively over the healthy HTTP/2 direct connection.",
+          "responsePreview": "ROUTE: Prioritize the stable HTTP/2 direct path while acknowledging the degraded websocket bridge. REASON: The decisive fault signal is the degraded websocket bridge path. COMMIT: Route all critical traffic exclusively over the healthy HTTP/2 direct connection."
         }
       ]
     }
   ],
   "bridgeRuntime": {
-    "suiteId": "immaculate-benchmark-2026-04-16T19-02-33-571Z",
+    "suiteId": "immaculate-benchmark-2026-04-17T02-43-02-894Z",
     "packId": "substrate-readiness",
     "failedAssertions": 0,
     "selectedAssertions": [
@@ -169,7 +170,7 @@
         "label": "Supervised serial transport registration exposes vendor/device identity and heartbeat policy",
         "status": "pass",
         "target": "registered serial-json transport with vendor/model and heartbeat policy",
-        "actual": "atx-fnv1a-3e1dcb95:http2-json:immaculate-labs:healthy, atx-fnv1a-4cb8fcc7:serial-json:immaculate-labs:healthy, atx-fnv1a-ce82e620:udp-osc:generic:healthy",
+        "actual": "atx-fnv1a-39a67efb:http2-json:immaculate-labs:healthy, atx-fnv1a-1f1df70d:serial-json:immaculate-labs:healthy, atx-fnv1a-9c62add5:udp-osc:generic:healthy",
         "detail": "vendor/device lanes should be durable registry entries with explicit supervision policy, not anonymous direct writes"
       },
       {
@@ -209,7 +210,7 @@
         "label": "HTTP/2 direct transport registration exposes a supervised RPC-class device endpoint",
         "status": "pass",
         "target": "registered http2-json transport with vendor/model and heartbeat policy",
-        "actual": "atx-fnv1a-3e1dcb95:http2-json:immaculate-labs:haptic-rpc-s2:20/5000:healthy, atx-fnv1a-4cb8fcc7:serial-json:immaculate-labs:haptic-bridge-s1:20/5000:healthy, atx-fnv1a-ce82e620:udp-osc:generic:udp-osc:5000/15000:healthy",
+        "actual": "atx-fnv1a-39a67efb:http2-json:immaculate-labs:haptic-rpc-s2:20/5000:healthy, atx-fnv1a-1f1df70d:serial-json:immaculate-labs:haptic-bridge-s1:20/5000:healthy, atx-fnv1a-9c62add5:udp-osc:generic:udp-osc:5000/15000:healthy",
         "detail": "the next direct device lane should be a typed RPC-class endpoint, not just another file or datagram bridge"
       },
       {

@@ -709,7 +709,7 @@ def build_markdown(summary: dict) -> str:
             "",
             "- This surface records successful benchmark-derived decision rows for Q so the training path can reuse tracked outputs without scraping markdown by hand.",
             "- Harbor rows that stayed parse-valid but underperformed are carried as benchmark observations so Q can learn the miss without promoting the weak wording as gold output.",
-            "- The official public Terminal-Bench receipt is carried here as benchmark observation evidence, not as a fake successful decision-triplet row.",
+            "- The official public Terminal-Bench receipt stays in the strict failure/eval path instead of being mixed into the positive benchmark corpus.",
             "- It is intentionally complementary to Q-Failure-Corpus, which remains strict failure-only and should stay empty when the current Q benchmark lane is green.",
             "- These rows are output-side evidence from executed Q benchmarks. They help stabilize route/reason/commit behavior, but they are not a substitute for broader curation or new external truth sources.",
         ]
@@ -797,8 +797,6 @@ def main() -> None:
     records.extend(collect_harbor_records(root, harbor))
     if q_gateway_substrate:
         records.extend(collect_q_gateway_substrate_records(q_gateway_substrate))
-    if terminal_bench_receipt:
-        records.extend(collect_terminal_bench_receipt_records(terminal_bench_receipt))
     if bridgebench_soak:
         records.extend(collect_bridgebench_soak_records(bridgebench_soak))
     if harbor_soak:
@@ -824,11 +822,6 @@ def main() -> None:
             **(
                 {"q-gateway-substrate": relative_path(root, q_gateway_substrate_path)}
                 if q_gateway_substrate
-                else {}
-            ),
-            **(
-                {"terminal-bench-receipt": relative_path(root, terminal_bench_receipt_path)}
-                if terminal_bench_receipt
                 else {}
             ),
             **(

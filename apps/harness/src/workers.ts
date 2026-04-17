@@ -78,7 +78,9 @@ export type IntelligenceWorkerAssignmentRequest = {
   backlogPressure?: GovernancePressureLevel;
   reliabilityFloor?: number | null;
   nodeViews?: NodeView[];
+  nodeViewMap?: Map<string, NodeView>;
   peerViews?: FederationPeerView[];
+  peerViewMap?: Map<string, FederationPeerView | undefined>;
   executionOutcomeSummaries?: IntelligenceWorkerExecutionOutcomeSummary[];
   executionOutcomeSummaryMap?: Map<string, IntelligenceWorkerExecutionOutcomeSummary>;
 };
@@ -206,6 +208,19 @@ function arraysEqual(left: string[], right: string[]): boolean {
 
 function buildNodeViewMap(nodeViews?: NodeView[]): Map<string, NodeView> {
   return new Map((nodeViews ?? []).map((node) => [node.nodeId, node]));
+}
+
+function buildPeerViewMap(
+  workers: IntelligenceWorkerRecord[],
+  nodeViewMap: Map<string, NodeView>,
+  peerViews?: FederationPeerView[]
+): Map<string, FederationPeerView | undefined> {
+  const peerViewMap = new Map<string, FederationPeerView | undefined>();
+  for (const worker of workers) {
+    const node = worker.nodeId ? nodeViewMap.get(worker.nodeId) : undefined;
+    peerViewMap.set(worker.workerId, matchWorkerPeerView(worker, node, peerViews));
+  }
+  return peerViewMap;
 }
 
 function buildExecutionOutcomeSummaryMap(
@@ -445,8 +460,10 @@ function buildWorkerView(
   now: string,
   request?: IntelligenceWorkerAssignmentRequest
 ): IntelligenceWorkerView {
-  const node = worker.nodeId ? buildNodeViewMap(request?.nodeViews).get(worker.nodeId) : undefined;
-  const peer = matchWorkerPeerView(worker, node, request?.peerViews);
+  const nodeViewMap = request?.nodeViewMap ?? buildNodeViewMap(request?.nodeViews);
+  const node = worker.nodeId ? nodeViewMap.get(worker.nodeId) : undefined;
+  const peer =
+    request?.peerViewMap?.get(worker.workerId) ?? matchWorkerPeerView(worker, node, request?.peerViews);
   const outcomeSummaryMap =
     request?.executionOutcomeSummaryMap ??
     buildExecutionOutcomeSummaryMap(request?.executionOutcomeSummaries);
@@ -669,11 +686,16 @@ function selectWorker(
   request: IntelligenceWorkerAssignmentRequest,
   now: string
 ): { assignment: IntelligenceWorkerAssignment | null; workers: IntelligenceWorkerView[]; summary: IntelligenceWorkerSummary } {
+  const nodeViewMap = request.nodeViewMap ?? buildNodeViewMap(request.nodeViews);
+  const executionOutcomeSummaryMap =
+    request.executionOutcomeSummaryMap ??
+    buildExecutionOutcomeSummaryMap(request.executionOutcomeSummaries);
+  const peerViewMap = request.peerViewMap ?? buildPeerViewMap(workers, nodeViewMap, request.peerViews);
   const resolvedRequest: IntelligenceWorkerAssignmentRequest = {
     ...request,
-    executionOutcomeSummaryMap:
-      request.executionOutcomeSummaryMap ??
-      buildExecutionOutcomeSummaryMap(request.executionOutcomeSummaries)
+    nodeViewMap,
+    peerViewMap,
+    executionOutcomeSummaryMap
   };
   const preferredLayerIds = [
     resolvedRequest.recommendedLayerId?.trim() || null,
@@ -1258,8 +1280,18 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
         const reservedWorker = applyAssignmentLease(selected, now, request.target);
         const updated = workers.filter((worker) => worker.workerId !== selected.workerId).concat(reservedWorker);
         await writeWorkers(updated);
+        const updatedRequest: IntelligenceWorkerAssignmentRequest = {
+          ...request,
+          nodeViewMap: request.nodeViewMap ?? buildNodeViewMap(request.nodeViews),
+          executionOutcomeSummaryMap:
+            request.executionOutcomeSummaryMap ??
+            buildExecutionOutcomeSummaryMap(request.executionOutcomeSummaries),
+          peerViewMap:
+            request.peerViewMap ??
+            buildPeerViewMap(updated, request.nodeViewMap ?? buildNodeViewMap(request.nodeViews), request.peerViews)
+        };
         const updatedViews = sortWorkers(updated).map((worker) =>
-          buildWorkerView(worker, now, request)
+          buildWorkerView(worker, now, updatedRequest)
         );
         return {
           workers: updatedViews,

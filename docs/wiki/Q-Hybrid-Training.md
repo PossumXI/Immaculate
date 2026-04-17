@@ -2,12 +2,12 @@
 
 This page records one hybrid Q training session. In plain English: it ties the Q fine-tune lane and the Immaculate orchestration-improvement lane into one stamped session, then tells you exactly which parts are ready or missing.
 
-- Generated: `2026-04-17T02:02:50Z`
-- Release: `0.1.0+6190f63`
-- Session id: `q-hybrid-harbor-opt-2384cf5-bench-v1`
-- Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v1-45280d5-a181f850`
-- Dataset rows: `32`
-- Immaculate orchestration bundle: `immaculate-orchestration-6190f63-55187c4d`
+- Generated: `2026-04-17T02:45:56Z`
+- Release: `0.1.0+3c3e41d`
+- Session id: `q-hybrid-harbor-opt-2384cf5-bench-v2`
+- Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v2-3c3e41d-766c8ccf`
+- Dataset rows: `31`
+- Immaculate orchestration bundle: `immaculate-orchestration-3c3e41d-7aa3136b`
 - HF Jobs training surface: `docs/wiki/HF-Jobs-Training.md`
 - Colab free training surface: `docs/wiki/Colab-Free-Training.md`
 - OCI GPU advisor: `docs/wiki/OCI-GPU-Advisor.md`
@@ -23,29 +23,29 @@ This page records one hybrid Q training session. In plain English: it ties the Q
 ## Q Fine-Tune Lane
 
 - Training lock: `.training-output/q/latest-training-lock.json`
-- Config: `.training-output/q/q-lora-config-harbor-opt-2384cf5-bench-v1.json`
-- Dataset: `.training-output/q/q-mix-longctx-harbor-opt-2384cf5-bench-v1.jsonl`
-- Mix manifest: `.training-output/q/q-mix-longctx-harbor-opt-2384cf5-bench-v1.manifest.json`
+- Config: `.training-output/q/q-lora-config-harbor-opt-2384cf5-bench-v2.json`
+- Dataset: `.training-output/q/q-mix-longctx-harbor-opt-2384cf5-bench-v2.jsonl`
+- Mix manifest: `.training-output/q/q-mix-longctx-harbor-opt-2384cf5-bench-v2.manifest.json`
 - Curation run id: `n/a`
 - Curation run path: `n/a`
 - Benchmark corpus: `docs/wiki/Q-Benchmark-Corpus.json`
 - Benchmark corpus JSONL: `.training-output/q/q-benchmark-corpus.jsonl`
-- Benchmark corpus records: `20`
+- Benchmark corpus records: `19`
 - Failure corpus: `docs/wiki/Q-Failure-Corpus.json`
-- Local command: `C:\Users\Knight\AppData\Local\Microsoft\WindowsApps\python.EXE C:\Users\Knight\Desktop\Immaculate\Immaculate-push-harbor\training\q\train_q_lora_unsloth.py --config C:\Users\Knight\Desktop\Immaculate\Immaculate-push-harbor\.training-output\q\q-lora-config-harbor-opt-2384cf5-bench-v1.json --session-manifest C:\Users\Knight\Desktop\Immaculate\Immaculate-push-harbor\.training-output\q\sessions\q-hybrid-harbor-opt-2384cf5-bench-v1\hybrid-session.manifest.json --dry-run`
+- Local command: `C:\Users\Knight\AppData\Local\Microsoft\WindowsApps\python.EXE C:\Users\Knight\Desktop\Immaculate\Immaculate-push-harbor\training\q\train_q_lora_unsloth.py --config C:\Users\Knight\Desktop\Immaculate\Immaculate-push-harbor\.training-output\q\q-lora-config-harbor-opt-2384cf5-bench-v2.json --session-manifest C:\Users\Knight\Desktop\Immaculate\Immaculate-push-harbor\.training-output\q\sessions\q-hybrid-harbor-opt-2384cf5-bench-v2\hybrid-session.manifest.json --dry-run`
 
 ## Immaculate Orchestration Lane
 
-- Bundle path: `.training-output/immaculate/immaculate-training-bundle-q-hybrid-harbor-opt-2384cf5-bench-v1.json`
+- Bundle path: `.training-output/immaculate/immaculate-training-bundle-q-hybrid-harbor-opt-2384cf5-bench-v2.json`
 - Signal count: `14`
 - This lane improves Immaculate through benchmark and orchestration evidence while keeping the tracked Q lineage as the only model-training lane in scope.
 
 ## Cloud Bundle
 
-- Bundle id: `q-hybrid-harbor-opt-2384cf5-bench-v1-6190f63`
-- Archive: `.training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v1/cloud-bundle/q-hybrid-harbor-opt-2384cf5-bench-v1-cloud-bundle.tar.gz`
-- Archive SHA-256: `7137a9fc12c5cba3c570c8a963c1f1bfb0e9137d71e6d6af0bc671734e49c5b0`
-- Bundle manifest: `.training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v1/cloud-bundle/bundle-manifest.json`
+- Bundle id: `q-hybrid-harbor-opt-2384cf5-bench-v2-3c3e41d`
+- Archive: `.training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v2/cloud-bundle/q-hybrid-harbor-opt-2384cf5-bench-v2-cloud-bundle.tar.gz`
+- Archive SHA-256: `8e76f728bc864a70b0349534173889d6881ae5d33aea55e2db9a225fbd820a90`
+- Bundle manifest: `.training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v2/cloud-bundle/bundle-manifest.json`
 - Included file count: `9`
 
 ## Cloud Doctor

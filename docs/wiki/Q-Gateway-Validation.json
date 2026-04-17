@@ -1,44 +1,49 @@
 {
-  "generatedAt": "2026-04-15T02:32:19.275Z",
-  "gatewayUrl": "http://127.0.0.1:8915",
+  "generatedAt": "2026-04-17T02:48:43.496Z",
+  "gatewayUrl": "http://127.0.0.1:8902",
   "alias": "Q",
   "qServingLabel": "Q",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "194a8fc18d1f5e54a2f88108827bbe632cd791c6",
-    "gitShortSha": "194a8fc",
-    "gitBranch": "detached",
-    "buildId": "0.1.0+194a8fc",
+    "gitSha": "3c3e41d99de4ee12273359707ffe5f0e2025e851",
+    "gitShortSha": "3c3e41d",
+    "gitBranch": "harbor-q-push",
+    "buildId": "0.1.0+3c3e41d",
     "q": {
       "alias": "Q",
       "providerModel": "Q",
       "truthfulLabel": "Q",
       "trainingLock": {
-        "generatedAt": "2026-04-14T15:26:05Z",
+        "generatedAt": "2026-04-17T02:45:48Z",
         "lockVersion": 1,
-        "bundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5",
-        "runName": "q-defsec-code-longctx-cur-fnv1a-8f551a5c",
+        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v2-3c3e41d-766c8ccf",
+        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v2",
         "aliasName": "Q",
-        "trainDatasetPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c.jsonl",
-        "trainDatasetSha256": "5c329cc58772a0dc52e12dafcc421caa5458c6a7c37b96f2970d8a04e937c64f",
-        "trainDatasetRowCount": 1013,
-        "mixManifestPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\q\\q-mix-longctx-cur-fnv1a-8f551a5c.manifest.json",
-        "mixManifestSha256": "3f2210e752c4407ab8baf87fbd686e40ef17b1571e87811bc04b92199d080ec7",
-        "curationRunPath": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-q-gateway\\.training-output\\training-data\\runs\\cur-fnv1a-8f551a5c\\run.json",
-        "curationRunId": "cur-fnv1a-8f551a5c",
+        "trainDatasetPath": ".training-output/q/q-mix-longctx-harbor-opt-2384cf5-bench-v2.jsonl",
+        "trainDatasetSha256": "766c8ccf551f183e006a9553d9fd6e1fad396a2bfc6f6fb9740a19af284ea1e8",
+        "trainDatasetRowCount": 31,
+        "mixManifestPath": ".training-output/q/q-mix-longctx-harbor-opt-2384cf5-bench-v2.manifest.json",
+        "mixManifestSha256": "2b3449f4a2dec2d8e6384cb0ae1670d7549912eba572b304d64960c8894c7263",
+        "mixSupplementalCount": 2,
+        "mixSupplementalPaths": [
+          "training/q/bridgebench_seed.json",
+          "training/q/coding_long_context_seed.json"
+        ],
+        "curationRunId": null,
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-14T21:35:43Z",
-        "sessionId": "q-hybrid-cur-fnv1a-8f551a5c",
-        "sessionPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c/hybrid-session.json",
+        "generatedAt": "2026-04-17T02:45:56Z",
+        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v2",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v2/hybrid-session.json",
         "localStatus": "ready",
-        "cloudStatus": "not-configured",
-        "cloudProvider": "oci",
-        "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5",
-        "immaculateBundleId": "immaculate-orchestration-36fc9bb-4c759c95"
+        "cloudStatus": "launch-blocked",
+        "cloudProvider": "hf_jobs",
+        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v2-3c3e41d-766c8ccf",
+        "immaculateBundleId": "immaculate-orchestration-3c3e41d-7aa3136b",
+        "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
       }
     }
   },
@@ -58,8 +63,8 @@
       "body": {
         "ok": true,
         "release": {
-          "buildId": "0.1.0+194a8fc",
-          "gitShortSha": "194a8fc"
+          "buildId": "0.1.0+3c3e41d",
+          "gitShortSha": "3c3e41d"
         },
         "gateway": "q",
         "alias": "Q",
@@ -71,17 +76,17 @@
         },
         "authMode": "api-key",
         "host": "127.0.0.1",
-        "port": 8915
+        "port": 8902
       },
       "headers": {
         "connection": "keep-alive",
         "content-length": "234",
         "content-type": "application/json; charset=utf-8",
-        "date": "Wed, 15 Apr 2026 02:32:16 GMT",
+        "date": "Fri, 17 Apr 2026 02:48:40 GMT",
         "keep-alive": "timeout=72",
         "vary": "Origin"
       },
-      "wallLatencyMs": 19.97
+      "wallLatencyMs": 15.69
     },
     "unauthorizedChat": {
       "status": 401,
@@ -93,11 +98,11 @@
         "connection": "keep-alive",
         "content-length": "91",
         "content-type": "application/json; charset=utf-8",
-        "date": "Wed, 15 Apr 2026 02:32:16 GMT",
+        "date": "Fri, 17 Apr 2026 02:48:40 GMT",
         "keep-alive": "timeout=72",
         "vary": "Origin"
       },
-      "wallLatencyMs": 6.55
+      "wallLatencyMs": 5.88
     },
     "info": {
       "status": 200,
@@ -106,16 +111,16 @@
         "alias": "Q",
         "model": "Q",
         "release": {
-          "buildId": "0.1.0+194a8fc",
-          "gitShortSha": "194a8fc",
-          "qTrainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-f3886f2-5c329cc5"
+          "buildId": "0.1.0+3c3e41d",
+          "gitShortSha": "3c3e41d",
+          "qTrainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v2-3c3e41d-766c8ccf"
         },
         "circuit": {
           "state": "closed",
           "consecutiveFailures": 0
         },
         "authMode": "api-key",
-        "keyId": "qkey-mnzfq6u9-8f90a02c",
+        "keyId": "qkey-mo2b6zm6-c5e0783d",
         "rateLimit": {
           "requestsPerMinute": 30,
           "burst": 30,
@@ -130,16 +135,16 @@
       },
       "headers": {
         "connection": "keep-alive",
-        "content-length": "434",
+        "content-length": "443",
         "content-type": "application/json; charset=utf-8",
-        "date": "Wed, 15 Apr 2026 02:32:16 GMT",
+        "date": "Fri, 17 Apr 2026 02:48:40 GMT",
         "keep-alive": "timeout=72",
         "vary": "Origin",
         "x-ratelimit-limit": "30",
         "x-ratelimit-remaining": "29",
         "x-ratelimit-reset-ms": "0"
       },
-      "wallLatencyMs": 76.32
+      "wallLatencyMs": 68.23
     },
     "models": {
       "status": 200,
@@ -160,26 +165,26 @@
         "connection": "keep-alive",
         "content-length": "111",
         "content-type": "application/json; charset=utf-8",
-        "date": "Wed, 15 Apr 2026 02:32:16 GMT",
+        "date": "Fri, 17 Apr 2026 02:48:40 GMT",
         "keep-alive": "timeout=72",
         "vary": "Origin",
         "x-ratelimit-limit": "30",
         "x-ratelimit-remaining": "28",
         "x-ratelimit-reset-ms": "0"
       },
-      "wallLatencyMs": 73.78
+      "wallLatencyMs": 69.63
     },
     "authorizedChat": {
       "status": 200,
       "body": {
-        "id": "chatcmpl-mnzfq7r2",
+        "id": "chatcmpl-mo2b70ia",
         "object": "chat.completion",
-        "created": 1776220337,
+        "created": 1776394121,
         "model": "Q",
         "providerModel": "Q",
         "primaryModel": "Q",
         "circuitState": "closed",
-        "latencyMs": 857.33,
+        "latencyMs": 848.61,
         "thinkingDetected": false,
         "choices": [
           {
@@ -201,20 +206,20 @@
         "connection": "keep-alive",
         "content-length": "382",
         "content-type": "application/json; charset=utf-8",
-        "date": "Wed, 15 Apr 2026 02:32:17 GMT",
+        "date": "Fri, 17 Apr 2026 02:48:41 GMT",
         "keep-alive": "timeout=72",
         "vary": "Origin",
         "x-provider-model": "Q",
         "x-q-alias": "Q",
         "x-q-circuit-state": "closed",
-        "x-q-primary-latency-ms": "857.33",
+        "x-q-primary-latency-ms": "848.61",
         "x-q-primary-model": "Q",
         "x-ratelimit-limit": "30",
         "x-ratelimit-remaining": "27",
         "x-ratelimit-reset-ms": "0",
-        "x-upstream-latency-ms": "857.33"
+        "x-upstream-latency-ms": "848.61"
       },
-      "wallLatencyMs": 941.53
+      "wallLatencyMs": 929.25
     },
     "concurrentRejection": {
       "status": 429,
@@ -227,7 +232,7 @@
         "connection": "keep-alive",
         "content-length": "101",
         "content-type": "application/json; charset=utf-8",
-        "date": "Wed, 15 Apr 2026 02:32:17 GMT",
+        "date": "Fri, 17 Apr 2026 02:48:41 GMT",
         "keep-alive": "timeout=72",
         "retry-after": "1",
         "vary": "Origin",
@@ -235,19 +240,19 @@
         "x-ratelimit-remaining": "26",
         "x-ratelimit-reset-ms": "1000"
       },
-      "wallLatencyMs": 78.93
+      "wallLatencyMs": 81.55
     }
   },
   "directOllama": {
-    "latencyMs": 873.3,
-    "wallLatencyMs": 892.16,
+    "latencyMs": 905.93,
+    "wallLatencyMs": 922.76,
     "responsePreview": "Gateway reports healthy status."
   },
   "comparison": {
-    "gatewayEndToEndLatencyMs": 941.53,
-    "gatewayUpstreamLatencyMs": 857.33,
-    "gatewayAddedLatencyMs": 84.2,
-    "directOllamaLatencyMs": 873.3
+    "gatewayEndToEndLatencyMs": 929.25,
+    "gatewayUpstreamLatencyMs": 848.61,
+    "gatewayAddedLatencyMs": 80.64,
+    "directOllamaLatencyMs": 905.93
   },
   "output": {
     "jsonPath": "docs\\wiki\\Q-Gateway-Validation.json",
