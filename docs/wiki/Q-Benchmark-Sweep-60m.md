@@ -2,9 +2,9 @@
 
 This page records the hour-class Q and Immaculate benchmark sweep. It ties the historical 60-minute W&B soak lane to the repeated BridgeBench and Harbor task-pack lanes in one stamped surface.
 
-- Generated: `2026-04-17T20:51:08.584Z`
-- Release: `0.1.0+30d48b7`
-- Repo commit: `30d48b7`
+- Generated: `2026-04-17T20:56:29.772Z`
+- Release: `0.1.0+ae69c0e`
+- Repo commit: `ae69c0e`
 - Q model name: `Q`
 - Q foundation model: `Gemma 4`
 - Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14-30d48b7-248a8349`
@@ -14,10 +14,10 @@ This page records the hour-class Q and Immaculate benchmark sweep. It ties the h
 This is the current newest W&B benchmark publication tracked in git. Read this first if you want the latest published W&B result rather than the last hour-class soak rerun.
 
 - Pack: `Substrate Readiness`
-- Suite: `immaculate-benchmark-2026-04-17T02-09-25-503Z`
-- Published: `2026-04-17T02:11:17.210524+00:00`
-- Run URL: `https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/hp3m80eh`
-- Failed assertions: `0` / `119`
+- Suite: `immaculate-benchmark-2026-04-17T10-27-32-456Z`
+- Published: `2026-04-17T10:27:55.225772+00:00`
+- Run URL: `https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/l5h7p5ol`
+- Failed assertions: `0` / `122`
 
 ## Historical W&B 60m Soak
 

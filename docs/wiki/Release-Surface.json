@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-17T20:52:47.953Z",
+  "generatedAt": "2026-04-17T20:56:42.969Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "30d48b7e6e99aaacd7284b2c4096d3e68f40f350",
-    "gitShortSha": "30d48b7",
+    "gitSha": "ae69c0e9e62facf042460bcf2e99f1b5037b5dcb",
+    "gitShortSha": "ae69c0e",
     "gitBranch": "harbor-q-push",
-    "buildId": "0.1.0+30d48b7",
+    "buildId": "0.1.0+ae69c0e",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -65,7 +65,7 @@
     {
       "label": "Q readiness gate",
       "path": "docs\\wiki\\Q-Readiness-Gate.json",
-      "generatedAt": "2026-04-17T20:29:42.247Z"
+      "generatedAt": "2026-04-17T20:52:53.290Z"
     },
     {
       "label": "Q gateway validation",
@@ -135,7 +135,7 @@
     {
       "label": "W&B benchmark export",
       "path": "docs\\wiki\\Benchmark-Wandb-Export.json",
-      "generatedAt": "2026-04-17T02:11:36.709380+00:00"
+      "generatedAt": "2026-04-17T10:28:04.992947+00:00"
     },
     {
       "label": "Harbor terminal bench",
@@ -160,7 +160,7 @@
     {
       "label": "Q benchmark sweep (60m)",
       "path": "docs\\wiki\\Q-Benchmark-Sweep-60m.json",
-      "generatedAt": "2026-04-17T20:51:08.584Z"
+      "generatedAt": "2026-04-17T20:56:29.772Z"
     }
   ],
   "cloudflare": {
