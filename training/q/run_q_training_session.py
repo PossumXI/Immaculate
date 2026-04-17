@@ -3,8 +3,10 @@ import json
 import os
 import re
 import shutil
+import site
 import subprocess
 import sys
+import sysconfig
 import tarfile
 from datetime import datetime, timezone
 from hashlib import sha256
@@ -216,6 +218,31 @@ def locate_hf_cli(root: Path, env_map: dict[str, str]) -> str:
         if local_posix.exists():
             return str(local_posix)
     return shutil.which("hf") or "hf"
+
+
+def locate_oci_cli(root: Path, env_map: dict[str, str]) -> str:
+    explicit = str(env_map.get("OCI_CLI_BIN", "")).strip()
+    if explicit:
+        return explicit
+    script_dir_candidates = [
+        Path(sys.executable).resolve(strict=False).parent,
+        Path(sysconfig.get_path("scripts")).resolve(strict=False),
+        Path(site.getuserbase()).resolve(strict=False) / ("Scripts" if sys.platform.startswith("win") else "bin"),
+    ]
+    candidates = []
+    for script_dir in script_dir_candidates:
+        candidates.append(script_dir / ("oci.exe" if sys.platform.startswith("win") else "oci"))
+    candidates.extend(
+        [
+            root / ".tools" / "oci-cli-venv" / "Scripts" / "oci.exe",
+            root.parent / ".tools" / "oci-cli-venv" / "Scripts" / "oci.exe",
+            root.parent / "Immaculate-q-gateway" / ".tools" / "oci-cli-venv" / "Scripts" / "oci.exe",
+        ]
+    )
+    for candidate in candidates:
+        if candidate.exists():
+            return str(candidate.resolve(strict=False))
+    return shutil.which("oci") or "oci"
 
 
 def hf_gpu_flavor_names(hardware_entries: object) -> list[str]:
@@ -816,7 +843,7 @@ def build_cloud_bundle(
     training_lock_path: Path,
     config_path: Path,
     mix_manifest_path: Path,
-    curation_run_path: Path,
+    curation_run_path: Path | None,
     dataset_path: Path,
     failure_corpus_path: Path | None,
     benchmark_corpus_path: Path | None,
@@ -834,10 +861,11 @@ def build_cloud_bundle(
         training_lock_path,
         config_path,
         mix_manifest_path,
-        curation_run_path,
         dataset_path,
         immaculate_bundle_output,
     ]
+    if curation_run_path is not None and curation_run_path.exists():
+        source_paths.append(curation_run_path)
     if failure_corpus_path is not None and failure_corpus_path.exists():
         source_paths.append(failure_corpus_path)
     if benchmark_corpus_path is not None and benchmark_corpus_path.exists():
@@ -1045,7 +1073,8 @@ def render_markdown(summary: dict) -> str:
         f"- Config: `{q['configPath']}`",
         f"- Dataset: `{q['trainDatasetPath']}`",
         f"- Mix manifest: `{q['mixManifestPath']}`",
-        f"- Curation run: `{q['curationRunId']}`",
+        f"- Curation run id: `{q.get('curationRunId') or 'n/a'}`",
+        f"- Curation run path: `{q.get('curationRunPath') or 'n/a'}`",
         f"- Benchmark corpus: `{q['benchmarkCorpusPath']}`",
         f"- Benchmark corpus JSONL: `{q['benchmarkCorpusJsonlPath']}`",
         f"- Benchmark corpus records: `{q['benchmarkCorpusRecordCount']}`",
@@ -1158,7 +1187,7 @@ def render_markdown(summary: dict) -> str:
             "- One hybrid session can now coordinate local Q preparation, optional local training, optional cloud launch intent, and an Immaculate orchestration bundle in one place.",
             "- A cloud launch is only claimed when the session doctor marks the cloud lane ready and an actual launch command is configured.",
             "- The cloud bundle exists so a remote GPU node can train the exact locked dataset instead of booting without the tracked session inputs.",
-            "- Missing provider auth, staging proof, launch targets, or billing headroom keeps the cloud lane explicit as `not-configured` instead of being papered over.",
+            "- Missing provider auth, staging proof, launch targets, or billing headroom keeps the cloud lane explicit as `not-configured` or `launch-blocked` instead of being papered over.",
         ]
     )
     return "\n".join(lines) + "\n"
@@ -1202,11 +1231,13 @@ def main() -> None:
     if mix_manifest_path is None or not mix_manifest_path.exists():
         raise ValueError("Unable to resolve the concrete Q mix manifest path from the manifest or training lock.")
 
-    curation_run_path = resolve_repo_path(str(q_manifest.get("curationRunPath", "")).strip()) or resolve_repo_path(
-        str(training_lock.get("curation", {}).get("runPath", "")).strip()
-    )
-    if curation_run_path is None or not curation_run_path.exists():
-        raise ValueError("Unable to resolve the concrete curation run path from the manifest or training lock.")
+    manifest_curation_run = q_manifest.get("curationRunPath")
+    lock_curation_run = training_lock.get("curation", {}).get("runPath")
+    curation_run_path = resolve_repo_path(str(manifest_curation_run).strip()) if manifest_curation_run is not None else None
+    if curation_run_path is None and lock_curation_run is not None:
+        curation_run_path = resolve_repo_path(str(lock_curation_run).strip())
+    if curation_run_path is not None and not curation_run_path.exists():
+        raise ValueError("Configured curation run path does not exist.")
 
     dataset_path = resolve_repo_path(str(config.get("train_dataset_path", "")).strip())
     if dataset_path is None or not dataset_path.exists():
@@ -1421,7 +1452,7 @@ def main() -> None:
     hf_jobs_hardware = hf_jobs_report.get("hardware", []) if isinstance(hf_jobs_report, dict) else []
     hf_jobs_gpu_shapes = hf_gpu_flavor_names(hf_jobs_hardware)
     colab_free_report = try_load_json(colab_free_training_json_path) or {}
-    oci_cli_bin = str(canonical_cloud_env.get("OCI_CLI_BIN", "")).strip() or shutil.which("oci") or "oci"
+    oci_cli_bin = locate_oci_cli(root, canonical_cloud_env)
     oci_cli_available = bool(shutil.which(oci_cli_bin) or Path(oci_cli_bin).exists())
     oci_auth_mode = "missing"
     if str(canonical_cloud_env.get("OCI_CLI_AUTH", "")).strip() == "instance_principal":
@@ -1485,7 +1516,11 @@ def main() -> None:
                 "regionKey": None,
                 "isHomeRegion": False,
                 "shape": None,
-                "reason": "OCI GPU advisor is unavailable until OCI auth and CLI are ready.",
+                "reason": (
+                    "Active hybrid session is using the HF Jobs cloud lane; see OCI-Region-Capacity for the current OCI controller state."
+                    if cloud_provider != "oci"
+                    else "OCI GPU advisor is unavailable until OCI auth and CLI are ready."
+                ),
             },
             "suggestedEnvUpdates": {},
             "actions": [],
@@ -1705,7 +1740,7 @@ def main() -> None:
             "IMMACULATE_Q_TRAINING_CONFIG_PATH": str(config_path),
             "IMMACULATE_Q_TRAINING_CONFIG_REPO_PATH": relative_path(root, config_path),
             "IMMACULATE_Q_TRAINING_MIX_MANIFEST_PATH": str(mix_manifest_path),
-            "IMMACULATE_Q_TRAINING_CURATION_RUN_PATH": str(curation_run_path),
+            "IMMACULATE_Q_TRAINING_CURATION_RUN_PATH": str(curation_run_path) if curation_run_path is not None else "",
             "IMMACULATE_Q_TRAINING_DATASET_PATH": str(dataset_path),
             "IMMACULATE_Q_BENCHMARK_CORPUS_PATH": str(benchmark_corpus_path),
             "IMMACULATE_Q_BENCHMARK_CORPUS_JSONL_PATH": str(benchmark_corpus_jsonl_path or ""),
@@ -1722,6 +1757,20 @@ def main() -> None:
         }
     )
 
+    local_lane_status = "ready" if local_ready else ("skipped" if not local_enabled or local_mode == "skip" else "not-configured")
+    cloud_lane_status = "ready" if cloud_ready else ("skipped" if not cloud_enabled or cloud_mode == "skip" else "not-configured")
+    if (
+        cloud_lane_status == "not-configured"
+        and cloud_provider == "hf_jobs"
+        and bool(hf_jobs_auth.get("ready", False))
+        and bool(hf_jobs_staged_bundle.get("staged", False))
+        and (
+            str(hf_jobs_smoke.get("blocker") or "").strip()
+            or str(hf_jobs_launch.get("blocker") or "").strip()
+        )
+    ):
+        cloud_lane_status = "launch-blocked"
+
     summary = {
         "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
         "sessionId": session_id,
@@ -1735,6 +1784,7 @@ def main() -> None:
             "trainDatasetPath": relative_path(root, dataset_path),
             "trainDatasetRowCount": count_jsonl_rows(dataset_path),
             "mixManifestPath": relative_path(root, mix_manifest_path),
+            "curationRunPath": relative_path(root, curation_run_path) if curation_run_path is not None else None,
             "curationRunId": training_lock.get("curation", {}).get("runId"),
             "benchmarkCorpusPath": relative_path(root, benchmark_corpus_path) if benchmark_corpus_path.exists() else str(benchmark_corpus_path),
             "benchmarkCorpusJsonlPath": relative_path(root, benchmark_corpus_jsonl_path) if benchmark_corpus_jsonl_path and benchmark_corpus_jsonl_path.exists() else str(benchmark_corpus_jsonl_path),
@@ -1843,14 +1893,14 @@ def main() -> None:
             "local": {
                 "enabled": local_enabled,
                 "mode": local_mode,
-                "status": "ready" if local_ready else ("skipped" if not local_enabled or local_mode == "skip" else "not-configured"),
+                "status": local_lane_status,
                 "command": local_command,
             },
             "cloud": {
                 "enabled": cloud_enabled,
                 "provider": cloud_provider,
                 "mode": cloud_mode,
-                "status": "ready" if cloud_ready else ("skipped" if not cloud_enabled or cloud_mode == "skip" else "not-configured"),
+                "status": cloud_lane_status,
                 "command": cloud_launch_command,
             },
         },

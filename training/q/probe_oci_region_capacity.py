@@ -1,8 +1,10 @@
 import argparse
 import json
 import shutil
+import site
 import subprocess
 import sys
+import sysconfig
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -59,11 +61,21 @@ def resolve_oci_bin(root: Path, raw_value: str) -> str:
     raw = raw_value.strip()
     if raw:
         return str(Path(raw).expanduser().resolve(strict=False))
-    candidates = [
-        root / ".tools" / "oci-cli-venv" / "Scripts" / "oci.exe",
-        root.parent / ".tools" / "oci-cli-venv" / "Scripts" / "oci.exe",
-        root.parent / "Immaculate-q-gateway" / ".tools" / "oci-cli-venv" / "Scripts" / "oci.exe",
+    script_dir_candidates = [
+        Path(sys.executable).resolve(strict=False).parent,
+        Path(sysconfig.get_path("scripts")).resolve(strict=False),
+        Path(site.getuserbase()).resolve(strict=False) / ("Scripts" if sys.platform.startswith("win") else "bin"),
     ]
+    candidates = []
+    for script_dir in script_dir_candidates:
+        candidates.append(script_dir / ("oci.exe" if sys.platform.startswith("win") else "oci"))
+    candidates.extend(
+        [
+            root / ".tools" / "oci-cli-venv" / "Scripts" / "oci.exe",
+            root.parent / ".tools" / "oci-cli-venv" / "Scripts" / "oci.exe",
+            root.parent / "Immaculate-q-gateway" / ".tools" / "oci-cli-venv" / "Scripts" / "oci.exe",
+        ]
+    )
     for candidate in candidates:
         if candidate.exists():
             return str(candidate.resolve(strict=False))

@@ -117,6 +117,7 @@ For the OCI controller path specifically:
 - put the OCI launch target OCIDs in that env file or a session-local overlay env file
 - prefer `OCI_Q_TRAINING_HF_TOKEN_SECRET_OCID` and `OCI_Q_TRAINING_WANDB_API_KEY_SECRET_OCID` over plain-text token exports
 - use `deploy/oci-training/scripts/launch-oci-q-training.sh --check` to verify the launch-target shape before a real billable launch
+- in `train` mode the OCI runner now bootstraps the Python training stack before it invokes `train_q_lora_unsloth.py`
 - keep the hybrid session as the source of truth; the OCI launcher consumes the session bundle instead of inventing its own dataset state
 
 ## Hybrid Session
@@ -143,6 +144,7 @@ The active workaround cloud lane can also run through Hugging Face Jobs:
 - use `deploy/hf-jobs/env/immaculate-q-training.env.example` as the non-secret controller template
 - keep the token in a separate env file such as `C:/Users/Knight/Desktop/cheeks/Asgard/.env`
 - validate and stage the active bundle with `npm run q:hf:jobs -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --env-file C:/Users/Knight/Desktop/cheeks/Asgard/.env --env-file .training-output/q/sessions/<session-id>/hf-jobs.env --smoke-launch`
+- in `train` mode the remote HF Jobs runner now bootstraps the Python training stack before it calls `train_q_lora_unsloth.py`
 - treat `docs/wiki/HF-Jobs-Training.md` as the truth surface for auth, staged bundle state, visible hardware, and any billing blocker
 - keep the session doctor as the source of truth for whether the HF Jobs lane is actually ready to launch
 

@@ -30,7 +30,11 @@ const proofCards = [
   },
   {
     label: "Training State",
-    body: "Q lock is still 31 rows with 2 supplementals. Benchmark corpus is 20 rows. Failure corpus is 6 seeds."
+    body: "Q lock is now 32 rows with 2 supplementals. Benchmark corpus is 20 rows. Failure corpus is 6 seeds."
+  },
+  {
+    label: "Cloud Lane",
+    body: "HF Jobs auth and bundle staging are real on bench-v1. The blocker is prepaid credits, not missing session state."
   }
 ];
 
@@ -78,7 +82,7 @@ export function LandingPage() {
             <span>BridgeBench 4/4</span>
             <span>Substrate seam green</span>
             <span>Harbor 0.950 / 0.925</span>
-            <span>31-row lock</span>
+            <span>32-row bench-v1 lock</span>
             <span>20 benchmark rows</span>
           </div>
 

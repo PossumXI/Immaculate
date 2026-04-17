@@ -69,7 +69,8 @@ Latest plain-English readout:
 - on the current repo-local Harbor task pack, oracle is still `1.000` on both tasks
 - `Q` scored `0.950` on the Q structured-contract task and `0.925` on the Immaculate bridge fail-closed task
 - those Harbor scores break down into perfect programmatic passes (`1.000` on both tasks) plus improved operator-grade judge scores (`0.900` and `0.850`)
-- the current locked Q bundle is still `q-defsec-code-longctx-harbor-opt-2384cf5-2384cf5-57097d65`: `31` rows and `2` curated supplementals; the latest restamped Immaculate orchestration bundle is `immaculate-orchestration-9bc2e59-55187c4d`
+- the current locked Q bundle is now `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v1-45280d5-a181f850`: `32` rows and `2` tracked supplementals; the paired Immaculate orchestration bundle is `immaculate-orchestration-45280d5-55187c4d`
+- the current HF Jobs lane is authenticated and staging the promoted bench-v1 bundle correctly, but the real blocker is Hugging Face prepaid credits, not missing auth or a fake session
 - the tracked Q benchmark corpus now carries `20` records, and the strict failure corpus carries `6` live eval seeds with `8` resolved successes kept out of the failure lane
 - the official public-task Terminal-Bench receipt for `terminal-bench/make-mips-interpreter` is still `0.000`, and that underperformance now stays in the repair loop instead of living as a dead-end public artifact
 

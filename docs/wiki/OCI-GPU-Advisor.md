@@ -2,9 +2,9 @@
 
 This page records the current OCI GPU launch advice for the active Q hybrid training session.
 
-- Generated: `2026-04-16T00:02:31Z`
-- Release: `0.1.0+a252873`
-- Session id: `q-hybrid-cur-fnv1a-8f551a5c-bench-v3`
+- Generated: `2026-04-17T00:54:48Z`
+- Release: `0.1.0+45280d5`
+- Session id: `q-hybrid-harbor-opt-2384cf5-bench-v1`
 - Probe scope: `verified-subscribed-regions-only`
 - Controller region: `n/a`
 - Configured target region: `n/a`
@@ -20,7 +20,7 @@ This page records the current OCI GPU launch advice for the active Q hybrid trai
 - Status: `none`
 - Region: `n/a`
 - Shape: `n/a`
-- Reason: OCI GPU advisor is unavailable until OCI auth and CLI are ready.
+- Reason: Active hybrid session is using the HF Jobs cloud lane; see OCI-Region-Capacity for the current OCI controller state.
 
 ## Public Expansion Candidates
 

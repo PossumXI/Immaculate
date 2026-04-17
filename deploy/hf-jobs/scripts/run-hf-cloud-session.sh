@@ -50,6 +50,7 @@ PYTHON_BIN="${IMMACULATE_Q_TRAINING_PYTHON:-python3}"
 BUNDLE_MOUNT_ROOT="${HF_BUNDLE_MOUNT_ROOT:-/bundle}"
 BUNDLE_REPO_PATH="${HF_BUNDLE_ARCHIVE_PATH:-}"
 MANIFEST_REPO_PATH="${HF_BUNDLE_MANIFEST_REPO_PATH:-}"
+BOOTSTRAP_MODE="${IMMACULATE_Q_TRAINING_BOOTSTRAP:-auto}"
 
 if [[ -z "${SESSION_REPO_PATH}" ]]; then
   echo "IMMACULATE_Q_HYBRID_SESSION_REPO_PATH is required." >&2
@@ -126,6 +127,10 @@ TRAIN_ARGS=(
 
 if [[ "${JOB_MODE}" != "train" ]]; then
   TRAIN_ARGS+=(--dry-run)
+fi
+
+if [[ "${BOOTSTRAP_MODE}" == "always" || "${BOOTSTRAP_MODE}" == "true" || ( "${BOOTSTRAP_MODE}" == "auto" && "${JOB_MODE}" == "train" ) ]]; then
+  bash "${REPO_ROOT}/deploy/shared/scripts/install-q-training-stack.sh" "${PYTHON_BIN}"
 fi
 
 exec "${TRAIN_ARGS[@]}"

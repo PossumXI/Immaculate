@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-04-15T18:57:58Z",
+  "generatedAt": "2026-04-17T00:43:28Z",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "bb5d74917c953b52af2f71057a4d1cb7cdcd39a4",
-    "gitShortSha": "bb5d749",
-    "buildId": "0.1.0+bb5d749"
+    "gitSha": "45280d5867db018cd44b27b373a2404a70a179c0",
+    "gitShortSha": "45280d5",
+    "buildId": "0.1.0+45280d5"
   },
-  "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
+  "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v1",
   "auth": {
-    "hfCliBin": "C:\\Users\\Knight\\Desktop\\Immaculate\\.tools\\foundry-venv\\Scripts\\hf.exe",
+    "hfCliBin": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-push-harbor\\.tools\\foundry-venv\\Scripts\\hf.exe",
     "tokenSource": "HUGGINFACE_ACCESS_TOKEN",
     "ready": true,
     "user": "TruLumecreator",
@@ -181,14 +181,14 @@
   "jobsVisibleCount": 0,
   "stagedBundle": {
     "repoId": "TruLumecreator/immaculate-q-cloud-bundles",
-    "archiveRepoPath": "sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/q-hybrid-cur-fnv1a-8f551a5c-bench-v2-cloud-bundle.tar.gz",
-    "manifestRepoPath": "sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/bundle-manifest.json",
+    "archiveRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v1/q-hybrid-harbor-opt-2384cf5-bench-v1-cloud-bundle.tar.gz",
+    "manifestRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v1/bundle-manifest.json",
     "staged": true,
-    "createRepoStdout": "Successfully created \u001b[1mTruLumecreator/immaculate-q-cloud-bundles\u001b[0m on the Hub.\nYour repo is now available at \u001b[1mhttps://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles\u001b[0m",
-    "createRepoStderr": "\u001b[33mFutureWarning: `hf repo` is deprecated in favor of `hf repos`.\u001b[0m",
-    "uploadArchiveStdout": "https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles/commit/a0f34031355f91e8f8f440ed27cd585c57b156a3",
-    "uploadArchiveStderr": "Processing Files (0 / 0)      : |          |  0.00B /  0.00B            \n\nNew Data Upload               : |          |  0.00B /  0.00B            \u001b[A\n\n\n  ...ch-v2-cloud-bundle.tar.gz:  95%|#########4| 2.10MB / 2.22MB            \u001b[A\u001b[A\n\n\n  ...ch-v2-cloud-bundle.tar.gz:  95%|#########4| 2.10MB / 2.22MB            \u001b[A\u001b[A\nProcessing Files (0 / 1)      :  95%|#########4| 2.10MB / 2.22MB, 10.5MB/s  \n\nNew Data Upload               :  95%|#########4| 2.10MB / 2.22MB, 10.5MB/s  \u001b[A\n\n\n  ...ch-v2-cloud-bundle.tar.gz:  95%|#########4| 2.10MB / 2.22MB            \u001b[A\u001b[A\n\n\n  ...ch-v2-cloud-bundle.tar.gz:  95%|#########4| 2.10MB / 2.22MB            \u001b[A\u001b[A\n\n\n  ...ch-v2-cloud-bundle.tar.gz: 100%|##########| 2.22MB / 2.22MB            \u001b[A\u001b[A\nProcessing Files (1 / 1)      : 100%|##########| 2.22MB / 2.22MB, 2.77MB/s  \n\nNew Data Upload               : 100%|##########| 2.22MB / 2.22MB, 2.77MB/s  \u001b[A\n\n\n  ...ch-v2-cloud-bundle.tar.gz: 100%|##########| 2.22MB / 2.22MB            \u001b[A\u001b[A\n\n\n  ...ch-v2-cloud-bundle.tar.gz: 100%|##########| 2.22MB / 2.22MB            \u001b[A\u001b[A\nProcessing Files (1 / 1)      : 100%|##########| 2.22MB / 2.22MB, 2.22MB/s  \n\nNew Data Upload               : 100%|##########| 2.22MB / 2.22MB, 2.22MB/s  \n\n  ...ch-v2-cloud-bundle.tar.gz: 100%|##########| 2.22MB / 2.22MB",
-    "uploadManifestStdout": "https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles/commit/4c116241a118da973a9bcc5856c5f18393bae0fd",
+    "createRepoStdout": "repo_id=TruLumecreator/immaculate-q-cloud-bundles url=https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles",
+    "createRepoStderr": "Warning: `hf repo` is deprecated in favor of `hf repos`.",
+    "uploadArchiveStdout": "url=https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles/commit/2c160df1ca92424d1add2e4307801df47fae4160",
+    "uploadArchiveStderr": null,
+    "uploadManifestStdout": "url=https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles/commit/bb35e3e9f883471811c5e5464040ab874e8754a0",
     "uploadManifestStderr": null
   },
   "smokeLaunch": {
@@ -197,14 +197,15 @@
     "flavor": "cpu-basic",
     "timeout": "5m",
     "jobId": null,
-    "blocker": "Error: Client error '402 Payment Required' for url 'https://huggingface.co/api/jobs/TruLumecreator' (Request ID: Root=1-69dfdfb3-6d068e3b2fa32b847cc2e8ec;644d56af-8af0-4c7d-a5f4-d3a14bca61cd)\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402\n\nPre-paid credit balance is insufficient - add more credits to your account to use Jobs.",
+    "blocker": "Error: Client error '402 Payment Required' for url 'https://huggingface.co/api/jobs/TruLumecreator' (Request ID: Root=1-69e1822f-4a039ab85d756a7809542f0c;9f8feb26-3fba-4852-9a4d-95d543987590)\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402\n\nPre-paid credit balance is insufficient - add more credits to your account to use Jobs.",
     "stdout": "\u001b[90mSet HF_DEBUG=1 as environment variable for full traceback.\u001b[0m",
-    "stderr": "Error: Client error '402 Payment Required' for url 'https://huggingface.co/api/jobs/TruLumecreator' (Request ID: Root=1-69dfdfb3-6d068e3b2fa32b847cc2e8ec;644d56af-8af0-4c7d-a5f4-d3a14bca61cd)\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402\n\nPre-paid credit balance is insufficient - add more credits to your account to use Jobs."
+    "stderr": "Error: Client error '402 Payment Required' for url 'https://huggingface.co/api/jobs/TruLumecreator' (Request ID: Root=1-69e1822f-4a039ab85d756a7809542f0c;9f8feb26-3fba-4852-9a4d-95d543987590)\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402\n\nPre-paid credit balance is insufficient - add more credits to your account to use Jobs."
   },
   "launch": {
     "attempted": false,
     "jobMode": "dry-run",
-    "flavor": "a10g-small",
+    "bootstrapMode": "auto",
+    "flavor": "t4-small",
     "timeout": "4h",
     "image": "python:3.12",
     "namespace": "TruLumecreator",
@@ -219,7 +220,7 @@
     "recommendedNextStep": "Hugging Face Jobs is authenticated and the bundle is staged, but prepaid credits are insufficient for launch. Add HF credits, then rerun the same session through the HF Jobs launcher."
   },
   "output": {
-    "sessionJsonPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hf-jobs-launch.json",
+    "sessionJsonPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v1/hf-jobs-launch.json",
     "wikiJsonPath": "docs/wiki/HF-Jobs-Training.json",
     "wikiMarkdownPath": "docs/wiki/HF-Jobs-Training.md"
   }

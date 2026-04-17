@@ -152,6 +152,7 @@ def build_release_summary(root: Path) -> dict:
 def render_markdown(report: dict) -> str:
     staged = report.get("stagedBundle", {})
     smoke = report.get("smokeLaunch", {})
+    launch = report.get("launch", {})
     hardware = report.get("hardware", [])
     gpu_names = ", ".join(entry.get("name", "") for entry in hardware if "N/A" not in str(entry.get("accelerator", ""))) or "none"
     return "\n".join(
@@ -178,6 +179,9 @@ def render_markdown(report: dict) -> str:
             f"- Hardware flavors visible: `{len(hardware)}`",
             f"- GPU-capable flavors visible: `{gpu_names}`",
             f"- Existing jobs visible: `{report.get('jobsVisibleCount', 'n/a')}`",
+            f"- Job image: `{launch.get('image', 'n/a')}`",
+            f"- Launch mode: `{launch.get('jobMode', 'n/a')}`",
+            f"- Training bootstrap: `{launch.get('bootstrapMode', 'n/a')}`",
             "",
             "## Smoke Launch",
             "",
@@ -192,6 +196,7 @@ def render_markdown(report: dict) -> str:
             "",
             "- This path proves Hugging Face Jobs auth, hardware visibility, and bundle staging separately from OCI.",
             "- A successful dataset upload does not claim a cloud training run happened.",
+            "- In train mode the remote runner bootstraps the tracked Python training stack before it invokes the Q trainer.",
             "- A failed smoke launch is recorded as a billing or provider blocker, not papered over as cloud readiness.",
         ]
     ) + "\n"
@@ -290,6 +295,7 @@ def main() -> None:
     job_image = str(effective_env.get("HF_JOB_IMAGE", "python:3.12")).strip() or "python:3.12"
     job_namespace = str(effective_env.get("HF_JOB_NAMESPACE", auth_user or "")).strip() or None
     job_mode = str(effective_env.get("HF_JOB_MODE", "dry-run")).strip() or "dry-run"
+    bootstrap_mode = str(effective_env.get("IMMACULATE_Q_TRAINING_BOOTSTRAP", "auto")).strip() or "auto"
 
     smoke_attempted = bool(args.smoke_launch)
     smoke_ready = False
@@ -366,6 +372,8 @@ def main() -> None:
             f"HF_BUNDLE_MANIFEST_REPO_PATH={repo_manifest_path}",
             "-e",
             f"HF_JOB_MODE={job_mode}",
+            "-e",
+            f"IMMACULATE_Q_TRAINING_BOOTSTRAP={bootstrap_mode}",
         ]
         if str(effective_env.get("WANDB_API_KEY", "")).strip() and str(effective_env.get("WANDB_MODE", "")).strip().lower() not in {"offline", "disabled"}:
             launch_command.extend(["--secrets", "WANDB_API_KEY"])
@@ -418,6 +426,7 @@ def main() -> None:
         "launch": {
             "attempted": launch_attempted,
             "jobMode": job_mode,
+            "bootstrapMode": bootstrap_mode,
             "flavor": job_flavor,
             "timeout": job_timeout,
             "image": job_image,

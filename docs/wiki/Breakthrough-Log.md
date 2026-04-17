@@ -21,6 +21,34 @@ For each breakthrough, record:
 
 ### 2026-04-16
 
+#### The Q cloud lane now stages the promoted bench-v1 bundle truthfully, and the next real blocker is billing rather than fake session state
+
+What changed:
+- the hybrid session controller no longer treats a missing legacy `training-data/run.json` provenance artifact as a hard blocker when the active Q lock, mix manifest, benchmark corpus, and failure corpus are already concrete
+- the benchmark-promotion path now compares the benchmark corpus against the SHA recorded in the active mix manifest instead of trusting the current file at the same path, so it can actually mint the next bench lineage when the corpus grew underneath the old lock
+- that promotion path produced a new locked bundle `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v1-45280d5-a181f850`, a new `32`-row Q dataset, and a new hybrid session `q-hybrid-harbor-opt-2384cf5-bench-v1`
+- the promoted HF Jobs lane now stages that exact bench-v1 cloud bundle on the real Hugging Face dataset repo and records the provider response in `docs/wiki/HF-Jobs-Training.md`
+- both the HF Jobs runner and the OCI training runner now bootstrap the Python Q training stack in `train` mode, so the next paid launch is prepared to execute the trainer instead of failing immediately on missing imports
+
+Why it matters:
+- the missed systems pattern was that the repo had enough real state to stage a cloud bundle, but one stale provenance assumption and one benchmark-promotion shortcut were still forcing the cloud lane to look fake
+- removing the false curation blocker matters because the cloud bundle can now be built from the tracked lock, config, mix, benchmark corpus, failure corpus, and paired Immaculate bundle that actually define the active Q run
+- fixing the SHA comparison matters because the repo can now honestly roll forward when the benchmark corpus changes, instead of pretending an older lock already includes evidence it never saw
+- the remote bootstrap matters because the next real cloud train should fail only on provider, billing, or model issues, not on an avoidable missing-package error
+
+Evidence:
+- `docs/wiki/Q-Benchmark-Promotion.md` now records `status: promoted` and the new bench-v1 bundle `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v1-45280d5-a181f850`
+- `docs/wiki/Q-Hybrid-Training.md` now records session `q-hybrid-harbor-opt-2384cf5-bench-v1`, a `32`-row dataset, and a real cloud bundle tarball staged under the session root
+- `docs/wiki/HF-Jobs-Training.md` now records the promoted bench-v1 archive path and the real provider blocker: `402 Payment Required` from Hugging Face Jobs because prepaid credits are insufficient
+- `docs/wiki/Release-Surface.md` now points at the bench-v1 lock and the paired Immaculate orchestration bundle `immaculate-orchestration-45280d5-55187c4d`
+
+What this unlocks next:
+- once HF prepaid credits are available, the same staged bench-v1 session can be rerun without rebuilding the training state from scratch
+- the next paid HF Jobs launch can use `train` mode with the remote bootstrap already wired in
+- if OCI launch targets become available first, the OCI lane can reuse the same promoted session bundle and the same dependency bootstrap instead of forking the training path again
+
+### 2026-04-16
+
 #### The Q improvement loop now has two new live evidence seams: a gateway-to-substrate benchmark and a private Q API audit spool
 
 What changed:

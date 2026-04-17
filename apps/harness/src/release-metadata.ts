@@ -138,6 +138,17 @@ type QHybridTrainingWikiFile = {
       provider?: string;
     };
   };
+  lanes?: {
+    local?: {
+      status?: string;
+      mode?: string;
+    };
+    cloud?: {
+      status?: string;
+      provider?: string;
+      mode?: string;
+    };
+  };
 };
 
 type ImmaculateTrainingBundleFile = {
@@ -259,17 +270,20 @@ async function readHybridSessionSummary(): Promise<QHybridTrainingSessionSummary
   const lockBundleId = trainingLock?.bundleId?.trim();
   const wikiMatchesCurrentLock = wikiBundleId && lockBundleId ? wikiBundleId === lockBundleId : Boolean(wikiPayload?.sessionId);
   if (wikiPayload?.sessionId && wikiMatchesCurrentLock) {
+    const localStatus =
+      wikiPayload.lanes?.local?.status ||
+      (wikiPayload.doctor?.local?.ready ? wikiPayload.doctor.local.mode || "ready" : "failed");
+    const cloudStatus =
+      wikiPayload.lanes?.cloud?.status || (wikiPayload.doctor?.cloud?.ready ? "ready" : "not-configured");
     return {
       generatedAt: wikiPayload.generatedAt,
       sessionId: wikiPayload.sessionId,
       sessionPath:
         normalizeReportedPath(wikiPayload.manifestPath)?.replace(/\.manifest\.json$/u, ".json") ||
         path.relative(REPO_ROOT, wikiPath).replaceAll("\\", "/"),
-      localStatus: wikiPayload.doctor?.local?.ready
-        ? wikiPayload.doctor.local.mode || "ready"
-        : "failed",
-      cloudStatus: wikiPayload.doctor?.cloud?.ready ? "ready" : "not-configured",
-      cloudProvider: wikiPayload.doctor?.cloud?.provider,
+      localStatus,
+      cloudStatus,
+      cloudProvider: wikiPayload.lanes?.cloud?.provider || wikiPayload.doctor?.cloud?.provider,
       trainingBundleId: wikiPayload.q?.trainingBundleId,
       immaculateBundleId: latestImmaculateBundle.bundleId ?? wikiPayload.immaculate?.bundleId,
       immaculateBundlePath: latestImmaculateBundle.bundlePath ?? normalizeReportedPath(wikiPayload.manifestPath)

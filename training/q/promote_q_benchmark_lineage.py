@@ -274,11 +274,12 @@ def main() -> None:
     benchmark_rel_path = relative_path(root, benchmark_jsonl_path)
     benchmark_included = False
     benchmark_sha_match = False
+    recorded_base_sha = str(current_mix_manifest.get("base", {}).get("sha256", "")).strip()
     supplemental_paths: list[Path] = []
     current_base_path = resolve_repo_path(str(current_mix_manifest.get("base", {}).get("path", "")).strip())
     if current_base_path is not None and relative_path(root, current_base_path) == benchmark_rel_path:
         benchmark_included = True
-        benchmark_sha_match = sha256_file(current_base_path) == benchmark_sha
+        benchmark_sha_match = recorded_base_sha == benchmark_sha if recorded_base_sha else sha256_file(current_base_path) == benchmark_sha
     for entry in current_supplemental:
         if not isinstance(entry, dict):
             continue
@@ -361,7 +362,7 @@ def main() -> None:
     new_config_path = resolve_repo_path(str(new_config_path).replace("\\", "/")) or new_config_path
 
     deduped_supplemental: list[Path] = []
-    seen_rel_paths: set[str] = set()
+    seen_rel_paths: set[str] = {relative_path(root, base_dataset_path)}
     for supplemental_path in supplemental_paths + [benchmark_jsonl_path]:
         rel = relative_path(root, supplemental_path)
         if rel in seen_rel_paths:
@@ -394,9 +395,13 @@ def main() -> None:
     new_config["training_lock_path"] = ".training-output/q/latest-training-lock.json"
     save_json(new_config_path, new_config)
 
-    current_curation_run_path = resolve_repo_path(str(active_session_manifest.get("q", {}).get("curationRunPath", "")).strip())
-    if current_curation_run_path is None:
-        current_curation_run_path = resolve_repo_path(str(latest_lock.get("curation", {}).get("runPath", "")).strip())
+    active_manifest_curation = active_session_manifest.get("q", {}).get("curationRunPath")
+    latest_lock_curation = latest_lock.get("curation", {}).get("runPath")
+    current_curation_run_path = (
+        resolve_repo_path(str(active_manifest_curation).strip()) if active_manifest_curation is not None else None
+    )
+    if current_curation_run_path is None and latest_lock_curation is not None:
+        current_curation_run_path = resolve_repo_path(str(latest_lock_curation).strip())
 
     lock_command = [
         sys.executable,

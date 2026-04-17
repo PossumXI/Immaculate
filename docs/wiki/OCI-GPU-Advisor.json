@@ -12,17 +12,17 @@
     "regionKey": null,
     "isHomeRegion": false,
     "shape": null,
-    "reason": "OCI GPU advisor is unavailable until OCI auth and CLI are ready."
+    "reason": "Active hybrid session is using the HF Jobs cloud lane; see OCI-Region-Capacity for the current OCI controller state."
   },
   "suggestedEnvUpdates": {},
   "actions": [],
-  "generatedAt": "2026-04-16T00:02:31Z",
-  "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v3",
+  "generatedAt": "2026-04-17T00:54:48Z",
+  "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v1",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "a252873d15b3265e2ee38c22c5907612487722fa",
-    "gitShortSha": "a252873",
-    "buildId": "0.1.0+a252873"
+    "gitSha": "45280d5867db018cd44b27b373a2404a70a179c0",
+    "gitShortSha": "45280d5",
+    "buildId": "0.1.0+45280d5"
   },
   "output": {
     "jsonPath": "docs/wiki/OCI-GPU-Advisor.json",
