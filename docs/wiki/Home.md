@@ -21,7 +21,7 @@ Right now the honest story is:
 - the live `Q` API audit loop is now real: rejected and failed `/api/q/run` calls are written into a tracked audit spool, surfaced in [[Q-API-Audit]], and promoted into the strict failure corpus instead of being lost in runtime logs
 - Q is materially better on the Harbor operator pack, but it still loses points on grounding and operator wording: `0.950` on `q-structured-contract` and `0.925` on `immaculate-bridge-fail-closed`
 - the public Terminal-Bench receipt is still a real failing benchmark at `0.000`, and that failure now stays in the tracked Q repair loop instead of getting buried in marketing copy
-- the current Q improvement path is concrete: a `31`-row locked bundle, a `20`-record benchmark corpus, a `6`-seed failure corpus, and a latest Immaculate orchestration bundle of `immaculate-orchestration-b5ffe48-55187c4d`
+- the current Q improvement path is concrete: a `31`-row locked bundle, a `20`-record benchmark corpus, a `6`-seed failure corpus, and a latest Immaculate orchestration bundle of `immaculate-orchestration-9bc2e59-55187c4d`
 
 ## What This Project Actually Prioritizes
 

@@ -28,7 +28,7 @@ What changed:
 - that seam now publishes `docs/wiki/Q-Gateway-Substrate.md` and `docs/wiki/Q-Gateway-Substrate.json` with real measured values instead of burying the handoff inside a broader benchmark page
 - the private `/api/q/run` path now writes a real audit spool, and the repo now publishes it through `docs/wiki/Q-API-Audit.md` and `docs/wiki/Q-API-Audit.json`
 - the strict Q failure corpus now ingests unique live Q API failures, so prompt-size and request-shape failures can become repair seeds instead of vanishing into runtime logs
-- the latest release surface now points at the newest measured Immaculate orchestration bundle `immaculate-orchestration-b5ffe48-55187c4d` instead of only the older bundle frozen into the last hybrid-session page
+- the latest release surface now points at the newest measured Immaculate orchestration bundle `immaculate-orchestration-9bc2e59-55187c4d` instead of only the older bundle frozen into the last hybrid-session page
 
 Why it matters:
 - the missed systems pattern was that Q had benchmark pages and a harness route, but not one clean page proving the gateway-to-arbitration seam and not one clean loop carrying live Q API failures back into the training/eval path
@@ -41,7 +41,7 @@ Evidence:
 - `docs/wiki/Q-API-Audit.md` now records `5` raw audit records across `transport_timeout`, `missing_prompt`, and `prompt_too_large`
 - `docs/wiki/Q-Benchmark-Corpus.md` now reports `20` tracked benchmark rows
 - `docs/wiki/Q-Failure-Corpus.md` now reports `6` strict eval seeds with `8` resolved successes excluded
-- `docs/wiki/Release-Surface.md` now stamps the latest Immaculate orchestration bundle as `immaculate-orchestration-b5ffe48-55187c4d`
+- `docs/wiki/Release-Surface.md` now stamps the latest Immaculate orchestration bundle as `immaculate-orchestration-9bc2e59-55187c4d`
 
 What this unlocks next:
 - the next Q optimization pass can target the gateway-to-arbitration seam directly instead of treating the public edge and the substrate as separate mysteries

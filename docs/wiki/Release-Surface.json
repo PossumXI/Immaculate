@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-17T00:19:57.223Z",
+  "generatedAt": "2026-04-17T00:22:19.772Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "b5ffe4870f92f98af7e99403be45bd294ba902d5",
-    "gitShortSha": "b5ffe48",
+    "gitSha": "9bc2e59cdb47163f6e45996ce0916b537d8e5c24",
+    "gitShortSha": "9bc2e59",
     "gitBranch": "harbor-q-push",
-    "buildId": "0.1.0+b5ffe48",
+    "buildId": "0.1.0+9bc2e59",
     "q": {
       "alias": "Q",
       "providerModel": "Q",
@@ -39,7 +39,7 @@
         "cloudStatus": "not-configured",
         "cloudProvider": "hf_jobs",
         "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-2384cf5-57097d65",
-        "immaculateBundleId": "immaculate-orchestration-b5ffe48-55187c4d",
+        "immaculateBundleId": "immaculate-orchestration-9bc2e59-55187c4d",
         "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
       }
     }
@@ -113,7 +113,7 @@
     {
       "label": "Q benchmark corpus",
       "path": "docs\\wiki\\Q-Benchmark-Corpus.json",
-      "generatedAt": "2026-04-17T00:10:45Z"
+      "generatedAt": "2026-04-17T00:21:37Z"
     },
     {
       "label": "Q failure corpus",
@@ -123,12 +123,12 @@
     {
       "label": "Q benchmark promotion",
       "path": "docs\\wiki\\Q-Benchmark-Promotion.json",
-      "generatedAt": "2026-04-17T00:11:09Z"
+      "generatedAt": "2026-04-17T00:22:07Z"
     },
     {
       "label": "W&B benchmark export",
       "path": "docs\\wiki\\Benchmark-Wandb-Export.json",
-      "generatedAt": "2026-04-16T17:58:29.253932+00:00"
+      "generatedAt": "2026-04-16T19:08:47.819427+00:00"
     },
     {
       "label": "Harbor terminal bench",
