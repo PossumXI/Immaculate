@@ -16,13 +16,13 @@
   },
   "suggestedEnvUpdates": {},
   "actions": [],
-  "generatedAt": "2026-04-17T00:54:48Z",
+  "generatedAt": "2026-04-17T02:02:50Z",
   "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v1",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "45280d5867db018cd44b27b373a2404a70a179c0",
-    "gitShortSha": "45280d5",
-    "buildId": "0.1.0+45280d5"
+    "gitSha": "6190f6366cedf101b1612e2daa3429b4a180a4ff",
+    "gitShortSha": "6190f63",
+    "buildId": "0.1.0+6190f63"
   },
   "output": {
     "jsonPath": "docs/wiki/OCI-GPU-Advisor.json",

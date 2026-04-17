@@ -2,8 +2,8 @@
 
 This page records the real OCI region-capacity move for the active Q cloud-training lane and the paired Immaculate cloud bundle.
 
-- Generated: `2026-04-17T00:54:01Z`
-- Release: `0.1.0+45280d5`
+- Generated: `2026-04-17T02:02:24Z`
+- Release: `0.1.0+6190f63`
 - Controller region: `us-ashburn-1`
 - Tenancy id: `ocid1.tenancy.oc1..aaaaaaaaajrnaanoycyyhq5caorcxc2puwaqf55ldw3ywzgqja6iwrs7a3jq`
 - Cloud training lanes: `Q, Immaculate`
@@ -32,7 +32,7 @@ This page records the real OCI region-capacity move for the active Q cloud-train
 
 - Latest attempt status: `blocked`
 - Subscription limit reached: `True`
-- Recommended next step: Provide the tenancy CSI to `oci support incident create` for `regions.subscribed-region-count`, then rerun the bench-v2 doctor for the Q and Immaculate cloud lanes.
+- Recommended next step: OCI support incident creation is still blocked for this controller identity. Current error: The Requested Domain was not found or not Authorized. Open the limit increase manually in OCI/My Oracle Support or fix the support-account identity binding, then rerun the bench-v2 doctor for the Q and Immaculate cloud lanes.
 
 ## Live Limit Surface
 
@@ -48,11 +48,11 @@ This page records the real OCI region-capacity move for the active Q cloud-train
 - Write-permitted support groups: `1`
 - LIMIT catalog includes region-subscription-limits: `True`
 - CLI support create ready now: `False`
-- CLI create blocker: CSI is required by `oci support incident create` and is not present in the local controller config or workspace.
+- CLI create blocker: The Requested Domain was not found or not Authorized
 - Discovered support-domain candidate: `Default`
-- Support-domain binding verified: `unknown`
+- Support-domain binding verified: `False`
 - Incident created: `False`
-- Incident error: n/a
+- Incident error: The Requested Domain was not found or not Authorized
 - Helper path: `training/q/create_oci_region_limit_request.py`
 - Helper check command: `python training/q/create_oci_region_limit_request.py --check`
 

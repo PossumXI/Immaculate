@@ -19,6 +19,30 @@ For each breakthrough, record:
 
 ## Current Entries
 
+### 2026-04-17
+
+#### The OCI cloud lane moved past the missing-CSI blocker, and the next real limit is Oracle support-domain authorization
+
+What changed:
+- the OCI region-capacity probe now sources the support CSI from the saved operator env and runs the real support-backed limit-request path instead of stopping early on missing local input
+- the repo's tracked OCI surfaces now record the real post-CSI blocker from Oracle Support: `The Requested Domain was not found or not Authorized`
+- the paired hybrid-session and release surfaces were restamped so the current Q and Immaculate cloud lanes describe the same OCI boundary everywhere
+
+Why it matters:
+- the missed systems pattern was that "missing CSI" and "cannot create the incident" are not the same class of blocker; once CSI is present, the next problem is no longer local wiring, it is support-account authorization
+- that matters because the next operator move changes completely: the repo no longer needs more CSI plumbing, it needs Oracle support-domain binding fixed or the limit request opened manually in OCI/My Oracle Support
+- keeping that distinction explicit protects the cloud lane from fake optimism and protects the repo copy from blaming the wrong missing input
+
+Evidence:
+- `docs/wiki/OCI-Region-Capacity.md` now records `createPrerequisitesMet: true`, `createPossible: false`, and the incident error `The Requested Domain was not found or not Authorized`
+- `docs/wiki/Q-Hybrid-Training.md` now carries the same OCI support boundary inside the active hybrid session
+- `docs/wiki/Release-Surface.md` and `docs/wiki/Q-Readiness-Gate.md` were restamped after the OCI probe so the latest build surfaces point at the same current session state
+
+What this unlocks next:
+- the OCI lane is now one support-account fix away from a real region-limit escalation attempt instead of being blocked on unknown local wiring
+- HF Jobs and OCI can now be compared honestly as separate external blockers: Hugging Face credits on one side, Oracle support-domain authorization on the other
+- the next cloud move can focus on the real provider boundary instead of re-auditing whether CSI ever made it onto the controller
+
 ### 2026-04-16
 
 #### The Q cloud lane now stages the promoted bench-v1 bundle truthfully, and the next real blocker is billing rather than fake session state

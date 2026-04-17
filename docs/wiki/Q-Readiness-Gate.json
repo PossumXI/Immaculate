@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-04-17T00:55:33.137Z",
+  "generatedAt": "2026-04-17T02:06:23.171Z",
   "threshold": 0.75,
   "ready": true,
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "45280d5867db018cd44b27b373a2404a70a179c0",
-    "gitShortSha": "45280d5",
+    "gitSha": "6190f6366cedf101b1612e2daa3429b4a180a4ff",
+    "gitShortSha": "6190f63",
     "gitBranch": "harbor-q-push",
-    "buildId": "0.1.0+45280d5",
+    "buildId": "0.1.0+6190f63",
     "q": {
       "alias": "Q",
       "providerModel": "Q",
@@ -34,14 +34,14 @@
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-17T00:54:48Z",
+        "generatedAt": "2026-04-17T02:02:50Z",
         "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v1",
         "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v1/hybrid-session.json",
         "localStatus": "ready",
         "cloudStatus": "launch-blocked",
         "cloudProvider": "hf_jobs",
         "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v1-45280d5-a181f850",
-        "immaculateBundleId": "immaculate-orchestration-45280d5-55187c4d",
+        "immaculateBundleId": "immaculate-orchestration-6190f63-55187c4d",
         "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
       }
     }

@@ -68,7 +68,7 @@ The current live capacity advice now has its own generated surface:
 The repo-local helper for the support-backed region-limit request is:
 
 - `python training/q/create_oci_region_limit_request.py --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --check`
-- it will not create the incident unless CSI is present through `--csi` or `OCI_SUPPORT_CSI`
+- CSI is now sourced through `--csi` or `OCI_SUPPORT_CSI`; the current blocker after that handoff is Oracle support-domain authorization (`The Requested Domain was not found or not Authorized`)
 
 That page is where the repo records:
 
@@ -78,7 +78,7 @@ That page is where the repo records:
 - the public expansion candidates that are discoverable but not yet verified for capacity
 - the actual tenancy response when the controller tries to subscribe the next GPU-candidate region
 - the live `regions.subscribed-region-count` limit object when OCI exposes it
-- whether OCI Support exposes `region-subscription-limits` for this tenancy and whether a local CLI-created limit request is blocked by missing CSI
+- whether OCI Support exposes `region-subscription-limits` for this tenancy and whether a local CLI-created limit request is blocked by support-domain authorization for the current controller identity
 
 ## Truth Boundary
 
@@ -86,4 +86,4 @@ That page is where the repo records:
 - It does not claim OCI auth exists on this machine unless the doctor reports a concrete controller auth mode and config path.
 - It does not claim the Q cloud lane is safe just because a GPU node can be launched; the session still has to carry the exact locked dataset and config.
 - It does not claim public OCI regions have verified GPU capacity until the advisor proves a subscribed region can actually expose GPU-capable shapes to the current controller auth.
-- It does not claim the CLI can raise the subscribed-region ceiling by itself; if OCI Support requires `--csi` and CSI is not present locally, that remains an external operator boundary.
+- It does not claim the CLI can raise the subscribed-region ceiling by itself; even with CSI present locally, Oracle support-domain authorization can still block incident creation and remains an external operator boundary.

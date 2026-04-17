@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-04-17T00:54:01Z",
+  "generatedAt": "2026-04-17T02:02:24Z",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "45280d5867db018cd44b27b373a2404a70a179c0",
-    "gitShortSha": "45280d5",
-    "buildId": "0.1.0+45280d5"
+    "gitSha": "6190f6366cedf101b1612e2daa3429b4a180a4ff",
+    "gitShortSha": "6190f63",
+    "buildId": "0.1.0+6190f63"
   },
   "controllerRegion": "us-ashburn-1",
   "tenancyId": "ocid1.tenancy.oc1..aaaaaaaaajrnaanoycyyhq5caorcxc2puwaqf55ldw3ywzgqja6iwrs7a3jq",
@@ -74,15 +74,18 @@
     },
     "regionSubscriptionLimitFound": true,
     "limitCatalogError": null,
-    "createPrerequisitesMet": false,
+    "createPrerequisitesMet": true,
     "createPossible": false,
-    "createBlockedReason": "CSI is required by `oci support incident create` and is not present in the local controller config or workspace.",
+    "createBlockedReason": "The Requested Domain was not found or not Authorized",
     "domainId": "ocid1.domain.oc1..aaaaaaaafcdpyfzwyywdasbyz7rl4lwsmnyixs765ws2g2hu6khcxev3q27a",
     "domainDisplayName": "Default",
-    "domainBindingVerified": null,
+    "domainBindingVerified": false,
     "domainError": null,
     "incident": null,
-    "incidentError": null,
+    "incidentError": {
+      "code": "DOMAIN_NOT_FOUND",
+      "message": "The Requested Domain was not found or not Authorized"
+    },
     "helperPath": "training/q/create_oci_region_limit_request.py",
     "helperCheckCommand": "python training/q/create_oci_region_limit_request.py --check"
   },
@@ -91,7 +94,7 @@
     "latestAttemptCode": "TenantCapacityExceeded",
     "latestAttemptMessage": "You have exceeded the maximum number of allowed subscribed regions. Please see the Limits, Quotas and Usage page for more detail.",
     "subscriptionLimitReached": true,
-    "recommendedNextStep": "Provide the tenancy CSI to `oci support incident create` for `regions.subscribed-region-count`, then rerun the bench-v2 doctor for the Q and Immaculate cloud lanes."
+    "recommendedNextStep": "OCI support incident creation is still blocked for this controller identity. Current error: The Requested Domain was not found or not Authorized. Open the limit increase manually in OCI/My Oracle Support or fix the support-account identity binding, then rerun the bench-v2 doctor for the Q and Immaculate cloud lanes."
   },
   "output": {
     "jsonPath": "docs/wiki/OCI-Region-Capacity.json",
