@@ -38,6 +38,7 @@ export interface Env {
   CLOUDFLARE_Q_NAME?: string;
   CLOUDFLARE_Q_BASE_MODEL?: string;
   CLOUDFLARE_Q_LORA_NAME?: string;
+  CLOUDFLARE_Q_PROFILE_MODE?: string;
   CLOUDFLARE_AI_GATEWAY_ID?: string;
   CLOUDFLARE_Q_WORKER_API_KEY?: string;
   CLOUDFLARE_GATEWAY_SKIP_CACHE?: string;

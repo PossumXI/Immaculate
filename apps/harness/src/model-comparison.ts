@@ -5,11 +5,12 @@ import { performance } from "node:perf_hooks";
 import { fileURLToPath } from "node:url";
 import { createEngine, type BenchmarkReport, type GovernancePressureLevel, type IntelligenceLayerRole } from "@immaculate/core";
 import { loadLatestBenchmarkReportForPack } from "./benchmark.js";
-import { listOllamaModels, runOllamaExecution } from "./ollama.js";
-import { resolveQAliasSpecification } from "./ollama-alias.js";
+import { listOllamaModels, prewarmOllamaModel, runOllamaExecution } from "./ollama.js";
 import { resolveReleaseMetadata, type ReleaseMetadata } from "./release-metadata.js";
 import {
   displayModelName,
+  getQFoundationModelName,
+  getQModelName,
   matchesModelReference,
   resolveQModel,
   truthfulModelLabel,
@@ -56,6 +57,7 @@ type ModelTaskResult = {
 type ModelSummary = {
   requestedModel: string;
   actualModel: string;
+  foundationModel: string;
   displayName: string;
   truthfulLabel: string;
   vendor: string;
@@ -98,11 +100,11 @@ type OrchestratorComparison = {
 export type ModelComparisonReport = {
   generatedAt: string;
   surface: "direct-q-structured-contract";
-  ollamaBaseUrl: string;
+  qRuntimeBaseUrl: string;
   release: ReleaseMetadata;
-  qAlias: {
-    alias: string;
-    actualModel: string;
+  qModel: {
+    modelName: string;
+    foundationModel: string;
     truthfulLabel: string;
   };
   hardwareContext: HardwareContext;
@@ -197,18 +199,9 @@ function captureHardwareContext(): HardwareContext {
 }
 
 function buildComparisonModels(installedModelNames: string[]): string[] {
-  const qAlias = resolveQAliasSpecification();
-  const requested = (
-    process.env.IMMACULATE_MODEL_COMPARISON_SET?.split(",").map((entry) => entry.trim()) ?? [qAlias.alias]
-  ).filter(Boolean);
-
-  return Array.from(
-    new Set(
-      requested.filter((candidate) => {
-        return installedModelNames.some((installedModelName) => matchesModelReference(installedModelName, candidate));
-      })
-    )
-  );
+  return installedModelNames.some((installedModelName) => matchesModelReference(installedModelName, getQModelName()))
+    ? [getQModelName()]
+    : [];
 }
 
 function buildTaskResultsSummary(
@@ -222,7 +215,8 @@ function buildTaskResultsSummary(
   const parseSuccessCount = tasks.filter((task) => task.parseSuccess).length;
   return {
     requestedModel,
-    actualModel,
+    actualModel: truthfulModelLabel(actualModel),
+    foundationModel: getQFoundationModelName(),
     displayName: displayModelName(actualModel),
     truthfulLabel: truthfulModelLabel(actualModel),
     vendor: vendorForModel(actualModel),
@@ -242,9 +236,13 @@ function buildTaskResultsSummary(
 async function runModelComparisonTasks(
   requestedModel: string,
   actualModel: string,
-  ollamaBaseUrl: string
+  qRuntimeBaseUrl: string
 ): Promise<ModelSummary> {
   const tasks: ModelTaskResult[] = [];
+  await prewarmOllamaModel({
+    endpoint: qRuntimeBaseUrl,
+    model: actualModel
+  });
 
   for (const task of COMPARISON_TASKS) {
     const engine = createEngine({
@@ -266,7 +264,7 @@ async function runModelComparisonTasks(
           model: actualModel,
           role: task.role,
           status: "ready",
-          endpoint: ollamaBaseUrl,
+          endpoint: qRuntimeBaseUrl,
           registeredAt: new Date().toISOString()
         },
         objective: task.objective,
@@ -397,8 +395,9 @@ function renderMarkdown(report: ModelComparisonReport): string {
     `- Release: ${report.release.buildId}`,
     `- Repo commit: ${report.release.gitShortSha}`,
     `- Surface: ${report.surface}`,
-    `- Ollama endpoint: ${report.ollamaBaseUrl}`,
-    `- Q lane: ${report.qAlias.alias.toUpperCase()}`,
+    `- Q runtime endpoint: ${report.qRuntimeBaseUrl}`,
+    `- Q model name: ${report.qModel.modelName.toUpperCase()}`,
+    `- Q foundation model: ${report.qModel.foundationModel}`,
     `- Q training bundle: ${report.release.q.trainingLock?.bundleId ?? "none generated yet"}`,
     `- Hardware: ${JSON.stringify(report.hardwareContext)}`,
     ""
@@ -479,7 +478,7 @@ export async function runModelComparison(): Promise<ModelComparisonReport> {
   const installedModelNames = installed.map((model) => model.name);
   const requestedModels = buildComparisonModels(installedModelNames);
   if (requestedModels.length === 0) {
-    throw new Error("The configured Q model is not installed in local Ollama.");
+    throw new Error("The configured Q model is not installed in the local Q runtime.");
   }
 
   const models: ModelSummary[] = [];
@@ -498,12 +497,12 @@ export async function runModelComparison(): Promise<ModelComparisonReport> {
   const report: ModelComparisonReport = {
     generatedAt,
     surface: "direct-q-structured-contract",
-    ollamaBaseUrl: DEFAULT_OLLAMA_URL,
+    qRuntimeBaseUrl: DEFAULT_OLLAMA_URL,
     release: await resolveReleaseMetadata(),
-    qAlias: {
-      alias: resolveQAliasSpecification().displayName,
-      actualModel: resolveQAliasSpecification().displayName,
-      truthfulLabel: truthfulModelLabel(resolveQAliasSpecification().baseModel)
+    qModel: {
+      modelName: getQModelName(),
+      foundationModel: getQFoundationModelName(),
+      truthfulLabel: truthfulModelLabel(getQModelName())
     },
     hardwareContext: captureHardwareContext(),
     models,

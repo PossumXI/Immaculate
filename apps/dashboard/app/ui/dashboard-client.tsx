@@ -371,7 +371,7 @@ type NeuroSessionDetail = {
   streamCount: number;
 };
 
-type OllamaModelState = {
+type QModelState = {
   model: string;
   name?: string;
 };
@@ -506,7 +506,7 @@ export function DashboardClient() {
   const [actuationProtocols, setActuationProtocols] = useState<ActuationProtocolState[]>([]);
   const [actuationTransports, setActuationTransports] = useState<ActuationTransportState[]>([]);
   const [actuationDeliveries, setActuationDeliveries] = useState<ActuationDeliveryState[]>([]);
-  const [ollamaModels, setOllamaModels] = useState<OllamaModelState[]>([]);
+  const [qModels, setQModels] = useState<QModelState[]>([]);
   const deferredSnapshot = useDeferredValue(snapshot);
   const [connected, setConnected] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
@@ -682,7 +682,7 @@ export function DashboardClient() {
             },
             { cache: "no-store" }
           ),
-          harnessFetch(`${harnessBaseUrl}/api/intelligence/ollama/models`, { cache: "no-store" })
+          harnessFetch(`${harnessBaseUrl}/api/intelligence/q/models`, { cache: "no-store" })
         ]);
 
         const topologyPayload = (await topologyResponse.json()) as { profile: string; objective: string; nodes: number; edges: number; planes: string[]; cycle: number; lastEventId?: string };
@@ -699,7 +699,7 @@ export function DashboardClient() {
         const actuationAdaptersPayload = (await actuationAdaptersResponse.json()) as { adapters: ActuationAdapterState[] };
         const actuationProtocolsPayload = (await actuationProtocolsResponse.json()) as { protocols: ActuationProtocolState[] };
         const actuationTransportsPayload = (await actuationTransportsResponse.json()) as { transports: ActuationTransportState[] };
-        const modelsPayload = (await modelsResponse.json()) as { models?: OllamaModelState[]; error?: string };
+        const modelsPayload = (await modelsResponse.json()) as { models?: QModelState[]; error?: string };
 
         let nextDatasetDetail: DatasetDetail | null = null;
         if (datasetsPayload.datasets[0]?.id) {
@@ -813,7 +813,7 @@ export function DashboardClient() {
               setActuationDeliveries(actuationDeliveriesPayload.deliveries ?? []);
             setActiveReplayCount(replaysPayload.replays.length);
             setActiveLiveSourceCount(liveSourcesPayload.sources.length);
-            setOllamaModels(modelsPayload.models ?? []);
+            setQModels(modelsPayload.models ?? []);
           });
         }
       } catch (error) {
@@ -1278,7 +1278,7 @@ export function DashboardClient() {
     try {
       setRegisteringLayer(true);
       const response = await governedHarnessFetch(
-        `${harnessBaseUrl}/api/intelligence/ollama/register`,
+        `${harnessBaseUrl}/api/intelligence/q/register`,
         {
           purpose: ["cognitive-registration"],
           policyId: "cognitive-ops-default",
@@ -1882,7 +1882,7 @@ export function DashboardClient() {
               disabled={cognitionRunning}
               type="button"
             >
-              {cognitionRunning ? "Running local cognition..." : "Run local Gemma pass"}
+              {cognitionRunning ? "Running local cognition..." : "Run local Q pass"}
             </button>
             <button
               className="benchmark-button"
@@ -1907,7 +1907,7 @@ export function DashboardClient() {
                 <h2>Registered cognition backends</h2>
               </div>
               <div className="benchmark-actions">
-                <span>{snapshot?.intelligenceLayers.length ?? 0} layers / {ollamaModels.length} local models</span>
+                <span>{snapshot?.intelligenceLayers.length ?? 0} layers / {qModels.length} Q runtime records</span>
                 <button
                   className="benchmark-button"
                   onClick={() => {
@@ -2033,7 +2033,7 @@ export function DashboardClient() {
                       ? adapter.bridgeReady
                         ? `ready ${adapter.bridgeDeviceId ?? "device"}${adapter.bridgeSessionId ? ` (${adapter.bridgeSessionId})` : ""}`
                         : "connected / awaiting hello"
-                      : "file fallback"}
+                      : "file-backed path"}
                   </span>
                   <span>{formatPercent(adapter.maxIntensity)}</span>
                   <span>{adapter.lastDeliveryTransport ?? "--"}</span>
@@ -2355,10 +2355,10 @@ export function DashboardClient() {
             <span>/api/neuro/replays + /api/neuro/live/sources</span>
           </div>
           <div className="data-row">
-            <span>Ollama registry</span>
-            <span>{ollamaModels.length}</span>
-            <span>{ollamaModels[0]?.model ?? "no models"}</span>
-            <span>/api/intelligence/ollama/models + register</span>
+            <span>Q local runtime</span>
+            <span>{qModels.length}</span>
+            <span>{qModels[0]?.model ?? "Q unavailable"}</span>
+            <span>Q discovery + registration</span>
           </div>
           <div className="data-row">
             <span>Derived reads</span>

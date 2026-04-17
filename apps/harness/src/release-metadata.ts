@@ -3,14 +3,14 @@ import { existsSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { getQModelAlias, getQModelTarget, truthfulModelLabel } from "./q-model.js";
+import { foundationModelLabel, getQModelName, getQModelTarget, truthfulModelLabel } from "./q-model.js";
 
 export type QTrainingLockSummary = {
   generatedAt?: string;
   lockVersion?: number;
   bundleId: string;
   runName?: string;
-  aliasName?: string;
+  modelName?: string;
   trainDatasetPath?: string;
   trainDatasetSha256?: string;
   trainDatasetRowCount?: number;
@@ -44,8 +44,8 @@ export type ReleaseMetadata = {
   gitBranch: string;
   buildId: string;
   q: {
-    alias: string;
-    providerModel: string;
+    modelName: string;
+    foundationModel: string;
     truthfulLabel: string;
     trainingLock?: QTrainingLockSummary;
     hybridSession?: QHybridTrainingSessionSummary;
@@ -76,7 +76,7 @@ type QTrainingLockFile = {
   bundleId?: string;
   run?: {
     runName?: string;
-    aliasName?: string;
+    modelName?: string;
     baseModel?: string;
     trainDatasetPath?: string;
     trainDatasetSha256?: string;
@@ -231,7 +231,7 @@ async function readTrainingLockSummary(): Promise<QTrainingLockSummary | undefin
     lockVersion: payload.lockVersion,
     bundleId: payload.bundleId,
     runName: payload.run?.runName,
-    aliasName: payload.run?.aliasName,
+    modelName: payload.run?.modelName,
     trainDatasetPath: normalizeReportedPath(payload.run?.trainDatasetPath),
     trainDatasetSha256: payload.run?.trainDatasetSha256,
     trainDatasetRowCount: payload.run?.trainDatasetRowCount,
@@ -337,8 +337,8 @@ export async function resolveReleaseMetadata(): Promise<ReleaseMetadata> {
     gitBranch,
     buildId: `${packageVersion}+${gitShortSha}`,
     q: {
-      alias: getQModelAlias(),
-      providerModel: getQModelAlias(),
+      modelName: getQModelName(),
+      foundationModel: foundationModelLabel(getQModelTarget()),
       truthfulLabel: truthfulModelLabel(getQModelTarget()),
       trainingLock,
       hybridSession

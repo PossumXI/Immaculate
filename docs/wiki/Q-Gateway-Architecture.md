@@ -26,7 +26,7 @@ Release/build identity for the current repo state lives in:
 - per-key rate limiting and concurrency limiting
 - bounded chat-completion request validation
 - a narrow OpenAI-compatible surface for `Q`
-- direct private execution against the configured Ollama backend
+- direct private execution against the configured Q runtime backend
 - a bounded primary-model circuit breaker with explicit fail-closed behavior
 - private OCI deployment glue for that narrow process
 
@@ -61,7 +61,7 @@ The dedicated gateway is safer than exposing the harness directly because:
 Recommended shape:
 
 1. run the Q gateway on a private subnet
-2. keep Ollama on a separate private host or private service address
+2. keep the Q runtime on a separate private host or private service address
 3. allow clients in through OCI Bastion, VPN, FastConnect, peered VCNs, or a
    private load balancer
 4. do not assign a public IP to the gateway host by default
@@ -69,7 +69,7 @@ Recommended shape:
 Example split:
 
 - Q gateway: `10.0.3.10:8788`
-- private Ollama: `10.0.2.20:11434`
+- private Q runtime: `10.0.2.20:11434`
 
 ## Bundle Contents
 

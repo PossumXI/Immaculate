@@ -5,7 +5,7 @@ Welcome to the live field guide for Immaculate.
 In plain English, Immaculate is a control system for AI and automation.
 It helps a machine decide what to do next, checks whether that action is allowed, keeps receipts, and publishes measurements so people can see what is real.
 
-`Q` is the local reasoning-model lane inside that system. It is served through a bounded gateway, trained through a tracked hybrid session path, and published here simply as `Q`.
+Q is the public model name, built by Arobi Technology Alliance on Gemma 4; Gaetano Comparcola is the founder, CEO, lead architect, and lead engineer; Immaculate is the governed orchestration harness around Q.
 
 Public website:
 
@@ -17,13 +17,14 @@ If you want the fastest plain-English benchmark summary, read [[Harbor-Terminal-
 Right now the honest story is:
 
 - Q parses both tracked local contract lanes cleanly: `4/4` on [[Model-Benchmark-Comparison]] and `4/4` on [[BridgeBench]]
-- the new `Q` substrate benchmark is fully green: the dedicated Q gateway stayed live, rejected unauthenticated traffic, preserved `ROUTE/REASON/COMMIT`, and handed the work back into Immaculate arbitration with `0` failed assertions, `10400.27 ms` gateway-latency P95, and `2.11 ms` arbitration-latency P95
-- the dedicated Q gateway contract is also green: `/health 200`, authenticated `/api/q/info 200`, authenticated `/v1/models 200`, authenticated chat `200`, concurrent rejection `429`, and `80.64 ms` measured gateway-added latency on the latest loopback pass
+- the new `Q` substrate benchmark is fully green: the dedicated Q gateway stayed live, rejected unauthenticated traffic, preserved `ROUTE/REASON/COMMIT`, and handed the work back into Immaculate arbitration with `0` failed assertions; the exact live latency numbers are published on [[Q-Gateway-Substrate]]
+- the dedicated Q gateway contract is also green: `/health 200`, authenticated `/api/q/info 200`, authenticated `/v1/models 200`, authenticated chat `200`, bounded `429` concurrency rejection, and a canonical identity smoke that answers as `Q`, `Arobi Technology Alliance`, `Gaetano Comparcola`, `Gemma 4`, and `Immaculate`; the exact current gateway overhead lives on [[Q-Gateway-Validation]]
 - the live `Q` API audit loop is now real: rejected and failed `/api/q/run` calls are written into a tracked audit spool, surfaced in [[Q-API-Audit]], and promoted into the strict failure corpus instead of being lost in runtime logs
 - Q is materially better on the Harbor operator pack, but it still loses points on grounding and operator wording: `0.950` on `q-structured-contract` and `0.925` on `immaculate-bridge-fail-closed`
 - the public Terminal-Bench receipt is still a real failing benchmark at `0.000`, and that failure now stays in the tracked Q repair loop instead of getting buried in marketing copy
-- the current Q improvement path is concrete: a promoted `31`-row locked `bench-v2` bundle, a `19`-record benchmark corpus, a `6`-seed failure corpus, and a latest Immaculate orchestration bundle of `immaculate-orchestration-3c3e41d-7aa3136b`
-- the current cloud truth is also concrete: the promoted HF Jobs bundle is staged and authenticated on the real account, the blocker there is prepaid credit balance, and the Cloudflare inference lane is still `auth-blocked` with the eval bundle ready but no live worker auth or adapter artifact yet
+- the current Q improvement path is concrete and machine-stamped: the active Q bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d`, the current benchmark corpus is `49` rows, the strict failure corpus is `6` rows, and the paired Immaculate orchestration bundle all live on [[Release-Surface]], [[Q-Benchmark-Corpus]], and [[Q-Failure-Corpus]]
+- the current cloud truth is also concrete: the promoted HF Jobs bundle is staged and authenticated on the real account, the launch lane is ready when you want it, and the Cloudflare inference lane is still blocked on auth and adapter export even though the profile and eval bundle are ready
+- Immaculate now treats healthy local Q as a first-class governed routing directive, so blocked cloud status no longer forces a false guarded hold when the local Q lane is already healthy
 
 ## What This Project Actually Prioritizes
 
@@ -39,7 +40,7 @@ Right now the honest story is:
 - A durable harness with a dashboard and terminal control surface
 - A record of what happened, what was denied, and what retried
 - Neurodata ingest through BIDS and NWB
-- Local cognition through Ollama and the dedicated `Q` gateway
+- Local cognition through the governed Q runtime and the dedicated `Q` gateway
 - Governed actuation with transport health checks instead of blind delivery
 - Authenticated federation membership export/import with verified remote node and worker identity
 - Recurring signed peer refresh plus signed lease renewal with stale-state eviction, so dead remotes fall out of placement instead of lingering as ghost capacity
@@ -94,7 +95,7 @@ Right now the honest story is:
 - [[Live-Validation-2026-04-13]] records the latest fresh machine-run validation pass, including the current `60s` benchmark regression instead of hiding it
 - [[Training-Data-Factory]] tracks the manifest-first corpus curation path for defensive Q fine-tuning work without pretending the machine replaced legal review
 - [[OCI-Private-Deployment]] tracks the hardened Oracle private-subnet harness bundle: Podman image, cloud-init bootstrap, systemd supervision, OCI Vault pull-through, and no public ingress
-- [[Q-Alias-and-Banner]] tracks the stable `Q` identity plus the yellow/ocean-blue startup banner controls
+- [[Q-Model-Identity-And-Banner]] tracks the stable `Q` identity plus the yellow/ocean-blue startup banner controls
 - [[Q-API-Hosting]] tracks both the private harness Q edge and the separate dedicated Q gateway, with the hosting truth boundary kept explicit
 - the live peer-refresh drill now proves the full liveness loop: healthy signed peers import real remote workers, bad-secret peers are rejected, and killed peers age out and are evicted from placement
 - the live lease-renewal drill now proves a second control loop: signed renewals can move placement from one authenticated peer to another when cross-node latency flips

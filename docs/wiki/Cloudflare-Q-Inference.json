@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-04-17T02:46:23Z",
+  "generatedAt": "2026-04-17T10:10:15Z",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "3c3e41d99de4ee12273359707ffe5f0e2025e851",
-    "gitShortSha": "3c3e41d",
-    "buildId": "0.1.0+3c3e41d"
+    "gitSha": "848d44f8dbe409a8227bab61f88eccbf078dd056",
+    "gitShortSha": "848d44f",
+    "buildId": "0.1.0+848d44f"
   },
-  "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v2",
+  "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v13",
   "sessionPath": ".training-output/q/latest-hybrid-session.json",
   "auth": {
     "accountIdReady": false,
@@ -21,47 +21,90 @@
     "authHeader": "cf-aig-authorization: Bearer <token>",
     "metadataLimit": 5
   },
+  "profile": {
+    "generatedAt": "2026-04-17T10:10:13Z",
+    "profileId": "q-cloudflare-profile-848d44f",
+    "qName": "Q",
+    "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d",
+    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v13",
+    "buildId": "0.1.0+848d44f",
+    "rules": [
+      {
+        "id": "bridge-trust",
+        "directive": "If a late ACK, nonce mismatch, or nonce replay appears, say the bridge ACK path is untrusted and keep delivery fail-closed."
+      },
+      {
+        "id": "direct-lane",
+        "directive": "If direct HTTP/2 is healthy and policy-allowed while the bridge is degraded, name direct HTTP/2 as the trusted lane."
+      },
+      {
+        "id": "lease-recovery",
+        "directive": "If lease jitter, failed execution, or repair pending appears, stabilize the peer with bounded retries and preserve durable retry lineage."
+      },
+      {
+        "id": "same-origin",
+        "directive": "If same-origin operator access and token secrecy are both required, keep credentials out of browser-visible URLs."
+      },
+      {
+        "id": "operator-grade",
+        "directive": "Prefer terse operator-grade route, reason, and commit wording over generic caution language."
+      }
+    ],
+    "ready": true,
+    "workerModulePath": "deploy/cloudflare/worker/src/q-profile.generated.ts",
+    "ruleCount": 5,
+    "output": {
+      "workerModulePath": "deploy/cloudflare/worker/src/q-profile.generated.ts",
+      "manifestPath": "docs/wiki/Cloudflare-Q-Profile.json",
+      "markdownPath": "docs/wiki/Cloudflare-Q-Profile.md"
+    }
+  },
   "adapter": {
-    "generatedAt": "2026-04-17T02:46:22Z",
-    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v2",
+    "generatedAt": "2026-04-17T10:10:14Z",
+    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v13",
     "ready": false,
     "checkOnly": true,
-    "sourceDir": ".training-output/q/runs/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v2",
+    "sourceDir": ".training-output/q/runs/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13",
     "trainingLockPath": ".training-output/q/latest-training-lock.json",
     "adapterConfigPath": null,
     "adapterWeightsPath": null,
     "weightsSizeBytes": null,
     "weightsSizeMb": null,
-    "outputDir": ".training-output/q/cloudflare/q-hybrid-harbor-opt-2384cf5-bench-v2/adapter",
+    "outputDir": ".training-output/q/cloudflare/q-hybrid-harbor-opt-2384cf5-bench-v13/adapter",
     "exportedPaths": [],
     "blockers": [
-      "Adapter source directory is missing: .training-output/q/runs/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v2",
+      "Adapter source directory is missing: .training-output/q/runs/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13",
       "adapter_config.json is missing from the candidate adapter source.",
       "adapter_model.safetensors is missing from the candidate adapter source."
     ]
   },
   "evalBundle": {
     "ready": true,
-    "recordCount": 19,
-    "availableRecordCount": 19,
-    "jsonlPath": ".training-output/q/cloudflare/q-hybrid-harbor-opt-2384cf5-bench-v2/eval/cloudflare-q-eval-bundle.jsonl",
-    "manifestPath": ".training-output/q/cloudflare/q-hybrid-harbor-opt-2384cf5-bench-v2/eval/cloudflare-q-eval-bundle.json",
+    "recordCount": 24,
+    "availableRecordCount": 49,
+    "jsonlPath": ".training-output/q/cloudflare/q-hybrid-harbor-opt-2384cf5-bench-v13/eval/cloudflare-q-eval-bundle.jsonl",
+    "manifestPath": ".training-output/q/cloudflare/q-hybrid-harbor-opt-2384cf5-bench-v13/eval/cloudflare-q-eval-bundle.json",
     "sourceSurfaceCounts": {
-      "bridgebench": 4,
+      "bridgebench": 3,
       "bridgebench-soak": 1,
       "harbor-terminal-bench": 2,
-      "harbor-terminal-bench-soak": 7,
-      "model-comparison": 4,
-      "q-gateway-substrate": 1
+      "harbor-terminal-bench-soak": 4,
+      "model-comparison": 3,
+      "q-gateway-substrate": 1,
+      "q-harness-identity-seed": 4,
+      "q-immaculate-reasoning-seed": 6
     },
     "selectionGroupCounts": {
       "bridgebench-soak:benchmark_observation:completed": 1,
-      "bridgebench:decision_triplet:completed": 4,
+      "bridgebench:decision_triplet:completed": 3,
       "harbor-terminal-bench-soak:benchmark_observation:completed": 1,
-      "harbor-terminal-bench-soak:decision_triplet:completed": 6,
+      "harbor-terminal-bench-soak:decision_triplet:completed": 3,
       "harbor-terminal-bench:benchmark_observation:degraded": 2,
-      "model-comparison:decision_triplet:completed": 4,
-      "q-gateway-substrate:benchmark_observation:completed": 1
+      "model-comparison:decision_triplet:completed": 3,
+      "q-gateway-substrate:benchmark_observation:completed": 1,
+      "q-harness-identity-seed:benchmark_observation:curated": 4,
+      "q-immaculate-reasoning-seed:benchmark_observation:curated": 3,
+      "q-immaculate-reasoning-seed:decision_triplet:curated": 3
     }
   },
   "worker": {
@@ -74,6 +117,9 @@
     "workerUrlReady": false,
     "workerUrl": null,
     "baseModelReady": false,
+    "profileMode": "enabled",
+    "assetMode": "base-model-guided",
+    "profileReady": true,
     "loraReady": false
   },
   "health": {
@@ -91,6 +137,7 @@
   },
   "readiness": {
     "authReady": false,
+    "profileReady": true,
     "adapterReady": false,
     "workerReady": false,
     "evalBundleReady": true,
@@ -101,7 +148,7 @@
     "role": "inference-eval-plane",
     "ready": false,
     "status": "auth-blocked",
-    "recommendedNextStep": "Set CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN, then rerun the Cloudflare inference check."
+    "recommendedNextStep": "Set CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN, and CLOUDFLARE_Q_BASE_MODEL, then rerun the Cloudflare inference check."
   },
   "output": {
     "sessionJsonPath": ".training-output/q/cloudflare-q-inference.json",

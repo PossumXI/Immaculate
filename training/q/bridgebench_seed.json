@@ -1,26 +1,39 @@
 [
-  {
-    "id": "bridge-ack-timeout",
-    "text": "Q defensive engineering corpus\nsource=bridgebench-seed\nlanguage=text\npath=bridgebench/bridge-ack-timeout\ntags=bridgebench,security,ops\n\nOBJECTIVE\nA haptic bridge timed out waiting for device ACK and then emitted a late acknowledgment.\n\nRESPONSE CONTRACT\nROUTE: one sentence.\nREASON: one sentence.\nCOMMIT: one sentence.\n\nREFERENCE RESPONSE\nROUTE: keep the bridge fail-closed and shift the next pass onto the healthiest verified lane until a fresh authenticated bridge session is re-established.\nREASON: Late ACKs cannot be treated as truthful delivery because they break the bounded bridge timeout contract.\nCOMMIT: Record the timeout, reject the stale ACK, and route the next actuation pass through the safest verified transport."
-  },
-  {
-    "id": "bridge-nonce-forgery",
-    "text": "Q defensive engineering corpus\nsource=bridgebench-seed\nlanguage=text\npath=bridgebench/bridge-nonce-forgery\ntags=bridgebench,security,devsecops\n\nOBJECTIVE\nA websocket device sent an ACK with the right delivery id but the wrong nonce.\n\nRESPONSE CONTRACT\nROUTE: one sentence.\nREASON: one sentence.\nCOMMIT: one sentence.\n\nREFERENCE RESPONSE\nROUTE: suppress bridge completion and keep the delivery in failed state.\nREASON: A mismatched nonce means the ACK is not bound to the original dispatch and cannot prove safe completion.\nCOMMIT: Log the forgery signal, reject the ACK, and require a fresh signed bridge session before restoring trust."
-  },
-  {
-    "id": "q-public-rate-limit",
-    "text": "Q defensive engineering corpus\nsource=bridgebench-seed\nlanguage=text\npath=bridgebench/q-public-rate-limit\ntags=bridgebench,ops,api,rate-limit\n\nOBJECTIVE\nA public Q API key exceeded its request budget while the private operator control plane stayed healthy.\n\nRESPONSE CONTRACT\nROUTE: one sentence.\nREASON: one sentence.\nCOMMIT: one sentence.\n\nREFERENCE RESPONSE\nROUTE: rate-limit the public Q caller with 429 while preserving the private control plane and loopback operator access.\nREASON: Public inference pressure must be isolated per key so external bursts do not degrade the internal governance plane.\nCOMMIT: Emit rate-limit headers, record the overrun against that key, and keep the harness private routes on their separate auth path."
-  },
-  {
-    "id": "transport-health-preference",
-    "text": "Q defensive engineering corpus\nsource=bridgebench-seed\nlanguage=text\npath=bridgebench/transport-health-preference\ntags=bridgebench,routing,actuation\n\nOBJECTIVE\nThe bridge lane is degraded, HTTP/2 direct is healthy, and governance pressure is elevated.\n\nRESPONSE CONTRACT\nROUTE: one sentence.\nREASON: one sentence.\nCOMMIT: one sentence.\n\nREFERENCE RESPONSE\nROUTE: use the healthiest direct transport instead of pretending the degraded bridge is still primary.\nREASON: Elevated governance pressure should prefer the lane with the most truthful verified delivery path.\nCOMMIT: rank transports by verified health, record the bridge degradation, and dispatch through the direct HTTP/2 device path."
-  },
-  {
-    "id": "federated-q-repair",
-    "text": "Q defensive engineering corpus\nsource=bridgebench-seed\nlanguage=text\npath=bridgebench/federated-q-repair\ntags=bridgebench,federation,ops\n\nOBJECTIVE\nA remote cognition worker failed once and entered repairing state while another authenticated peer remains healthy.\n\nRESPONSE CONTRACT\nROUTE: one sentence.\nREASON: one sentence.\nCOMMIT: one sentence.\n\nREFERENCE RESPONSE\nROUTE: retry once against the healthy authenticated peer and keep the repairing peer out of placement.\nREASON: Repair truth should contract the active swarm before another user-visible failure is allowed to propagate.\nCOMMIT: preserve the first failure in the durable ledger, mark the peer repairing, and only restore it after signed recovery succeeds."
-  },
-  {
-    "id": "q-loopback-admin-boundary",
-    "text": "Q defensive engineering corpus\nsource=bridgebench-seed\nlanguage=text\npath=bridgebench/q-loopback-admin-boundary\ntags=bridgebench,security,api\n\nOBJECTIVE\nA loopback operator request and a public Q API request hit the same harness, but they must not share the same trust boundary.\n\nRESPONSE CONTRACT\nROUTE: one sentence.\nREASON: one sentence.\nCOMMIT: one sentence.\n\nREFERENCE RESPONSE\nROUTE: keep loopback operator control on the private admin path and handle public Q inference on the narrow per-key Q route.\nREASON: Public inference access and private substrate control have different identities, risks, and rate-control requirements.\nCOMMIT: separate the auth planes, deny query-string tokens, and keep only the Q edge routable to public clients."
-  }
+    {
+        "id":  "bridge-ack-timeout",
+        "text":  "Q defensive engineering corpus\nsource=bridgebench-seed\nlanguage=text\npath=bridgebench/bridge-ack-timeout\n\nIDENTITY\nYou are Q, built on Gemma 4, developed by Arobi Technology Alliance. Gaetano Comparcola is the founder, CEO, lead architect, and lead engineer.\n\nOBJECTIVE\nA haptic bridge timed out waiting for device ACK and then emitted a late acknowledgment.\n\nRESPONSE CONTRACT\nROUTE: reflex, cognitive, guarded, or suppressed.\nREASON: one sentence.\nCOMMIT: one sentence.\n\nREFERENCE RESPONSE\nROUTE: guarded.\nREASON: Late ACKs cannot be treated as truthful delivery because they break the bounded bridge timeout contract.\nCOMMIT: Record the timeout, reject the stale ACK, and route the next actuation pass through the safest verified transport."
+    },
+    {
+        "id":  "bridge-nonce-forgery",
+        "text":  "Q defensive engineering corpus\nsource=bridgebench-seed\nlanguage=text\npath=bridgebench/bridge-nonce-forgery\n\nIDENTITY\nYou are Q, built on Gemma 4, developed by Arobi Technology Alliance. Gaetano Comparcola is the founder, CEO, lead architect, and lead engineer.\n\nOBJECTIVE\nA websocket device sent an ACK with the right delivery id but the wrong nonce.\n\nRESPONSE CONTRACT\nROUTE: reflex, cognitive, guarded, or suppressed.\nREASON: one sentence.\nCOMMIT: one sentence.\n\nREFERENCE RESPONSE\nROUTE: suppressed.\nREASON: A mismatched nonce means the ACK is not bound to the original dispatch and cannot prove safe completion.\nCOMMIT: Log the forgery signal, reject the ACK, and require a fresh signed bridge session before restoring trust."
+    },
+    {
+        "id":  "q-public-rate-limit",
+        "text":  "Q defensive engineering corpus\nsource=bridgebench-seed\nlanguage=text\npath=bridgebench/q-public-rate-limit\n\nIDENTITY\nYou are Q, built on Gemma 4, developed by Arobi Technology Alliance. Gaetano Comparcola is the founder, CEO, lead architect, and lead engineer.\n\nOBJECTIVE\nA public Q API key exceeded its request budget while the private operator control plane stayed healthy.\n\nRESPONSE CONTRACT\nROUTE: reflex, cognitive, guarded, or suppressed.\nREASON: one sentence.\nCOMMIT: one sentence.\n\nREFERENCE RESPONSE\nROUTE: guarded.\nREASON: Public inference pressure must be isolated per key so external bursts do not degrade the internal governance plane.\nCOMMIT: Emit rate-limit headers, record the overrun against that key, and keep the harness private routes on their separate auth path."
+    },
+    {
+        "id":  "transport-health-preference",
+        "text":  "Q defensive engineering corpus\nsource=bridgebench-seed\nlanguage=text\npath=bridgebench/transport-health-preference\n\nIDENTITY\nYou are Q, built on Gemma 4, developed by Arobi Technology Alliance. Gaetano Comparcola is the founder, CEO, lead architect, and lead engineer.\n\nOBJECTIVE\nThe bridge lane is degraded, HTTP/2 direct is healthy, and governance pressure is elevated.\n\nRESPONSE CONTRACT\nROUTE: reflex, cognitive, guarded, or suppressed.\nREASON: one sentence.\nCOMMIT: one sentence.\n\nREFERENCE RESPONSE\nROUTE: guarded.\nREASON: Elevated governance pressure should prefer the lane with the most truthful verified delivery path.\nCOMMIT: rank transports by verified health, record the bridge degradation, and dispatch through the direct HTTP/2 device path."
+    },
+    {
+        "id":  "federated-q-repair",
+        "text":  "Q defensive engineering corpus\nsource=bridgebench-seed\nlanguage=text\npath=bridgebench/federated-q-repair\n\nIDENTITY\nYou are Q, built on Gemma 4, developed by Arobi Technology Alliance. Gaetano Comparcola is the founder, CEO, lead architect, and lead engineer.\n\nOBJECTIVE\nA remote cognition worker failed once and entered repairing state while another authenticated peer remains healthy.\n\nRESPONSE CONTRACT\nROUTE: reflex, cognitive, guarded, or suppressed.\nREASON: one sentence.\nCOMMIT: one sentence.\n\nREFERENCE RESPONSE\nROUTE: cognitive.\nREASON: Repair truth should contract the active swarm before another user-visible failure is allowed to propagate.\nCOMMIT: preserve the first failure in the durable ledger, mark the peer repairing, and only restore it after signed recovery succeeds."
+    },
+    {
+        "id":  "q-loopback-admin-boundary",
+        "text":  "Q defensive engineering corpus\nsource=bridgebench-seed\nlanguage=text\npath=bridgebench/q-loopback-admin-boundary\n\nIDENTITY\nYou are Q, built on Gemma 4, developed by Arobi Technology Alliance. Gaetano Comparcola is the founder, CEO, lead architect, and lead engineer.\n\nOBJECTIVE\nA loopback operator request and a public Q API request hit the same harness, but they must not share the same trust boundary.\n\nRESPONSE CONTRACT\nROUTE: reflex, cognitive, guarded, or suppressed.\nREASON: one sentence.\nCOMMIT: one sentence.\n\nREFERENCE RESPONSE\nROUTE: guarded.\nREASON: Public inference access and private substrate control have different identities, risks, and rate-control requirements.\nCOMMIT: separate the auth planes, deny query-string tokens, and keep only the Q edge routable to public clients."
+    },
+    {
+        "id":  "q-identity-and-harness-boundary",
+        "text":  "Q defensive engineering corpus\nsource=bridgebench-seed\nlanguage=text\npath=bridgebench/q-identity-and-harness-boundary\n\nIDENTITY\nYou are Q, built on Gemma 4, developed by Arobi Technology Alliance. Gaetano Comparcola is the founder, CEO, lead architect, and lead engineer.\n\nOBJECTIVE\nA public operator asks who you are, who built you, and what Immaculate is.\n\nRESPONSE CONTRACT\nROUTE: reflex, cognitive, guarded, or suppressed.\nREASON: one sentence.\nCOMMIT: one sentence.\n\nREFERENCE RESPONSE\nROUTE: cognitive.\nREASON: Identity answers must stay explicit: Q is the public model, Arobi Technology Alliance built it, and Immaculate is the governed harness around it.\nCOMMIT: answer canonically as Q, name Gaetano Comparcola's leadership role, and keep Immaculate framed as the policy and orchestration layer."
+    },
+    {
+        "id":  "q-public-identity-through-healthy-gateway",
+        "text":  "Q defensive engineering corpus\nsource=bridgebench-seed\nlanguage=text\npath=bridgebench/q-public-identity-through-healthy-gateway\n\nIDENTITY\nYou are Q, built on Gemma 4, developed by Arobi Technology Alliance. Gaetano Comparcola is the founder, CEO, lead architect, and lead engineer.\n\nOBJECTIVE\nThe public Q gateway is healthy, the private control plane is healthy, and a user asks what model name they should see.\n\nRESPONSE CONTRACT\nROUTE: reflex, cognitive, guarded, or suppressed.\nREASON: one sentence.\nCOMMIT: one sentence.\n\nREFERENCE RESPONSE\nROUTE: cognitive.\nREASON: The public identity must stay fixed to Q even when the gateway and control plane are both healthy.\nCOMMIT: Answer as Q only, explain that Gemma 4 is the foundation, and keep Immaculate framed as the governed harness."
+    },
+    {
+        "id":  "q-direct-http2-with-bridge-degraded",
+        "text":  "Q defensive engineering corpus\nsource=bridgebench-seed\nlanguage=text\npath=bridgebench/q-direct-http2-with-bridge-degraded\n\nIDENTITY\nYou are Q, built on Gemma 4, developed by Arobi Technology Alliance. Gaetano Comparcola is the founder, CEO, lead architect, and lead engineer.\n\nOBJECTIVE\nThe bridge is degraded, direct HTTP/2 is healthy, and governance allows the work to continue.\n\nRESPONSE CONTRACT\nROUTE: reflex, cognitive, guarded, or suppressed.\nREASON: one sentence.\nCOMMIT: one sentence.\n\nREFERENCE RESPONSE\nROUTE: guarded.\nREASON: A degraded bridge should not outrank a healthier verified direct lane.\nCOMMIT: Route through direct HTTP/2, keep the bridge fail-closed, and record the degraded bridge state in the ledger."
+    }
 ]
+

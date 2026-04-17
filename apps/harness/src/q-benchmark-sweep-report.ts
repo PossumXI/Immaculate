@@ -21,8 +21,8 @@ type BridgeBenchSoakReport = {
   p95RunLatencyMs?: number;
   bridgeRuntimeFailedAssertionsTotal?: number;
   bridgeRuntimeFailedAssertionRuns?: number;
-  qAlias?: string;
-  truthfulModelLabel?: string;
+  qModelName?: string;
+  foundationModelLabel?: string;
   output?: {
     jsonPath?: string;
   };
@@ -87,7 +87,9 @@ type BenchmarkStatusReport = {
 
 type SweepReport = {
   generatedAt: string;
-  release: ReleaseMetadata;
+  release: Omit<ReleaseMetadata, "q"> & {
+    q: Pick<ReleaseMetadata["q"], "modelName" | "foundationModel" | "trainingLock" | "hybridSession">;
+  };
   bridgeBenchSoak?: BridgeBenchSoakReport;
   harborSoak?: HarborSoakReport;
   wandbSoak?: BenchmarkStatusEntry;
@@ -96,6 +98,24 @@ type SweepReport = {
     markdownPath: string;
   };
 };
+
+function sanitizeSweepValue<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.map((entry) => sanitizeSweepValue(entry)) as T;
+  }
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).map(([key, entry]) => [
+        key === "providerModel" ? "foundationModel" : key,
+        sanitizeSweepValue(entry)
+      ])
+    ) as T;
+  }
+  if (typeof value === "string") {
+    return value.replace(/\bollama\/Q\b/g, "Q") as T;
+  }
+  return value;
+}
 
 const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(MODULE_ROOT, "../../..");
@@ -142,7 +162,8 @@ function renderMarkdown(report: SweepReport): string {
     `- Generated: \`${report.generatedAt}\``,
     `- Release: \`${report.release.buildId}\``,
     `- Repo commit: \`${report.release.gitShortSha}\``,
-    `- Q serving label: \`${report.release.q.truthfulLabel}\``,
+    `- Q model name: \`${report.release.q.modelName}\``,
+    `- Q foundation model: \`${report.release.q.foundationModel}\``,
     `- Q training bundle: \`${report.release.q.trainingLock?.bundleId ?? "none"}\``,
     ""
   ];
@@ -205,9 +226,17 @@ async function main(): Promise<void> {
 
   const report: SweepReport = {
     generatedAt: new Date().toISOString(),
-    release,
-    bridgeBenchSoak,
-    harborSoak,
+    release: {
+      ...release,
+      q: {
+        modelName: release.q.modelName,
+        foundationModel: release.q.foundationModel,
+        trainingLock: release.q.trainingLock,
+        hybridSession: release.q.hybridSession
+      }
+    },
+    bridgeBenchSoak: sanitizeSweepValue(bridgeBenchSoak),
+    harborSoak: sanitizeSweepValue(harborSoak),
     wandbSoak: benchmarkStatus?.publications?.["latency-soak-60m"],
     output: {
       jsonPath: path.join("docs", "wiki", "Q-Benchmark-Sweep-60m.json"),

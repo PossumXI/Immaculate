@@ -12,10 +12,10 @@
 Immaculate is software for running AI and automation carefully.
 In plain English: it helps a system decide what to do next, checks whether that action is allowed, records what happened, and publishes real benchmarks instead of hand-wavy claims.
 
-`Q` is the repo's local reasoning-model lane. It is served, benchmarked, and trained here as `Q`, wrapped in a dedicated gateway, measured with structured tasks, and tied to a reproducible training-bundle path.
-The newest proof points are a real `Q` substrate benchmark, where the gateway hands structured work back into Immaculate arbitration, and a real `Q` API audit loop, where live `/api/q/run` failures become tracked repair inputs instead of disappearing into logs.
+`Q` is the single custom model used across this repo. It is built on Gemma 4, developed by Arobi Technology Alliance, served everywhere here under the product name `Q`, and tied to a reproducible training-bundle path.
+The newest proof points are a real `Q` substrate benchmark, where the gateway hands structured work back into Immaculate arbitration, a canonical identity gate where Q answers as Q with the right company and project facts, and a real `Q` API audit loop where live `/api/q/run` failures become tracked repair inputs instead of disappearing into logs.
 
-Gaetano Comparcola, operating publicly as `PossumX`, is the program owner, systems architect, and engineering lead for Immaculate. `PossumX.dev` is the public profile site attached to benchmark attribution, architecture ownership, and published results.
+Gaetano Comparcola is the founder and CEO of Arobi Technology Alliance and the lead architect and engineer behind Immaculate and Q.
 
 This repository is prepared for public collaboration under the Apache 2.0 license. Community contributions are welcome, but the project keeps a hard line on governance, reproducibility, and security.
 
@@ -63,17 +63,16 @@ This repository is prepared for public collaboration under the Apache 2.0 licens
 
 Latest plain-English readout:
 
-- direct `Q` is `4/4` on the local structured lane and `4/4` on BridgeBench; current averages are `24527.89 ms` on Model-Benchmark-Comparison and `13108.23 ms` on BridgeBench, with `0` bridge-runtime assertion failures
-- the `Q` substrate benchmark is green end to end on the current `bench-v2` lock: `0` failed assertions, `3` structured fields at P50, `10400.27 ms` gateway-latency P95, `2.11 ms` arbitration-latency P95, and `3` guard denials carried through the critical hold case
-- the dedicated Q gateway is green on the live contract lane: `/health 200`, authenticated `/api/q/info 200`, authenticated `/v1/models 200`, authenticated chat `200`, concurrent rejection `429`, and only `80.64 ms` of measured gateway-added latency above upstream Ollama latency on the latest loopback pass
-- the live `Q` API audit loop is now real and writing back into training surfaces: `5` raw audit records currently exist, covering `transport_timeout`, `missing_prompt`, and `prompt_too_large`
-- on the current repo-local Harbor task pack, oracle is still `1.000` on both tasks
-- `Q` scored `0.950` on the Q structured-contract task and `0.925` on the Immaculate bridge fail-closed task
-- those Harbor scores break down into perfect programmatic passes (`1.000` on both tasks) plus improved operator-grade judge scores (`0.900` and `0.850`)
-- the current locked Q bundle is now `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v2-3c3e41d-766c8ccf`: `31` rows and `2` tracked supplementals; the paired Immaculate orchestration bundle is `immaculate-orchestration-3c3e41d-7aa3136b`
-- the current HF Jobs lane is authenticated and staging the promoted `bench-v2` bundle correctly, but the real blocker is Hugging Face prepaid credits, not missing auth or fake session state
-- the current Cloudflare lane is honest and narrower: the eval bundle is ready, but auth, worker config, and adapter export are still blocked, so Cloudflare remains an inference/eval lane rather than a claimed training backend
-- the tracked Q benchmark corpus now carries `19` records, and the strict failure corpus carries `6` live eval seeds with `8` resolved successes kept out of the failure lane
+- direct `Q` is green on both tracked local contract lanes: `4/4` on [docs/wiki/Model-Benchmark-Comparison.md](docs/wiki/Model-Benchmark-Comparison.md) and `4/4` on [docs/wiki/BridgeBench.md](docs/wiki/BridgeBench.md), with `0` bridge-runtime assertion failures
+- the `Q` gateway-to-Immaculate seam is green end to end on the current tracked lock: `0` failed assertions, preserved `ROUTE / REASON / COMMIT`, and real governance denials carried through the critical hold case; the exact current latencies live on [docs/wiki/Q-Gateway-Substrate.md](docs/wiki/Q-Gateway-Substrate.md)
+- the dedicated Q gateway contract is green and Q-only: `/health 200`, authenticated `/api/q/info 200`, authenticated `/v1/models 200`, authenticated chat `200`, bounded `429` concurrency rejection, and a canonical identity smoke that answers as `Q`, `Arobi Technology Alliance`, `Gaetano Comparcola`, `Gemma 4`, and `Immaculate`; the current measured gateway overhead lives on [docs/wiki/Q-Gateway-Validation.md](docs/wiki/Q-Gateway-Validation.md)
+- the live `Q` API audit loop is real and now writes failures back into training surfaces instead of leaving them in logs; current failures include `transport_timeout`, `missing_prompt`, and `prompt_too_large`
+- on the repo-local Harbor operator pack, oracle is still `1.000` on both tasks while `Q` is currently `0.950` on the Q structured-contract task and `0.925` on the Immaculate bridge fail-closed task
+- the current Q bundle, hybrid session, benchmark corpus, failure corpus, and paired Immaculate orchestration bundle are machine-stamped on [docs/wiki/Release-Surface.md](docs/wiki/Release-Surface.md); the active tracked Q bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d`
+- the tracked Q benchmark corpus currently carries `49` records, and the strict failure corpus currently carries `6` live eval seeds with resolved successes kept out of the failure lane
+- Immaculate now treats the healthy local Q lane as a first-class governed routing directive instead of a generic model slot, so blocked cloud status no longer forces a false guarded hold when local Q is healthy
+- the current HF Jobs lane is authenticated, hardware-visible, staged against the active lock, and launch-ready when you want to start the cloud run
+- the current Cloudflare lane is still an inference/eval lane, not a claimed training backend: the profile and eval bundle are ready, while auth, worker config, and adapter export are still blocked
 - the official public-task Terminal-Bench receipt for `terminal-bench/make-mips-interpreter` is still `0.000`, and that underperformance now stays in the repair loop instead of living as a dead-end public artifact
 
 ## Workspace
@@ -138,7 +137,7 @@ The default generated output root is `.training-output/`, which is intentionally
 
 For the `Q` fine-tune path specifically:
 
-- alias/install guide: [docs/wiki/Q-Alias-and-Banner.md](docs/wiki/Q-Alias-and-Banner.md)
+- model identity and banner guide: [docs/wiki/Q-Model-Identity-And-Banner.md](docs/wiki/Q-Model-Identity-And-Banner.md)
 - secure API and hosting guide: [docs/wiki/Q-API-Hosting.md](docs/wiki/Q-API-Hosting.md)
 - gateway architecture: [docs/wiki/Q-Gateway-Architecture.md](docs/wiki/Q-Gateway-Architecture.md)
 - gateway-to-substrate seam benchmark: [docs/wiki/Q-Gateway-Substrate.md](docs/wiki/Q-Gateway-Substrate.md)
@@ -244,7 +243,7 @@ For the dedicated Q gateway:
 - it serves `GET /health`, `GET /api/q/info`, `GET /v1/models`, and `POST /v1/chat/completions`
 - it accepts only Q API keys, not the harness admin key
 - the latest loopback validation is green on auth, model listing, served completion, and `429` concurrency rejection
-- it fail-closes on repeated primary-model failures instead of masking a broken upstream with a second model lane
+- it fail-closes on repeated primary-model failures instead of masking a broken upstream
 - it is designed for private OCI deployment, not public internet exposure by default
 
 ## Benchmark
@@ -335,11 +334,8 @@ Refresh the tracked Q failure-only corpus:
 npm run q:failure-corpus
 ```
 
-Create or refresh the local Ollama alias for `Q`:
-
-```powershell
-npm run ollama:alias:q -- --force
-```
+`Q` is the product name used in the repo.
+It is the only model name surfaced in the repo, and it is built on Gemma 4.
 
 Render the yellow/ocean-blue startup banner directly:
 
@@ -456,7 +452,7 @@ Benchmark packs currently include:
 - execution scheduling is now durable and inspectable, choosing whether cognition runs as a single layer or a swarm formation before any mediated execution commits
 - intelligence worker assignment is now an authoritative runtime control instead of a sidecar scorer: cognition reserves a worker lease before it runs and records the chosen worker, profile, host, reason, score, and execution endpoint into the durable execution ledger
 - the harness now maintains a governed local node registry and node heartbeat surface so worker placement has an explicit locality/control plane instead of anonymous host labels alone
-- remote worker placement now rides an overlooked but real substrate that was already in front of the system: worker records can advertise Ollama-compatible execution endpoints, so cognition can be placed onto remote compute without inventing a second orchestration protocol
+- remote worker placement now rides an overlooked but real substrate that was already in front of the system: worker records can advertise Q-runtime-compatible execution endpoints, so cognition can be placed onto remote compute without inventing a second orchestration protocol
 - locality-aware worker placement now runs inside the live harness: when multiple healthy remote workers can satisfy the same request, the system can prefer the worker in the local control locality before crossing into a different rack/zone
 - local swarm execution now treats one host as a pool of leaseable worker slots instead of a single monolithic worker record, so widened cognition can actually reserve parallel local capacity without lying about topology
 - authenticated federation now includes signed membership export/import, verified remote node and worker identity, recurring peer refresh, signed lease renewal, and stale-state eviction before dead remotes can stay in placement
@@ -478,7 +474,7 @@ Benchmark packs currently include:
 - direct device adapters beyond the first live socket neurophysiology ingress path
 - additional vendor-specific transports beyond serial and HTTP/2 direct lanes, including MIDI and richer gRPC-class adapters
 - arbitration and scheduling that feed live neural coupling, device health, decode confidence, and governance pressure deeper into multi-agent planning before route/dispatch
-- additional multi-agent and tool execution backends beyond the first Ollama layer
+- additional multi-agent and tool execution backends beyond the first governed Q runtime layer
 - richer worker federation beyond the current authenticated membership, recurring peer refresh, and stale-trust eviction phase
 - fuller federated control pressure that can learn from longer execution history and cost envelopes without overfitting to short-term noise
 - domain benchmark packs against published neuro/BCI workloads
@@ -534,7 +530,7 @@ The harness now exposes a deliberate operator/automation surface. These routes a
 - `GET /api/actuation/transports`
 - `GET /api/actuation/deliveries`
 - `GET /api/actuation/outputs`
-- `GET /api/intelligence/ollama/models`
+- `GET /api/intelligence/q/models`
 - `POST /api/actuation/dispatch`
 - `POST /api/orchestration/mediate`
 - `POST /api/actuation/transports/udp/register`
@@ -548,7 +544,7 @@ The harness now exposes a deliberate operator/automation surface. These routes a
 - `POST /api/federation/peers/sync`
 - `POST /api/federation/peers/:peerId/refresh`
 - `POST /api/federation/peers/:peerId/lease-renew`
-- `POST /api/intelligence/ollama/register`
+- `POST /api/intelligence/q/register`
 - `POST /api/intelligence/workers/register`
 - `POST /api/intelligence/workers/:workerId/heartbeat`
 - `POST /api/intelligence/workers/:workerId/unregister`

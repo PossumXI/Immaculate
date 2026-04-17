@@ -1,11 +1,21 @@
 import os from "node:os";
 import path from "node:path";
+import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { performance } from "node:perf_hooks";
+import { spawn, type ChildProcess } from "node:child_process";
+import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 import { createPersistence } from "./persistence.js";
 import { createQApiKeyRegistry, normalizeQApiRateLimitPolicy } from "./q-api-auth.js";
-import { getQModelAlias, getQModelTarget, truthfulModelLabel } from "./q-model.js";
+import {
+  getImmaculateHarnessName,
+  getQDeveloperName,
+  getQFoundationModelName,
+  getQLeadName,
+  getQModelName,
+  getQModelTarget
+} from "./q-model.js";
 import { resolveReleaseMetadata, type ReleaseMetadata } from "./release-metadata.js";
 import { runOllamaChatCompletion, type OllamaChatMessage } from "./ollama.js";
 
@@ -33,12 +43,16 @@ type HardwareContext = {
   nodeVersion: string;
 };
 
+type PublicReleaseMetadata = Omit<ReleaseMetadata, "q"> & {
+  q: Pick<ReleaseMetadata["q"], "modelName" | "foundationModel" | "trainingLock" | "hybridSession">;
+};
+
 type QGatewayValidationReport = {
   generatedAt: string;
   gatewayUrl: string;
-  alias: string;
-  qServingLabel: string;
-  release: ReleaseMetadata;
+  modelName: string;
+  foundationModel: string;
+  release: PublicReleaseMetadata;
   hardwareContext: HardwareContext;
   checks: {
     health: HttpCheck;
@@ -46,9 +60,14 @@ type QGatewayValidationReport = {
     info: HttpCheck;
     models: HttpCheck;
     authorizedChat: HttpCheck;
+    identityChat: HttpCheck;
     concurrentRejection: HttpCheck;
   };
-  directOllama: {
+  identity: {
+    canonical: boolean;
+    responsePreview: string;
+  };
+  localQFoundationRun: {
     latencyMs: number;
     wallLatencyMs: number;
     responsePreview: string;
@@ -58,7 +77,7 @@ type QGatewayValidationReport = {
     gatewayEndToEndLatencyMs: number;
     gatewayUpstreamLatencyMs?: number;
     gatewayAddedLatencyMs?: number;
-    directOllamaLatencyMs: number;
+    localQFoundationLatencyMs: number;
   };
   output: {
     jsonPath: string;
@@ -67,6 +86,7 @@ type QGatewayValidationReport = {
 };
 
 const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
+const HARNESS_ROOT = path.resolve(MODULE_ROOT, "..");
 const REPO_ROOT = path.resolve(MODULE_ROOT, "../../..");
 const WIKI_ROOT = path.join(REPO_ROOT, "docs", "wiki");
 
@@ -148,18 +168,115 @@ async function checkHttp(
   };
 }
 
+function parseGatewayPort(gatewayUrl: string): number {
+  return Number(new URL(gatewayUrl).port || 80);
+}
+
+function resolveGatewayCommand(): { command: string; args: string[] } {
+  const compiledGatewayPath = path.join(HARNESS_ROOT, "dist", "q-gateway.js");
+  if (existsSync(compiledGatewayPath)) {
+    return {
+      command: process.execPath,
+      args: [compiledGatewayPath]
+    };
+  }
+
+  const tsxBinary = path.join(
+    REPO_ROOT,
+    "node_modules",
+    ".bin",
+    process.platform === "win32" ? "tsx.cmd" : "tsx"
+  );
+  return {
+    command: tsxBinary,
+    args: [path.join(HARNESS_ROOT, "src", "q-gateway.ts")]
+  };
+}
+
+function startGatewayProcess(options: {
+  runtimeDir: string;
+  keysPath: string;
+  port: number;
+}): ChildProcess {
+  const gateway = resolveGatewayCommand();
+  return spawn(gateway.command, gateway.args, {
+    cwd: REPO_ROOT,
+    env: {
+      ...process.env,
+      IMMACULATE_RUNTIME_DIR: options.runtimeDir,
+      IMMACULATE_Q_API_KEYS_PATH: options.keysPath,
+      IMMACULATE_Q_GATEWAY_HOST: "127.0.0.1",
+      IMMACULATE_Q_GATEWAY_PORT: String(options.port),
+      IMMACULATE_Q_API_DEFAULT_MAX_CONCURRENT: "1"
+    },
+    stdio: "ignore",
+    windowsHide: true
+  });
+}
+
+async function stopGatewayProcess(child: ChildProcess | undefined): Promise<void> {
+  if (!child || child.killed || child.exitCode !== null) {
+    return;
+  }
+  child.kill();
+  await Promise.race([
+    new Promise<void>((resolve) => {
+      child.once("exit", () => resolve());
+    }),
+    delay(5_000).then(() => undefined)
+  ]);
+}
+
+async function ensureGatewayAvailable(options: {
+  gatewayUrl: string;
+  runtimeDir: string;
+  keysPath: string;
+}): Promise<ChildProcess | undefined> {
+  try {
+    const health = await checkHttp(`${options.gatewayUrl}/health`);
+    if (health.status === 200) {
+      return undefined;
+    }
+  } catch {
+    // Start a local ephemeral gateway below.
+  }
+
+  const child = startGatewayProcess({
+    runtimeDir: options.runtimeDir,
+    keysPath: options.keysPath,
+    port: parseGatewayPort(options.gatewayUrl)
+  });
+
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 80; attempt += 1) {
+    try {
+      const health = await checkHttp(`${options.gatewayUrl}/health`);
+      if (health.status === 200) {
+        return child;
+      }
+      lastError = new Error(`Gateway health returned ${health.status}.`);
+    } catch (error) {
+      lastError = error;
+    }
+    await delay(250);
+  }
+
+  await stopGatewayProcess(child);
+  throw lastError instanceof Error ? lastError : new Error("Q gateway did not become healthy in time.");
+}
+
 function renderMarkdown(report: QGatewayValidationReport): string {
   return [
     "# Q Gateway Validation",
     "",
-    "This page is generated from a real live loopback validation pass against the dedicated Q gateway process, plus a direct Ollama call against the same Q lane.",
+    "This page is generated from a real live loopback validation pass against the dedicated Q gateway process, plus a direct local Q foundation-model call against the same Q stack.",
     "",
     `- Generated: ${report.generatedAt}`,
     `- Release: ${report.release.buildId}`,
     `- Repo commit: ${report.release.gitShortSha}`,
     `- Gateway URL: ${report.gatewayUrl}`,
-    `- Alias: ${report.alias}`,
-    `- Q serving label: ${report.qServingLabel}`,
+    `- Q model name: ${report.modelName}`,
+    `- Q foundation model: ${report.foundationModel}`,
     `- Q training bundle: ${report.release.q.trainingLock?.bundleId ?? "none generated yet"}`,
     `- Hardware: ${JSON.stringify(report.hardwareContext)}`,
     "",
@@ -170,30 +287,64 @@ function renderMarkdown(report: QGatewayValidationReport): string {
     `- authenticated /api/q/info: \`${report.checks.info.status}\``,
     `- authenticated /v1/models: \`${report.checks.models.status}\``,
     `- authenticated /v1/chat/completions: \`${report.checks.authorizedChat.status}\` in \`${report.checks.authorizedChat.wallLatencyMs}\` ms`,
+    `- authenticated identity smoke: \`${report.checks.identityChat.status}\` | canonical \`${report.identity.canonical}\``,
     `- concurrent rejection: \`${report.checks.concurrentRejection.status}\``,
+    "",
+    "## Identity Smoke",
+    "",
+    `- preview: ${report.identity.responsePreview}`,
     "",
     "## Latency Comparison",
     "",
     `- gateway end-to-end latency: \`${report.comparison.gatewayEndToEndLatencyMs}\` ms`,
     `- gateway upstream latency header: \`${report.comparison.gatewayUpstreamLatencyMs ?? "n/a"}\` ms`,
     `- gateway added latency: \`${report.comparison.gatewayAddedLatencyMs ?? "n/a"}\` ms`,
-    `- direct Ollama latency: \`${report.comparison.directOllamaLatencyMs}\` ms`,
+    `- direct local Q foundation-model latency: \`${report.comparison.localQFoundationLatencyMs}\` ms`,
     "",
-    "## Direct Ollama Result",
+    "## Direct Local Q Foundation Result",
     "",
-    `- failure class: \`${report.directOllama.failureClass ?? "none"}\``,
-    `- latency: \`${report.directOllama.latencyMs}\` ms`,
-    `- wall latency: \`${report.directOllama.wallLatencyMs}\` ms`,
-    `- preview: ${report.directOllama.responsePreview}`
+    `- failure class: \`${report.localQFoundationRun.failureClass ?? "none"}\``,
+    `- latency: \`${report.localQFoundationRun.latencyMs}\` ms`,
+    `- wall latency: \`${report.localQFoundationRun.wallLatencyMs}\` ms`,
+    `- preview: ${report.localQFoundationRun.responsePreview}`
   ].join("\n");
+}
+
+function normalizeText(value: string): string {
+  return value.replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+function extractChatContent(body: unknown): string {
+  if (!body || typeof body !== "object") {
+    return "";
+  }
+  const choices = (body as { choices?: Array<{ message?: { content?: string } }> }).choices;
+  const content = choices?.[0]?.message?.content;
+  return typeof content === "string" ? content.trim() : "";
+}
+
+function isCanonicalIdentityResponse(value: string): boolean {
+  const normalized = normalizeText(value);
+  return [
+    normalizeText(getQModelName()),
+    normalizeText(getQDeveloperName()),
+    normalizeText(getQLeadName()),
+    normalizeText(getQFoundationModelName()),
+    normalizeText(getImmaculateHarnessName())
+  ].every((token) => normalized.includes(token));
 }
 
 async function main(): Promise<void> {
   const flags = parseFlags(process.argv.slice(2));
   const persistence = createPersistence(flags.runtimeDir);
+  const runtimeDir = persistence.getStatus().rootDir;
+  const keysPath =
+    flags.keysPath?.trim() ||
+    process.env.IMMACULATE_Q_API_KEYS_PATH ||
+    path.join(runtimeDir, "q-api-keys.json");
   const registry = await createQApiKeyRegistry({
-    rootDir: persistence.getStatus().rootDir,
-    storePath: flags.keysPath?.trim() || process.env.IMMACULATE_Q_API_KEYS_PATH,
+    rootDir: runtimeDir,
+    storePath: keysPath,
     defaultRateLimit: normalizeQApiRateLimitPolicy(undefined, {
       requestsPerMinute: 30,
       burst: 30,
@@ -210,8 +361,15 @@ async function main(): Promise<void> {
     }
   });
 
+  let spawnedGateway: ChildProcess | undefined;
+
   try {
     const gatewayUrl = flags.gatewayUrl.replace(/\/+$/, "");
+    spawnedGateway = await ensureGatewayAvailable({
+      gatewayUrl,
+      runtimeDir,
+      keysPath
+    });
     const gatewayHeaders = {
       Authorization: `Bearer ${created.plainTextKey}`,
       "content-type": "application/json"
@@ -227,7 +385,7 @@ async function main(): Promise<void> {
       }
     ];
     const chatBody = {
-      model: getQModelAlias(),
+      model: getQModelName(),
       messages: chatMessages,
       max_tokens: 64,
       temperature: 0.1,
@@ -253,6 +411,26 @@ async function main(): Promise<void> {
       headers: gatewayHeaders,
       body: JSON.stringify(chatBody)
     });
+    const identityBody = {
+      model: getQModelName(),
+      messages: [
+        {
+          role: "user",
+          content:
+            "Who are you, who developed you, who led the project, what are you built on, and what is Immaculate?"
+        }
+      ],
+      max_tokens: 192,
+      temperature: 0.05,
+      stream: false
+    };
+    const identityChat = await checkHttp(`${gatewayUrl}/v1/chat/completions`, {
+      method: "POST",
+      headers: gatewayHeaders,
+      body: JSON.stringify(identityBody)
+    });
+    const identityContent = extractChatContent(identityChat.body);
+    const identityCanonical = identityChat.status === 200 && isCanonicalIdentityResponse(identityContent);
 
     const concurrentPrimary = fetch(`${gatewayUrl}/v1/chat/completions`, {
       method: "POST",
@@ -284,12 +462,23 @@ async function main(): Promise<void> {
       typeof upstreamHeader === "string" && upstreamHeader.trim().length > 0
         ? Number(upstreamHeader)
         : undefined;
+    const release = await resolveReleaseMetadata();
+    const publicRelease: PublicReleaseMetadata = {
+      ...release,
+      q: {
+        modelName: release.q.modelName,
+        foundationModel: release.q.foundationModel,
+        trainingLock: release.q.trainingLock,
+        hybridSession: release.q.hybridSession
+      }
+    };
+
     const report: QGatewayValidationReport = {
       generatedAt: new Date().toISOString(),
       gatewayUrl,
-      alias: getQModelAlias(),
-      qServingLabel: truthfulModelLabel(getQModelTarget()),
-      release: await resolveReleaseMetadata(),
+      modelName: getQModelName(),
+      foundationModel: getQFoundationModelName(),
+      release: publicRelease,
       hardwareContext: captureHardwareContext(),
       checks: {
         health,
@@ -297,9 +486,14 @@ async function main(): Promise<void> {
         info,
         models,
         authorizedChat,
+        identityChat,
         concurrentRejection
       },
-      directOllama: {
+      identity: {
+        canonical: identityCanonical,
+        responsePreview: identityContent || "[missing identity response]"
+      },
+      localQFoundationRun: {
         latencyMs: direct.latencyMs,
         wallLatencyMs: directWallLatencyMs,
         responsePreview: direct.responsePreview,
@@ -312,7 +506,7 @@ async function main(): Promise<void> {
           typeof gatewayUpstreamLatencyMs === "number"
             ? Number((authorizedChat.wallLatencyMs - gatewayUpstreamLatencyMs).toFixed(2))
             : undefined,
-        directOllamaLatencyMs: direct.latencyMs
+        localQFoundationLatencyMs: direct.latencyMs
       },
       output: {
         jsonPath: path.join("docs", "wiki", "Q-Gateway-Validation.json"),
@@ -330,6 +524,8 @@ async function main(): Promise<void> {
       info.status !== 200 ||
       models.status !== 200 ||
       authorizedChat.status !== 200 ||
+      identityChat.status !== 200 ||
+      !identityCanonical ||
       concurrentRejection.status !== 429 ||
       direct.failureClass
     ) {
@@ -351,6 +547,7 @@ async function main(): Promise<void> {
     );
   } finally {
     await registry.revokeKey(created.key.keyId).catch(() => undefined);
+    await stopGatewayProcess(spawnedGateway);
   }
 }
 

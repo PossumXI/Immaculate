@@ -41,7 +41,7 @@ Recommended network shape:
 4. restrict the NSG or security list so TCP `8787` is allowed only from your
    operator CIDR, bastion subnet, or private load balancer subnet
 5. keep outbound egress limited to what the node actually needs:
-   package mirrors, OCI Vault, your private Ollama endpoint, and W&B if you are
+   package mirrors, OCI Vault, your private Q runtime endpoint, and W&B if you are
    publishing benchmarks from that node
 
 The host-side bind should stay private:

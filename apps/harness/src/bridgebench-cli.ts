@@ -6,7 +6,7 @@ async function main(): Promise<void> {
     JSON.stringify(
       {
         generatedAt: report.generatedAt,
-        qAlias: report.qAlias,
+        qModelName: report.qModelName,
         modelCount: report.models.length,
         bridgeSuiteId: report.bridgeRuntime.suiteId,
         bridgeFailedAssertions: report.bridgeRuntime.failedAssertions,

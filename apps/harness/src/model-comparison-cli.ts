@@ -6,7 +6,7 @@ async function main(): Promise<void> {
     JSON.stringify(
       {
         generatedAt: report.generatedAt,
-        qAlias: report.qAlias,
+        qModel: report.qModel,
         modelCount: report.models.length,
         topModel: report.models[0]
           ? {

@@ -28,10 +28,10 @@ npm run training-data:curate -- fixtures/training/q-defsec-curation.example.json
 python training/q/build_q_text_dataset.py --input .training-output/training-data/runs/<run-id>/curated-records.jsonl --output .training-output/q/q-train-<run-id>.jsonl
 ```
 
-3. Blend the governed corpus with the tracked BridgeBench seed set and the richer coding/long-context seed set:
+3. Blend the governed corpus with the tracked Q identity anchor first, then the Immaculate reasoning seed, the BridgeBench seed set, and the richer coding/long-context seed set:
 
 ```powershell
-python training/q/build_q_mixture.py --base .training-output/q/q-train-<run-id>.jsonl --supplemental training/q/bridgebench_seed.json --supplemental training/q/coding_long_context_seed.json --output .training-output/q/q-mix-<run-id>.jsonl
+python training/q/build_q_mixture.py --base .training-output/q/q-train-<run-id>.jsonl --supplemental training/q/q_harness_identity_seed.json --supplemental training/q/q_immaculate_reasoning_seed.json --supplemental training/q/bridgebench_seed.json --supplemental training/q/coding_long_context_seed.json --output .training-output/q/q-mix-<run-id>.jsonl
 ```
 
 When `.training-output/q/q-benchmark-corpus.jsonl` exists, treat it as another tracked `--supplemental` on the next mixture pass so benchmark-derived Q decision rows enter through the same manifest-recorded seam.
@@ -176,7 +176,12 @@ The next truthful Q run should emphasize:
 The repo now carries a dedicated richer supplement for that purpose:
 
 - `training/q/coding_long_context_seed.json`
+- `training/q/q_harness_identity_seed.json`
+- `training/q/q_immaculate_reasoning_seed.json`
 - `training/q/q_lora_config.long_context.example.json`
+
+`training/q/q_harness_identity_seed.json` now includes a consolidated one-sentence Q plus Immaculate truth-boundary example.
+`training/q/q_immaculate_reasoning_seed.json` adds governed route/reason/commit examples so Q learns how Immaculate should use it under real pressure instead of only learning who it is.
 
 ## Truth Boundary
 

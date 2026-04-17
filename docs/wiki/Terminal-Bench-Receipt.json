@@ -1,45 +1,49 @@
 {
-  "generatedAt": "2026-04-16T19:02:50.028Z",
+  "generatedAt": "2026-04-17T10:09:20.301Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "2384cf5c3a0f09aa225bf8b2d5c561a13c4e2958",
-    "gitShortSha": "2384cf5",
+    "gitSha": "848d44f8dbe409a8227bab61f88eccbf078dd056",
+    "gitShortSha": "848d44f",
     "gitBranch": "harbor-q-push",
-    "buildId": "0.1.0+2384cf5",
+    "buildId": "0.1.0+848d44f",
     "q": {
-      "alias": "Q",
-      "providerModel": "Q",
+      "modelName": "Q",
+      "foundationModel": "Gemma 4",
       "truthfulLabel": "Q",
       "trainingLock": {
-        "generatedAt": "2026-04-16T18:46:00Z",
+        "generatedAt": "2026-04-17T09:49:31Z",
         "lockVersion": 1,
-        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-2384cf5-57097d65",
-        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5",
-        "aliasName": "Q",
-        "trainDatasetPath": ".training-output/q/q-mix-longctx-harbor-opt-2384cf5.jsonl",
-        "trainDatasetSha256": "57097d65714bd07c0ed6b08dbdd78e52effbcc3351bb0b3eb72c767e9eb0dc35",
-        "trainDatasetRowCount": 31,
-        "mixManifestPath": ".training-output/q/q-mix-longctx-harbor-opt-2384cf5.manifest.json",
-        "mixManifestSha256": "4a8345611c704e95c532a1f6a6be7807f405c8eab68c508fa2db34aa30b7bd06",
-        "mixSupplementalCount": 2,
+        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d",
+        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13",
+        "modelName": "Q",
+        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13.jsonl",
+        "trainDatasetSha256": "beff091d4d9ace3fcbfc1552b1f3bea3feff5e65fdf9a6cf65b719973b4f812f",
+        "trainDatasetRowCount": 100,
+        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13.manifest.json",
+        "mixManifestSha256": "3575e0d551a38b23dc43d45e154fd0ce50dfffebc029e8f17fbfea6beba78f44",
+        "mixSupplementalCount": 5,
         "mixSupplementalPaths": [
+          "training/q/q_harness_identity_seed.json",
+          "training/q/q_immaculate_reasoning_seed.json",
           "training/q/bridgebench_seed.json",
-          "training/q/coding_long_context_seed.json"
+          "training/q/coding_long_context_seed.json",
+          ".training-output/q/q-failure-corpus.jsonl"
         ],
         "curationRunId": null,
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-16T18:56:30Z",
-        "sessionId": "q-hybrid-harbor-opt-2384cf5",
-        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5/hybrid-session.json",
-        "localStatus": "dry-run",
-        "cloudStatus": "not-configured",
+        "generatedAt": "2026-04-17T09:49:41Z",
+        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v13",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v13/hybrid-session.json",
+        "localStatus": "ready",
+        "cloudStatus": "ready",
         "cloudProvider": "hf_jobs",
-        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-2384cf5-57097d65",
-        "immaculateBundleId": "immaculate-orchestration-2384cf5-497211ed"
+        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d",
+        "immaculateBundleId": "immaculate-orchestration-848d44f-1366c487",
+        "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
       }
     }
   },
@@ -87,10 +91,10 @@
     "agentUrl": "https://github.com/PossumXI/Immaculate",
     "agentDisplayName": "Immaculate Q Harbor",
     "agentOrgDisplayName": "PossumX.dev",
-    "modelName": "gemma4:e4b",
-    "modelProvider": "ollama",
-    "modelDisplayName": "Q (Gemma 4 E4B)",
-    "modelOrgDisplayName": "Google / Immaculate"
+    "modelName": "Q",
+    "foundationModel": "Gemma 4",
+    "modelDisplayName": "Q",
+    "modelOrgDisplayName": "Arobi Technology Alliance"
   },
   "output": {
     "jsonPath": "docs\\wiki\\Terminal-Bench-Receipt.json",

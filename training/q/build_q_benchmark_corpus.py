@@ -1,5 +1,6 @@
 import argparse
 import json
+import re
 import subprocess
 from collections import Counter
 from datetime import datetime, timezone
@@ -14,7 +15,7 @@ def repo_root() -> Path:
 
 
 def load_json(path: Path):
-    return json.loads(path.read_text(encoding="utf-8"))
+    return json.loads(path.read_text(encoding="utf-8-sig"))
 
 
 def git_value(root: Path, *args: str) -> str:
@@ -54,6 +55,24 @@ def latest_training_bundle_id(root: Path) -> str:
     except Exception:
         return "none generated yet"
     return str(payload.get("bundleId", "")).strip() or "none generated yet"
+
+
+def normalize_route(value: str | None) -> str | None:
+    candidate = " ".join(str(value or "").strip().lower().split())
+    if candidate in {"reflex", "cognitive", "guarded", "suppressed"}:
+        return candidate
+    for route in ("guarded", "suppressed", "cognitive", "reflex"):
+        if route in candidate:
+            return route
+    if "guard" in candidate:
+        return "guarded"
+    if "suppress" in candidate or "block" in candidate:
+        return "suppressed"
+    if "cognit" in candidate or "repair" in candidate or "stabil" in candidate:
+        return "cognitive"
+    if "direct" in candidate:
+        return "reflex"
+    return None
 
 
 def load_optional_json(path: Path) -> dict | None:
@@ -247,7 +266,7 @@ def collect_model_records(surface_name: str, model: dict) -> list[dict]:
     for task in model.get("tasks", []):
         status = str(task.get("status", "")).strip()
         parse_success = bool(task.get("parseSuccess"))
-        route = str(task.get("routeSuggestion", "")).strip()
+        route = normalize_route(task.get("routeSuggestion"))
         reason = str(task.get("reasonSummary", "")).strip()
         commit = str(task.get("commitStatement", "")).strip()
         if status != "completed" or not parse_success or not route or not reason or not commit:
@@ -288,7 +307,7 @@ def collect_harbor_records(root: Path, harbor: dict) -> list[dict]:
         response = q_gateway.get("response", {})
         if not isinstance(response, dict):
             continue
-        route = str(response.get("route", "")).strip()
+        route = normalize_route(response.get("route"))
         reason = str(response.get("reason", "")).strip()
         commit = str(response.get("commit", "")).strip()
         score = q_gateway.get("score")
@@ -347,6 +366,99 @@ def collect_harbor_records(root: Path, harbor: dict) -> list[dict]:
             },
         }
         records.append(finalize_record(record))
+    return records
+
+
+def parse_seed_user_prompt(text: str) -> str:
+    if "\nUSER\n" not in text or "\n\nASSISTANT\n" not in text:
+        return ""
+    return text.split("\nUSER\n", 1)[1].split("\n\nASSISTANT\n", 1)[0].strip()
+
+
+def parse_seed_assistant_response(text: str) -> str:
+    if "\nASSISTANT\n" not in text:
+        return ""
+    return text.split("\nASSISTANT\n", 1)[1].strip()
+
+
+def extract_seed_field(response: str, field: str) -> str:
+    matches = re.findall(
+        rf"{field}\s*:\s*(.+?)(?=\s+(?:ROUTE|REASON|COMMIT)\s*:|$)",
+        response,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    return " ".join((matches[-1] if matches else "").strip().split())
+
+
+def collect_seed_benchmark_records(seed_path: Path, source_surface: str) -> list[dict]:
+    if not seed_path.exists():
+        return []
+    payload = load_json(seed_path)
+    if not isinstance(payload, list):
+        return []
+
+    records: list[dict] = []
+    for entry in payload:
+        if not isinstance(entry, dict):
+            continue
+        row_id = str(entry.get("id", "seed-row")).strip() or "seed-row"
+        text = str(entry.get("text", "")).strip()
+        if not text:
+            continue
+        objective = parse_seed_user_prompt(text) or row_id.replace("-", " ")
+        assistant = parse_seed_assistant_response(text)
+        route = normalize_route(extract_seed_field(assistant, "ROUTE"))
+        reason = extract_seed_field(assistant, "REASON")
+        commit = extract_seed_field(assistant, "COMMIT")
+        facts = [f"Curated seed path: {source_surface}/{row_id}"]
+
+        if route and reason and commit:
+            record = {
+                "id": f"{source_surface}:{row_id}",
+                "row_type": "decision_triplet",
+                "source_surface": source_surface,
+                "row_id": row_id,
+                "label": row_id.replace("-", " "),
+                "objective": objective,
+                "facts": facts,
+                "output": {
+                    "route": route,
+                    "reason": reason,
+                    "commit": commit,
+                },
+                "quality": {
+                    "status": "curated",
+                    "parse_success": True,
+                    "structured_field_count": 3,
+                    "thinking_detected": False,
+                    "score": 1.0,
+                },
+            }
+            records.append(finalize_record(record))
+            continue
+
+        if assistant:
+            record = {
+                "id": f"{source_surface}:{row_id}",
+                "row_type": "benchmark_observation",
+                "source_surface": source_surface,
+                "row_id": row_id,
+                "label": row_id.replace("-", " "),
+                "objective": objective,
+                "facts": facts,
+                "observation": [
+                    "Curated Q identity and orchestration benchmark row.",
+                    f"Canonical answer: {assistant}",
+                ],
+                "quality": {
+                    "status": "curated",
+                    "parse_success": True,
+                    "structured_field_count": 0,
+                    "thinking_detected": False,
+                    "score": 1.0,
+                },
+            }
+            records.append(finalize_record(record))
     return records
 
 
@@ -477,6 +589,7 @@ def collect_bridgebench_soak_records(bridgebench_soak: dict) -> list[dict]:
                 "attempt"
             ):
                 route = str(row.get("routeSuggestion", "")).strip()
+                route = normalize_route(route)
                 reason = str(row.get("reasonSummary", "")).strip()
                 commit = str(row.get("commitStatement", "")).strip()
                 if not route or not reason or not commit:
@@ -622,7 +735,7 @@ def collect_harbor_soak_records(root: Path, harbor_soak: dict) -> list[dict]:
         response = run.get("response", {})
         if not isinstance(response, dict):
             continue
-        route = str(response.get("route", "")).strip()
+        route = normalize_route(response.get("route"))
         reason = str(response.get("reason", "")).strip()
         commit = str(response.get("commit", "")).strip()
         score = float(run.get("score", 0) or 0)
@@ -634,7 +747,7 @@ def collect_harbor_soak_records(root: Path, harbor_soak: dict) -> list[dict]:
     for task_id, task_runs in eligible_runs_by_task.items():
         for run in evenly_sample_rows(task_runs, MAX_HARBOR_SOAK_DECISIONS_PER_TASK, "iteration"):
             response = run.get("response", {})
-            route = str(response.get("route", "")).strip()
+            route = normalize_route(response.get("route"))
             reason = str(response.get("reason", "")).strip()
             commit = str(response.get("commit", "")).strip()
             iteration = int(run.get("iteration", 0) or 0)
@@ -756,6 +869,16 @@ def main() -> None:
         help="Path to Harbor-Terminal-Bench-Soak.json",
     )
     parser.add_argument(
+        "--identity-seed",
+        default=str(root / "training" / "q" / "q_harness_identity_seed.json"),
+        help="Path to q_harness_identity_seed.json",
+    )
+    parser.add_argument(
+        "--reasoning-seed",
+        default=str(root / "training" / "q" / "q_immaculate_reasoning_seed.json"),
+        help="Path to q_immaculate_reasoning_seed.json",
+    )
+    parser.add_argument(
         "--output",
         default=str(root / ".training-output" / "q" / "q-benchmark-corpus.jsonl"),
         help="Output JSONL path",
@@ -774,6 +897,8 @@ def main() -> None:
     terminal_bench_receipt_path = Path(args.terminal_bench_receipt)
     bridgebench_soak_path = Path(args.bridgebench_soak)
     harbor_soak_path = Path(args.harbor_soak)
+    identity_seed_path = Path(args.identity_seed)
+    reasoning_seed_path = Path(args.reasoning_seed)
     output_path = Path(args.output)
     manifest_path = Path(args.manifest)
     markdown_path = manifest_path.with_suffix(".md")
@@ -801,6 +926,8 @@ def main() -> None:
         records.extend(collect_bridgebench_soak_records(bridgebench_soak))
     if harbor_soak:
         records.extend(collect_harbor_soak_records(root, harbor_soak))
+    records.extend(collect_seed_benchmark_records(identity_seed_path, "q-harness-identity-seed"))
+    records.extend(collect_seed_benchmark_records(reasoning_seed_path, "q-immaculate-reasoning-seed"))
 
     source_counts = Counter(record["source_surface"] for record in records)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -832,6 +959,16 @@ def main() -> None:
             **(
                 {"harbor-terminal-bench-soak": relative_path(root, harbor_soak_path)}
                 if harbor_soak
+                else {}
+            ),
+            **(
+                {"q-harness-identity-seed": relative_path(root, identity_seed_path)}
+                if identity_seed_path.exists()
+                else {}
+            ),
+            **(
+                {"q-immaculate-reasoning-seed": relative_path(root, reasoning_seed_path)}
+                if reasoning_seed_path.exists()
                 else {}
             ),
         },

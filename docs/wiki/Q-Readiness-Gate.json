@@ -1,55 +1,59 @@
 {
-  "generatedAt": "2026-04-17T02:49:49.403Z",
+  "generatedAt": "2026-04-17T10:18:45.574Z",
   "threshold": 0.75,
   "ready": true,
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "3c3e41d99de4ee12273359707ffe5f0e2025e851",
-    "gitShortSha": "3c3e41d",
+    "gitSha": "848d44f8dbe409a8227bab61f88eccbf078dd056",
+    "gitShortSha": "848d44f",
     "gitBranch": "harbor-q-push",
-    "buildId": "0.1.0+3c3e41d",
+    "buildId": "0.1.0+848d44f",
     "q": {
-      "alias": "Q",
-      "providerModel": "Q",
+      "modelName": "Q",
+      "foundationModel": "Gemma 4",
       "truthfulLabel": "Q",
       "trainingLock": {
-        "generatedAt": "2026-04-17T02:45:48Z",
+        "generatedAt": "2026-04-17T09:49:31Z",
         "lockVersion": 1,
-        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v2-3c3e41d-766c8ccf",
-        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v2",
-        "aliasName": "Q",
-        "trainDatasetPath": ".training-output/q/q-mix-longctx-harbor-opt-2384cf5-bench-v2.jsonl",
-        "trainDatasetSha256": "766c8ccf551f183e006a9553d9fd6e1fad396a2bfc6f6fb9740a19af284ea1e8",
-        "trainDatasetRowCount": 31,
-        "mixManifestPath": ".training-output/q/q-mix-longctx-harbor-opt-2384cf5-bench-v2.manifest.json",
-        "mixManifestSha256": "2b3449f4a2dec2d8e6384cb0ae1670d7549912eba572b304d64960c8894c7263",
-        "mixSupplementalCount": 2,
+        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d",
+        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13",
+        "modelName": "Q",
+        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13.jsonl",
+        "trainDatasetSha256": "beff091d4d9ace3fcbfc1552b1f3bea3feff5e65fdf9a6cf65b719973b4f812f",
+        "trainDatasetRowCount": 100,
+        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13.manifest.json",
+        "mixManifestSha256": "3575e0d551a38b23dc43d45e154fd0ce50dfffebc029e8f17fbfea6beba78f44",
+        "mixSupplementalCount": 5,
         "mixSupplementalPaths": [
+          "training/q/q_harness_identity_seed.json",
+          "training/q/q_immaculate_reasoning_seed.json",
           "training/q/bridgebench_seed.json",
-          "training/q/coding_long_context_seed.json"
+          "training/q/coding_long_context_seed.json",
+          ".training-output/q/q-failure-corpus.jsonl"
         ],
         "curationRunId": null,
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-17T02:45:56Z",
-        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v2",
-        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v2/hybrid-session.json",
+        "generatedAt": "2026-04-17T10:11:18Z",
+        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v13",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v13/hybrid-session.json",
         "localStatus": "ready",
-        "cloudStatus": "launch-blocked",
+        "cloudStatus": "ready",
         "cloudProvider": "hf_jobs",
-        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v2-3c3e41d-766c8ccf",
-        "immaculateBundleId": "immaculate-orchestration-3c3e41d-7aa3136b",
+        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d",
+        "immaculateBundleId": "immaculate-orchestration-848d44f-6e631f6b",
         "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
       }
     }
   },
   "reasons": [],
   "sources": {
-    "modelComparisonGeneratedAt": "2026-04-17T02:40:21.770Z",
-    "bridgeBenchGeneratedAt": "2026-04-17T02:43:07.635Z"
+    "modelComparisonGeneratedAt": "2026-04-17T10:03:22.220Z",
+    "bridgeBenchGeneratedAt": "2026-04-17T10:18:04.934Z",
+    "qGatewayValidationGeneratedAt": "2026-04-17T10:12:01.155Z"
   },
   "q": {
     "modelComparison": {
@@ -60,7 +64,8 @@
     "bridgeBench": {
       "parseSuccessRate": 1,
       "taskCount": 4
-    }
+    },
+    "gatewayIdentityCanonical": true
   },
   "output": {
     "jsonPath": "docs\\wiki\\Q-Readiness-Gate.json",

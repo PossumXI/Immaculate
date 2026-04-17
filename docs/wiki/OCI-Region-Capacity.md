@@ -32,7 +32,7 @@ This page records the real OCI region-capacity move for the active Q cloud-train
 
 - Latest attempt status: `blocked`
 - Subscription limit reached: `True`
-- Recommended next step: OCI support incident creation is still blocked for this controller identity. Current error: The Requested Domain was not found or not Authorized. Open the limit increase manually in OCI/My Oracle Support or fix the support-account identity binding, then rerun the bench-v2 doctor for the Q and Immaculate cloud lanes.
+- Recommended next step: OCI support incident creation is still blocked for this controller identity. Current error: The Requested Domain was not found or not Authorized. Open the limit increase manually in OCI/My Oracle Support or fix the support-account identity binding, then rerun the current Q and Immaculate cloud doctor.
 
 ## Live Limit Surface
 

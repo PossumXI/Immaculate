@@ -1,45 +1,48 @@
 {
-  "generatedAt": "2026-04-17T02:45:25.427Z",
+  "generatedAt": "2026-04-17T10:09:10.958Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "3c3e41d99de4ee12273359707ffe5f0e2025e851",
-    "gitShortSha": "3c3e41d",
+    "gitSha": "848d44f8dbe409a8227bab61f88eccbf078dd056",
+    "gitShortSha": "848d44f",
     "gitBranch": "harbor-q-push",
-    "buildId": "0.1.0+3c3e41d",
+    "buildId": "0.1.0+848d44f",
     "q": {
-      "alias": "Q",
-      "providerModel": "Q",
+      "modelName": "Q",
+      "foundationModel": "Gemma 4",
       "truthfulLabel": "Q",
       "trainingLock": {
-        "generatedAt": "2026-04-17T00:37:47Z",
+        "generatedAt": "2026-04-17T09:49:31Z",
         "lockVersion": 1,
-        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v1-45280d5-a181f850",
-        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v1",
-        "aliasName": "Q",
-        "trainDatasetPath": ".training-output/q/q-mix-longctx-harbor-opt-2384cf5-bench-v1.jsonl",
-        "trainDatasetSha256": "a181f85086f680a68ecf38e1e1b0c93f86c63349f578b01a849172ede9e13993",
-        "trainDatasetRowCount": 32,
-        "mixManifestPath": ".training-output/q/q-mix-longctx-harbor-opt-2384cf5-bench-v1.manifest.json",
-        "mixManifestSha256": "da61683a4d0849c4b5aad9cdffefea2609409b32e8a84c031353222f5ad85742",
-        "mixSupplementalCount": 2,
+        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d",
+        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13",
+        "modelName": "Q",
+        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13.jsonl",
+        "trainDatasetSha256": "beff091d4d9ace3fcbfc1552b1f3bea3feff5e65fdf9a6cf65b719973b4f812f",
+        "trainDatasetRowCount": 100,
+        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13.manifest.json",
+        "mixManifestSha256": "3575e0d551a38b23dc43d45e154fd0ce50dfffebc029e8f17fbfea6beba78f44",
+        "mixSupplementalCount": 5,
         "mixSupplementalPaths": [
+          "training/q/q_harness_identity_seed.json",
+          "training/q/q_immaculate_reasoning_seed.json",
           "training/q/bridgebench_seed.json",
-          "training/q/coding_long_context_seed.json"
+          "training/q/coding_long_context_seed.json",
+          ".training-output/q/q-failure-corpus.jsonl"
         ],
         "curationRunId": null,
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-17T02:02:50Z",
-        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v1",
-        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v1/hybrid-session.json",
+        "generatedAt": "2026-04-17T09:49:41Z",
+        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v13",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v13/hybrid-session.json",
         "localStatus": "ready",
-        "cloudStatus": "launch-blocked",
+        "cloudStatus": "ready",
         "cloudProvider": "hf_jobs",
-        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v1-45280d5-a181f850",
-        "immaculateBundleId": "immaculate-orchestration-6190f63-55187c4d",
+        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d",
+        "immaculateBundleId": "immaculate-orchestration-848d44f-1366c487",
         "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
       }
     }
@@ -150,7 +153,7 @@
               ],
               "kind": "llm",
               "judge": {
-                "model": "ollama/Q",
+                "model": "Q",
                 "reasoning_effort": "medium",
                 "timeout": 120,
                 "files": [
@@ -267,7 +270,7 @@
               ],
               "kind": "llm",
               "judge": {
-                "model": "ollama/Q",
+                "model": "Q",
                 "reasoning_effort": "medium",
                 "timeout": 120,
                 "files": [
@@ -395,7 +398,7 @@
               ],
               "kind": "llm",
               "judge": {
-                "model": "ollama/Q",
+                "model": "Q",
                 "reasoning_effort": "medium",
                 "timeout": 240,
                 "files": [
@@ -512,7 +515,7 @@
               ],
               "kind": "llm",
               "judge": {
-                "model": "ollama/Q",
+                "model": "Q",
                 "reasoning_effort": "medium",
                 "timeout": 240,
                 "files": [

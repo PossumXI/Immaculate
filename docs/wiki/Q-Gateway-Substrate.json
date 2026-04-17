@@ -1,58 +1,61 @@
 {
-  "generatedAt": "2026-04-17T02:49:30.783Z",
+  "generatedAt": "2026-04-17T10:18:33.187Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "3c3e41d99de4ee12273359707ffe5f0e2025e851",
-    "gitShortSha": "3c3e41d",
+    "gitSha": "848d44f8dbe409a8227bab61f88eccbf078dd056",
+    "gitShortSha": "848d44f",
     "gitBranch": "harbor-q-push",
-    "buildId": "0.1.0+3c3e41d",
+    "buildId": "0.1.0+848d44f",
     "q": {
-      "alias": "Q",
-      "providerModel": "Q",
+      "modelName": "Q",
+      "foundationModel": "Gemma 4",
       "truthfulLabel": "Q",
       "trainingLock": {
-        "generatedAt": "2026-04-17T02:45:48Z",
+        "generatedAt": "2026-04-17T09:49:31Z",
         "lockVersion": 1,
-        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v2-3c3e41d-766c8ccf",
-        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v2",
-        "aliasName": "Q",
-        "trainDatasetPath": ".training-output/q/q-mix-longctx-harbor-opt-2384cf5-bench-v2.jsonl",
-        "trainDatasetSha256": "766c8ccf551f183e006a9553d9fd6e1fad396a2bfc6f6fb9740a19af284ea1e8",
-        "trainDatasetRowCount": 31,
-        "mixManifestPath": ".training-output/q/q-mix-longctx-harbor-opt-2384cf5-bench-v2.manifest.json",
-        "mixManifestSha256": "2b3449f4a2dec2d8e6384cb0ae1670d7549912eba572b304d64960c8894c7263",
-        "mixSupplementalCount": 2,
+        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d",
+        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13",
+        "modelName": "Q",
+        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13.jsonl",
+        "trainDatasetSha256": "beff091d4d9ace3fcbfc1552b1f3bea3feff5e65fdf9a6cf65b719973b4f812f",
+        "trainDatasetRowCount": 100,
+        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13.manifest.json",
+        "mixManifestSha256": "3575e0d551a38b23dc43d45e154fd0ce50dfffebc029e8f17fbfea6beba78f44",
+        "mixSupplementalCount": 5,
         "mixSupplementalPaths": [
+          "training/q/q_harness_identity_seed.json",
+          "training/q/q_immaculate_reasoning_seed.json",
           "training/q/bridgebench_seed.json",
-          "training/q/coding_long_context_seed.json"
+          "training/q/coding_long_context_seed.json",
+          ".training-output/q/q-failure-corpus.jsonl"
         ],
         "curationRunId": null,
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-17T02:45:56Z",
-        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v2",
-        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v2/hybrid-session.json",
+        "generatedAt": "2026-04-17T10:11:18Z",
+        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v13",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v13/hybrid-session.json",
         "localStatus": "ready",
-        "cloudStatus": "launch-blocked",
+        "cloudStatus": "ready",
         "cloudProvider": "hf_jobs",
-        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v2-3c3e41d-766c8ccf",
-        "immaculateBundleId": "immaculate-orchestration-3c3e41d-7aa3136b",
+        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d",
+        "immaculateBundleId": "immaculate-orchestration-848d44f-6e631f6b",
         "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
       }
     }
   },
   "benchmark": {
-    "suiteId": "immaculate-benchmark-2026-04-17T02-48-54-697Z",
-    "generatedAt": "2026-04-17T02:48:54.697Z",
+    "suiteId": "immaculate-benchmark-2026-04-17T10-15-21-328Z",
+    "generatedAt": "2026-04-17T10:15:21.328Z",
     "packId": "q-gateway-substrate",
     "packLabel": "Q Gateway Substrate",
     "failedAssertions": 0,
     "structuredFieldsP50": 3,
-    "latencyP95Ms": 10400.27,
-    "arbitrationP95Ms": 2.11,
+    "latencyP95Ms": 47539.78,
+    "arbitrationP95Ms": 2.14,
     "guardDenialsMax": 3,
     "hardware": "knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics"
   },
@@ -74,16 +77,16 @@
     {
       "id": "q-gateway-substrate-release-bind",
       "status": "pass",
-      "target": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v2-3c3e41d-766c8ccf",
-      "actual": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v2-3c3e41d-766c8ccf",
+      "target": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d",
+      "actual": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d",
       "detail": "the release surface must agree with the live gateway before Q can be benchmarked as one coherent product"
     },
     {
       "id": "q-gateway-substrate-model-list",
       "status": "pass",
-      "target": "Q alias with truthful provider label",
-      "actual": "200 / Q / Q",
-      "detail": "the public model list should make the alias and the real provider model explicit"
+      "target": "Q public model name built on Gemma 4",
+      "actual": "200 / Q / Gemma 4",
+      "detail": "the public model list should make Q the only model name while still stating it is built on Gemma 4"
     },
     {
       "id": "q-gateway-substrate-concurrency",

@@ -1,40 +1,40 @@
 {
-  "generatedAt": "2026-04-15T19:49:12Z",
+  "generatedAt": "2026-04-17T10:09:51Z",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "43c035a3dbb67eefb5c918c94973738ccb5097f3",
-    "gitShortSha": "43c035a",
-    "buildId": "0.1.0+43c035a"
+    "gitSha": "848d44f8dbe409a8227bab61f88eccbf078dd056",
+    "gitShortSha": "848d44f",
+    "buildId": "0.1.0+848d44f"
   },
   "repo": {
     "slug": "PossumXI/Immaculate"
   },
-  "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
+  "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v13",
   "session": {
-    "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.manifest.json",
-    "configPath": ".training-output/q/q-lora-config-longctx-cur-fnv1a-8f551a5c-bench-v2.json",
+    "manifestPath": ".training-output/q/latest-hybrid-session.json",
+    "configPath": ".training-output/q/q-lora-config-harbor-opt-2384cf5-bench-v13.json",
     "trainingLockPath": ".training-output/q/latest-training-lock.json",
-    "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e",
-    "immaculateBundleOutputPath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-cur-fnv1a-8f551a5c-bench-v2.json"
+    "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d",
+    "immaculateBundleOutputPath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-harbor-opt-2384cf5-bench-v13.json"
   },
   "bundle": {
     "sourceType": "hf_dataset",
     "repoId": "TruLumecreator/immaculate-q-cloud-bundles",
-    "archiveRepoPath": "sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/q-hybrid-cur-fnv1a-8f551a5c-bench-v2-cloud-bundle.tar.gz",
-    "manifestRepoPath": "sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/bundle-manifest.json",
+    "archiveRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v13/q-hybrid-harbor-opt-2384cf5-bench-v13-cloud-bundle.tar.gz",
+    "manifestRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v13/bundle-manifest.json",
     "staged": true
   },
   "microTrain": {
-    "configPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/colab/q-colab-micro-config.json",
+    "configPath": ".training-output/q/colab/q-colab-micro-config.json",
     "maxSteps": 24,
     "maxSeqLength": 2048,
     "minGpuMemoryGb": 20,
     "wandbOptional": true
   },
   "notebook": {
-    "path": "deploy/colab/notebooks/q-hybrid-cur-fnv1a-8f551a5c-bench-v2-colab-free.ipynb",
-    "fileName": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2-colab-free.ipynb",
-    "openInColabUrl": "https://colab.research.google.com/github/PossumXI/Immaculate/blob/main/deploy/colab/notebooks/q-hybrid-cur-fnv1a-8f551a5c-bench-v2-colab-free.ipynb"
+    "path": "deploy/colab/notebooks/q-hybrid-harbor-opt-2384cf5-bench-v13-colab-free.ipynb",
+    "fileName": "q-hybrid-harbor-opt-2384cf5-bench-v13-colab-free.ipynb",
+    "openInColabUrl": "https://colab.research.google.com/github/PossumXI/Immaculate/blob/main/deploy/colab/notebooks/q-hybrid-harbor-opt-2384cf5-bench-v13-colab-free.ipynb"
   },
   "summary": {
     "provider": "colab_free",
@@ -42,9 +42,9 @@
     "recommendedNextStep": "Open the notebook in Colab, provide HF_TOKEN, and use the free runtime for doctor plus dry-run or a bounded Q micro-train when a large enough GPU appears."
   },
   "output": {
-    "sessionJsonPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/colab-free-export.json",
+    "sessionJsonPath": ".training-output/q/colab-free-export.json",
     "wikiJsonPath": "docs/wiki/Colab-Free-Training.json",
     "wikiMarkdownPath": "docs/wiki/Colab-Free-Training.md",
-    "notebookPath": "deploy/colab/notebooks/q-hybrid-cur-fnv1a-8f551a5c-bench-v2-colab-free.ipynb"
+    "notebookPath": "deploy/colab/notebooks/q-hybrid-harbor-opt-2384cf5-bench-v13-colab-free.ipynb"
   }
 }

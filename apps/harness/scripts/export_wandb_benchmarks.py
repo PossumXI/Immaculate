@@ -91,7 +91,7 @@ def export_runs(status: dict) -> dict:
                 "artifact": {
                     "name": getattr(artifact, "name", None),
                     "type": getattr(artifact, "type", None),
-                    "aliases": list(getattr(artifact, "aliases", []) or []),
+                    "channels": list(getattr(artifact, "aliases", []) or []),
                     "metadata": dict(getattr(artifact, "metadata", {}) or {}),
                 }
                 if artifact
@@ -162,7 +162,7 @@ def render_markdown(export: dict) -> str:
                 f"- Role: `{summary.get('benchmark/role')}`",
                 f"- Website: `{summary.get('benchmark/website')}`",
                 f"- Benchmark artifact: `{artifact.get('name')}`",
-                f"- Artifact aliases: `{', '.join(artifact.get('aliases', [])) if artifact else ''}`",
+                f"- Artifact channels: `{', '.join(artifact.get('channels', [])) if artifact else ''}`",
                 "",
             ]
         )

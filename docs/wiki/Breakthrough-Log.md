@@ -21,12 +21,66 @@ For each breakthrough, record:
 
 ### 2026-04-17
 
+#### Q now answers as Q, Immaculate routes to healthy local Q first, and the tracked bundle moved forward to bench-v13
+
+What changed:
+- the direct Q identity path now answers canonically as `Q`, `Arobi Technology Alliance`, `Gaetano Comparcola`, `Gemma 4`, and `Immaculate`, even when the user asks compound identity-and-harness questions
+- Immaculate now carries a real Q orchestration context and uses a Q routing directive so a healthy local Q lane is treated as the primary governed lane instead of being displaced by a blocked cloud lane
+- the active Q lock, hybrid session, benchmark corpus, failure corpus, Cloudflare profile, and cloud bundle surfaces were all promoted and restamped onto the tracked `bench-v13` lineage
+- the public website, README, and wiki home now tell the same Q-only story in plain English, with the canonical identity gate and the governed local-Q lane called out explicitly
+
+Why it matters:
+- the missed systems pattern was that Q had already become the real product identity, but one compound question path and one routing branch were still letting the system behave as if Q were only a prompt wrapper around a generic execution slot
+- fixing the identity path matters because a custom model stops being a real product the moment it forgets who it is under mixed operator prompts
+- fixing the routing branch matters because a blocked cloud lane should not downgrade a healthy local Q lane into an artificial review hold
+- moving the tracked bundle to `bench-v13` matters because the next fine-tune and the next orchestration pass now point at the repaired benchmark and failure surfaces that actually exist today
+
+Evidence:
+- `apps/harness/src/q-model.ts` now canonicalizes compound identity questions back to the full Q identity answer
+- `apps/harness/src/q-orchestration-context.ts` and `apps/harness/src/routing.ts` now carry and honor an explicit Q routing directive
+- `docs/wiki/Q-Gateway-Validation.md` now records a green canonical identity smoke on the current tracked build
+- `docs/wiki/Release-Surface.md` now points at `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d` and the paired Immaculate bundle `immaculate-orchestration-848d44f-1366c487`
+- `docs/wiki/Q-Benchmark-Corpus.md` now records `49` benchmark rows and `docs/wiki/Q-Failure-Corpus.md` now records `6` live eval seeds on the same tracked line
+
+What this unlocks next:
+- the next Q fine-tune can train harder on real harness reasoning and identity continuity instead of spending another pass on product-name cleanup
+- the next Immaculate routing pass can use Q-aware directives earlier in mediation instead of letting Q-awareness live mostly in rationale text
+- future public benchmark and release surfaces can stay Q-only without drifting back to old bundle IDs or stale lane semantics
+
+### 2026-04-17
+
+#### Immaculate now treats Q as a governed first-class execution lane instead of a generic model slot
+
+What changed:
+- Q now has an explicit orchestration context that carries identity, readiness, gateway-substrate health, cloud-lane status, and the active training bundle into arbitration and scheduling
+- the public `/api/q/run` path no longer leaks resolved upstream model strings into user-visible responses or audit records; public identity is always `Q`, with `Gemma 4` kept as the foundation label
+- the active Q training lock now carries explicit identity and Immaculate-reasoning seeds, and the current tracked bundle is always machine-stamped on `docs/wiki/Release-Surface.md`
+- the paired Immaculate orchestration bundle is also machine-stamped on `docs/wiki/Release-Surface.md`
+
+Why it matters:
+- the missed systems pattern was that Q already had the right structure contract, but Immaculate was still reasoning about a generic execution lane in places where it should have been reasoning about Q specifically
+- once Q readiness, gateway health, and cloud-lane blockage become explicit orchestration inputs, Immaculate can choose safer local governed execution before a degraded cloud lane or ambiguous route causes operator confusion
+- fixing the public identity leak matters because a custom model stops being a real product the moment the public surface starts naming upstream internals instead of the governed product users are actually calling
+
+Evidence:
+- `apps/harness/src/q-orchestration-context.ts` now resolves a grounded Q context from release state, readiness, substrate health, and cloud-lane state
+- `apps/harness/src/arbitration.ts` and `apps/harness/src/scheduling.ts` now accept Q context and record Q-aware rationale in their decisions
+- `apps/harness/src/server.ts` now emits `Q` as the public model name on `/api/q/run` success and failure paths
+- `docs/wiki/Release-Surface.md` now points at the current tracked Q bundle, corpora, hybrid session, and paired Immaculate orchestration bundle
+
+What this unlocks next:
+- the next Q fine-tune can optimize real Q-and-Immaculate reasoning instead of only prompt-format compliance
+- the next Immaculate routing pass can become Q-aware by policy, not just Q-aware by prompt text
+- future public benchmark surfaces can stay Q-only without leaking upstream implementation labels back into the product story
+
+### 2026-04-17
+
 #### The Q hot path now spends less time on disk and routing overhead, and the active training lock has moved forward to bench-v2
 
 What changed:
 - the dedicated Q gateway stopped rewriting its API-key store on every successful request and now only flushes usage metadata on a bounded cadence
 - that same key-store path now reloads and merges external key changes safely, so validator-created keys work across processes instead of being lost behind a stale in-memory cache
-- the direct Q path now uses keep-alive HTTP agents into Ollama, and the Q-specific prompt path is more compact and more grounded in explicit facts instead of wasting tokens on generic context
+- the direct Q path now uses keep-alive HTTP agents into the local Q backend, and the Q-specific prompt path is more compact and more grounded in explicit facts instead of wasting tokens on generic context
 - Immaculate worker selection now reuses node, peer, and execution-outcome views inside a batch instead of rebuilding that context for every reservation
 - the Cloudflare eval lane now follows the latest hybrid session automatically, builds a stratified eval bundle, and publishes explicit readiness buckets instead of one vague ready/not-ready flag
 - the active Q lock is now `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v2-3c3e41d-766c8ccf`, paired with Immaculate bundle `immaculate-orchestration-3c3e41d-7aa3136b`
@@ -322,7 +376,7 @@ What this unlocks next:
 #### The hybrid session can now carry a real OCI cloud-launch path, and the hidden controller/runtime mismatch is closed instead of hand-entered each run
 
 What changed:
-- the hybrid session runner now understands `cloud.envFilePath`, `cloud.inlineEnv`, canonical HF/W&B/OCI aliases, and a staged cloud bundle instead of relying only on the live shell
+- the hybrid session runner now understands `cloud.envFilePath`, `cloud.inlineEnv`, canonical HF/W&B/OCI identifiers, and a staged cloud bundle instead of relying only on the live shell
 - the repo now carries a dedicated `deploy/oci-training/` bundle with an OCI launcher, a remote training runner, a Vault-oriented secret fetcher, and a cloud-init template
 - the cloud lane now stages the exact locked session inputs into a tarball so a remote GPU node can train the tracked bundle instead of booting with no access to the local dataset
 - the OCI controller logic now prefers the real CLI env names `OCI_CLI_CONFIG_FILE` and `OCI_CLI_PROFILE` while keeping backward compatibility with the older shorthand names already used in the repo
@@ -378,11 +432,11 @@ What this unlocks next:
 What changed:
 - the repo now carries a real Harbor task pack under `benchmarks/harbor/` for two strict terminal tasks: `q-structured-contract` and `immaculate-bridge-fail-closed`
 - the Harbor agent path for `Q` now runs through the dedicated OpenAI-compatible Q gateway instead of a fake local stub
-- the Ollama transport in `apps/harness/src/ollama.ts` now uses explicit Node `http`/`https` request handling with a controlled timeout instead of the older `fetch` path that quietly died around five minutes
+- the local Q transport now uses explicit Node `http`/`https` request handling with a controlled timeout instead of the older `fetch` path that quietly died around five minutes
 - the repo now generates `docs/wiki/Harbor-Terminal-Bench.md` and `docs/wiki/Harbor-Terminal-Bench.json`, tying Harbor results back to the release/build surface
 
 Why it matters:
-- the missed failure pattern was not in Harbor or in the task pack; it was the gateway transport itself, which was cutting off long Q completions at roughly `300` seconds even when direct Ollama could still finish honestly
+- the missed failure pattern was not in Harbor or in the task pack; it was the gateway transport itself, which was cutting off long Q completions at roughly `300` seconds even when the direct local Q backend could still finish honestly
 - removing that ceiling means the served Q edge is no longer weaker than the underlying model for longer structured completions
 - the Harbor pack gives the repo a second benchmark language beyond BridgeBench/model comparison: terminal tasks with an oracle baseline, a real Q agent lane, and RewardKit scoring
 - this is the first repo-local pass where Harbor, the Q gateway, and the benchmark publication story all line up on the same truthful surface
@@ -390,7 +444,7 @@ Why it matters:
 Evidence:
 - `harbor-q-oracle-v7` and `harbor-immaculate-oracle-v7` both scored `1.000` under Harbor + RewardKit
 - `harbor-q-agent-custom-v5` and `harbor-immaculate-agent-custom-v1` both scored `1.000` through the real Q gateway agent lane
-- the same structured Q probe that previously failed around `300678` ms through the gateway succeeded directly against Ollama at `412787.48` ms, then succeeded through the repaired gateway at `8029.01` ms
+- the same structured Q probe that previously failed around `300678` ms through the gateway succeeded directly against the local Q backend at `412787.48` ms, then succeeded through the repaired gateway at `8029.01` ms
 - `npm run benchmark:harbor:report` now writes the Harbor benchmark page into `docs/wiki/Harbor-Terminal-Bench.md` and `docs/wiki/Harbor-Terminal-Bench.json`
 
 What this unlocks next:
@@ -454,7 +508,7 @@ What this unlocks next:
 
 ### 2026-04-14
 
-#### Q gained a second serving control loop, and the direct model is now green under the readiness gate after the structured-contract fix
+#### Q gained a dedicated serving control loop, and the readiness gate is now green after the structured-contract fix
 
 What changed:
 - the dedicated Q gateway now carries a real primary-model circuit breaker with fail-closed behavior
@@ -472,7 +526,7 @@ Evidence:
 - `docs/wiki/Q-Readiness-Gate.json` now shows `ready: true` at threshold `0.75`
 - `docs/wiki/Model-Benchmark-Comparison.json` now shows direct `Q` at `4/4` parse success
 - `docs/wiki/BridgeBench.json` now also shows direct `Q` at `4/4` parse success with the bridge-runtime lane still green
-- the dedicated gateway now records primary failure class and open-circuit state directly instead of hiding a broken Q lane behind a second model surface
+- the dedicated gateway now records primary failure class and open-circuit state directly instead of obscuring a broken Q path
 - `docs/wiki/Q-Gateway-Validation.json` still shows the normal direct Q gateway path green on auth, concurrency control, and sanitized output when the primary model is healthy enough for the short-form request
 
 What this unlocks next:
@@ -513,7 +567,7 @@ What changed:
 - the repo now contains a dedicated Q gateway server at `apps/harness/src/q-gateway.ts` instead of only the narrow Q route embedded inside the full harness
 - the gateway exposes only `GET /health`, `GET /api/q/info`, `GET /v1/models`, and `POST /v1/chat/completions`
 - the gateway uses Q API keys only and does not accept the broader harness admin key
-- the Ollama adapter now runs structured/control calls with `think: false`, explicit failure classes, and a harder contract validator that rejects prompt-echo garbage instead of rewarding it as parse success
+- the Q runtime adapter now runs structured/control calls with `think: false`, explicit failure classes, and a harder contract validator that rejects prompt-echo garbage instead of rewarding it as parse success
 - the public gateway path now sanitizes leaked meta tags like `<channel|>` before returning content to callers
 - the OCI Q gateway bundle now targets the real dedicated Node gateway process instead of a proxy-only placeholder
 
@@ -527,13 +581,13 @@ Evidence:
 - the dedicated gateway returned `200` on `/health`, `401` without a key on `/v1/chat/completions`, `200` on authenticated `/api/q/info` and `/v1/models`, and `429 concurrency_limited` on the second overlapping keyed request
 - the live gateway response was sanitized to `Gateway operational, all good.` with only about `95.83 ms` of overhead above upstream latency on the latest loopback pass
 - `npm run compare:models` now records the harsher truth after the metric fix when direct `Q` regresses under `transport_timeout`
-- `npm run bridgebench` still passed the bridge-runtime lane with `0` failed assertions while the direct-Q model lane also sits at `0/4` parse success with `transport_timeout`
+- `npm run bridgebench` still passed the bridge-runtime surface with `0` failed assertions while the direct-Q path also sits at `0/4` parse success with `transport_timeout`
 - `npm run benchmark:gate:all` passed again at `2026-04-14T01:47:25.513Z` with `runCount: 3` and `violationCount: 0`
 
 What this unlocks next:
 - a real OCI-hosted private Q API without exposing the full harness control plane
 - structured-output release gates that can block a weak Q fine-tune even when the gateway itself is healthy
-- a cleaner next training pass for Q focused on contract obedience and anti-prompt-echo behavior instead of generic alias or serving work
+- a cleaner next training pass for Q focused on contract obedience and anti-prompt-echo behavior instead of generic model-serving work
 
 #### Q gained a real bounded serving edge, BridgeBench became a tracked surface, and the training path got more truthful
 
@@ -552,9 +606,9 @@ Why it matters:
 Evidence:
 - `GET /api/q/info` on `127.0.0.1:8896` returned `200`
 - unauthenticated `POST /api/q/run` returned `401`
-- keyed `POST /api/q/run` reached the model execution path and returned a truthful `503` with `No response returned by Ollama.` instead of failing in the auth/governance layer
+- keyed `POST /api/q/run` reached the model execution path and returned a truthful `503` with `No response returned by the Q backend.` instead of failing in the auth/governance layer
 - a second concurrent keyed request returned `429 concurrency_limited` while the first request was still in flight
-- `npm run bridgebench` regenerated `docs/wiki/BridgeBench.md` and `docs/wiki/BridgeBench.json` with `0` failed bridge-runtime assertions and a still-failing local model lane
+- `npm run bridgebench` regenerated `docs/wiki/BridgeBench.md` and `docs/wiki/BridgeBench.json` with `0` failed bridge-runtime assertions and a still-failing local model path
 - `python -m py_compile training/q/train_q_lora_unsloth.py training/q/build_q_mixture.py` passed after the training-path cleanup
 
 What this unlocks next:
@@ -564,30 +618,30 @@ What this unlocks next:
 
 ### 2026-04-13
 
-#### Q became a truthful alias, the local comparison surface went live, and the latest regression stayed published
+#### Q became a stable Gemma 4-based product identity, the local comparison surface went live, and the latest regression stayed published
 
 What changed:
-- Immaculate now has a real local Ollama alias path so the current Q lineage can be addressed as `Q`
+- Immaculate now binds `Q` directly to one real public model identity built on Gemma 4
 - the harness now emits a controlled yellow/ocean-blue startup banner and surfaces the active `Q` lane at boot
 - the repo now carries a live direct-Q structured-contract page that publishes the measured outputs into the wiki
 - the `Q` fine-tune path now has a tracked curation manifest, a text-dataset shaper, and an Unsloth launch bundle wired back to the training-data factory
 - the repo now also carries a hardened OCI private deployment bundle and a live validation page that records both the successful Temporal rerun and the failed fresh `60s` benchmark rerun
 
 Why it matters:
-- this closes a common honesty gap in local model work: a renamed model is now a real alias with an operator surface, not a silent doc-only nickname
+- this closes a common honesty gap in local model work: `Q` is the real public model name, built on one real Gemma 4 foundation, with no alternate public identity
 - the missed systems pattern was that local comparison pages are more valuable when they publish bad news as well as good news; the `60s` regression and the weak structured output from `Q` are both now part of the source-controlled record
 - it also ties training back to the governed corpus path, which keeps the next `Q` fine-tune from splintering into an untracked side experiment
 
 Evidence:
-- `npm run ollama:alias:q -- --force` succeeded and installed `q:latest`
+- the repo now resolves `Q` directly as the single public model name and there is no separate public install path
 - `npm run benchmark:temporal` passed on `2026-04-13` with suite `immaculate-benchmark-2026-04-13T22-40-03-299Z`
 - `npm run benchmark:latency:60s` completed on `2026-04-13` with suite `immaculate-benchmark-2026-04-13T22-41-40-475Z` and `3` failing assertions, which are now published in `docs/wiki/Live-Validation-2026-04-13.md`
 - `npm run compare:models` generated `docs/wiki/Model-Benchmark-Comparison.md` and kept the direct-Q regression on record when the structured contract failed on this machine
-- the follow-up live server drill kept one more ugly truth on record: `Q` failed closed with `No response returned by Ollama.` while `/api/health` stayed healthy
+- the follow-up live server drill kept one more ugly truth on record: `Q` failed closed with `No response returned by the Q backend.` while `/api/health` stayed healthy
 - `npm run training-data:curate -- fixtures/training/q-defsec-curation.example.json` produced run `cur-fnv1a-b7a9289b` with `969` accepted files, and `python training/q/build_q_text_dataset.py ...` shaped those records into `.training-output/q/q-train-cur-fnv1a-b7a9289b.jsonl`
 
 What this unlocks next:
-- real `Q` fine-tuning against the governed corpus path instead of continued alias-only work
+- real `Q` fine-tuning against the governed corpus path instead of continued identity-only cleanup work
 - structured-output evaluation gates for `Q` so route/reason/commit compliance becomes a hard release surface
 - a targeted fix pass for the fresh `60s` benchmark regression on Windows instead of pretending the older soak run already answered that question
 
@@ -706,7 +760,7 @@ Why it matters:
 
 Evidence:
 - `npm run typecheck`, `npm run build`, and `npm run benchmark:gate:all` passed again on `2026-04-13` after the peer-refresh and eviction pass
-- a live three-process drill on `127.0.0.1:8941-8943` plus a mock Ollama endpoint on `127.0.0.1:19170` proved the full path:
+- a live three-process drill on `127.0.0.1:8941-8943` plus a mock local Q backend on `127.0.0.1:19170` proved the full path:
 - the healthy signed peer on `8942` imported remote worker `worker-local-127-0-0-1-8942-slot-1`, which was recorded as `executionProfile=remote` and won `remote_required` placement with reason `remote-capable · locality local:knightly · identity verified · model demo-model · latency 21.0ms · cost $0.42/h · watch`
 - the bad-secret peer on `8943` was rejected with `Federation node identity verification failed: unexpected key 6fa91d17b766`
 - after the healthy peer process was killed, the peer aged into `faulted`, the remote node disappeared from `/api/nodes`, remote workers disappeared from `/api/intelligence/workers`, and the next `remote_required` cognition run failed closed with `No eligible remote execution worker available`
@@ -815,7 +869,7 @@ What this unlocks next:
 #### Parallel swarm execution stopped dead-ending on a single local worker lease
 
 What changed:
-- the local execution plane no longer models one host as one leaseable worker record; it can now materialize a bounded pool of local worker slots on the same Ollama endpoint
+- the local execution plane no longer models one host as one leaseable worker record; it can now materialize a bounded pool of local worker slots on the same local Q backend endpoint
 - parallel swarm reservation now cleans up partially reserved leases if a later reservation fails, instead of stranding earlier leases until TTL expiry
 - benchmark coverage now proves that three distinct local slot leases can be reserved on one host, and live guarded-swarm smoke now proves the non-guard turns actually launch under one parallel batch instead of failing on the second reservation
 
@@ -864,7 +918,7 @@ What changed:
 - cognition execution now reserves a concrete intelligence worker before it runs instead of only scoring workers as an advisory side channel
 - worker reservations are lease-backed and visible in the registry, so duplicate assignment pressure is explicit and the same worker cannot be handed out twice concurrently
 - cognitive executions now persist placement metadata including `sessionId`, worker id/label/host, execution profile, placement reason, score, and the concrete execution endpoint
-- remote worker placement now uses a real but previously overlooked substrate: a worker can advertise an Ollama-compatible endpoint, and the runtime can place cognition there directly without inventing a separate remote orchestration RPC
+- remote worker placement now uses a real but previously overlooked substrate: a worker can advertise a Q-runtime-compatible endpoint, and the runtime can place cognition there directly without inventing a separate remote orchestration RPC
 - actuation dispatch and mediated orchestration no longer fall back to the newest global execution or frame when the caller omits sources; they now require explicit session binding or fail closed on mismatch
 
 Why it matters:
@@ -1155,7 +1209,7 @@ Evidence:
 - the dashboard and TUI now surface `snapshot.executionSchedules[0]`
 
 What this unlocks next:
-- schedule-aware multi-agent execution across heterogeneous backends instead of a single Ollama family
+- schedule-aware multi-agent execution across heterogeneous backends instead of a single local Q backend family
 - schedule pressure feeding back into route, reason, and future locality-aware orchestration
 - richer experiments where cognition width becomes a controlled systems variable instead of an accident of implementation
 

@@ -14,7 +14,7 @@ def repo_root() -> Path:
 
 
 def load_json(path_value: Path) -> dict[str, Any]:
-    payload = json.loads(path_value.read_text(encoding="utf-8"))
+    payload = json.loads(path_value.read_text(encoding="utf-8-sig"))
     if not isinstance(payload, dict):
         raise ValueError(f"{path_value} must contain a JSON object.")
     return payload
@@ -101,6 +101,13 @@ def materialize_json_surface(script_path: Path, *args: str) -> None:
     subprocess.run([sys.executable, str(script_path), *args], cwd=str(repo_root()), check=True)
 
 
+def run_npm_script(root: Path, script_name: str) -> None:
+    npm_bin = shutil.which("npm.cmd") or shutil.which("npm")
+    if not npm_bin:
+        raise FileNotFoundError("npm was not found in PATH.")
+    subprocess.run([npm_bin, "run", script_name], cwd=str(root), check=True)
+
+
 def normalize_path_text(root: Path, path_value: str | None) -> str | None:
     if not path_value:
         return None
@@ -179,6 +186,7 @@ def render_markdown(summary: dict[str, Any]) -> str:
         "## Promotion State",
         "",
         f"- Benchmark corpus already in active mix: `{summary['active']['benchmarkCorpusIncluded']}`",
+        f"- Failure corpus already in active mix: `{summary['active']['failureCorpusIncluded']}`",
         f"- Active mix rows: `{summary['active']['trainDatasetRowCount']}`",
         f"- Active mix manifest: `{summary['active']['mixManifestPath']}`",
         f"- Active session manifest: `{summary['active']['sessionManifestPath']}`",
@@ -206,8 +214,8 @@ def render_markdown(summary: dict[str, Any]) -> str:
             "",
             "## Truth Boundary",
             "",
-            "- A promoted state means the benchmark corpus has been pulled into the locked Q training mix and the hybrid session has been restamped against that mix.",
-            "- An already-current state means the active Q bundle already carries the current benchmark corpus hash, so the repo should not fabricate a new bench version just to look active.",
+            "- A promoted state means the benchmark corpus and any available strict failure corpus have been pulled into the locked Q training mix and the hybrid session has been restamped against that mix.",
+            "- An already-current state means the active Q bundle already carries the current benchmark corpus hash plus any available strict failure corpus hash, so the repo should not fabricate a new bench version just to look active.",
             "- This surface tracks preparation and locking only. It does not imply a local train or cloud fine-tune has executed.",
         ]
     )
@@ -229,6 +237,16 @@ def main() -> None:
         help="Benchmark corpus manifest path",
     )
     parser.add_argument(
+        "--failure-jsonl",
+        default=str(root / ".training-output" / "q" / "q-failure-corpus.jsonl"),
+        help="Strict failure corpus JSONL path",
+    )
+    parser.add_argument(
+        "--failure-manifest",
+        default=str(root / "docs" / "wiki" / "Q-Failure-Corpus.json"),
+        help="Strict failure corpus manifest path",
+    )
+    parser.add_argument(
         "--latest-lock",
         default=str(root / ".training-output" / "q" / "latest-training-lock.json"),
         help="Latest Q training lock path",
@@ -247,6 +265,8 @@ def main() -> None:
 
     benchmark_jsonl_path = Path(args.benchmark_jsonl).resolve()
     benchmark_manifest_path = Path(args.benchmark_manifest).resolve()
+    failure_jsonl_path = Path(args.failure_jsonl).resolve()
+    failure_manifest_path = Path(args.failure_manifest).resolve()
     latest_lock_path = Path(args.latest_lock).resolve()
     latest_session_path = Path(args.latest_session).resolve()
     output_manifest_path = Path(args.manifest_output).resolve()
@@ -262,6 +282,10 @@ def main() -> None:
     benchmark_manifest = load_json(benchmark_manifest_path) if benchmark_manifest_path.exists() else {}
     benchmark_sha = sha256_file(benchmark_jsonl_path)
     benchmark_row_count = count_jsonl_rows(benchmark_jsonl_path)
+    failure_manifest = load_json(failure_manifest_path) if failure_manifest_path.exists() else {}
+    failure_corpus_available = failure_jsonl_path.exists()
+    failure_sha = sha256_file(failure_jsonl_path) if failure_corpus_available else None
+    failure_row_count = count_jsonl_rows(failure_jsonl_path) if failure_corpus_available else 0
     latest_lock = load_json(latest_lock_path)
     latest_session = load_json(latest_session_path)
 
@@ -272,8 +296,11 @@ def main() -> None:
 
     current_supplemental = current_mix_manifest.get("supplemental", [])
     benchmark_rel_path = relative_path(root, benchmark_jsonl_path)
+    failure_rel_path = relative_path(root, failure_jsonl_path)
     benchmark_included = False
     benchmark_sha_match = False
+    failure_included = not failure_corpus_available
+    failure_sha_match = not failure_corpus_available
     recorded_base_sha = str(current_mix_manifest.get("base", {}).get("sha256", "")).strip()
     supplemental_paths: list[Path] = []
     current_base_path = resolve_repo_path(str(current_mix_manifest.get("base", {}).get("path", "")).strip())
@@ -291,6 +318,9 @@ def main() -> None:
         if relative_path(root, supplemental_path) == benchmark_rel_path:
             benchmark_included = True
             benchmark_sha_match = str(entry.get("sha256", "")).strip() == benchmark_sha
+        if failure_corpus_available and relative_path(root, supplemental_path) == failure_rel_path:
+            failure_included = True
+            failure_sha_match = str(entry.get("sha256", "")).strip() == failure_sha
 
     active_session_manifest_path = resolve_repo_path(str(latest_session.get("manifestPath", "")).strip())
     if active_session_manifest_path is None or not active_session_manifest_path.exists():
@@ -309,9 +339,11 @@ def main() -> None:
     }
     release["buildId"] = f"{release['packageVersion']}+{release['gitShortSha']}"
 
+    current_inputs_are_current = benchmark_included and benchmark_sha_match and failure_included and failure_sha_match
+
     summary: dict[str, Any] = {
         "generatedAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
-        "status": "already-current" if benchmark_included and benchmark_sha_match and not args.force else "promoted",
+        "status": "already-current" if current_inputs_are_current and not args.force else "promoted",
         "release": release,
         "benchmarkCorpus": {
             "jsonlPath": relative_path(root, benchmark_jsonl_path),
@@ -320,11 +352,20 @@ def main() -> None:
             "rowCount": benchmark_row_count,
             "manifestRecordCount": benchmark_manifest.get("recordCount"),
         },
+        "failureCorpus": {
+            "available": failure_corpus_available,
+            "jsonlPath": relative_path(root, failure_jsonl_path),
+            "manifestPath": relative_path(root, failure_manifest_path) if failure_manifest_path.exists() else None,
+            "sha256": failure_sha,
+            "rowCount": failure_row_count,
+            "manifestRecordCount": failure_manifest.get("recordCount"),
+        },
         "active": {
             "bundleId": latest_lock.get("bundleId"),
             "runName": active_run_name,
             "sessionId": active_session_id,
             "benchmarkCorpusIncluded": benchmark_included and benchmark_sha_match,
+            "failureCorpusIncluded": failure_included and failure_sha_match,
             "trainDatasetRowCount": latest_lock.get("run", {}).get("trainDatasetRowCount"),
             "mixManifestPath": relative_path(root, current_mix_manifest_path),
             "sessionManifestPath": relative_path(root, active_session_manifest_path),
@@ -363,7 +404,17 @@ def main() -> None:
 
     deduped_supplemental: list[Path] = []
     seen_rel_paths: set[str] = {relative_path(root, base_dataset_path)}
-    for supplemental_path in supplemental_paths + [benchmark_jsonl_path]:
+    identity_seed_path = root / "training" / "q" / "q_harness_identity_seed.json"
+    orchestration_seed_path = root / "training" / "q" / "q_immaculate_reasoning_seed.json"
+    seed_inputs: list[Path] = []
+    if identity_seed_path.exists():
+        seed_inputs.append(identity_seed_path)
+    if orchestration_seed_path.exists():
+        seed_inputs.append(orchestration_seed_path)
+    promotion_inputs = seed_inputs + supplemental_paths + [benchmark_jsonl_path]
+    if failure_corpus_available:
+        promotion_inputs.append(failure_jsonl_path)
+    for supplemental_path in promotion_inputs:
         rel = relative_path(root, supplemental_path)
         if rel in seen_rel_paths:
             continue
@@ -389,7 +440,9 @@ def main() -> None:
     subprocess.run(mixture_command, cwd=str(root), check=True)
 
     new_config = dict(current_config)
+    model_name = str(new_config.get("model_name") or "Q").strip()
     new_config["run_name"] = promotion_run_name
+    new_config["model_name"] = model_name
     new_config["train_dataset_path"] = relative_path(root, new_mix_output_path)
     new_config["output_dir"] = derive_output_dir(str(current_config.get("output_dir", "")), promotion_run_name)
     new_config["training_lock_path"] = ".training-output/q/latest-training-lock.json"
@@ -490,6 +543,7 @@ def main() -> None:
         "runName": refreshed_lock.get("run", {}).get("runName"),
         "sessionId": refreshed_session.get("sessionId"),
         "benchmarkCorpusIncluded": True,
+        "failureCorpusIncluded": failure_corpus_available,
         "trainDatasetRowCount": refreshed_lock.get("run", {}).get("trainDatasetRowCount"),
         "mixManifestPath": relative_path(root, new_mix_manifest_path),
         "sessionManifestPath": relative_path(root, new_session_manifest_path),
@@ -503,6 +557,7 @@ def main() -> None:
 
     save_json(output_manifest_path, summary)
     save_markdown(output_markdown_path, render_markdown(summary))
+    run_npm_script(root, "release:surface")
     print(json.dumps(summary, indent=2))
 
 

@@ -15,7 +15,20 @@ import {
   type OllamaChatMessage
 } from "./ollama.js";
 import { resolveReleaseMetadata } from "./release-metadata.js";
-import { getQModelAlias, getQModelTarget, isQAlias, isQTargetModel, matchesModelReference, truthfulModelLabel } from "./q-model.js";
+import {
+  buildCanonicalQIdentityAnswer,
+  canonicalizeQIdentityAnswer,
+  detectQIdentityQuestion,
+  getQDeveloperName,
+  getQFoundationModelName,
+  getQIdentityInstruction,
+  getQIdentitySummary,
+  getQLeadName,
+  getQModelName,
+  getQModelTarget,
+  getImmaculateHarnessName,
+  matchesModelReference,
+} from "./q-model.js";
 import { createFailureCircuitBreaker } from "./q-resilience.js";
 
 type GatewayPrincipal = {
@@ -58,7 +71,7 @@ const DEFAULT_TIMEOUT_MS = Math.max(
   Number(process.env.IMMACULATE_Q_GATEWAY_TIMEOUT_MS ?? process.env.IMMACULATE_OLLAMA_CONTROL_TIMEOUT_MS ?? 120_000) ||
     120_000
 );
-const PRIMARY_MODEL = getQModelTarget();
+const Q_MODEL_TARGET = getQModelTarget();
 const PRIMARY_FAILURE_THRESHOLD = Math.max(
   1,
   Number(process.env.IMMACULATE_Q_GATEWAY_PRIMARY_FAILURE_THRESHOLD ?? 2) || 2
@@ -182,9 +195,9 @@ function normalizeAllowedOrigins(raw: string | undefined): string[] {
 }
 
 function normalizeModelSelection(value: string | undefined): string {
-  const requested = value?.trim() || getQModelAlias();
-  if (isQAlias(requested) || isQTargetModel(requested)) {
-    return getQModelTarget();
+  const requested = value?.trim() || getQModelName();
+  if (requested === getQModelName()) {
+    return Q_MODEL_TARGET;
   }
   throw new Error(`Unsupported model: ${requested}`);
 }
@@ -263,6 +276,24 @@ function sanitizeGatewayResponse(value: string): string {
   return trimmed;
 }
 
+function latestUserPrompt(messages: OllamaChatMessage[]): string | undefined {
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index];
+    if (message?.role === "user" && message.content.trim().length > 0) {
+      return message.content.trim();
+    }
+  }
+  return undefined;
+}
+
+function buildGatewayMessages(messages: OllamaChatMessage[]): OllamaChatMessage[] {
+  const identityMessage: OllamaChatMessage = {
+    role: "system",
+    content: `${getQIdentityInstruction()} Keep answers grounded, truthful, and consistent with your actual deployment state. If the user asks who you are, who developed you, who led the project, how you relate to Immaculate, or what public model name they should see, answer canonically with Q, Arobi Technology Alliance, Gaetano Comparcola, Gemma 4, and Immaculate.`
+  };
+  return [identityMessage, ...messages];
+}
+
 function getPrincipal(request: FastifyRequest): GatewayPrincipal | undefined {
   return principals.get(request.raw);
 }
@@ -277,12 +308,35 @@ async function runGatewayChatAttempt(options: {
   return runOllamaChatCompletion({
     endpoint: OLLAMA_URL,
     model: options.model,
-    messages: options.messages,
+    messages: buildGatewayMessages(options.messages),
     temperature: options.temperature,
     maxTokens: options.maxTokens,
     timeoutMs: options.timeoutMs,
     think: false
   });
+}
+
+function attachQResponseHeaders(
+  reply: FastifyReply,
+  circuitState: ReturnType<typeof qPrimaryCircuit.snapshot>,
+  primaryFailureClass?: string,
+  primaryResult?: OllamaChatCompletionResult,
+  servedResult?: OllamaChatCompletionResult
+): void {
+  reply.header("x-q-model-name", getQModelName());
+  reply.header("x-q-foundation-model", getQFoundationModelName());
+  reply.header("x-q-developer", getQDeveloperName());
+  reply.header("x-q-lead", getQLeadName());
+  reply.header("x-q-circuit-state", circuitState.state);
+  if (primaryFailureClass) {
+    reply.header("x-q-failure-class", primaryFailureClass);
+  }
+  if (primaryResult) {
+    reply.header("x-q-latency-ms", String(primaryResult.latencyMs));
+  }
+  if (servedResult) {
+    reply.header("x-upstream-latency-ms", String(servedResult.latencyMs));
+  }
 }
 
 await app.register(cors, {
@@ -370,9 +424,14 @@ app.get("/health", async () => {
       gitShortSha: releaseMetadata.gitShortSha
     },
     gateway: "q",
-    alias: getQModelAlias(),
-    model: truthfulModelLabel(PRIMARY_MODEL),
-    modelReady: installedModelNames.some((installedModelName) => matchesModelReference(installedModelName, PRIMARY_MODEL)),
+    modelName: getQModelName(),
+    model: getQModelName(),
+    developer: getQDeveloperName(),
+    lead: getQLeadName(),
+    foundationModel: getQFoundationModelName(),
+    harness: getImmaculateHarnessName(),
+    identitySummary: getQIdentitySummary(),
+    modelReady: installedModelNames.some((installedModelName) => matchesModelReference(installedModelName, Q_MODEL_TARGET)),
     circuit,
     authMode: "api-key",
     host: GATEWAY_HOST,
@@ -391,8 +450,13 @@ app.get("/api/q/info", async (request, reply) => {
 
   return {
     enabled: true,
-    alias: getQModelAlias(),
-    model: truthfulModelLabel(PRIMARY_MODEL),
+    modelName: getQModelName(),
+    model: getQModelName(),
+    developer: getQDeveloperName(),
+    lead: getQLeadName(),
+    foundationModel: getQFoundationModelName(),
+    harness: getImmaculateHarnessName(),
+    identitySummary: getQIdentitySummary(),
     release: {
       buildId: releaseMetadata.buildId,
       gitShortSha: releaseMetadata.gitShortSha,
@@ -410,11 +474,11 @@ app.get("/v1/models", async () => ({
   object: "list",
   data: [
     {
-      id: getQModelAlias(),
+      id: getQModelName(),
       object: "model",
-      owned_by: "immaculate",
+      owned_by: getQDeveloperName(),
       metadata: {
-        providerModel: truthfulModelLabel(PRIMARY_MODEL)
+        foundationModel: getQFoundationModelName()
       }
     }
   ]
@@ -444,16 +508,50 @@ app.post("/v1/chat/completions", async (request, reply) => {
 
   const temperature = typeof body.temperature === "number" ? body.temperature : 0.2;
   const maxTokens = typeof body.max_tokens === "number" ? body.max_tokens : 256;
+  const userPrompt = latestUserPrompt(messages);
+  const canonicalIdentityKind = detectQIdentityQuestion(userPrompt);
+  if (canonicalIdentityKind) {
+    const circuit = qPrimaryCircuit.snapshot();
+    attachQResponseHeaders(reply, circuit);
+    return {
+      id: `chatcmpl-${Date.now().toString(36)}`,
+      object: "chat.completion",
+      created: Math.floor(Date.now() / 1000),
+      model: getQModelName(),
+      foundationModel: getQFoundationModelName(),
+      developer: getQDeveloperName(),
+      lead: getQLeadName(),
+      harness: getImmaculateHarnessName(),
+      circuitState: circuit.state,
+      latencyMs: 0,
+      thinkingDetected: false,
+      choices: [
+        {
+          index: 0,
+          message: {
+            role: "assistant",
+            content: buildCanonicalQIdentityAnswer(canonicalIdentityKind)
+          },
+          finish_reason: "stop"
+        }
+      ],
+      usage: {
+        prompt_tokens: 0,
+        completion_tokens: 0,
+        total_tokens: 0
+      }
+    };
+  }
+
   const primaryDecision = qPrimaryCircuit.beforeRequest();
-  const primaryModel = PRIMARY_MODEL;
+  const qModel = Q_MODEL_TARGET;
   let primaryResult: OllamaChatCompletionResult | undefined;
   let primaryFailureClass: string | undefined = primaryDecision.reason;
-  let servedModel = primaryModel;
   let servedResult: OllamaChatCompletionResult | undefined;
 
   if (primaryDecision.allowPrimary) {
     primaryResult = await runGatewayChatAttempt({
-      model: primaryModel,
+      model: qModel,
       messages,
       temperature,
       maxTokens,
@@ -469,19 +567,7 @@ app.post("/v1/chat/completions", async (request, reply) => {
   }
 
   const circuit = qPrimaryCircuit.snapshot();
-  reply.header("x-q-alias", getQModelAlias());
-  reply.header("x-q-primary-model", truthfulModelLabel(primaryModel));
-  reply.header("x-provider-model", truthfulModelLabel(servedModel));
-  reply.header("x-q-circuit-state", circuit.state);
-  if (primaryFailureClass) {
-    reply.header("x-q-primary-failure-class", primaryFailureClass);
-  }
-  if (primaryResult) {
-    reply.header("x-q-primary-latency-ms", String(primaryResult.latencyMs));
-  }
-  if (servedResult) {
-    reply.header("x-upstream-latency-ms", String(servedResult.latencyMs));
-  }
+  attachQResponseHeaders(reply, circuit, primaryFailureClass, primaryResult, servedResult);
 
   if (!servedResult || servedResult.failureClass) {
     reply.code(503);
@@ -489,26 +575,31 @@ app.post("/v1/chat/completions", async (request, reply) => {
       error: "q_upstream_failure",
       failureClass: servedResult?.failureClass ?? primaryFailureClass ?? "http_error",
       message: servedResult?.responsePreview ?? primaryResult?.responsePreview ?? "Q upstream failed.",
-      model: getQModelAlias(),
-      providerModel: truthfulModelLabel(servedModel),
-      primaryModel: truthfulModelLabel(primaryModel),
+      model: getQModelName(),
+      foundationModel: getQFoundationModelName(),
+      developer: getQDeveloperName(),
+      lead: getQLeadName(),
+      harness: getImmaculateHarnessName(),
       circuitState: circuit.state,
-      primaryFailureClass,
       latencyMs: servedResult?.latencyMs ?? primaryResult?.latencyMs ?? 0,
       thinkingDetected: servedResult?.thinkingDetected ?? primaryResult?.thinkingDetected ?? false
     };
   }
 
-  const content = sanitizeGatewayResponse(servedResult.response);
+  const content = canonicalizeQIdentityAnswer(
+    userPrompt,
+    sanitizeGatewayResponse(servedResult.response)
+  );
 
   return {
     id: `chatcmpl-${Date.now().toString(36)}`,
     object: "chat.completion",
     created: Math.floor(Date.now() / 1000),
-    model: getQModelAlias(),
-    providerModel: truthfulModelLabel(servedModel),
-    primaryModel: truthfulModelLabel(primaryModel),
-    primaryFailureClass,
+    model: getQModelName(),
+    foundationModel: getQFoundationModelName(),
+    developer: getQDeveloperName(),
+    lead: getQLeadName(),
+    harness: getImmaculateHarnessName(),
     circuitState: circuit.state,
     latencyMs: servedResult.latencyMs,
     thinkingDetected: servedResult.thinkingDetected,

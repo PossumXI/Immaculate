@@ -120,7 +120,7 @@ OCI private Q gateway bundle installed.
 
 Next steps:
   1. Review ${ENV_TARGET}
-  2. Point IMMACULATE_OLLAMA_URL at the private Ollama host reachable from the gateway node
+  2. Point IMMACULATE_OLLAMA_URL at the private Q backend host reachable from the gateway node
   3. Create at least one Q API key with: npm run q:keys -- create --label oci-client
   4. Start the service with: sudo systemctl start ${SERVICE_NAME}
   5. Verify from a private client with: curl http://${IMMACULATE_Q_GATEWAY_PRIVATE_BIND_IP:-10.0.3.10}:${IMMACULATE_Q_GATEWAY_PUBLISHED_PORT:-8788}/health

@@ -20,6 +20,24 @@ def _normalize_model_name(value: str | None) -> str:
     return value.split("/", 1)[1] if "/" in value else value
 
 
+def _normalize_route(value: str | None) -> str | None:
+    candidate = " ".join(str(value or "").strip().lower().split())
+    if candidate in {"reflex", "cognitive", "guarded", "suppressed"}:
+        return candidate
+    for route in ("guarded", "suppressed", "cognitive", "reflex"):
+        if route in candidate:
+            return route
+    if "guard" in candidate:
+        return "guarded"
+    if "suppress" in candidate or "block" in candidate:
+        return "suppressed"
+    if "cognit" in candidate or "repair" in candidate or "stabil" in candidate:
+        return "cognitive"
+    if "direct" in candidate:
+        return "reflex"
+    return None
+
+
 def _strip_code_fences(value: str) -> str:
     text = value.strip()
     if text.startswith("```"):
@@ -51,7 +69,7 @@ def _extract_json_object(value: str) -> dict[str, Any] | None:
 def _normalize_structured_result(value: dict[str, Any] | None) -> dict[str, str] | None:
     if not isinstance(value, dict):
         return None
-    route = str(value.get("route", "")).strip().lower()
+    route = _normalize_route(str(value.get("route", "")).strip())
     reason = " ".join(str(value.get("reason", "")).strip().split())
     commit = " ".join(str(value.get("commit", "")).strip().split())
     if route not in {"reflex", "cognitive", "guarded", "suppressed"}:
@@ -138,6 +156,39 @@ class HarborQAgent(BaseAgent):
         )
         return _normalize_structured_result(_extract_json_object(repaired))
 
+    async def _refine_structured_output(
+        self,
+        task_payload: dict[str, Any],
+        structured: dict[str, str],
+    ) -> dict[str, str] | None:
+        refined = await self._call_q(
+            [
+                {
+                    "role": "system",
+                    "content": (
+                        "You rewrite prior Q outputs into stricter operator JSON only. "
+                        "Return exactly one JSON object with keys route, reason, commit. "
+                        "Allowed routes: reflex, cognitive, guarded, suppressed. "
+                        "Reason and commit must each be 24 words or fewer. "
+                        "Use only facts supplied in the task payload. "
+                        "If ACKs are late, mismatched, or replayed, say so explicitly. "
+                        "If the bridge is degraded but direct HTTP/2 is healthy and allowed, say direct HTTP/2 is the trusted lane. "
+                        "Keep delivery state truthful and fail-closed; do not invent facts."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        "Rewrite this structured Q output into stronger operator-grade JSON without changing the underlying facts.\n\n"
+                        f"TASK PAYLOAD\n{json.dumps(task_payload, indent=2)}\n\n"
+                        f"CURRENT OUTPUT\n{json.dumps(structured, indent=2)}"
+                    ),
+                },
+            ],
+            max_tokens=220,
+        )
+        return _normalize_structured_result(_extract_json_object(refined))
+
     async def _write_response(self, environment: BaseEnvironment, response: dict[str, str]) -> None:
         encoded = base64.b64encode(json.dumps(response, indent=2).encode("utf-8")).decode("ascii")
         command = (
@@ -163,7 +214,10 @@ class HarborQAgent(BaseAgent):
         }
 
         system_prompt = (
-            "You are Q operating as a governed terminal task agent. "
+            "You are Q, the custom model developed by Arobi Technology Alliance and built on Gemma 4. "
+            "Gaetano Comparcola is the founder, CEO, lead architect, and lead engineer for the project. "
+            "You operate inside Immaculate, the governed orchestration and control system around you. "
+            "You are operating as a governed terminal task agent. "
             "Read the task instruction and any attached JSON context. "
             "Return exactly one JSON object with keys route, reason, commit. "
             "Allowed route values: reflex, cognitive, guarded, suppressed. "
@@ -172,7 +226,8 @@ class HarborQAgent(BaseAgent):
             "Commit must state the concrete next operator action that keeps the ledger truthful. "
             "If an ACK is late, mismatched, or replayed, say so explicitly instead of generic caution language. "
             "If the bridge is degraded but direct HTTP/2 is healthy and policy-allowed, say that direct HTTP/2 is the trusted path. "
-            "Stay fail-closed and do not invent facts."
+            "Stay fail-closed and do not invent facts. "
+            "Route must be one canonical label only, not a sentence."
         )
         example_messages = [
             {
@@ -249,6 +304,9 @@ class HarborQAgent(BaseAgent):
             repaired = structured is not None
         if structured is None:
             raise RuntimeError("Q did not produce a valid structured response.")
+        refined = await self._refine_structured_output(task_payload, structured)
+        if refined is not None:
+            structured = refined
 
         await self._write_response(environment, structured)
         (self.logs_dir / "q-agent-output.json").write_text(

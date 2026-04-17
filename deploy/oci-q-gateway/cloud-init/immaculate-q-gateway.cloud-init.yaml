@@ -58,5 +58,5 @@ final_message: |
   Next steps:
     1. Clone Immaculate into /opt/immaculate/src
     2. Copy deploy/oci-q-gateway/env/immaculate-q-gateway.env.example to /etc/immaculate/immaculate-q-gateway.env
-    3. Point IMMACULATE_OLLAMA_URL at the private Ollama host reachable from the gateway node
+    3. Point IMMACULATE_OLLAMA_URL at the private Q backend host reachable from the gateway node
     4. Run sudo bash deploy/oci-q-gateway/scripts/install-oci-q-gateway.sh --enable

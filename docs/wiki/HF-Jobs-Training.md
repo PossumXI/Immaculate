@@ -2,17 +2,17 @@
 
 This page records the real Hugging Face Jobs workaround path for the active Q and Immaculate cloud bundle.
 
-- Generated: `2026-04-17T00:43:28Z`
-- Release: `0.1.0+45280d5`
-- Session id: `q-hybrid-harbor-opt-2384cf5-bench-v1`
+- Generated: `2026-04-17T10:09:58Z`
+- Release: `0.1.0+848d44f`
+- Session id: `q-hybrid-harbor-opt-2384cf5-bench-v13`
 - Authenticated user: `TruLumecreator`
 - HF CLI path: `C:\Users\Knight\Desktop\Immaculate\Immaculate-push-harbor\.tools\foundry-venv\Scripts\hf.exe`
 
 ## Bundle Staging
 
 - Dataset repo: `TruLumecreator/immaculate-q-cloud-bundles`
-- Archive path: `sessions/q-hybrid-harbor-opt-2384cf5-bench-v1/q-hybrid-harbor-opt-2384cf5-bench-v1-cloud-bundle.tar.gz`
-- Manifest path: `sessions/q-hybrid-harbor-opt-2384cf5-bench-v1/bundle-manifest.json`
+- Archive path: `sessions/q-hybrid-harbor-opt-2384cf5-bench-v13/q-hybrid-harbor-opt-2384cf5-bench-v13-cloud-bundle.tar.gz`
+- Manifest path: `sessions/q-hybrid-harbor-opt-2384cf5-bench-v13/bundle-manifest.json`
 - Bundle staged: `True`
 
 ## Jobs Surface
@@ -26,15 +26,12 @@ This page records the real Hugging Face Jobs workaround path for the active Q an
 
 ## Smoke Launch
 
-- Attempted: `True`
+- Attempted: `False`
 - Ready: `False`
 - Flavor: `cpu-basic`
 - Timeout: `5m`
 - Job id: `n/a`
-- Blocker: Error: Client error '402 Payment Required' for url 'https://huggingface.co/api/jobs/TruLumecreator' (Request ID: Root=1-69e1822f-4a039ab85d756a7809542f0c;9f8feb26-3fba-4852-9a4d-95d543987590)
-For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402
-
-Pre-paid credit balance is insufficient - add more credits to your account to use Jobs.
+- Blocker: None
 
 ## Truth Boundary
 

@@ -11,6 +11,7 @@ In plain English:
 
 - the private harness route is for operators already inside Immaculate
 - the dedicated Q gateway is the smaller, safer edge for Q users
+- both surfaces serve the same real Q product, built on Gemma 4 and published under one model name only: `Q`
 
 Current build and bundle identity:
 
@@ -50,7 +51,7 @@ This gateway is the safer deployment surface for external Q users because it:
 - exposes only four routes
 - keeps federation, actuation, benchmarks, and operator APIs off the public edge
 - uses the same hashed Q key store and per-key rate/concurrency limits
-- trips open on repeated primary-model failures and fail-closes instead of silently switching the user onto a second model lane
+- trips open on repeated Q-upstream failures and returns explicit failure instead of masking the broken Q lane
 
 If you want one sentence: the gateway is the “public front desk” for Q, while the harness route is the “staff-only back room” inside the full control plane.
 
@@ -100,8 +101,9 @@ Per-key overrides are stored with the key record at creation time.
 
 ## Live Gateway Validation
 
-Fresh loopback validation on `2026-04-14` against the dedicated gateway at
-`http://127.0.0.1:8900` proved:
+The latest tracked loopback validation proves the dedicated gateway contract is
+green on the current build. The exact port, latency, and build stamp live on
+[[Q-Gateway-Validation]]. The stable truth is:
 
 - `GET /health` returned `200`
 - unauthenticated `POST /v1/chat/completions` returned `401`
@@ -109,9 +111,10 @@ Fresh loopback validation on `2026-04-14` against the dedicated gateway at
 - authenticated `GET /v1/models` returned `200`
 - authenticated `POST /v1/chat/completions` returned `200`
 - the served response was sanitized to final-answer content:
-  `Gateway reports healthy status.`
+  `Gateway operational, healthy now.`
 - the concurrency check returned `429 concurrency_limited`
-- measured gateway overhead above upstream latency was about `99.92 ms`
+- the gateway added only a bounded amount of overhead above the upstream Q lane,
+  and the current measured value is published on [[Q-Gateway-Validation]]
 
 Tracked evidence lives in:
 
@@ -126,7 +129,7 @@ The dedicated gateway now has one honest upstream-failure loop:
 - the primary Q lane can accumulate consecutive failures
 - once the configured threshold is reached, the primary circuit opens
 - while the circuit is open, requests stop hammering the dead primary
-- the gateway stays explicit about the failure class instead of silently switching the request onto a different model lane
+- the gateway stays explicit about the failure class and returns it directly
 
 ## OCI Private Hosting
 
@@ -154,7 +157,7 @@ serves the full private harness.
 - The harness Q edge is also still real and still private.
 - The gateway contract proof, the gateway-to-substrate seam benchmark, and the live Q API audit loop are now three separate evidence pages on purpose; they answer different questions and should not be collapsed into one vague “Q is working” claim.
 - The gateway is private-OCI-first, not internet-public by default.
-- The gateway fail-closes on direct-Q upstream failures and keeps that fact explicit in headers and response metadata.
+- The gateway keeps direct-Q upstream failure state explicit in headers and response metadata and fail-closes instead of silently rewriting the product identity.
 - No real OCI instance was launched from this pass.
 - No completed cloud fine-tune run for `Q` is claimed from this pass.
 - Direct `Q` is now green on the structured route/reason/commit readiness gate

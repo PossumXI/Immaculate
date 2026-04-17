@@ -1,6 +1,7 @@
 import path from "node:path";
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
+import { getQDeveloperName, getQFoundationModelName, getQModelName } from "./q-model.js";
 import { resolveReleaseMetadata, type ReleaseMetadata } from "./release-metadata.js";
 
 type ReceiptFlags = {
@@ -73,9 +74,13 @@ type SubmissionMetadata = {
   agentDisplayName?: string;
   agentOrgDisplayName?: string;
   modelName?: string;
-  modelProvider?: string;
+  foundationModel?: string;
   modelDisplayName?: string;
   modelOrgDisplayName?: string;
+};
+
+type ExistingTerminalBenchReceiptFile = {
+  submission?: SubmissionMetadata;
 };
 
 type TerminalBenchReceiptReport = {
@@ -217,6 +222,14 @@ async function readJsonFile<T>(filePath: string): Promise<T> {
   return JSON.parse(await readFile(filePath, "utf8")) as T;
 }
 
+async function readOptionalJsonFile<T>(filePath: string): Promise<T | undefined> {
+  try {
+    return await readJsonFile<T>(filePath);
+  } catch {
+    return undefined;
+  }
+}
+
 function parseMetadataYaml(payload: string): SubmissionMetadata {
   const metadata: SubmissionMetadata = {};
   for (const rawLine of payload.split(/\r?\n/u)) {
@@ -244,7 +257,7 @@ function parseMetadataYaml(payload: string): SubmissionMetadata {
         metadata.modelName = value;
         break;
       case "model_provider":
-        metadata.modelProvider = value;
+        metadata.foundationModel = value;
         break;
       case "model_display_name":
         metadata.modelDisplayName = value;
@@ -346,7 +359,7 @@ function renderMarkdown(report: TerminalBenchReceiptReport): string {
     `- Public task: \`${report.harbor.taskName ?? "unknown"}\``,
     `- Dataset ref: \`${report.harbor.datasetRef ?? "unknown"}\``,
     `- Harbor agent import path: \`${report.harbor.harborAgentImportPath ?? "unknown"}\``,
-    `- Harbor model: \`${report.harbor.harborModelName ?? "unknown"}\``,
+    `- Harbor model: \`${report.harbor.harborModelName ?? getQModelName()}\``,
     `- Harbor job name: \`${report.harbor.jobName}\``,
     `- Attempts: \`${report.harbor.attempts}\``,
     `- Concurrent trials: \`${report.harbor.concurrentTrials}\``,
@@ -370,9 +383,9 @@ function renderMarkdown(report: TerminalBenchReceiptReport): string {
     `- Agent display name: \`${report.submission.agentDisplayName ?? "unknown"}\``,
     `- Agent org: \`${report.submission.agentOrgDisplayName ?? "unknown"}\``,
     `- Agent URL: \`${report.submission.agentUrl ?? "unknown"}\``,
-    `- Model display name: \`${report.submission.modelDisplayName ?? report.submission.modelName ?? "unknown"}\``,
-    `- Model provider: \`${report.submission.modelProvider ?? "unknown"}\``,
-    `- Model org: \`${report.submission.modelOrgDisplayName ?? "unknown"}\``,
+    `- Model name: \`${report.submission.modelDisplayName ?? report.submission.modelName ?? getQModelName()}\``,
+    `- Foundation model: \`${report.submission.foundationModel ?? getQFoundationModelName()}\``,
+    `- Model org: \`${report.submission.modelOrgDisplayName ?? getQDeveloperName()}\``,
     `- Discussion state observed: \`${report.leaderboard.discussionState}\``,
     `- Merge state observed: \`${report.leaderboard.mergeState}\``,
     `- Submission commit verified: \`${report.leaderboard.commitVerified ? "yes" : "no"}\``,
@@ -421,7 +434,7 @@ async function main(): Promise<void> {
         "submissions",
         "terminal-bench",
         "2.0",
-        "q-harbor__q-gemma4-e4b",
+        "q-harbor__q",
         "metadata.yaml"
       ),
       parentCandidatePath(
@@ -430,23 +443,27 @@ async function main(): Promise<void> {
         "submissions",
         "terminal-bench",
         "2.0",
-        "q-harbor__q-gemma4-e4b",
+        "q-harbor__q",
         "metadata.yaml"
       )
     ]));
-  if (!metadataPath) {
-    throw new Error("Terminal-Bench metadata.yaml not found. Pass --metadata-path explicitly.");
-  }
-
-  const [release, result, config, metadataYaml] = await Promise.all([
+  const existingReceiptPath = path.join(WIKI_ROOT, "Terminal-Bench-Receipt.json");
+  const [release, result, config, metadataYaml, existingReceipt] = await Promise.all([
     resolveReleaseMetadata(),
     readJsonFile<HarborResultFile>(resultPath),
     readJsonFile<HarborConfigFile>(configPath),
-    readFile(metadataPath, "utf8")
+    metadataPath ? readFile(metadataPath, "utf8") : Promise.resolve<string | undefined>(undefined),
+    readOptionalJsonFile<ExistingTerminalBenchReceiptFile>(existingReceiptPath)
   ]);
 
-  const [evalKey, evalStats] = requireSingleEvalEntry(result);
-  const metadata = parseMetadataYaml(metadataYaml);
+  const [, evalStats] = requireSingleEvalEntry(result);
+  const metadata = {
+    ...(metadataYaml ? parseMetadataYaml(metadataYaml) : existingReceipt?.submission),
+    modelName: getQModelName(),
+    modelDisplayName: getQModelName(),
+    foundationModel: getQFoundationModelName(),
+    modelOrgDisplayName: getQDeveloperName()
+  };
   const report: TerminalBenchReceiptReport = {
     generatedAt: new Date().toISOString(),
     release,
@@ -465,7 +482,7 @@ async function main(): Promise<void> {
       datasetRef: config.datasets?.[0]?.ref,
       taskName: config.datasets?.[0]?.task_names?.[0],
       harborAgentImportPath: config.agents?.[0]?.import_path || undefined,
-      harborModelName: config.agents?.[0]?.model_name || undefined,
+      harborModelName: getQModelName(),
       attempts: config.n_attempts ?? result.n_total_trials ?? 0,
       concurrentTrials: config.n_concurrent_trials ?? 1,
       timeoutMultiplier: config.timeout_multiplier,

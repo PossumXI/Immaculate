@@ -4,6 +4,7 @@ import type {
   CognitiveExecution,
   ExecutionSchedule,
   EventEnvelope,
+  IntelligenceLayer,
   IngestedDatasetSummary,
   NeuroBandPower,
   NeuroFrameWindow,
@@ -15,6 +16,7 @@ import type {
 } from "@immaculate/core";
 import type { BidsDatasetFile, BidsDatasetRecord } from "./bids.js";
 import type { NwbSessionRecord } from "./nwb.js";
+import { truthfulModelLabel } from "./q-model.js";
 
 const REDACTED = "[redacted]";
 
@@ -365,6 +367,7 @@ export function projectNeuroFrameWindow(
 export function redactCognitiveExecution(execution: CognitiveExecution): CognitiveExecution {
   return {
     ...(execution as CognitiveExecutionTrace),
+    model: truthfulModelLabel(execution.model),
     objective: REDACTED,
     promptDigest: REDACTED,
     responsePreview: REDACTED,
@@ -381,17 +384,28 @@ export function projectCognitiveExecution(
 ): CognitiveExecution {
   const visibility = deriveVisibilityScope(consentScope);
   if (visibility === "intelligence" || visibility === "audit") {
-    return execution;
+    return {
+      ...execution,
+      model: truthfulModelLabel(execution.model)
+    };
   }
   if (visibility === "benchmark") {
     return {
       ...execution,
+      model: truthfulModelLabel(execution.model),
       objective: REDACTED,
       promptDigest: REDACTED,
       responsePreview: REDACTED
     };
   }
   return redactCognitiveExecution(execution);
+}
+
+export function projectIntelligenceLayer(layer: IntelligenceLayer): IntelligenceLayer {
+  return {
+    ...layer,
+    model: truthfulModelLabel(layer.model)
+  };
 }
 
 export function redactActuationOutput(output: ActuationOutput): ActuationOutput {
@@ -510,6 +524,7 @@ export function projectPhaseSnapshot(
     const snapshotWithConversations = snapshot as PhaseSnapshotWithConversations;
     return {
       ...snapshot,
+      intelligenceLayers: snapshot.intelligenceLayers.map((layer) => projectIntelligenceLayer(layer)),
       datasets: snapshot.datasets.map(redactDatasetSummary),
       neuroSessions: snapshot.neuroSessions.map(redactNeuroSessionSummary),
       neuroFrames: snapshot.neuroFrames.map((frame) => projectNeuroFrameWindow(frame, consentScope)),
@@ -531,7 +546,10 @@ export function projectPhaseSnapshot(
     };
   }
 
-  return redactPhaseSnapshot(snapshot);
+  return {
+    ...redactPhaseSnapshot(snapshot),
+    intelligenceLayers: snapshot.intelligenceLayers.map((layer) => projectIntelligenceLayer(layer))
+  };
 }
 
 function projectDerivedText(value: string): string {

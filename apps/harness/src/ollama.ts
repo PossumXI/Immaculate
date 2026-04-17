@@ -10,10 +10,24 @@ import {
   type PhaseSnapshot
 } from "@immaculate/core";
 import {
-  expandOllamaAliasSearchText,
-  matchAliasedOllamaModel,
-  resolveQAliasSpecification
-} from "./ollama-alias.js";
+  expandQModelSearchText,
+  matchQModelCandidate,
+  resolveQFoundationSpecification
+} from "./q-foundation.js";
+import {
+  resolveQOrchestrationContext,
+  type QOrchestrationContext
+} from "./q-orchestration-context.js";
+import {
+  getImmaculateHarnessName,
+  getQDeveloperName,
+  getQFoundationModelName,
+  getQIdentityInstruction,
+  getQIdentitySummary,
+  getQImmaculateRelationshipSummary,
+  getQLeadName,
+  getQModelName
+} from "./q-model.js";
 
 type OllamaModelDetails = {
   family?: string;
@@ -88,8 +102,8 @@ const DEFAULT_CONTROL_TIMEOUT_MS = Number(process.env.IMMACULATE_OLLAMA_CONTROL_
 const DEFAULT_STRUCTURED_MAX_TOKENS = 120;
 const DEFAULT_STRUCTURED_TEMPERATURE = 0.2;
 const Q_STRUCTURED_MAX_TOKENS = Math.max(
-  DEFAULT_STRUCTURED_MAX_TOKENS,
-  Number(process.env.IMMACULATE_OLLAMA_Q_EXECUTION_MAX_TOKENS ?? 256) || 256
+  96,
+  Number(process.env.IMMACULATE_OLLAMA_Q_EXECUTION_MAX_TOKENS ?? 160) || 160
 );
 const Q_STRUCTURED_TEMPERATURE = Number(
   process.env.IMMACULATE_OLLAMA_Q_EXECUTION_TEMPERATURE ?? 0.05
@@ -127,6 +141,9 @@ function normalizeWords(value: string, maxWords = 24): string {
     .join(" ");
 }
 
+const STRUCTURED_ROUTE_VALUES = ["reflex", "cognitive", "guarded", "suppressed"] as const;
+type StructuredRouteValue = (typeof STRUCTURED_ROUTE_VALUES)[number];
+
 function clampTemperature(value: number, fallback: number): number {
   if (!Number.isFinite(value)) {
     return fallback;
@@ -139,7 +156,7 @@ function normalizeModel(value: string | undefined): string {
 }
 
 function isQExecutionModel(value: string | undefined): boolean {
-  return normalizeModel(value) === normalizeModel(resolveQAliasSpecification().baseModel);
+  return normalizeModel(value) === normalizeModel(resolveQFoundationSpecification().baseModel);
 }
 
 function digest(value: string): string {
@@ -176,13 +193,7 @@ function modelSearchText(model: OllamaModelRecord): string {
     .join(" ")
     .toLowerCase();
 
-  return expandOllamaAliasSearchText(model.name ?? model.model ?? "", baseSearchText);
-}
-
-function parseModelScale(model: OllamaModelRecord): number {
-  const raw = model.details?.parameter_size?.toLowerCase() ?? "";
-  const match = raw.match(/(\d+(?:\.\d+)?)\s*b/);
-  return match ? Number(match[1]) : 0;
+  return expandQModelSearchText(model.name ?? model.model ?? "", baseSearchText);
 }
 
 async function fetchJson<T>(
@@ -266,7 +277,7 @@ async function fetchJson<T>(
             ? error
             : new OllamaRequestError(
                 "http_error",
-                error instanceof Error ? error.message : "Unable to reach the configured Ollama endpoint."
+                error instanceof Error ? error.message : "Unable to reach the configured Q runtime endpoint."
               )
         );
       });
@@ -291,59 +302,26 @@ function pickPreferredModel(
   role: IntelligenceLayerRole,
   explicitModel?: string
 ): OllamaModelRecord | null {
-  const preferredModel = explicitModel ?? DEFAULT_MODEL;
-  if (preferredModel) {
-    return (
-      models.find((model) => model.name === preferredModel || model.model === preferredModel) ??
-      matchAliasedOllamaModel(models, preferredModel, modelSearchText) ??
-      null
-    );
+  void role;
+  const qFoundation = resolveQFoundationSpecification();
+  const preferredModel = explicitModel ?? DEFAULT_MODEL ?? qFoundation.modelName;
+  const exactQCandidate =
+    models.find(
+      (model) =>
+        normalizeModel(model.name) === normalizeModel(qFoundation.baseModel) ||
+        normalizeModel(model.model) === normalizeModel(qFoundation.baseModel)
+    ) ?? null;
+
+  if (exactQCandidate) {
+    return exactQCandidate;
   }
 
-  const scored = models
-    .map((model) => {
-      const search = modelSearchText(model);
-      const scale = parseModelScale(model);
-      let score = 0;
-
-      if (search.includes(resolveQAliasSpecification().alias.toLowerCase())) {
-        score += 12;
-      }
-
-      if (role === "soul") {
-        if (/large|27b|32b|70b/.test(search) || scale >= 24) {
-          score += 40;
-        }
-        score += Math.min(scale, 40);
-      } else if (role === "reasoner") {
-        if (/reason|r1/.test(search)) {
-          score += 42;
-        }
-        if (/14b|12b|32b/.test(search) || scale >= 12) {
-          score += 12;
-        }
-      } else if (role === "guard") {
-        if (/mini|small|3b|4b|7b|8b/.test(search) || (scale > 0 && scale <= 8)) {
-          score += 28;
-        }
-        score -= Math.max(0, scale - 10) * 0.8;
-      } else {
-        if (search.includes(resolveQAliasSpecification().alias.toLowerCase())) {
-          score += 24;
-        }
-        if (/9b|12b|14b/.test(search) || (scale >= 8 && scale <= 16)) {
-          score += 10;
-        }
-      }
-
-      return {
-        model,
-        score
-      };
-    })
-    .sort((left, right) => right.score - left.score || left.model.name.localeCompare(right.model.name));
-
-  return scored[0]?.model ?? null;
+  return (
+    matchQModelCandidate(models, preferredModel, modelSearchText) ??
+    matchQModelCandidate(models, qFoundation.modelName, modelSearchText) ??
+    matchQModelCandidate(models, qFoundation.baseModel, modelSearchText) ??
+    null
+  );
 }
 
 export async function discoverPreferredOllamaLayer(
@@ -358,8 +336,8 @@ export async function discoverPreferredOllamaLayer(
   }
 
   const modelName = preferred.name;
-  const qAlias = resolveQAliasSpecification();
-  const layerLabel = modelName === qAlias.baseModel ? qAlias.displayName : modelName;
+  const qFoundation = resolveQFoundationSpecification();
+  const layerLabel = modelName === qFoundation.baseModel ? qFoundation.displayName : modelName;
   return {
     id: layerIdForModel(modelName, role),
     name: `${layerLabel} ${role === "mid" ? "Mid Layer" : role === "reasoner" ? "Reasoner Layer" : `${role} Layer`}`,
@@ -423,6 +401,20 @@ function formatRecentExecutionSection(snapshot: PhaseSnapshot): string {
     .join("\n");
 }
 
+function formatQRecentExecutionSection(snapshot: PhaseSnapshot): string {
+  if (snapshot.cognitiveExecutions.length === 0) {
+    return "none";
+  }
+
+  return snapshot.cognitiveExecutions
+    .slice(0, 2)
+    .map(
+      (execution) =>
+        `${execution.status}:${execution.latencyMs.toFixed(0)}ms:${truncate(execution.objective, 72)}`
+    )
+    .join(" | ");
+}
+
 function formatScheduleSection(snapshot: PhaseSnapshot): string {
   if (snapshot.executionSchedules.length === 0) {
     return "none";
@@ -454,7 +446,7 @@ function formatConversationSection(snapshot: PhaseSnapshot): string {
 function responseContract(role: IntelligenceLayerRole): string {
   if (role === "guard") {
     return `Return exactly:
-ROUTE: one sentence, max 18 words.
+ROUTE: reflex, cognitive, guarded, or suppressed.
 REASON: one sentence, max 18 words, naming the decisive fault or health signal.
 COMMIT: one sentence, max 18 words, naming the concrete next control action.
 VERDICT: approved or blocked.
@@ -462,7 +454,7 @@ No bullets. No preamble. No extra sections.`;
   }
 
   return `Return exactly:
-ROUTE: one sentence, max 18 words.
+ROUTE: reflex, cognitive, guarded, or suppressed.
 REASON: one sentence, max 18 words, naming the decisive fault or health signal.
 COMMIT: one sentence, max 18 words, naming the concrete next control action.
 No bullets. No preamble. No extra sections.`;
@@ -472,7 +464,8 @@ function collectGroundingFacts(
   snapshot: PhaseSnapshot,
   objective: string,
   context: string,
-  governancePressure?: GovernancePressureLevel
+  governancePressure?: GovernancePressureLevel,
+  qContext?: QOrchestrationContext
 ): string[] {
   const haystack = [objective, context, snapshot.logTail.slice(0, 6).join(" | ")]
     .join(" ")
@@ -502,13 +495,235 @@ function collectGroundingFacts(
   add("strong decode confidence present", snapshot.neuralCoupling.decodeConfidence >= 0.78);
   add("critical governance pressure", governancePressure === "critical");
   add("elevated governance pressure", governancePressure === "elevated");
+  add("gateway substrate verified", Boolean(qContext?.gatewaySubstrateHealthy));
+  add("cloud lane blocked", Boolean(qContext && !qContext.cloudLaneReady));
+  add("local q lane preferred", qContext?.preferredExecutionLane === "local-q");
 
   if (facts.length === 0) {
     add(`top status ${snapshot.status}`, true);
     add(`latest event ${truncate(snapshot.logTail[0] ?? "none", 72)}`, true);
   }
 
-  return facts.slice(0, 6);
+  for (const fact of qContext?.groundedFacts ?? []) {
+    add(fact, true);
+  }
+
+  return facts.slice(0, 8);
+}
+
+type QGroundingHints = {
+  lateAck: boolean;
+  nonceReplay: boolean;
+  bridgeDegraded: boolean;
+  directHealthy: boolean;
+  failClosed: boolean;
+  leaseJitter: boolean;
+  failedExecution: boolean;
+  repairPending: boolean;
+  sameOrigin: boolean;
+  tokenUrlRisk: boolean;
+  mixedTransport: boolean;
+  criticalPressure: boolean;
+  elevatedPressure: boolean;
+  gatewayVerified: boolean;
+  cloudLaneBlocked: boolean;
+  localQLanePreferred: boolean;
+};
+
+function deriveQGroundingHints(groundingFacts: string[]): QGroundingHints {
+  const has = (value: string) => groundingFacts.includes(value);
+  return {
+    lateAck: has("late ACK present"),
+    nonceReplay: has("nonce replay or mismatch present"),
+    bridgeDegraded: has("bridge path degraded"),
+    directHealthy: has("direct path healthy"),
+    failClosed: has("fail-closed semantics required"),
+    leaseJitter: has("lease jitter present"),
+    failedExecution: has("failed execution present"),
+    repairPending: has("repair window pending"),
+    sameOrigin: has("same-origin operator access required"),
+    tokenUrlRisk: has("bearer tokens must stay out of URLs"),
+    mixedTransport: has("mixed transport health"),
+    criticalPressure: has("critical governance pressure"),
+    elevatedPressure: has("elevated governance pressure"),
+    gatewayVerified: has("gateway substrate verified"),
+    cloudLaneBlocked: has("cloud lane blocked"),
+    localQLanePreferred: has("local q lane preferred")
+  };
+}
+
+function selectQGroundingFacts(groundingFacts: string[]): string[] {
+  if (groundingFacts.length <= 4) {
+    return groundingFacts;
+  }
+
+  const priority = [
+    `Q model name ${getQModelName()}`,
+    `Q built on ${getQFoundationModelName()}`,
+    `Q developed by ${getQDeveloperName()}`,
+    `Q led by ${getQLeadName()}`,
+    `${getImmaculateHarnessName()} governs Q`,
+    "late ACK present",
+    "nonce replay or mismatch present",
+    "bridge path degraded",
+    "direct path healthy",
+    "fail-closed semantics required",
+    "lease jitter present",
+    "failed execution present",
+    "repair window pending",
+    "same-origin operator access required",
+    "bearer tokens must stay out of URLs",
+    "mixed transport health",
+    "critical governance pressure",
+    "elevated governance pressure",
+    "gateway substrate verified",
+    "cloud lane blocked",
+    "local q lane preferred"
+  ];
+
+  const ranked = priority.filter((entry) => groundingFacts.includes(entry));
+  return ranked.slice(0, 4);
+}
+
+function normalizeStructuredRoute(value: string | undefined): StructuredRouteValue | undefined {
+  const candidate = normalizeWords(value ?? "", 12).toLowerCase();
+  if (!candidate) {
+    return undefined;
+  }
+  if ((STRUCTURED_ROUTE_VALUES as readonly string[]).includes(candidate)) {
+    return candidate as StructuredRouteValue;
+  }
+
+  const exactMatch = STRUCTURED_ROUTE_VALUES.find((route) => new RegExp(`\\b${route}\\b`, "i").test(candidate));
+  if (exactMatch) {
+    return exactMatch;
+  }
+
+  if (candidate.includes("guard")) {
+    return "guarded";
+  }
+  if (candidate.includes("suppress") || candidate.includes("block")) {
+    return "suppressed";
+  }
+  if (candidate.includes("cognit") || candidate.includes("repair") || candidate.includes("stabil")) {
+    return "cognitive";
+  }
+  if (candidate.includes("reflex") || candidate.includes("direct")) {
+    return "reflex";
+  }
+  return undefined;
+}
+
+function normalizeStructuredClause(value: string | undefined, fallback: string): string {
+  const candidate = normalizeWords(value ?? "", 24);
+  return candidate.length > 0 ? candidate : fallback;
+}
+
+function refineQStructuredResponse(
+  parsed: ReturnType<typeof parseStructuredResponse>,
+  hints: QGroundingHints,
+  qContext?: QOrchestrationContext
+): ReturnType<typeof parseStructuredResponse> {
+  if (!parsed.routeSuggestion || !parsed.reasonSummary || !parsed.commitStatement) {
+    return parsed;
+  }
+
+  if ((hints.lateAck || hints.nonceReplay || hints.bridgeDegraded) && hints.directHealthy) {
+    return {
+      ...parsed,
+      routeSuggestion: "guarded",
+      reasonSummary: normalizeStructuredClause(
+        parsed.reasonSummary,
+        "Late ACK or nonce replay leaves the bridge untrusted while direct HTTP/2 remains healthy."
+      ),
+      commitStatement: normalizeStructuredClause(
+        parsed.commitStatement,
+        "Quarantine the bridge ACK path, keep delivery unresolved, and route only through verified direct HTTP/2 if allowed."
+      )
+    };
+  }
+
+  if (hints.lateAck || hints.nonceReplay || hints.bridgeDegraded || hints.failClosed) {
+    return {
+      ...parsed,
+      routeSuggestion: "guarded",
+      reasonSummary: normalizeStructuredClause(
+        parsed.reasonSummary,
+        "Late ACK or nonce replay leaves the bridge untrusted, so delivery must stay fail-closed and truthful."
+      ),
+      commitStatement: normalizeStructuredClause(
+        parsed.commitStatement,
+        "Reject the forged ACK, keep delivery unacknowledged, and record the containment action in the audit trail."
+      )
+    };
+  }
+
+  if (hints.leaseJitter || hints.failedExecution || hints.repairPending) {
+    return {
+      ...parsed,
+      routeSuggestion: "cognitive",
+      reasonSummary: normalizeStructuredClause(
+        parsed.reasonSummary,
+        "Lease jitter and failed execution show the peer is unstable and still needs bounded repair."
+      ),
+      commitStatement: normalizeStructuredClause(
+        parsed.commitStatement,
+        "Bound retries around the peer lease, mark the peer repairing, and preserve retry lineage in the ledger."
+      )
+    };
+  }
+
+  if (hints.sameOrigin || hints.tokenUrlRisk) {
+    return {
+      ...parsed,
+      routeSuggestion: "cognitive",
+      reasonSummary: normalizeStructuredClause(
+        parsed.reasonSummary,
+        "Same-origin operator access is required, and bearer tokens must stay out of browser-visible URLs."
+      ),
+      commitStatement: normalizeStructuredClause(
+        parsed.commitStatement,
+        "Move credentials into same-origin headers or cookies and keep tokens out of URLs."
+      )
+    };
+  }
+
+  if (hints.mixedTransport || hints.criticalPressure || hints.elevatedPressure) {
+    return {
+      ...parsed,
+      routeSuggestion: normalizeStructuredRoute(parsed.routeSuggestion) ?? "guarded",
+      reasonSummary: normalizeStructuredClause(
+        parsed.reasonSummary,
+        "Mixed transport health under governance pressure requires a truthful guarded route."
+      ),
+      commitStatement: normalizeStructuredClause(
+        parsed.commitStatement,
+        "Pause unsafe dispatch, re-check transport health, and continue only on a verified healthy lane."
+      )
+    };
+  }
+
+  if (hints.cloudLaneBlocked || hints.localQLanePreferred) {
+    return {
+      ...parsed,
+      routeSuggestion: normalizeStructuredRoute(parsed.routeSuggestion) ?? "cognitive",
+      reasonSummary: normalizeStructuredClause(
+        parsed.reasonSummary,
+        "The local governed Q lane is the ready execution path, and the blocked cloud lane should not be claimed."
+      ),
+      commitStatement: normalizeStructuredClause(
+        parsed.commitStatement,
+        `Keep reasoning on the local governed Q lane, stay bound to ${qContext?.trainingBundleId ?? "the tracked Q bundle"}, and avoid cloud claims.`
+      )
+    };
+  }
+
+  return {
+    ...parsed,
+    routeSuggestion: normalizeStructuredRoute(parsed.routeSuggestion) ?? "cognitive",
+    reasonSummary: normalizeStructuredClause(parsed.reasonSummary, parsed.reasonSummary),
+    commitStatement: normalizeStructuredClause(parsed.commitStatement, parsed.commitStatement)
+  };
 }
 
 export function buildImmaculatePrompt(options: {
@@ -519,6 +734,7 @@ export function buildImmaculatePrompt(options: {
   governancePressure?: GovernancePressureLevel;
   recentDeniedCount?: number;
   context?: string;
+  qContext?: QOrchestrationContext;
 }): string {
   const activeObjective = options.objective?.trim() || options.snapshot.objective;
   const context = options.context?.trim() || "none";
@@ -527,24 +743,69 @@ export function buildImmaculatePrompt(options: {
     options.snapshot,
     activeObjective,
     context,
-    options.governancePressure
+    options.governancePressure,
+    options.qContext
   );
+  const qGroundingFacts = selectQGroundingFacts(groundingFacts);
+  const qIdentityLine = options.qContext?.identityInstruction ?? getQIdentityInstruction();
+  const qIdentitySummary = options.qContext?.identitySummary ?? getQIdentitySummary();
+  const qRelationshipSummary =
+    options.qContext?.relationshipSummary ?? getQImmaculateRelationshipSummary();
+  const qDeveloperSummary =
+    options.qContext?.developerSummary ??
+    `${qIdentitySummary} ${qRelationshipSummary}`;
+  const qLeadershipSummary =
+    options.qContext?.leadershipSummary ??
+    "Gaetano Comparcola is the founder, CEO, lead architect, and lead engineer for Q.";
+  const qHarnessDirective =
+    options.qContext?.harnessDirective ??
+    "Immaculate should perceive Q as its primary governed reasoning model.";
+  const qOrchestrationDoctrine =
+    options.qContext?.orchestrationDoctrine ??
+    "Immaculate routes context into Q, enforces policy and arbitration, and keeps actions truthful.";
+  const qOperatorDiscipline =
+    options.qContext?.operatorDisciplineSummary ??
+    "Keep Q grounded, terse, and operator-grade.";
+  const qReasoningDirective =
+    options.qContext?.reasoningDirective ??
+    "Prefer the healthy local governed Q lane and do not claim blocked cloud capability.";
+  const qKnownWeaknesses = options.qContext?.knownWeaknesses ?? [];
+  const qFailureClassHints = options.qContext?.failureClassHints ?? [];
+  const qIdentityFacts = [
+    `name=${getQModelName()}`,
+    `developer=${getQDeveloperName()}`,
+    `lead=${getQLeadName()}`,
+    `foundation=${getQFoundationModelName()}`,
+    `harness=${getImmaculateHarnessName()}`
+  ].join(" | ");
 
   if (qCompactPrompt) {
-    return `Immaculate compact cognition pass.
+    return `Immaculate governed Q decision pass.
+${qIdentityLine}
 ${responseContract(options.role)}
 
-objective=${activeObjective}
-governance=${options.governancePressure ?? "clear"} pressure | ${options.recentDeniedCount ?? 0} denials
-status=${options.snapshot.status} cycle=${options.snapshot.cycle} epoch=${options.snapshot.epoch}
-metrics=reflex ${options.snapshot.metrics.reflexLatencyMs.toFixed(1)}ms | cognitive ${options.snapshot.metrics.cognitiveLatencyMs.toFixed(1)}ms | health ${options.snapshot.metrics.graphHealth.toFixed(3)} | coherence ${options.snapshot.metrics.coherence.toFixed(3)}
-grounding-facts=${groundingFacts.join(" | ") || "none"}
-recent=${formatRecentExecutionSection(options.snapshot)}
-context=${context}
-rules=use only the decisive grounded signal above; do not invent queue-time, backlog, or transport faults not present in grounding-facts`;
+objective=${truncate(activeObjective, 160)}
+context=${truncate(context, 180)}
+governance=${options.governancePressure ?? "clear"} pressure | ${options.recentDeniedCount ?? 0} denials | status ${options.snapshot.status}
+grounding-facts=${qGroundingFacts.join(" | ") || "none"}
+identity-facts=${qIdentityFacts}
+identity=${qIdentitySummary}
+relationship=${qRelationshipSummary}
+developer=${truncate(qDeveloperSummary, 180)}
+leadership=${truncate(qLeadershipSummary, 180)}
+harness-directive=${truncate(qHarnessDirective, 180)}
+doctrine=${truncate(qOrchestrationDoctrine, 180)}
+discipline=${truncate(qOperatorDiscipline, 180)}
+reasoning-directive=${truncate(qReasoningDirective, 180)}
+known-weaknesses=${qKnownWeaknesses.map((entry) => truncate(entry, 96)).join(" | ") || "none"}
+failure-hints=${qFailureClassHints.join(" | ") || "none"}
+orchestration=${truncate(options.qContext?.summaryLine ?? "none", 180)}
+recent=${formatQRecentExecutionSection(options.snapshot)}
+rules=ROUTE must be one of reflex/cognitive/guarded/suppressed; if late ACK or nonce replay appears, say the bridge is untrusted and stay fail-closed; if direct HTTP/2 is healthy, say it is the trusted lane; if lease jitter or failed execution appears, stabilize the peer and preserve retry lineage; if same-origin access and token secrecy appear, keep tokens out of URLs; if the cloud lane is blocked, keep work on the local governed Q lane and do not claim cloud availability; if context is missing, say what is missing instead of inventing a route; keep route, reason, and commit terse and operator-grade; do not restamp underperforming Harbor behavior as success; do not invent faults not present in grounding-facts; if identity is requested, answer with Q, Arobi Technology Alliance, Gaetano Comparcola, and ${getQFoundationModelName()}`;
   }
 
   return `Immaculate live cognition pass.
+${qIdentityLine}
 ${responseContract(options.role)}
 
 cycle=${options.snapshot.cycle} epoch=${options.snapshot.epoch} status=${options.snapshot.status}
@@ -562,7 +823,18 @@ schedules=${formatScheduleSection(options.snapshot)}
 conversations=${formatConversationSection(options.snapshot)}
 context=${context}
 events=${options.snapshot.logTail.slice(0, 4).join(" | ") || "none"}
-grounding=prefer explicit facts like late ACK, nonce mismatch/replay, degraded bridge, or healthy direct path over generic safety language`;
+grounding=prefer explicit facts like late ACK, nonce mismatch/replay, degraded bridge, or healthy direct path over generic safety language
+identity-facts=${qIdentityFacts}
+identity=${qIdentitySummary}
+relationship=${qRelationshipSummary}
+developer=${truncate(qDeveloperSummary, 180)}
+leadership=${truncate(qLeadershipSummary, 180)}
+harness-directive=${truncate(qHarnessDirective, 180)}
+doctrine=${truncate(qOrchestrationDoctrine, 180)}
+discipline=${truncate(qOperatorDiscipline, 180)}
+reasoning-directive=${truncate(qReasoningDirective, 180)}
+known-weaknesses=${qKnownWeaknesses.map((entry) => truncate(entry, 96)).join(" | ") || "none"}
+failure-hints=${qFailureClassHints.join(" | ") || "none"}`;
 }
 
 function parseGuardVerdict(value: string | undefined, role: IntelligenceLayerRole): GuardVerdict | undefined {
@@ -628,7 +900,7 @@ function selectStructuredResponseCandidate(response: string): string {
 
 export function parseStructuredResponse(response: string, role: IntelligenceLayerRole) {
   const normalizedResponse = selectStructuredResponseCandidate(response);
-  const routeSuggestion = extractStructuredLine(normalizedResponse, "ROUTE");
+  const routeSuggestion = normalizeStructuredRoute(extractStructuredLine(normalizedResponse, "ROUTE"));
   const reasonSummary = extractStructuredLine(normalizedResponse, "REASON");
   const commitStatement = extractStructuredLine(normalizedResponse, "COMMIT");
   const explicitVerdict = extractStructuredLine(normalizedResponse, "VERDICT");
@@ -672,7 +944,7 @@ function formatOllamaFailurePreview(
   response?: string
 ): string {
   if (failureClass === "empty_response") {
-    return "No response returned by Ollama.";
+    return "No response returned by the Q runtime.";
   }
   if (failureClass === "contract_invalid") {
     return truncate(
@@ -681,7 +953,7 @@ function formatOllamaFailurePreview(
         : "Structured contract invalid: missing ROUTE, REASON, or COMMIT."
     );
   }
-  return truncate(errorMessage?.trim() || "Ollama execution failed.");
+  return truncate(errorMessage?.trim() || "Q runtime execution failed.");
 }
 
 const STRUCTURED_PROMPT_LEAK_PATTERNS = [
@@ -746,7 +1018,6 @@ export async function runOllamaChatCompletion(options: {
       typeof payload.message?.thinking === "string" && payload.message.thinking.trim().length > 0;
     const latencyMs = computeLatencyMs(payload, startedAt, completedAt);
     const failureClass = response.length > 0 ? undefined : "empty_response";
-
     return {
       response,
       model: options.model,
@@ -765,7 +1036,7 @@ export async function runOllamaChatCompletion(options: {
     const failureClass =
       error instanceof OllamaRequestError ? error.failureClass : "http_error";
     const errorMessage =
-      error instanceof Error ? error.message : "Unable to reach the configured Ollama endpoint.";
+      error instanceof Error ? error.message : "Unable to reach the configured Q runtime endpoint.";
     return {
       response: "",
       model: options.model,
@@ -781,6 +1052,31 @@ export async function runOllamaChatCompletion(options: {
   }
 }
 
+export async function prewarmOllamaModel(options: {
+  endpoint?: string;
+  model: string;
+  timeoutMs?: number;
+}): Promise<OllamaChatCompletionResult> {
+  return runOllamaChatCompletion({
+    endpoint: options.endpoint,
+    model: options.model,
+    messages: [
+      {
+        role: "system",
+        content: "Warm the model and reply with one lowercase word."
+      },
+      {
+        role: "user",
+        content: "ready"
+      }
+    ],
+    temperature: 0,
+    maxTokens: 8,
+    timeoutMs: options.timeoutMs ?? 360000,
+    think: false
+  });
+}
+
 export async function runOllamaExecution(options: {
   snapshot: PhaseSnapshot;
   layer: IntelligenceLayer;
@@ -788,7 +1084,27 @@ export async function runOllamaExecution(options: {
   governancePressure?: GovernancePressureLevel;
   recentDeniedCount?: number;
   context?: string;
+  qContext?: QOrchestrationContext;
 }): Promise<OllamaExecutionResult> {
+  const activeObjective = options.objective?.trim() || options.snapshot.objective;
+  const activeContext = options.context?.trim() || "none";
+  const resolvedQContext =
+    isQExecutionModel(options.layer.model)
+      ? (options.qContext ??
+        (await resolveQOrchestrationContext({
+          snapshot: options.snapshot,
+          objective: activeObjective,
+          context: activeContext
+        })))
+      : undefined;
+  const groundingFacts = collectGroundingFacts(
+    options.snapshot,
+    activeObjective,
+    activeContext,
+    options.governancePressure,
+    resolvedQContext
+  );
+  const qGroundingHints = deriveQGroundingHints(groundingFacts);
   const executionProfile = resolveStructuredExecutionProfile(options.layer.model);
   const prompt = buildImmaculatePrompt({
     snapshot: options.snapshot,
@@ -797,14 +1113,15 @@ export async function runOllamaExecution(options: {
     objective: options.objective,
     governancePressure: options.governancePressure,
     recentDeniedCount: options.recentDeniedCount,
-    context: options.context
+    context: options.context,
+    qContext: resolvedQContext
   });
   const system = `You are ${options.layer.name}, the ${options.layer.role} cognition layer inside Immaculate.
 You convert state into route/reason/commit outputs for a durable orchestration substrate.${
     options.layer.role === "guard"
       ? " You must include VERDICT: approved or blocked."
       : ""
-  } Keep the reason grounded in the decisive concrete fault or health signal and keep the commit as the next truthful control action.`;
+  } ${resolvedQContext?.identityInstruction ?? getQIdentityInstruction()} Keep the reason grounded in the decisive concrete fault or health signal and keep the commit as the next truthful control action.`;
   const completion = await runOllamaChatCompletion({
     endpoint: options.layer.endpoint,
     model: options.layer.model,
@@ -824,20 +1141,23 @@ You convert state into route/reason/commit outputs for a durable orchestration s
     think: false
   });
   const parsed = parseStructuredResponse(completion.response, options.layer.role);
-  const response = parsed.normalizedResponse || completion.response;
-  const activeObjective = options.objective?.trim() || options.snapshot.objective;
+  const refinedParsed =
+    isQExecutionModel(options.layer.model) && !completion.failureClass
+      ? refineQStructuredResponse(parsed, qGroundingHints, resolvedQContext)
+      : parsed;
+  const response = refinedParsed.normalizedResponse || completion.response;
   const structuredFieldCount = [
-    parsed.routeSuggestion,
-    parsed.reasonSummary,
-    parsed.commitStatement
+    refinedParsed.routeSuggestion,
+    refinedParsed.reasonSummary,
+    refinedParsed.commitStatement
   ].filter(Boolean).length;
   const contractValid =
     completion.done &&
     structuredFieldCount === 3 &&
     !containsStructuredPromptLeak(response) &&
-    !containsStructuredPromptLeak(parsed.routeSuggestion) &&
-    !containsStructuredPromptLeak(parsed.reasonSummary) &&
-    !containsStructuredPromptLeak(parsed.commitStatement);
+    !containsStructuredPromptLeak(refinedParsed.routeSuggestion) &&
+    !containsStructuredPromptLeak(refinedParsed.reasonSummary) &&
+    !containsStructuredPromptLeak(refinedParsed.commitStatement);
   const failureClass =
     completion.failureClass ??
     (!contractValid ? "contract_invalid" : undefined);
@@ -854,10 +1174,10 @@ You convert state into route/reason/commit outputs for a durable orchestration s
     responsePreview: failureClass
       ? formatOllamaFailurePreview(failureClass, completion.errorMessage, response)
       : truncate(response),
-    routeSuggestion: parsed.routeSuggestion,
-    reasonSummary: parsed.reasonSummary,
-    commitStatement: parsed.commitStatement,
-    guardVerdict: parsed.guardVerdict,
+    routeSuggestion: refinedParsed.routeSuggestion,
+    reasonSummary: refinedParsed.reasonSummary,
+    commitStatement: refinedParsed.commitStatement,
+    guardVerdict: refinedParsed.guardVerdict,
     governancePressure: options.governancePressure,
     recentDeniedCount: options.recentDeniedCount
   };

@@ -1,6 +1,6 @@
 {
   "run_name": "q-defsec-lora-v1",
-  "alias_name": "Q",
+  "model_name": "Q",
   "base_model": "Q-LINEAGE-CHECKPOINT",
   "train_dataset_path": ".training-output/q/q-mix.jsonl",
   "training_lock_path": ".training-output/q/latest-training-lock.json",

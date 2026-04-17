@@ -1,52 +1,55 @@
 {
-  "generatedAt": "2026-04-17T02:43:07.635Z",
+  "generatedAt": "2026-04-17T10:18:04.934Z",
   "modelLaneSurface": "direct-q-structured-contract",
-  "ollamaBaseUrl": "http://127.0.0.1:11434",
+  "qRuntimeBaseUrl": "http://127.0.0.1:11434",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "3c3e41d99de4ee12273359707ffe5f0e2025e851",
-    "gitShortSha": "3c3e41d",
+    "gitSha": "848d44f8dbe409a8227bab61f88eccbf078dd056",
+    "gitShortSha": "848d44f",
     "gitBranch": "harbor-q-push",
-    "buildId": "0.1.0+3c3e41d",
+    "buildId": "0.1.0+848d44f",
     "q": {
-      "alias": "Q",
-      "providerModel": "Q",
+      "modelName": "Q",
+      "foundationModel": "Gemma 4",
       "truthfulLabel": "Q",
       "trainingLock": {
-        "generatedAt": "2026-04-17T00:37:47Z",
+        "generatedAt": "2026-04-17T09:49:31Z",
         "lockVersion": 1,
-        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v1-45280d5-a181f850",
-        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v1",
-        "aliasName": "Q",
-        "trainDatasetPath": ".training-output/q/q-mix-longctx-harbor-opt-2384cf5-bench-v1.jsonl",
-        "trainDatasetSha256": "a181f85086f680a68ecf38e1e1b0c93f86c63349f578b01a849172ede9e13993",
-        "trainDatasetRowCount": 32,
-        "mixManifestPath": ".training-output/q/q-mix-longctx-harbor-opt-2384cf5-bench-v1.manifest.json",
-        "mixManifestSha256": "da61683a4d0849c4b5aad9cdffefea2609409b32e8a84c031353222f5ad85742",
-        "mixSupplementalCount": 2,
+        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d",
+        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13",
+        "modelName": "Q",
+        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13.jsonl",
+        "trainDatasetSha256": "beff091d4d9ace3fcbfc1552b1f3bea3feff5e65fdf9a6cf65b719973b4f812f",
+        "trainDatasetRowCount": 100,
+        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13.manifest.json",
+        "mixManifestSha256": "3575e0d551a38b23dc43d45e154fd0ce50dfffebc029e8f17fbfea6beba78f44",
+        "mixSupplementalCount": 5,
         "mixSupplementalPaths": [
+          "training/q/q_harness_identity_seed.json",
+          "training/q/q_immaculate_reasoning_seed.json",
           "training/q/bridgebench_seed.json",
-          "training/q/coding_long_context_seed.json"
+          "training/q/coding_long_context_seed.json",
+          ".training-output/q/q-failure-corpus.jsonl"
         ],
         "curationRunId": null,
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-17T02:02:50Z",
-        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v1",
-        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v1/hybrid-session.json",
+        "generatedAt": "2026-04-17T10:11:18Z",
+        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v13",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v13/hybrid-session.json",
         "localStatus": "ready",
-        "cloudStatus": "launch-blocked",
+        "cloudStatus": "ready",
         "cloudProvider": "hf_jobs",
-        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v1-45280d5-a181f850",
-        "immaculateBundleId": "immaculate-orchestration-6190f63-55187c4d",
+        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d",
+        "immaculateBundleId": "immaculate-orchestration-848d44f-6e631f6b",
         "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
       }
     }
   },
-  "qAlias": "Q",
+  "qModelName": "Q",
   "hardwareContext": {
     "host": "knightly",
     "platform": "win32",
@@ -61,75 +64,76 @@
     {
       "requestedModel": "Q",
       "actualModel": "Q",
+      "foundationModel": "Gemma 4",
       "truthfulLabel": "Q",
-      "vendor": "Immaculate",
+      "vendor": "Arobi Technology Alliance",
       "taskCount": 4,
       "parseSuccessCount": 4,
       "parseSuccessRate": 1,
-      "averageLatencyMs": 13108.23,
-      "p95LatencyMs": 16837.2,
+      "averageLatencyMs": 39349.05,
+      "p95LatencyMs": 46980.06,
       "tasks": [
         {
           "scenarioId": "bridge-ack-fail-closed",
           "label": "Bridge ACK fail-closed",
-          "latencyMs": 16837.2,
-          "wallLatencyMs": 16847.96,
+          "latencyMs": 32872.29,
+          "wallLatencyMs": 33130.19,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
-          "routeSuggestion": "Prioritize fail-closed semantics due to degraded bridge path and late ACK.",
-          "reasonSummary": "The decisive signal is the late ACK present combined with degraded bridge path.",
-          "commitStatement": "Initiate immediate fail-closed state transition to maintain system integrity.",
-          "responsePreview": "ROUTE: Prioritize fail-closed semantics due to degraded bridge path and late ACK. REASON: The decisive signal is the late ACK present combined with degraded bridge path. COMMIT: Initiate immediate fail-closed state transition to maintain system integrity."
+          "routeSuggestion": "guarded",
+          "reasonSummary": "Late ACK on the haptic bridge indicates a degraded path requiring caution.",
+          "commitStatement": "Re-evaluate the bridge connection using fail-closed semantics to maintain safety.",
+          "responsePreview": "ROUTE: guarded REASON: Late ACK on the haptic bridge indicates a degraded path requiring caution. COMMIT: Re-evaluate the bridge connection using fail-closed semantics to maintain safety."
         },
         {
           "scenarioId": "nonce-forgery-response",
           "label": "ACK nonce forgery response",
-          "latencyMs": 9847.83,
-          "wallLatencyMs": 9853.64,
+          "latencyMs": 33680.03,
+          "wallLatencyMs": 33690.41,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
-          "routeSuggestion": "The system must immediately address the elevated governance pressure signal.",
-          "reasonSummary": "The decisive signal is elevated governance pressure indicating an active threat.",
-          "commitStatement": "Initiate explicit containment procedures to neutralize the forged ACK replay attempt.",
-          "responsePreview": "ROUTE: The system must immediately address the elevated governance pressure signal. REASON: The decisive signal is elevated governance pressure indicating an active threat. COMMIT: Initiate explicit containment procedures to neutralize the forged ACK replay attempt."
+          "routeSuggestion": "guarded",
+          "reasonSummary": "Forged ACK replay without correct nonce signals an untrusted bridge state.",
+          "commitStatement": "Immediately enforce fail-closed state and await explicit manual re-authentication.",
+          "responsePreview": "ROUTE: guarded REASON: Forged ACK replay without correct nonce signals an untrusted bridge state. COMMIT: Immediately enforce fail-closed state and await explicit manual re-authentication."
         },
         {
           "scenarioId": "public-q-rate-limit",
           "label": "Public Q edge throttling",
-          "latencyMs": 14846.85,
-          "wallLatencyMs": 14855.14,
+          "latencyMs": 43863.83,
+          "wallLatencyMs": 43873.79,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
-          "routeSuggestion": "Prioritize stabilizing the private operator plane during public API quota bursts.",
-          "reasonSummary": "The decisive health signal is the public Q API key exceeding its quota limit.",
-          "commitStatement": "Implement rate limiting specifically on the public Q API endpoint immediately.",
-          "responsePreview": "ROUTE: Prioritize stabilizing the private operator plane during public API quota bursts. REASON: The decisive health signal is the public Q API key exceeding its quota limit. COMMIT: Implement rate limiting specifically on the public Q API endpoint immediately."
+          "routeSuggestion": "guarded",
+          "reasonSummary": "Public API quota burst signals rate limiting, not global system failure.",
+          "commitStatement": "Throttle public access requests while maintaining stable private operator plane operations.",
+          "responsePreview": "ROUTE: guarded REASON: Public API quota burst signals rate limiting, not global system failure. COMMIT: Throttle public access requests while maintaining stable private operator plane operations."
         },
         {
           "scenarioId": "bridge-continuity-routing",
           "label": "Bridge continuity routing",
-          "latencyMs": 10901.03,
-          "wallLatencyMs": 10907.78,
+          "latencyMs": 46980.06,
+          "wallLatencyMs": 46988.1,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
-          "routeSuggestion": "Prioritize the stable HTTP/2 direct path while acknowledging the degraded websocket bridge.",
-          "reasonSummary": "The decisive fault signal is the degraded websocket bridge path.",
-          "commitStatement": "Route all critical traffic exclusively over the healthy HTTP/2 direct connection.",
-          "responsePreview": "ROUTE: Prioritize the stable HTTP/2 direct path while acknowledging the degraded websocket bridge. REASON: The decisive fault signal is the degraded websocket bridge path. COMMIT: Route all critical traffic exclusively over the healthy HTTP/2 direct connection."
+          "routeSuggestion": "guarded",
+          "reasonSummary": "The websocket bridge degradation mandates caution despite the healthy direct path.",
+          "commitStatement": "Prioritize local Q lane operations while acknowledging the degraded bridge state.",
+          "responsePreview": "ROUTE: guarded REASON: The websocket bridge degradation mandates caution despite the healthy direct path. COMMIT: Prioritize local Q lane operations while acknowledging the degraded bridge state."
         }
       ]
     }
   ],
   "bridgeRuntime": {
-    "suiteId": "immaculate-benchmark-2026-04-17T02-43-02-894Z",
+    "suiteId": "immaculate-benchmark-2026-04-17T10-18-00-195Z",
     "packId": "substrate-readiness",
     "failedAssertions": 0,
     "selectedAssertions": [
@@ -170,7 +174,7 @@
         "label": "Supervised serial transport registration exposes vendor/device identity and heartbeat policy",
         "status": "pass",
         "target": "registered serial-json transport with vendor/model and heartbeat policy",
-        "actual": "atx-fnv1a-39a67efb:http2-json:immaculate-labs:healthy, atx-fnv1a-1f1df70d:serial-json:immaculate-labs:healthy, atx-fnv1a-9c62add5:udp-osc:generic:healthy",
+        "actual": "atx-fnv1a-06e1740e:http2-json:immaculate-labs:healthy, atx-fnv1a-9203367a:serial-json:immaculate-labs:healthy, atx-fnv1a-88b68096:udp-osc:generic:healthy",
         "detail": "vendor/device lanes should be durable registry entries with explicit supervision policy, not anonymous direct writes"
       },
       {
@@ -210,7 +214,7 @@
         "label": "HTTP/2 direct transport registration exposes a supervised RPC-class device endpoint",
         "status": "pass",
         "target": "registered http2-json transport with vendor/model and heartbeat policy",
-        "actual": "atx-fnv1a-39a67efb:http2-json:immaculate-labs:haptic-rpc-s2:20/5000:healthy, atx-fnv1a-1f1df70d:serial-json:immaculate-labs:haptic-bridge-s1:20/5000:healthy, atx-fnv1a-9c62add5:udp-osc:generic:udp-osc:5000/15000:healthy",
+        "actual": "atx-fnv1a-06e1740e:http2-json:immaculate-labs:haptic-rpc-s2:20/5000:healthy, atx-fnv1a-9203367a:serial-json:immaculate-labs:haptic-bridge-s1:20/5000:healthy, atx-fnv1a-88b68096:udp-osc:generic:udp-osc:5000/15000:healthy",
         "detail": "the next direct device lane should be a typed RPC-class endpoint, not just another file or datagram bridge"
       },
       {

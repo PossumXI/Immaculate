@@ -33,6 +33,34 @@ CANONICAL_ENV_ALIASES: dict[str, tuple[str, ...]] = {
 }
 
 
+def truthy_env(name: str) -> bool:
+    return str(os.getenv(name, "")).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def usable_npm_value(name: str) -> str:
+    value = str(os.getenv(name, "")).strip()
+    if value.lower() in {"", "true", "false"}:
+        return ""
+    return value
+
+
+def normalize_cli_argv(argv: list[str]) -> list[str]:
+    if any(token == "--session" or token.startswith("--session=") for token in argv[1:]):
+        return argv
+
+    normalized = [argv[0]]
+    positionals = [token for token in argv[1:] if not token.startswith("--")]
+    session_value = usable_npm_value("npm_config_session") or (positionals[0] if positionals else "")
+
+    if session_value:
+        normalized.extend(["--session", session_value])
+    if "--doctor" in argv[1:] or truthy_env("npm_config_doctor"):
+        normalized.append("--doctor")
+    if "--launch" in argv[1:] or truthy_env("npm_config_launch"):
+        normalized.append("--launch")
+    return normalized
+
+
 def repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
@@ -1195,6 +1223,7 @@ def render_markdown(summary: dict) -> str:
 
 def main() -> None:
     root = repo_root()
+    sys.argv = normalize_cli_argv(sys.argv)
     parser = argparse.ArgumentParser(description="Doctor and coordinate a hybrid Q training session.")
     parser.add_argument("--session", required=True, help="Path to the hybrid training session manifest JSON.")
     parser.add_argument("--doctor", action="store_true", help="Validate and materialize the session summary without launching.")
@@ -1780,7 +1809,7 @@ def main() -> None:
             "trainingBundleId": training_lock.get("bundleId"),
             "trainingLockPath": relative_path(root, training_lock_path),
             "configPath": relative_path(root, config_path),
-            "modelId": config.get("alias_name", "Q"),
+            "modelId": config.get("model_name", "Q"),
             "trainDatasetPath": relative_path(root, dataset_path),
             "trainDatasetRowCount": count_jsonl_rows(dataset_path),
             "mixManifestPath": relative_path(root, mix_manifest_path),
@@ -1820,7 +1849,7 @@ def main() -> None:
                 "launchCommand": cloud_launch_command,
                 "cliBin": oci_cli_bin if cloud_provider == "oci" else hf_cli_bin,
                 "authMode": oci_auth_mode if cloud_provider == "oci" else ("token" if hf_ready else "missing"),
-                "authSource": oci_bootstrap.get("source") if cloud_provider == "oci" else hf_source,
+                "authSource": oci_bootstrap.get("source") if cloud_provider == "oci" else ("HF_TOKEN" if hf_source else None),
                 "authConfigPath": oci_bootstrap.get("configPath") if cloud_provider == "oci" else None,
                 "authProfile": oci_bootstrap.get("profile") if cloud_provider == "oci" else None,
                 "authKeyPath": oci_bootstrap.get("keyPath") if cloud_provider == "oci" else None,

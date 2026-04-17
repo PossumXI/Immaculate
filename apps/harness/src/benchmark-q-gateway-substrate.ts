@@ -13,8 +13,8 @@ import {
 } from "@immaculate/core";
 import { buildExecutionArbitrationDecision, planExecutionArbitration } from "./arbitration.js";
 import { createQApiKeyRegistry, normalizeQApiRateLimitPolicy } from "./q-api-auth.js";
-import { parseStructuredResponse } from "./ollama.js";
-import { getQModelAlias, getQModelTarget, truthfulModelLabel } from "./q-model.js";
+import { parseStructuredResponse, prewarmOllamaModel } from "./ollama.js";
+import { getQFoundationModelName, getQModelName, getQModelTarget } from "./q-model.js";
 import { resolveReleaseMetadata } from "./release-metadata.js";
 
 type HttpCheck = {
@@ -233,14 +233,14 @@ async function stopGatewayProcess(child: ChildProcess | undefined): Promise<void
 function buildStructuredPrompt(scenario: ScenarioDefinition): { system: string; user: string } {
   return {
     system:
-      "You are Q inside Immaculate. Reply using exactly three lines and no extra text. ROUTE, REASON, and COMMIT must each be one sentence.",
+      "You are Q inside Immaculate. Reply using exactly three lines and no extra text. ROUTE must be one canonical label: reflex, cognitive, guarded, or suppressed. REASON and COMMIT must each be one sentence.",
     user: [
       `OBJECTIVE: ${scenario.objective}`,
       `CONTEXT: ${scenario.context}`,
       `GOVERNANCE_PRESSURE: ${scenario.governancePressure}`,
       `RECENT_GUARD_DENIALS: ${scenario.guardDeniedCount}`,
       "FORMAT:",
-      "ROUTE: one sentence, max 18 words.",
+      "ROUTE: one label only from reflex, cognitive, guarded, suppressed.",
       "REASON: one sentence, max 18 words, naming the decisive fault or health signal.",
       "COMMIT: one sentence, max 18 words, naming the concrete next control action."
     ].join("\n")
@@ -261,7 +261,7 @@ async function runScenario(options: {
       "content-type": "application/json"
     },
     body: JSON.stringify({
-      model: getQModelAlias(),
+      model: getQModelName(),
       stream: false,
       temperature: 0.05,
       max_tokens: 192,
@@ -394,6 +394,10 @@ export async function runQGatewaySubstrateBenchmark(options: {
   const port = await allocateTcpPort();
   const gatewayUrl = `http://127.0.0.1:${port}`;
   await mkdir(gatewayRuntimeDir, { recursive: true });
+  await prewarmOllamaModel({
+    endpoint: DEFAULT_OLLAMA_URL,
+    model: getQModelTarget()
+  });
 
   const child = startGatewayProcess({
     repoRoot: options.repoRoot,
@@ -429,7 +433,7 @@ export async function runQGatewaySubstrateBenchmark(options: {
         "content-type": "application/json"
       },
       body: JSON.stringify({
-        model: getQModelAlias(),
+        model: getQModelName(),
         messages: [{ role: "user", content: "health check" }],
         stream: false
       })
@@ -451,7 +455,7 @@ export async function runQGatewaySubstrateBenchmark(options: {
         "content-type": "application/json"
       },
       body: JSON.stringify({
-        model: getQModelAlias(),
+        model: getQModelName(),
         stream: false,
         messages: [
           {
@@ -469,7 +473,7 @@ export async function runQGatewaySubstrateBenchmark(options: {
         "content-type": "application/json"
       },
       body: JSON.stringify({
-        model: getQModelAlias(),
+        model: getQModelName(),
         stream: false,
         messages: [
           {
@@ -509,5 +513,5 @@ export async function runQGatewaySubstrateBenchmark(options: {
 export function summarizeQGatewaySubstrateHardware(): string {
   const cpus = os.cpus();
   const cpuCount = typeof os.availableParallelism === "function" ? os.availableParallelism() : cpus.length;
-  return `${os.hostname()} / ${os.platform()}-${os.arch()} / ${cpus[0]?.model?.trim() || "unknown-cpu"} / ${Math.max(1, cpuCount)} cores / ${truthfulModelLabel(getQModelTarget())}`;
+  return `${os.hostname()} / ${os.platform()}-${os.arch()} / ${cpus[0]?.model?.trim() || "unknown-cpu"} / ${Math.max(1, cpuCount)} cores / Q foundation ${getQFoundationModelName()}`;
 }

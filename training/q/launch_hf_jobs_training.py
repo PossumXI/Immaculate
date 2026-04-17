@@ -12,6 +12,39 @@ ENV_LINE_PATTERN = re.compile(r"^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s
 HF_ENV_ALIASES = ("HF_TOKEN", "HUGGINGFACE_TOKEN", "HUGGINFACE_ACCESS_TOKEN")
 
 
+def truthy_env(name: str) -> bool:
+    return str(os.getenv(name, "")).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def usable_npm_value(name: str) -> str:
+    value = str(os.getenv(name, "")).strip()
+    if value.lower() in {"", "true", "false"}:
+        return ""
+    return value
+
+
+def normalize_cli_argv(argv: list[str]) -> list[str]:
+    if any(token == "--session" or token.startswith("--session=") for token in argv[1:]):
+        return argv
+
+    normalized = [argv[0]]
+    positionals = [token for token in argv[1:] if not token.startswith("--")]
+    session_value = usable_npm_value("npm_config_session") or (positionals[0] if positionals else "")
+    env_file_value = usable_npm_value("npm_config_env_file") or (positionals[1] if len(positionals) > 1 else "")
+
+    if session_value:
+        normalized.extend(["--session", session_value])
+    if env_file_value:
+        normalized.extend(["--env-file", env_file_value])
+    if "--check" in argv[1:] or truthy_env("npm_config_check"):
+        normalized.append("--check")
+    if "--smoke-launch" in argv[1:] or truthy_env("npm_config_smoke_launch"):
+        normalized.append("--smoke-launch")
+    if "--launch" in argv[1:] or truthy_env("npm_config_launch"):
+        normalized.append("--launch")
+    return normalized
+
+
 def repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
@@ -85,6 +118,12 @@ def first_present_env_value(env: dict[str, str], names: tuple[str, ...]) -> tupl
         if value:
             return name, value
     return None, None
+
+
+def canonical_hf_token_source(source: str | None) -> str | None:
+    if source in HF_ENV_ALIASES:
+        return "HF_TOKEN"
+    return source
 
 
 def locate_hf_cli(root: Path, env: dict[str, str]) -> str:
@@ -204,6 +243,7 @@ def render_markdown(report: dict) -> str:
 
 def main() -> None:
     root = repo_root()
+    sys.argv = normalize_cli_argv(sys.argv)
     parser = argparse.ArgumentParser(description="Stage and optionally launch the active Q hybrid bundle on Hugging Face Jobs.")
     parser.add_argument("--session", required=True, help="Path to the hybrid session manifest JSON.")
     parser.add_argument("--env-file", action="append", default=[], help="Optional env file(s) to load.")
@@ -217,6 +257,13 @@ def main() -> None:
         raise FileNotFoundError(f"Session manifest not found: {args.session}")
 
     session = load_json(session_path)
+    manifest_pointer = str(session.get("manifestPath", "")).strip() if isinstance(session, dict) else ""
+    if manifest_pointer and "cloudBundle" not in session:
+        pointed_manifest = resolve_repo_path(manifest_pointer)
+        if pointed_manifest is None or not pointed_manifest.exists():
+            raise FileNotFoundError(f"Hybrid session manifest pointer is invalid: {manifest_pointer}")
+        session_path = pointed_manifest
+        session = load_json(session_path)
     session_id = str(session.get("sessionId", "")).strip() or "unknown-session"
     cloud = session.get("cloud", {}) if isinstance(session.get("cloud"), dict) else {}
     inline_env = cloud.get("inlineEnv", {}) if isinstance(cloud, dict) else {}
@@ -240,8 +287,15 @@ def main() -> None:
     jobs_visible_count = 0 if "No jobs found" in ps_stdout else max(0, len([line for line in ps_stdout.splitlines() if line.strip()]))
 
     release = build_release_summary(root)
-    cloud_bundle_root = session_path.parent / "cloud-bundle"
-    bundle_manifest_path = cloud_bundle_root / "bundle-manifest.json"
+    cloud_bundle = session.get("cloudBundle", {}) if isinstance(session.get("cloudBundle"), dict) else {}
+    bundle_manifest_pointer = str(cloud_bundle.get("manifestPath", "")).strip()
+    if bundle_manifest_pointer:
+        bundle_manifest_path = resolve_repo_path(bundle_manifest_pointer)
+    else:
+        bundle_manifest_path = session_path.parent / "cloud-bundle" / "bundle-manifest.json"
+    if bundle_manifest_path is None:
+        raise FileNotFoundError("Cloud bundle manifest path could not be resolved.")
+    cloud_bundle_root = bundle_manifest_path.parent
     bundle_manifest = load_json(bundle_manifest_path)
     archive_relative = str(bundle_manifest.get("archive", {}).get("path", "")).strip() or str(next(cloud_bundle_root.glob("*.tar.gz")).name)
     archive_path = resolve_repo_path(archive_relative) or next(cloud_bundle_root.glob("*.tar.gz"))
@@ -394,7 +448,7 @@ def main() -> None:
         "sessionId": session_id,
         "auth": {
             "hfCliBin": hf_cli,
-            "tokenSource": token_source,
+            "tokenSource": canonical_hf_token_source(token_source),
             "ready": auth_code == 0,
             "user": auth_user,
             "stderr": auth_stderr or None,

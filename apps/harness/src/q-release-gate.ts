@@ -40,6 +40,13 @@ type BridgeBenchReport = {
   models: BridgeBenchModel[];
 };
 
+type QGatewayValidationReport = {
+  generatedAt: string;
+  identity?: {
+    canonical?: boolean;
+  };
+};
+
 type QReadinessGateReport = {
   generatedAt: string;
   threshold: number;
@@ -49,6 +56,7 @@ type QReadinessGateReport = {
   sources: {
     modelComparisonGeneratedAt?: string;
     bridgeBenchGeneratedAt?: string;
+    qGatewayValidationGeneratedAt?: string;
   };
   q: {
     modelComparison?: {
@@ -62,6 +70,7 @@ type QReadinessGateReport = {
       taskCount: number;
       dominantFailureClass?: string;
     };
+    gatewayIdentityCanonical?: boolean;
   };
   output: {
     jsonPath: string;
@@ -107,6 +116,7 @@ function renderMarkdown(report: QReadinessGateReport): string {
     `- Q training bundle: \`${report.release.q.trainingLock?.bundleId ?? "none generated yet"}\``,
     `- Model comparison source: \`${report.sources.modelComparisonGeneratedAt ?? "missing"}\``,
     `- BridgeBench source: \`${report.sources.bridgeBenchGeneratedAt ?? "missing"}\``,
+    `- Q gateway validation source: \`${report.sources.qGatewayValidationGeneratedAt ?? "missing"}\``,
     "",
     "## Q Direct Results",
     "",
@@ -115,6 +125,7 @@ function renderMarkdown(report: QReadinessGateReport): string {
     `- Model comparison dominant failure: \`${report.q.modelComparison?.dominantFailureClass ?? "none"}\``,
     `- BridgeBench parse success: \`${report.q.bridgeBench?.parseSuccessRate ?? "n/a"}\``,
     `- BridgeBench dominant failure: \`${report.q.bridgeBench?.dominantFailureClass ?? "none"}\``,
+    `- Q gateway identity canonical: \`${report.q.gatewayIdentityCanonical ?? "n/a"}\``,
     "",
     "## Reasons",
     "",
@@ -126,8 +137,10 @@ async function main(): Promise<void> {
   const threshold = Number(process.env.IMMACULATE_Q_READINESS_THRESHOLD ?? 0.75);
   const comparisonPath = path.join(WIKI_ROOT, "Model-Benchmark-Comparison.json");
   const bridgeBenchPath = path.join(WIKI_ROOT, "BridgeBench.json");
+  const qGatewayValidationPath = path.join(WIKI_ROOT, "Q-Gateway-Validation.json");
   const modelComparison = await readJson<ModelComparisonReport>(comparisonPath);
   const bridgeBench = await readJson<BridgeBenchReport>(bridgeBenchPath);
+  const qGatewayValidation = await readJson<QGatewayValidationReport>(qGatewayValidationPath);
 
   const qComparison = modelComparison?.models.find((model) => model.truthfulLabel.trim().startsWith("Q"));
   const qBridgeBench = bridgeBench?.models.find((model) => model.truthfulLabel.trim().startsWith("Q"));
@@ -149,6 +162,9 @@ async function main(): Promise<void> {
       `Q BridgeBench parse success ${qBridgeBench.parseSuccessRate} is below the ${threshold} readiness threshold.`
     );
   }
+  if (qGatewayValidation?.identity?.canonical !== true) {
+    reasons.push("Q gateway identity validation is missing or not canonical.");
+  }
 
   const report: QReadinessGateReport = {
     generatedAt: new Date().toISOString(),
@@ -158,7 +174,8 @@ async function main(): Promise<void> {
     reasons,
     sources: {
       modelComparisonGeneratedAt: modelComparison?.generatedAt,
-      bridgeBenchGeneratedAt: bridgeBench?.generatedAt
+      bridgeBenchGeneratedAt: bridgeBench?.generatedAt,
+      qGatewayValidationGeneratedAt: qGatewayValidation?.generatedAt
     },
     q: {
       modelComparison: qComparison
@@ -175,7 +192,8 @@ async function main(): Promise<void> {
             taskCount: qBridgeBench.taskCount,
             dominantFailureClass: dominantFailureClass(qBridgeBench.tasks)
           }
-        : undefined
+        : undefined,
+      gatewayIdentityCanonical: qGatewayValidation?.identity?.canonical === true
     },
     output: {
       jsonPath: path.join("docs", "wiki", "Q-Readiness-Gate.json"),

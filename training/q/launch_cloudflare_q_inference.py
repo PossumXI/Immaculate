@@ -19,6 +19,7 @@ CLOUDFLARE_ENV_ALIASES: dict[str, tuple[str, ...]] = {
     "CLOUDFLARE_Q_WORKER_URL": ("CLOUDFLARE_Q_WORKER_URL",),
     "CLOUDFLARE_Q_BASE_MODEL": ("CLOUDFLARE_Q_BASE_MODEL",),
     "CLOUDFLARE_Q_LORA_NAME": ("CLOUDFLARE_Q_LORA_NAME",),
+    "CLOUDFLARE_Q_PROFILE_MODE": ("CLOUDFLARE_Q_PROFILE_MODE",),
     "CLOUDFLARE_Q_WORKER_API_KEY": ("CLOUDFLARE_Q_WORKER_API_KEY",),
     "CLOUDFLARE_ADAPTER_SOURCE_DIR": ("CLOUDFLARE_ADAPTER_SOURCE_DIR",),
     "CLOUDFLARE_ADAPTER_EXPORT_DIR": ("CLOUDFLARE_ADAPTER_EXPORT_DIR",),
@@ -178,6 +179,7 @@ def run_command(command: list[str], cwd: Path, env: dict[str, str] | None = None
 
 
 def render_markdown(report: dict) -> str:
+    profile = report.get("profile", {})
     adapter = report.get("adapter", {})
     eval_bundle = report.get("evalBundle", {})
     worker = report.get("worker", {})
@@ -209,6 +211,7 @@ def render_markdown(report: dict) -> str:
             "## Readiness",
             "",
             f"- Auth ready: `{readiness.get('authReady')}`",
+            f"- Profile ready: `{readiness.get('profileReady')}`",
             f"- Adapter ready: `{readiness.get('adapterReady')}`",
             f"- Worker ready: `{readiness.get('workerReady')}`",
             f"- Eval bundle ready: `{readiness.get('evalBundleReady')}`",
@@ -223,8 +226,14 @@ def render_markdown(report: dict) -> str:
             f"- Gateway compat URL: `{show(gateway.get('compatUrl'))}`",
             f"- Auth header: `{gateway.get('authHeader', 'cf-aig-authorization: Bearer <token>')}`",
             "",
-            "## Adapter Export",
+            "## Q Profile And Optional Adapter",
             "",
+            f"- Profile ready: `{profile.get('ready')}`",
+            f"- Profile id: `{show(profile.get('profileId'))}`",
+            f"- Training bundle: `{show(profile.get('trainingBundleId'))}`",
+            f"- Worker module: `{show(profile.get('workerModulePath'))}`",
+            f"- Rule count: `{show(profile.get('ruleCount'))}`",
+            *[f"- Profile blocker: {blocker}" for blocker in profile.get("blockers", [])],
             f"- Ready: `{adapter.get('ready')}`",
             f"- Source dir: `{show(adapter.get('sourceDir'))}`",
             f"- Output dir: `{show(adapter.get('outputDir'))}`",
@@ -250,7 +259,10 @@ def render_markdown(report: dict) -> str:
             f"- Worker URL configured: `{worker.get('workerUrlReady')}`",
             f"- Worker URL: `{show(worker.get('workerUrl'))}`",
             f"- Base model configured: `{worker.get('baseModelReady')}`",
+            f"- Guided profile mode: `{show(worker.get('profileMode'))}`",
+            f"- Guided profile ready: `{worker.get('profileReady')}`",
             f"- LoRA name configured: `{worker.get('loraReady')}`",
+            f"- Worker asset mode: `{show(worker.get('assetMode'))}`",
             f"- Worker health attempted: `{health.get('attempted')}`",
             f"- Worker health ready: `{health.get('ready')}`",
             f"- Worker health status: `{show(health.get('status'))}`",
@@ -268,7 +280,7 @@ def render_markdown(report: dict) -> str:
             "",
             "- This lane treats Cloudflare as a Q inference and evaluation plane, not the heavy training backend.",
             "- The worker serves only the public Q identity and rejects other model labels.",
-            "- A Cloudflare deploy is not claimed until account auth, a Cloudflare-ready adapter bundle, and worker deployment all exist together.",
+            "- A Cloudflare deploy is not claimed until account auth, a worker profile or LoRA asset exists, and worker deployment all exist together.",
             "- AI Gateway is used for logging and evaluation metadata around the Q worker path instead of pretending Cloudflare is the source of the Q fine-tune itself.",
         ]
     ) + "\n"
@@ -308,6 +320,15 @@ def main() -> None:
     wrangler_config = root / "deploy" / "cloudflare" / "wrangler.toml"
     deploy_script = root / "deploy" / "cloudflare" / "scripts" / "deploy-cloudflare-worker.sh"
 
+    profile_command = [
+        sys.executable,
+        "training/q/build_cloudflare_q_profile.py",
+        "--session",
+        relative_path(root, session_path) or str(session_path),
+    ]
+    profile_code, profile_stdout, profile_stderr = run_command(profile_command, root)
+    profile_report = json.loads(profile_stdout) if profile_stdout else {}
+
     adapter_command = [
         sys.executable,
         "training/q/export_cloudflare_adapter.py",
@@ -345,6 +366,7 @@ def main() -> None:
     worker_url = env_values.get("CLOUDFLARE_Q_WORKER_URL", "")
     compat_url = f"https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/compat/chat/completions" if account_id else None
     base_model_configured = bool(env_values.get("CLOUDFLARE_Q_BASE_MODEL", ""))
+    profile_mode = env_values.get("CLOUDFLARE_Q_PROFILE_MODE", "enabled").strip().lower() or "enabled"
     lora_configured = bool(env_values.get("CLOUDFLARE_Q_LORA_NAME", ""))
 
     health_attempted = bool(worker_url)
@@ -406,9 +428,11 @@ def main() -> None:
                 if smoke_blocker is None and evaluated_rows > 0:
                     smoke_ready = True
 
+    profile_ready = bool(isinstance(profile_report, dict) and profile_report.get("profileId"))
     adapter_ready = bool(isinstance(adapter_report, dict) and adapter_report.get("ready"))
     eval_bundle_ready = bool(eval_report.get("recordCount", 0) > 0)
-    worker_config_ready = bool(worker_url and base_model_configured and lora_configured)
+    worker_asset_mode = "lora" if adapter_ready else "base-model-guided" if profile_ready else "none"
+    worker_config_ready = bool(worker_url and base_model_configured and (profile_mode == "disabled" or profile_ready))
     worker_ready = bool(typecheck_code == 0 and worker_config_ready and health_ready)
 
     session_report_path = session_path.parent / "cloudflare-q-inference.json"
@@ -430,6 +454,10 @@ def main() -> None:
             "compatUrl": compat_url,
             "authHeader": "cf-aig-authorization: Bearer <token>",
             "metadataLimit": 5,
+        },
+        "profile": profile_report if isinstance(profile_report, dict) else {
+            "ready": False,
+            "blockers": [profile_stderr or "Cloudflare profile report was not produced."],
         },
         "adapter": adapter_report if isinstance(adapter_report, dict) else {
             "ready": False,
@@ -454,6 +482,9 @@ def main() -> None:
             "workerUrlReady": bool(worker_url),
             "workerUrl": worker_url or None,
             "baseModelReady": base_model_configured,
+            "profileMode": profile_mode,
+            "assetMode": worker_asset_mode,
+            "profileReady": profile_ready,
             "loraReady": lora_configured,
         },
         "health": {
@@ -471,6 +502,7 @@ def main() -> None:
         },
         "readiness": {
             "authReady": bool(account_id and api_token),
+            "profileReady": profile_ready,
             "adapterReady": adapter_ready,
             "workerReady": worker_ready,
             "evalBundleReady": eval_bundle_ready,
@@ -479,26 +511,26 @@ def main() -> None:
         "summary": {
             "provider": "cloudflare",
             "role": "inference-eval-plane",
-            "ready": bool(account_id and api_token and adapter_ready and worker_ready and eval_bundle_ready),
+            "ready": bool(account_id and api_token and profile_ready and worker_ready and eval_bundle_ready),
             "status": (
                 "smoke-ready"
-                if account_id and api_token and adapter_ready and worker_ready and eval_bundle_ready and smoke_ready
-                else "worker-blocked"
-                if adapter_ready and eval_bundle_ready and not worker_ready
-                else "adapter-blocked"
-                if bool(account_id and api_token) and not adapter_ready
+                if account_id and api_token and profile_ready and worker_ready and eval_bundle_ready and smoke_ready
                 else "auth-blocked"
                 if not bool(account_id and api_token)
+                else "profile-blocked"
+                if bool(account_id and api_token) and not profile_ready
+                else "worker-blocked"
+                if profile_ready and eval_bundle_ready and not worker_ready
                 else "eval-blocked"
             ),
             "recommendedNextStep": (
-                "Set CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN, then rerun the Cloudflare inference check."
+                "Set CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN, and CLOUDFLARE_Q_BASE_MODEL, then rerun the Cloudflare inference check."
                 if not account_id or not api_token
                 else (
-                    "Produce a Cloudflare-ready adapter artifact with adapter_config.json and adapter_model.safetensors, then rerun the check."
-                    if not adapter_ready
+                    "Generate the Cloudflare Q worker profile, then rerun the Cloudflare inference check."
+                    if not profile_ready
                     else (
-                        "Set CLOUDFLARE_Q_WORKER_URL, CLOUDFLARE_Q_BASE_MODEL, and CLOUDFLARE_Q_LORA_NAME, then deploy the worker."
+                        "Set CLOUDFLARE_Q_WORKER_URL and CLOUDFLARE_Q_BASE_MODEL, then deploy the worker."
                         if not worker_config_ready
                         else (
                             "Deploy the Cloudflare worker and make /health green before replaying the eval bundle."

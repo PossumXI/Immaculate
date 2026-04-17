@@ -5,9 +5,16 @@ import { performance } from "node:perf_hooks";
 import { fileURLToPath } from "node:url";
 import { createEngine, type BenchmarkAssertion, type BenchmarkReport, type GovernancePressureLevel, type IntelligenceLayerRole } from "@immaculate/core";
 import { runPublishedBenchmark, loadLatestBenchmarkReportForPack } from "./benchmark.js";
-import { listOllamaModels, runOllamaExecution } from "./ollama.js";
+import { listOllamaModels, prewarmOllamaModel, runOllamaExecution } from "./ollama.js";
 import { resolveReleaseMetadata, type ReleaseMetadata } from "./release-metadata.js";
-import { getQModelAlias, matchesModelReference, resolveQModel, truthfulModelLabel, vendorForModel } from "./q-model.js";
+import {
+  getQFoundationModelName,
+  getQModelName,
+  matchesModelReference,
+  resolveQModel,
+  truthfulModelLabel,
+  vendorForModel
+} from "./q-model.js";
 
 export type BridgeBenchScenario = {
   id: string;
@@ -38,6 +45,7 @@ type BridgeBenchTaskResult = {
 type BridgeBenchModelSummary = {
   requestedModel: string;
   actualModel: string;
+  foundationModel: string;
   truthfulLabel: string;
   vendor: string;
   taskCount: number;
@@ -65,9 +73,9 @@ type TemporalSummary = {
 export type BridgeBenchReport = {
   generatedAt: string;
   modelLaneSurface: "direct-q-structured-contract";
-  ollamaBaseUrl: string;
+  qRuntimeBaseUrl: string;
   release: ReleaseMetadata;
-  qAlias: string;
+  qModelName: string;
   hardwareContext: {
     host: string;
     platform: string;
@@ -167,21 +175,17 @@ function captureHardwareContext() {
 }
 
 function buildBridgeBenchModels(installedModelNames: string[]): string[] {
-  const requested = (
-    process.env.IMMACULATE_BRIDGEBENCH_MODEL_SET?.split(",").map((entry) => entry.trim()) ?? [getQModelAlias()]
-  ).filter(Boolean);
-
-  return Array.from(
-    new Set(
-      requested.filter((candidate) => {
-        return installedModelNames.some((installedModelName) => matchesModelReference(installedModelName, candidate));
-      })
-    )
-  );
+  return installedModelNames.some((installedModelName) => matchesModelReference(installedModelName, getQModelName()))
+    ? [getQModelName()]
+    : [];
 }
 
 async function runBridgeBenchModel(requestedModel: string, actualModel: string): Promise<BridgeBenchModelSummary> {
   const tasks: BridgeBenchTaskResult[] = [];
+  await prewarmOllamaModel({
+    endpoint: DEFAULT_OLLAMA_URL,
+    model: actualModel
+  });
 
   for (const scenario of BRIDGEBENCH_SCENARIOS) {
     const engine = createEngine({
@@ -252,7 +256,8 @@ async function runBridgeBenchModel(requestedModel: string, actualModel: string):
   const parseSuccessCount = tasks.filter((task) => task.parseSuccess).length;
   return {
     requestedModel,
-    actualModel,
+    actualModel: truthfulModelLabel(actualModel),
+    foundationModel: getQFoundationModelName(),
     truthfulLabel: truthfulModelLabel(actualModel),
     vendor: vendorForModel(actualModel),
     taskCount: tasks.length,
@@ -284,6 +289,7 @@ function buildMarkdown(report: BridgeBenchReport): string {
   lines.push(`Release: \`${report.release.buildId}\``);
   lines.push(`Repo commit: \`${report.release.gitShortSha}\``);
   lines.push(`Model lane surface: \`${report.modelLaneSurface}\``);
+  lines.push(`Q foundation model: \`${report.release.q.foundationModel}\``);
   lines.push(`Q training bundle: \`${report.release.q.trainingLock?.bundleId ?? "none generated yet"}\``);
   lines.push("The Q lane below measures direct local Q structured-contract behavior, not the served Q gateway edge.");
   lines.push("");
@@ -344,9 +350,9 @@ export async function runBridgeBench(): Promise<BridgeBenchReport> {
   const report: BridgeBenchReport = {
     generatedAt: new Date().toISOString(),
     modelLaneSurface: "direct-q-structured-contract",
-    ollamaBaseUrl: DEFAULT_OLLAMA_URL,
+    qRuntimeBaseUrl: DEFAULT_OLLAMA_URL,
     release: await resolveReleaseMetadata(),
-    qAlias: getQModelAlias(),
+    qModelName: getQModelName(),
     hardwareContext: captureHardwareContext(),
     models: modelSummaries,
     bridgeRuntime: {

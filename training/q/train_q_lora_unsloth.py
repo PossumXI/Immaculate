@@ -98,6 +98,7 @@ def main() -> None:
         raise ValueError("Config requires train_dataset_path or curated_dataset_path.")
     training_lock = load_training_lock(config.get("training_lock_path"))
     session_manifest = load_session_manifest(args.session_manifest)
+    model_name = str(config.get("model_name") or "Q").strip()
 
     row_count, column_names = inspect_jsonl_dataset(dataset_path)
     if "text" not in column_names:
@@ -135,7 +136,7 @@ def main() -> None:
                     "accepted": True,
                     "dry_run": True,
                     "run_name": config["run_name"],
-                    "alias_name": config["alias_name"],
+                    "model_name": model_name,
                     "train_dataset_path": dataset_path,
                     "row_count": row_count,
                     "columns": column_names,
@@ -199,7 +200,7 @@ def main() -> None:
             {
                 "accepted": True,
                 "run_name": config["run_name"],
-                "alias_name": config["alias_name"],
+                "model_name": model_name,
                 "train_dataset_path": dataset_path,
                 "output_dir": config["output_dir"],
                 "training_session_path": args.session_manifest,

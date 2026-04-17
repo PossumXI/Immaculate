@@ -30,7 +30,7 @@ This page is exported from live W&B benchmark runs and committed into the repo w
 - Role: `Program Originator, Systems Architect, and Engineering Lead`
 - Website: `https://PossumX.dev`
 - Benchmark artifact: `immaculate-immaculate-benchmark-2026-04-17T02-09-26-615Z:v0`
-- Artifact aliases: `latest`
+- Artifact channels: `latest`
 
 ### Durability Recovery
 
@@ -52,7 +52,7 @@ This page is exported from live W&B benchmark runs and committed into the repo w
 - Role: `Program Originator, Systems Architect, and Engineering Lead`
 - Website: `https://PossumX.dev`
 - Benchmark artifact: `immaculate-immaculate-benchmark-2026-04-17T02-09-26-159Z:v0`
-- Artifact aliases: `latest`
+- Artifact channels: `latest`
 
 ### Substrate Readiness
 
@@ -74,7 +74,7 @@ This page is exported from live W&B benchmark runs and committed into the repo w
 - Role: `Program Originator, Systems Architect, and Engineering Lead`
 - Website: `https://PossumX.dev`
 - Benchmark artifact: `immaculate-immaculate-benchmark-2026-04-17T02-09-25-503Z:v0`
-- Artifact aliases: `latest`
+- Artifact channels: `latest`
 
 ### Durability Torture
 
@@ -96,7 +96,7 @@ This page is exported from live W&B benchmark runs and committed into the repo w
 - Role: `Program Originator, Systems Architect, and Engineering Lead`
 - Website: `https://PossumX.dev`
 - Benchmark artifact: `immaculate-immaculate-benchmark-2026-04-13T01-57-58-711Z:v0`
-- Artifact aliases: `latest`
+- Artifact channels: `latest`
 
 ### Temporal Baseline
 
@@ -118,7 +118,7 @@ This page is exported from live W&B benchmark runs and committed into the repo w
 - Role: `Program Originator, Systems Architect, and Engineering Lead`
 - Website: `https://PossumX.dev`
 - Benchmark artifact: `immaculate-immaculate-benchmark-2026-04-13T01-44-55-523Z:v0`
-- Artifact aliases: `latest`
+- Artifact channels: `latest`
 
 ### External Neurodata Ingest
 
@@ -140,7 +140,7 @@ This page is exported from live W&B benchmark runs and committed into the repo w
 - Role: `Program Originator, Systems Architect, and Engineering Lead`
 - Website: `https://PossumX.dev`
 - Benchmark artifact: `immaculate-immaculate-benchmark-2026-04-13T01-44-55-493Z:v0`
-- Artifact aliases: `latest`
+- Artifact channels: `latest`
 
 ### Latency Soak (60m)
 
@@ -162,7 +162,7 @@ This page is exported from live W&B benchmark runs and committed into the repo w
 - Role: `Program Originator, Systems Architect, and Engineering Lead`
 - Website: `https://PossumX.dev`
 - Benchmark artifact: `immaculate-immaculate-benchmark-2026-04-12T21-48-36-880Z:v0`
-- Artifact aliases: `latest`
+- Artifact channels: `latest`
 
 ### Latency Benchmark (60s)
 
@@ -184,4 +184,4 @@ This page is exported from live W&B benchmark runs and committed into the repo w
 - Role: `Program Originator, Systems Architect, and Engineering Lead`
 - Website: `https://PossumX.dev`
 - Benchmark artifact: `immaculate-immaculate-benchmark-2026-04-12T19-36-44-817Z:v0`
-- Artifact aliases: `latest`
+- Artifact channels: `latest`

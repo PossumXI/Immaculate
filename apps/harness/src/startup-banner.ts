@@ -1,4 +1,4 @@
-import { resolveQAliasSpecification } from "./ollama-alias.js";
+import { getQFoundationModelName, getQModelName } from "./q-model.js";
 
 export type StartupBannerOptions = {
   host: string;
@@ -65,14 +65,11 @@ function renderTitleLines(): string[] {
 }
 
 function renderInfoLines(options: StartupBannerOptions): string[] {
-  const qAlias = resolveQAliasSpecification();
-  const modelLabel = options.configuredModel?.trim() || qAlias.displayName;
-
   return [
-    `${applyColor("lavender-to-ocean truecolor banner", INFO_ACCENT)} ${applyColor("|", INFO_DIM)} ${applyColor("Q cognition alias", INFO_DIM)}`,
+    `${applyColor("lavender-to-ocean truecolor banner", INFO_ACCENT)} ${applyColor("|", INFO_DIM)} ${applyColor("Q cognition surface", INFO_DIM)}`,
     `${applyColor("endpoint", INFO_PRIMARY)} ${options.host}:${options.port} ${applyColor("| ticks", INFO_PRIMARY)} ${options.tickIntervalMs}ms`,
-    `${applyColor("ollama", INFO_PRIMARY)} ${options.ollamaUrl} ${applyColor("| model", INFO_PRIMARY)} ${modelLabel}`,
-    `${applyColor("Q lane", INFO_ACCENT)} ${qAlias.alias} ${applyColor("| banner", INFO_PRIMARY)} ${bannerMode()}`
+    `${applyColor("runtime", INFO_PRIMARY)} ${options.ollamaUrl} ${applyColor("| model", INFO_PRIMARY)} ${getQModelName()}`,
+    `${applyColor("Q product", INFO_ACCENT)} ${getQModelName()} ${applyColor("| foundation", INFO_PRIMARY)} ${getQFoundationModelName()} ${applyColor("| banner", INFO_PRIMARY)} ${bannerMode()}`
   ];
 }
 

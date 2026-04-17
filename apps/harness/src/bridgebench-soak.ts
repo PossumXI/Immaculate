@@ -65,7 +65,7 @@ type BridgeBenchSoakReport = {
   p95RunLatencyMs: number;
   bridgeRuntimeFailedAssertionsTotal: number;
   bridgeRuntimeFailedAssertionRuns: number;
-  qAlias: string;
+  qModelName: string;
   truthfulModelLabel: string;
   release?: ReleaseMetadata;
   runs: BridgeBenchSoakRunSummary[];
@@ -240,7 +240,7 @@ function buildMarkdownSummary(report: Pick<
   | "p95RunLatencyMs"
   | "bridgeRuntimeFailedAssertionsTotal"
   | "bridgeRuntimeFailedAssertionRuns"
-  | "qAlias"
+  | "qModelName"
   | "truthfulModelLabel"
   | "trainingRows"
 >): string {
@@ -255,7 +255,7 @@ function buildMarkdownSummary(report: Pick<
     `- Run latency ms: avg \`${report.averageRunLatencyMs}\` / p95 \`${report.p95RunLatencyMs}\``,
     `- Bridge runtime failed assertions: \`${report.bridgeRuntimeFailedAssertionsTotal}\` across \`${report.bridgeRuntimeFailedAssertionRuns}\` runs`,
     `- Training rows: \`${report.trainingRows.length}\``,
-    `- Q alias: \`${report.qAlias}\``,
+    `- Q model name: \`${report.qModelName}\``,
     `- Truthful model label: \`${report.truthfulModelLabel}\``
   ].join("\n");
 }
@@ -276,7 +276,7 @@ async function main(): Promise<void> {
   let bridgeRuntimeFailedAssertionsTotal = 0;
   let bridgeRuntimeFailedAssertionRuns = 0;
   let release: ReleaseMetadata | undefined;
-  let qAlias = "Q";
+  let qModelName = "Q";
   let truthfulModelLabel = "Q";
 
   let attempt = 0;
@@ -300,7 +300,7 @@ async function main(): Promise<void> {
         bridgeRuntimeFailedAssertionRuns += 1;
       }
       release ??= report.release;
-      qAlias = report.qAlias;
+      qModelName = report.qModelName;
       truthfulModelLabel = report.models[0]?.truthfulLabel ?? truthfulModelLabel;
     } catch (error) {
       runs.push({
@@ -349,7 +349,7 @@ async function main(): Promise<void> {
     p95RunLatencyMs,
     bridgeRuntimeFailedAssertionsTotal,
     bridgeRuntimeFailedAssertionRuns,
-    qAlias,
+    qModelName,
     truthfulModelLabel,
     release,
     runs,

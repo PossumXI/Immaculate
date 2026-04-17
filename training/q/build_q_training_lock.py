@@ -18,7 +18,7 @@ def sha256_file(path_value: Path) -> str:
 
 
 def load_json(path_value: Path) -> dict:
-    payload = json.loads(path_value.read_text(encoding="utf-8"))
+    payload = json.loads(path_value.read_text(encoding="utf-8-sig"))
     if not isinstance(payload, dict):
         raise ValueError(f"{path_value} must contain a JSON object.")
     return payload
@@ -40,7 +40,7 @@ def git_value(repo_root: Path, *args: str) -> str:
 
 def count_jsonl_rows(path_value: Path) -> int:
     row_count = 0
-    with path_value.open("r", encoding="utf-8") as handle:
+    with path_value.open("r", encoding="utf-8-sig") as handle:
         for line in handle:
             if line.strip():
                 row_count += 1
@@ -84,6 +84,7 @@ def main() -> None:
     config_hash = sha256_file(config_path)
     mix_manifest_hash = sha256_file(mix_manifest_path)
     bundle_id = f"{config['run_name']}-{git_short_sha}-{dataset_hash[:8]}"
+    model_name = str(config.get("model_name") or "Q").strip()
 
     lock = {
         "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
@@ -96,7 +97,7 @@ def main() -> None:
         },
         "run": {
             "runName": config["run_name"],
-            "aliasName": config.get("alias_name"),
+            "modelName": model_name,
             "baseModel": config.get("base_model"),
             "trainDatasetPath": str(dataset_path),
             "trainDatasetSha256": dataset_hash,

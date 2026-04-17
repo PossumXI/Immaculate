@@ -13,7 +13,7 @@ def load_audit_records(path: Path) -> list[dict]:
     if not path.exists():
         return []
     records: list[dict] = []
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in path.read_text(encoding="utf-8-sig").splitlines():
         stripped = line.strip()
         if not stripped:
             continue
@@ -46,6 +46,7 @@ def render_markdown(summary: dict) -> str:
             "## Latest Record",
             "",
             f"- Session: `{latest.get('sessionId', 'n/a')}`",
+            f"- Model name: `{latest.get('modelName', 'Q')}`",
             f"- Status: `{latest.get('status', 'n/a')}`",
             f"- Failure class: `{latest.get('failureClass', 'none')}`",
             f"- Latency: `{latest.get('latencyMs', 'n/a')}` ms",
@@ -107,7 +108,10 @@ def main():
         except Exception:
             pass
 
-    latest_record = records[-1] if records else {}
+    latest_record = dict(records[-1]) if records else {}
+    if latest_record:
+        latest_record["modelName"] = str(latest_record.get("modelName") or "Q").strip() or "Q"
+        latest_record.pop("alias", None)
     summary = {
         "generatedAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "sourcePath": str(audit_path.relative_to(root)).replace("\\", "/") if audit_path.exists() else str(audit_path).replace("\\", "/"),

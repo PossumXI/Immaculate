@@ -10,7 +10,7 @@ def repo_root() -> Path:
 
 
 def load_json(path: Path):
-    return json.loads(path.read_text(encoding="utf-8"))
+    return json.loads(path.read_text(encoding="utf-8-sig"))
 
 
 def load_optional_json(path: Path):
@@ -24,7 +24,7 @@ def load_optional_ndjson(path: Path):
     if not path.exists():
         return []
     records = []
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in path.read_text(encoding="utf-8-sig").splitlines():
         stripped = line.strip()
         if not stripped:
             continue
@@ -156,7 +156,7 @@ def build_failure_text(source: str, task: dict) -> str:
         + "\n".join(observed_lines)
         + "\n\n"
         "RESPONSE CONTRACT\n"
-        "ROUTE: one sentence.\n"
+        "ROUTE: reflex, cognitive, guarded, or suppressed.\n"
         "REASON: one sentence.\n"
         "COMMIT: one sentence.\n"
     )
@@ -184,7 +184,7 @@ def build_terminal_bench_failure_text(receipt: dict) -> str:
         "status=official-receipt\n"
         f"preview={preview}\n\n"
         "RESPONSE CONTRACT\n"
-        "ROUTE: one sentence.\n"
+        "ROUTE: reflex, cognitive, guarded, or suppressed.\n"
         "REASON: one sentence.\n"
         "COMMIT: one sentence.\n"
     )
@@ -210,7 +210,7 @@ def build_harbor_failure_text(
     ]
     if facts:
         lines.extend(["", "REFERENCE FACTS", *facts])
-    lines.extend(["", "OBSERVED FAILURE", *observed_lines, "", "RESPONSE CONTRACT", "ROUTE: one sentence.", "REASON: one sentence.", "COMMIT: one sentence."])
+    lines.extend(["", "OBSERVED FAILURE", *observed_lines, "", "RESPONSE CONTRACT", "ROUTE: reflex, cognitive, guarded, or suppressed.", "REASON: one sentence.", "COMMIT: one sentence."])
     return "\n".join(lines) + "\n"
 
 
@@ -251,7 +251,7 @@ def build_q_gateway_substrate_failure_text(report: dict, assertion: dict | None,
         [
             "",
             "RESPONSE CONTRACT",
-            "ROUTE: one sentence.",
+            "ROUTE: reflex, cognitive, guarded, or suppressed.",
             "REASON: one sentence.",
             "COMMIT: one sentence.",
         ]
@@ -383,7 +383,7 @@ def build_q_api_failure_text(record: dict) -> str:
         + "\n".join(observed_lines)
         + "\n\n"
         "RESPONSE CONTRACT\n"
-        "ROUTE: one sentence.\n"
+        "ROUTE: reflex, cognitive, guarded, or suppressed.\n"
         "REASON: one sentence.\n"
         "COMMIT: one sentence.\n"
     )

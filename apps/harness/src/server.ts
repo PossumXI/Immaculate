@@ -49,6 +49,7 @@ import {
   listOllamaModels,
   runOllamaExecution
 } from "./ollama.js";
+import { resolveQOrchestrationContext } from "./q-orchestration-context.js";
 import {
   createLiveNeuroManager,
   type LiveNeuroPayload
@@ -97,7 +98,15 @@ import {
 } from "./q-api-auth.js";
 import { createQRateLimiter } from "./q-rate-limit.js";
 import {
-  getQModelAlias,
+  foundationModelLabel,
+  getImmaculateHarnessName,
+  getQDeveloperName,
+  getQFoundationModelName,
+  getQIdentitySummary,
+  getQLeadName,
+  getQModelName,
+  getQModelTarget,
+  matchesModelReference,
   truthfulModelLabel
 } from "./q-model.js";
 import { resolveReleaseMetadata } from "./release-metadata.js";
@@ -115,6 +124,7 @@ import {
   projectCognitiveExecution,
   projectConversation,
   projectExecutionSchedule,
+  projectIntelligenceLayer,
   projectDatasetRecord,
   projectEventEnvelope,
   projectNeuroFrameWindow,
@@ -470,7 +480,7 @@ type QApiAuditRecord = {
   source: "q-api";
   sessionId: string;
   executionId?: string;
-  alias: string;
+  modelName: string;
   model?: string;
   role: IntelligenceLayer["role"];
   status: "completed" | "failed";
@@ -2574,6 +2584,10 @@ function resolveBoundSources(options: {
 
 function selectPreferredLayer(preferredRoles?: IntelligenceLayer["role"][]): IntelligenceLayer | null {
   const snapshot = phaseSnapshotSchema.parse(engine.getSnapshot());
+  const qBackedLayers = snapshot.intelligenceLayers.filter(
+    (layer) => truthfulModelLabel(layer.model) === getQModelName()
+  );
+  const candidateLayers = qBackedLayers.length > 0 ? qBackedLayers : snapshot.intelligenceLayers;
   const rolePriority = new Map([
     ["mid", 0],
     ["reasoner", 1],
@@ -2590,7 +2604,7 @@ function selectPreferredLayer(preferredRoles?: IntelligenceLayer["role"][]): Int
   };
 
   return (
-    [...snapshot.intelligenceLayers]
+    [...candidateLayers]
       .sort((left, right) => {
         const leftStatus = left.status === "ready" ? 0 : left.status === "busy" ? 1 : 2;
         const rightStatus = right.status === "ready" ? 0 : right.status === "busy" ? 1 : 2;
@@ -2608,6 +2622,10 @@ function selectPreferredLayers(
   maxCount = 3
 ): IntelligenceLayer[] {
   const snapshot = phaseSnapshotSchema.parse(engine.getSnapshot());
+  const qBackedLayers = snapshot.intelligenceLayers.filter(
+    (layer) => truthfulModelLabel(layer.model) === getQModelName()
+  );
+  const candidateLayers = qBackedLayers.length > 0 ? qBackedLayers : snapshot.intelligenceLayers;
   const rolePriority = new Map([
     ["mid", 0],
     ["reasoner", 1],
@@ -2623,7 +2641,7 @@ function selectPreferredLayers(
     return index >= 0 ? index : preferredRoles.length + (rolePriority.get(role) ?? 9);
   };
 
-  return [...snapshot.intelligenceLayers]
+  return [...candidateLayers]
     .filter((layer) => layer.status !== "offline")
     .sort((left, right) => {
       const leftStatus =
@@ -2653,7 +2671,10 @@ async function ensurePreferredIntelligenceLayer(
   const snapshot = phaseSnapshotSchema.parse(engine.getSnapshot());
   const existing =
     [...snapshot.intelligenceLayers]
-      .filter((layer) => layer.role === role)
+      .filter(
+        (layer) =>
+          layer.role === role && truthfulModelLabel(layer.model) === getQModelName()
+      )
       .sort((left, right) => {
         const leftStatus =
           left.status === "ready" ? 0 : left.status === "busy" ? 1 : left.status === "degraded" ? 2 : 3;
@@ -2667,7 +2688,7 @@ async function ensurePreferredIntelligenceLayer(
   }
 
   try {
-    const discovered = await discoverPreferredOllamaLayer(role);
+    const discovered = await discoverPreferredOllamaLayer(role, LOCAL_OLLAMA_ENDPOINT, getQModelName());
     if (!discovered) {
       return null;
     }
@@ -2762,6 +2783,12 @@ async function executeCognitivePass(options: {
       governance.listDecisions()
     );
     const deniedCount = recentGovernanceDeniedCount();
+    const qContext = await resolveQOrchestrationContext({
+      snapshot: activeSnapshot,
+      objective: options.objective,
+      context: options.context,
+      release: releaseMetadata
+    });
     app.log.info(
       {
         layerId: busyLayer.id,
@@ -2770,7 +2797,10 @@ async function executeCognitivePass(options: {
         workerProfile: options.assignment?.executionProfile,
         executionEndpoint,
         governancePressure,
-        deniedCount
+        deniedCount,
+        qBundleId: qContext.trainingBundleId,
+        qPreferredExecutionLane: qContext.preferredExecutionLane,
+        qBlockedLanes: qContext.blockedLanes
       },
       "Executing governed cognitive pass."
     );
@@ -2780,7 +2810,8 @@ async function executeCognitivePass(options: {
       objective: options.objective,
       context: options.context,
       governancePressure,
-      recentDeniedCount: deniedCount
+      recentDeniedCount: deniedCount,
+      qContext
     });
     const boundExecution = bindExecutionPlacement({
       execution: result.execution,
@@ -2931,13 +2962,20 @@ async function executeScheduledCognitivePass(options: {
       governance.listDecisions()
     );
     const deniedCount = recentGovernanceDeniedCount();
+    const qContext = await resolveQOrchestrationContext({
+      snapshot: activeSnapshot,
+      objective: options.objective,
+      context: options.context,
+      release: releaseMetadata
+    });
     const result = await runOllamaExecution({
       snapshot: activeSnapshot,
       layer: executionLayer,
       objective: options.objective,
       context: options.context,
       governancePressure,
-      recentDeniedCount: deniedCount
+      recentDeniedCount: deniedCount,
+      qContext
     });
     const boundExecution = bindExecutionPlacement({
       execution: result.execution,
@@ -3459,6 +3497,16 @@ async function dispatchWithRoute(options: {
   frame?: ReturnType<typeof engine.getSnapshot>["neuroFrames"][number];
 }) {
   const status: ActuationOutput["status"] = options.body.suppressed ? "suppressed" : "dispatched";
+  const currentSnapshot = engine.getSnapshot();
+  const qRouteContext =
+    options.execution && truthfulModelLabel(options.execution.model) === getQModelName()
+      ? await resolveQOrchestrationContext({
+          snapshot: currentSnapshot,
+          objective: options.execution.objective,
+          context: options.execution.reasonSummary ?? options.execution.responsePreview,
+          release: releaseMetadata
+        })
+      : undefined;
   const federatedPressureState = await computeFederatedExecutionPressure({
     target:
       options.execution?.executionTopology === "parallel" ||
@@ -3469,7 +3517,7 @@ async function dispatchWithRoute(options: {
       options.execution?.assignedWorkerProfile === "remote" ? ["swarm"] : undefined
   });
   const routePlan = planAdaptiveRoute({
-    snapshot: engine.getSnapshot(),
+    snapshot: currentSnapshot,
     frame: options.frame,
     execution: options.execution,
     cognitiveRouteSuggestion: options.execution?.routeSuggestion,
@@ -3484,7 +3532,8 @@ async function dispatchWithRoute(options: {
     requestedTargetNodeId: options.body.targetNodeId?.trim() || undefined,
     requestedIntensity:
       typeof options.body.intensity === "number" ? Number(options.body.intensity) : undefined,
-    suppressed: options.body.suppressed
+    suppressed: options.body.suppressed,
+    qContext: qRouteContext
   });
   const command =
     options.body.command?.trim() ||
@@ -4074,7 +4123,12 @@ app.get("/api/q/info", async () => {
   if (!Q_API_ENABLED) {
     return {
       enabled: false,
-      alias: getQModelAlias(),
+      modelName: getQModelName(),
+      developer: getQDeveloperName(),
+      lead: getQLeadName(),
+      foundationModel: getQFoundationModelName(),
+      harness: getImmaculateHarnessName(),
+      identitySummary: getQIdentitySummary(),
       release: {
         buildId: releaseMetadata.buildId,
         gitShortSha: releaseMetadata.gitShortSha,
@@ -4086,8 +4140,13 @@ app.get("/api/q/info", async () => {
 
   return {
     enabled: true,
-    alias: getQModelAlias(),
-    model: truthfulModelLabel(getQModelAlias()),
+    modelName: getQModelName(),
+    model: truthfulModelLabel(getQModelName()),
+    developer: getQDeveloperName(),
+    lead: getQLeadName(),
+    foundationModel: getQFoundationModelName(),
+    harness: getImmaculateHarnessName(),
+    identitySummary: getQIdentitySummary(),
     release: {
       buildId: releaseMetadata.buildId,
       gitShortSha: releaseMetadata.gitShortSha,
@@ -4133,13 +4192,13 @@ app.post("/api/q/run", async (request, reply) => {
     keyId: authContext?.key?.keyId,
     label: authContext?.key?.label
   };
-  const appendAudit = async (record: Omit<QApiAuditRecord, "generatedAt" | "source" | "sessionId" | "alias" | "role" | "objective" | "contextPreview" | "principal">) => {
+  const appendAudit = async (record: Omit<QApiAuditRecord, "generatedAt" | "source" | "sessionId" | "modelName" | "role" | "objective" | "contextPreview" | "principal">) => {
     try {
       await appendQApiAuditRecord({
         generatedAt: new Date().toISOString(),
         source: "q-api",
         sessionId,
-        alias: getQModelAlias(),
+        modelName: getQModelName(),
         role,
         objective: prompt,
         contextPreview: truncateAuditText(context),
@@ -4192,7 +4251,7 @@ app.post("/api/q/run", async (request, reply) => {
   }
 
   try {
-    const layer = await discoverPreferredOllamaLayer(role, LOCAL_OLLAMA_ENDPOINT, getQModelAlias());
+    const layer = await discoverPreferredOllamaLayer(role, LOCAL_OLLAMA_ENDPOINT, getQModelName());
     if (!layer) {
       await appendAudit({
         status: "failed",
@@ -4201,12 +4260,12 @@ app.post("/api/q/run", async (request, reply) => {
         latencyMs: 0,
         failureClass: "q_model_unavailable",
         thinkingDetected: false,
-        responsePreview: "Q is not currently available from the configured Ollama endpoint."
+        responsePreview: "Q is not currently available from the configured Q runtime endpoint."
       });
       reply.code(503);
       return {
         error: "q_model_unavailable",
-        message: "Q is not currently available from the configured Ollama endpoint."
+        message: "Q is not currently available from the configured Q runtime endpoint."
       };
     }
 
@@ -4241,7 +4300,7 @@ app.post("/api/q/run", async (request, reply) => {
       ].filter(Boolean).length;
       await appendAudit({
         executionId: result.execution.id,
-        model: truthfulModelLabel(result.execution.model),
+        model: getQModelName(),
         status: "failed",
         parseSuccess: structuredFieldCount === 3,
         structuredFieldCount,
@@ -4256,8 +4315,12 @@ app.post("/api/q/run", async (request, reply) => {
       reply.code(503);
       return {
         error: "q_execution_failed",
-        alias: getQModelAlias(),
-        model: truthfulModelLabel(result.execution.model),
+        modelName: getQModelName(),
+        model: getQModelName(),
+        developer: getQDeveloperName(),
+        lead: getQLeadName(),
+        foundationModel: getQFoundationModelName(),
+        harness: getImmaculateHarnessName(),
         executionId: result.execution.id,
         latencyMs: result.execution.latencyMs,
         failureClass: result.failureClass,
@@ -4273,7 +4336,7 @@ app.post("/api/q/run", async (request, reply) => {
     ].filter(Boolean).length;
     await appendAudit({
       executionId: result.execution.id,
-      model: truthfulModelLabel(result.execution.model),
+      model: getQModelName(),
       status: "completed",
       parseSuccess: structuredFieldCount === 3,
       structuredFieldCount,
@@ -4288,8 +4351,12 @@ app.post("/api/q/run", async (request, reply) => {
 
     return {
       accepted: true,
-      alias: getQModelAlias(),
-      model: truthfulModelLabel(result.execution.model),
+      modelName: getQModelName(),
+      model: getQModelName(),
+      developer: getQDeveloperName(),
+      lead: getQLeadName(),
+      foundationModel: getQFoundationModelName(),
+      harness: getImmaculateHarnessName(),
       role,
       executionId: result.execution.id,
       sessionId,
@@ -4676,26 +4743,40 @@ app.get("/api/actuation/deliveries", async (request, reply) => {
   };
 });
 
-app.get("/api/intelligence/ollama/models", async (request, reply) => {
+async function listQRuntimeModels(request: FastifyRequest, reply: FastifyReply) {
   try {
     const models = await listOllamaModels();
+    const qAvailable = models.some((model) =>
+      matchesModelReference(model.name ?? model.model, getQModelTarget())
+    );
     return {
-      models
+      models: qAvailable
+        ? [
+            {
+              model: getQModelName(),
+              name: getQModelName(),
+              foundationModel: getQFoundationModelName()
+            }
+          ]
+        : []
     };
   } catch (error) {
     reply.code(503);
     return {
-      error: "ollama_unavailable",
-      message: error instanceof Error ? error.message : "Ollama is unavailable."
+      error: "q_runtime_unavailable",
+      message: error instanceof Error ? error.message : "The Q runtime is unavailable."
     };
   }
-});
+}
 
-app.post("/api/intelligence/ollama/register", async (request, reply) => {
+app.get("/api/intelligence/q/models", listQRuntimeModels);
+app.get("/api/intelligence/ollama/models", listQRuntimeModels);
+
+async function registerQRuntimeLayer(request: FastifyRequest, reply: FastifyReply) {
   if (
     !authorizeGovernedAction(
       "cognitive-registration",
-      "/api/intelligence/ollama/register",
+      "/api/intelligence/q/register",
       request,
       reply
     )
@@ -4707,15 +4788,27 @@ app.post("/api/intelligence/ollama/register", async (request, reply) => {
     (request.body as { role?: IntelligenceLayer["role"]; model?: string } | undefined) ?? {};
 
   try {
+    const requestedModel = body.model?.trim();
+    if (
+      requestedModel &&
+      !matchesModelReference(requestedModel, getQModelName()) &&
+      !matchesModelReference(requestedModel, getQModelTarget())
+    ) {
+      reply.code(400);
+      return {
+        error: "unsupported_model",
+        message: "Only Q can be registered on this harness."
+      };
+    }
     const layer = await discoverPreferredOllamaLayer(
       body.role ?? "mid",
       undefined,
-      body.model?.trim() || undefined
+      getQModelName()
     );
     if (!layer) {
       reply.code(404);
       return {
-        error: "no_local_ollama_models"
+        error: "no_local_q_runtime"
       };
     }
 
@@ -4725,17 +4818,20 @@ app.post("/api/intelligence/ollama/register", async (request, reply) => {
 
     return {
       accepted: true,
-      layer,
+      layer: projectIntelligenceLayer(layer),
       snapshot
     };
   } catch (error) {
     reply.code(503);
     return {
-      error: "ollama_registration_failed",
-      message: error instanceof Error ? error.message : "Unable to register Ollama layer."
+      error: "q_runtime_registration_failed",
+      message: error instanceof Error ? error.message : "Unable to register the Q runtime layer."
     };
   }
-});
+}
+
+app.post("/api/intelligence/q/register", registerQRuntimeLayer);
+app.post("/api/intelligence/ollama/register", registerQRuntimeLayer);
 
 app.post("/api/intelligence/workers/register", async (request, reply) => {
   if (
@@ -5933,7 +6029,7 @@ app.post("/api/intelligence/run", async (request, reply) => {
     reply.code(404);
     return {
       error: "no_intelligence_layer",
-      message: "Register an Ollama layer before running a cognitive pass."
+      message: "Register a Q runtime layer before running a cognitive pass."
     };
   }
 
@@ -6024,6 +6120,11 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
     target: "planner-swarm",
     preferredDeviceAffinityTags: ["swarm"]
   });
+  const mediationQContext = await resolveQOrchestrationContext({
+    snapshot,
+    objective: body.objective,
+    release: releaseMetadata
+  });
 
   const arbitrationPlan = planExecutionArbitration({
     snapshot,
@@ -6037,7 +6138,8 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
     forceCognition: body.forceCognition,
     suppressed: body.suppressed,
     sessionConversationMemory,
-    federationPressure: federatedPressureState.pressure
+    federationPressure: federatedPressureState.pressure,
+    qContext: mediationQContext
   });
   const arbitrationDecision = buildExecutionArbitrationDecision({
     plan: arbitrationPlan,
@@ -6078,7 +6180,8 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
     arbitration: arbitrationDecision,
     requestedLayerId: body.layerId?.trim() || undefined,
     sessionConversationMemory,
-    federationPressure: federatedPressureState.pressure
+    federationPressure: federatedPressureState.pressure,
+    qContext: mediationQContext
   });
   const scheduleDecision = buildExecutionScheduleDecision({
     arbitration: arbitrationDecision,
@@ -6104,7 +6207,7 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
       reply.code(404);
       return {
         error: "no_intelligence_layer",
-        message: "Register an Ollama layer before running the mediated cognitive schedule.",
+        message: "Register a Q runtime layer before running the mediated cognitive schedule.",
         arbitrationDecision,
         arbitrationPlan,
         scheduleDecision,
@@ -6148,6 +6251,15 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
   const guardAllowsDispatch =
     mediationConversation?.guardVerdict === undefined ||
     mediationConversation.guardVerdict === "approved";
+  const routePreviewQContext =
+    mediationExecution && truthfulModelLabel(mediationExecution.model) === getQModelName()
+      ? await resolveQOrchestrationContext({
+          snapshot: engine.getSnapshot(),
+          objective: mediationExecution.objective,
+          context: mediationExecution.reasonSummary ?? mediationExecution.responsePreview,
+          release: releaseMetadata
+        })
+      : undefined;
   const routePreview = planAdaptiveRoute({
     snapshot: engine.getSnapshot(),
     frame,
@@ -6165,7 +6277,8 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
     requestedIntensity:
       typeof body.intensity === "number" ? Number(body.intensity) : undefined,
     suppressed:
-      !arbitrationPlan.shouldDispatchActuation || !guardAllowsDispatch
+      !arbitrationPlan.shouldDispatchActuation || !guardAllowsDispatch,
+    qContext: routePreviewQContext
   });
   const shouldDispatchOnApproval =
     dispatchOnApproval && arbitrationPlan.shouldDispatchActuation && guardAllowsDispatch;

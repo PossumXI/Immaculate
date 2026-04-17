@@ -1,6 +1,6 @@
 {
   "run_name": "q-defsec-code-longctx-v2",
-  "alias_name": "Q",
+  "model_name": "Q",
   "base_model": "Q-LINEAGE-CHECKPOINT",
   "train_dataset_path": ".training-output/q/q-mix-longctx-v2.jsonl",
   "training_lock_path": ".training-output/q/latest-training-lock.json",

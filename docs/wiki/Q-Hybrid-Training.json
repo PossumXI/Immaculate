@@ -1,39 +1,39 @@
 {
-  "generatedAt": "2026-04-17T02:45:56Z",
-  "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v2",
-  "manifestPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v2/hybrid-session.manifest.json",
+  "generatedAt": "2026-04-17T10:11:18Z",
+  "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v13",
+  "manifestPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v13/hybrid-session.manifest.json",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "3c3e41d99de4ee12273359707ffe5f0e2025e851",
-    "gitShortSha": "3c3e41d",
-    "buildId": "0.1.0+3c3e41d"
+    "gitSha": "848d44f8dbe409a8227bab61f88eccbf078dd056",
+    "gitShortSha": "848d44f",
+    "buildId": "0.1.0+848d44f"
   },
   "q": {
-    "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v2-3c3e41d-766c8ccf",
+    "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d",
     "trainingLockPath": ".training-output/q/latest-training-lock.json",
-    "configPath": ".training-output/q/q-lora-config-harbor-opt-2384cf5-bench-v2.json",
+    "configPath": ".training-output/q/q-lora-config-harbor-opt-2384cf5-bench-v13.json",
     "modelId": "Q",
-    "trainDatasetPath": ".training-output/q/q-mix-longctx-harbor-opt-2384cf5-bench-v2.jsonl",
-    "trainDatasetRowCount": 31,
-    "mixManifestPath": ".training-output/q/q-mix-longctx-harbor-opt-2384cf5-bench-v2.manifest.json",
+    "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13.jsonl",
+    "trainDatasetRowCount": 100,
+    "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13.manifest.json",
     "curationRunPath": null,
     "curationRunId": null,
     "benchmarkCorpusPath": "docs/wiki/Q-Benchmark-Corpus.json",
     "benchmarkCorpusJsonlPath": ".training-output/q/q-benchmark-corpus.jsonl",
-    "benchmarkCorpusRecordCount": 19,
+    "benchmarkCorpusRecordCount": 49,
     "failureCorpusPath": "docs/wiki/Q-Failure-Corpus.json"
   },
   "immaculate": {
-    "bundleId": "immaculate-orchestration-3c3e41d-7aa3136b",
-    "bundlePath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-harbor-opt-2384cf5-bench-v2.json",
+    "bundleId": "immaculate-orchestration-848d44f-6e631f6b",
+    "bundlePath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-harbor-opt-2384cf5-bench-v13.json",
     "signalCount": 14
   },
   "cloudBundle": {
-    "bundleId": "q-hybrid-harbor-opt-2384cf5-bench-v2-3c3e41d",
-    "archivePath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v2/cloud-bundle/q-hybrid-harbor-opt-2384cf5-bench-v2-cloud-bundle.tar.gz",
-    "archiveSha256": "8e76f728bc864a70b0349534173889d6881ae5d33aea55e2db9a225fbd820a90",
-    "archiveSizeBytes": 17819,
-    "manifestPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v2/cloud-bundle/bundle-manifest.json",
+    "bundleId": "q-hybrid-harbor-opt-2384cf5-bench-v13-848d44f",
+    "archivePath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v13/cloud-bundle/q-hybrid-harbor-opt-2384cf5-bench-v13-cloud-bundle.tar.gz",
+    "archiveSha256": "77f4e49a8634a19cbc443260b07238dc002cfb2fb3ddc702e81b221b314cb3e0",
+    "archiveSizeBytes": 30093,
+    "manifestPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v13/cloud-bundle/bundle-manifest.json",
     "fileCount": 9,
     "repoRemoteUrl": "https://github.com/PossumXI/Immaculate.git"
   },
@@ -55,7 +55,7 @@
     "cloud": {
       "provider": "hf_jobs",
       "mode": "launch",
-      "ready": false,
+      "ready": true,
       "envFiles": [
         {
           "path": "C:/Users/Knight/Desktop/cheeks/Asgard/.env",
@@ -91,7 +91,7 @@
         "python",
         "training/q/launch_hf_jobs_training.py",
         "--session",
-        ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v2/hybrid-session.manifest.json",
+        ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v13/hybrid-session.manifest.json",
         "--env-file",
         "C:/Users/Knight/Desktop/cheeks/Asgard/.env",
         "--check"
@@ -297,12 +297,10 @@
       "bundleRepo": "TruLumecreator/immaculate-q-cloud-bundles",
       "bundleStaged": true,
       "jobsVisibleCount": 0,
-      "smokeAttempted": true,
-      "smokeBlocker": "Error: Client error '402 Payment Required' for url 'https://huggingface.co/api/jobs/TruLumecreator' (Request ID: Root=1-69e1822f-4a039ab85d756a7809542f0c;9f8feb26-3fba-4852-9a4d-95d543987590)\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402\n\nPre-paid credit balance is insufficient - add more credits to your account to use Jobs.",
+      "smokeAttempted": false,
+      "smokeBlocker": null,
       "launchBlocker": null,
-      "reasons": [
-        "HF Jobs smoke launch blocker: Error: Client error '402 Payment Required' for url 'https://huggingface.co/api/jobs/TruLumecreator' (Request ID: Root=1-69e1822f-4a039ab85d756a7809542f0c;9f8feb26-3fba-4852-9a4d-95d543987590)\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402\n\nPre-paid credit balance is insufficient - add more credits to your account to use Jobs."
-      ],
+      "reasons": [],
       "canonicalSources": {
         "HF_TOKEN": "HF_TOKEN",
         "WANDB_MODE": "WANDB_MODE",
@@ -340,13 +338,13 @@
     },
     "suggestedEnvUpdates": {},
     "actions": [],
-    "generatedAt": "2026-04-17T02:45:56Z",
-    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v2",
+    "generatedAt": "2026-04-17T10:11:18Z",
+    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v13",
     "release": {
       "packageVersion": "0.1.0",
-      "gitSha": "3c3e41d99de4ee12273359707ffe5f0e2025e851",
-      "gitShortSha": "3c3e41d",
-      "buildId": "0.1.0+3c3e41d"
+      "gitSha": "848d44f8dbe409a8227bab61f88eccbf078dd056",
+      "gitShortSha": "848d44f",
+      "buildId": "0.1.0+848d44f"
     },
     "output": {
       "jsonPath": "docs/wiki/OCI-GPU-Advisor.json",
@@ -449,7 +447,7 @@
       "latestAttemptCode": "TenantCapacityExceeded",
       "latestAttemptMessage": "You have exceeded the maximum number of allowed subscribed regions. Please see the Limits, Quotas and Usage page for more detail.",
       "subscriptionLimitReached": true,
-      "recommendedNextStep": "OCI support incident creation is still blocked for this controller identity. Current error: The Requested Domain was not found or not Authorized. Open the limit increase manually in OCI/My Oracle Support or fix the support-account identity binding, then rerun the bench-v2 doctor for the Q and Immaculate cloud lanes."
+      "recommendedNextStep": "OCI support incident creation is still blocked for this controller identity. Current error: The Requested Domain was not found or not Authorized. Open the limit increase manually in OCI/My Oracle Support or fix the support-account identity binding, then rerun the current Q and Immaculate cloud doctor."
     },
     "output": {
       "jsonPath": "docs/wiki/OCI-Region-Capacity.json",
@@ -457,17 +455,17 @@
     }
   },
   "hfJobsTraining": {
-    "generatedAt": "2026-04-17T00:43:28Z",
+    "generatedAt": "2026-04-17T10:09:58Z",
     "release": {
       "packageVersion": "0.1.0",
-      "gitSha": "45280d5867db018cd44b27b373a2404a70a179c0",
-      "gitShortSha": "45280d5",
-      "buildId": "0.1.0+45280d5"
+      "gitSha": "848d44f8dbe409a8227bab61f88eccbf078dd056",
+      "gitShortSha": "848d44f",
+      "buildId": "0.1.0+848d44f"
     },
-    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v1",
+    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v13",
     "auth": {
       "hfCliBin": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-push-harbor\\.tools\\foundry-venv\\Scripts\\hf.exe",
-      "tokenSource": "HUGGINFACE_ACCESS_TOKEN",
+      "tokenSource": "HF_TOKEN",
       "ready": true,
       "user": "TruLumecreator",
       "stderr": null
@@ -639,25 +637,25 @@
     "jobsVisibleCount": 0,
     "stagedBundle": {
       "repoId": "TruLumecreator/immaculate-q-cloud-bundles",
-      "archiveRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v1/q-hybrid-harbor-opt-2384cf5-bench-v1-cloud-bundle.tar.gz",
-      "manifestRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v1/bundle-manifest.json",
+      "archiveRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v13/q-hybrid-harbor-opt-2384cf5-bench-v13-cloud-bundle.tar.gz",
+      "manifestRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v13/bundle-manifest.json",
       "staged": true,
       "createRepoStdout": "repo_id=TruLumecreator/immaculate-q-cloud-bundles url=https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles",
       "createRepoStderr": "Warning: `hf repo` is deprecated in favor of `hf repos`.",
-      "uploadArchiveStdout": "url=https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles/commit/2c160df1ca92424d1add2e4307801df47fae4160",
-      "uploadArchiveStderr": null,
-      "uploadManifestStdout": "url=https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles/commit/bb35e3e9f883471811c5e5464040ab874e8754a0",
-      "uploadManifestStderr": null
+      "uploadArchiveStdout": "url=https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles/commit/82709d696351b8b6cb06154c5ce0b02c366cf528",
+      "uploadArchiveStderr": "Removing 1 file(s) from commit that have not changed.\nNo files have been modified since last commit. Skipping to prevent empty commit.",
+      "uploadManifestStdout": "url=https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles/commit/82709d696351b8b6cb06154c5ce0b02c366cf528",
+      "uploadManifestStderr": "Removing 1 file(s) from commit that have not changed.\nNo files have been modified since last commit. Skipping to prevent empty commit."
     },
     "smokeLaunch": {
-      "attempted": true,
+      "attempted": false,
       "ready": false,
       "flavor": "cpu-basic",
       "timeout": "5m",
       "jobId": null,
-      "blocker": "Error: Client error '402 Payment Required' for url 'https://huggingface.co/api/jobs/TruLumecreator' (Request ID: Root=1-69e1822f-4a039ab85d756a7809542f0c;9f8feb26-3fba-4852-9a4d-95d543987590)\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402\n\nPre-paid credit balance is insufficient - add more credits to your account to use Jobs.",
-      "stdout": "\u001b[90mSet HF_DEBUG=1 as environment variable for full traceback.\u001b[0m",
-      "stderr": "Error: Client error '402 Payment Required' for url 'https://huggingface.co/api/jobs/TruLumecreator' (Request ID: Root=1-69e1822f-4a039ab85d756a7809542f0c;9f8feb26-3fba-4852-9a4d-95d543987590)\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402\n\nPre-paid credit balance is insufficient - add more credits to your account to use Jobs."
+      "blocker": null,
+      "stdout": null,
+      "stderr": null
     },
     "launch": {
       "attempted": false,
@@ -674,8 +672,8 @@
     },
     "summary": {
       "provider": "hf_jobs",
-      "launchReady": false,
-      "recommendedNextStep": "Hugging Face Jobs is authenticated and the bundle is staged, but prepaid credits are insufficient for launch. Add HF credits, then rerun the same session through the HF Jobs launcher."
+      "launchReady": true,
+      "recommendedNextStep": "Hugging Face Jobs is authenticated and hardware is visible. Launch the staged Q hybrid session when ready."
     },
     "output": {
       "jsonPath": "docs/wiki/HF-Jobs-Training.json",
@@ -683,42 +681,42 @@
     }
   },
   "colabFreeTraining": {
-    "generatedAt": "2026-04-15T19:49:12Z",
+    "generatedAt": "2026-04-17T10:09:51Z",
     "release": {
       "packageVersion": "0.1.0",
-      "gitSha": "43c035a3dbb67eefb5c918c94973738ccb5097f3",
-      "gitShortSha": "43c035a",
-      "buildId": "0.1.0+43c035a"
+      "gitSha": "848d44f8dbe409a8227bab61f88eccbf078dd056",
+      "gitShortSha": "848d44f",
+      "buildId": "0.1.0+848d44f"
     },
     "repo": {
       "slug": "PossumXI/Immaculate"
     },
-    "sessionId": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2",
+    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v13",
     "session": {
-      "manifestPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/hybrid-session.manifest.json",
-      "configPath": ".training-output/q/q-lora-config-longctx-cur-fnv1a-8f551a5c-bench-v2.json",
+      "manifestPath": ".training-output/q/latest-hybrid-session.json",
+      "configPath": ".training-output/q/q-lora-config-harbor-opt-2384cf5-bench-v13.json",
       "trainingLockPath": ".training-output/q/latest-training-lock.json",
-      "trainingBundleId": "q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v2-86bf2b5-6207dd5e",
-      "immaculateBundleOutputPath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-cur-fnv1a-8f551a5c-bench-v2.json"
+      "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d",
+      "immaculateBundleOutputPath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-harbor-opt-2384cf5-bench-v13.json"
     },
     "bundle": {
       "sourceType": "hf_dataset",
       "repoId": "TruLumecreator/immaculate-q-cloud-bundles",
-      "archiveRepoPath": "sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/q-hybrid-cur-fnv1a-8f551a5c-bench-v2-cloud-bundle.tar.gz",
-      "manifestRepoPath": "sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/bundle-manifest.json",
+      "archiveRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v13/q-hybrid-harbor-opt-2384cf5-bench-v13-cloud-bundle.tar.gz",
+      "manifestRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v13/bundle-manifest.json",
       "staged": true
     },
     "microTrain": {
-      "configPath": ".training-output/q/sessions/q-hybrid-cur-fnv1a-8f551a5c-bench-v2/colab/q-colab-micro-config.json",
+      "configPath": ".training-output/q/colab/q-colab-micro-config.json",
       "maxSteps": 24,
       "maxSeqLength": 2048,
       "minGpuMemoryGb": 20,
       "wandbOptional": true
     },
     "notebook": {
-      "path": "deploy/colab/notebooks/q-hybrid-cur-fnv1a-8f551a5c-bench-v2-colab-free.ipynb",
-      "fileName": "q-hybrid-cur-fnv1a-8f551a5c-bench-v2-colab-free.ipynb",
-      "openInColabUrl": "https://colab.research.google.com/github/PossumXI/Immaculate/blob/main/deploy/colab/notebooks/q-hybrid-cur-fnv1a-8f551a5c-bench-v2-colab-free.ipynb"
+      "path": "deploy/colab/notebooks/q-hybrid-harbor-opt-2384cf5-bench-v13-colab-free.ipynb",
+      "fileName": "q-hybrid-harbor-opt-2384cf5-bench-v13-colab-free.ipynb",
+      "openInColabUrl": "https://colab.research.google.com/github/PossumXI/Immaculate/blob/main/deploy/colab/notebooks/q-hybrid-harbor-opt-2384cf5-bench-v13-colab-free.ipynb"
     },
     "summary": {
       "provider": "colab_free",
@@ -739,9 +737,9 @@
         "C:\\Users\\Knight\\AppData\\Local\\Microsoft\\WindowsApps\\python.EXE",
         "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-push-harbor\\training\\q\\train_q_lora_unsloth.py",
         "--config",
-        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-push-harbor\\.training-output\\q\\q-lora-config-harbor-opt-2384cf5-bench-v2.json",
+        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-push-harbor\\.training-output\\q\\q-lora-config-harbor-opt-2384cf5-bench-v13.json",
         "--session-manifest",
-        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-push-harbor\\.training-output\\q\\sessions\\q-hybrid-harbor-opt-2384cf5-bench-v2\\hybrid-session.manifest.json",
+        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-push-harbor\\.training-output\\q\\sessions\\q-hybrid-harbor-opt-2384cf5-bench-v13\\hybrid-session.manifest.json",
         "--dry-run"
       ]
     },
@@ -749,12 +747,12 @@
       "enabled": true,
       "provider": "hf_jobs",
       "mode": "launch",
-      "status": "launch-blocked",
+      "status": "ready",
       "command": [
         "python",
         "training/q/launch_hf_jobs_training.py",
         "--session",
-        ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v2/hybrid-session.manifest.json",
+        ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v13/hybrid-session.manifest.json",
         "--env-file",
         "C:/Users/Knight/Desktop/cheeks/Asgard/.env",
         "--check"
@@ -762,8 +760,8 @@
     }
   },
   "output": {
-    "sessionJsonPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v2/hybrid-session.json",
-    "sessionMarkdownPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v2/hybrid-session.md",
+    "sessionJsonPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v13/hybrid-session.json",
+    "sessionMarkdownPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v13/hybrid-session.md",
     "wikiJsonPath": "docs/wiki/Q-Hybrid-Training.json",
     "wikiMarkdownPath": "docs/wiki/Q-Hybrid-Training.md",
     "hfJobsTrainingJsonPath": "docs/wiki/HF-Jobs-Training.json",

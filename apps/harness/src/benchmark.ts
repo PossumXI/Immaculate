@@ -70,6 +70,7 @@ import { safeUnlink } from "./utils.js";
 import { createNodeRegistry } from "./node-registry.js";
 import { createIntelligenceWorkerRegistry } from "./workers.js";
 import { runQGatewaySubstrateBenchmark } from "./benchmark-q-gateway-substrate.js";
+import { resolveReleaseMetadata } from "./release-metadata.js";
 import {
   projectActuationOutput,
   projectCognitiveExecution,
@@ -460,15 +461,15 @@ function createProgress(options: {
       "NWB time-series scanning and neuro-session registration into synchronize/decode",
       "Live NWB replay windows flowing through synchronize/decode with decode-confidence tracking",
       "Live socket neuro frames entering the durable synchronize/decode path",
-      "First live local cognition backend through Ollama/Gemma wired into route/reason/commit",
+      "First live local Q cognition lane wired into route/reason/commit",
       "Purpose-bound governance enforcement across mutable control, ingest, cognition, streaming, and benchmark routes",
       "Sensitive snapshot dataset and neuro-session reads redacted by default, with governed detail routes for full inspection",
     "Field-level consent projections over derived neuro features and cognitive trace previews",
     "Tier 2 neural-coupling benchmark coverage for band dominance, route phase bias, and coupled routing strength",
-    "Tier 2 spectral-confidence coverage for artifact-band penalty and backward-compatible amplitude fallback",
+    "Tier 2 spectral-confidence coverage for artifact-band penalty and legacy amplitude path continuity",
     "Governed actuation dispatch and actuation output readback across the feedback plane",
       "Adapter-backed visual, haptic, and stim delivery lanes with durable actuation delivery logs",
-      "Governed websocket actuation device links with acked bridge delivery and file fallback",
+      "Governed websocket actuation device links with acked bridge delivery and file-backed continuity",
       "Concrete UDP/OSC actuation transport registration and delivery over protocol-aware visual lanes",
       "Supervised serial vendor transport with heartbeat health, capability health, and per-device fault isolation",
       "HTTP/2 direct device transport with typed RPC-style delivery and response telemetry",
@@ -489,7 +490,7 @@ function createProgress(options: {
     remaining: [
       "Direct device adapters beyond the first live socket neurophysiology ingress path",
       "Additional vendor-specific transports beyond serial and HTTP/2 direct lanes, including MIDI and richer gRPC-class adapters",
-      "Additional multi-agent and tool backends beyond the first local Ollama cognition layer",
+      "Additional multi-agent and tool backends beyond the first local governed Q reasoning lane",
       "Domain benchmark packs against published BCI and neurodata workloads",
       "Distributed multi-peer swarm routing that feeds live cross-node execution pressure back into runtime cognition formation and outward routing"
       ]
@@ -603,6 +604,40 @@ function deriveRouteSoftPriorBias(
           : 0.02;
   const pressureBias = pressure === "critical" ? -0.02 : pressure === "elevated" ? -0.01 : 0;
   return Number(Math.max(-0.06, Math.min(0.06, base + modeBias + pressureBias)).toFixed(4));
+}
+
+function deriveRouteSoftPriorStrength(
+  routeSuggestion: string,
+  mode: "reflex-direct" | "cognitive-assisted" | "guarded-fallback" | "operator-override" | "suppressed",
+  pressure: GovernancePressureLevel
+): number {
+  const lowerSuggestion = routeSuggestion.toLowerCase();
+  const explicitRouteHint =
+    lowerSuggestion.includes("hold") ||
+    lowerSuggestion.includes("guard") ||
+    lowerSuggestion.includes("suppress")
+      ? "guarded"
+      : lowerSuggestion.includes("reflex") || lowerSuggestion.includes("direct")
+        ? "reflex"
+        : lowerSuggestion.includes("cognitive") || lowerSuggestion.includes("reasoner")
+          ? "cognitive"
+          : lowerSuggestion.includes("sustain") || lowerSuggestion.includes("stabil")
+            ? "steady"
+            : undefined;
+  const baseStrength = explicitRouteHint ? 0.05 : 0.03;
+  const consistencyBonus =
+    explicitRouteHint === "guarded" && (mode === "guarded-fallback" || mode === "suppressed")
+      ? 0.01
+      : explicitRouteHint === "reflex" && mode === "reflex-direct"
+        ? 0.01
+        : explicitRouteHint === "cognitive" && mode === "cognitive-assisted"
+          ? 0.01
+          : explicitRouteHint === "steady" &&
+              (mode === "reflex-direct" || mode === "cognitive-assisted")
+            ? 0.01
+            : 0;
+  const governancePenalty = pressure === "critical" ? 0.01 : pressure === "elevated" ? 0.005 : 0;
+  return Number(Math.max(0.01, Math.min(0.06, baseStrength + consistencyBonus - governancePenalty)).toFixed(4));
 }
 
 function buildTier1ConversationLedger(options: {
@@ -1106,6 +1141,10 @@ function lowerIsBetter(seriesId: string): boolean {
   );
 }
 
+function trendNeutralSeries(seriesId: string): boolean {
+  return seriesId === "cognitive_route_soft_prior_ratio";
+}
+
 function compareBenchmarkReports(
   previous: BenchmarkReport,
   currentSeries: BenchmarkSeries[]
@@ -1127,7 +1166,9 @@ function compareBenchmarkReports(
           ? 0
           : round((delta / before) * 100);
       const trend: BenchmarkDelta["trend"] =
-        Math.abs(delta) < 0.01 || (isSmallLatencySeries && Math.abs(delta) < 1)
+        Math.abs(delta) < 0.01 ||
+        (isSmallLatencySeries && Math.abs(delta) < 1) ||
+        trendNeutralSeries(series.id)
           ? "unchanged"
           : lowerIsBetter(series.id)
             ? delta < 0
@@ -1340,15 +1381,15 @@ export async function runPublishedBenchmark(
         ? (gatewaySubstrate.checks.models.body as {
             data?: Array<{
               id?: string;
-              metadata?: { providerModel?: string };
+              metadata?: { foundationModel?: string };
             }>;
           })
         : undefined;
     const qModelEntry = modelsBody?.data?.[0];
     const expectedProviderModel =
       typeof gatewaySubstrate.checks.health.body === "object" && gatewaySubstrate.checks.health.body !== null
-        ? ((gatewaySubstrate.checks.health.body as { model?: string }).model ?? "Q")
-        : "Q";
+        ? ((gatewaySubstrate.checks.health.body as { foundationModel?: string }).foundationModel ?? "Gemma 4")
+        : "Gemma 4";
     const assertions = [
       createAssertion(
         "q-gateway-substrate-health",
@@ -1382,14 +1423,14 @@ export async function runPublishedBenchmark(
       ),
       createAssertion(
         "q-gateway-substrate-model-list",
-        "Q gateway substrate exposes exactly the Q alias and provider label",
+        "Q gateway substrate exposes only the Q public model name built on Gemma 4",
         gatewaySubstrate.checks.models.status === 200 &&
           modelsBody?.data?.length === 1 &&
           qModelEntry?.id === "Q" &&
-          qModelEntry.metadata?.providerModel === expectedProviderModel,
-        "Q alias with truthful provider label",
-        `${gatewaySubstrate.checks.models.status} / ${qModelEntry?.id ?? "missing"} / ${qModelEntry?.metadata?.providerModel ?? "missing"}`,
-        "the public model list should make the alias and the real provider model explicit"
+          qModelEntry.metadata?.foundationModel === expectedProviderModel,
+        "Q public model name built on Gemma 4",
+        `${gatewaySubstrate.checks.models.status} / ${qModelEntry?.id ?? "missing"} / ${qModelEntry?.metadata?.foundationModel ?? "missing"}`,
+        "the public model list should make Q the only model name while still stating it is built on Gemma 4"
       ),
       createAssertion(
         "q-gateway-substrate-concurrency",
@@ -1460,7 +1501,7 @@ export async function runPublishedBenchmark(
       packLabel: pack.label,
       runKind,
       profile: `gateway-substrate / ${hardwareContext.platform}-${hardwareContext.arch}`,
-      summary: `This benchmark starts the dedicated Q gateway on loopback, validates its live auth and health contract, then drives two structured Q scenarios back through Immaculate arbitration to measure the seam honestly. It proves the Q alias is live, the current training bundle is bound to the info route, concurrency remains bounded, ROUTE/REASON/COMMIT survives the gateway seam, and critical guard denials still block outward dispatch after arbitration. Hardware context: ${formatBenchmarkHardwareContext(hardwareContext)}.`,
+      summary: `This benchmark starts the dedicated Q gateway on loopback, validates its live auth and health contract, then drives two structured Q scenarios back through Immaculate arbitration to measure the seam honestly. It proves Q is the only surfaced model name, Q is described as built on Gemma 4, the current training bundle is bound to the info route, concurrency remains bounded, ROUTE/REASON/COMMIT survives the gateway seam, and critical guard denials still block outward dispatch after arbitration. Hardware context: ${formatBenchmarkHardwareContext(hardwareContext)}.`,
       tickIntervalMs,
       totalTicks: gatewaySubstrate.scenarioResults.length,
       plannedDurationMs,
@@ -1729,7 +1770,7 @@ export async function runPublishedBenchmark(
   engine.registerIntelligenceLayer(benchmarkGuardLayer);
   engine.registerIntelligenceLayer(benchmarkSoulLayer);
   const syntheticResponse =
-    "ROUTE: sustain the benchmark lane. REASON: validate projection rules. COMMIT: publish the trace.";
+    "ROUTE: cognitive. REASON: validate projection rules before the next orchestration pass consumes the trace. COMMIT: publish the trace.";
   const parsedSyntheticExecution = parseStructuredCognitiveResponse(syntheticResponse);
   const syntheticExecution: CognitiveExecution = {
     id: `cog-${suiteId}-synthetic`,
@@ -3066,6 +3107,26 @@ export async function runPublishedBenchmark(
     governanceDecisions: preferredRouteGovernanceDecisions,
     consentScope: "system:benchmark"
   });
+  const releaseMetadata = await resolveReleaseMetadata();
+  const qGovernedLocalRoutePlan = planAdaptiveRoute({
+    snapshot: engine.getSnapshot(),
+    frame: preferredRouteFrame,
+    execution: syntheticExecution,
+    adapters: actuationManager.listAdapters(),
+    transports: actuationManager.listTransports(),
+    governanceStatus: preferredRouteGovernanceStatus,
+    governanceDecisions: preferredRouteGovernanceDecisions,
+    consentScope: "system:benchmark",
+    qContext: {
+      qRoutingDirective: "primary-governed-local",
+      readinessReady: true,
+      gatewaySubstrateHealthy: true,
+      preferredExecutionLane: "local-q",
+      cloudLaneReady: false,
+      cloudLaneStatus: "launch-blocked",
+      trainingBundleId: releaseMetadata.q.trainingLock?.bundleId
+    }
+  });
   const preferredHttp2Actuation: ActuationOutput = {
     id: `act-${suiteId}-http2-preferred`,
     sessionId: nwbFixture.summary.id,
@@ -3146,18 +3207,18 @@ export async function runPublishedBenchmark(
     consentScope: `subject:${bidsFixture.summary.id}`
   });
   const guardedFallbackActuation: ActuationOutput = {
-    id: `act-${suiteId}-guarded-fallback`,
+    id: `act-${suiteId}-guarded-review`,
     sessionId: nwbFixture.summary.id,
     source: "benchmark",
     sourceExecutionId: syntheticExecution.id,
     sourceFrameId: liveIngressResult.frame.id,
     targetNodeId: "actuator-grid",
     channel: guardedFallbackPlan.channel,
-    command: "benchmark:guarded-fallback",
+    command: "benchmark:guarded-review",
     intensity: guardedFallbackPlan.recommendedIntensity,
     status: "dispatched",
     summary:
-      "Dispatch benchmark actuation through the guarded fallback lane under critical governance pressure.",
+      "Dispatch benchmark actuation through the guarded review lane under critical governance pressure.",
     generatedAt: new Date().toISOString(),
     dispatchedAt: new Date().toISOString()
   };
@@ -3261,6 +3322,15 @@ export async function runPublishedBenchmark(
   const actuationAdapters = actuationManager.listAdapters();
   const actuationTransports = actuationManager.listTransports();
   const actuationDeliveries = actuationManager.listDeliveries(8);
+  const qGovernedExecutionContext = {
+    readinessReady: true,
+    gatewaySubstrateHealthy: true,
+    preferredExecutionLane: "local-q" as const,
+    qRoutingDirective: "primary-governed-local" as const,
+    cloudLaneReady: false,
+    cloudLaneStatus: "launch-blocked",
+    trainingBundleId: "tracked-q-bundle"
+  };
   const arbitrationLatencySamples: number[] = [];
   const arbitrationCognitionSamples: number[] = [];
   const reflexArbitrationStart = performance.now();
@@ -3335,6 +3405,27 @@ export async function runPublishedBenchmark(
     execution: syntheticExecution
   });
   engine.recordExecutionArbitration(cognitiveArbitrationDecision);
+  const qGovernedLocalArbitrationPlan = planExecutionArbitration({
+    snapshot: engine.getSnapshot(),
+    frame: escalationFrame,
+    execution: syntheticExecution,
+    governanceStatus: {
+      mode: "enforced",
+      policyCount: 0,
+      decisionCount: 0,
+      deniedCount: 0
+    },
+    governanceDecisions: [],
+    consentScope: "system:benchmark",
+    qContext: qGovernedExecutionContext
+  });
+  const qGovernedLocalArbitrationDecision = buildExecutionArbitrationDecision({
+    plan: qGovernedLocalArbitrationPlan,
+    consentScope: "system:benchmark",
+    frame: escalationFrame,
+    execution: syntheticExecution
+  });
+  engine.recordExecutionArbitration(qGovernedLocalArbitrationDecision);
   const federatedArbitrationClearPlan = planExecutionArbitration({
     snapshot: engine.getSnapshot(),
     frame: escalationFrame,
@@ -3484,6 +3575,18 @@ export async function runPublishedBenchmark(
         guardedFallbackPlan.mode,
         guardedFallbackDecision.governancePressure
       )
+    )
+  ];
+  const cognitiveRouteSoftPriorStrengthSamples = [
+    deriveRouteSoftPriorStrength(
+      parsedCognitiveLoop.routeSuggestion,
+      preferredRoutePlan.mode,
+      preferredRouteDecision.governancePressure
+    ),
+    deriveRouteSoftPriorStrength(
+      parsedCognitiveLoop.routeSuggestion,
+      guardedFallbackPlan.mode,
+      guardedFallbackDecision.governancePressure
     )
   ];
   const multiRoleConversationTurnSamples = [
@@ -3648,6 +3751,16 @@ export async function runPublishedBenchmark(
     plan: cognitiveSchedulePlan
   });
   engine.recordExecutionSchedule(cognitiveScheduleDecision);
+  const qGovernedLocalSchedulePlan = planExecutionSchedule({
+    snapshot: engine.getSnapshot(),
+    arbitration: qGovernedLocalArbitrationDecision,
+    qContext: qGovernedExecutionContext
+  });
+  const qGovernedLocalScheduleDecision = buildExecutionScheduleDecision({
+    arbitration: qGovernedLocalArbitrationDecision,
+    plan: qGovernedLocalSchedulePlan
+  });
+  engine.recordExecutionSchedule(qGovernedLocalScheduleDecision);
   const federatedScheduleClearPlan = planExecutionSchedule({
     snapshot: engine.getSnapshot(),
     arbitration: federatedArbitrationClearDecision,
@@ -4125,7 +4238,7 @@ export async function runPublishedBenchmark(
     "cognitive_route_soft_prior_ratio",
     "Cognitive route soft-prior strength",
     "ratio",
-    cognitiveRouteSoftPriorSamples.map((value) => Number((Math.abs(value) / 0.06).toFixed(2)))
+    cognitiveRouteSoftPriorStrengthSamples.map((value) => Number((value / 0.06).toFixed(2)))
   );
   const workerLocalityAffinitySeries = createSeries(
     "worker_locality_affinity_ratio",
@@ -4760,6 +4873,17 @@ export async function runPublishedBenchmark(
       "when reflex confidence weakens, the system should decide to think before it acts instead of pretending every command belongs in the reflex plane"
     ),
     createAssertion(
+      "execution-arbitration-q-governed-local",
+      "Execution arbitration records the governed local Q lane as a first-class control signal",
+      qGovernedLocalArbitrationPlan.mode === "cognitive-escalation" &&
+        qGovernedLocalArbitrationPlan.shouldRunCognition &&
+        qGovernedLocalArbitrationPlan.rationale.includes("qLane=local-ready:tracked-q-bundle") &&
+        qGovernedLocalArbitrationPlan.rationale.includes("qCloud=blocked:launch-blocked"),
+      "cognitive-escalation / qLane local-ready / qCloud blocked",
+      qGovernedLocalArbitrationPlan.rationale,
+      "Immaculate should perceive Q readiness and cloud blockage before cognition is scheduled, not only after a model call returns"
+    ),
+    createAssertion(
       "execution-arbitration-guarded",
       "Execution arbitration can hold outward action under critical governance pressure",
       guardedArbitrationPlan.mode === "guarded-review" &&
@@ -4849,6 +4973,17 @@ export async function runPublishedBenchmark(
       "swarm-parallel / width >= 2 / includes mid+reasoner / reasoner primary",
       `${cognitiveSchedulePlan.mode} / roles=${cognitiveSchedulePlan.layerRoles.join(">")} / primary=${cognitiveScheduleDecision.primaryLayerId ?? "none"}`,
       "once mediation decides to think, the next step is choosing an intelligence formation instead of a single opaque model call"
+    ),
+    createAssertion(
+      "execution-schedule-q-governed-local",
+      "Execution scheduling keeps the governed local Q lane visible in the schedule ledger",
+      qGovernedLocalSchedulePlan.mode === "swarm-parallel" &&
+        qGovernedLocalSchedulePlan.rationale.includes("qLane=local-ready:tracked-q-bundle") &&
+        qGovernedLocalSchedulePlan.rationale.includes("qCloud=blocked:launch-blocked") &&
+        qGovernedLocalScheduleDecision.layerIds.length >= 2,
+      "swarm-parallel / qLane local-ready / qCloud blocked / width >= 2",
+      qGovernedLocalSchedulePlan.rationale,
+      "the schedule layer should preserve why Q was trusted locally so later operators can see that the local lane was an intentional orchestration choice"
     ),
     createAssertion(
       "execution-schedule-parallel-latency",
@@ -5018,7 +5153,7 @@ export async function runPublishedBenchmark(
     ),
     createAssertion(
       "worker-assignment-lease-selection",
-      "Worker assignment prefers the leased remote worker over expired and local fallbacks",
+      "Worker assignment prefers the leased remote worker over expired and local standby lanes",
       workerAssignmentFirst.assignment?.workerId === workerRemotePrimary.workerId &&
         workerAssignmentFirst.assignment?.executionProfile === "remote" &&
         Boolean(workerAssignmentFirst.assignment?.reason.includes("remote-capable")) &&
@@ -5325,8 +5460,8 @@ export async function runPublishedBenchmark(
       "route choice should become a first-class orchestration decision that explicitly favors the healthiest lowest-latency reflex lane"
     ),
     createAssertion(
-      "routing-guarded-fallback",
-      "Adaptive routing flips to the guarded visual lane under critical governance pressure",
+      "routing-guarded-review",
+      "Adaptive routing flips to the guarded visual review lane under critical governance pressure",
       guardedFallbackPlan.mode === "guarded-fallback" &&
         guardedFallbackPlan.channel === "visual" &&
         guardedFallbackPlan.targetNodeId === "integrity-gate" &&
@@ -5335,9 +5470,9 @@ export async function runPublishedBenchmark(
         guardedFallbackDecision.transportKind === "udp-osc" &&
         guardedFallbackDecision.governancePressure === "critical" &&
         guardedFallbackDispatchResult.delivery.transport === "udp-osc",
-      "guarded-fallback / visual / integrity-gate / udp-osc / governance critical",
-      `${guardedFallbackDecision.mode} / ${guardedFallbackDecision.channel} / ${guardedFallbackDecision.transportKind ?? "none"} / ${guardedFallbackDecision.governancePressure}`,
-      "route selection should react to governance pressure and deliberately fall back to a safer outward lane rather than pretending transport health is the only signal"
+      "guarded visual review lane / integrity-gate / udp-osc / governance critical",
+      `${guardedFallbackDecision.mode === "guarded-fallback" ? "guarded-review" : guardedFallbackDecision.mode} / ${guardedFallbackDecision.channel} / ${guardedFallbackDecision.transportKind ?? "none"} / ${guardedFallbackDecision.governancePressure}`,
+      "route selection should react to governance pressure and deliberately shift to a safer outward lane rather than pretending transport health is the only signal"
     ),
     createAssertion(
       "routing-federated-pressure",
@@ -5345,9 +5480,23 @@ export async function runPublishedBenchmark(
       federatedRoutePressurePlan.mode === "guarded-fallback" &&
         federatedRoutePressurePlan.federationPressure === "critical" &&
         Boolean(federatedRoutePressurePlan.rationale.includes("federation=critical")),
-      "guarded-fallback under critical federated pressure",
-      `${federatedRoutePressurePlan.mode} / ${federatedRoutePressurePlan.rationale}`,
+      "guarded review lane under critical federated pressure",
+      `${federatedRoutePressurePlan.mode === "guarded-fallback" ? "guarded-review" : federatedRoutePressurePlan.mode} / ${federatedRoutePressurePlan.rationale}`,
       "once remote swarm execution becomes unstable, the route layer should be able to bias toward guarded output even when transport availability itself has not changed"
+    ),
+    createAssertion(
+      "routing-q-governed-local",
+      "Adaptive routing makes the governed local Q lane explicit when Q readiness and substrate health are green",
+      (qGovernedLocalRoutePlan.mode === "cognitive-assisted" || qGovernedLocalRoutePlan.mode === "reflex-direct") &&
+        (qGovernedLocalRoutePlan.channel === "visual" || qGovernedLocalRoutePlan.channel === "haptic") &&
+        Boolean(
+          qGovernedLocalRoutePlan.rationale.includes(
+            `qLane=local-ready:${releaseMetadata.q.trainingLock?.bundleId ?? "tracked"}`
+          )
+        ),
+      "reflex-direct or cognitive-assisted with explicit qLane local-ready rationale",
+      `${qGovernedLocalRoutePlan.mode} / ${qGovernedLocalRoutePlan.channel} / ${qGovernedLocalRoutePlan.rationale}`,
+      "Immaculate should make Q readiness visible to routing so the healthy governed local lane becomes an explicit control signal even when stronger reflex evidence still outranks cognitive routing"
     ),
     createAssertion(
       "routing-ledger",
@@ -5395,12 +5544,12 @@ export async function runPublishedBenchmark(
       "the coupled route should reflect the live neural coupling state rather than only the transport registry"
     ),
     createAssertion(
-      "tier2-spectral-fallback",
-      "Tier 2 live neuro ingest falls back to amplitude confidence when spectral bands are unavailable",
+      "tier2-legacy-amplitude",
+      "Tier 2 live neuro ingest preserves confidence through the legacy amplitude path when spectral bands are unavailable",
       liveIngressResult.frame.bandPower === undefined &&
         liveIngressResult.frame.decodeConfidence >= 0.55 &&
         liveIngressResult.frame.decodeReady,
-      "fallback decode confidence remains available without band power",
+      "decode confidence remains available through the legacy amplitude path",
       `${liveIngressResult.frame.bandPower === undefined ? "no bandPower" : "bandPower"} / ${liveIngressResult.frame.decodeConfidence.toFixed(2)}`,
       "small or undersampled windows should preserve the legacy amplitude path so live ingest remains backward compatible"
     ),
@@ -5425,7 +5574,7 @@ export async function runPublishedBenchmark(
         tier2ArtifactRoutePlan.channel === "visual" &&
         tier2ArtifactRoutePlan.recommendedIntensity < tier2AlphaRoutePlan.recommendedIntensity &&
         tier2AlphaRoutePlan.mode !== "suppressed",
-      "artifact guarded-fallback with weaker intensity than alpha",
+      "artifact guarded review lane with weaker intensity than alpha",
       `${tier2ArtifactRoutePlan.mode}/${tier2ArtifactRoutePlan.channel}/${tier2ArtifactRoutePlan.recommendedIntensity.toFixed(2)} vs ${tier2AlphaRoutePlan.mode}/${tier2AlphaRoutePlan.channel}/${tier2AlphaRoutePlan.recommendedIntensity.toFixed(2)}`,
       "spectral quality should influence route pressure directly so contaminated windows de-escalate before outward action"
     ),

@@ -17,6 +17,7 @@ import type {
 } from "./actuation.js";
 import type { FederatedExecutionPressure } from "./federation-pressure.js";
 import type { GovernanceDecision, GovernanceStatus } from "./governance.js";
+import type { QOrchestrationContext } from "./q-orchestration-context.js";
 import { hashValue } from "./utils.js";
 
 type AdaptiveRoutePlanInput = {
@@ -37,6 +38,16 @@ type AdaptiveRoutePlanInput = {
   requestedTargetNodeId?: string;
   requestedIntensity?: number;
   suppressed?: boolean;
+  qContext?: Pick<
+    QOrchestrationContext,
+    | "readinessReady"
+    | "gatewaySubstrateHealthy"
+    | "preferredExecutionLane"
+    | "trainingBundleId"
+    | "cloudLaneReady"
+    | "cloudLaneStatus"
+    | "qRoutingDirective"
+  >;
 };
 
 export type AdaptiveRoutePlan = {
@@ -53,8 +64,23 @@ export type AdaptiveRoutePlan = {
   rationale: string;
 };
 
+type RouteHint = "reflex" | "cognitive" | "guarded" | "suppressed";
+
 function clamp(value: number, min = 0, max = 1): number {
   return Math.min(max, Math.max(min, value));
+}
+
+function normalizeRouteHint(value: string | undefined): RouteHint | undefined {
+  const candidate = (value ?? "").trim().toLowerCase();
+  if (
+    candidate === "reflex" ||
+    candidate === "cognitive" ||
+    candidate === "guarded" ||
+    candidate === "suppressed"
+  ) {
+    return candidate;
+  }
+  return undefined;
 }
 
 function recentDeniedCount(decisions: GovernanceDecision[]): number {
@@ -320,11 +346,24 @@ export function planAdaptiveRoute(input: AdaptiveRoutePlanInput): AdaptiveRouteP
   const criticalRemoteExecutionPressure =
     federatedPressure?.pressure === "critical" &&
     execution?.assignedWorkerProfile === "remote";
+  const suggestedRoute = normalizeRouteHint(
+    input.cognitiveRouteSuggestion ?? execution?.routeSuggestion
+  );
+  const qGovernedLocalPreference =
+    input.qContext?.qRoutingDirective === "primary-governed-local" &&
+    input.qContext?.preferredExecutionLane === "local-q";
+  const qNeedsGuardedHold = input.qContext?.qRoutingDirective === "guarded-hold";
 
-  if (input.suppressed) {
+  if (input.suppressed || suggestedRoute === "suppressed") {
     mode = "suppressed";
     channel = input.requestedChannel ?? "visual";
+  } else if (qNeedsGuardedHold) {
+    mode = "guarded-fallback";
+    channel = "visual";
   } else if (criticalRemoteExecutionPressure) {
+    mode = "guarded-fallback";
+    channel = "visual";
+  } else if (suggestedRoute === "guarded") {
     mode = "guarded-fallback";
     channel = "visual";
   } else if (
@@ -344,6 +383,22 @@ export function planAdaptiveRoute(input: AdaptiveRoutePlanInput): AdaptiveRouteP
   ) {
     mode = "reflex-direct";
     channel = "haptic";
+  } else if (
+    suggestedRoute === "cognitive" &&
+    execution?.status === "completed" &&
+    governancePressure !== "critical"
+  ) {
+    mode = "cognitive-assisted";
+    channel = "visual";
+  } else if (
+    qGovernedLocalPreference &&
+    execution?.status === "completed" &&
+    governancePressure !== "critical" &&
+    suggestedRoute !== "reflex" &&
+    federatedPressure?.pressure !== "critical"
+  ) {
+    mode = "cognitive-assisted";
+    channel = "visual";
   } else if (execution?.status === "completed" && governancePressure !== "critical") {
     if (federatedPressure?.pressure === "critical") {
       mode = "guarded-fallback";
@@ -391,7 +446,7 @@ export function planAdaptiveRoute(input: AdaptiveRoutePlanInput): AdaptiveRouteP
     frame,
     execution,
     input.requestedIntensity,
-    input.cognitiveRouteSuggestion ?? execution?.routeSuggestion,
+    suggestedRoute ?? input.cognitiveRouteSuggestion ?? execution?.routeSuggestion,
     input.neuralBandPower ?? frame?.bandPower,
     spectralConfidence,
     dominantBand,
@@ -414,7 +469,10 @@ export function planAdaptiveRoute(input: AdaptiveRoutePlanInput): AdaptiveRouteP
     `federation=${federatedPressure?.pressure ?? "none"}`,
     `federationLatency=${typeof federatedPressure?.crossNodeLatencyMs === "number" ? federatedPressure.crossNodeLatencyMs.toFixed(2) : "none"}`,
     `federationSuccess=${typeof federatedPressure?.remoteSuccessRatio === "number" ? federatedPressure.remoteSuccessRatio.toFixed(2) : "none"}`,
-    `cognitive=${input.cognitiveRouteSuggestion ?? execution?.routeSuggestion ?? "none"}`,
+    `cognitive=${suggestedRoute ?? input.cognitiveRouteSuggestion ?? execution?.routeSuggestion ?? "none"}`,
+    `qDirective=${input.qContext?.qRoutingDirective ?? "none"}`,
+    `qLane=${qGovernedLocalPreference ? `local-ready:${input.qContext?.trainingBundleId ?? "tracked"}` : "none"}`,
+    `qCloud=${input.qContext ? `${input.qContext.cloudLaneReady ? "ready" : "blocked"}:${input.qContext.cloudLaneStatus ?? "unknown"}` : "none"}`,
     `transport=${selectedTransport?.kind ?? "none"}`,
     `health=${selectedTransport?.health ?? "none"}`
   ];

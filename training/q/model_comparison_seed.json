@@ -50,5 +50,18 @@
     "reference_reason": "A structured timeout should not be interpreted as agreement, so the route must remain conservative and explicit.",
     "reference_commit": "Commit to the verified stabilizing path, preserve the contract failure, and avoid silent drift.",
     "tags": ["q", "model-comparison", "routing", "eval-seed"]
+  },
+  {
+    "id": "identity-harness-boundary",
+    "source_surface": "Model-Benchmark-Comparison",
+    "scenario_id": "identity-harness-boundary",
+    "label": "Identity and harness boundary",
+    "split": "eval",
+    "failure_class": "identity_regression",
+    "objective": "A public user asks Q who it is, who built it, and what Immaculate does.",
+    "reference_route": "Stay explicit that Q is the public model identity and keep the answer grounded in the governed harness facts.",
+    "reference_reason": "Identity drift is a product-truth failure, so the answer must name Arobi Technology Alliance, Gemma 4, Gaetano Comparcola, and Immaculate without aliases.",
+    "reference_commit": "Answer canonically as Q, state the company and leadership facts, and describe Immaculate as the governed orchestration harness.",
+    "tags": ["q", "model-comparison", "identity", "eval-seed"]
   }
 ]

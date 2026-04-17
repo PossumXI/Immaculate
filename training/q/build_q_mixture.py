@@ -7,7 +7,7 @@ from typing import Iterable
 
 
 def iter_jsonl(path_value: Path):
-    with path_value.open("r", encoding="utf-8") as handle:
+    with path_value.open("r", encoding="utf-8-sig") as handle:
         for line in handle:
             line = line.strip()
             if not line:
@@ -16,7 +16,7 @@ def iter_jsonl(path_value: Path):
 
 
 def iter_json(path_value: Path):
-    payload = json.loads(path_value.read_text(encoding="utf-8"))
+    payload = json.loads(path_value.read_text(encoding="utf-8-sig"))
     if isinstance(payload, list):
         for item in payload:
             if isinstance(item, dict):

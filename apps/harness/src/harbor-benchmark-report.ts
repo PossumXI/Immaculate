@@ -126,6 +126,24 @@ type HarborBenchmarkReport = {
   };
 };
 
+function sanitizePublicSurfaceValue<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.map((entry) => sanitizePublicSurfaceValue(entry)) as T;
+  }
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).map(([key, entry]) => [
+        key,
+        sanitizePublicSurfaceValue(entry)
+      ])
+    ) as T;
+  }
+  if (typeof value === "string") {
+    return value.replace(/\bollama\/Q\b/g, "Q") as T;
+  }
+  return value;
+}
+
 const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(MODULE_ROOT, "../../..");
 const WIKI_ROOT = path.join(REPO_ROOT, "docs", "wiki");
@@ -264,7 +282,7 @@ async function loadHarborJobSurface(jobPath: string): Promise<HarborJobSurface> 
     errors: evalStats.n_errors ?? 0,
     trialId,
     reward,
-    rewardDetails,
+    rewardDetails: sanitizePublicSurfaceValue(rewardDetails),
     programmaticScore,
     llmJudgeScore,
     response: response ?? agentOutput?.structured,
@@ -333,7 +351,7 @@ function renderMarkdown(report: HarborBenchmarkReport): string {
     }
     if (report.transportFix.directOllamaSuccess) {
       lines.push(
-        `- Direct Ollama probe: \`${report.transportFix.directOllamaSuccess.status}\` at \`${report.transportFix.directOllamaSuccess.latencyMs}\` ms. ${report.transportFix.directOllamaSuccess.summary}`
+        `- Direct local Q foundation probe: \`${report.transportFix.directOllamaSuccess.status}\` at \`${report.transportFix.directOllamaSuccess.latencyMs}\` ms. ${report.transportFix.directOllamaSuccess.summary}`
       );
     }
     if (report.transportFix.postFixGatewaySuccess) {
@@ -381,10 +399,10 @@ async function main(): Promise<void> {
     gatewayModel: release.q.truthfulLabel,
     tasks,
     llmJudge: llmJudgeAttempts
-      ? {
+      ? sanitizePublicSurfaceValue({
           ...llmJudgeAttempts,
           attempts: (llmJudgeAttempts.attempts ?? []).filter((attempt) => /\bq\b/i.test(attempt.provider))
-        }
+        })
       : undefined,
     transportFix: await readJsonFile<TransportFixFile>(TRANSPORT_FIX_PATH),
     output: {

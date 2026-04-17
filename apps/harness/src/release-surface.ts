@@ -11,7 +11,9 @@ type SurfaceTimestamp = {
 
 type ReleaseSurfaceReport = {
   generatedAt: string;
-  release: ReleaseMetadata;
+  release: Omit<ReleaseMetadata, "q"> & {
+    q: Pick<ReleaseMetadata["q"], "modelName" | "foundationModel" | "trainingLock" | "hybridSession">;
+  };
   surfaces: SurfaceTimestamp[];
   cloudflare?: {
     generatedAt?: string;
@@ -187,15 +189,15 @@ function renderMarkdown(report: ReleaseSurfaceReport): string {
     `- Root package version: \`${report.release.packageVersion}\``,
     `- Harness package version: \`${report.release.harnessVersion}\``,
     `- Core package version: \`${report.release.coreVersion}\``,
-    `- Q serving label: \`${report.release.q.truthfulLabel}\``,
-    `- Q alias: \`${report.release.q.alias}\``,
+    `- Q model name: \`${report.release.q.modelName}\``,
+    `- Q foundation model: \`${report.release.q.foundationModel}\``,
     `- Q training bundle: \`${trainingLock?.bundleId ?? "none generated yet"}\``,
     `- Q hybrid session: \`${hybridSession?.sessionId ?? "none generated yet"}\``,
     "",
     "## What This Means In Plain English",
     "",
     `- Immaculate build \`${report.release.buildId}\` is the current repo build stamp.`,
-    `- Q is served and benchmarked as \`${report.release.q.truthfulLabel}\` across the current repo surfaces.`,
+    `- Q is the only public model name used across the repo, and it is built on \`${report.release.q.foundationModel}\`.`,
     trainingLock
       ? `- The latest tracked Q training bundle is \`${trainingLock.bundleId}\`, tied to dataset \`${trainingLock.trainDatasetPath ?? "unknown"}\` and config/provenance captured in \`${trainingLock.lockPath}\`.`
       : "- No tracked Q training bundle has been generated yet in this checkout.",
@@ -267,7 +269,15 @@ async function main(): Promise<void> {
 
   const report: ReleaseSurfaceReport = {
     generatedAt: new Date().toISOString(),
-    release,
+    release: {
+      ...release,
+      q: {
+        modelName: release.q.modelName,
+        foundationModel: release.q.foundationModel,
+        trainingLock: release.q.trainingLock,
+        hybridSession: release.q.hybridSession
+      }
+    },
     surfaces,
     cloudflare,
     output: {

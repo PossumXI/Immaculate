@@ -1,4 +1,4 @@
-# Harbor Terminal Bench Soak
+﻿# Harbor Terminal Bench Soak
 
 This page records the repeated Q-only Harbor task-pack lane. Oracle and Q run side by side on the same terminal tasks so the repo can keep the control truth and the Q truth in one surface.
 
@@ -35,3 +35,5 @@ This page records the repeated Q-only Harbor task-pack lane. Oracle and Q run si
 
 - Oracle and Q are measured on the same Harbor task pack, but this remains a repo-local task lane rather than a W&B publication lane.
 - A `running` state means the soak was interrupted or is still in flight; a `completed` state means the runtime root was fully collected, not that the duration target was necessarily met.
+
+

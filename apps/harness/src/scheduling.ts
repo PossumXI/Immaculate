@@ -9,7 +9,9 @@ import type {
   PhaseSnapshot
 } from "@immaculate/core";
 import type { FederatedExecutionPressure } from "./federation-pressure.js";
+import type { QOrchestrationContext } from "./q-orchestration-context.js";
 import type { SessionConversationMemory } from "./conversation.js";
+import { getQModelName, truthfulModelLabel } from "./q-model.js";
 import { hashValue } from "./utils.js";
 
 type ExecutionSchedulePlanInput = {
@@ -19,6 +21,16 @@ type ExecutionSchedulePlanInput = {
   maxWidth?: number;
   sessionConversationMemory?: SessionConversationMemory;
   federationPressure?: FederatedExecutionPressure;
+  qContext?: Pick<
+    QOrchestrationContext,
+    | "readinessReady"
+    | "gatewaySubstrateHealthy"
+    | "preferredExecutionLane"
+    | "qRoutingDirective"
+    | "cloudLaneReady"
+    | "cloudLaneStatus"
+    | "trainingBundleId"
+  >;
 };
 
 export type ExecutionSchedulePlan = {
@@ -320,6 +332,12 @@ export function planExecutionSchedule(input: ExecutionSchedulePlanInput): Execut
   const dominantBand = input.snapshot.neuralCoupling.dominantBand;
   const sessionConversationMemory = input.sessionConversationMemory;
   const federatedPressure = input.federationPressure;
+  const qDirective = input.qContext?.qRoutingDirective;
+  const qGovernedLaneHealthy =
+    qDirective === "primary-governed-local" ||
+    (input.qContext?.preferredExecutionLane === "local-q" &&
+      input.qContext?.readinessReady === true &&
+      input.qContext?.gatewaySubstrateHealthy === true);
   const sessionBlockedVerdicts = sessionConversationMemory?.blockedVerdictCount ?? 0;
   const sessionApprovedVerdicts = sessionConversationMemory?.approvedVerdictCount ?? 0;
   if (sessionBlockedVerdicts >= 2 && input.arbitration.shouldRunCognition) {
@@ -349,6 +367,10 @@ export function planExecutionSchedule(input: ExecutionSchedulePlanInput): Execut
     input.maxWidth ??
     (input.arbitration.mode === "operator-override"
       ? Math.max(3, preferredRoles.length)
+      : qGovernedLaneHealthy
+        ? input.arbitration.governancePressure === "clear"
+          ? Math.min(2, Math.max(2, preferredRoles.length))
+          : Math.min(2, Math.max(1, preferredRoles.length))
       : federatedPressure?.pressure === "critical"
         ? 1
         : federatedPressure?.pressure === "elevated"
@@ -358,8 +380,14 @@ export function planExecutionSchedule(input: ExecutionSchedulePlanInput): Execut
         : strongFastSignal && input.arbitration.governancePressure === "clear"
           ? Math.max(1, Math.min(2, preferredRoles.length))
           : Math.max(3, preferredRoles.length));
+  const qOnlyLayers = qGovernedLaneHealthy
+    ? input.snapshot.intelligenceLayers.filter(
+        (layer) => truthfulModelLabel(layer.model) === getQModelName()
+      )
+    : input.snapshot.intelligenceLayers;
+  const selectableLayers = qOnlyLayers.length > 0 ? qOnlyLayers : input.snapshot.intelligenceLayers;
   const selectedLayers = selectLayers(
-    input.snapshot.intelligenceLayers,
+    selectableLayers,
     preferredRoles,
     input.requestedLayerId,
     adaptiveMaxWidth
@@ -398,15 +426,18 @@ export function planExecutionSchedule(input: ExecutionSchedulePlanInput): Execut
     classifyBacklogPressure(backlogScore),
     federatedPressure?.pressure
   );
-  const admissionState = buildAdmissionState({
-    shouldRunCognition: input.arbitration.shouldRunCognition,
-    selectedCount: selectedLayers.length,
-    readyCount: readyLayerCount,
-    busyCount: busyLayerCount,
-    healthWeightedWidth: rawHealthWeightedWidth,
-    backlogPressure,
-    federationPressure: federatedPressure
-  });
+  const admissionState =
+    input.arbitration.shouldRunCognition && input.qContext && !qGovernedLaneHealthy
+      ? "hold"
+      : buildAdmissionState({
+          shouldRunCognition: input.arbitration.shouldRunCognition,
+          selectedCount: selectedLayers.length,
+          readyCount: readyLayerCount,
+          busyCount: busyLayerCount,
+          healthWeightedWidth: rawHealthWeightedWidth,
+          backlogPressure,
+          federationPressure: federatedPressure
+        });
   const admittedLayers =
     admissionState === "hold"
       ? []
@@ -472,6 +503,9 @@ export function planExecutionSchedule(input: ExecutionSchedulePlanInput): Execut
     `federation=${federatedPressure?.pressure ?? "none"}`,
     `federationLatency=${typeof federatedPressure?.crossNodeLatencyMs === "number" ? federatedPressure.crossNodeLatencyMs.toFixed(2) : "none"}`,
     `federationSuccess=${typeof federatedPressure?.remoteSuccessRatio === "number" ? federatedPressure.remoteSuccessRatio.toFixed(2) : "none"}`,
+    `qDirective=${qDirective ?? "none"}`,
+    `qLane=${qGovernedLaneHealthy ? `local-ready:${input.qContext?.trainingBundleId ?? "tracked"}` : input.qContext ? "hold" : "none"}`,
+    `qCloud=${input.qContext ? `${input.qContext.cloudLaneReady ? "ready" : "blocked"}:${input.qContext.cloudLaneStatus ?? "unknown"}` : "none"}`,
     `sessionBlocked=${sessionBlockedVerdicts}`,
     `sessionApproved=${sessionApprovedVerdicts}`,
     `dispatch=${input.arbitration.shouldDispatchActuation ? "allow" : "hold"}`

@@ -2,11 +2,12 @@
 
 This page records the hour-class Q and Immaculate benchmark sweep. It ties the 60-minute benchmark publication lane to the repeated BridgeBench and Harbor task-pack lanes in one stamped surface.
 
-- Generated: `2026-04-15T08:24:47.464Z`
-- Release: `0.1.0+dd31cfa`
-- Repo commit: `dd31cfa`
-- Q serving label: `Q`
-- Q training bundle: `q-defsec-code-longctx-cur-fnv1a-8f551a5c-bench-v1-5e51e00-e16a056e`
+- Generated: `2026-04-17T07:13:20.835Z`
+- Release: `0.1.0+848d44f`
+- Repo commit: `848d44f`
+- Q model name: `Q`
+- Q foundation model: `Gemma 4`
+- Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v8-848d44f-4a805f5f`
 
 ## W&B 60m Soak
 
@@ -30,7 +31,7 @@ This page records the hour-class Q and Immaculate benchmark sweep. It ties the 6
 
 ## Harbor Terminal Bench Soak
 
-- Generated: `2026-04-15T08:22:53.565Z`
+- Generated: `2026-04-16T13:05:24.510Z`
 - Duration seconds: `3600`
 - Total runs: `90`
 - Oracle avg score: `1.000` | avg duration `8.99 s`

@@ -14,8 +14,10 @@ import type {
 import { STABILITY_POLE } from "@immaculate/core";
 import type { FederatedExecutionPressure } from "./federation-pressure.js";
 import type { GovernanceDecision, GovernanceStatus } from "./governance.js";
+import type { QOrchestrationContext } from "./q-orchestration-context.js";
 import type { SessionConversationMemory } from "./conversation.js";
 import { deriveGovernancePressure } from "./routing.js";
+import { getQModelName, truthfulModelLabel } from "./q-model.js";
 import { hashValue } from "./utils.js";
 
 type ExecutionArbitrationPlanInput = {
@@ -31,6 +33,16 @@ type ExecutionArbitrationPlanInput = {
   suppressed?: boolean;
   sessionConversationMemory?: SessionConversationMemory;
   federationPressure?: FederatedExecutionPressure;
+  qContext?: Pick<
+    QOrchestrationContext,
+    | "readinessReady"
+    | "gatewaySubstrateHealthy"
+    | "preferredExecutionLane"
+    | "qRoutingDirective"
+    | "cloudLaneReady"
+    | "cloudLaneStatus"
+    | "trainingBundleId"
+  >;
 };
 
 export type ExecutionArbitrationPlan = {
@@ -178,6 +190,17 @@ export function planExecutionArbitration(
   const sessionBlockedVerdicts = sessionConversationMemory?.blockedVerdictCount ?? 0;
   const sessionApprovedVerdicts = sessionConversationMemory?.approvedVerdictCount ?? 0;
   const federatedPressure = input.federationPressure;
+  const qDirective = input.qContext?.qRoutingDirective;
+  const qGovernedLaneHealthy =
+    qDirective === "primary-governed-local" ||
+    (input.qContext?.preferredExecutionLane === "local-q" &&
+      input.qContext?.readinessReady === true &&
+      input.qContext?.gatewaySubstrateHealthy === true);
+  const qNeedsGuardedHold =
+    qDirective === "guarded-hold" ||
+    (Boolean(input.qContext) &&
+      !qGovernedLaneHealthy &&
+      (!input.qContext?.readinessReady || !input.qContext?.gatewaySubstrateHealthy));
   if (sessionBlockedVerdicts >= 3 && governancePressure === "clear") {
     governancePressure = "elevated";
   } else if (sessionBlockedVerdicts >= 2 && governancePressure !== "critical") {
@@ -196,10 +219,16 @@ export function planExecutionArbitration(
     (spectralSignal.dominantBand === "beta" || spectralSignal.dominantBand === "gamma");
   const weakSpectralSignal =
     activeSpectralSignal && spectralSignal.signalQuality < 0.18;
+  const qOnlyLayers = qGovernedLaneHealthy
+    ? input.snapshot.intelligenceLayers.filter(
+        (layer) => truthfulModelLabel(layer.model) === getQModelName()
+      )
+    : input.snapshot.intelligenceLayers;
+  const arbitrationLayers = qOnlyLayers.length > 0 ? qOnlyLayers : input.snapshot.intelligenceLayers;
   const explicitRequestedLayer = input.requestedLayerId
     ? selectLayer(
-    input.snapshot.intelligenceLayers,
-    input.requestedLayerId
+        arbitrationLayers,
+        input.requestedLayerId
       )
     : undefined;
 
@@ -212,10 +241,10 @@ export function planExecutionArbitration(
   let preferredLayer =
     explicitRequestedLayer ??
     (governancePressure === "critical"
-      ? selectLayer(input.snapshot.intelligenceLayers, undefined, ["guard", "reasoner", "mid", "soul"])
+      ? selectLayer(arbitrationLayers, undefined, ["guard", "reasoner", "mid", "soul"])
       : governancePressure === "elevated"
-        ? selectLayer(input.snapshot.intelligenceLayers, undefined, ["reasoner", "mid", "soul", "guard"])
-        : selectLayer(input.snapshot.intelligenceLayers, undefined, ["mid", "reasoner", "soul", "guard"]));
+        ? selectLayer(arbitrationLayers, undefined, ["reasoner", "mid", "soul", "guard"])
+        : selectLayer(arbitrationLayers, undefined, ["mid", "reasoner", "soul", "guard"]));
 
   if (input.suppressed) {
     mode = "suppressed";
@@ -259,7 +288,7 @@ export function planExecutionArbitration(
     governancePressure === "elevated" ||
     execution?.status === "failed"
   ) {
-    if (preferredLayer) {
+    if (preferredLayer && !qNeedsGuardedHold) {
       mode = "cognitive-escalation";
       targetNodeId = "planner-swarm";
       targetPlane = "cognitive";
@@ -321,6 +350,9 @@ export function planExecutionArbitration(
     `federation=${federatedPressure?.pressure ?? "none"}`,
     `federationLatency=${typeof federatedPressure?.crossNodeLatencyMs === "number" ? federatedPressure.crossNodeLatencyMs.toFixed(2) : "none"}`,
     `federationSuccess=${typeof federatedPressure?.remoteSuccessRatio === "number" ? federatedPressure.remoteSuccessRatio.toFixed(2) : "none"}`,
+    `qDirective=${qDirective ?? "none"}`,
+    `qLane=${qGovernedLaneHealthy ? `local-ready:${input.qContext?.trainingBundleId ?? "tracked"}` : input.qContext ? "hold" : "none"}`,
+    `qCloud=${input.qContext ? `${input.qContext.cloudLaneReady ? "ready" : "blocked"}:${input.qContext.cloudLaneStatus ?? "unknown"}` : "none"}`,
     `sessionBlocked=${sessionBlockedVerdicts}`,
     `sessionApproved=${sessionApprovedVerdicts}`,
     `cognition=${shouldRunCognition ? "run" : "skip"}`,
