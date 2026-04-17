@@ -1,15 +1,27 @@
 # Q Benchmark Sweep (60m)
 
-This page records the hour-class Q and Immaculate benchmark sweep. It ties the 60-minute benchmark publication lane to the repeated BridgeBench and Harbor task-pack lanes in one stamped surface.
+This page records the hour-class Q and Immaculate benchmark sweep. It ties the historical 60-minute W&B soak lane to the repeated BridgeBench and Harbor task-pack lanes in one stamped surface.
 
-- Generated: `2026-04-17T07:13:20.835Z`
-- Release: `0.1.0+848d44f`
-- Repo commit: `848d44f`
+- Generated: `2026-04-17T20:51:08.584Z`
+- Release: `0.1.0+30d48b7`
+- Repo commit: `30d48b7`
 - Q model name: `Q`
 - Q foundation model: `Gemma 4`
-- Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v8-848d44f-4a805f5f`
+- Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14-30d48b7-248a8349`
 
-## W&B 60m Soak
+## Latest W&B Publication
+
+This is the current newest W&B benchmark publication tracked in git. Read this first if you want the latest published W&B result rather than the last hour-class soak rerun.
+
+- Pack: `Substrate Readiness`
+- Suite: `immaculate-benchmark-2026-04-17T02-09-25-503Z`
+- Published: `2026-04-17T02:11:17.210524+00:00`
+- Run URL: `https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/hp3m80eh`
+- Failed assertions: `0` / `119`
+
+## Historical W&B 60m Soak
+
+This is the last published hour-class soak lane. It remains useful historical evidence, but it is not automatically the newest W&B benchmark unless the 60m pack is rerun.
 
 - Suite: `immaculate-benchmark-2026-04-12T21-48-36-880Z`
 - Pack: `Latency Soak (60m)`
@@ -49,6 +61,8 @@ This page records the hour-class Q and Immaculate benchmark sweep. It ties the 6
 
 ## Truth Boundary
 
-- The W&B section is the published hour-class benchmark lane for Immaculate.
+- The latest W&B publication may be newer than the historical 60m soak lane shown here.
+- Read `docs/wiki/Benchmark-Status.md` and `docs/wiki/Benchmark-Wandb-Export.md` for the newest published W&B result.
+- The 60m section on this page is historical hour-class evidence, not an automatic "latest" claim.
 - The BridgeBench and Harbor sections are repo-local repeated Q-only sweeps and remain distinct from W&B publication unless explicitly published there.
 - If a section is missing, that run was not produced yet in this checkout.

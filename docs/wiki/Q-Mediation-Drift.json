@@ -1,0 +1,107 @@
+{
+  "generatedAt": "2026-04-17T20:52:43.143Z",
+  "release": {
+    "packageVersion": "0.1.0",
+    "harnessVersion": "0.1.0",
+    "coreVersion": "0.1.0",
+    "gitSha": "30d48b7e6e99aaacd7284b2c4096d3e68f40f350",
+    "gitShortSha": "30d48b7",
+    "gitBranch": "harbor-q-push",
+    "buildId": "0.1.0+30d48b7",
+    "q": {
+      "modelName": "Q",
+      "foundationModel": "Gemma 4",
+      "truthfulLabel": "Q",
+      "trainingLock": {
+        "generatedAt": "2026-04-17T20:29:42Z",
+        "lockVersion": 1,
+        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14-30d48b7-248a8349",
+        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14",
+        "modelName": "Q",
+        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14.jsonl",
+        "trainDatasetSha256": "248a8349d1f5e1234dfba76ea5d2e3473313496f015e164565fa30d80b0ba094",
+        "trainDatasetRowCount": 109,
+        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14.manifest.json",
+        "mixManifestSha256": "b1c919b7d96f89d74744a291cfb9d9f1468158eae4cc586aa859aebfdedb16fe",
+        "mixSupplementalCount": 5,
+        "mixSupplementalPaths": [
+          "training/q/q_harness_identity_seed.json",
+          "training/q/q_immaculate_reasoning_seed.json",
+          "training/q/bridgebench_seed.json",
+          "training/q/coding_long_context_seed.json",
+          ".training-output/q/q-failure-corpus.jsonl"
+        ],
+        "curationRunId": null,
+        "lockPath": ".training-output/q/latest-training-lock.json"
+      },
+      "hybridSession": {
+        "generatedAt": "2026-04-17T20:51:59Z",
+        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v14",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v14/hybrid-session.json",
+        "localStatus": "ready",
+        "cloudStatus": "ready",
+        "cloudProvider": "hf_jobs",
+        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14-30d48b7-248a8349",
+        "immaculateBundleId": "immaculate-orchestration-30d48b7-ec4b3cb6",
+        "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
+      }
+    }
+  },
+  "benchmark": {
+    "suiteId": "immaculate-benchmark-2026-04-17T20-35-03-424Z",
+    "generatedAt": "2026-04-17T20:35:03.424Z",
+    "packId": "q-mediation-drift",
+    "packLabel": "Q Mediation Drift",
+    "failedAssertions": 0,
+    "routeAlignmentP50": 1,
+    "qOnlySelectionP50": 1,
+    "driftDetectedMax": 0,
+    "latencyP95Ms": 17929.24,
+    "hardware": "knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics"
+  },
+  "assertions": [
+    {
+      "id": "q-mediation-drift-health",
+      "status": "pass",
+      "target": "200 health / tracked bundle / one Q model entry",
+      "actual": "200 / q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14-30d48b7-248a8349 / Q",
+      "detail": "the mediation drift lane is only honest if it starts from the same live Q gateway and tracked bundle the rest of the repo claims"
+    },
+    {
+      "id": "q-mediation-drift-structured",
+      "status": "pass",
+      "target": "all scenarios parse 3 structured fields",
+      "actual": "mixed-pressure-local-cognition:completed/3/none, mixed-pressure-guarded-hold:completed/3/none",
+      "detail": "the mediation lane should fail if malformed Q output can still pass through arbitration and scheduling as if it were governed intent"
+    },
+    {
+      "id": "q-mediation-drift-route-alignment",
+      "status": "pass",
+      "target": "all scenarios aligned / p50 1 / max drift 0",
+      "actual": "mixed-pressure-local-cognition:cognitive->cognitive-assisted/drift=false, mixed-pressure-guarded-hold:guarded->guarded-fallback/drift=false",
+      "detail": "the live route/reason/commit answer is only useful if mediation preserves that governed route instead of silently drifting to a different execution posture"
+    },
+    {
+      "id": "q-mediation-drift-q-only-selection",
+      "status": "pass",
+      "target": "local cognition scenario keeps Q-only selection with degraded admission",
+      "actual": "true/cognitive-assisted/degrade/1",
+      "detail": "when the governed local Q lane is healthy, Immaculate should keep mediation inside the Q-backed layer set even if pressure is elevated"
+    },
+    {
+      "id": "q-mediation-drift-guarded-hold",
+      "status": "pass",
+      "target": "guarded route / guarded-fallback / no dispatch",
+      "actual": "guarded/guarded-fallback/hold/dispatch=false",
+      "detail": "critical mixed pressure should preserve Q's guarded route and keep outward dispatch closed instead of letting later layers reopen action"
+    }
+  ],
+  "driftTrace": [
+    "Mixed pressure local cognition: route=cognitive / routing=cognitive-assisted / admission=degrade / drift=false / q-self=Q preserved the governed ROUTE/REASON/COMMIT contract without repair. / immaculate-self=Immaculate preserved Q's governed route through arbitration, scheduling, and routing.",
+    "Mixed pressure guarded hold: route=guarded / routing=guarded-fallback / admission=hold / drift=false / q-self=Q preserved the governed ROUTE/REASON/COMMIT contract without repair. / immaculate-self=Immaculate preserved Q's governed route through arbitration, scheduling, and routing."
+  ],
+  "output": {
+    "jsonPath": "docs\\wiki\\Q-Mediation-Drift.json",
+    "markdownPath": "docs\\wiki\\Q-Mediation-Drift.md"
+  }
+}

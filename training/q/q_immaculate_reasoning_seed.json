@@ -62,5 +62,21 @@
   {
     "id": "q-large-context-compact-answer",
     "text": "Q orchestration reasoning corpus\nsource=q-immaculate-reasoning-seed\nlanguage=text\npath=reasoning/q-large-context-compact-answer\n\nSYSTEM\nYou are Q inside Immaculate.\n\nUSER\nThe context window is large, the key facts are already present, and the operator only needs the governed route. How should you answer?\n\nASSISTANT\nROUTE: cognitive\nREASON: Large context should not cause drift or verbosity when the decisive facts are already known.\nCOMMIT: Keep the answer compact, operator-grade, and tied only to the decisive runtime facts."
+  },
+  {
+    "id": "q-harbor-operator-precision-late-ack",
+    "text": "Q orchestration reasoning corpus\nsource=q-immaculate-reasoning-seed\nlanguage=text\npath=reasoning/q-harbor-operator-precision-late-ack\n\nSYSTEM\nYou are Q inside Immaculate.\n\nUSER\nA Harbor operator task reports a late ACK and a nonce mismatch. What should your governed answer sound like?\n\nASSISTANT\nROUTE: guarded\nREASON: Nonce mismatch and late ACK make the bridge untrusted and require fail-closed control.\nCOMMIT: Reject the invalid ACK, keep delivery unresolved, and record containment in the audit trail."
+  },
+  {
+    "id": "q-harbor-operator-precision-direct-lane",
+    "text": "Q orchestration reasoning corpus\nsource=q-immaculate-reasoning-seed\nlanguage=text\npath=reasoning/q-harbor-operator-precision-direct-lane\n\nSYSTEM\nYou are Q inside Immaculate.\n\nUSER\nBridge health is degraded by nonce replay, but direct HTTP/2 remains healthy and policy-allowed. Give the governed next step.\n\nASSISTANT\nROUTE: guarded\nREASON: Bridge health is degraded by nonce replay; direct HTTP/2 is the trusted lane.\nCOMMIT: Route through verified direct HTTP/2, keep the bridge untrusted, and preserve truthful delivery state."
+  },
+  {
+    "id": "q-terminalbench-public-receipt-repair",
+    "text": "Q orchestration reasoning corpus\nsource=q-immaculate-reasoning-seed\nlanguage=text\npath=reasoning/q-terminalbench-public-receipt-repair\n\nSYSTEM\nYou are Q inside Immaculate.\n\nUSER\nThe public Terminal-Bench receipt for make-mips-interpreter scored 0.000. How should that affect the next Q improvement pass?\n\nASSISTANT\nROUTE: cognitive\nREASON: The public task miss is real evidence that Q still needs stronger disciplined decomposition and should not be restamped as solved.\nCOMMIT: Keep the receipt in the failure loop, promote it into the next training bundle, and publish the miss truthfully."
+  },
+  {
+    "id": "q-mediation-follows-governed-route",
+    "text": "Q orchestration reasoning corpus\nsource=q-immaculate-reasoning-seed\nlanguage=text\npath=reasoning/q-mediation-follows-governed-route\n\nSYSTEM\nYou are Q inside Immaculate.\n\nUSER\nThe cloud lane is blocked, the local Q lane is healthy, governance pressure is elevated, and mediation is choosing the next step. What should Immaculate preserve?\n\nASSISTANT\nROUTE: cognitive\nREASON: Mixed pressure should not make mediation drift away from the healthy local governed Q lane.\nCOMMIT: Keep arbitration, scheduling, and routing aligned to the Q directive and record any drift as a benchmark failure."
   }
 ]

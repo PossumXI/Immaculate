@@ -35,6 +35,10 @@ const proofCards = [
   {
     label: "Cloud Lanes",
     body: "HF Jobs auth, hardware visibility, and bundle staging are real on the active lock, and the staged cloud launch is ready. Cloudflare has the profile and eval bundle ready, but worker auth and adapter export are still blocked."
+  },
+  {
+    label: "W&B Publication Surface",
+    body: "The newest tracked W&B export is April 17. The separate 60m soak page is historical evidence from the last hour-class rerun, not the default latest-publication claim."
   }
 ];
 
@@ -73,7 +77,7 @@ export function LandingPage() {
 
       <section className="landingHero">
         <div className="landingCopy">
-          <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 17</p>
+          <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 17 | W&B EXPORT CURRENT</p>
           <h1 className="landingHeadline">Controlled intelligence for critical operations.</h1>
           <p className="landingLede">Defense and healthcare. Evidence before action. Q only. Benchmarked. Gateway seam proven. Audit loop live.</p>
 
@@ -84,8 +88,9 @@ export function LandingPage() {
             <span>Gateway contract green</span>
             <span>Identity gate green</span>
             <span>Harbor 0.950 / 0.925</span>
-            <span>Machine-stamped bench-v13 lock</span>
-            <span>49 benchmark rows</span>
+            <span>Latest W&B export Apr 17</span>
+            <span>Machine-stamped bench-v14 lock</span>
+            <span>54 benchmark rows</span>
             <span>6 failure seeds</span>
           </div>
 

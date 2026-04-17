@@ -62,6 +62,10 @@ const SURFACE_FILES: SurfaceTimestamp[] = [
     path: path.join("docs", "wiki", "Q-Gateway-Substrate.json")
   },
   {
+    label: "Q mediation drift",
+    path: path.join("docs", "wiki", "Q-Mediation-Drift.json")
+  },
+  {
     label: "Q API audit",
     path: path.join("docs", "wiki", "Q-API-Audit.json")
   },

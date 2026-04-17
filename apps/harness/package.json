@@ -14,6 +14,7 @@
     "benchmark:harbor:soak": "tsx src/harbor-soak-cli.ts",
     "benchmark:terminalbench:receipt": "tsx src/terminal-bench-receipt.ts",
     "benchmark:q:substrate:report": "tsx src/q-gateway-substrate-report.ts",
+    "benchmark:q:mediation:report": "tsx src/q-mediation-drift-report.ts",
     "benchmark:q:sweep:report": "tsx src/q-benchmark-sweep-report.ts",
     "benchmark:neurodata": "tsx src/benchmark-cli.ts --pack=neurodata-external",
     "benchmark:publish:wandb": "tsx src/wandb-publish-cli.ts",

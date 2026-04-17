@@ -389,6 +389,43 @@ def build_q_api_failure_text(record: dict) -> str:
     )
 
 
+def build_q_mediation_drift_failure_text(report: dict, assertion: dict | None) -> str:
+    benchmark = report.get("benchmark", {})
+    suite_id = str(benchmark.get("suiteId", "q-mediation-drift")).strip() or "q-mediation-drift"
+    label = str(benchmark.get("packLabel", "Q Mediation Drift")).strip() or "Q Mediation Drift"
+    parts = [
+        "Q defensive engineering failure corpus",
+        "source=q-mediation-drift",
+        "language=text",
+        f"path=q-mediation-drift/{suite_id}",
+        "tags=q,failure-corpus,eval-seed,q-mediation-drift",
+        "",
+        "OBJECTIVE",
+        f"{label} seam review",
+        "",
+        "OBSERVED FAILURE",
+    ]
+    if assertion:
+        parts.extend(
+            [
+                f"failure_class=q_mediation_drift_assertion_failed:{str(assertion.get('id', 'unknown')).strip() or 'unknown'}",
+                f"status={str(assertion.get('status', 'unknown')).strip() or 'unknown'}",
+                f"preview={str(assertion.get('actual', '')).strip() or '[no actual summary]'}",
+                f"target={str(assertion.get('target', '')).strip() or '[no target summary]'}",
+            ]
+        )
+    parts.extend(
+        [
+            "",
+            "RESPONSE CONTRACT",
+            "ROUTE: reflex, cognitive, guarded, or suppressed.",
+            "REASON: one sentence.",
+            "COMMIT: one sentence.",
+        ]
+    )
+    return "\n".join(parts) + "\n"
+
+
 def collect_q_api_audit_records(records: list[dict]):
     collected = []
     resolved_successes = 0
@@ -464,11 +501,43 @@ def collect_q_gateway_substrate_records(report: dict | None):
     ]
 
 
+def collect_q_mediation_drift_records(report: dict | None):
+    if not isinstance(report, dict):
+        return []
+    benchmark = report.get("benchmark", {})
+    if not isinstance(benchmark, dict):
+        return []
+    if int(benchmark.get("failedAssertions", 0) or 0) <= 0:
+        return []
+    assertion = next(
+        (
+            entry
+            for entry in report.get("assertions", [])
+            if isinstance(entry, dict) and str(entry.get("status", "")).strip() == "fail"
+        ),
+        None,
+    )
+    return [
+        {
+            "id": f"q-mediation-drift:{str(benchmark.get('suiteId', 'unknown')).strip() or 'unknown'}",
+            "source": "q-mediation-drift",
+            "label": f"Q mediation drift failure: {str(benchmark.get('packLabel', 'Q Mediation Drift')).strip() or 'Q Mediation Drift'}",
+            "status": "failed",
+            "parseSuccess": False,
+            "failureClass": f"q_mediation_drift_assertion_failed:{str(assertion.get('id', 'unknown')).strip() if isinstance(assertion, dict) else 'unknown'}",
+            "responsePreview": str(assertion.get("actual", "")).strip() if isinstance(assertion, dict) else "",
+            "evalOnly": True,
+            "text": build_q_mediation_drift_failure_text(report, assertion),
+        }
+    ]
+
+
 def collect_records(
     root: Path,
     comparison: dict,
     bridgebench: dict,
     q_gateway_substrate: dict | None,
+    q_mediation_drift: dict | None,
     q_api_audit: list[dict],
     terminal_bench_receipt: dict | None,
     harbor: dict | None
@@ -519,6 +588,13 @@ def collect_records(
     substrate_records = collect_q_gateway_substrate_records(q_gateway_substrate)
     records.extend(substrate_records)
     for record in substrate_records:
+        failure_class = record.get("failureClass")
+        if failure_class:
+            failure_counter[str(failure_class)] += 1
+
+    mediation_drift_records = collect_q_mediation_drift_records(q_mediation_drift)
+    records.extend(mediation_drift_records)
+    for record in mediation_drift_records:
         failure_class = record.get("failureClass")
         if failure_class:
             failure_counter[str(failure_class)] += 1
@@ -588,6 +664,11 @@ def main():
         help="Path to Q-Gateway-Substrate.json",
     )
     parser.add_argument(
+        "--q-mediation-drift",
+        default=str(repo_root() / "docs" / "wiki" / "Q-Mediation-Drift.json"),
+        help="Path to Q-Mediation-Drift.json",
+    )
+    parser.add_argument(
         "--q-api-audit",
         default=str(repo_root() / ".training-output" / "q" / "q-api-audit.ndjson"),
         help="Path to the live q-api audit NDJSON spool.",
@@ -607,6 +688,7 @@ def main():
     comparison = load_json(Path(args.comparison))
     bridgebench = load_json(Path(args.bridgebench))
     q_gateway_substrate = load_optional_json(Path(args.q_gateway_substrate))
+    q_mediation_drift = load_optional_json(Path(args.q_mediation_drift))
     q_api_audit = load_optional_ndjson(Path(args.q_api_audit))
     terminal_bench_receipt = load_optional_json(Path(args.terminal_bench_receipt))
     harbor = load_optional_json(Path(args.harbor))
@@ -622,6 +704,7 @@ def main():
         comparison,
         bridgebench,
         q_gateway_substrate,
+        q_mediation_drift,
         q_api_audit,
         terminal_bench_receipt,
         harbor
@@ -642,6 +725,7 @@ def main():
             "modelComparison": Path(args.comparison).name,
             "bridgeBench": Path(args.bridgebench).name,
             "qGatewaySubstrate": Path(args.q_gateway_substrate).name if q_gateway_substrate else None,
+            "qMediationDrift": Path(args.q_mediation_drift).name if q_mediation_drift else None,
             "qApiAudit": Path(args.q_api_audit).name if q_api_audit else None,
             "terminalBenchReceipt": Path(args.terminal_bench_receipt).name if terminal_bench_receipt else None,
             "harborTerminalBench": Path(args.harbor).name if harbor else None,

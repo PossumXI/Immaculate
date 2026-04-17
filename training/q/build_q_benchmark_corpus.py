@@ -572,6 +572,45 @@ def collect_q_gateway_substrate_records(report: dict) -> list[dict]:
     return [finalize_record(record)]
 
 
+def collect_q_mediation_drift_records(report: dict) -> list[dict]:
+    benchmark = report.get("benchmark", {})
+    if not isinstance(benchmark, dict) or not benchmark:
+        return []
+    failed_assertions = int(benchmark.get("failedAssertions", 0) or 0)
+    route_alignment = float(benchmark.get("routeAlignmentP50", 0) or 0)
+    q_only_selection = float(benchmark.get("qOnlySelectionP50", 0) or 0)
+    drift_detected = float(benchmark.get("driftDetectedMax", 0) or 0)
+    latency_p95_ms = float(benchmark.get("latencyP95Ms", 0) or 0)
+    record = {
+        "id": "q-mediation-drift:aggregate",
+        "row_type": "benchmark_observation",
+        "source_surface": "q-mediation-drift",
+        "row_id": "aggregate",
+        "label": "Q mediation drift benchmark",
+        "objective": "Preserve Q's governed route through Immaculate arbitration, scheduling, and routing under mixed pressure without drift.",
+        "facts": [
+            f"Suite: {benchmark.get('suiteId', 'unknown')}",
+            f"Pack: {benchmark.get('packLabel', benchmark.get('packId', 'q-mediation-drift'))}",
+            f"Failed assertions: {failed_assertions}",
+        ],
+        "observation": [
+            f"Route alignment held at p50 {route_alignment:.2f}.",
+            f"Q-only layer selection held at p50 {q_only_selection:.2f}.",
+            f"Drift detected max remained {drift_detected:.2f}.",
+            f"Mediation latency held at p95 {latency_p95_ms:.2f} ms.",
+        ],
+        "quality": {
+            "status": "completed" if failed_assertions == 0 else "degraded",
+            "parse_success": route_alignment >= 1 and drift_detected == 0,
+            "structured_field_count": 3 if route_alignment >= 1 else 0,
+            "thinking_detected": False,
+            "score": 1.0 if failed_assertions == 0 else max(0.0, 1.0 - failed_assertions * 0.1),
+            "p95_latency_ms": latency_p95_ms,
+        },
+    }
+    return [finalize_record(record)]
+
+
 def collect_bridgebench_soak_records(bridgebench_soak: dict) -> list[dict]:
     training_rows = bridgebench_soak.get("trainingRows", [])
     if isinstance(training_rows, list) and training_rows:
@@ -854,6 +893,11 @@ def main() -> None:
         help="Path to Q-Gateway-Substrate.json",
     )
     parser.add_argument(
+        "--q-mediation-drift",
+        default=str(root / "docs" / "wiki" / "Q-Mediation-Drift.json"),
+        help="Path to Q-Mediation-Drift.json",
+    )
+    parser.add_argument(
         "--terminal-bench-receipt",
         default=str(root / "docs" / "wiki" / "Terminal-Bench-Receipt.json"),
         help="Path to Terminal-Bench-Receipt.json",
@@ -894,6 +938,7 @@ def main() -> None:
     bridgebench_path = Path(args.bridgebench)
     harbor_path = Path(args.harbor)
     q_gateway_substrate_path = Path(args.q_gateway_substrate)
+    q_mediation_drift_path = Path(args.q_mediation_drift)
     terminal_bench_receipt_path = Path(args.terminal_bench_receipt)
     bridgebench_soak_path = Path(args.bridgebench_soak)
     harbor_soak_path = Path(args.harbor_soak)
@@ -907,6 +952,7 @@ def main() -> None:
     bridgebench = load_json(bridgebench_path)
     harbor = load_json(harbor_path)
     q_gateway_substrate = load_optional_json(q_gateway_substrate_path)
+    q_mediation_drift = load_optional_json(q_mediation_drift_path)
     terminal_bench_receipt = load_optional_json(terminal_bench_receipt_path)
     bridgebench_soak = load_optional_json(bridgebench_soak_path)
     harbor_soak = load_optional_json(harbor_soak_path)
@@ -922,6 +968,8 @@ def main() -> None:
     records.extend(collect_harbor_records(root, harbor))
     if q_gateway_substrate:
         records.extend(collect_q_gateway_substrate_records(q_gateway_substrate))
+    if q_mediation_drift:
+        records.extend(collect_q_mediation_drift_records(q_mediation_drift))
     if bridgebench_soak:
         records.extend(collect_bridgebench_soak_records(bridgebench_soak))
     if harbor_soak:
@@ -949,6 +997,11 @@ def main() -> None:
             **(
                 {"q-gateway-substrate": relative_path(root, q_gateway_substrate_path)}
                 if q_gateway_substrate
+                else {}
+            ),
+            **(
+                {"q-mediation-drift": relative_path(root, q_mediation_drift_path)}
+                if q_mediation_drift
                 else {}
             ),
             **(

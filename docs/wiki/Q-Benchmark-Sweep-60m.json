@@ -1,27 +1,27 @@
 {
-  "generatedAt": "2026-04-17T07:13:20.835Z",
+  "generatedAt": "2026-04-17T20:51:08.584Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "848d44f8dbe409a8227bab61f88eccbf078dd056",
-    "gitShortSha": "848d44f",
+    "gitSha": "30d48b7e6e99aaacd7284b2c4096d3e68f40f350",
+    "gitShortSha": "30d48b7",
     "gitBranch": "harbor-q-push",
-    "buildId": "0.1.0+848d44f",
+    "buildId": "0.1.0+30d48b7",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
       "trainingLock": {
-        "generatedAt": "2026-04-17T07:12:41Z",
+        "generatedAt": "2026-04-17T20:29:42Z",
         "lockVersion": 1,
-        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v8-848d44f-4a805f5f",
-        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v8",
+        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14-30d48b7-248a8349",
+        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14",
         "modelName": "Q",
-        "trainDatasetPath": ".training-output/q/q-mix-longctx-harbor-opt-2384cf5-bench-v8.jsonl",
-        "trainDatasetSha256": "4a805f5f86175d90ce984c2453bf675ea97943fcf66562d7cf9ceb0f69990782",
-        "trainDatasetRowCount": 51,
-        "mixManifestPath": ".training-output/q/q-mix-longctx-harbor-opt-2384cf5-bench-v8.manifest.json",
-        "mixManifestSha256": "cdffa38c1241ef7e17f16e10c118773fd17ea7addd7b110e4960196274c10040",
+        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14.jsonl",
+        "trainDatasetSha256": "248a8349d1f5e1234dfba76ea5d2e3473313496f015e164565fa30d80b0ba094",
+        "trainDatasetRowCount": 109,
+        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14.manifest.json",
+        "mixManifestSha256": "b1c919b7d96f89d74744a291cfb9d9f1468158eae4cc586aa859aebfdedb16fe",
         "mixSupplementalCount": 5,
         "mixSupplementalPaths": [
           "training/q/q_harness_identity_seed.json",
@@ -34,17 +34,51 @@
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-17T07:12:47Z",
-        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v8",
-        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v8/hybrid-session.json",
+        "generatedAt": "2026-04-17T20:30:04Z",
+        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v14",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v14/hybrid-session.json",
         "localStatus": "ready",
-        "cloudStatus": "launch-blocked",
+        "cloudStatus": "ready",
         "cloudProvider": "hf_jobs",
-        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v8-848d44f-4a805f5f",
-        "immaculateBundleId": "immaculate-orchestration-848d44f-e2c270c1",
+        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14-30d48b7-248a8349",
+        "immaculateBundleId": "immaculate-orchestration-30d48b7-ec4b3cb6",
         "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
       }
     }
+  },
+  "latestWandbPublication": {
+    "suiteId": "immaculate-benchmark-2026-04-17T02-09-25-503Z",
+    "packId": "substrate-readiness",
+    "packLabel": "Substrate Readiness",
+    "runKind": "smoke",
+    "generatedAt": "2026-04-17T02:09:25.503Z",
+    "publishedAt": "2026-04-17T02:11:17.210524+00:00",
+    "entity": "arobi-arobi-technology-alliance",
+    "project": "immaculate",
+    "projectUrl": "https://wandb.ai/arobi-arobi-technology-alliance/immaculate",
+    "runUrl": "https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/hp3m80eh",
+    "artifactName": "immaculate-immaculate-benchmark-2026-04-17T02-09-25-503Z",
+    "artifactType": "benchmark-report",
+    "integrityStatus": "verified",
+    "recoveryMode": "checkpoint",
+    "plannedDurationMs": 12800,
+    "failedAssertions": 0,
+    "totalAssertions": 119,
+    "totalDurationMs": 635.85,
+    "hardwareContext": {
+      "host": "runnervmeorf1",
+      "platform": "linux",
+      "arch": "x64",
+      "osVersion": "#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026",
+      "cpuModel": "AMD EPYC 7763 64-Core Processor",
+      "cpuCount": 4,
+      "memoryGiB": 15.61,
+      "diskKind": "HDD (Virtual Disk)",
+      "nodeVersion": "v22.22.2"
+    },
+    "owner": "Gaetano Comparcola (PossumX)",
+    "role": "Program Originator, Systems Architect, and Engineering Lead",
+    "website": "https://PossumX.dev"
   },
   "bridgeBenchSoak": {
     "generatedAt": "2026-04-15T06:15:54.188Z",
@@ -3127,7 +3161,7 @@
       "markdownPath": "docs/wiki/Harbor-Terminal-Bench-Soak.md"
     }
   },
-  "wandbSoak": {
+  "historicalWandbSoak": {
     "suiteId": "immaculate-benchmark-2026-04-12T21-48-36-880Z",
     "packId": "latency-soak-60m",
     "packLabel": "Latency Soak (60m)",

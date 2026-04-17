@@ -90,9 +90,10 @@ type SweepReport = {
   release: Omit<ReleaseMetadata, "q"> & {
     q: Pick<ReleaseMetadata["q"], "modelName" | "foundationModel" | "trainingLock" | "hybridSession">;
   };
+  latestWandbPublication?: BenchmarkStatusEntry;
   bridgeBenchSoak?: BridgeBenchSoakReport;
   harborSoak?: HarborSoakReport;
-  wandbSoak?: BenchmarkStatusEntry;
+  historicalWandbSoak?: BenchmarkStatusEntry;
   output: {
     jsonPath: string;
     markdownPath: string;
@@ -157,7 +158,7 @@ function renderMarkdown(report: SweepReport): string {
   const lines: string[] = [
     "# Q Benchmark Sweep (60m)",
     "",
-    "This page records the hour-class Q and Immaculate benchmark sweep. It ties the 60-minute benchmark publication lane to the repeated BridgeBench and Harbor task-pack lanes in one stamped surface.",
+    "This page records the hour-class Q and Immaculate benchmark sweep. It ties the historical 60-minute W&B soak lane to the repeated BridgeBench and Harbor task-pack lanes in one stamped surface.",
     "",
     `- Generated: \`${report.generatedAt}\``,
     `- Release: \`${report.release.buildId}\``,
@@ -168,16 +169,35 @@ function renderMarkdown(report: SweepReport): string {
     ""
   ];
 
-  if (report.wandbSoak) {
-    lines.push("## W&B 60m Soak");
+  if (report.latestWandbPublication) {
+    lines.push("## Latest W&B Publication");
     lines.push("");
-    lines.push(`- Suite: \`${report.wandbSoak.suiteId ?? "n/a"}\``);
-    lines.push(`- Pack: \`${report.wandbSoak.packLabel ?? report.wandbSoak.packId ?? "n/a"}\``);
-    lines.push(`- Published: \`${report.wandbSoak.publishedAt ?? "n/a"}\``);
-    lines.push(`- Planned duration ms: \`${report.wandbSoak.plannedDurationMs ?? "n/a"}\``);
-    lines.push(`- Wall duration ms: \`${report.wandbSoak.totalDurationMs ?? "n/a"}\``);
-    lines.push(`- Failed assertions: \`${report.wandbSoak.failedAssertions ?? "n/a"}\` / \`${report.wandbSoak.totalAssertions ?? "n/a"}\``);
-    lines.push(`- Run URL: \`${report.wandbSoak.runUrl ?? "n/a"}\``);
+    lines.push(
+      "This is the current newest W&B benchmark publication tracked in git. Read this first if you want the latest published W&B result rather than the last hour-class soak rerun."
+    );
+    lines.push("");
+    lines.push(`- Pack: \`${report.latestWandbPublication.packLabel ?? report.latestWandbPublication.packId ?? "n/a"}\``);
+    lines.push(`- Suite: \`${report.latestWandbPublication.suiteId ?? "n/a"}\``);
+    lines.push(`- Published: \`${report.latestWandbPublication.publishedAt ?? "n/a"}\``);
+    lines.push(`- Run URL: \`${report.latestWandbPublication.runUrl ?? "n/a"}\``);
+    lines.push(`- Failed assertions: \`${report.latestWandbPublication.failedAssertions ?? "n/a"}\` / \`${report.latestWandbPublication.totalAssertions ?? "n/a"}\``);
+    lines.push("");
+  }
+
+  if (report.historicalWandbSoak) {
+    lines.push("## Historical W&B 60m Soak");
+    lines.push("");
+    lines.push(
+      "This is the last published hour-class soak lane. It remains useful historical evidence, but it is not automatically the newest W&B benchmark unless the 60m pack is rerun."
+    );
+    lines.push("");
+    lines.push(`- Suite: \`${report.historicalWandbSoak.suiteId ?? "n/a"}\``);
+    lines.push(`- Pack: \`${report.historicalWandbSoak.packLabel ?? report.historicalWandbSoak.packId ?? "n/a"}\``);
+    lines.push(`- Published: \`${report.historicalWandbSoak.publishedAt ?? "n/a"}\``);
+    lines.push(`- Planned duration ms: \`${report.historicalWandbSoak.plannedDurationMs ?? "n/a"}\``);
+    lines.push(`- Wall duration ms: \`${report.historicalWandbSoak.totalDurationMs ?? "n/a"}\``);
+    lines.push(`- Failed assertions: \`${report.historicalWandbSoak.failedAssertions ?? "n/a"}\` / \`${report.historicalWandbSoak.totalAssertions ?? "n/a"}\``);
+    lines.push(`- Run URL: \`${report.historicalWandbSoak.runUrl ?? "n/a"}\``);
     lines.push("");
   }
 
@@ -210,7 +230,9 @@ function renderMarkdown(report: SweepReport): string {
 
   lines.push("## Truth Boundary");
   lines.push("");
-  lines.push("- The W&B section is the published hour-class benchmark lane for Immaculate.");
+  lines.push("- The latest W&B publication may be newer than the historical 60m soak lane shown here.");
+  lines.push("- Read `docs/wiki/Benchmark-Status.md` and `docs/wiki/Benchmark-Wandb-Export.md` for the newest published W&B result.");
+  lines.push("- The 60m section on this page is historical hour-class evidence, not an automatic \"latest\" claim.");
   lines.push("- The BridgeBench and Harbor sections are repo-local repeated Q-only sweeps and remain distinct from W&B publication unless explicitly published there.");
   lines.push("- If a section is missing, that run was not produced yet in this checkout.");
   return `${lines.join("\n")}\n`;
@@ -224,6 +246,15 @@ async function main(): Promise<void> {
     readJsonFile<BenchmarkStatusReport>(BENCHMARK_STATUS_PATH)
   ]);
 
+  const benchmarkEntries = Object.values(benchmarkStatus?.publications ?? {});
+  const latestWandbPublication = benchmarkEntries
+    .slice()
+    .sort((left, right) =>
+      String(right.publishedAt ?? right.generatedAt ?? "").localeCompare(
+        String(left.publishedAt ?? left.generatedAt ?? "")
+      )
+    )[0];
+
   const report: SweepReport = {
     generatedAt: new Date().toISOString(),
     release: {
@@ -235,9 +266,10 @@ async function main(): Promise<void> {
         hybridSession: release.q.hybridSession
       }
     },
+    latestWandbPublication,
     bridgeBenchSoak: sanitizeSweepValue(bridgeBenchSoak),
     harborSoak: sanitizeSweepValue(harborSoak),
-    wandbSoak: benchmarkStatus?.publications?.["latency-soak-60m"],
+    historicalWandbSoak: benchmarkStatus?.publications?.["latency-soak-60m"],
     output: {
       jsonPath: path.join("docs", "wiki", "Q-Benchmark-Sweep-60m.json"),
       markdownPath: path.join("docs", "wiki", "Q-Benchmark-Sweep-60m.md")

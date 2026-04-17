@@ -44,7 +44,7 @@ This repository is prepared for public collaboration under the Apache 2.0 licens
 - official Terminal-Bench public-task receipt: [docs/wiki/Terminal-Bench-Receipt.md](docs/wiki/Terminal-Bench-Receipt.md)
 - GitHub checks receipt: [docs/wiki/GitHub-Checks-Receipt.md](docs/wiki/GitHub-Checks-Receipt.md)
 - Harbor terminal bench soak: [docs/wiki/Harbor-Terminal-Bench-Soak.md](docs/wiki/Harbor-Terminal-Bench-Soak.md)
-- Q benchmark sweep (60m): [docs/wiki/Q-Benchmark-Sweep-60m.md](docs/wiki/Q-Benchmark-Sweep-60m.md)
+- Q benchmark sweep (60m historical lane): [docs/wiki/Q-Benchmark-Sweep-60m.md](docs/wiki/Q-Benchmark-Sweep-60m.md)
 - Q benchmark corpus: [docs/wiki/Q-Benchmark-Corpus.md](docs/wiki/Q-Benchmark-Corpus.md)
 - Q benchmark promotion: [docs/wiki/Q-Benchmark-Promotion.md](docs/wiki/Q-Benchmark-Promotion.md)
 - hybrid Q training session: [docs/wiki/Q-Hybrid-Training.md](docs/wiki/Q-Hybrid-Training.md)
@@ -68,8 +68,9 @@ Latest plain-English readout:
 - the dedicated Q gateway contract is green and Q-only: `/health 200`, authenticated `/api/q/info 200`, authenticated `/v1/models 200`, authenticated chat `200`, bounded `429` concurrency rejection, and a canonical identity smoke that answers as `Q`, `Arobi Technology Alliance`, `Gaetano Comparcola`, `Gemma 4`, and `Immaculate`; the current measured gateway overhead lives on [docs/wiki/Q-Gateway-Validation.md](docs/wiki/Q-Gateway-Validation.md)
 - the live `Q` API audit loop is real and now writes failures back into training surfaces instead of leaving them in logs; current failures include `transport_timeout`, `missing_prompt`, and `prompt_too_large`
 - on the repo-local Harbor operator pack, oracle is still `1.000` on both tasks while `Q` is currently `0.950` on the Q structured-contract task and `0.925` on the Immaculate bridge fail-closed task
-- the current Q bundle, hybrid session, benchmark corpus, failure corpus, and paired Immaculate orchestration bundle are machine-stamped on [docs/wiki/Release-Surface.md](docs/wiki/Release-Surface.md); the active tracked Q bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d`
-- the tracked Q benchmark corpus currently carries `49` records, and the strict failure corpus currently carries `6` live eval seeds with resolved successes kept out of the failure lane
+- the latest tracked W&B export is still current on `2026-04-17` through [docs/wiki/Benchmark-Status.md](docs/wiki/Benchmark-Status.md) and [docs/wiki/Benchmark-Wandb-Export.md](docs/wiki/Benchmark-Wandb-Export.md); the separate [docs/wiki/Q-Benchmark-Sweep-60m.md](docs/wiki/Q-Benchmark-Sweep-60m.md) page is a historical hour-class soak page and still points at the last rerun of that specific pack
+- the current Q bundle, hybrid session, benchmark corpus, failure corpus, and paired Immaculate orchestration bundle are machine-stamped on [docs/wiki/Release-Surface.md](docs/wiki/Release-Surface.md); the active tracked Q bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14-30d48b7-248a8349`
+- the tracked Q benchmark corpus currently carries `54` records, and the strict failure corpus currently carries `6` live eval seeds with resolved successes kept out of the failure lane
 - Immaculate now treats the healthy local Q lane as a first-class governed routing directive instead of a generic model slot, so blocked cloud status no longer forces a false guarded hold when local Q is healthy
 - the current HF Jobs lane is authenticated, hardware-visible, staged against the active lock, and launch-ready when you want to start the cloud run
 - the current Cloudflare lane is still an inference/eval lane, not a claimed training backend: the profile and eval bundle are ready, while auth, worker config, and adapter export are still blocked

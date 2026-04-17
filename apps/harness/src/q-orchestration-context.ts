@@ -37,6 +37,16 @@ type QGatewaySubstrateFile = {
   };
 };
 
+type QMediationDriftFile = {
+  generatedAt?: string;
+  benchmark?: {
+    suiteId?: string;
+    failedAssertions?: number;
+    routeAlignmentP50?: number;
+    driftDetectedMax?: number;
+  };
+};
+
 type CloudflareQInferenceFile = {
   generatedAt?: string;
   summary?: {
@@ -126,6 +136,7 @@ function collectContextGroundingFacts(options: {
   release: ReleaseMetadata;
   readiness?: QReadinessGateFile;
   substrate?: QGatewaySubstrateFile;
+  mediation?: QMediationDriftFile;
   cloud?: CloudflareQInferenceFile;
   snapshot?: PhaseSnapshot;
   objective?: string;
@@ -152,6 +163,10 @@ function collectContextGroundingFacts(options: {
   add(
     `gateway substrate ${options.substrate?.benchmark?.failedAssertions === 0 ? "verified" : "degraded"}`,
     options.substrate !== undefined
+  );
+  add(
+    `mediation drift ${options.mediation?.benchmark?.failedAssertions === 0 ? "verified" : "degraded"}`,
+    options.mediation !== undefined
   );
   add(
     `cloud Q lane ${options.cloud?.summary?.ready ? "ready" : "blocked"}`,
@@ -185,9 +200,10 @@ export async function resolveQOrchestrationContext(
   options: ResolveQOrchestrationContextOptions = {}
 ): Promise<QOrchestrationContext> {
   const release = options.release ?? (await resolveReleaseMetadata());
-  const [readiness, substrate, cloud, harbor, failureCorpus] = await Promise.all([
+  const [readiness, substrate, mediation, cloud, harbor, failureCorpus] = await Promise.all([
     readJsonFile<QReadinessGateFile>(path.join(WIKI_ROOT, "Q-Readiness-Gate.json")),
     readJsonFile<QGatewaySubstrateFile>(path.join(WIKI_ROOT, "Q-Gateway-Substrate.json")),
+    readJsonFile<QMediationDriftFile>(path.join(WIKI_ROOT, "Q-Mediation-Drift.json")),
     readJsonFile<CloudflareQInferenceFile>(path.join(WIKI_ROOT, "Cloudflare-Q-Inference.json")),
     readJsonFile<HarborTerminalBenchFile>(path.join(WIKI_ROOT, "Harbor-Terminal-Bench.json")),
     readJsonFile<QFailureCorpusFile>(path.join(WIKI_ROOT, "Q-Failure-Corpus.json"))
@@ -214,8 +230,14 @@ export async function resolveQOrchestrationContext(
     ...(typeof harborBridgeScore === "number" && harborBridgeScore < 1
       ? ["Q still needs cleaner fail-closed bridge reasoning under governed Harbor pressure."]
       : []),
+    ...(Number(mediation?.benchmark?.failedAssertions ?? 0) > 0
+      ? ["Immaculate must follow Q's governed route under mixed pressure without mediation drift."]
+      : []),
     ...(Number(failureClassCounts.harbor_structured_underperforming ?? 0) > 0
       ? ["Do not restamp Harbor underperformance as success; keep the miss explicit and reusable."]
+      : []),
+    ...(Number(failureClassCounts.terminal_bench_public_task_underperforming ?? 0) > 0
+      ? ["Public coding-task misses should feed the repair loop as bounded decomposition work, not be restamped as solved."]
       : []),
     ...(Number(failureClassCounts.transport_timeout ?? 0) > 0
       ? ["Prefer bounded operator-grade answers that finish cleanly instead of drifting into timeout territory."]
@@ -246,6 +268,7 @@ export async function resolveQOrchestrationContext(
     release,
     readiness,
     substrate,
+    mediation,
     cloud,
     snapshot: options.snapshot,
     objective: options.objective,

@@ -201,6 +201,25 @@ export const benchmarkPacks: BenchmarkPack[] = [
     cognitiveP95MaxMs: 250,
     maxRegressedSeries: 0,
     percentRegressionTolerance: 5
+  },
+  {
+    id: "q-mediation-drift",
+    label: "Q Mediation Drift",
+    description:
+      "Integration lane that drives live Q route/reason/commit outputs through Immaculate arbitration, scheduling, and routing under mixed pressure to prove the governed route survives without drift.",
+    reportRunKind: "benchmark",
+    reportPlannedDurationMs: 0,
+    tickIntervalMs: 20,
+    maxTicks: 240,
+    ciEligible: false,
+    completionStrategy: "checkpoint-ready",
+    realTimePacing: false,
+    persistEveryTicks: 1,
+    liveFramesPerTick: 0,
+    reflexP95MaxMs: 100,
+    cognitiveP95MaxMs: 250,
+    maxRegressedSeries: 0,
+    percentRegressionTolerance: 5
   }
 ];
 

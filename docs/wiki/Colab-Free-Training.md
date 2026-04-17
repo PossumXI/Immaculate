@@ -2,11 +2,11 @@
 
 This page records the free supplemental Colab lane for the active Q and Immaculate hybrid session.
 
-- Generated: `2026-04-17T10:09:51Z`
-- Release: `0.1.0+848d44f`
-- Session id: `q-hybrid-harbor-opt-2384cf5-bench-v13`
-- Notebook path: `deploy/colab/notebooks/q-hybrid-harbor-opt-2384cf5-bench-v13-colab-free.ipynb`
-- Open in Colab: `https://colab.research.google.com/github/PossumXI/Immaculate/blob/main/deploy/colab/notebooks/q-hybrid-harbor-opt-2384cf5-bench-v13-colab-free.ipynb`
+- Generated: `2026-04-17T20:51:05Z`
+- Release: `0.1.0+30d48b7`
+- Session id: `q-hybrid-harbor-opt-2384cf5-bench-v14`
+- Notebook path: `deploy/colab/notebooks/q-hybrid-harbor-opt-2384cf5-bench-v14-colab-free.ipynb`
+- Open in Colab: `https://colab.research.google.com/github/PossumXI/Immaculate/blob/main/deploy/colab/notebooks/q-hybrid-harbor-opt-2384cf5-bench-v14-colab-free.ipynb`
 
 ## What This Lane Does
 
@@ -25,7 +25,7 @@ This page records the free supplemental Colab lane for the active Q and Immacula
 
 ## Micro-Train Defaults
 
-- Derived config path: `.training-output/q/colab/q-colab-micro-config.json`
+- Derived config path: `.training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v14/colab/q-colab-micro-config.json`
 - Max steps: `24`
 - Max sequence length: `2048`
 - Minimum GPU memory for train: `20 GB`

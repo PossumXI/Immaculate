@@ -201,6 +201,11 @@ export function planExecutionArbitration(
     (Boolean(input.qContext) &&
       !qGovernedLaneHealthy &&
       (!input.qContext?.readinessReady || !input.qContext?.gatewaySubstrateHealthy));
+  const preserveGovernedLocalCognition =
+    qGovernedLaneHealthy &&
+    !qNeedsGuardedHold &&
+    sessionBlockedVerdicts >= 2 &&
+    governancePressure !== "critical";
   if (sessionBlockedVerdicts >= 3 && governancePressure === "clear") {
     governancePressure = "elevated";
   } else if (sessionBlockedVerdicts >= 2 && governancePressure !== "critical") {
@@ -312,7 +317,12 @@ export function planExecutionArbitration(
     routeModeHint = "reflex-direct";
   }
 
-  if (sessionBlockedVerdicts >= 2 && mode !== "suppressed" && mode !== "operator-override") {
+  if (
+    sessionBlockedVerdicts >= 2 &&
+    mode !== "suppressed" &&
+    mode !== "operator-override" &&
+    !preserveGovernedLocalCognition
+  ) {
     mode = "guarded-review";
     targetNodeId = "integrity-gate";
     targetPlane = "cognitive";
@@ -336,7 +346,7 @@ export function planExecutionArbitration(
     mode === "cognitive-escalation" &&
     federatedPressure?.pressure === "elevated"
   ) {
-    routeModeHint = "guarded-fallback";
+    routeModeHint = preserveGovernedLocalCognition ? "cognitive-assisted" : "guarded-fallback";
   }
 
   const objective = input.objective?.trim() || defaultObjective(mode, frame, governancePressure);

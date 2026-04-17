@@ -10,6 +10,7 @@ import {
 import { createQRateLimiter } from "./q-rate-limit.js";
 import {
   listOllamaModels,
+  parseStructuredResponse,
   runOllamaChatCompletion,
   type OllamaChatCompletionResult,
   type OllamaChatMessage
@@ -70,6 +71,20 @@ const DEFAULT_TIMEOUT_MS = Math.max(
   1_000,
   Number(process.env.IMMACULATE_Q_GATEWAY_TIMEOUT_MS ?? process.env.IMMACULATE_OLLAMA_CONTROL_TIMEOUT_MS ?? 120_000) ||
     120_000
+);
+const STRUCTURED_REQUEST_MAX_TOKENS = Math.max(
+  48,
+  Number(process.env.IMMACULATE_Q_GATEWAY_STRUCTURED_MAX_TOKENS ?? 96) || 96
+);
+const STRUCTURED_REQUEST_TIMEOUT_MS = Math.max(
+  5_000,
+  Number(
+    process.env.IMMACULATE_Q_GATEWAY_STRUCTURED_TIMEOUT_MS ?? Math.min(DEFAULT_TIMEOUT_MS, 45_000)
+  ) || Math.min(DEFAULT_TIMEOUT_MS, 45_000)
+);
+const STRUCTURED_REPAIR_TIMEOUT_MS = Math.max(
+  3_000,
+  Number(process.env.IMMACULATE_Q_GATEWAY_STRUCTURED_REPAIR_TIMEOUT_MS ?? 12_000) || 12_000
 );
 const Q_MODEL_TARGET = getQModelTarget();
 const PRIMARY_FAILURE_THRESHOLD = Math.max(
@@ -284,6 +299,51 @@ function latestUserPrompt(messages: OllamaChatMessage[]): string | undefined {
     }
   }
   return undefined;
+}
+
+function isStructuredContractRequest(messages: OllamaChatMessage[]): boolean {
+  const combined = messages.map((message) => message.content).join("\n");
+  return /\bROUTE\s*:/i.test(combined) && /\bREASON\s*:/i.test(combined) && /\bCOMMIT\s*:/i.test(combined);
+}
+
+function structuredFieldCount(value: string): number {
+  const parsed = parseStructuredResponse(value, "reasoner");
+  return [parsed.routeSuggestion, parsed.reasonSummary, parsed.commitStatement].filter(Boolean).length;
+}
+
+function buildStructuredRepairMessages(
+  messages: OllamaChatMessage[],
+  previousResponse: string
+): OllamaChatMessage[] {
+  const originalPrompt =
+    latestUserPrompt(messages) ??
+    messages
+      .filter((message) => message.role !== "assistant")
+      .map((message) => message.content.trim())
+      .filter(Boolean)
+      .join("\n\n");
+  return [
+    {
+      role: "system",
+      content:
+        "Repair the prior answer. Return exactly three lines and no extra text. ROUTE must be one of reflex, cognitive, guarded, or suppressed. REASON and COMMIT must each be one sentence."
+    },
+    {
+      role: "user",
+      content: [
+        "Original task:",
+        originalPrompt,
+        "",
+        "Previous answer:",
+        previousResponse || "(empty)",
+        "",
+        "Return only:",
+        "ROUTE: one label only.",
+        "REASON: one sentence.",
+        "COMMIT: one sentence."
+      ].join("\n")
+    }
+  ];
 }
 
 function buildGatewayMessages(messages: OllamaChatMessage[]): OllamaChatMessage[] {
@@ -508,6 +568,13 @@ app.post("/v1/chat/completions", async (request, reply) => {
 
   const temperature = typeof body.temperature === "number" ? body.temperature : 0.2;
   const maxTokens = typeof body.max_tokens === "number" ? body.max_tokens : 256;
+  const structuredRequest = isStructuredContractRequest(messages);
+  const effectiveMaxTokens = structuredRequest
+    ? Math.min(maxTokens, STRUCTURED_REQUEST_MAX_TOKENS)
+    : maxTokens;
+  const effectiveTimeoutMs = structuredRequest
+    ? Math.min(DEFAULT_TIMEOUT_MS, STRUCTURED_REQUEST_TIMEOUT_MS)
+    : DEFAULT_TIMEOUT_MS;
   const userPrompt = latestUserPrompt(messages);
   const canonicalIdentityKind = detectQIdentityQuestion(userPrompt);
   if (canonicalIdentityKind) {
@@ -548,14 +615,17 @@ app.post("/v1/chat/completions", async (request, reply) => {
   let primaryResult: OllamaChatCompletionResult | undefined;
   let primaryFailureClass: string | undefined = primaryDecision.reason;
   let servedResult: OllamaChatCompletionResult | undefined;
+  let contractRepairAttempted = false;
+  let contractRepairUsed = false;
+  let contractRepairFailureClass: string | undefined;
 
   if (primaryDecision.allowPrimary) {
     primaryResult = await runGatewayChatAttempt({
       model: qModel,
       messages,
       temperature,
-      maxTokens,
-      timeoutMs: DEFAULT_TIMEOUT_MS
+      maxTokens: effectiveMaxTokens,
+      timeoutMs: effectiveTimeoutMs
     });
     if (primaryResult.failureClass) {
       primaryFailureClass = primaryResult.failureClass;
@@ -582,14 +652,64 @@ app.post("/v1/chat/completions", async (request, reply) => {
       harness: getImmaculateHarnessName(),
       circuitState: circuit.state,
       latencyMs: servedResult?.latencyMs ?? primaryResult?.latencyMs ?? 0,
-      thinkingDetected: servedResult?.thinkingDetected ?? primaryResult?.thinkingDetected ?? false
+      thinkingDetected: servedResult?.thinkingDetected ?? primaryResult?.thinkingDetected ?? false,
+      contractRepairAttempted,
+      contractRepairUsed,
+      contractRepairFailureClass
     };
   }
 
-  const content = canonicalizeQIdentityAnswer(
+  let servedLatencyMs = servedResult.latencyMs;
+  let servedThinkingDetected = servedResult.thinkingDetected;
+  let content = canonicalizeQIdentityAnswer(
     userPrompt,
     sanitizeGatewayResponse(servedResult.response)
   );
+  if (structuredRequest && structuredFieldCount(content) !== 3) {
+    contractRepairAttempted = true;
+    const repairResult = await runGatewayChatAttempt({
+      model: qModel,
+      messages: buildStructuredRepairMessages(messages, content),
+      temperature: 0,
+      maxTokens: Math.min(effectiveMaxTokens, STRUCTURED_REQUEST_MAX_TOKENS),
+      timeoutMs: STRUCTURED_REPAIR_TIMEOUT_MS
+    });
+    servedLatencyMs += repairResult.latencyMs;
+    servedThinkingDetected = servedThinkingDetected || repairResult.thinkingDetected;
+    if (!repairResult.failureClass) {
+      const repairedContent = canonicalizeQIdentityAnswer(
+        userPrompt,
+        sanitizeGatewayResponse(repairResult.response)
+      );
+      if (structuredFieldCount(repairedContent) === 3) {
+        content = repairedContent;
+        contractRepairUsed = true;
+      } else {
+        contractRepairFailureClass = "contract_invalid";
+      }
+    } else {
+      contractRepairFailureClass = repairResult.failureClass;
+    }
+  }
+  if (structuredRequest && structuredFieldCount(content) !== 3) {
+    reply.code(503);
+    return {
+      error: "q_upstream_failure",
+      failureClass: contractRepairFailureClass ?? "contract_invalid",
+      message: content || "Structured contract invalid: missing ROUTE, REASON, or COMMIT.",
+      model: getQModelName(),
+      foundationModel: getQFoundationModelName(),
+      developer: getQDeveloperName(),
+      lead: getQLeadName(),
+      harness: getImmaculateHarnessName(),
+      circuitState: circuit.state,
+      latencyMs: servedLatencyMs,
+      thinkingDetected: servedThinkingDetected,
+      contractRepairAttempted,
+      contractRepairUsed,
+      contractRepairFailureClass
+    };
+  }
 
   return {
     id: `chatcmpl-${Date.now().toString(36)}`,
@@ -601,8 +721,11 @@ app.post("/v1/chat/completions", async (request, reply) => {
     lead: getQLeadName(),
     harness: getImmaculateHarnessName(),
     circuitState: circuit.state,
-    latencyMs: servedResult.latencyMs,
-    thinkingDetected: servedResult.thinkingDetected,
+    latencyMs: servedLatencyMs,
+    thinkingDetected: servedThinkingDetected,
+    contractRepairAttempted,
+    contractRepairUsed,
+    contractRepairFailureClass,
     choices: [
       {
         index: 0,

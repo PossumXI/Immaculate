@@ -21,6 +21,32 @@ For each breakthrough, record:
 
 ### 2026-04-17
 
+#### Public W&B truth no longer conflates the historical 60m soak lane with the latest published benchmark
+
+What changed:
+- the repo-local `Q` mediation benchmark was rerun clean again with `0` failed assertions while the runner path stayed bounded through the structured Q gateway path
+- the stitched `Q-Benchmark-Sweep-60m` generator now explicitly separates the newest W&B publication from the historical 60-minute soak lane instead of letting the old hour-class page read like the latest publish
+- the README, wiki home, and website now point readers to `Benchmark-Status` and `Benchmark-Wandb-Export` for the newest published W&B result, while treating `Q-Benchmark-Sweep-60m` as historical hour-class evidence unless that pack is rerun
+- the public training/release story is restamped on the active `bench-v14` Q line with `54` benchmark rows and `6` strict failure seeds
+
+Why it matters:
+- the missed systems pattern was not missing data, but surface confusion: the repo already had a newer April 17 W&B export while one historical hour-class page was still making it easy to misread April 12 as the newest W&B benchmark
+- separating “latest published W&B result” from “last rerun of the 60m soak pack” matters because public evidence pages must stay precise about what is current and what is historical
+- restamping the active Q line matters because public copy that still says `bench-v13` or `49` rows quietly breaks trust even when the generated evidence has already moved on
+
+Evidence:
+- `apps/harness/src/q-benchmark-sweep-report.ts` now emits both the latest W&B publication and the historical 60m soak lane with an explicit truth boundary
+- `docs/wiki/Benchmark-Status.md` and `docs/wiki/Benchmark-Wandb-Export.md` still show the latest tracked W&B export on `2026-04-17`
+- `docs/wiki/Q-Benchmark-Sweep-60m.md` now carries the historical 60m soak wording instead of reading like the default latest W&B page
+- `README.md`, `docs/wiki/Home.md`, and `apps/dashboard/app/ui/landing-page.tsx` now call out the April 17 W&B export and the active `bench-v14` / `54`-row Q line in plain English
+
+What this unlocks next:
+- future W&B refreshes can land without forcing people to reverse-engineer which page is “latest” and which page is “historical pack evidence”
+- the next published hour-class soak rerun can update the historical lane cleanly without confusing it with the default latest-publication surface
+- public performance conversations can stay anchored to the right evidence page before the next Q fine-tune or Cloudflare evaluation pass starts
+
+### 2026-04-17
+
 #### Q now answers as Q, Immaculate routes to healthy local Q first, and the tracked bundle moved forward to bench-v13
 
 What changed:

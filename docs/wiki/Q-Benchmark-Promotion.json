@@ -1,18 +1,18 @@
 {
-  "generatedAt": "2026-04-17T09:49:30Z",
+  "generatedAt": "2026-04-17T20:29:42Z",
   "status": "promoted",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "848d44f8dbe409a8227bab61f88eccbf078dd056",
-    "gitShortSha": "848d44f",
-    "buildId": "0.1.0+848d44f"
+    "gitSha": "30d48b7e6e99aaacd7284b2c4096d3e68f40f350",
+    "gitShortSha": "30d48b7",
+    "buildId": "0.1.0+30d48b7"
   },
   "benchmarkCorpus": {
     "jsonlPath": ".training-output/q/q-benchmark-corpus.jsonl",
     "manifestPath": "docs/wiki/Q-Benchmark-Corpus.json",
-    "sha256": "82a3c06884df39c8e93091e315a94aca34801509bfbe708f1dc1d6edf7ff8eab",
-    "rowCount": 49,
-    "manifestRecordCount": 49
+    "sha256": "06f2da1ac20a206d1cbb0a49df6bd59acaa6452d15c204d0e6a7111804389134",
+    "rowCount": 54,
+    "manifestRecordCount": 54
   },
   "failureCorpus": {
     "available": true,
@@ -23,30 +23,30 @@
     "manifestRecordCount": 6
   },
   "active": {
-    "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d",
-    "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13",
-    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v13",
+    "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14-30d48b7-248a8349",
+    "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14",
+    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v14",
     "benchmarkCorpusIncluded": true,
     "failureCorpusIncluded": true,
-    "trainDatasetRowCount": 100,
-    "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13.manifest.json",
-    "sessionManifestPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v13/hybrid-session.manifest.json"
+    "trainDatasetRowCount": 109,
+    "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14.manifest.json",
+    "sessionManifestPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v14/hybrid-session.manifest.json"
   },
   "candidate": {
-    "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14",
-    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v14"
+    "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v15",
+    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v15"
   },
   "output": {
     "manifestPath": "docs/wiki/Q-Benchmark-Promotion.json",
     "markdownPath": "docs/wiki/Q-Benchmark-Promotion.md"
   },
   "promotion": {
-    "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d",
-    "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13",
-    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v13",
-    "trainDatasetRowCount": 100,
-    "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13.manifest.json",
-    "configPath": ".training-output/q/q-lora-config-harbor-opt-2384cf5-bench-v13.json",
+    "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14-30d48b7-248a8349",
+    "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14",
+    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v14",
+    "trainDatasetRowCount": 109,
+    "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14.manifest.json",
+    "configPath": ".training-output/q/q-lora-config-harbor-opt-2384cf5-bench-v14.json",
     "lockPath": ".training-output/q/latest-training-lock.json"
   }
 }

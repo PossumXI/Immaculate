@@ -22,7 +22,7 @@ Right now the honest story is:
 - the live `Q` API audit loop is now real: rejected and failed `/api/q/run` calls are written into a tracked audit spool, surfaced in [[Q-API-Audit]], and promoted into the strict failure corpus instead of being lost in runtime logs
 - Q is materially better on the Harbor operator pack, but it still loses points on grounding and operator wording: `0.950` on `q-structured-contract` and `0.925` on `immaculate-bridge-fail-closed`
 - the public Terminal-Bench receipt is still a real failing benchmark at `0.000`, and that failure now stays in the tracked Q repair loop instead of getting buried in marketing copy
-- the current Q improvement path is concrete and machine-stamped: the active Q bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d`, the current benchmark corpus is `49` rows, the strict failure corpus is `6` rows, and the paired Immaculate orchestration bundle all live on [[Release-Surface]], [[Q-Benchmark-Corpus]], and [[Q-Failure-Corpus]]
+- the current Q improvement path is concrete and machine-stamped: the active Q bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14-30d48b7-248a8349`, the current benchmark corpus is `54` rows, the strict failure corpus is `6` rows, and the paired Immaculate orchestration bundle all live on [[Release-Surface]], [[Q-Benchmark-Corpus]], and [[Q-Failure-Corpus]]
 - the current cloud truth is also concrete: the promoted HF Jobs bundle is staged and authenticated on the real account, the launch lane is ready when you want it, and the Cloudflare inference lane is still blocked on auth and adapter export even though the profile and eval bundle are ready
 - Immaculate now treats healthy local Q as a first-class governed routing directive, so blocked cloud status no longer forces a false guarded hold when the local Q lane is already healthy
 
@@ -66,11 +66,12 @@ Right now the honest story is:
 - [[Engineering-Doctrine]] defines the standing build philosophy and what qualifies as a real leap
 - [[Benchmark-Status]] points to the live public W&B project plus the latest published benchmark runs by pack
 - [[Benchmark-Wandb-Export]] is the committed pull-back from W&B itself, so benchmark results live in git wiki even when the W&B project stays private
+- the latest tracked W&B export is currently stamped on `2026-04-17`; if you see `2026-04-12`, you are looking at the historical hour-class soak lane rather than the newest published W&B result
 - [[Harbor-Terminal-Bench]] records the repo-local Harbor task pack, the executed Q gateway scores, and the latest Harbor truth boundary
 - [[Terminal-Bench-Receipt]] records the official public-task Terminal-Bench receipt submission PR for the real `Q` lane; it is one public receipt on the official leaderboard repo, not a full leaderboard sweep
 - [[GitHub-Checks-Receipt]] records a raw GitHub REST verification of workflow-runs and check-runs when classic status contexts are empty, so release claims are tied to the checks GitHub Actions actually publishes
 - [[Harbor-Terminal-Bench-Soak]] records the repeated Q-only Harbor hour-lane with oracle/Q side-by-side task scores
-- [[Q-Benchmark-Sweep-60m]] records the stitched 60-minute Q and Immaculate benchmark surface across W&B, BridgeBench, and Harbor
+- [[Q-Benchmark-Sweep-60m]] records the stitched historical 60-minute Q and Immaculate soak surface across W&B, BridgeBench, and Harbor; it is not the default “latest W&B” page unless that pack is rerun
 - [[Q-Hybrid-Training]] records the latest tracked hybrid training session for `Q` plus the paired Immaculate orchestration bundle and cloud-readiness truth
 - [[HF-Jobs-Training]] records the authenticated Hugging Face Jobs cloud lane, staged bundle path, visible hardware, and any billing blocker without pretending a cloud run happened
 - [[Colab-Free-Training]] records the free supplemental Colab lane that replays the same session bundle for doctoring, Immaculate bundle regeneration, and bounded Q micro-trains

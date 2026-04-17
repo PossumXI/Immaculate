@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-04-17T10:09:58Z",
+  "generatedAt": "2026-04-17T20:51:27Z",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "848d44f8dbe409a8227bab61f88eccbf078dd056",
-    "gitShortSha": "848d44f",
-    "buildId": "0.1.0+848d44f"
+    "gitSha": "30d48b7e6e99aaacd7284b2c4096d3e68f40f350",
+    "gitShortSha": "30d48b7",
+    "buildId": "0.1.0+30d48b7"
   },
-  "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v13",
+  "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v14",
   "auth": {
     "hfCliBin": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-push-harbor\\.tools\\foundry-venv\\Scripts\\hf.exe",
     "tokenSource": "HF_TOKEN",
@@ -181,15 +181,15 @@
   "jobsVisibleCount": 0,
   "stagedBundle": {
     "repoId": "TruLumecreator/immaculate-q-cloud-bundles",
-    "archiveRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v13/q-hybrid-harbor-opt-2384cf5-bench-v13-cloud-bundle.tar.gz",
-    "manifestRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v13/bundle-manifest.json",
+    "archiveRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v14/q-hybrid-harbor-opt-2384cf5-bench-v14-cloud-bundle.tar.gz",
+    "manifestRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v14/bundle-manifest.json",
     "staged": true,
     "createRepoStdout": "repo_id=TruLumecreator/immaculate-q-cloud-bundles url=https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles",
     "createRepoStderr": "Warning: `hf repo` is deprecated in favor of `hf repos`.",
-    "uploadArchiveStdout": "url=https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles/commit/82709d696351b8b6cb06154c5ce0b02c366cf528",
-    "uploadArchiveStderr": "Removing 1 file(s) from commit that have not changed.\nNo files have been modified since last commit. Skipping to prevent empty commit.",
-    "uploadManifestStdout": "url=https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles/commit/82709d696351b8b6cb06154c5ce0b02c366cf528",
-    "uploadManifestStderr": "Removing 1 file(s) from commit that have not changed.\nNo files have been modified since last commit. Skipping to prevent empty commit."
+    "uploadArchiveStdout": "url=https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles/commit/a3c6977e949606dae9cabe71d235a858095f0fb7",
+    "uploadArchiveStderr": null,
+    "uploadManifestStdout": "url=https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles/commit/914a4208f4a5813c010510c8a32368d495b19348",
+    "uploadManifestStderr": null
   },
   "smokeLaunch": {
     "attempted": false,
@@ -220,7 +220,7 @@
     "recommendedNextStep": "Hugging Face Jobs is authenticated and hardware is visible. Launch the staged Q hybrid session when ready."
   },
   "output": {
-    "sessionJsonPath": ".training-output/q/hf-jobs-launch.json",
+    "sessionJsonPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v14/hf-jobs-launch.json",
     "wikiJsonPath": "docs/wiki/HF-Jobs-Training.json",
     "wikiMarkdownPath": "docs/wiki/HF-Jobs-Training.md"
   }

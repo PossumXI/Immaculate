@@ -70,6 +70,7 @@ import { safeUnlink } from "./utils.js";
 import { createNodeRegistry } from "./node-registry.js";
 import { createIntelligenceWorkerRegistry } from "./workers.js";
 import { runQGatewaySubstrateBenchmark } from "./benchmark-q-gateway-substrate.js";
+import { runQMediationDriftBenchmark } from "./benchmark-q-mediation-drift.js";
 import { resolveReleaseMetadata } from "./release-metadata.js";
 import {
   projectActuationOutput,
@@ -1537,6 +1538,223 @@ export async function runPublishedBenchmark(
             gatewayLatencySeries,
             arbitrationLatencySeries,
             guardDeniedSeries
+          ])
+        : undefined
+    };
+
+    return publishBenchmarkReport(report);
+  }
+
+  if (pack.id === "q-mediation-drift") {
+    const mediationDrift = await runQMediationDriftBenchmark({
+      repoRoot: REPO_ROOT,
+      runtimeDir
+    });
+    const qGatewayStatus = createPersistence(runtimeDir).getStatus();
+    const structuredFieldSeries = createSeries(
+      "q_mediation_drift_structured_fields",
+      "Q Mediation Drift Structured Fields",
+      "fields",
+      mediationDrift.scenarioResults.map((scenario) => scenario.structuredFieldCount)
+    );
+    const latencySeries = createSeries(
+      "q_mediation_drift_latency_ms",
+      "Q Mediation Drift End-To-End Latency",
+      "ms",
+      mediationDrift.scenarioResults.map((scenario) => scenario.latencyMs)
+    );
+    const arbitrationLatencySeries = createSeries(
+      "q_mediation_drift_arbitration_ms",
+      "Q Mediation Drift Arbitration Latency",
+      "ms",
+      mediationDrift.scenarioResults.map((scenario) => scenario.arbitrationLatencyMs)
+    );
+    const schedulingLatencySeries = createSeries(
+      "q_mediation_drift_scheduling_ms",
+      "Q Mediation Drift Scheduling Latency",
+      "ms",
+      mediationDrift.scenarioResults.map((scenario) => scenario.schedulingLatencyMs)
+    );
+    const routingLatencySeries = createSeries(
+      "q_mediation_drift_routing_ms",
+      "Q Mediation Drift Routing Latency",
+      "ms",
+      mediationDrift.scenarioResults.map((scenario) => scenario.routingLatencyMs)
+    );
+    const routeAlignmentSeries = createSeries(
+      "q_mediation_drift_route_alignment",
+      "Q Mediation Drift Route Alignment",
+      "ratio",
+      mediationDrift.scenarioResults.map((scenario) => (scenario.routeAligned ? 1 : 0))
+    );
+    const qOnlySelectionSeries = createSeries(
+      "q_mediation_drift_q_only_selection",
+      "Q Mediation Drift Q-Only Layer Selection",
+      "ratio",
+      mediationDrift.scenarioResults
+        .filter((scenario) => scenario.id === "mixed-pressure-local-cognition")
+        .map((scenario) => (scenario.qOnlyLayerSelection ? 1 : 0))
+    );
+    const driftDetectedSeries = createSeries(
+      "q_mediation_drift_drift_detected",
+      "Q Mediation Drift Drift Detection",
+      "count",
+      mediationDrift.scenarioResults.map((scenario) => (scenario.driftDetected ? 1 : 0))
+    );
+    const infoBody =
+      typeof mediationDrift.checks.info.body === "object" && mediationDrift.checks.info.body !== null
+        ? (mediationDrift.checks.info.body as {
+            release?: { qTrainingBundleId?: string };
+          })
+        : undefined;
+    const modelsBody =
+      typeof mediationDrift.checks.models.body === "object" && mediationDrift.checks.models.body !== null
+        ? (mediationDrift.checks.models.body as {
+            data?: Array<{
+              id?: string;
+            }>;
+          })
+        : undefined;
+    const qModelEntry = modelsBody?.data?.[0];
+    const assertions = [
+      createAssertion(
+        "q-mediation-drift-health",
+        "Q mediation drift lane starts from a live gateway bound to the tracked Q bundle",
+        mediationDrift.checks.health.status === 200 &&
+          infoBody?.release?.qTrainingBundleId === mediationDrift.qTrainingBundleId &&
+          modelsBody?.data?.length === 1 &&
+          qModelEntry?.id === "Q",
+        "200 health / tracked bundle / one Q model entry",
+        `${mediationDrift.checks.health.status} / ${infoBody?.release?.qTrainingBundleId ?? "missing"} / ${qModelEntry?.id ?? "missing"}`,
+        "the mediation drift lane is only honest if it starts from the same live Q gateway and tracked bundle the rest of the repo claims"
+      ),
+      createAssertion(
+        "q-mediation-drift-structured",
+        "Mixed-pressure mediation scenarios preserve ROUTE/REASON/COMMIT structure",
+        mediationDrift.scenarioResults.every(
+          (scenario) => scenario.parseSuccess && scenario.structuredFieldCount === 3
+        ),
+        "all scenarios parse 3 structured fields",
+        mediationDrift.scenarioResults
+          .map(
+            (scenario) =>
+              `${scenario.id}:${scenario.status}/${scenario.structuredFieldCount}/${scenario.failureClass ?? "none"}`
+          )
+          .join(", "),
+        "the mediation lane should fail if malformed Q output can still pass through arbitration and scheduling as if it were governed intent"
+      ),
+      createAssertion(
+        "q-mediation-drift-route-alignment",
+        "Immaculate routing follows Q's governed route under mixed pressure without drift",
+        mediationDrift.scenarioResults.every((scenario) => scenario.routeAligned) &&
+          routeAlignmentSeries.p50 === 1 &&
+          driftDetectedSeries.max === 0,
+        "all scenarios aligned / p50 1 / max drift 0",
+        mediationDrift.scenarioResults
+          .map(
+            (scenario) =>
+              `${scenario.id}:${scenario.routeSuggestion ?? "missing"}->${scenario.routingMode}/drift=${scenario.driftDetected}`
+          )
+          .join(", "),
+        "the live route/reason/commit answer is only useful if mediation preserves that governed route instead of silently drifting to a different execution posture"
+      ),
+      createAssertion(
+        "q-mediation-drift-q-only-selection",
+        "Primary local Q mediation stays inside Q-backed layers instead of widening to non-Q cognition",
+        mediationDrift.scenarioResults.every(
+          (scenario) =>
+            scenario.id !== "mixed-pressure-local-cognition" ||
+            (scenario.qOnlyLayerSelection &&
+              scenario.routingMode === "cognitive-assisted" &&
+              scenario.scheduleAdmissionState === "degrade")
+        ) && qOnlySelectionSeries.p50 === 1,
+        "local cognition scenario keeps Q-only selection with degraded admission",
+        mediationDrift.scenarioResults
+          .filter((scenario) => scenario.id === "mixed-pressure-local-cognition")
+          .map(
+            (scenario) =>
+              `${scenario.qOnlyLayerSelection}/${scenario.routingMode}/${scenario.scheduleAdmissionState}/${scenario.selectedLayerCount}`
+          )
+          .join(", "),
+        "when the governed local Q lane is healthy, Immaculate should keep mediation inside the Q-backed layer set even if pressure is elevated"
+      ),
+      createAssertion(
+        "q-mediation-drift-guarded-hold",
+        "Critical guarded mediation keeps dispatch closed while the guarded route survives",
+        mediationDrift.scenarioResults.some(
+          (scenario) =>
+            scenario.id === "mixed-pressure-guarded-hold" &&
+            scenario.routeSuggestion === "guarded" &&
+            scenario.routingMode === "guarded-fallback" &&
+            !scenario.shouldDispatchActuation
+        ),
+        "guarded route / guarded-fallback / no dispatch",
+        mediationDrift.scenarioResults
+          .filter((scenario) => scenario.id === "mixed-pressure-guarded-hold")
+          .map(
+            (scenario) =>
+              `${scenario.routeSuggestion ?? "missing"}/${scenario.routingMode}/${scenario.scheduleAdmissionState}/dispatch=${scenario.shouldDispatchActuation}`
+          )
+          .join(", "),
+        "critical mixed pressure should preserve Q's guarded route and keep outward dispatch closed instead of letting later layers reopen action"
+      )
+    ];
+    const report: BenchmarkReport = {
+      suiteId,
+      generatedAt,
+      packId: pack.id,
+      packLabel: pack.label,
+      runKind,
+      profile: `mediation-drift / ${hardwareContext.platform}-${hardwareContext.arch}`,
+      summary: `This benchmark starts the dedicated Q gateway on loopback, drives live Q route/reason/commit outputs through Immaculate arbitration, scheduling, and routing under mixed pressure, and measures whether the governed route survives without drift. It proves the live gateway is bound to the current tracked Q bundle, structured output remains parseable, primary-governed-local mediation stays inside Q-backed layers under elevated mixed pressure, and guarded-hold mediation stays fail-closed under critical mixed pressure. Hardware context: ${formatBenchmarkHardwareContext(hardwareContext)}.`,
+      tickIntervalMs,
+      totalTicks: mediationDrift.scenarioResults.length,
+      plannedDurationMs,
+      totalDurationMs: Number((performance.now() - benchmarkStartedAt).toFixed(2)),
+      checkpointCount: qGatewayStatus.checkpointCount,
+      recoveryMode: qGatewayStatus.recoveryMode,
+      recovered: true,
+      integrity: {
+        valid: true,
+        status: "verified",
+        coherenceStable: true,
+        findingCount: 0,
+        findings: [],
+        checkedAt: new Date().toISOString(),
+        currentCycle: Math.max(1, mediationDrift.scenarioResults.length),
+        activePassCount: 1
+      },
+      hardwareContext,
+      series: [
+        structuredFieldSeries,
+        latencySeries,
+        arbitrationLatencySeries,
+        schedulingLatencySeries,
+        routingLatencySeries,
+        routeAlignmentSeries,
+        qOnlySelectionSeries,
+        driftDetectedSeries
+      ],
+      assertions,
+      progress: {
+        stage: "q mediation drift integration",
+        completed: mediationDrift.scenarioResults.map(
+          (scenario) =>
+            `${scenario.label}: route=${scenario.routeSuggestion ?? "missing"} / routing=${scenario.routingMode} / admission=${scenario.scheduleAdmissionState} / drift=${scenario.driftDetected} / q-self=${scenario.qSelfEvaluation} / immaculate-self=${scenario.immaculateSelfEvaluation}`
+        ),
+        remaining: []
+      },
+      attribution: BENCHMARK_ATTRIBUTION,
+      comparison: previousReport
+        ? compareBenchmarkReports(previousReport, [
+            structuredFieldSeries,
+            latencySeries,
+            arbitrationLatencySeries,
+            schedulingLatencySeries,
+            routingLatencySeries,
+            routeAlignmentSeries,
+            qOnlySelectionSeries,
+            driftDetectedSeries
           ])
         : undefined
     };

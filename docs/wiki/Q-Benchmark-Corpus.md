@@ -3,11 +3,11 @@
 This page is generated from the tracked Q benchmark/report surfaces.
 It records the benchmark-derived corpus currently attached to Q. It is not a readiness gate and it does not replace the strict failure-only Q-Failure-Corpus surface.
 
-- Generated: `2026-04-17T10:18:30Z`
-- Release: `0.1.0+848d44f`
-- Repo commit: `848d44f`
-- Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d`
-- Records: `49`
+- Generated: `2026-04-17T20:51:45Z`
+- Release: `0.1.0+30d48b7`
+- Repo commit: `30d48b7`
+- Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14-30d48b7-248a8349`
+- Records: `54`
 - Row type: `mixed`
 - JSONL: `.training-output/q/q-benchmark-corpus.jsonl`
 
@@ -17,10 +17,11 @@ It records the benchmark-derived corpus currently attached to Q. It is not a rea
 - bridgebench: `4` via `docs/wiki/BridgeBench.json`
 - harbor-terminal-bench: `2` via `docs/wiki/Harbor-Terminal-Bench.json`
 - q-gateway-substrate: `1` via `docs/wiki/Q-Gateway-Substrate.json`
+- q-mediation-drift: `1` via `docs/wiki/Q-Mediation-Drift.json`
 - bridgebench-soak: `1` via `docs/wiki/BridgeBench-Soak.json`
 - harbor-terminal-bench-soak: `7` via `docs/wiki/Harbor-Terminal-Bench-Soak.json`
 - q-harness-identity-seed: `14` via `training/q/q_harness_identity_seed.json`
-- q-immaculate-reasoning-seed: `16` via `training/q/q_immaculate_reasoning_seed.json`
+- q-immaculate-reasoning-seed: `20` via `training/q/q_immaculate_reasoning_seed.json`
 
 ## Truth Boundary
 

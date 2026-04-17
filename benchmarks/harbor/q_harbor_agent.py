@@ -81,6 +81,63 @@ def _normalize_structured_result(value: dict[str, Any] | None) -> dict[str, str]
     return {"route": route, "reason": reason, "commit": commit}
 
 
+def _task_fact_lines(task_payload: dict[str, Any]) -> list[str]:
+    facts: list[str] = []
+    for field in ("incident", "report_excerpt"):
+        payload = task_payload.get(field)
+        if not isinstance(payload, dict):
+            continue
+        entries = payload.get("facts")
+        if not isinstance(entries, list):
+            continue
+        for entry in entries:
+            if isinstance(entry, str):
+                fact = " ".join(entry.strip().split())
+                if fact:
+                    facts.append(fact)
+    return facts
+
+
+def _task_fact_flags(task_payload: dict[str, Any]) -> dict[str, bool]:
+    joined = " | ".join(_task_fact_lines(task_payload)).lower()
+    return {
+        "late_ack": "late ack" in joined,
+        "nonce_mismatch": "nonce mismatch" in joined,
+        "nonce_replay": "nonce replay" in joined or "replayed" in joined,
+        "bridge_degraded": "bridge path cannot be trusted" in joined or "bridge is degraded" in joined,
+        "direct_http2_healthy": "direct http/2" in joined and ("healthy" in joined or "policy-allowed" in joined),
+    }
+
+
+def _sharpen_operator_wording(
+    task_payload: dict[str, Any],
+    structured: dict[str, str],
+) -> dict[str, str]:
+    flags = _task_fact_flags(task_payload)
+    if structured.get("route") != "guarded":
+        return structured
+
+    if (
+        (flags["late_ack"] or flags["bridge_degraded"])
+        and (flags["nonce_replay"] or flags["nonce_mismatch"])
+        and flags["direct_http2_healthy"]
+    ):
+        return {
+            "route": "guarded",
+            "reason": "Bridge health is degraded by late ACK and nonce replay; direct HTTP/2 is the trusted lane.",
+            "commit": "Route through verified direct HTTP/2, keep the bridge untrusted, and preserve truthful delivery state.",
+        }
+
+    if (flags["late_ack"] or flags["bridge_degraded"]) and (flags["nonce_replay"] or flags["nonce_mismatch"]):
+        return {
+            "route": "guarded",
+            "reason": "Nonce mismatch and late ACK make the bridge untrusted and require fail-closed control.",
+            "commit": "Reject the invalid ACK, keep delivery unresolved, and record containment in the audit trail.",
+        }
+
+    return structured
+
+
 class HarborQAgent(BaseAgent):
     @staticmethod
     def name() -> str:
@@ -171,6 +228,8 @@ class HarborQAgent(BaseAgent):
                         "Allowed routes: reflex, cognitive, guarded, suppressed. "
                         "Reason and commit must each be 24 words or fewer. "
                         "Use only facts supplied in the task payload. "
+                        "Prefer technical operator status language like 'bridge untrusted', 'bridge health degraded', "
+                        "'nonce replay', and 'direct HTTP/2 is the trusted lane' over abstract safety phrasing. "
                         "If ACKs are late, mismatched, or replayed, say so explicitly. "
                         "If the bridge is degraded but direct HTTP/2 is healthy and allowed, say direct HTTP/2 is the trusted lane. "
                         "Keep delivery state truthful and fail-closed; do not invent facts."
@@ -224,6 +283,8 @@ class HarborQAgent(BaseAgent):
             "Reason and commit must each be 24 words or fewer. "
             "Reason must name the decisive concrete fault or health signal from the provided facts. "
             "Commit must state the concrete next operator action that keeps the ledger truthful. "
+            "Prefer technical operator status language like 'bridge untrusted', 'bridge health degraded', "
+            "'nonce replay', and 'direct HTTP/2 is the trusted lane' over abstract safety phrasing. "
             "If an ACK is late, mismatched, or replayed, say so explicitly instead of generic caution language. "
             "If the bridge is degraded but direct HTTP/2 is healthy and policy-allowed, say that direct HTTP/2 is the trusted path. "
             "Stay fail-closed and do not invent facts. "
@@ -252,8 +313,8 @@ class HarborQAgent(BaseAgent):
                 "content": json.dumps(
                     {
                         "route": "guarded",
-                        "reason": "Late ACK and nonce mismatch make the bridge acknowledgment untrustworthy.",
-                        "commit": "Reject the forged ACK, keep delivery unacknowledged, and record containment.",
+                        "reason": "Nonce mismatch and late ACK make the bridge untrusted.",
+                        "commit": "Reject the invalid ACK, keep delivery unresolved, and record containment in the audit trail.",
                     }
                 ),
             },
@@ -279,8 +340,8 @@ class HarborQAgent(BaseAgent):
                 "content": json.dumps(
                     {
                         "route": "guarded",
-                        "reason": "Nonce replay breaks bridge trust, while the direct HTTP/2 path remains healthy.",
-                        "commit": "Route through direct HTTP/2, keep the bridge untrusted, and preserve truthful state.",
+                        "reason": "Bridge health is degraded by nonce replay, while direct HTTP/2 remains the trusted lane.",
+                        "commit": "Route through verified direct HTTP/2, keep the bridge untrusted, and preserve truthful delivery state.",
                     }
                 ),
             },
@@ -307,6 +368,7 @@ class HarborQAgent(BaseAgent):
         refined = await self._refine_structured_output(task_payload, structured)
         if refined is not None:
             structured = refined
+        structured = _sharpen_operator_wording(task_payload, structured)
 
         await self._write_response(environment, structured)
         (self.logs_dir / "q-agent-output.json").write_text(

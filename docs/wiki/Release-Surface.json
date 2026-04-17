@@ -1,27 +1,27 @@
 {
-  "generatedAt": "2026-04-17T10:18:45.735Z",
+  "generatedAt": "2026-04-17T20:52:47.953Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "848d44f8dbe409a8227bab61f88eccbf078dd056",
-    "gitShortSha": "848d44f",
+    "gitSha": "30d48b7e6e99aaacd7284b2c4096d3e68f40f350",
+    "gitShortSha": "30d48b7",
     "gitBranch": "harbor-q-push",
-    "buildId": "0.1.0+848d44f",
+    "buildId": "0.1.0+30d48b7",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
       "trainingLock": {
-        "generatedAt": "2026-04-17T09:49:31Z",
+        "generatedAt": "2026-04-17T20:29:42Z",
         "lockVersion": 1,
-        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d",
-        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13",
+        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14-30d48b7-248a8349",
+        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14",
         "modelName": "Q",
-        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13.jsonl",
-        "trainDatasetSha256": "beff091d4d9ace3fcbfc1552b1f3bea3feff5e65fdf9a6cf65b719973b4f812f",
-        "trainDatasetRowCount": 100,
-        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13.manifest.json",
-        "mixManifestSha256": "3575e0d551a38b23dc43d45e154fd0ce50dfffebc029e8f17fbfea6beba78f44",
+        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14.jsonl",
+        "trainDatasetSha256": "248a8349d1f5e1234dfba76ea5d2e3473313496f015e164565fa30d80b0ba094",
+        "trainDatasetRowCount": 109,
+        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14.manifest.json",
+        "mixManifestSha256": "b1c919b7d96f89d74744a291cfb9d9f1468158eae4cc586aa859aebfdedb16fe",
         "mixSupplementalCount": 5,
         "mixSupplementalPaths": [
           "training/q/q_harness_identity_seed.json",
@@ -34,14 +34,14 @@
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-17T10:11:18Z",
-        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v13",
-        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v13/hybrid-session.json",
+        "generatedAt": "2026-04-17T20:51:59Z",
+        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v14",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v14/hybrid-session.json",
         "localStatus": "ready",
         "cloudStatus": "ready",
         "cloudProvider": "hf_jobs",
-        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d",
-        "immaculateBundleId": "immaculate-orchestration-848d44f-6e631f6b",
+        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14-30d48b7-248a8349",
+        "immaculateBundleId": "immaculate-orchestration-30d48b7-ec4b3cb6",
         "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
       }
     }
@@ -65,7 +65,7 @@
     {
       "label": "Q readiness gate",
       "path": "docs\\wiki\\Q-Readiness-Gate.json",
-      "generatedAt": "2026-04-17T10:12:18.929Z"
+      "generatedAt": "2026-04-17T20:29:42.247Z"
     },
     {
       "label": "Q gateway validation",
@@ -78,6 +78,11 @@
       "generatedAt": "2026-04-17T10:18:33.187Z"
     },
     {
+      "label": "Q mediation drift",
+      "path": "docs\\wiki\\Q-Mediation-Drift.json",
+      "generatedAt": "2026-04-17T20:52:43.143Z"
+    },
+    {
       "label": "Q API audit",
       "path": "docs\\wiki\\Q-API-Audit.json",
       "generatedAt": "2026-04-17T10:09:27Z"
@@ -85,17 +90,17 @@
     {
       "label": "Q hybrid training",
       "path": "docs\\wiki\\Q-Hybrid-Training.json",
-      "generatedAt": "2026-04-17T10:11:18Z"
+      "generatedAt": "2026-04-17T20:51:59Z"
     },
     {
       "label": "HF Jobs training",
       "path": "docs\\wiki\\HF-Jobs-Training.json",
-      "generatedAt": "2026-04-17T10:09:58Z"
+      "generatedAt": "2026-04-17T20:51:27Z"
     },
     {
       "label": "Colab free training",
       "path": "docs\\wiki\\Colab-Free-Training.json",
-      "generatedAt": "2026-04-17T10:09:51Z"
+      "generatedAt": "2026-04-17T20:51:05Z"
     },
     {
       "label": "Cloudflare Q inference",
@@ -105,7 +110,7 @@
     {
       "label": "OCI GPU advisor",
       "path": "docs\\wiki\\OCI-GPU-Advisor.json",
-      "generatedAt": "2026-04-17T10:11:18Z"
+      "generatedAt": "2026-04-17T20:51:59Z"
     },
     {
       "label": "OCI region capacity",
@@ -115,27 +120,27 @@
     {
       "label": "Q benchmark corpus",
       "path": "docs\\wiki\\Q-Benchmark-Corpus.json",
-      "generatedAt": "2026-04-17T10:18:30Z"
+      "generatedAt": "2026-04-17T20:51:45Z"
     },
     {
       "label": "Q failure corpus",
       "path": "docs\\wiki\\Q-Failure-Corpus.json",
-      "generatedAt": "2026-04-17T10:18:30Z"
+      "generatedAt": "2026-04-17T20:51:45Z"
     },
     {
       "label": "Q benchmark promotion",
       "path": "docs\\wiki\\Q-Benchmark-Promotion.json",
-      "generatedAt": "2026-04-17T09:49:30Z"
+      "generatedAt": "2026-04-17T20:29:42Z"
     },
     {
       "label": "W&B benchmark export",
       "path": "docs\\wiki\\Benchmark-Wandb-Export.json",
-      "generatedAt": "2026-04-17T00:58:35.193636+00:00"
+      "generatedAt": "2026-04-17T02:11:36.709380+00:00"
     },
     {
       "label": "Harbor terminal bench",
       "path": "docs\\wiki\\Harbor-Terminal-Bench.json",
-      "generatedAt": "2026-04-17T10:09:10.958Z"
+      "generatedAt": "2026-04-17T20:29:00.570Z"
     },
     {
       "label": "Terminal-Bench receipt",
@@ -155,7 +160,7 @@
     {
       "label": "Q benchmark sweep (60m)",
       "path": "docs\\wiki\\Q-Benchmark-Sweep-60m.json",
-      "generatedAt": "2026-04-17T07:13:20.835Z"
+      "generatedAt": "2026-04-17T20:51:08.584Z"
     }
   ],
   "cloudflare": {

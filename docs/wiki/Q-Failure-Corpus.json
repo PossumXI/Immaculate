@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-17T10:18:30Z",
+  "generatedAt": "2026-04-17T20:51:45Z",
   "recordCount": 6,
   "evalSeedCount": 6,
   "resolvedSuccessCount": 8,
@@ -14,6 +14,7 @@
     "modelComparison": "Model-Benchmark-Comparison.json",
     "bridgeBench": "BridgeBench.json",
     "qGatewaySubstrate": "Q-Gateway-Substrate.json",
+    "qMediationDrift": "Q-Mediation-Drift.json",
     "qApiAudit": "q-api-audit.ndjson",
     "terminalBenchReceipt": "Terminal-Bench-Receipt.json",
     "harborTerminalBench": "Harbor-Terminal-Bench.json"
