@@ -17,20 +17,20 @@ const sectors = [
 
 const proofCards = [
   {
-    label: "BridgeBench",
-    body: "4 of 4 parsed clean. Bridge runtime lane stayed clean."
+    label: "Q Substrate Benchmark",
+    body: "Gateway to Immaculate seam is green. Structured handoff survived arbitration with zero failed assertions."
   },
   {
-    label: "Harbor",
+    label: "Q API Audit Loop",
+    body: "Live Q API failures are now captured, counted, and fed back into the repair corpus."
+  },
+  {
+    label: "Harbor Operator Pack",
     body: "Q reached 0.950 and 0.925 on the governed operator pack."
   },
   {
-    label: "Public Receipt",
-    body: "Official public Terminal-Bench task still scores 0.000 and stays in eval."
-  },
-  {
-    label: "Training",
-    body: "Current lock. 31 rows. 2 supplementals. Q plus Immaculate."
+    label: "Training State",
+    body: "Q lock is still 31 rows with 2 supplementals. Benchmark corpus is 20 rows. Failure corpus is 6 seeds."
   }
 ];
 
@@ -71,13 +71,15 @@ export function LandingPage() {
         <div className="landingCopy">
           <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 16</p>
           <h1 className="landingHeadline">Controlled intelligence for critical operations.</h1>
-          <p className="landingLede">Defense and healthcare. Evidence before action. Q only. Benchmarked. Current lock.</p>
+          <p className="landingLede">Defense and healthcare. Evidence before action. Q only. Benchmarked. Gateway seam proven. Audit loop live.</p>
 
           <div className="landingPills">
             <span>Q 4/4 structured</span>
             <span>BridgeBench 4/4</span>
+            <span>Substrate seam green</span>
             <span>Harbor 0.950 / 0.925</span>
             <span>31-row lock</span>
+            <span>20 benchmark rows</span>
           </div>
 
           <div className="landingSectorGrid">

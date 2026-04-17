@@ -30,6 +30,9 @@ reason to expose it.
 
 The harness edge accepts Q API keys and, on a private trusted node, can still
 coexist with the broader harness operator surface.
+It now also writes a real audit spool for `/api/q/run`, so bounded Q failures
+like `missing_prompt`, `prompt_too_large`, and live transport/model failures can
+feed the repair loop instead of staying trapped in runtime logs.
 
 ## Dedicated Q Gateway
 
@@ -113,6 +116,8 @@ Fresh loopback validation on `2026-04-14` against the dedicated gateway at
 Tracked evidence lives in:
 
 - [[Q-Gateway-Validation]]
+- [[Q-Gateway-Substrate]]
+- [[Q-API-Audit]]
 
 ## Primary Failure Control Loop
 
@@ -147,6 +152,7 @@ serves the full private harness.
 
 - The dedicated Q gateway is real and lives in `apps/harness/src/q-gateway.ts`.
 - The harness Q edge is also still real and still private.
+- The gateway contract proof, the gateway-to-substrate seam benchmark, and the live Q API audit loop are now three separate evidence pages on purpose; they answer different questions and should not be collapsed into one vague “Q is working” claim.
 - The gateway is private-OCI-first, not internet-public by default.
 - The gateway fail-closes on direct-Q upstream failures and keeps that fact explicit in headers and response metadata.
 - No real OCI instance was launched from this pass.

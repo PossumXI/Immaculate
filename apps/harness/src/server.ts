@@ -1,5 +1,6 @@
 import path from "node:path";
 import { spawn } from "node:child_process";
+import { appendFile, mkdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import Fastify, { type FastifyReply, type FastifyRequest } from "fastify";
 import cors from "@fastify/cors";
@@ -464,6 +465,33 @@ type QApiRequestContext = {
   key?: QApiKeyMetadata;
   rateLimit: QApiRateLimitPolicy;
 };
+type QApiAuditRecord = {
+  generatedAt: string;
+  source: "q-api";
+  sessionId: string;
+  executionId?: string;
+  alias: string;
+  model?: string;
+  role: IntelligenceLayer["role"];
+  status: "completed" | "failed";
+  parseSuccess: boolean;
+  structuredFieldCount: number;
+  latencyMs: number;
+  failureClass?: string;
+  thinkingDetected: boolean;
+  objective: string;
+  contextPreview?: string;
+  routeSuggestion?: string;
+  reasonSummary?: string;
+  commitStatement?: string;
+  responsePreview: string;
+  principal: {
+    kind: QApiRequestContext["principalKind"];
+    subject: string;
+    keyId?: string;
+    label?: string;
+  };
+};
 type FederatedRetryRunOptions = {
   assignment?: ExecutionWorkerAssignment;
   repairGroupId?: string;
@@ -493,6 +521,27 @@ await app.register(cors, {
 });
 
 await app.register(websocket);
+
+const REPO_ROOT = path.resolve(MODULE_ROOT, "../../..");
+const Q_API_AUDIT_PATH =
+  process.env.IMMACULATE_Q_API_AUDIT_PATH ??
+  path.join(REPO_ROOT, ".training-output", "q", "q-api-audit.ndjson");
+
+function truncateAuditText(value: string | undefined, limit = 240): string | undefined {
+  const normalized = value?.replace(/\s+/g, " ").trim();
+  if (!normalized) {
+    return undefined;
+  }
+  if (normalized.length <= limit) {
+    return normalized;
+  }
+  return `${normalized.slice(0, Math.max(0, limit - 1)).trimEnd()}…`;
+}
+
+async function appendQApiAuditRecord(record: QApiAuditRecord): Promise<void> {
+  await mkdir(path.dirname(Q_API_AUDIT_PATH), { recursive: true });
+  await appendFile(Q_API_AUDIT_PATH, `${JSON.stringify(record)}\n`, "utf8");
+}
 
 function extractQueryToken(urlValue?: string): string | undefined {
   if (!urlValue) {
@@ -4056,8 +4105,47 @@ app.post("/api/q/run", async (request, reply) => {
   const sessionId = body.sessionId?.trim() || `q-api-${Date.now().toString(36)}`;
   const authContext = getQApiRequestContext(request);
   const consentScope = qBinding.consentScope;
+  const auditPrincipal = {
+    kind: authContext?.principalKind ?? "key",
+    subject: authContext?.subject ?? "unknown",
+    keyId: authContext?.key?.keyId,
+    label: authContext?.key?.label
+  };
+  const appendAudit = async (record: Omit<QApiAuditRecord, "generatedAt" | "source" | "sessionId" | "alias" | "role" | "objective" | "contextPreview" | "principal">) => {
+    try {
+      await appendQApiAuditRecord({
+        generatedAt: new Date().toISOString(),
+        source: "q-api",
+        sessionId,
+        alias: getQModelAlias(),
+        role,
+        objective: prompt,
+        contextPreview: truncateAuditText(context),
+        principal: auditPrincipal,
+        ...record
+      });
+    } catch (error) {
+      request.log.warn(
+        {
+          error: error instanceof Error ? error.message : "unknown",
+          auditPath: Q_API_AUDIT_PATH,
+          sessionId
+        },
+        "Unable to append Q API audit record."
+      );
+    }
+  };
 
   if (!prompt) {
+    await appendAudit({
+      status: "failed",
+      parseSuccess: false,
+      structuredFieldCount: 0,
+      latencyMs: 0,
+      failureClass: "missing_prompt",
+      thinkingDetected: false,
+      responsePreview: "The Q API request was rejected because no prompt was supplied."
+    });
     reply.code(400);
     return {
       error: "missing_prompt"
@@ -4065,6 +4153,15 @@ app.post("/api/q/run", async (request, reply) => {
   }
 
   if (prompt.length > 4000 || (context?.length ?? 0) > 8000) {
+    await appendAudit({
+      status: "failed",
+      parseSuccess: false,
+      structuredFieldCount: 0,
+      latencyMs: 0,
+      failureClass: "prompt_too_large",
+      thinkingDetected: false,
+      responsePreview: "The Q API request exceeded the bounded prompt/context size."
+    });
     reply.code(400);
     return {
       error: "prompt_too_large",
@@ -4075,6 +4172,15 @@ app.post("/api/q/run", async (request, reply) => {
   try {
     const layer = await discoverPreferredOllamaLayer(role, LOCAL_OLLAMA_ENDPOINT, getQModelAlias());
     if (!layer) {
+      await appendAudit({
+        status: "failed",
+        parseSuccess: false,
+        structuredFieldCount: 0,
+        latencyMs: 0,
+        failureClass: "q_model_unavailable",
+        thinkingDetected: false,
+        responsePreview: "Q is not currently available from the configured Ollama endpoint."
+      });
       reply.code(503);
       return {
         error: "q_model_unavailable",
@@ -4106,6 +4212,25 @@ app.post("/api/q/run", async (request, reply) => {
     });
 
     if (result.execution.status === "failed") {
+      const structuredFieldCount = [
+        result.execution.routeSuggestion,
+        result.execution.reasonSummary,
+        result.execution.commitStatement
+      ].filter(Boolean).length;
+      await appendAudit({
+        executionId: result.execution.id,
+        model: truthfulModelLabel(result.execution.model),
+        status: "failed",
+        parseSuccess: structuredFieldCount === 3,
+        structuredFieldCount,
+        latencyMs: result.execution.latencyMs,
+        failureClass: result.failureClass,
+        thinkingDetected: Boolean(result.thinkingDetected),
+        routeSuggestion: result.execution.routeSuggestion,
+        reasonSummary: result.execution.reasonSummary,
+        commitStatement: result.execution.commitStatement,
+        responsePreview: result.execution.responsePreview
+      });
       reply.code(503);
       return {
         error: "q_execution_failed",
@@ -4118,6 +4243,26 @@ app.post("/api/q/run", async (request, reply) => {
         message: result.execution.responsePreview
       };
     }
+
+    const structuredFieldCount = [
+      result.execution.routeSuggestion,
+      result.execution.reasonSummary,
+      result.execution.commitStatement
+    ].filter(Boolean).length;
+    await appendAudit({
+      executionId: result.execution.id,
+      model: truthfulModelLabel(result.execution.model),
+      status: "completed",
+      parseSuccess: structuredFieldCount === 3,
+      structuredFieldCount,
+      latencyMs: result.execution.latencyMs,
+      failureClass: result.failureClass,
+      thinkingDetected: Boolean(result.thinkingDetected),
+      routeSuggestion: result.execution.routeSuggestion,
+      reasonSummary: result.execution.reasonSummary,
+      commitStatement: result.execution.commitStatement,
+      responsePreview: result.execution.responsePreview
+    });
 
     return {
       accepted: true,
@@ -4143,6 +4288,15 @@ app.post("/api/q/run", async (request, reply) => {
             }
     };
   } catch (error) {
+    await appendAudit({
+      status: "failed",
+      parseSuccess: false,
+      structuredFieldCount: 0,
+      latencyMs: 0,
+      failureClass: "http_error",
+      thinkingDetected: false,
+      responsePreview: error instanceof Error ? truncateAuditText(error.message, 280) ?? "Unable to run Q." : "Unable to run Q."
+    });
     reply.code(503);
     return {
       error: "q_execution_failed",

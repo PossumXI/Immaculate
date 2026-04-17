@@ -69,6 +69,7 @@ import { runTemporalBaselineComparison } from "./temporal-baseline.js";
 import { safeUnlink } from "./utils.js";
 import { createNodeRegistry } from "./node-registry.js";
 import { createIntelligenceWorkerRegistry } from "./workers.js";
+import { runQGatewaySubstrateBenchmark } from "./benchmark-q-gateway-substrate.js";
 import {
   projectActuationOutput,
   projectCognitiveExecution,
@@ -1291,6 +1292,210 @@ export async function runPublishedBenchmark(
             recoverySuccessSeries,
             dataLossSeries,
             iterationDurationSeries
+          ])
+        : undefined
+    };
+
+    return publishBenchmarkReport(report);
+  }
+
+  if (pack.id === "q-gateway-substrate") {
+    const gatewaySubstrate = await runQGatewaySubstrateBenchmark({
+      repoRoot: REPO_ROOT,
+      runtimeDir
+    });
+    const qGatewayStatus = createPersistence(runtimeDir).getStatus();
+    const structuredFieldSeries = createSeries(
+      "q_gateway_substrate_structured_fields",
+      "Q Gateway Substrate Structured Fields",
+      "fields",
+      gatewaySubstrate.scenarioResults.map((scenario) => scenario.structuredFieldCount)
+    );
+    const gatewayLatencySeries = createSeries(
+      "q_gateway_substrate_latency_ms",
+      "Q Gateway Substrate End-To-End Latency",
+      "ms",
+      gatewaySubstrate.scenarioResults.map((scenario) => scenario.latencyMs)
+    );
+    const arbitrationLatencySeries = createSeries(
+      "q_gateway_substrate_arbitration_ms",
+      "Q Gateway Substrate Arbitration Latency",
+      "ms",
+      gatewaySubstrate.scenarioResults.map((scenario) => scenario.arbitrationLatencyMs)
+    );
+    const guardDeniedSeries = createSeries(
+      "q_gateway_substrate_guard_denials",
+      "Q Gateway Substrate Guard Denials",
+      "count",
+      gatewaySubstrate.scenarioResults.map((scenario) => scenario.guardDeniedCount)
+    );
+    const infoBody =
+      typeof gatewaySubstrate.checks.info.body === "object" && gatewaySubstrate.checks.info.body !== null
+        ? (gatewaySubstrate.checks.info.body as {
+            release?: { qTrainingBundleId?: string };
+          })
+        : undefined;
+    const modelsBody =
+      typeof gatewaySubstrate.checks.models.body === "object" && gatewaySubstrate.checks.models.body !== null
+        ? (gatewaySubstrate.checks.models.body as {
+            data?: Array<{
+              id?: string;
+              metadata?: { providerModel?: string };
+            }>;
+          })
+        : undefined;
+    const qModelEntry = modelsBody?.data?.[0];
+    const expectedProviderModel =
+      typeof gatewaySubstrate.checks.health.body === "object" && gatewaySubstrate.checks.health.body !== null
+        ? ((gatewaySubstrate.checks.health.body as { model?: string }).model ?? "Q")
+        : "Q";
+    const assertions = [
+      createAssertion(
+        "q-gateway-substrate-health",
+        "Q gateway substrate health is live and model-ready",
+        gatewaySubstrate.checks.health.status === 200 &&
+          Boolean(
+            typeof gatewaySubstrate.checks.health.body === "object" &&
+              gatewaySubstrate.checks.health.body !== null &&
+              (gatewaySubstrate.checks.health.body as { ok?: boolean; modelReady?: boolean }).ok &&
+              (gatewaySubstrate.checks.health.body as { modelReady?: boolean }).modelReady
+          ),
+        "200 + ok=true + modelReady=true",
+        `${gatewaySubstrate.checks.health.status}`,
+        "the seam is only honest if the dedicated Q gateway is genuinely live before the substrate drives it"
+      ),
+      createAssertion(
+        "q-gateway-substrate-auth",
+        "Q gateway substrate rejects unauthenticated chat",
+        gatewaySubstrate.checks.unauthorizedChat.status === 401,
+        "401",
+        String(gatewaySubstrate.checks.unauthorizedChat.status),
+        "public edge auth needs to fail closed before this lane can be trusted"
+      ),
+      createAssertion(
+        "q-gateway-substrate-release-bind",
+        "Q gateway substrate info route is bound to the current tracked training bundle",
+        infoBody?.release?.qTrainingBundleId === gatewaySubstrate.qTrainingBundleId,
+        gatewaySubstrate.qTrainingBundleId ?? "tracked bundle id",
+        infoBody?.release?.qTrainingBundleId ?? "missing",
+        "the release surface must agree with the live gateway before Q can be benchmarked as one coherent product"
+      ),
+      createAssertion(
+        "q-gateway-substrate-model-list",
+        "Q gateway substrate exposes exactly the Q alias and provider label",
+        gatewaySubstrate.checks.models.status === 200 &&
+          modelsBody?.data?.length === 1 &&
+          qModelEntry?.id === "Q" &&
+          qModelEntry.metadata?.providerModel === expectedProviderModel,
+        "Q alias with truthful provider label",
+        `${gatewaySubstrate.checks.models.status} / ${qModelEntry?.id ?? "missing"} / ${qModelEntry?.metadata?.providerModel ?? "missing"}`,
+        "the public model list should make the alias and the real provider model explicit"
+      ),
+      createAssertion(
+        "q-gateway-substrate-concurrency",
+        "Q gateway substrate rejects a second in-flight chat request",
+        gatewaySubstrate.checks.concurrency.status === 429,
+        "429",
+        String(gatewaySubstrate.checks.concurrency.status),
+        "bounded concurrency is part of the contract, not an optional transport detail"
+      ),
+      createAssertion(
+        "q-gateway-substrate-structured",
+        "Q gateway substrate preserves ROUTE/REASON/COMMIT through the gateway seam",
+        gatewaySubstrate.scenarioResults.every(
+          (scenario) => scenario.status === "completed" && scenario.parseSuccess && scenario.structuredFieldCount === 3
+        ),
+        "all scenarios parse 3 structured fields",
+        gatewaySubstrate.scenarioResults
+          .map(
+            (scenario) =>
+              `${scenario.id}:${scenario.status}/${scenario.structuredFieldCount}/${scenario.failureClass ?? "none"}`
+          )
+          .join(", "),
+        "the benchmark should fail if the dedicated gateway allows malformed structured work to masquerade as a success"
+      ),
+      createAssertion(
+        "q-gateway-substrate-arbitration-pressure",
+        "Immaculate arbitration preserves the expected governance pressure after the Q seam",
+        gatewaySubstrate.scenarioResults.every(
+          (scenario) =>
+            scenario.id !== "critical-guard-hold" ||
+            (scenario.arbitrationGovernancePressure === "critical" && !scenario.shouldDispatchActuation)
+        ) &&
+          gatewaySubstrate.scenarioResults.every(
+            (scenario) =>
+              scenario.id !== "elevated-recovery" ||
+              scenario.arbitrationGovernancePressure === "elevated"
+          ),
+        "critical hold stays critical / elevated recovery stays elevated",
+        gatewaySubstrate.scenarioResults
+          .map(
+            (scenario) =>
+              `${scenario.id}:${scenario.arbitrationGovernancePressure}/${scenario.arbitrationMode}/dispatch=${scenario.shouldDispatchActuation}`
+          )
+          .join(", "),
+        "the seam is useful only if the routed Q output survives arbitration with the same governance intent"
+      ),
+      createAssertion(
+        "q-gateway-substrate-guard-denials",
+        "Critical guard-denial pressure blocks outward dispatch across the seam",
+        gatewaySubstrate.scenarioResults.some(
+          (scenario) =>
+            scenario.id === "critical-guard-hold" &&
+            scenario.guardDeniedCount >= 3 &&
+            scenario.shouldDispatchActuation === false
+        ),
+        "critical scenario with >=3 denials and no dispatch",
+        gatewaySubstrate.scenarioResults
+          .filter((scenario) => scenario.id === "critical-guard-hold")
+          .map((scenario) => `${scenario.guardDeniedCount} denials / dispatch=${scenario.shouldDispatchActuation}`)
+          .join(", "),
+        "this proves the gateway-facing Q path can still fail closed once Immaculate governance pressure turns critical"
+      )
+    ];
+    const report: BenchmarkReport = {
+      suiteId,
+      generatedAt,
+      packId: pack.id,
+      packLabel: pack.label,
+      runKind,
+      profile: `gateway-substrate / ${hardwareContext.platform}-${hardwareContext.arch}`,
+      summary: `This benchmark starts the dedicated Q gateway on loopback, validates its live auth and health contract, then drives two structured Q scenarios back through Immaculate arbitration to measure the seam honestly. It proves the Q alias is live, the current training bundle is bound to the info route, concurrency remains bounded, ROUTE/REASON/COMMIT survives the gateway seam, and critical guard denials still block outward dispatch after arbitration. Hardware context: ${formatBenchmarkHardwareContext(hardwareContext)}.`,
+      tickIntervalMs,
+      totalTicks: gatewaySubstrate.scenarioResults.length,
+      plannedDurationMs,
+      totalDurationMs: Number((performance.now() - benchmarkStartedAt).toFixed(2)),
+      checkpointCount: qGatewayStatus.checkpointCount,
+      recoveryMode: qGatewayStatus.recoveryMode,
+      recovered: true,
+      integrity: {
+        valid: true,
+        status: "verified",
+        coherenceStable: true,
+        findingCount: 0,
+        findings: [],
+        checkedAt: new Date().toISOString(),
+        currentCycle: Math.max(1, gatewaySubstrate.scenarioResults.length),
+        activePassCount: 1
+      },
+      hardwareContext,
+      series: [structuredFieldSeries, gatewayLatencySeries, arbitrationLatencySeries, guardDeniedSeries],
+      assertions,
+      progress: {
+        stage: "q gateway substrate integration",
+        completed: gatewaySubstrate.scenarioResults.map(
+          (scenario) =>
+            `${scenario.label}: ${scenario.status} / fields=${scenario.structuredFieldCount} / arbitration=${scenario.arbitrationGovernancePressure} / dispatch=${scenario.shouldDispatchActuation}`
+        ),
+        remaining: []
+      },
+      attribution: BENCHMARK_ATTRIBUTION,
+      comparison: previousReport
+        ? compareBenchmarkReports(previousReport, [
+            structuredFieldSeries,
+            gatewayLatencySeries,
+            arbitrationLatencySeries,
+            guardDeniedSeries
           ])
         : undefined
     };

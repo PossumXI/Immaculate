@@ -45,6 +45,14 @@ const SURFACE_FILES: SurfaceTimestamp[] = [
     path: path.join("docs", "wiki", "Q-Gateway-Validation.json")
   },
   {
+    label: "Q gateway substrate",
+    path: path.join("docs", "wiki", "Q-Gateway-Substrate.json")
+  },
+  {
+    label: "Q API audit",
+    path: path.join("docs", "wiki", "Q-API-Audit.json")
+  },
+  {
     label: "Q hybrid training",
     path: path.join("docs", "wiki", "Q-Hybrid-Training.json")
   },
@@ -175,6 +183,7 @@ function renderMarkdown(report: ReleaseSurfaceReport): string {
     `- Cloud lane status: \`${hybridSession?.cloudStatus ?? "n/a"}\``,
     `- Cloud provider: \`${hybridSession?.cloudProvider ?? "n/a"}\``,
     `- Immaculate orchestration bundle: \`${hybridSession?.immaculateBundleId ?? "n/a"}\``,
+    `- Immaculate bundle source: \`${hybridSession?.immaculateBundlePath ?? "n/a"}\``,
     "",
     "## Truth Boundary",
     "",

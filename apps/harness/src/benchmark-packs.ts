@@ -182,6 +182,25 @@ export const benchmarkPacks: BenchmarkPack[] = [
     cognitiveP95MaxMs: 250,
     maxRegressedSeries: 0,
     percentRegressionTolerance: 5
+  },
+  {
+    id: "q-gateway-substrate",
+    label: "Q Gateway Substrate",
+    description:
+      "Integration lane that starts the dedicated Q gateway, proves its live auth/health contract, then feeds structured Q outputs back through Immaculate arbitration to measure the seam honestly.",
+    reportRunKind: "benchmark",
+    reportPlannedDurationMs: 0,
+    tickIntervalMs: 20,
+    maxTicks: 240,
+    ciEligible: false,
+    completionStrategy: "checkpoint-ready",
+    realTimePacing: false,
+    persistEveryTicks: 1,
+    liveFramesPerTick: 0,
+    reflexP95MaxMs: 100,
+    cognitiveP95MaxMs: 250,
+    maxRegressedSeries: 0,
+    percentRegressionTolerance: 5
   }
 ];
 

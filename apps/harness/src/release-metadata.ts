@@ -32,6 +32,7 @@ export type QHybridTrainingSessionSummary = {
   cloudProvider?: string;
   trainingBundleId?: string;
   immaculateBundleId?: string;
+  immaculateBundlePath?: string;
 };
 
 export type ReleaseMetadata = {
@@ -61,6 +62,8 @@ const Q_OUTPUT_ROOT = path.join(REPO_ROOT, ".training-output", "q");
 const Q_LOCK_ROOT = path.join(Q_OUTPUT_ROOT, "locks");
 const Q_LATEST_LOCK_PATH = path.join(Q_OUTPUT_ROOT, "latest-training-lock.json");
 const Q_LATEST_HYBRID_SESSION_PATH = path.join(Q_OUTPUT_ROOT, "latest-hybrid-session.json");
+const IMMACULATE_OUTPUT_ROOT = path.join(REPO_ROOT, ".training-output", "immaculate");
+const IMMACULATE_LATEST_BUNDLE_PATH = path.join(IMMACULATE_OUTPUT_ROOT, "latest-training-bundle.json");
 let cachedReleaseMetadata: ReleaseMetadata | undefined;
 
 type PackageJson = {
@@ -135,6 +138,10 @@ type QHybridTrainingWikiFile = {
       provider?: string;
     };
   };
+};
+
+type ImmaculateTrainingBundleFile = {
+  bundleId?: string;
 };
 
 async function readJsonFile<T>(filePath: string): Promise<T | undefined> {
@@ -229,8 +236,23 @@ async function readTrainingLockSummary(): Promise<QTrainingLockSummary | undefin
   };
 }
 
+async function readLatestImmaculateBundle(): Promise<{
+  bundleId?: string;
+  bundlePath?: string;
+}> {
+  if (!existsSync(IMMACULATE_LATEST_BUNDLE_PATH)) {
+    return {};
+  }
+  const payload = await readJsonFile<ImmaculateTrainingBundleFile>(IMMACULATE_LATEST_BUNDLE_PATH);
+  return {
+    bundleId: payload?.bundleId?.trim() || undefined,
+    bundlePath: path.relative(REPO_ROOT, IMMACULATE_LATEST_BUNDLE_PATH).replaceAll("\\", "/")
+  };
+}
+
 async function readHybridSessionSummary(): Promise<QHybridTrainingSessionSummary | undefined> {
   const trainingLock = await readTrainingLockSummary();
+  const latestImmaculateBundle = await readLatestImmaculateBundle();
   const wikiPath = path.join(REPO_ROOT, "docs", "wiki", "Q-Hybrid-Training.json");
   const wikiPayload = existsSync(wikiPath) ? await readJsonFile<QHybridTrainingWikiFile>(wikiPath) : undefined;
   const wikiBundleId = wikiPayload?.q?.trainingBundleId?.trim();
@@ -249,7 +271,8 @@ async function readHybridSessionSummary(): Promise<QHybridTrainingSessionSummary
       cloudStatus: wikiPayload.doctor?.cloud?.ready ? "ready" : "not-configured",
       cloudProvider: wikiPayload.doctor?.cloud?.provider,
       trainingBundleId: wikiPayload.q?.trainingBundleId,
-      immaculateBundleId: wikiPayload.immaculate?.bundleId
+      immaculateBundleId: latestImmaculateBundle.bundleId ?? wikiPayload.immaculate?.bundleId,
+      immaculateBundlePath: latestImmaculateBundle.bundlePath ?? normalizeReportedPath(wikiPayload.manifestPath)
     };
   }
 
@@ -269,7 +292,8 @@ async function readHybridSessionSummary(): Promise<QHybridTrainingSessionSummary
     cloudStatus: payload.lanes?.cloud?.status,
     cloudProvider: payload.lanes?.cloud?.provider,
     trainingBundleId: payload.q?.trainingBundleId,
-    immaculateBundleId: payload.immaculate?.bundleId
+    immaculateBundleId: latestImmaculateBundle.bundleId ?? payload.immaculate?.bundleId,
+    immaculateBundlePath: latestImmaculateBundle.bundlePath
   };
 }
 

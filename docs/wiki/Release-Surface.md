@@ -2,9 +2,9 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-04-16T19:03:57.778Z
-- Immaculate release: `0.1.0+2384cf5`
-- Repo commit: `2384cf5c3a0f09aa225bf8b2d5c561a13c4e2958`
+- Generated: 2026-04-17T00:19:57.223Z
+- Immaculate release: `0.1.0+b5ffe48`
+- Repo commit: `b5ffe4870f92f98af7e99403be45bd294ba902d5`
 - Branch: `harbor-q-push`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+2384cf5` is the current repo build stamp.
+- Immaculate build `0.1.0+b5ffe48` is the current repo build stamp.
 - Q is served and benchmarked as `Q` across the current repo surfaces.
 - The latest tracked Q training bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-2384cf5-57097d65`, tied to dataset `.training-output/q/q-mix-longctx-harbor-opt-2384cf5.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
 - The latest hybrid session is `q-hybrid-harbor-opt-2384cf5`, with local lane `dry-run` and cloud lane `not-configured` on provider `hf_jobs`.
@@ -26,18 +26,20 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - BridgeBench: `2026-04-16T19:02:39.556Z` via `docs/wiki/BridgeBench.json`
 - BridgeBench soak: `2026-04-15T06:15:54.188Z` via `docs/wiki/BridgeBench-Soak.json`
 - Q structured contract benchmark: `2026-04-16T18:59:16.535Z` via `docs/wiki/Model-Benchmark-Comparison.json`
-- Q readiness gate: `2026-04-15T02:35:16.060Z` via `docs/wiki/Q-Readiness-Gate.json`
+- Q readiness gate: `2026-04-17T00:18:29.166Z` via `docs/wiki/Q-Readiness-Gate.json`
 - Q gateway validation: `2026-04-15T02:32:19.275Z` via `docs/wiki/Q-Gateway-Validation.json`
+- Q gateway substrate: `2026-04-17T00:14:27.341Z` via `docs/wiki/Q-Gateway-Substrate.json`
+- Q API audit: `2026-04-17T00:16:15Z` via `docs/wiki/Q-API-Audit.json`
 - Q hybrid training: `2026-04-16T18:56:30Z` via `docs/wiki/Q-Hybrid-Training.json`
 - HF Jobs training: `2026-04-15T18:57:58Z` via `docs/wiki/HF-Jobs-Training.json`
 - Colab free training: `2026-04-15T19:49:12Z` via `docs/wiki/Colab-Free-Training.json`
 - Cloudflare Q inference: `2026-04-15T22:59:47Z` via `docs/wiki/Cloudflare-Q-Inference.json`
 - OCI GPU advisor: `2026-04-16T00:02:31Z` via `docs/wiki/OCI-GPU-Advisor.json`
 - OCI region capacity: `2026-04-15T17:06:51Z` via `docs/wiki/OCI-Region-Capacity.json`
-- Q benchmark corpus: `2026-04-16T19:02:55Z` via `docs/wiki/Q-Benchmark-Corpus.json`
-- Q failure corpus: `2026-04-16T19:03:01Z` via `docs/wiki/Q-Failure-Corpus.json`
-- Q benchmark promotion: `2026-04-16T19:03:51Z` via `docs/wiki/Q-Benchmark-Promotion.json`
-- W&B benchmark export: `2026-04-16T17:20:52.213333+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
+- Q benchmark corpus: `2026-04-17T00:10:45Z` via `docs/wiki/Q-Benchmark-Corpus.json`
+- Q failure corpus: `2026-04-17T00:16:15Z` via `docs/wiki/Q-Failure-Corpus.json`
+- Q benchmark promotion: `2026-04-17T00:11:09Z` via `docs/wiki/Q-Benchmark-Promotion.json`
+- W&B benchmark export: `2026-04-16T17:58:29.253932+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
 - Harbor terminal bench: `2026-04-16T19:02:49.774Z` via `docs/wiki/Harbor-Terminal-Bench.json`
 - Terminal-Bench receipt: `2026-04-16T19:02:50.028Z` via `docs/wiki/Terminal-Bench-Receipt.json`
 - GitHub checks receipt: `2026-04-16T17:54:12.583Z` via `docs/wiki/GitHub-Checks-Receipt.json`
@@ -63,7 +65,8 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Local lane status: `dry-run`
 - Cloud lane status: `not-configured`
 - Cloud provider: `hf_jobs`
-- Immaculate orchestration bundle: `immaculate-orchestration-2384cf5-497211ed`
+- Immaculate orchestration bundle: `immaculate-orchestration-b5ffe48-55187c4d`
+- Immaculate bundle source: `.training-output/immaculate/latest-training-bundle.json`
 
 ## Truth Boundary
 

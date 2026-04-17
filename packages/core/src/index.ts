@@ -166,7 +166,8 @@ export const benchmarkPackIds = [
   "latency-soak-30m",
   "latency-soak-60m",
   "neurodata-external",
-  "temporal-baseline"
+  "temporal-baseline",
+  "q-gateway-substrate"
 ] as const;
 export type BenchmarkPackId = (typeof benchmarkPackIds)[number];
 

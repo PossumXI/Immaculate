@@ -21,6 +21,35 @@ For each breakthrough, record:
 
 ### 2026-04-16
 
+#### The Q improvement loop now has two new live evidence seams: a gateway-to-substrate benchmark and a private Q API audit spool
+
+What changed:
+- the repo now carries a dedicated `q-gateway-substrate` benchmark pack that starts the real Q gateway, proves auth and concurrency behavior, runs structured Q scenarios, and checks that the result survives handoff into Immaculate arbitration
+- that seam now publishes `docs/wiki/Q-Gateway-Substrate.md` and `docs/wiki/Q-Gateway-Substrate.json` with real measured values instead of burying the handoff inside a broader benchmark page
+- the private `/api/q/run` path now writes a real audit spool, and the repo now publishes it through `docs/wiki/Q-API-Audit.md` and `docs/wiki/Q-API-Audit.json`
+- the strict Q failure corpus now ingests unique live Q API failures, so prompt-size and request-shape failures can become repair seeds instead of vanishing into runtime logs
+- the latest release surface now points at the newest measured Immaculate orchestration bundle `immaculate-orchestration-b5ffe48-55187c4d` instead of only the older bundle frozen into the last hybrid-session page
+
+Why it matters:
+- the missed systems pattern was that Q had benchmark pages and a harness route, but not one clean page proving the gateway-to-arbitration seam and not one clean loop carrying live Q API failures back into the training/eval path
+- the seam benchmark matters because it proves Q is not only parsing local tasks; it is surviving the real product handoff from a bounded public edge into governed Immaculate arbitration
+- the audit spool matters because it turns private-harness Q failures into usable evidence instead of dead telemetry
+- together they make the next optimization pass more concrete: benchmark successes can reinforce the benchmark corpus, while live edge failures can enter the strict failure corpus with no manual transcription step
+
+Evidence:
+- `docs/wiki/Q-Gateway-Substrate.md` now records `0` failed assertions, `3` structured fields at P50, `29037.75 ms` gateway-latency P95, and `77.04 ms` arbitration-latency P95
+- `docs/wiki/Q-API-Audit.md` now records `5` raw audit records across `transport_timeout`, `missing_prompt`, and `prompt_too_large`
+- `docs/wiki/Q-Benchmark-Corpus.md` now reports `20` tracked benchmark rows
+- `docs/wiki/Q-Failure-Corpus.md` now reports `6` strict eval seeds with `8` resolved successes excluded
+- `docs/wiki/Release-Surface.md` now stamps the latest Immaculate orchestration bundle as `immaculate-orchestration-b5ffe48-55187c4d`
+
+What this unlocks next:
+- the next Q optimization pass can target the gateway-to-arbitration seam directly instead of treating the public edge and the substrate as separate mysteries
+- the next hybrid or cloud run can use a corpus that now includes both benchmark observations and unique live harness-edge failures
+- future regressions on the private Q edge can become tracked repair work within one repo cycle instead of waiting for another manual incident writeup
+
+### 2026-04-16
+
 #### Q's grounding pass now removes the BridgeBench timeout class and cuts the next locked training bundle straight from the repaired benchmark surfaces
 
 What changed:

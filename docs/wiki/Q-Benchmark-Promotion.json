@@ -1,18 +1,18 @@
 {
-  "generatedAt": "2026-04-16T19:03:51Z",
+  "generatedAt": "2026-04-17T00:11:09Z",
   "status": "already-current",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "2384cf5c3a0f09aa225bf8b2d5c561a13c4e2958",
-    "gitShortSha": "2384cf5",
-    "buildId": "0.1.0+2384cf5"
+    "gitSha": "b5ffe4870f92f98af7e99403be45bd294ba902d5",
+    "gitShortSha": "b5ffe48",
+    "buildId": "0.1.0+b5ffe48"
   },
   "benchmarkCorpus": {
     "jsonlPath": ".training-output/q/q-benchmark-corpus.jsonl",
     "manifestPath": "docs/wiki/Q-Benchmark-Corpus.json",
-    "sha256": "b5322794988792306dbbab8264ce800d91da9cc2681d9f1e84f6accfc36b0ce2",
-    "rowCount": 19,
-    "manifestRecordCount": 19
+    "sha256": "672034b6f69a54885e681d9f29158a4fbf5af2338f60b85ad96e347406ee344e",
+    "rowCount": 20,
+    "manifestRecordCount": 20
   },
   "active": {
     "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-2384cf5-57097d65",

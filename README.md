@@ -13,6 +13,7 @@ Immaculate is software for running AI and automation carefully.
 In plain English: it helps a system decide what to do next, checks whether that action is allowed, records what happened, and publishes real benchmarks instead of hand-wavy claims.
 
 `Q` is the repo's local reasoning-model lane. It is served, benchmarked, and trained here as `Q`, wrapped in a dedicated gateway, measured with structured tasks, and tied to a reproducible training-bundle path.
+The newest proof points are a real `Q` substrate benchmark, where the gateway hands structured work back into Immaculate arbitration, and a real `Q` API audit loop, where live `/api/q/run` failures become tracked repair inputs instead of disappearing into logs.
 
 Gaetano Comparcola, operating publicly as `PossumX`, is the program owner, systems architect, and engineering lead for Immaculate. `PossumX.dev` is the public profile site attached to benchmark attribution, architecture ownership, and published results.
 
@@ -56,16 +57,20 @@ This repository is prepared for public collaboration under the Apache 2.0 licens
 - product and release packaging plan: [docs/wiki/Product-Release-Plan.md](docs/wiki/Product-Release-Plan.md)
 - direct Q readiness gate: [docs/wiki/Q-Readiness-Gate.md](docs/wiki/Q-Readiness-Gate.md)
 - dedicated Q gateway validation: [docs/wiki/Q-Gateway-Validation.md](docs/wiki/Q-Gateway-Validation.md)
+- Q gateway substrate seam benchmark: [docs/wiki/Q-Gateway-Substrate.md](docs/wiki/Q-Gateway-Substrate.md)
+- Q API audit feedback loop: [docs/wiki/Q-API-Audit.md](docs/wiki/Q-API-Audit.md)
 - W&B pull-back committed into git: [docs/wiki/Benchmark-Wandb-Export.md](docs/wiki/Benchmark-Wandb-Export.md)
 
 Latest plain-English readout:
 
 - direct `Q` is `4/4` on the local structured lane and `4/4` on BridgeBench; current averages are `27913.26 ms` on Model-Benchmark-Comparison and `18661.35 ms` on BridgeBench, with `0` bridge-runtime assertion failures
+- the new `Q` substrate benchmark is green end to end: `0` failed assertions, `3` structured fields at P50, `29037.75 ms` gateway-latency P95, `77.04 ms` arbitration-latency P95, and `3` guard denials carried through the critical hold case
+- the live `Q` API audit loop is now real and writing back into training surfaces: `5` raw audit records currently exist, covering `transport_timeout`, `missing_prompt`, and `prompt_too_large`
 - on the current repo-local Harbor task pack, oracle is still `1.000` on both tasks
 - `Q` scored `0.950` on the Q structured-contract task and `0.925` on the Immaculate bridge fail-closed task
 - those Harbor scores break down into perfect programmatic passes (`1.000` on both tasks) plus improved operator-grade judge scores (`0.900` and `0.850`)
-- the current locked Q bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-2384cf5-57097d65`: `31` rows, `2` curated supplementals, and a matching Immaculate orchestration bundle `immaculate-orchestration-2384cf5-497211ed`
-- the tracked Q benchmark corpus now carries `19` records, and the strict failure corpus carries `3` live eval seeds with `8` resolved successes kept out of the failure lane
+- the current locked Q bundle is still `q-defsec-code-longctx-harbor-opt-2384cf5-2384cf5-57097d65`: `31` rows and `2` curated supplementals; the latest restamped Immaculate orchestration bundle is `immaculate-orchestration-b5ffe48-55187c4d`
+- the tracked Q benchmark corpus now carries `20` records, and the strict failure corpus carries `6` live eval seeds with `8` resolved successes kept out of the failure lane
 - the official public-task Terminal-Bench receipt for `terminal-bench/make-mips-interpreter` is still `0.000`, and that underperformance now stays in the repair loop instead of living as a dead-end public artifact
 
 ## Workspace
@@ -133,6 +138,8 @@ For the `Q` fine-tune path specifically:
 - alias/install guide: [docs/wiki/Q-Alias-and-Banner.md](docs/wiki/Q-Alias-and-Banner.md)
 - secure API and hosting guide: [docs/wiki/Q-API-Hosting.md](docs/wiki/Q-API-Hosting.md)
 - gateway architecture: [docs/wiki/Q-Gateway-Architecture.md](docs/wiki/Q-Gateway-Architecture.md)
+- gateway-to-substrate seam benchmark: [docs/wiki/Q-Gateway-Substrate.md](docs/wiki/Q-Gateway-Substrate.md)
+- live Q API audit loop: [docs/wiki/Q-API-Audit.md](docs/wiki/Q-API-Audit.md)
 - release/build identity: [docs/wiki/Release-Surface.md](docs/wiki/Release-Surface.md)
 - direct readiness gate: [docs/wiki/Q-Readiness-Gate.md](docs/wiki/Q-Readiness-Gate.md)
 - benchmark corpus: [docs/wiki/Q-Benchmark-Corpus.md](docs/wiki/Q-Benchmark-Corpus.md)

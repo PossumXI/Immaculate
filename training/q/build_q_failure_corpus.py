@@ -20,6 +20,23 @@ def load_optional_json(path: Path):
     return payload if isinstance(payload, dict) else None
 
 
+def load_optional_ndjson(path: Path):
+    if not path.exists():
+        return []
+    records = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        try:
+            payload = json.loads(stripped)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(payload, dict):
+            records.append(payload)
+    return records
+
+
 def harbor_context(root: Path, task_id: str, fallback_label: str) -> tuple[str, list[str]]:
     context_map = {
         "q-structured-contract": root / "benchmarks" / "harbor" / "q-structured-contract" / "incident.json",
@@ -115,6 +132,23 @@ def build_terminal_bench_failure_text(receipt: dict) -> str:
         f"trials={int(harbor.get('trials', 0) or 0)}; "
         f"discussion={str(leaderboard.get('discussionUrl', '')).strip() or '[missing discussion url]'}"
     )
+    return (
+        "Q defensive engineering failure corpus\n"
+        "source=terminal-bench-receipt\n"
+        "language=text\n"
+        f"path=terminal-bench-receipt/{task_name}\n"
+        "tags=q,failure-corpus,eval-seed,terminal-bench-public-receipt\n\n"
+        "OBJECTIVE\n"
+        f"{task_name}\n\n"
+        "OBSERVED FAILURE\n"
+        "failure_class=terminal_bench_public_task_underperforming\n"
+        "status=official-receipt\n"
+        f"preview={preview}\n\n"
+        "RESPONSE CONTRACT\n"
+        "ROUTE: one sentence.\n"
+        "REASON: one sentence.\n"
+        "COMMIT: one sentence.\n"
+    )
 
 
 def build_harbor_failure_text(
@@ -139,23 +173,51 @@ def build_harbor_failure_text(
         lines.extend(["", "REFERENCE FACTS", *facts])
     lines.extend(["", "OBSERVED FAILURE", *observed_lines, "", "RESPONSE CONTRACT", "ROUTE: one sentence.", "REASON: one sentence.", "COMMIT: one sentence."])
     return "\n".join(lines) + "\n"
-    return (
-        "Q defensive engineering failure corpus\n"
-        "source=terminal-bench-receipt\n"
-        "language=text\n"
-        f"path=terminal-bench-receipt/{task_name}\n"
-        "tags=q,failure-corpus,eval-seed,terminal-bench-public-receipt\n\n"
-        "OBJECTIVE\n"
-        f"{task_name}\n\n"
-        "OBSERVED FAILURE\n"
-        "failure_class=terminal_bench_public_task_underperforming\n"
-        "status=official-receipt\n"
-        f"preview={preview}\n\n"
-        "RESPONSE CONTRACT\n"
-        "ROUTE: one sentence.\n"
-        "REASON: one sentence.\n"
-        "COMMIT: one sentence.\n"
+
+
+def build_q_gateway_substrate_failure_text(report: dict, assertion: dict | None, scenario: dict | None) -> str:
+    suite_id = str(report.get("benchmark", {}).get("suiteId", "q-gateway-substrate")).strip() or "q-gateway-substrate"
+    label = str(report.get("benchmark", {}).get("packLabel", "Q Gateway Substrate")).strip() or "Q Gateway Substrate"
+    parts = [
+        "Q defensive engineering failure corpus",
+        "source=q-gateway-substrate",
+        "language=text",
+        f"path=q-gateway-substrate/{suite_id}",
+        "tags=q,failure-corpus,eval-seed,q-gateway-substrate",
+        "",
+        "OBJECTIVE",
+        f"{label} seam review",
+        "",
+        "OBSERVED FAILURE",
+    ]
+    if assertion:
+        parts.extend(
+            [
+                f"failure_class=q_gateway_substrate_assertion_failed:{str(assertion.get('id', 'unknown')).strip() or 'unknown'}",
+                f"status={str(assertion.get('status', 'unknown')).strip() or 'unknown'}",
+                f"preview={str(assertion.get('actual', '')).strip() or '[no actual summary]'}",
+                f"target={str(assertion.get('target', '')).strip() or '[no target summary]'}",
+            ]
+        )
+    if scenario:
+        parts.extend(
+            [
+                f"scenario={str(scenario.get('id', 'unknown')).strip() or 'unknown'}",
+                f"parse_success={str(bool(scenario.get('parseSuccess'))).lower()}",
+                f"structured_fields={int(scenario.get('structuredFieldCount', 0) or 0)}",
+                f"scenario_preview={str(scenario.get('responsePreview', '')).strip() or '[no preview]'}",
+            ]
+        )
+    parts.extend(
+        [
+            "",
+            "RESPONSE CONTRACT",
+            "ROUTE: one sentence.",
+            "REASON: one sentence.",
+            "COMMIT: one sentence.",
+        ]
     )
+    return "\n".join(parts) + "\n"
 
 
 def collect_terminal_bench_receipt_records(receipt: dict):
@@ -232,10 +294,126 @@ def collect_harbor_records(root: Path, harbor: dict):
     return records
 
 
+def build_q_api_failure_text(record: dict) -> str:
+    objective = str(record.get("objective", "")).strip() or "Q API routed task"
+    failure_class = str(record.get("failureClass", "")).strip() or "unknown"
+    status = str(record.get("status", "unknown")).strip() or "unknown"
+    session_id = str(record.get("sessionId", "q-api-session")).strip() or "q-api-session"
+    preview = str(record.get("responsePreview", "")).strip() or "[no preview]"
+    route = str(record.get("routeSuggestion", "")).strip()
+    reason = str(record.get("reasonSummary", "")).strip()
+    commit = str(record.get("commitStatement", "")).strip()
+    observed_lines = [
+        f"failure_class={failure_class}",
+        f"status={status}",
+        f"parse_success={str(bool(record.get('parseSuccess'))).lower()}",
+        f"preview={preview}",
+    ]
+    if route:
+        observed_lines.append(f"route={route}")
+    if reason:
+        observed_lines.append(f"reason={reason}")
+    if commit:
+        observed_lines.append(f"commit={commit}")
+    return (
+        "Q defensive engineering failure corpus\n"
+        "source=q-api-live\n"
+        "language=text\n"
+        f"path=q-api-live/{session_id}\n"
+        "tags=q,failure-corpus,eval-seed,q-api-live\n\n"
+        "OBJECTIVE\n"
+        f"{objective}\n\n"
+        "OBSERVED FAILURE\n"
+        + "\n".join(observed_lines)
+        + "\n\n"
+        "RESPONSE CONTRACT\n"
+        "ROUTE: one sentence.\n"
+        "REASON: one sentence.\n"
+        "COMMIT: one sentence.\n"
+    )
+
+
+def collect_q_api_audit_records(records: list[dict]):
+    collected = []
+    resolved_successes = 0
+    failure_counter = Counter()
+    seen_failure_keys: set[tuple[str, str, str, str, str, str, str]] = set()
+    for record in records:
+        status = str(record.get("status", "unknown")).strip() or "unknown"
+        parse_success = bool(record.get("parseSuccess"))
+        route = str(record.get("routeSuggestion", "")).strip()
+        reason = str(record.get("reasonSummary", "")).strip()
+        commit = str(record.get("commitStatement", "")).strip()
+        if status == "completed" and parse_success and route and reason and commit:
+            resolved_successes += 1
+            continue
+        failure_class = str(record.get("failureClass", "")).strip() or "q_api_live_failure"
+        dedupe_key = (
+            failure_class,
+            str(record.get("objective", "")).strip(),
+            str(record.get("contextPreview", "")).strip(),
+            str(record.get("responsePreview", "")).strip(),
+            route,
+            reason,
+            commit,
+        )
+        if dedupe_key in seen_failure_keys:
+            continue
+        seen_failure_keys.add(dedupe_key)
+        failure_counter[failure_class] += 1
+        collected.append(
+            {
+                "id": f"q-api-live:{str(record.get('executionId') or record.get('sessionId') or 'unknown').strip()}",
+                "source": "q-api-live",
+                "label": f"Q API live failure: {str(record.get('objective', 'Q API request')).strip() or 'Q API request'}",
+                "status": status,
+                "parseSuccess": parse_success,
+                "failureClass": failure_class,
+                "responsePreview": str(record.get("responsePreview", "")).strip(),
+                "evalOnly": True,
+                "text": build_q_api_failure_text(record),
+            }
+        )
+    return collected, resolved_successes, dict(failure_counter)
+
+
+def collect_q_gateway_substrate_records(report: dict | None):
+    if not isinstance(report, dict):
+        return []
+    benchmark = report.get("benchmark", {})
+    if not isinstance(benchmark, dict):
+        return []
+    if int(benchmark.get("failedAssertions", 0) or 0) <= 0:
+        return []
+    assertion = next(
+        (
+            entry
+            for entry in report.get("assertions", [])
+            if isinstance(entry, dict) and str(entry.get("status", "")).strip() == "fail"
+        ),
+        None,
+    )
+    return [
+        {
+            "id": f"q-gateway-substrate:{str(benchmark.get('suiteId', 'unknown')).strip() or 'unknown'}",
+            "source": "q-gateway-substrate",
+            "label": f"Q gateway substrate failure: {str(benchmark.get('packLabel', 'Q Gateway Substrate')).strip() or 'Q Gateway Substrate'}",
+            "status": "failed",
+            "parseSuccess": False,
+            "failureClass": f"q_gateway_substrate_assertion_failed:{str(assertion.get('id', 'unknown')).strip() if isinstance(assertion, dict) else 'unknown'}",
+            "responsePreview": str(assertion.get("actual", "")).strip() if isinstance(assertion, dict) else "",
+            "evalOnly": True,
+            "text": build_q_gateway_substrate_failure_text(report, assertion, None),
+        }
+    ]
+
+
 def collect_records(
     root: Path,
     comparison: dict,
     bridgebench: dict,
+    q_gateway_substrate: dict | None,
+    q_api_audit: list[dict],
     terminal_bench_receipt: dict | None,
     harbor: dict | None
 ):
@@ -282,6 +460,19 @@ def collect_records(
             if failure_class:
                 failure_counter[str(failure_class)] += 1
 
+    substrate_records = collect_q_gateway_substrate_records(q_gateway_substrate)
+    records.extend(substrate_records)
+    for record in substrate_records:
+        failure_class = record.get("failureClass")
+        if failure_class:
+            failure_counter[str(failure_class)] += 1
+
+    q_api_records, q_api_resolved_successes, q_api_failure_counts = collect_q_api_audit_records(q_api_audit)
+    records.extend(q_api_records)
+    resolved_successes += q_api_resolved_successes
+    for failure_class, count in q_api_failure_counts.items():
+        failure_counter[failure_class] += count
+
     if harbor:
         harbor_records = collect_harbor_records(root, harbor)
         records.extend(harbor_records)
@@ -296,18 +487,18 @@ def collect_records(
 def build_intro(eval_seed_count: int, resolved_successes: int) -> str:
     if eval_seed_count > 0:
         return (
-            "This page is generated from the tracked direct-Q report surfaces. "
+            "This page is generated from the tracked direct-Q report surfaces and the live Q API audit spool. "
             "It turns current failures into eval seeds first and keeps them separate "
             "from the resolved-success training path."
         )
     if resolved_successes > 0:
         return (
-            "This page is generated from the tracked direct-Q report surfaces. "
+            "This page is generated from the tracked direct-Q report surfaces and the live Q API audit spool. "
             "The current live failure count is zero, so this failure-only export is empty. "
             "Resolved structured-contract rows are intentionally excluded from this surface."
         )
     return (
-        "This page is generated from the tracked direct-Q report surfaces. "
+        "This page is generated from the tracked direct-Q report surfaces and the live Q API audit spool. "
         "There are currently no live failure seeds to export."
     )
 
@@ -336,6 +527,16 @@ def main():
         help="Path to Terminal-Bench-Receipt.json",
     )
     parser.add_argument(
+        "--q-gateway-substrate",
+        default=str(repo_root() / "docs" / "wiki" / "Q-Gateway-Substrate.json"),
+        help="Path to Q-Gateway-Substrate.json",
+    )
+    parser.add_argument(
+        "--q-api-audit",
+        default=str(repo_root() / ".training-output" / "q" / "q-api-audit.ndjson"),
+        help="Path to the live q-api audit NDJSON spool.",
+    )
+    parser.add_argument(
         "--harbor",
         default=str(repo_root() / "docs" / "wiki" / "Harbor-Terminal-Bench.json"),
         help="Path to Harbor-Terminal-Bench.json",
@@ -349,6 +550,8 @@ def main():
 
     comparison = load_json(Path(args.comparison))
     bridgebench = load_json(Path(args.bridgebench))
+    q_gateway_substrate = load_optional_json(Path(args.q_gateway_substrate))
+    q_api_audit = load_optional_ndjson(Path(args.q_api_audit))
     terminal_bench_receipt = load_optional_json(Path(args.terminal_bench_receipt))
     harbor = load_optional_json(Path(args.harbor))
     output_path = Path(args.output)
@@ -362,6 +565,8 @@ def main():
         root,
         comparison,
         bridgebench,
+        q_gateway_substrate,
+        q_api_audit,
         terminal_bench_receipt,
         harbor
     )
@@ -380,6 +585,8 @@ def main():
         "sources": {
             "modelComparison": Path(args.comparison).name,
             "bridgeBench": Path(args.bridgebench).name,
+            "qGatewaySubstrate": Path(args.q_gateway_substrate).name if q_gateway_substrate else None,
+            "qApiAudit": Path(args.q_api_audit).name if q_api_audit else None,
             "terminalBenchReceipt": Path(args.terminal_bench_receipt).name if terminal_bench_receipt else None,
             "harborTerminalBench": Path(args.harbor).name if harbor else None,
         },

@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-04-16T19:04:39.109Z",
+  "generatedAt": "2026-04-17T00:18:29.166Z",
   "threshold": 0.75,
   "ready": true,
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "2384cf5c3a0f09aa225bf8b2d5c561a13c4e2958",
-    "gitShortSha": "2384cf5",
+    "gitSha": "b5ffe4870f92f98af7e99403be45bd294ba902d5",
+    "gitShortSha": "b5ffe48",
     "gitBranch": "harbor-q-push",
-    "buildId": "0.1.0+2384cf5",
+    "buildId": "0.1.0+b5ffe48",
     "q": {
       "alias": "Q",
       "providerModel": "Q",
@@ -41,7 +41,8 @@
         "cloudStatus": "not-configured",
         "cloudProvider": "hf_jobs",
         "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-2384cf5-57097d65",
-        "immaculateBundleId": "immaculate-orchestration-2384cf5-497211ed"
+        "immaculateBundleId": "immaculate-orchestration-b5ffe48-55187c4d",
+        "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
       }
     }
   },

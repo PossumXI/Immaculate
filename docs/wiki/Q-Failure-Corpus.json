@@ -1,15 +1,20 @@
 {
-  "generatedAt": "2026-04-16T19:03:01Z",
-  "recordCount": 3,
-  "evalSeedCount": 3,
+  "generatedAt": "2026-04-17T00:16:15Z",
+  "recordCount": 6,
+  "evalSeedCount": 6,
   "resolvedSuccessCount": 8,
   "failureClassCounts": {
     "terminal_bench_public_task_underperforming": 1,
+    "transport_timeout": 1,
+    "missing_prompt": 1,
+    "prompt_too_large": 1,
     "harbor_structured_underperforming": 2
   },
   "sources": {
     "modelComparison": "Model-Benchmark-Comparison.json",
     "bridgeBench": "BridgeBench.json",
+    "qGatewaySubstrate": "Q-Gateway-Substrate.json",
+    "qApiAudit": "q-api-audit.ndjson",
     "terminalBenchReceipt": "Terminal-Bench-Receipt.json",
     "harborTerminalBench": "Harbor-Terminal-Bench.json"
   },

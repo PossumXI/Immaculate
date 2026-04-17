@@ -13,13 +13,15 @@ Public website:
 
 If you only read one generated page before diving deeper, read [[Release-Surface]]. It tells you exactly which build, commit, and Q training bundle the current docs refer to.
 
-If you want the fastest plain-English benchmark summary, read [[Harbor-Terminal-Bench]] and [[BridgeBench]] together.
+If you want the fastest plain-English benchmark summary, read [[Harbor-Terminal-Bench]], [[BridgeBench]], and [[Q-Gateway-Substrate]] together.
 Right now the honest story is:
 
 - Q parses both tracked local contract lanes cleanly: `4/4` on [[Model-Benchmark-Comparison]] and `4/4` on [[BridgeBench]]
+- the new `Q` substrate benchmark is fully green: the dedicated Q gateway stayed live, rejected unauthenticated traffic, preserved `ROUTE/REASON/COMMIT`, and handed the work back into Immaculate arbitration with `0` failed assertions
+- the live `Q` API audit loop is now real: rejected and failed `/api/q/run` calls are written into a tracked audit spool, surfaced in [[Q-API-Audit]], and promoted into the strict failure corpus instead of being lost in runtime logs
 - Q is materially better on the Harbor operator pack, but it still loses points on grounding and operator wording: `0.950` on `q-structured-contract` and `0.925` on `immaculate-bridge-fail-closed`
 - the public Terminal-Bench receipt is still a real failing benchmark at `0.000`, and that failure now stays in the tracked Q repair loop instead of getting buried in marketing copy
-- the current Q improvement path is concrete: a `31`-row locked bundle, a `19`-record benchmark corpus, and a `3`-seed failure corpus built from the latest measured runs
+- the current Q improvement path is concrete: a `31`-row locked bundle, a `20`-record benchmark corpus, a `6`-seed failure corpus, and a latest Immaculate orchestration bundle of `immaculate-orchestration-b5ffe48-55187c4d`
 
 ## What This Project Actually Prioritizes
 
@@ -79,11 +81,13 @@ Right now the honest story is:
 - [[BridgeBench]] carries the live bridge/control-plane Q benchmark alongside the real bridge runtime assertions
 - [[BridgeBench-Soak]] carries the repeated one-hour Q-only BridgeBench lane
 - [[Q-Gateway-Validation]] carries the live dedicated-gateway contract proof for `Q`: health, auth, model listing, served completion, and concurrency rejection
+- [[Q-Gateway-Substrate]] carries the live seam benchmark where the dedicated `Q` gateway hands structured work back into Immaculate arbitration under real governance pressure
+- [[Q-API-Audit]] carries the live `/api/q/run` audit spool summary so Q failures on the private harness edge can feed the repair loop instead of staying trapped in logs
 - [[Q-Gateway-Architecture]] tracks the dedicated private OCI-first gateway boundary for `Q`, separate from the full harness
 - [[Q-Readiness-Gate]] keeps the direct-Q structured contract honest and is currently green: direct `Q` is release-eligible on the tracked local contract lane on this machine
 - [[Q-Benchmark-Corpus]] records the tracked benchmark-derived corpus surface for `Q`, including current record counts, source benchmark pages, the official Terminal-Bench receipt observation row, and export path
 - [[Q-Benchmark-Promotion]] records whether the active locked Q bundle already carries the current benchmark corpus or needs a new bench-lineage promotion
-- [[Q-Failure-Corpus]] is now a strict failure-only export and now carries both live direct-Q failures and the official Terminal-Bench public-task underperformance seed without mixing in resolved successes
+- [[Q-Failure-Corpus]] is now a strict failure-only export and now carries live Q API failures, Harbor underperformance seeds, and the official Terminal-Bench public-task underperformance seed without mixing in resolved successes
 - the Q training path now also carries a richer coding/long-context supplement plus an `8192`-token long-context LoRA config, so the next cloud run can target code repair and repo-horizon reasoning instead of only bridge/control-plane seeds
 - [[Live-Validation-2026-04-13]] records the latest fresh machine-run validation pass, including the current `60s` benchmark regression instead of hiding it
 - [[Training-Data-Factory]] tracks the manifest-first corpus curation path for defensive Q fine-tuning work without pretending the machine replaced legal review

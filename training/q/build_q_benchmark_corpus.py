@@ -421,6 +421,45 @@ def collect_terminal_bench_receipt_records(receipt: dict) -> list[dict]:
     return [finalize_record(record)]
 
 
+def collect_q_gateway_substrate_records(report: dict) -> list[dict]:
+    benchmark = report.get("benchmark", {})
+    if not isinstance(benchmark, dict) or not benchmark:
+        return []
+    failed_assertions = int(benchmark.get("failedAssertions", 0) or 0)
+    structured_fields = float(benchmark.get("structuredFieldsP50", 0) or 0)
+    latency_p95_ms = float(benchmark.get("latencyP95Ms", 0) or 0)
+    arbitration_p95_ms = float(benchmark.get("arbitrationP95Ms", 0) or 0)
+    guard_denials_max = float(benchmark.get("guardDenialsMax", 0) or 0)
+    record = {
+        "id": "q-gateway-substrate:aggregate",
+        "row_type": "benchmark_observation",
+        "source_surface": "q-gateway-substrate",
+        "row_id": "aggregate",
+        "label": "Q gateway substrate seam benchmark",
+        "objective": "Retain a truthful Q-to-Immaculate seam where the dedicated Q gateway preserves structure and fail-closed governance pressure through arbitration.",
+        "facts": [
+            f"Suite: {benchmark.get('suiteId', 'unknown')}",
+            f"Pack: {benchmark.get('packLabel', benchmark.get('packId', 'q-gateway-substrate'))}",
+            f"Failed assertions: {failed_assertions}",
+        ],
+        "observation": [
+            f"Structured fields held at p50 {structured_fields:.2f}.",
+            f"Gateway end-to-end latency held at p95 {latency_p95_ms:.2f} ms.",
+            f"Arbitration latency held at p95 {arbitration_p95_ms:.2f} ms.",
+            f"Guard denial max remained {guard_denials_max:.2f} while the seam stayed fail-closed.",
+        ],
+        "quality": {
+            "status": "completed" if failed_assertions == 0 else "degraded",
+            "parse_success": structured_fields >= 3,
+            "structured_field_count": int(round(structured_fields)),
+            "thinking_detected": False,
+            "score": 1.0 if failed_assertions == 0 else max(0.0, 1.0 - failed_assertions * 0.1),
+            "p95_latency_ms": latency_p95_ms,
+        },
+    }
+    return [finalize_record(record)]
+
+
 def collect_bridgebench_soak_records(bridgebench_soak: dict) -> list[dict]:
     training_rows = bridgebench_soak.get("trainingRows", [])
     if isinstance(training_rows, list) and training_rows:
@@ -697,6 +736,11 @@ def main() -> None:
         help="Path to Harbor-Terminal-Bench.json",
     )
     parser.add_argument(
+        "--q-gateway-substrate",
+        default=str(root / "docs" / "wiki" / "Q-Gateway-Substrate.json"),
+        help="Path to Q-Gateway-Substrate.json",
+    )
+    parser.add_argument(
         "--terminal-bench-receipt",
         default=str(root / "docs" / "wiki" / "Terminal-Bench-Receipt.json"),
         help="Path to Terminal-Bench-Receipt.json",
@@ -726,6 +770,7 @@ def main() -> None:
     comparison_path = Path(args.comparison)
     bridgebench_path = Path(args.bridgebench)
     harbor_path = Path(args.harbor)
+    q_gateway_substrate_path = Path(args.q_gateway_substrate)
     terminal_bench_receipt_path = Path(args.terminal_bench_receipt)
     bridgebench_soak_path = Path(args.bridgebench_soak)
     harbor_soak_path = Path(args.harbor_soak)
@@ -736,6 +781,7 @@ def main() -> None:
     comparison = load_json(comparison_path)
     bridgebench = load_json(bridgebench_path)
     harbor = load_json(harbor_path)
+    q_gateway_substrate = load_optional_json(q_gateway_substrate_path)
     terminal_bench_receipt = load_optional_json(terminal_bench_receipt_path)
     bridgebench_soak = load_optional_json(bridgebench_soak_path)
     harbor_soak = load_optional_json(harbor_soak_path)
@@ -749,6 +795,8 @@ def main() -> None:
     if bridgebench_model:
         records.extend(collect_model_records("bridgebench", bridgebench_model))
     records.extend(collect_harbor_records(root, harbor))
+    if q_gateway_substrate:
+        records.extend(collect_q_gateway_substrate_records(q_gateway_substrate))
     if terminal_bench_receipt:
         records.extend(collect_terminal_bench_receipt_records(terminal_bench_receipt))
     if bridgebench_soak:
@@ -773,6 +821,11 @@ def main() -> None:
             "model-comparison": relative_path(root, comparison_path),
             "bridgebench": relative_path(root, bridgebench_path),
             "harbor-terminal-bench": relative_path(root, harbor_path),
+            **(
+                {"q-gateway-substrate": relative_path(root, q_gateway_substrate_path)}
+                if q_gateway_substrate
+                else {}
+            ),
             **(
                 {"terminal-bench-receipt": relative_path(root, terminal_bench_receipt_path)}
                 if terminal_bench_receipt
