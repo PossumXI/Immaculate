@@ -13,6 +13,7 @@
     "benchmark:harbor:report": "tsx src/harbor-benchmark-report.ts",
     "benchmark:harbor:soak": "tsx src/harbor-soak-cli.ts",
     "benchmark:terminalbench:receipt": "tsx src/terminal-bench-receipt.ts",
+    "benchmark:terminalbench:rerun": "tsx src/terminal-bench-rerun.ts",
     "benchmark:q:substrate:report": "tsx src/q-gateway-substrate-report.ts",
     "benchmark:q:mediation:report": "tsx src/q-mediation-drift-report.ts",
     "benchmark:q:sweep:report": "tsx src/q-benchmark-sweep-report.ts",

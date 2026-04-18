@@ -2,10 +2,10 @@
 
 This page records the Cloudflare deploy and evaluation lane for Q-only inference.
 
-- Generated: `2026-04-18T02:57:06Z`
-- Release: `0.1.0+1b28d69`
-- Session id: `q-hybrid-harbor-opt-2384cf5-bench-v16`
-- Session path: `.training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v16/hybrid-session.manifest.json`
+- Generated: `2026-04-18T06:21:00Z`
+- Release: `0.1.0+d0bdd00`
+- Session id: `q-hybrid-harbor-opt-2384cf5-bench-v18`
+- Session path: `.training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v18/hybrid-session.manifest.json`
 - Status: `auth-blocked`
 - Worker config: `deploy/cloudflare/wrangler.toml`
 - Worker typecheck ready: `True`
@@ -31,17 +31,17 @@ This page records the Cloudflare deploy and evaluation lane for Q-only inference
 ## Q Profile And Optional Adapter
 
 - Profile ready: `True`
-- Profile id: `q-cloudflare-profile-1b28d69`
-- Training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16-35ab7e8-de7361fa`
+- Profile id: `q-cloudflare-profile-d0bdd00`
+- Training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v18-d0bdd00-4db18397`
 - Worker module: `deploy/cloudflare/worker/src/q-profile.generated.ts`
 - Rule count: `5`
 - Ready: `False`
-- Source dir: `.training-output/q/runs/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16`
-- Output dir: `.training-output/q/cloudflare/q-hybrid-harbor-opt-2384cf5-bench-v16/adapter`
+- Source dir: `.training-output/q/runs/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v18`
+- Output dir: `.training-output/q/cloudflare/q-hybrid-harbor-opt-2384cf5-bench-v18/adapter`
 - Adapter config: `n/a`
 - Adapter weights: `n/a`
 - Weights size MB: `n/a`
-- Adapter blocker: Adapter source directory is missing: .training-output/q/runs/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16
+- Adapter blocker: Adapter source directory is missing: .training-output/q/runs/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v18
 - Adapter blocker: adapter_config.json is missing from the candidate adapter source.
 - Adapter blocker: adapter_model.safetensors is missing from the candidate adapter source.
 
@@ -49,11 +49,11 @@ This page records the Cloudflare deploy and evaluation lane for Q-only inference
 
 - Ready: `True`
 - Record count: `24`
-- Available source rows: `54`
-- JSONL path: `.training-output/q/cloudflare/q-hybrid-harbor-opt-2384cf5-bench-v16/eval/cloudflare-q-eval-bundle.jsonl`
-- Manifest path: `.training-output/q/cloudflare/q-hybrid-harbor-opt-2384cf5-bench-v16/eval/cloudflare-q-eval-bundle.json`
-- Source surface counts: `{"bridgebench": 3, "bridgebench-soak": 1, "harbor-terminal-bench": 2, "harbor-terminal-bench-soak": 4, "model-comparison": 3, "q-gateway-substrate": 1, "q-harness-identity-seed": 3, "q-immaculate-reasoning-seed": 6, "q-mediation-drift": 1}`
-- Selection group counts: `{"bridgebench-soak:benchmark_observation:completed": 1, "bridgebench:decision_triplet:completed": 3, "harbor-terminal-bench-soak:benchmark_observation:completed": 1, "harbor-terminal-bench-soak:decision_triplet:completed": 3, "harbor-terminal-bench:benchmark_observation:degraded": 2, "model-comparison:decision_triplet:completed": 3, "q-gateway-substrate:benchmark_observation:completed": 1, "q-harness-identity-seed:benchmark_observation:curated": 3, "q-immaculate-reasoning-seed:benchmark_observation:curated": 3, "q-immaculate-reasoning-seed:decision_triplet:curated": 3, "q-mediation-drift:benchmark_observation:completed": 1}`
+- Available source rows: `55`
+- JSONL path: `.training-output/q/cloudflare/q-hybrid-harbor-opt-2384cf5-bench-v18/eval/cloudflare-q-eval-bundle.jsonl`
+- Manifest path: `.training-output/q/cloudflare/q-hybrid-harbor-opt-2384cf5-bench-v18/eval/cloudflare-q-eval-bundle.json`
+- Source surface counts: `{"bridgebench": 3, "bridgebench-soak": 1, "harbor-terminal-bench": 2, "harbor-terminal-bench-soak": 4, "model-comparison": 2, "q-gateway-substrate": 1, "q-harness-identity-seed": 3, "q-immaculate-reasoning-seed": 6, "q-mediation-drift": 1, "terminal-bench-rerun": 1}`
+- Selection group counts: `{"bridgebench-soak:benchmark_observation:completed": 1, "bridgebench:decision_triplet:completed": 3, "harbor-terminal-bench-soak:benchmark_observation:completed": 1, "harbor-terminal-bench-soak:decision_triplet:completed": 3, "harbor-terminal-bench:benchmark_observation:degraded": 2, "model-comparison:decision_triplet:completed": 2, "q-gateway-substrate:benchmark_observation:completed": 1, "q-harness-identity-seed:benchmark_observation:curated": 3, "q-immaculate-reasoning-seed:benchmark_observation:curated": 3, "q-immaculate-reasoning-seed:decision_triplet:curated": 3, "q-mediation-drift:benchmark_observation:completed": 1, "terminal-bench-rerun:benchmark_observation:completed": 1}`
 
 ## Worker And Gateway
 

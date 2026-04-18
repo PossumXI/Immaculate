@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-04-18T02:52:42Z",
+  "generatedAt": "2026-04-18T06:21:15Z",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "1b28d691c7ba778adea63d50b18fa292303a0faf",
-    "gitShortSha": "1b28d69",
-    "buildId": "0.1.0+1b28d69",
-    "qTrainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16-35ab7e8-de7361fa"
+    "gitSha": "d0bdd00c3784f262b445d969a2b3d510da035bbb",
+    "gitShortSha": "d0bdd00",
+    "buildId": "0.1.0+d0bdd00",
+    "qTrainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v18-d0bdd00-4db18397"
   },
   "rowType": "mixed",
-  "recordCount": 54,
+  "recordCount": 55,
   "sourceCounts": {
     "model-comparison": 4,
     "bridgebench": 4,
@@ -17,6 +17,7 @@
     "q-mediation-drift": 1,
     "bridgebench-soak": 1,
     "harbor-terminal-bench-soak": 7,
+    "terminal-bench-rerun": 1,
     "q-harness-identity-seed": 14,
     "q-immaculate-reasoning-seed": 20
   },
@@ -24,6 +25,7 @@
     "model-comparison": "docs/wiki/Model-Benchmark-Comparison.json",
     "bridgebench": "docs/wiki/BridgeBench.json",
     "harbor-terminal-bench": "docs/wiki/Harbor-Terminal-Bench.json",
+    "terminal-bench-rerun": "docs/wiki/Terminal-Bench-Rerun.json",
     "q-gateway-substrate": "docs/wiki/Q-Gateway-Substrate.json",
     "q-mediation-drift": "docs/wiki/Q-Mediation-Drift.json",
     "bridgebench-soak": "docs/wiki/BridgeBench-Soak.json",

@@ -18,7 +18,7 @@ const sectors = [
 const proofCards = [
   {
     label: "Q Mediation Drift",
-    body: "The four-scenario mixed-pressure reasoning lane is green on the active bench-v16 lock. Q and Immaculate both self-evaluate every scenario, route alignment stays perfect, and runner-path P95 is 24.61 ms."
+    body: "The four-scenario mixed-pressure reasoning lane is green on the active bench-v18 lock. Q and Immaculate both self-evaluate every scenario, route alignment stays perfect, and runner-path P95 is 24.61 ms."
   },
   {
     label: "Q Substrate Benchmark",
@@ -33,12 +33,16 @@ const proofCards = [
     body: "Q reached 0.950 and 0.925 on the governed operator pack."
   },
   {
+    label: "Public Terminal-Bench",
+    body: "The historical official public receipt is still 0.000. A separate local diagnostic rerun is 5/5, but it stays diagnostic-only. The latest default Q-only smoke now completes end to end with zero exceptions and a 0.0 score, so the remaining gap is solver depth rather than gateway failure."
+  },
+  {
     label: "Training State",
     body: "Q is the public model name built by Arobi Technology Alliance on Gemma 4. Gaetano Comparcola is the founder, CEO, lead architect, and lead engineer, and Immaculate is the governed orchestration harness around Q."
   },
   {
     label: "Cloud Lanes",
-    body: "HF Jobs auth, hardware visibility, and bundle staging are real on the active bench-v16 lock, and the staged cloud launch is ready. Cloudflare has the profile and eval bundle ready on bench-v16, but worker auth and adapter export are still blocked."
+    body: "HF Jobs auth, hardware visibility, and bundle staging are real on the active bench-v18 lock, and the staged cloud launch is ready. Cloudflare has the profile and eval bundle ready on bench-v18, but worker auth and adapter export are still blocked."
   },
   {
     label: "W&B Publication Surface",
@@ -95,9 +99,11 @@ export function LandingPage() {
             <span>Identity gate green</span>
             <span>Harbor 0.950 / 0.925</span>
             <span>Latest W&B export Apr 18</span>
-            <span>Machine-stamped bench-v16 lock</span>
-            <span>54 benchmark rows</span>
+            <span>Machine-stamped bench-v18 lock</span>
+            <span>55 benchmark rows</span>
             <span>6 failure seeds</span>
+            <span>Public Terminal-Bench 0.000</span>
+            <span>Diagnostic rerun 5/5</span>
           </div>
 
           <div className="landingSectorGrid">

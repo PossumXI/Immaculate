@@ -2,9 +2,9 @@
 
 This page records the official public-task Terminal-Bench leaderboard receipt submission for the real `Q` lane. It is a real Harbor job plus a real public PR/discussion on the official leaderboard dataset repo.
 
-- Generated: `2026-04-18T01:43:40.315Z`
-- Release: `0.1.0+8874851`
-- Repo commit: `887485123b57de8b4c6ea87c8c6911db3cf14dda`
+- Generated: `2026-04-18T06:23:47.663Z`
+- Release: `0.1.0+d0bdd00`
+- Repo commit: `d0bdd00c3784f262b445d969a2b3d510da035bbb`
 - Q serving label: `Q`
 - Measured bundle boundary: this page is tied to the last verified public-task Harbor run and can remain on an older Q bundle than the active release surface until that public task is rerun.
 - Leaderboard repo: `harborframework/terminal-bench-2-leaderboard`
@@ -36,6 +36,14 @@ This page records the official public-task Terminal-Bench leaderboard receipt su
 - pass@2 `0.000`, pass@4 `0.000`, pass@5 `0.000`
 - Trial ids: `make-mips-interpreter__8rHSUQ2, make-mips-interpreter__Hho3A4K, make-mips-interpreter__MyvbUq7, make-mips-interpreter__UUSmarr, make-mips-interpreter__zYpyWMm`
 
+## Local Diagnostic Rerun Evidence
+
+- Generated: `2026-04-18T06:20:59.166Z`
+- Mean reward: `1.000`
+- Trials: `5`
+- Errors: `0`
+- Local rerun page: `docs/wiki/Terminal-Bench-Rerun.md`
+
 ## Submission Package
 
 - Agent display name: `Immaculate Q Harbor`
@@ -52,10 +60,12 @@ This page records the official public-task Terminal-Bench leaderboard receipt su
 
 - This is not just a local benchmark note. It is a real public receipt on the official Terminal-Bench leaderboard submission repo.
 - The receipt proves the real `Q` lane can be packaged, evaluated on a public Terminal-Bench task, and submitted through the official Harbor/Hugging Face path without hiding behind a repo-local task pack.
-- The result is intentionally kept honest: the score here is poor, but the receipt and submission mechanics are real.
+- The result is intentionally kept honest: the official public receipt here is poor, while any newer local diagnostic rerun stays separate until it is resubmitted through the public leaderboard path.
 
 ## Truth Boundary
 
 - This is one public-task receipt for `terminal-bench/make-mips-interpreter`, not a full Terminal-Bench leaderboard sweep.
 - The PR/discussion is currently open and ready to merge; this page does not claim it is already merged unless the discussion page says so later.
 - The published score here is `0.000`, so this page proves official receipt and submission, not strong public-task performance.
+- If a newer `Terminal-Bench-Rerun` page exists, it is current local engineering evidence only. It does not replace this public receipt until a new public submission is made.
+- Any local diagnostic rerun is there to prove the harness and verifier contract, not to silently rewrite the historical public leaderboard record.

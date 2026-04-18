@@ -2,12 +2,12 @@
 
 This page records one hybrid Q training session. In plain English: it ties the Q fine-tune lane and the Immaculate orchestration-improvement lane into one stamped session, then tells you exactly which parts are ready or missing.
 
-- Generated: `2026-04-18T02:53:01Z`
-- Release: `0.1.0+1b28d69`
-- Session id: `q-hybrid-harbor-opt-2384cf5-bench-v16`
-- Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16-35ab7e8-de7361fa`
-- Dataset rows: `109`
-- Immaculate orchestration bundle: `immaculate-orchestration-1b28d69-ec4b3cb6`
+- Generated: `2026-04-18T06:21:26Z`
+- Release: `0.1.0+d0bdd00`
+- Session id: `q-hybrid-harbor-opt-2384cf5-bench-v18`
+- Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v18-d0bdd00-4db18397`
+- Dataset rows: `110`
+- Immaculate orchestration bundle: `immaculate-orchestration-d0bdd00-ec4b3cb6`
 - HF Jobs training surface: `docs/wiki/HF-Jobs-Training.md`
 - Colab free training surface: `docs/wiki/Colab-Free-Training.md`
 - OCI GPU advisor: `docs/wiki/OCI-GPU-Advisor.md`
@@ -23,29 +23,29 @@ This page records one hybrid Q training session. In plain English: it ties the Q
 ## Q Fine-Tune Lane
 
 - Training lock: `.training-output/q/latest-training-lock.json`
-- Config: `.training-output/q/q-lora-config-harbor-opt-2384cf5-bench-v16.json`
-- Dataset: `.training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16.jsonl`
-- Mix manifest: `.training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16.manifest.json`
+- Config: `.training-output/q/q-lora-config-harbor-opt-2384cf5-bench-v18.json`
+- Dataset: `.training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v18.jsonl`
+- Mix manifest: `.training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v18.manifest.json`
 - Curation run id: `n/a`
 - Curation run path: `n/a`
 - Benchmark corpus: `docs/wiki/Q-Benchmark-Corpus.json`
 - Benchmark corpus JSONL: `.training-output/q/q-benchmark-corpus.jsonl`
-- Benchmark corpus records: `54`
+- Benchmark corpus records: `55`
 - Failure corpus: `docs/wiki/Q-Failure-Corpus.json`
-- Local command: `C:\Users\Knight\AppData\Local\Microsoft\WindowsApps\python.EXE C:\Users\Knight\Desktop\Immaculate\Immaculate-push-harbor\training\q\train_q_lora_unsloth.py --config C:\Users\Knight\Desktop\Immaculate\Immaculate-push-harbor\.training-output\q\q-lora-config-harbor-opt-2384cf5-bench-v16.json --session-manifest C:\Users\Knight\Desktop\Immaculate\Immaculate-push-harbor\.training-output\q\sessions\q-hybrid-harbor-opt-2384cf5-bench-v16\hybrid-session.manifest.json --dry-run`
+- Local command: `C:\Users\Knight\AppData\Local\Microsoft\WindowsApps\python.EXE C:\Users\Knight\Desktop\Immaculate\Immaculate-push-harbor\training\q\train_q_lora_unsloth.py --config C:\Users\Knight\Desktop\Immaculate\Immaculate-push-harbor\.training-output\q\q-lora-config-harbor-opt-2384cf5-bench-v18.json --session-manifest C:\Users\Knight\Desktop\Immaculate\Immaculate-push-harbor\.training-output\q\sessions\q-hybrid-harbor-opt-2384cf5-bench-v18\hybrid-session.manifest.json --dry-run`
 
 ## Immaculate Orchestration Lane
 
-- Bundle path: `.training-output/immaculate/immaculate-training-bundle-q-hybrid-harbor-opt-2384cf5-bench-v16.json`
+- Bundle path: `.training-output/immaculate/immaculate-training-bundle-q-hybrid-harbor-opt-2384cf5-bench-v18.json`
 - Signal count: `14`
 - This lane improves Immaculate through benchmark and orchestration evidence while keeping the tracked Q lineage as the only model-training lane in scope.
 
 ## Cloud Bundle
 
-- Bundle id: `q-hybrid-harbor-opt-2384cf5-bench-v16-1b28d69`
-- Archive: `.training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v16/cloud-bundle/q-hybrid-harbor-opt-2384cf5-bench-v16-cloud-bundle.tar.gz`
-- Archive SHA-256: `f7d8dccdfea26dcd49c6a7c4d1e55747cce59810f5e0497d656ee98cfea9a5dd`
-- Bundle manifest: `.training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v16/cloud-bundle/bundle-manifest.json`
+- Bundle id: `q-hybrid-harbor-opt-2384cf5-bench-v18-d0bdd00`
+- Archive: `.training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v18/cloud-bundle/q-hybrid-harbor-opt-2384cf5-bench-v18-cloud-bundle.tar.gz`
+- Archive SHA-256: `dd140fa60bd26ec88ad3ca6c2014205512249981ef5e684e34955b852ea3bbb1`
+- Bundle manifest: `.training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v18/cloud-bundle/bundle-manifest.json`
 - Included file count: `9`
 
 ## Cloud Doctor
@@ -69,14 +69,14 @@ This page records one hybrid Q training session. In plain English: it ties the Q
 ## HF Jobs Surface
 
 - Recommended next step: Hugging Face Jobs is authenticated and hardware is visible. Launch the staged Q hybrid session when ready.
-- Staged archive path: `sessions/q-hybrid-harbor-opt-2384cf5-bench-v16/q-hybrid-harbor-opt-2384cf5-bench-v16-cloud-bundle.tar.gz`
-- Staged manifest path: `sessions/q-hybrid-harbor-opt-2384cf5-bench-v16/bundle-manifest.json`
+- Staged archive path: `sessions/q-hybrid-harbor-opt-2384cf5-bench-v18/q-hybrid-harbor-opt-2384cf5-bench-v18-cloud-bundle.tar.gz`
+- Staged manifest path: `sessions/q-hybrid-harbor-opt-2384cf5-bench-v18/bundle-manifest.json`
 
 ## Colab Free Surface
 
 - Recommended next step: Open the notebook in Colab, provide HF_TOKEN, and use the free runtime for doctor plus dry-run or a bounded Q micro-train when a large enough GPU appears.
-- Notebook path: `deploy/colab/notebooks/q-hybrid-harbor-opt-2384cf5-bench-v16-colab-free.ipynb`
-- Open in Colab: `https://colab.research.google.com/github/PossumXI/Immaculate/blob/main/deploy/colab/notebooks/q-hybrid-harbor-opt-2384cf5-bench-v16-colab-free.ipynb`
+- Notebook path: `deploy/colab/notebooks/q-hybrid-harbor-opt-2384cf5-bench-v18-colab-free.ipynb`
+- Open in Colab: `https://colab.research.google.com/github/PossumXI/Immaculate/blob/main/deploy/colab/notebooks/q-hybrid-harbor-opt-2384cf5-bench-v18-colab-free.ipynb`
 - Micro-train max steps: `24`
 - Micro-train max sequence length: `2048`
 - Minimum GPU memory for real train: `20 GB`

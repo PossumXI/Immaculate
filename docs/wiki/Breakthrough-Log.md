@@ -21,6 +21,33 @@ For each breakthrough, record:
 
 ### 2026-04-18
 
+#### Terminal-Bench is no longer failing on prompt overflow; it is now failing on the real Q-only task boundary
+
+What changed:
+- the generic Harbor path for the public `terminal-bench/make-mips-interpreter` task now compacts planning and generation payloads instead of dumping the whole workspace into Q
+- binary workspace files are now explicitly omitted from prompt context instead of being pasted as raw ELF garbage
+- the task-specific MIPS/DOOM shim stayed in the repo, but it is now gated behind `IMMACULATE_ENABLE_TERMINAL_BENCH_DIAGNOSTIC_SHIMS` so it cannot silently masquerade as default HarborQAgent capability
+- the Harbor agent now waits on the Q gateway health surface and retries once when the gateway is open from upstream failure instead of hard-failing immediately on `circuit_open`
+
+Why it matters:
+- the missed systems pattern was that the old public-task failure looked like “Q is bad at Terminal-Bench,” but the first concrete blocker was more basic: the generic Harbor path was blowing the Q gateway input bound before the task could really start
+- once the payload overflow and binary-garbage issues were removed, the remaining failure became much more useful: the next real bottleneck is Q under sustained task pressure, seen now as a completed-but-wrong `0.0` solution rather than prompt-size rejection
+- gating the MIPS/DOOM shim matters because a diagnostic verifier pass is useful engineering evidence, but it is not the same thing as default Q capability on the public benchmark
+
+Evidence:
+- the historical official public receipt in `docs/wiki/Terminal-Bench-Receipt.md` remains `0.000`
+- the local diagnostic rerun in `docs/wiki/Terminal-Bench-Rerun.md` remains `5/5` and is explicitly marked diagnostic-only
+- the fresh generic post-fix Harbor smoke at `.runtime/terminal-bench-jobs/q-terminal-bench-public-generic-smoke-postfix2/result.json` completed with `1` trial, `0` exceptions, reward `0.0`, and a full verifier pass after `10m 16s`
+- the generated payload for that completed run was `2921` characters and marked `/app/doomgeneric_mips` as `[binary file omitted: doomgeneric_mips, 1543608 bytes]`, proving the old prompt-bloat path is no longer the main blocker
+- the earlier fresh generic smokes at `.runtime/terminal-bench-jobs/q-terminal-bench-public-generic-smoke-fresh/result.json` and `.runtime/terminal-bench-jobs/q-terminal-bench-public-generic-smoke-postfix/result.json` still show the intermediate transition through `APITimeoutError` and `circuit_open` while the runner-path fixes were landing
+
+What this unlocks next:
+- the next Q tuning pass can train against the real public-task miss instead of another synthetic prompt-format issue
+- the next Harbor improvement pass can stay generic and Q-only while targeting upstream stability, shorter planning chains, and better terminal-task solve depth
+- public copy can now say exactly what failed, what was fixed, and what remains open without blending the historical receipt, the diagnostic rerun, and the default generic path into one misleading story
+
+### 2026-04-18
+
 #### Q and Immaculate now prove governed route preservation across a harder four-scenario mediation lane
 
 What changed:

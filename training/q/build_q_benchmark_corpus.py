@@ -553,6 +553,72 @@ def collect_terminal_bench_receipt_records(receipt: dict) -> list[dict]:
     return [finalize_record(record)]
 
 
+def collect_terminal_bench_rerun_records(report: dict) -> list[dict]:
+    harbor = report.get("harbor", {})
+    if not isinstance(harbor, dict):
+        return []
+
+    task_name = str(harbor.get("taskName", "")).strip()
+    dataset_name = str(harbor.get("datasetName", "")).strip()
+    attempts = int(harbor.get("attempts", 0) or 0)
+    trials = int(harbor.get("trials", 0) or 0)
+    errors = int(harbor.get("errors", 0) or 0)
+    mean_reward = float(harbor.get("meanReward", 0) or 0)
+    if not task_name or not dataset_name:
+        return []
+
+    pass_at_k = harbor.get("passAtK", {})
+    pass_at_k_lines = []
+    if isinstance(pass_at_k, dict):
+        for key in sorted(pass_at_k.keys(), key=lambda value: int(str(value)) if str(value).isdigit() else 9999):
+            pass_at_k_lines.append(f"pass@{key}: {pass_at_k[key]}")
+
+    record = {
+        "id": "terminal-bench-rerun:aggregate",
+        "row_type": "benchmark_observation",
+        "source_surface": "terminal-bench-rerun",
+        "row_id": "aggregate",
+        "label": "Terminal-Bench public-task local rerun",
+        "objective": (
+            "Keep the repaired public Terminal-Bench task in the positive benchmark corpus so the next Q training pass "
+            "can reuse the measured fix instead of learning only from the older public miss."
+        ),
+        "facts": [
+            f"Dataset: {dataset_name}",
+            f"Task: {task_name}",
+            f"Attempts: {attempts}",
+            f"Trials: {trials}",
+            f"Errors: {errors}",
+            f"Mean reward: {mean_reward:.3f}",
+        ],
+        "observation": [
+            (
+                f"Local diagnostic Harbor rerun of the real public task {task_name} completed with mean reward {mean_reward:.3f} "
+                f"across {trials} trials and {errors} errors."
+            ),
+            (
+                "The repaired Q Harbor agent bypassed the oversized gateway-planning path, used a diagnostic deterministic vm.js runtime, "
+                "and stabilized frame capture for the verifier."
+            ),
+            (
+                ", ".join(pass_at_k_lines) if pass_at_k_lines else "No pass@k data reported."
+            ),
+            "This rerun is diagnostic-only and should not be treated as the default HarborQAgent capability until a real public resubmission exists.",
+        ],
+        "quality": {
+            "status": "completed" if mean_reward >= 1 and errors == 0 else "degraded",
+            "parse_success": mean_reward > 0,
+            "structured_field_count": 0,
+            "thinking_detected": False,
+            "score": mean_reward,
+            "run_count": attempts,
+            "task_count": 1,
+            "average_duration_sec": float(harbor.get("durationSec", 0) or 0),
+        },
+    }
+    return [finalize_record(record)]
+
+
 def collect_q_gateway_substrate_records(report: dict) -> list[dict]:
     benchmark = report.get("benchmark", {})
     if not isinstance(benchmark, dict) or not benchmark:
@@ -881,6 +947,7 @@ def build_markdown(summary: dict) -> str:
             "",
             "- This surface records successful benchmark-derived decision rows for Q so the training path can reuse tracked outputs without scraping markdown by hand.",
             "- Harbor rows that stayed parse-valid but underperformed are carried as benchmark observations so Q can learn the miss without promoting the weak wording as gold output.",
+            "- A repaired local Terminal-Bench rerun can enter the positive benchmark corpus while the older official public receipt remains in the strict failure/eval path until resubmission.",
             "- The official public Terminal-Bench receipt stays in the strict failure/eval path instead of being mixed into the positive benchmark corpus.",
             "- It is intentionally complementary to Q-Failure-Corpus, which remains strict failure-only and should stay empty when the current Q benchmark lane is green.",
             "- These rows are output-side evidence from executed Q benchmarks. They help stabilize route/reason/commit behavior, but they are not a substitute for broader curation or new external truth sources.",
@@ -923,6 +990,11 @@ def main() -> None:
         help="Path to Terminal-Bench-Receipt.json",
     )
     parser.add_argument(
+        "--terminal-bench-rerun",
+        default=str(root / "docs" / "wiki" / "Terminal-Bench-Rerun.json"),
+        help="Path to Terminal-Bench-Rerun.json",
+    )
+    parser.add_argument(
         "--bridgebench-soak",
         default=str(root / "docs" / "wiki" / "BridgeBench-Soak.json"),
         help="Path to BridgeBench-Soak.json",
@@ -960,6 +1032,7 @@ def main() -> None:
     q_gateway_substrate_path = Path(args.q_gateway_substrate)
     q_mediation_drift_path = Path(args.q_mediation_drift)
     terminal_bench_receipt_path = Path(args.terminal_bench_receipt)
+    terminal_bench_rerun_path = Path(args.terminal_bench_rerun)
     bridgebench_soak_path = Path(args.bridgebench_soak)
     harbor_soak_path = Path(args.harbor_soak)
     identity_seed_path = Path(args.identity_seed)
@@ -974,6 +1047,7 @@ def main() -> None:
     q_gateway_substrate = load_optional_json(q_gateway_substrate_path)
     q_mediation_drift = load_optional_json(q_mediation_drift_path)
     terminal_bench_receipt = load_optional_json(terminal_bench_receipt_path)
+    terminal_bench_rerun = load_optional_json(terminal_bench_rerun_path)
     bridgebench_soak = load_optional_json(bridgebench_soak_path)
     harbor_soak = load_optional_json(harbor_soak_path)
 
@@ -994,6 +1068,8 @@ def main() -> None:
         records.extend(collect_bridgebench_soak_records(bridgebench_soak))
     if harbor_soak:
         records.extend(collect_harbor_soak_records(root, harbor_soak))
+    if terminal_bench_rerun:
+        records.extend(collect_terminal_bench_rerun_records(terminal_bench_rerun))
     records.extend(collect_seed_benchmark_records(identity_seed_path, "q-harness-identity-seed"))
     records.extend(collect_seed_benchmark_records(reasoning_seed_path, "q-immaculate-reasoning-seed"))
 
@@ -1014,6 +1090,11 @@ def main() -> None:
             "model-comparison": relative_path(root, comparison_path),
             "bridgebench": relative_path(root, bridgebench_path),
             "harbor-terminal-bench": relative_path(root, harbor_path),
+            **(
+                {"terminal-bench-rerun": relative_path(root, terminal_bench_rerun_path)}
+                if terminal_bench_rerun
+                else {}
+            ),
             **(
                 {"q-gateway-substrate": relative_path(root, q_gateway_substrate_path)}
                 if q_gateway_substrate

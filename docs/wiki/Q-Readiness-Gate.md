@@ -2,12 +2,12 @@
 
 This page is generated from the tracked direct-Q report surfaces. It does not grade the gateway transport; it grades whether the underlying Q model is ready for structured route/reason/commit work on this machine.
 
-- Generated: 2026-04-18T02:57:20.638Z
-- Release: `0.1.0+1b28d69`
-- Repo commit: `1b28d69`
+- Generated: 2026-04-18T06:21:53.994Z
+- Release: `0.1.0+d0bdd00`
+- Repo commit: `d0bdd00`
 - Ready: `true`
 - Threshold: `0.75`
-- Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16-35ab7e8-de7361fa`
+- Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v18-d0bdd00-4db18397`
 - Model comparison source: `2026-04-17T10:03:22.220Z`
 - BridgeBench source: `2026-04-17T10:18:04.934Z`
 - Q gateway validation source: `2026-04-17T10:12:01.155Z`

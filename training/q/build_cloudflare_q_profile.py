@@ -119,6 +119,11 @@ def main() -> None:
     root = repo_root()
     parser = argparse.ArgumentParser(description="Generate a Q-only Cloudflare worker profile module from the active hybrid session.")
     parser.add_argument(
+        "session_arg",
+        nargs="?",
+        help="Optional positional hybrid session path for npm wrapper compatibility."
+    )
+    parser.add_argument(
         "--session",
         default=str(root / ".training-output" / "q" / "latest-hybrid-session.json"),
         help="Path to the latest hybrid session summary JSON."
@@ -140,7 +145,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    session_path = Path(args.session)
+    session_path = Path(args.session_arg or args.session)
     training_lock_path = Path(args.training_lock)
     worker_module_path = Path(args.worker_module)
     manifest_path = Path(args.manifest)

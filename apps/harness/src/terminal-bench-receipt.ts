@@ -83,6 +83,19 @@ type ExistingTerminalBenchReceiptFile = {
   submission?: SubmissionMetadata;
 };
 
+type ExistingTerminalBenchRerunFile = {
+  generatedAt?: string;
+  harbor?: {
+    meanReward?: number;
+    trials?: number;
+    errors?: number;
+  };
+  output?: {
+    markdownPath?: string;
+    jsonPath?: string;
+  };
+};
+
 type TerminalBenchReceiptReport = {
   generatedAt: string;
   release: ReleaseMetadata;
@@ -117,6 +130,14 @@ type TerminalBenchReceiptReport = {
     trialIds: string[];
   };
   submission: SubmissionMetadata;
+  localRerun?: {
+    generatedAt?: string;
+    meanReward?: number;
+    trials?: number;
+    errors?: number;
+    markdownPath?: string;
+    jsonPath?: string;
+  };
   output: {
     jsonPath: string;
     markdownPath: string;
@@ -339,6 +360,19 @@ function renderMarkdown(report: TerminalBenchReceiptReport): string {
     .sort((left, right) => Number(left) - Number(right))
     .map((key) => `pass@${key} \`${report.harbor.passAtK[key]?.toFixed(3) ?? "n/a"}\``)
     .join(", ");
+  const localRerunPath = report.localRerun?.markdownPath?.replaceAll("\\", "/");
+  const localRerunSection = report.localRerun
+    ? [
+    "## Local Diagnostic Rerun Evidence",
+        "",
+        `- Generated: \`${report.localRerun.generatedAt ?? "unknown"}\``,
+        `- Mean reward: \`${(report.localRerun.meanReward ?? 0).toFixed(3)}\``,
+        `- Trials: \`${report.localRerun.trials ?? 0}\``,
+        `- Errors: \`${report.localRerun.errors ?? 0}\``,
+        `- Local rerun page: \`${localRerunPath ?? "docs/wiki/Terminal-Bench-Rerun.md"}\``,
+        "",
+      ]
+    : [];
 
   return [
     "# Terminal-Bench Receipt",
@@ -379,6 +413,7 @@ function renderMarkdown(report: TerminalBenchReceiptReport): string {
     `- ${passAtK}`,
     `- Trial ids: \`${report.harbor.trialIds.join(", ") || "none"}\``,
     "",
+    ...localRerunSection,
     "## Submission Package",
     "",
     `- Agent display name: \`${report.submission.agentDisplayName ?? "unknown"}\``,
@@ -395,13 +430,15 @@ function renderMarkdown(report: TerminalBenchReceiptReport): string {
     "",
     "- This is not just a local benchmark note. It is a real public receipt on the official Terminal-Bench leaderboard submission repo.",
     "- The receipt proves the real `Q` lane can be packaged, evaluated on a public Terminal-Bench task, and submitted through the official Harbor/Hugging Face path without hiding behind a repo-local task pack.",
-    "- The result is intentionally kept honest: the score here is poor, but the receipt and submission mechanics are real.",
+    "- The result is intentionally kept honest: the official public receipt here is poor, while any newer local diagnostic rerun stays separate until it is resubmitted through the public leaderboard path.",
     "",
     "## Truth Boundary",
     "",
     "- This is one public-task receipt for `terminal-bench/make-mips-interpreter`, not a full Terminal-Bench leaderboard sweep.",
     "- The PR/discussion is currently open and ready to merge; this page does not claim it is already merged unless the discussion page says so later.",
-    "- The published score here is `0.000`, so this page proves official receipt and submission, not strong public-task performance."
+    "- The published score here is `0.000`, so this page proves official receipt and submission, not strong public-task performance.",
+    "- If a newer `Terminal-Bench-Rerun` page exists, it is current local engineering evidence only. It does not replace this public receipt until a new public submission is made.",
+    "- Any local diagnostic rerun is there to prove the harness and verifier contract, not to silently rewrite the historical public leaderboard record."
   ].join("\n");
 }
 
@@ -449,12 +486,14 @@ async function main(): Promise<void> {
       )
     ]));
   const existingReceiptPath = path.join(WIKI_ROOT, "Terminal-Bench-Receipt.json");
-  const [release, result, config, metadataYaml, existingReceipt] = await Promise.all([
+  const rerunPath = path.join(WIKI_ROOT, "Terminal-Bench-Rerun.json");
+  const [release, result, config, metadataYaml, existingReceipt, localRerun] = await Promise.all([
     resolveReleaseMetadata(),
     readJsonFile<HarborResultFile>(resultPath),
     readJsonFile<HarborConfigFile>(configPath),
     metadataPath ? readFile(metadataPath, "utf8") : Promise.resolve<string | undefined>(undefined),
-    readOptionalJsonFile<ExistingTerminalBenchReceiptFile>(existingReceiptPath)
+    readOptionalJsonFile<ExistingTerminalBenchReceiptFile>(existingReceiptPath),
+    readOptionalJsonFile<ExistingTerminalBenchRerunFile>(rerunPath)
   ]);
 
   const [, evalStats] = requireSingleEvalEntry(result);
@@ -499,6 +538,16 @@ async function main(): Promise<void> {
       trialIds: collectTrialIds(evalStats)
     },
     submission: metadata,
+    localRerun: localRerun
+      ? {
+          generatedAt: localRerun.generatedAt,
+          meanReward: localRerun.harbor?.meanReward,
+          trials: localRerun.harbor?.trials,
+          errors: localRerun.harbor?.errors,
+          markdownPath: localRerun.output?.markdownPath,
+          jsonPath: localRerun.output?.jsonPath
+        }
+      : undefined,
     output: {
       jsonPath: path.join("docs", "wiki", "Terminal-Bench-Receipt.json"),
       markdownPath: path.join("docs", "wiki", "Terminal-Bench-Receipt.md")

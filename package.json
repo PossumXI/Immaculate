@@ -17,6 +17,7 @@
     "benchmark:harbor:report": "npm run benchmark:harbor:report -w @immaculate/harness",
     "benchmark:harbor:soak": "npm run benchmark:harbor:soak -w @immaculate/harness",
     "benchmark:terminalbench:receipt": "npm run benchmark:terminalbench:receipt -w @immaculate/harness",
+    "benchmark:terminalbench:rerun": "npm run benchmark:terminalbench:rerun -w @immaculate/harness",
     "benchmark:q:substrate": "npm run benchmark -w @immaculate/harness -- --pack=q-gateway-substrate",
     "benchmark:q:substrate:report": "npm run benchmark:q:substrate:report -w @immaculate/harness",
     "benchmark:q:mediation": "npm run benchmark -w @immaculate/harness -- --pack=q-mediation-drift",
