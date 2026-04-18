@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-04-17T20:51:27Z",
+  "generatedAt": "2026-04-18T01:29:44Z",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "30d48b7e6e99aaacd7284b2c4096d3e68f40f350",
-    "gitShortSha": "30d48b7",
-    "buildId": "0.1.0+30d48b7"
+    "gitSha": "4d810449e49b887238564998aa6a731df03913bb",
+    "gitShortSha": "4d81044",
+    "buildId": "0.1.0+4d81044"
   },
-  "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v14",
+  "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v15",
   "auth": {
     "hfCliBin": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-push-harbor\\.tools\\foundry-venv\\Scripts\\hf.exe",
     "tokenSource": "HF_TOKEN",
@@ -181,14 +181,14 @@
   "jobsVisibleCount": 0,
   "stagedBundle": {
     "repoId": "TruLumecreator/immaculate-q-cloud-bundles",
-    "archiveRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v14/q-hybrid-harbor-opt-2384cf5-bench-v14-cloud-bundle.tar.gz",
-    "manifestRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v14/bundle-manifest.json",
+    "archiveRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v15/q-hybrid-harbor-opt-2384cf5-bench-v15-cloud-bundle.tar.gz",
+    "manifestRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v15/bundle-manifest.json",
     "staged": true,
     "createRepoStdout": "repo_id=TruLumecreator/immaculate-q-cloud-bundles url=https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles",
     "createRepoStderr": "Warning: `hf repo` is deprecated in favor of `hf repos`.",
-    "uploadArchiveStdout": "url=https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles/commit/a3c6977e949606dae9cabe71d235a858095f0fb7",
+    "uploadArchiveStdout": "url=https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles/commit/6b6f65b490225be9cca74dadbca4d83cf247a2bc",
     "uploadArchiveStderr": null,
-    "uploadManifestStdout": "url=https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles/commit/914a4208f4a5813c010510c8a32368d495b19348",
+    "uploadManifestStdout": "url=https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles/commit/2c66104f5ef6c543859e67726a44a8c0ed0b17d5",
     "uploadManifestStderr": null
   },
   "smokeLaunch": {
@@ -220,7 +220,7 @@
     "recommendedNextStep": "Hugging Face Jobs is authenticated and hardware is visible. Launch the staged Q hybrid session when ready."
   },
   "output": {
-    "sessionJsonPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v14/hf-jobs-launch.json",
+    "sessionJsonPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v15/hf-jobs-launch.json",
     "wikiJsonPath": "docs/wiki/HF-Jobs-Training.json",
     "wikiMarkdownPath": "docs/wiki/HF-Jobs-Training.md"
   }

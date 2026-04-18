@@ -1563,6 +1563,12 @@ export async function runPublishedBenchmark(
       "ms",
       mediationDrift.scenarioResults.map((scenario) => scenario.latencyMs)
     );
+    const runnerPathLatencySeries = createSeries(
+      "q_mediation_drift_runner_path_ms",
+      "Q Mediation Drift Runner Path Latency",
+      "ms",
+      mediationDrift.scenarioResults.map((scenario) => scenario.runnerPathLatencyMs)
+    );
     const arbitrationLatencySeries = createSeries(
       "q_mediation_drift_arbitration_ms",
       "Q Mediation Drift Arbitration Latency",
@@ -1592,7 +1598,7 @@ export async function runPublishedBenchmark(
       "Q Mediation Drift Q-Only Layer Selection",
       "ratio",
       mediationDrift.scenarioResults
-        .filter((scenario) => scenario.id === "mixed-pressure-local-cognition")
+        .filter((scenario) => scenario.expectedRoute === "cognitive")
         .map((scenario) => (scenario.qOnlyLayerSelection ? 1 : 0))
     );
     const driftDetectedSeries = createSeries(
@@ -1663,14 +1669,14 @@ export async function runPublishedBenchmark(
         "Primary local Q mediation stays inside Q-backed layers instead of widening to non-Q cognition",
         mediationDrift.scenarioResults.every(
           (scenario) =>
-            scenario.id !== "mixed-pressure-local-cognition" ||
+            scenario.expectedRoute !== "cognitive" ||
             (scenario.qOnlyLayerSelection &&
               scenario.routingMode === "cognitive-assisted" &&
               scenario.scheduleAdmissionState === "degrade")
         ) && qOnlySelectionSeries.p50 === 1,
-        "local cognition scenario keeps Q-only selection with degraded admission",
+        "all local cognition scenarios keep Q-only selection with degraded admission",
         mediationDrift.scenarioResults
-          .filter((scenario) => scenario.id === "mixed-pressure-local-cognition")
+          .filter((scenario) => scenario.expectedRoute === "cognitive")
           .map(
             (scenario) =>
               `${scenario.qOnlyLayerSelection}/${scenario.routingMode}/${scenario.scheduleAdmissionState}/${scenario.selectedLayerCount}`
@@ -1681,22 +1687,40 @@ export async function runPublishedBenchmark(
       createAssertion(
         "q-mediation-drift-guarded-hold",
         "Critical guarded mediation keeps dispatch closed while the guarded route survives",
-        mediationDrift.scenarioResults.some(
-          (scenario) =>
-            scenario.id === "mixed-pressure-guarded-hold" &&
-            scenario.routeSuggestion === "guarded" &&
-            scenario.routingMode === "guarded-fallback" &&
-            !scenario.shouldDispatchActuation
-        ),
-        "guarded route / guarded-fallback / no dispatch",
         mediationDrift.scenarioResults
-          .filter((scenario) => scenario.id === "mixed-pressure-guarded-hold")
+          .filter((scenario) => scenario.expectedRoute === "guarded")
+          .every(
+            (scenario) =>
+              scenario.routeSuggestion === "guarded" &&
+              scenario.routingMode === "guarded-fallback" &&
+              !scenario.shouldDispatchActuation
+          ),
+        "all guarded scenarios preserve guarded-fallback with dispatch closed",
+        mediationDrift.scenarioResults
+          .filter((scenario) => scenario.expectedRoute === "guarded")
           .map(
             (scenario) =>
               `${scenario.routeSuggestion ?? "missing"}/${scenario.routingMode}/${scenario.scheduleAdmissionState}/dispatch=${scenario.shouldDispatchActuation}`
           )
           .join(", "),
         "critical mixed pressure should preserve Q's guarded route and keep outward dispatch closed instead of letting later layers reopen action"
+      ),
+      createAssertion(
+        "q-mediation-drift-self-eval",
+        "Q and Immaculate both emit explicit self-evaluations for every mediation scenario",
+        mediationDrift.scenarioResults.every(
+          (scenario) =>
+            scenario.qSelfEvaluation.trim().length > 0 &&
+            scenario.immaculateSelfEvaluation.trim().length > 0
+        ),
+        "all scenarios emit q-self and immaculate-self evaluations",
+        mediationDrift.scenarioResults
+          .map(
+            (scenario) =>
+              `${scenario.id}:q=${scenario.qSelfEvaluation.trim().length > 0}/immaculate=${scenario.immaculateSelfEvaluation.trim().length > 0}`
+          )
+          .join(", "),
+        "drift handling is only diagnostic if both Q and Immaculate explain why they held the line or where they drifted"
       )
     ];
     const report: BenchmarkReport = {
@@ -1706,7 +1730,7 @@ export async function runPublishedBenchmark(
       packLabel: pack.label,
       runKind,
       profile: `mediation-drift / ${hardwareContext.platform}-${hardwareContext.arch}`,
-      summary: `This benchmark starts the dedicated Q gateway on loopback, drives live Q route/reason/commit outputs through Immaculate arbitration, scheduling, and routing under mixed pressure, and measures whether the governed route survives without drift. It proves the live gateway is bound to the current tracked Q bundle, structured output remains parseable, primary-governed-local mediation stays inside Q-backed layers under elevated mixed pressure, and guarded-hold mediation stays fail-closed under critical mixed pressure. Hardware context: ${formatBenchmarkHardwareContext(hardwareContext)}.`,
+      summary: `This benchmark starts the dedicated Q gateway on loopback, drives live Q route/reason/commit outputs through Immaculate arbitration, scheduling, and routing under mixed pressure, and measures whether the governed route survives without drift. It proves the live gateway is bound to the current tracked Q bundle, structured output remains parseable, primary-governed-local mediation stays inside Q-backed layers under elevated mixed pressure, guarded-hold mediation stays fail-closed under critical integrity pressure, and both Q and Immaculate emit explicit self-evaluations for every scenario. Hardware context: ${formatBenchmarkHardwareContext(hardwareContext)}.`,
       tickIntervalMs,
       totalTicks: mediationDrift.scenarioResults.length,
       plannedDurationMs,
@@ -1728,6 +1752,7 @@ export async function runPublishedBenchmark(
       series: [
         structuredFieldSeries,
         latencySeries,
+        runnerPathLatencySeries,
         arbitrationLatencySeries,
         schedulingLatencySeries,
         routingLatencySeries,
@@ -1749,6 +1774,7 @@ export async function runPublishedBenchmark(
         ? compareBenchmarkReports(previousReport, [
             structuredFieldSeries,
             latencySeries,
+            runnerPathLatencySeries,
             arbitrationLatencySeries,
             schedulingLatencySeries,
             routingLatencySeries,

@@ -11,7 +11,11 @@ import {
   createEngine,
   type GovernancePressureLevel
 } from "@immaculate/core";
-import { createActuationManager } from "./actuation.js";
+import {
+  createActuationManager,
+  type ActuationAdapterState,
+  type ActuationTransportState
+} from "./actuation.js";
 import { buildExecutionArbitrationDecision, planExecutionArbitration } from "./arbitration.js";
 import type { SessionConversationMemory } from "./conversation.js";
 import type { FederatedExecutionPressure } from "./federation-pressure.js";
@@ -36,6 +40,7 @@ type QMediationDriftScenarioResult = {
   parseSuccess: boolean;
   structuredFieldCount: number;
   latencyMs: number;
+  runnerPathLatencyMs: number;
   arbitrationLatencyMs: number;
   schedulingLatencyMs: number;
   routingLatencyMs: number;
@@ -137,6 +142,38 @@ const SCENARIOS: ScenarioDefinition[] = [
     }
   },
   {
+    id: "mixed-pressure-local-memory-cognition",
+    label: "Mixed pressure local memory cognition",
+    objective:
+      "The local governed Q lane is healthy, the cloud lane is blocked, two recent blocked verdicts already exist, and one recovering remote peer is showing better latency than the local lane. A strong decode signal is present, but there is no replay, integrity fault, or critical governance event. Choose the governed mediation route without drifting to reflex, remote widening, or a guarded hold.",
+    context:
+      "Reply with ROUTE, REASON, and COMMIT only. Keep the answer terse and operator-grade. Treat prior blocked verdicts as historical pressure, not proof that healthy local Q must stop mediating.",
+    governancePressure: "elevated",
+    expectedRoute: "cognitive",
+    expectedRoutingMode: "cognitive-assisted",
+    expectedAdmissionState: "degrade",
+    expectedDispatchAllowed: true,
+    qRoutingDirective: "primary-governed-local",
+    readinessReady: true,
+    gatewaySubstrateHealthy: true,
+    guardDeniedCount: 0,
+    sessionBlockedVerdictCount: 2,
+    consentScope: "session:benchmark",
+    frameDecodeReady: true,
+    frameDecodeConfidence: 0.87,
+    federatedPressure: {
+      pressure: "elevated",
+      healthyPeerCount: 1,
+      recoveringPeerCount: 1,
+      eligibleRemoteWorkerCount: 1,
+      crossNodeLatencyMs: 44,
+      remoteSuccessRatio: 0.69,
+      remoteFailurePressure: 0.46,
+      executionLatencyMs: 1750,
+      rationale: "Fast recovering remote signals should not override the healthy local governed Q lane."
+    }
+  },
+  {
     id: "mixed-pressure-guarded-hold",
     label: "Mixed pressure guarded hold",
     objective:
@@ -166,6 +203,38 @@ const SCENARIOS: ScenarioDefinition[] = [
       remoteFailurePressure: 0.84,
       executionLatencyMs: 4100,
       rationale: "Critical mixed pressure requires a fail-closed governed hold."
+    }
+  },
+  {
+    id: "mixed-pressure-integrity-guarded-hold",
+    label: "Mixed pressure integrity guarded hold",
+    objective:
+      "Replay evidence and bridge integrity faults are still active, governance pressure is critical, and repeated denials are already on record. Remote peers and decode signals look healthier again, but they do not clear the integrity fault. Choose the governed hold route and keep dispatch closed.",
+    context:
+      "Reply with ROUTE, REASON, and COMMIT only. Keep the answer terse and operator-grade. Do not let healthier latency or recovered remote workers override active replay or integrity faults.",
+    governancePressure: "critical",
+    expectedRoute: "guarded",
+    expectedRoutingMode: "guarded-fallback",
+    expectedAdmissionState: "hold",
+    expectedDispatchAllowed: false,
+    qRoutingDirective: "guarded-hold",
+    readinessReady: false,
+    gatewaySubstrateHealthy: false,
+    guardDeniedCount: 4,
+    sessionBlockedVerdictCount: 3,
+    consentScope: "subject:benchmark",
+    frameDecodeReady: true,
+    frameDecodeConfidence: 0.66,
+    federatedPressure: {
+      pressure: "elevated",
+      healthyPeerCount: 2,
+      recoveringPeerCount: 0,
+      eligibleRemoteWorkerCount: 2,
+      crossNodeLatencyMs: 39,
+      remoteSuccessRatio: 0.92,
+      remoteFailurePressure: 0.09,
+      executionLatencyMs: 930,
+      rationale: "Recovered remotes stay secondary while replay and bridge-integrity faults remain active."
     }
   }
 ];
@@ -419,6 +488,8 @@ async function runScenario(options: {
   authorization: string;
   qTrainingBundleId?: string;
   scenario: ScenarioDefinition;
+  adapters: ActuationAdapterState[];
+  transports: ActuationTransportState[];
 }): Promise<QMediationDriftScenarioResult> {
   const prompt = buildStructuredPrompt(options.scenario);
   const chat = await checkHttp(`${options.gatewayUrl}/v1/chat/completions`, {
@@ -556,14 +627,13 @@ async function runScenario(options: {
   });
   const schedulingLatencyMs = Number((performance.now() - schedulingStarted).toFixed(2));
 
-  const actuationManager = await createActuationManager(path.join(REPO_ROOT, ".runtime", "q-mediation-drift-actuation"));
   const routingStarted = performance.now();
   const routePlan = planAdaptiveRoute({
     snapshot,
     frame,
     execution,
-    adapters: actuationManager.listAdapters(),
-    transports: actuationManager.listTransports(),
+    adapters: options.adapters,
+    transports: options.transports,
     governanceStatus: {
       mode: "enforced",
       policyCount: 1,
@@ -576,6 +646,9 @@ async function runScenario(options: {
     qContext
   });
   const routingLatencyMs = Number((performance.now() - routingStarted).toFixed(2));
+  const runnerPathLatencyMs = Number(
+    (arbitrationLatencyMs + schedulingLatencyMs + routingLatencyMs).toFixed(2)
+  );
 
   const selectedLayers = snapshot.intelligenceLayers.filter((layer) => schedulePlan.layerIds.includes(layer.id));
   const qOnlyLayerSelection =
@@ -653,6 +726,7 @@ async function runScenario(options: {
     structuredFieldCount,
     latencyMs:
       typeof responseBody.latencyMs === "number" ? Number(responseBody.latencyMs) : Number(chat.wallLatencyMs.toFixed(2)),
+    runnerPathLatencyMs,
     arbitrationLatencyMs,
     schedulingLatencyMs,
     routingLatencyMs,
@@ -698,14 +772,19 @@ export async function runQMediationDriftBenchmark(options: {
 }): Promise<QMediationDriftBenchmarkResult> {
   const benchmarkRuntimeDir = path.join(options.runtimeDir, "q-mediation-drift");
   const gatewayRuntimeDir = path.join(benchmarkRuntimeDir, "gateway");
+  const actuationRuntimeDir = path.join(benchmarkRuntimeDir, "actuation");
   const keysPath = path.join(gatewayRuntimeDir, "q-api-keys.json");
   const port = await allocateTcpPort();
   const gatewayUrl = `http://127.0.0.1:${port}`;
   await mkdir(gatewayRuntimeDir, { recursive: true });
+  await mkdir(actuationRuntimeDir, { recursive: true });
   await prewarmOllamaModel({
     endpoint: DEFAULT_OLLAMA_URL,
     model: getQModelTarget()
   });
+  const actuationManager = await createActuationManager(actuationRuntimeDir);
+  const adapters = actuationManager.listAdapters();
+  const transports = actuationManager.listTransports();
 
   const child = startGatewayProcess({
     repoRoot: options.repoRoot,
@@ -749,7 +828,9 @@ export async function runQMediationDriftBenchmark(options: {
           gatewayUrl,
           authorization,
           qTrainingBundleId: release.q.trainingLock?.bundleId,
-          scenario
+          scenario,
+          adapters,
+          transports
         })
       );
     }

@@ -17,8 +17,12 @@ const sectors = [
 
 const proofCards = [
   {
+    label: "Q Mediation Drift",
+    body: "The four-scenario mixed-pressure reasoning lane is green. Q and Immaculate both self-evaluate every scenario, route alignment stays perfect, and runner-path P95 is 7.43 ms."
+  },
+  {
     label: "Q Substrate Benchmark",
-    body: "Gateway to Immaculate seam is green. Structured handoff survives arbitration with zero failed assertions on the current tracked lock."
+    body: "Gateway to Immaculate seam is green. Structured handoff survives arbitration with zero failed assertions, gateway P95 is 30.02s, and arbitration P95 is 2.04 ms."
   },
   {
     label: "Q Gateway Contract",
@@ -34,7 +38,7 @@ const proofCards = [
   },
   {
     label: "Cloud Lanes",
-    body: "HF Jobs auth, hardware visibility, and bundle staging are real on the active lock, and the staged cloud launch is ready. Cloudflare has the profile and eval bundle ready, but worker auth and adapter export are still blocked."
+    body: "HF Jobs auth, hardware visibility, and bundle staging are real on the active bench-v15 lock, and the staged cloud launch is ready. Cloudflare has the profile and eval bundle ready, but worker auth and adapter export are still blocked."
   },
   {
     label: "W&B Publication Surface",
@@ -77,19 +81,21 @@ export function LandingPage() {
 
       <section className="landingHero">
         <div className="landingCopy">
-          <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 17 | W&B EXPORT CURRENT</p>
+          <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 18 | W&B EXPORT CURRENT</p>
           <h1 className="landingHeadline">Controlled intelligence for critical operations.</h1>
           <p className="landingLede">Defense and healthcare. Evidence before action. Q only. Benchmarked. Gateway seam proven. Audit loop live.</p>
 
           <div className="landingPills">
             <span>Q 4/4 structured</span>
             <span>BridgeBench 4/4</span>
+            <span>Mediation drift 4 scenarios</span>
+            <span>Runner path P95 7.43ms</span>
             <span>Substrate seam green</span>
             <span>Gateway contract green</span>
             <span>Identity gate green</span>
             <span>Harbor 0.950 / 0.925</span>
             <span>Latest W&B export Apr 17</span>
-            <span>Machine-stamped bench-v14 lock</span>
+            <span>Machine-stamped bench-v15 lock</span>
             <span>54 benchmark rows</span>
             <span>6 failure seeds</span>
           </div>

@@ -19,6 +19,33 @@ For each breakthrough, record:
 
 ## Current Entries
 
+### 2026-04-18
+
+#### Q and Immaculate now prove governed route preservation across a harder four-scenario mediation lane
+
+What changed:
+- the live `q-mediation-drift` pack was expanded from `2` mixed-pressure scenarios to `4`, adding a historical-pressure local cognition case and a conflicting healthy-signal integrity-hold case
+- the same lane now publishes runner-path timing separately from model timing, so the repo can see whether slowdowns come from Q itself or from Immaculate arbitration, scheduling, and routing
+- the lane now asserts that both Q and Immaculate emit explicit self-evaluations on every scenario instead of only reporting pass/fail drift
+- after the harder reasoning/orchestration pass landed clean, the benchmark promotion path minted the new active Q bundle `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v15-4d81044-ac6ea0d1` and paired Immaculate bundle `immaculate-orchestration-4d81044-ec4b3cb6`
+
+Why it matters:
+- the missed pattern was that a green two-scenario mediation page was not enough proof that Immaculate could preserve Q's governed route once historical blocked verdicts and conflicting healthy signals entered the same decision
+- separating runner-path latency from model latency matters because it tells the next optimization pass where the time is really being spent instead of blaming the whole request on Q
+- explicit Q and Immaculate self-evaluation matters because a control system should not only detect drift; it should explain whether drift came from Q's contract, from arbitration, or from later routing layers
+- promoting the new bench-v15 line matters because the next cloud run, the next Harbor improvement pass, and the next public release page now all point at the same updated benchmark lineage
+
+Evidence:
+- `docs/wiki/Q-Mediation-Drift.md` now records `4` scenarios, `0` failed assertions, route-alignment `P50 1`, drift-detected `max 0`, mediation-latency `P95 28897.9 ms`, and runner-path `P95 7.43 ms`
+- `docs/wiki/Q-Gateway-Substrate.md` now records the refreshed seam pass at `0` failed assertions with gateway-latency `P95 30018.66 ms` and arbitration-latency `P95 2.04 ms`
+- `docs/wiki/Q-Benchmark-Promotion.md` now records the promoted `bench-v15` line and `docs/wiki/Release-Surface.md` now points at the same active Q and Immaculate bundles
+- `README.md`, `docs/wiki/Home.md`, and `apps/dashboard/app/ui/landing-page.tsx` now explain the new reasoning/orchestration result in plain English instead of only listing older seam and Harbor facts
+
+What this unlocks next:
+- the next Q tuning pass can target the still-open Harbor wording losses and the public Terminal-Bench miss without destabilizing the now-harder mediation lane
+- the next Immaculate optimization pass can focus on end-to-end Q latency while keeping a separate eye on the much smaller runner-path latency budget
+- future drift work can add new mixed-pressure scenarios and still keep one explicit receipt showing whether Q drifted, Immaculate drifted, or neither did
+
 ### 2026-04-17
 
 #### Public W&B truth no longer conflates the historical 60m soak lane with the latest published benchmark

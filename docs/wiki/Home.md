@@ -13,16 +13,17 @@ Public website:
 
 If you only read one generated page before diving deeper, read [[Release-Surface]]. It tells you exactly which build, commit, and Q training bundle the current docs refer to.
 
-If you want the fastest plain-English benchmark summary, read [[Harbor-Terminal-Bench]], [[BridgeBench]], and [[Q-Gateway-Substrate]] together.
+If you want the fastest plain-English benchmark summary, read [[Harbor-Terminal-Bench]], [[Q-Mediation-Drift]], and [[Q-Gateway-Substrate]] together.
 Right now the honest story is:
 
 - Q parses both tracked local contract lanes cleanly: `4/4` on [[Model-Benchmark-Comparison]] and `4/4` on [[BridgeBench]]
-- the new `Q` substrate benchmark is fully green: the dedicated Q gateway stayed live, rejected unauthenticated traffic, preserved `ROUTE/REASON/COMMIT`, and handed the work back into Immaculate arbitration with `0` failed assertions; the exact live latency numbers are published on [[Q-Gateway-Substrate]]
+- the hard `Q` mediation drift lane is green: four mixed-pressure scenarios, `0` failed assertions, route-alignment `P50 1`, runner-path `P95 7.43 ms`, and explicit Q plus Immaculate self-evaluation on every scenario; the exact trace lives on [[Q-Mediation-Drift]]
+- the new `Q` substrate benchmark is fully green: the dedicated Q gateway stayed live, rejected unauthenticated traffic, preserved `ROUTE/REASON/COMMIT`, and handed the work back into Immaculate arbitration with `0` failed assertions; current seam timing is gateway `P95 30018.66 ms` and arbitration `P95 2.04 ms` on [[Q-Gateway-Substrate]]
 - the dedicated Q gateway contract is also green: `/health 200`, authenticated `/api/q/info 200`, authenticated `/v1/models 200`, authenticated chat `200`, bounded `429` concurrency rejection, and a canonical identity smoke that answers as `Q`, `Arobi Technology Alliance`, `Gaetano Comparcola`, `Gemma 4`, and `Immaculate`; the exact current gateway overhead lives on [[Q-Gateway-Validation]]
 - the live `Q` API audit loop is now real: rejected and failed `/api/q/run` calls are written into a tracked audit spool, surfaced in [[Q-API-Audit]], and promoted into the strict failure corpus instead of being lost in runtime logs
 - Q is materially better on the Harbor operator pack, but it still loses points on grounding and operator wording: `0.950` on `q-structured-contract` and `0.925` on `immaculate-bridge-fail-closed`
 - the public Terminal-Bench receipt is still a real failing benchmark at `0.000`, and that failure now stays in the tracked Q repair loop instead of getting buried in marketing copy
-- the current Q improvement path is concrete and machine-stamped: the active Q bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14-30d48b7-248a8349`, the current benchmark corpus is `54` rows, the strict failure corpus is `6` rows, and the paired Immaculate orchestration bundle all live on [[Release-Surface]], [[Q-Benchmark-Corpus]], and [[Q-Failure-Corpus]]
+- the current Q improvement path is concrete and machine-stamped: the active Q bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v15-4d81044-ac6ea0d1`, the current benchmark corpus is `54` rows, the strict failure corpus is `6` rows, and the paired Immaculate orchestration bundle all live on [[Release-Surface]], [[Q-Benchmark-Corpus]], and [[Q-Failure-Corpus]]
 - the current cloud truth is also concrete: the promoted HF Jobs bundle is staged and authenticated on the real account, the launch lane is ready when you want it, and the Cloudflare inference lane is still blocked on auth and adapter export even though the profile and eval bundle are ready
 - Immaculate now treats healthy local Q as a first-class governed routing directive, so blocked cloud status no longer forces a false guarded hold when the local Q lane is already healthy
 

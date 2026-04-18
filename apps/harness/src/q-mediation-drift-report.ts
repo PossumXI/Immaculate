@@ -12,11 +12,16 @@ type QMediationDriftSurface = {
     generatedAt: string;
     packId: string;
     packLabel: string;
+    scenarioCount: number;
     failedAssertions: number;
     routeAlignmentP50?: number;
     qOnlySelectionP50?: number;
     driftDetectedMax?: number;
     latencyP95Ms?: number;
+    runnerPathP95Ms?: number;
+    arbitrationP95Ms?: number;
+    schedulingP95Ms?: number;
+    routingP95Ms?: number;
     hardware?: string;
   };
   assertions: Array<{
@@ -61,11 +66,16 @@ function renderMarkdown(report: QMediationDriftSurface): string {
     "",
     `- Suite: \`${report.benchmark.suiteId}\``,
     `- Pack: \`${report.benchmark.packLabel} (${report.benchmark.packId})\``,
+    `- Scenario count: \`${report.benchmark.scenarioCount}\``,
     `- Failed assertions: \`${report.benchmark.failedAssertions}\``,
     `- Route alignment P50: \`${report.benchmark.routeAlignmentP50 ?? "n/a"}\``,
     `- Q-only layer selection P50: \`${report.benchmark.qOnlySelectionP50 ?? "n/a"}\``,
     `- Drift detected max: \`${report.benchmark.driftDetectedMax ?? "n/a"}\``,
     `- Mediation latency P95: \`${report.benchmark.latencyP95Ms ?? "n/a"} ms\``,
+    `- Runner path latency P95: \`${report.benchmark.runnerPathP95Ms ?? "n/a"} ms\``,
+    `- Arbitration latency P95: \`${report.benchmark.arbitrationP95Ms ?? "n/a"} ms\``,
+    `- Scheduling latency P95: \`${report.benchmark.schedulingP95Ms ?? "n/a"} ms\``,
+    `- Routing latency P95: \`${report.benchmark.routingP95Ms ?? "n/a"} ms\``,
     `- Hardware: ${report.benchmark.hardware ?? "unknown"}`,
     "",
     "## Assertions",
@@ -95,11 +105,16 @@ async function main(): Promise<void> {
       generatedAt: benchmark.generatedAt,
       packId: benchmark.packId,
       packLabel: benchmark.packLabel,
+      scenarioCount: benchmark.totalTicks,
       failedAssertions: benchmark.assertions.filter((assertion) => assertion.status === "fail").length,
       routeAlignmentP50: findSeriesValue(benchmark, "q_mediation_drift_route_alignment", "p50"),
       qOnlySelectionP50: findSeriesValue(benchmark, "q_mediation_drift_q_only_selection", "p50"),
       driftDetectedMax: findSeriesValue(benchmark, "q_mediation_drift_drift_detected", "max"),
       latencyP95Ms: findSeriesValue(benchmark, "q_mediation_drift_latency_ms", "p95"),
+      runnerPathP95Ms: findSeriesValue(benchmark, "q_mediation_drift_runner_path_ms", "p95"),
+      arbitrationP95Ms: findSeriesValue(benchmark, "q_mediation_drift_arbitration_ms", "p95"),
+      schedulingP95Ms: findSeriesValue(benchmark, "q_mediation_drift_scheduling_ms", "p95"),
+      routingP95Ms: findSeriesValue(benchmark, "q_mediation_drift_routing_ms", "p95"),
       hardware: benchmark.hardwareContext
         ? `${benchmark.hardwareContext.host} / ${benchmark.hardwareContext.platform}-${benchmark.hardwareContext.arch} / ${benchmark.hardwareContext.cpuModel}`
         : undefined
