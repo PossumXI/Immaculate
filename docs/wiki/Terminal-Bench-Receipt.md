@@ -6,6 +6,7 @@ This page records the official public-task Terminal-Bench leaderboard receipt su
 - Release: `0.1.0+8874851`
 - Repo commit: `887485123b57de8b4c6ea87c8c6911db3cf14dda`
 - Q serving label: `Q`
+- Measured bundle boundary: this page is tied to the last verified public-task Harbor run and can remain on an older Q bundle than the active release surface until that public task is rerun.
 - Leaderboard repo: `harborframework/terminal-bench-2-leaderboard`
 - Submission PR/discussion: https://huggingface.co/datasets/harborframework/terminal-bench-2-leaderboard/discussions/140
 - Submission commit: https://huggingface.co/datasets/harborframework/terminal-bench-2-leaderboard/commit/9a4ad15564f2a3c1303da7c89a08dc10cfec36c3

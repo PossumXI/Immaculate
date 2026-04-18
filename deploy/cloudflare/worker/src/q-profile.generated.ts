@@ -14,12 +14,12 @@ export type QCloudflareProfile = {
 };
 
 export const qCloudflareProfile: QCloudflareProfile = {
-  "generatedAt": "2026-04-18T02:38:23Z",
-  "profileId": "q-cloudflare-profile-35ab7e8",
+  "generatedAt": "2026-04-18T02:57:04Z",
+  "profileId": "q-cloudflare-profile-1b28d69",
   "qName": "Q",
   "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16-35ab7e8-de7361fa",
   "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v16",
-  "buildId": "0.1.0+35ab7e8",
+  "buildId": "0.1.0+1b28d69",
   "rules": [
     {
       "id": "bridge-trust",

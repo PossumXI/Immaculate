@@ -349,6 +349,7 @@ function renderMarkdown(report: TerminalBenchReceiptReport): string {
     `- Release: \`${report.release.buildId}\``,
     `- Repo commit: \`${report.release.gitSha}\``,
     `- Q serving label: \`${report.release.q.truthfulLabel}\``,
+    "- Measured bundle boundary: this page is tied to the last verified public-task Harbor run and can remain on an older Q bundle than the active release surface until that public task is rerun.",
     `- Leaderboard repo: \`${report.leaderboard.repo}\``,
     `- Submission PR/discussion: ${report.leaderboard.discussionUrl}`,
     `- Submission commit: ${report.leaderboard.commitUrl}`,

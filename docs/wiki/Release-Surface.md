@@ -2,9 +2,9 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-04-18T02:48:52.445Z
-- Immaculate release: `0.1.0+35ab7e8`
-- Repo commit: `35ab7e86c80ec367751e8bbc900d14042a3950de`
+- Generated: 2026-04-18T02:57:07.506Z
+- Immaculate release: `0.1.0+1b28d69`
+- Repo commit: `1b28d691c7ba778adea63d50b18fa292303a0faf`
 - Branch: `harbor-q-push`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+35ab7e8` is the current repo build stamp.
+- Immaculate build `0.1.0+1b28d69` is the current repo build stamp.
 - Q is the only public model name used across the repo, and it is built on `Gemma 4`.
 - The latest tracked Q training bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16-35ab7e8-de7361fa`, tied to dataset `.training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
 - The latest hybrid session is `q-hybrid-harbor-opt-2384cf5-bench-v16`, with local lane `ready` and cloud lane `ready` on provider `hf_jobs`.
@@ -27,21 +27,21 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - BridgeBench: `2026-04-17T10:18:04.934Z` via `docs/wiki/BridgeBench.json`
 - BridgeBench soak: `2026-04-15T06:15:54.188Z` via `docs/wiki/BridgeBench-Soak.json`
 - Q structured contract benchmark: `2026-04-17T10:03:22.220Z` via `docs/wiki/Model-Benchmark-Comparison.json`
-- Q readiness gate: `2026-04-18T02:48:52.147Z` via `docs/wiki/Q-Readiness-Gate.json`
+- Q readiness gate: `2026-04-18T02:52:42.386Z` via `docs/wiki/Q-Readiness-Gate.json`
 - Q gateway validation: `2026-04-17T10:12:01.155Z` via `docs/wiki/Q-Gateway-Validation.json`
-- Q gateway substrate: `2026-04-18T02:48:37.213Z` via `docs/wiki/Q-Gateway-Substrate.json`
-- Q mediation drift: `2026-04-18T02:48:36.533Z` via `docs/wiki/Q-Mediation-Drift.json`
+- Q gateway substrate: `2026-04-18T02:52:47.563Z` via `docs/wiki/Q-Gateway-Substrate.json`
+- Q mediation drift: `2026-04-18T02:52:47.334Z` via `docs/wiki/Q-Mediation-Drift.json`
 - Q API audit: `2026-04-17T10:09:27Z` via `docs/wiki/Q-API-Audit.json`
-- Q hybrid training: `2026-04-18T02:39:32Z` via `docs/wiki/Q-Hybrid-Training.json`
-- HF Jobs training: `2026-04-18T02:38:38Z` via `docs/wiki/HF-Jobs-Training.json`
-- Colab free training: `2026-04-18T02:39:29Z` via `docs/wiki/Colab-Free-Training.json`
-- Cloudflare Q inference: `2026-04-18T02:38:25Z` via `docs/wiki/Cloudflare-Q-Inference.json`
-- OCI GPU advisor: `2026-04-18T02:39:32Z` via `docs/wiki/OCI-GPU-Advisor.json`
+- Q hybrid training: `2026-04-18T02:53:01Z` via `docs/wiki/Q-Hybrid-Training.json`
+- HF Jobs training: `2026-04-18T02:57:03Z` via `docs/wiki/HF-Jobs-Training.json`
+- Colab free training: `2026-04-18T02:57:04Z` via `docs/wiki/Colab-Free-Training.json`
+- Cloudflare Q inference: `2026-04-18T02:57:06Z` via `docs/wiki/Cloudflare-Q-Inference.json`
+- OCI GPU advisor: `2026-04-18T02:53:01Z` via `docs/wiki/OCI-GPU-Advisor.json`
 - OCI region capacity: `2026-04-17T02:02:24Z` via `docs/wiki/OCI-Region-Capacity.json`
-- Q benchmark corpus: `2026-04-18T02:48:27Z` via `docs/wiki/Q-Benchmark-Corpus.json`
-- Q failure corpus: `2026-04-18T02:48:27Z` via `docs/wiki/Q-Failure-Corpus.json`
+- Q benchmark corpus: `2026-04-18T02:52:42Z` via `docs/wiki/Q-Benchmark-Corpus.json`
+- Q failure corpus: `2026-04-18T02:52:41Z` via `docs/wiki/Q-Failure-Corpus.json`
 - Q benchmark promotion: `2026-04-18T02:33:22Z` via `docs/wiki/Q-Benchmark-Promotion.json`
-- W&B benchmark export: `2026-04-17T20:58:29.164321+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
+- W&B benchmark export: `2026-04-18T01:47:15.933137+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
 - Harbor terminal bench: `2026-04-18T01:43:40.336Z` via `docs/wiki/Harbor-Terminal-Bench.json`
 - Terminal-Bench receipt: `2026-04-18T01:43:40.315Z` via `docs/wiki/Terminal-Bench-Receipt.json`
 - GitHub checks receipt: `2026-04-16T17:54:12.583Z` via `docs/wiki/GitHub-Checks-Receipt.json`
@@ -63,17 +63,17 @@ This page is generated from repo state. It is the plain-English answer to a simp
 ## Hybrid Training Session
 
 - Session path: `.training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v16/hybrid-session.json`
-- Session generated: `2026-04-18T02:39:32Z`
+- Session generated: `2026-04-18T02:53:01Z`
 - Local lane status: `ready`
 - Cloud lane status: `ready`
 - Cloud provider: `hf_jobs`
-- Immaculate orchestration bundle: `immaculate-orchestration-35ab7e8-ec4b3cb6`
+- Immaculate orchestration bundle: `immaculate-orchestration-1b28d69-ec4b3cb6`
 - Immaculate bundle source: `.training-output/immaculate/latest-training-bundle.json`
 
 ## Cloudflare Inference Lane
 
 - Session id: `q-hybrid-harbor-opt-2384cf5-bench-v16`
-- Generated: `2026-04-18T02:38:25Z`
+- Generated: `2026-04-18T02:57:06Z`
 - Status: `auth-blocked`
 - Auth ready: `false`
 - Adapter ready: `false`

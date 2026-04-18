@@ -42,7 +42,7 @@ const proofCards = [
   },
   {
     label: "W&B Publication Surface",
-    body: "The newest tracked W&B export is April 17. The newer April 18 mediation and substrate reruns are local repo evidence, while the separate 60m soak page remains historical evidence from the last hour-class rerun."
+    body: "The newest tracked W&B export is April 18. The April 18 mediation and substrate reruns are also live repo evidence, while the separate 60m soak page remains historical evidence from the last hour-class rerun."
   }
 ];
 
@@ -81,7 +81,7 @@ export function LandingPage() {
 
       <section className="landingHero">
         <div className="landingCopy">
-          <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 18 | W&amp;B EXPORT APR 17</p>
+          <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 18 | W&amp;B EXPORT APR 18</p>
           <h1 className="landingHeadline">Controlled intelligence for critical operations.</h1>
           <p className="landingLede">Defense and healthcare. Evidence before action. Q only. Benchmarked. Gateway seam proven. Audit loop live.</p>
 
@@ -94,7 +94,7 @@ export function LandingPage() {
             <span>Gateway contract green</span>
             <span>Identity gate green</span>
             <span>Harbor 0.950 / 0.925</span>
-            <span>Latest W&B export Apr 17</span>
+            <span>Latest W&B export Apr 18</span>
             <span>Machine-stamped bench-v16 lock</span>
             <span>54 benchmark rows</span>
             <span>6 failure seeds</span>

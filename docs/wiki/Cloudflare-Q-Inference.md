@@ -2,8 +2,8 @@
 
 This page records the Cloudflare deploy and evaluation lane for Q-only inference.
 
-- Generated: `2026-04-18T02:38:25Z`
-- Release: `0.1.0+35ab7e8`
+- Generated: `2026-04-18T02:57:06Z`
+- Release: `0.1.0+1b28d69`
 - Session id: `q-hybrid-harbor-opt-2384cf5-bench-v16`
 - Session path: `.training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v16/hybrid-session.manifest.json`
 - Status: `auth-blocked`
@@ -31,7 +31,7 @@ This page records the Cloudflare deploy and evaluation lane for Q-only inference
 ## Q Profile And Optional Adapter
 
 - Profile ready: `True`
-- Profile id: `q-cloudflare-profile-35ab7e8`
+- Profile id: `q-cloudflare-profile-1b28d69`
 - Training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16-35ab7e8-de7361fa`
 - Worker module: `deploy/cloudflare/worker/src/q-profile.generated.ts`
 - Rule count: `5`

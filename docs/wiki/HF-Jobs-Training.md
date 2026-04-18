@@ -2,8 +2,8 @@
 
 This page records the real Hugging Face Jobs workaround path for the active Q and Immaculate cloud bundle.
 
-- Generated: `2026-04-18T02:38:38Z`
-- Release: `0.1.0+35ab7e8`
+- Generated: `2026-04-18T02:57:03Z`
+- Release: `0.1.0+1b28d69`
 - Session id: `q-hybrid-harbor-opt-2384cf5-bench-v16`
 - Authenticated user: `TruLumecreator`
 - HF CLI path: `C:\Users\Knight\Desktop\Immaculate\Immaculate-push-harbor\.tools\foundry-venv\Scripts\hf.exe`

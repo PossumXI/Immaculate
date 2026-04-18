@@ -67,7 +67,7 @@ Right now the honest story is:
 - [[Engineering-Doctrine]] defines the standing build philosophy and what qualifies as a real leap
 - [[Benchmark-Status]] points to the live public W&B project plus the latest published benchmark runs by pack
 - [[Benchmark-Wandb-Export]] is the committed pull-back from W&B itself, so benchmark results live in git wiki even when the W&B project stays private
-- the latest tracked W&B export is currently stamped on `2026-04-17`; the latest local mediation/substrate reruns are `2026-04-18`, so if you see `2026-04-12`, you are looking at the historical hour-class soak lane rather than the newest published W&B result
+- the latest tracked W&B export is currently stamped on `2026-04-18`; the latest local mediation/substrate reruns are also `2026-04-18`, so if you see `2026-04-12`, you are looking at the historical hour-class soak lane rather than the newest published W&B result
 - [[Harbor-Terminal-Bench]] records the repo-local Harbor task pack, the executed Q gateway scores, and the latest Harbor truth boundary
 - [[Terminal-Bench-Receipt]] records the official public-task Terminal-Bench receipt submission PR for the real `Q` lane; it is one public receipt on the official leaderboard repo, not a full leaderboard sweep
 - [[GitHub-Checks-Receipt]] records a raw GitHub REST verification of workflow-runs and check-runs when classic status contexts are empty, so release claims are tied to the checks GitHub Actions actually publishes
@@ -94,7 +94,7 @@ Right now the honest story is:
 - [[Q-Benchmark-Promotion]] records whether the active locked Q bundle already carries the current benchmark corpus or needs a new bench-lineage promotion
 - [[Q-Failure-Corpus]] is now a strict failure-only export and now carries live Q API failures, Harbor underperformance seeds, and the official Terminal-Bench public-task underperformance seed without mixing in resolved successes
 - the Q training path now also carries a richer coding/long-context supplement plus an `8192`-token long-context LoRA config, so the next cloud run can target code repair and repo-horizon reasoning instead of only bridge/control-plane seeds
-- [[Live-Validation-2026-04-13]] records the latest fresh machine-run validation pass, including the current `60s` benchmark regression instead of hiding it
+- [[Live-Validation-2026-04-13]] records a historical `60s` validation regression page; the newer live reasoning/seam evidence for the current release is [[Q-Mediation-Drift]] plus [[Q-Gateway-Substrate]]
 - [[Training-Data-Factory]] tracks the manifest-first corpus curation path for defensive Q fine-tuning work without pretending the machine replaced legal review
 - [[OCI-Private-Deployment]] tracks the hardened Oracle private-subnet harness bundle: Podman image, cloud-init bootstrap, systemd supervision, OCI Vault pull-through, and no public ingress
 - [[Q-Model-Identity-And-Banner]] tracks the stable `Q` identity plus the yellow/ocean-blue startup banner controls

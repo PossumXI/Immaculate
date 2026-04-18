@@ -2,8 +2,8 @@
 
 This page records the current OCI GPU launch advice for the active Q hybrid training session.
 
-- Generated: `2026-04-18T02:39:32Z`
-- Release: `0.1.0+35ab7e8`
+- Generated: `2026-04-18T02:53:01Z`
+- Release: `0.1.0+1b28d69`
 - Session id: `q-hybrid-harbor-opt-2384cf5-bench-v16`
 - Probe scope: `verified-subscribed-regions-only`
 - Controller region: `n/a`

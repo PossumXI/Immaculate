@@ -70,7 +70,7 @@ Latest plain-English readout:
 - the dedicated Q gateway contract is green and Q-only: `/health 200`, authenticated `/api/q/info 200`, authenticated `/v1/models 200`, authenticated chat `200`, bounded `429` concurrency rejection, and a canonical identity smoke that answers as `Q`, `Arobi Technology Alliance`, `Gaetano Comparcola`, `Gemma 4`, and `Immaculate`; the current measured gateway overhead lives on [docs/wiki/Q-Gateway-Validation.md](docs/wiki/Q-Gateway-Validation.md)
 - the live `Q` API audit loop is real and now writes failures back into training surfaces instead of leaving them in logs; current failures include `transport_timeout`, `missing_prompt`, and `prompt_too_large`
 - on the repo-local Harbor operator pack, oracle is still `1.000` on both tasks while `Q` is currently `0.950` on the Q structured-contract task and `0.925` on the Immaculate bridge fail-closed task
-- the latest tracked W&B export is still current on `2026-04-17` through [docs/wiki/Benchmark-Status.md](docs/wiki/Benchmark-Status.md) and [docs/wiki/Benchmark-Wandb-Export.md](docs/wiki/Benchmark-Wandb-Export.md); the separate [docs/wiki/Q-Benchmark-Sweep-60m.md](docs/wiki/Q-Benchmark-Sweep-60m.md) page is a historical hour-class soak page and still points at the last rerun of that specific pack
+- the latest tracked W&B export is still current on `2026-04-18` through [docs/wiki/Benchmark-Status.md](docs/wiki/Benchmark-Status.md) and [docs/wiki/Benchmark-Wandb-Export.md](docs/wiki/Benchmark-Wandb-Export.md); the separate [docs/wiki/Q-Benchmark-Sweep-60m.md](docs/wiki/Q-Benchmark-Sweep-60m.md) page is a historical hour-class soak page and still points at the last rerun of that specific pack
 - the current Q bundle, hybrid session, benchmark corpus, failure corpus, and paired Immaculate orchestration bundle are machine-stamped on [docs/wiki/Release-Surface.md](docs/wiki/Release-Surface.md); the active tracked Q bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16-35ab7e8-de7361fa`
 - the tracked Q benchmark corpus currently carries `54` records, and the strict failure corpus currently carries `6` live eval seeds with resolved successes kept out of the failure lane
 - Immaculate now treats the healthy local Q lane as a first-class governed routing directive instead of a generic model slot, so blocked cloud status no longer forces a false guarded hold when local Q is healthy
@@ -363,7 +363,7 @@ Current benchmark publication surfaces:
 - W&B project: https://wandb.ai/arobi-arobi-technology-alliance/immaculate
 - tracked repo/wiki status: [docs/wiki/Benchmark-Status.md](docs/wiki/Benchmark-Status.md)
 - tracked repo/wiki W&B export: [docs/wiki/Benchmark-Wandb-Export.md](docs/wiki/Benchmark-Wandb-Export.md)
-- tracked repo/wiki live validation: [docs/wiki/Live-Validation-2026-04-13.md](docs/wiki/Live-Validation-2026-04-13.md)
+- tracked repo/wiki historical 60s validation regression: [docs/wiki/Live-Validation-2026-04-13.md](docs/wiki/Live-Validation-2026-04-13.md)
 - tracked repo/wiki Q structured contract benchmark: [docs/wiki/Model-Benchmark-Comparison.md](docs/wiki/Model-Benchmark-Comparison.md)
 - tracked repo/wiki BridgeBench surface: [docs/wiki/BridgeBench.md](docs/wiki/BridgeBench.md)
 - tracked repo/wiki Q API and hosting guide: [docs/wiki/Q-API-Hosting.md](docs/wiki/Q-API-Hosting.md)

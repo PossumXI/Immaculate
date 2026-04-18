@@ -2,9 +2,9 @@
 
 This page is generated from the dedicated `q-gateway-substrate` benchmark pack. It measures the real seam where the Q gateway hands structured work back into Immaculate arbitration.
 
-- Generated: 2026-04-18T02:48:37.213Z
-- Release: `0.1.0+35ab7e8`
-- Repo commit: `35ab7e8`
+- Generated: 2026-04-18T02:52:47.563Z
+- Release: `0.1.0+1b28d69`
+- Repo commit: `1b28d69`
 - Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16-35ab7e8-de7361fa`
 
 ## Benchmark

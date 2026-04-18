@@ -7,6 +7,7 @@ This page records the repo-local Harbor task pack for Immaculate and Q. It is a 
 - Repo commit: `887485123b57de8b4c6ea87c8c6911db3cf14dda`
 - Q serving label: `Q`
 - Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v15-4d81044-ac6ea0d1`
+- Measured bundle boundary: this page is the last verified Harbor rerun and can remain on an older Q bundle than the active release surface until Harbor is rerun again.
 
 ## What Ran
 

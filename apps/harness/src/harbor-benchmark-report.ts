@@ -328,6 +328,9 @@ function renderMarkdown(report: HarborBenchmarkReport): string {
   lines.push(`- Repo commit: \`${report.release.gitSha}\``);
   lines.push(`- Q serving label: \`${report.gatewayModel}\``);
   lines.push(`- Q training bundle: \`${report.release.q.trainingLock?.bundleId ?? "none generated yet"}\``);
+  lines.push(
+    "- Measured bundle boundary: this page is the last verified Harbor rerun and can remain on an older Q bundle than the active release surface until Harbor is rerun again."
+  );
   lines.push("");
   lines.push("## What Ran");
   lines.push("");
