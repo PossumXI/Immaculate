@@ -1,5 +1,8 @@
 # Immaculate — Audit Action Plan (2026-04-11)
 
+Related internal operator notes:
+- [Codex Guardrails And Mistakes (2026-04-18)](./Codex-Guardrails-And-Mistakes-2026-04-18.md)
+
 Top 10 actionable fixes, ordered by severity and implementation cost.
 
 ---
