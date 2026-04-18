@@ -143,6 +143,7 @@ const GATEWAY_IDENTITY_MESSAGE: OllamaChatMessage = {
   content: `${getQIdentityInstruction()} Keep answers grounded, truthful, and consistent with your actual deployment state. If the user asks who you are, who developed you, who led the project, how you relate to Immaculate, or what public model name they should see, answer canonically with Q, Arobi Technology Alliance, Gaetano Comparcola, Gemma 4, and Immaculate.`
 };
 const BENCHMARK_SKIP_Q_IDENTITY_HEADER = "x-immaculate-benchmark-skip-q-identity";
+const REQUEST_TIMEOUT_OVERRIDE_HEADER = "x-immaculate-request-timeout-ms";
 
 app.log.info(
   {
@@ -303,6 +304,18 @@ function isTruthyHeaderValue(value: string | string[] | undefined): boolean {
   }
   const normalized = raw.trim().toLowerCase();
   return normalized.length > 0 && normalized !== "0" && normalized !== "false" && normalized !== "off";
+}
+
+function parseTimeoutOverrideMs(value: string | string[] | undefined): number | undefined {
+  const raw = Array.isArray(value) ? value.find((entry) => entry.trim().length > 0) : value;
+  if (typeof raw !== "string") {
+    return undefined;
+  }
+  const parsed = Number(raw.trim());
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return undefined;
+  }
+  return Math.max(1_000, Math.min(DEFAULT_TIMEOUT_MS, Math.round(parsed)));
 }
 
 function latestUserPrompt(messages: OllamaChatMessage[]): string | undefined {
@@ -589,9 +602,15 @@ app.post("/v1/chat/completions", async (request, reply) => {
   const effectiveMaxTokens = structuredRequest
     ? Math.min(maxTokens, STRUCTURED_REQUEST_MAX_TOKENS)
     : maxTokens;
-  const effectiveTimeoutMs = structuredRequest
+  const timeoutOverrideMs = parseTimeoutOverrideMs(
+    request.headers[REQUEST_TIMEOUT_OVERRIDE_HEADER]
+  );
+  const baseTimeoutMs = structuredRequest
     ? Math.min(DEFAULT_TIMEOUT_MS, STRUCTURED_REQUEST_TIMEOUT_MS)
     : DEFAULT_TIMEOUT_MS;
+  const effectiveTimeoutMs = timeoutOverrideMs
+    ? Math.min(baseTimeoutMs, timeoutOverrideMs)
+    : baseTimeoutMs;
   const userPrompt = latestUserPrompt(messages);
   const canonicalIdentityKind = detectQIdentityQuestion(userPrompt);
   const skipBenchmarkIdentity = isTruthyHeaderValue(

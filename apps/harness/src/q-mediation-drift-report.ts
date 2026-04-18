@@ -32,6 +32,9 @@ type QMediationDriftSurface = {
     mediationDiagnosticSignals: string[];
     qSelfEvaluation: string;
     immaculateSelfEvaluation: string;
+    qDriftReasons: string[];
+    immaculateDriftReasons: string[];
+    runnerPathBottleneckStage: "arbitration" | "scheduling" | "routing";
     driftDetected: boolean;
     failureClass?: string;
   }>;
@@ -79,6 +82,9 @@ function buildFallbackDiagnostics(entries: string[]): QMediationDriftSurface["di
         : ["readiness=not-ready", "substrate=degraded", "cloud=blocked", "directive=guarded-hold"],
       qSelfEvaluation,
       immaculateSelfEvaluation,
+      qDriftReasons: [],
+      immaculateDriftReasons: [],
+      runnerPathBottleneckStage: "routing",
       driftDetected: driftRaw === "true",
       failureClass: undefined
     };
@@ -131,6 +137,9 @@ function renderMarkdown(report: QMediationDriftSurface): string {
       `- Mediation signals: ${diagnostic.mediationDiagnosticSignals.map((signal) => `\`${signal}\``).join(" / ")}`,
       `- Q self-eval: ${diagnostic.qSelfEvaluation}`,
       `- Immaculate self-eval: ${diagnostic.immaculateSelfEvaluation}`,
+      `- Runner bottleneck stage: \`${diagnostic.runnerPathBottleneckStage}\``,
+      `- Q drift reasons: ${diagnostic.qDriftReasons.length > 0 ? diagnostic.qDriftReasons.map((reason) => `\`${reason}\``).join(" / ") : "`none`"}`,
+      `- Immaculate drift reasons: ${diagnostic.immaculateDriftReasons.length > 0 ? diagnostic.immaculateDriftReasons.map((reason) => `\`${reason}\``).join(" / ") : "`none`"}`,
       `- Drift detected: \`${diagnostic.driftDetected}\`${diagnostic.failureClass ? ` / failure class \`${diagnostic.failureClass}\`` : ""}`,
       ""
     ].join("\n")),
@@ -192,6 +201,16 @@ async function main(): Promise<void> {
       mediationDiagnosticSignals: scenario.mediationDiagnosticSignals,
       qSelfEvaluation: scenario.qSelfEvaluation,
       immaculateSelfEvaluation: scenario.immaculateSelfEvaluation,
+      qDriftReasons: Array.isArray(scenario.qDriftReasons) ? scenario.qDriftReasons : [],
+      immaculateDriftReasons: Array.isArray(scenario.immaculateDriftReasons)
+        ? scenario.immaculateDriftReasons
+        : [],
+      runnerPathBottleneckStage:
+        scenario.runnerPathBottleneckStage === "arbitration" ||
+        scenario.runnerPathBottleneckStage === "scheduling" ||
+        scenario.runnerPathBottleneckStage === "routing"
+          ? scenario.runnerPathBottleneckStage
+          : "routing",
       driftDetected: scenario.driftDetected,
       failureClass: scenario.failureClass
     })),

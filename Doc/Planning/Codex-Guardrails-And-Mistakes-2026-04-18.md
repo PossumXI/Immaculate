@@ -144,15 +144,44 @@ Correction:
 Rule:
 - Never describe “Terminal-Bench failed” as one undifferentiated thing. Name the failing stage.
 
+### 11. I created a gateway key after startup and treated auth failure like a model miss
+
+Mistake:
+- I launched a fresh Q gateway and then minted the Harbor key afterward, which meant the live process had not loaded that key yet.
+
+Correction:
+- For a freshly isolated gateway runtime:
+  - create the key first, then start the gateway, or
+  - if the gateway is already running, mint the key into the same store and explicitly verify authenticated chat before launching Harbor
+
+Rule:
+- Never start a long Harbor rerun until the exact gateway key has already succeeded against `/v1/chat/completions`.
+
+### 12. I reused an occupied gateway port and accidentally tested the wrong process
+
+Mistake:
+- I attempted to start a new gateway on a port that was already in use, then hit health/auth on the older process instead of the intended one.
+
+Correction:
+- Before any isolated benchmark gateway launch:
+  - check the port is free
+  - confirm the new process actually bound
+  - verify the health response matches the intended runtime dir and port
+
+Rule:
+- Never trust a gateway health response until the newly started process has a verified listening socket on the requested port.
+
 ## Current Verified State
 
 As of the latest official Harbor rerun on `2026-04-18`:
-- job: `q-terminal-bench-public-generic-smoke-postfix13b`
+- job: `q-terminal-bench-public-generic-smoke-postfix16`
 - official Harbor result: `0.000`
-- planning payload size dropped to `4417` chars
-- planning now succeeds
-- generation still times out on the Q gateway and opens the circuit
+- agent exceptions: `0`
+- total runtime: `2m 44s`
+- planning now succeeds deterministically under Immaculate-owned task planning
+- the agent now preserves `q-agent-output.json` with stage journal, Q self-evaluation, and Immaculate self-evaluation even on failure
 - active failure stage: terminal file generation, not terminal planning
+- active remaining blocker: generation still hits `q_upstream_failure / circuit_open` before a verifier-backed `vm.js` is produced
 
 ## Preflight Checklist
 
@@ -189,7 +218,7 @@ Use this before any official public-task Harbor rerun:
 
 ## Immediate Next Actions
 
-1. Reduce generation prompt size the same way planning was reduced.
-2. Add a bounded generation retry that stays compact instead of widening context.
-3. Keep transport misses out of the semantic training target until generation reaches verifier-backed execution.
+1. Keep the compact deterministic planning path and continue shrinking the generation-stage wall clock.
+2. Train Q specifically against the semantic MIPS/doomgeneric miss once generation reaches verifier-backed execution again.
+3. Keep transport misses out of the semantic training target until generation clears the gateway reliably.
 4. Only resubmit a public Terminal-Bench receipt when the default Q-only path is green without diagnostic shims.

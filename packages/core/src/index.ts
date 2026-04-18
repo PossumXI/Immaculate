@@ -242,6 +242,9 @@ export type BenchmarkMediationDriftScenarioResult = {
   mediationDiagnosticSignals: string[];
   qSelfEvaluation: string;
   immaculateSelfEvaluation: string;
+  qDriftReasons: string[];
+  immaculateDriftReasons: string[];
+  runnerPathBottleneckStage: "arbitration" | "scheduling" | "routing";
   responsePreview: string;
   failureClass?: string;
 };
@@ -1135,6 +1138,9 @@ const benchmarkMediationDriftScenarioResultSchema = z.object({
   mediationDiagnosticSignals: z.array(z.string()),
   qSelfEvaluation: z.string(),
   immaculateSelfEvaluation: z.string(),
+  qDriftReasons: z.array(z.string()),
+  immaculateDriftReasons: z.array(z.string()),
+  runnerPathBottleneckStage: z.enum(["arbitration", "scheduling", "routing"]),
   responsePreview: z.string(),
   failureClass: z.string().optional()
 });
