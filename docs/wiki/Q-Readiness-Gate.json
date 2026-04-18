@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-04-18T06:21:53.994Z",
+  "generatedAt": "2026-04-18T06:26:52.167Z",
   "threshold": 0.75,
   "ready": true,
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "d0bdd00c3784f262b445d969a2b3d510da035bbb",
-    "gitShortSha": "d0bdd00",
+    "gitSha": "2eedcda24c421ad71f98d6cc41bcbc93277173b8",
+    "gitShortSha": "2eedcda",
     "gitBranch": "harbor-q-push",
-    "buildId": "0.1.0+d0bdd00",
+    "buildId": "0.1.0+2eedcda",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",

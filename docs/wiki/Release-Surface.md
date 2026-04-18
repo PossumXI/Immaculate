@@ -2,9 +2,9 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-04-18T06:23:52.481Z
-- Immaculate release: `0.1.0+d0bdd00`
-- Repo commit: `d0bdd00c3784f262b445d969a2b3d510da035bbb`
+- Generated: 2026-04-18T06:26:52.385Z
+- Immaculate release: `0.1.0+2eedcda`
+- Repo commit: `2eedcda24c421ad71f98d6cc41bcbc93277173b8`
 - Branch: `harbor-q-push`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+d0bdd00` is the current repo build stamp.
+- Immaculate build `0.1.0+2eedcda` is the current repo build stamp.
 - Q is the only public model name used across the repo, and it is built on `Gemma 4`.
 - The latest tracked Q training bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v18-d0bdd00-4db18397`, tied to dataset `.training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v18.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
 - The latest hybrid session is `q-hybrid-harbor-opt-2384cf5-bench-v18`, with local lane `ready` and cloud lane `ready` on provider `hf_jobs`.
@@ -41,7 +41,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Q benchmark corpus: `2026-04-18T06:21:15Z` via `docs/wiki/Q-Benchmark-Corpus.json`
 - Q failure corpus: `2026-04-18T06:21:15Z` via `docs/wiki/Q-Failure-Corpus.json`
 - Q benchmark promotion: `2026-04-18T05:48:17Z` via `docs/wiki/Q-Benchmark-Promotion.json`
-- W&B benchmark export: `2026-04-18T01:47:15.933137+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
+- W&B benchmark export: `2026-04-18T03:02:43.497039+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
 - Harbor terminal bench: `2026-04-18T01:43:40.336Z` via `docs/wiki/Harbor-Terminal-Bench.json`
 - Terminal-Bench receipt (historical public): `2026-04-18T06:23:47.663Z` via `docs/wiki/Terminal-Bench-Receipt.json`
 - Terminal-Bench rerun (diagnostic-only): `2026-04-18T06:20:59.166Z` via `docs/wiki/Terminal-Bench-Rerun.json`

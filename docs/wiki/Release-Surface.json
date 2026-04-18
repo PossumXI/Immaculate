@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-18T06:23:52.481Z",
+  "generatedAt": "2026-04-18T06:26:52.385Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "d0bdd00c3784f262b445d969a2b3d510da035bbb",
-    "gitShortSha": "d0bdd00",
+    "gitSha": "2eedcda24c421ad71f98d6cc41bcbc93277173b8",
+    "gitShortSha": "2eedcda",
     "gitBranch": "harbor-q-push",
-    "buildId": "0.1.0+d0bdd00",
+    "buildId": "0.1.0+2eedcda",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -135,7 +135,7 @@
     {
       "label": "W&B benchmark export",
       "path": "docs\\wiki\\Benchmark-Wandb-Export.json",
-      "generatedAt": "2026-04-18T01:47:15.933137+00:00"
+      "generatedAt": "2026-04-18T03:02:43.497039+00:00"
     },
     {
       "label": "Harbor terminal bench",
