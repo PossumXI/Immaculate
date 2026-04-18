@@ -138,6 +138,11 @@ let cachedModelReadiness:
       installedModelNames: string[];
     }
   | undefined;
+const GATEWAY_IDENTITY_MESSAGE: OllamaChatMessage = {
+  role: "system",
+  content: `${getQIdentityInstruction()} Keep answers grounded, truthful, and consistent with your actual deployment state. If the user asks who you are, who developed you, who led the project, how you relate to Immaculate, or what public model name they should see, answer canonically with Q, Arobi Technology Alliance, Gaetano Comparcola, Gemma 4, and Immaculate.`
+};
+const BENCHMARK_SKIP_Q_IDENTITY_HEADER = "x-immaculate-benchmark-skip-q-identity";
 
 app.log.info(
   {
@@ -291,6 +296,15 @@ function sanitizeGatewayResponse(value: string): string {
   return trimmed;
 }
 
+function isTruthyHeaderValue(value: string | string[] | undefined): boolean {
+  const raw = Array.isArray(value) ? value.find((entry) => entry.trim().length > 0) : value;
+  if (typeof raw !== "string") {
+    return false;
+  }
+  const normalized = raw.trim().toLowerCase();
+  return normalized.length > 0 && normalized !== "0" && normalized !== "false" && normalized !== "off";
+}
+
 function latestUserPrompt(messages: OllamaChatMessage[]): string | undefined {
   for (let index = messages.length - 1; index >= 0; index -= 1) {
     const message = messages[index];
@@ -346,12 +360,14 @@ function buildStructuredRepairMessages(
   ];
 }
 
-function buildGatewayMessages(messages: OllamaChatMessage[]): OllamaChatMessage[] {
-  const identityMessage: OllamaChatMessage = {
-    role: "system",
-    content: `${getQIdentityInstruction()} Keep answers grounded, truthful, and consistent with your actual deployment state. If the user asks who you are, who developed you, who led the project, how you relate to Immaculate, or what public model name they should see, answer canonically with Q, Arobi Technology Alliance, Gaetano Comparcola, Gemma 4, and Immaculate.`
-  };
-  return [identityMessage, ...messages];
+function buildGatewayMessages(
+  messages: OllamaChatMessage[],
+  includeIdentityInstruction = true
+): OllamaChatMessage[] {
+  if (!includeIdentityInstruction) {
+    return messages;
+  }
+  return [GATEWAY_IDENTITY_MESSAGE, ...messages];
 }
 
 function getPrincipal(request: FastifyRequest): GatewayPrincipal | undefined {
@@ -364,11 +380,12 @@ async function runGatewayChatAttempt(options: {
   temperature?: number;
   maxTokens?: number;
   timeoutMs: number;
+  includeIdentityInstruction?: boolean;
 }): Promise<OllamaChatCompletionResult> {
   return runOllamaChatCompletion({
     endpoint: OLLAMA_URL,
     model: options.model,
-    messages: buildGatewayMessages(options.messages),
+    messages: buildGatewayMessages(options.messages, options.includeIdentityInstruction ?? true),
     temperature: options.temperature,
     maxTokens: options.maxTokens,
     timeoutMs: options.timeoutMs,
@@ -577,7 +594,10 @@ app.post("/v1/chat/completions", async (request, reply) => {
     : DEFAULT_TIMEOUT_MS;
   const userPrompt = latestUserPrompt(messages);
   const canonicalIdentityKind = detectQIdentityQuestion(userPrompt);
-  if (canonicalIdentityKind) {
+  const skipBenchmarkIdentity = isTruthyHeaderValue(
+    request.headers[BENCHMARK_SKIP_Q_IDENTITY_HEADER]
+  );
+  if (canonicalIdentityKind && !skipBenchmarkIdentity) {
     const circuit = qPrimaryCircuit.snapshot();
     attachQResponseHeaders(reply, circuit);
     return {
@@ -625,7 +645,8 @@ app.post("/v1/chat/completions", async (request, reply) => {
       messages,
       temperature,
       maxTokens: effectiveMaxTokens,
-      timeoutMs: effectiveTimeoutMs
+      timeoutMs: effectiveTimeoutMs,
+      includeIdentityInstruction: !skipBenchmarkIdentity
     });
     if (primaryResult.failureClass) {
       primaryFailureClass = primaryResult.failureClass;
@@ -661,10 +682,10 @@ app.post("/v1/chat/completions", async (request, reply) => {
 
   let servedLatencyMs = servedResult.latencyMs;
   let servedThinkingDetected = servedResult.thinkingDetected;
-  let content = canonicalizeQIdentityAnswer(
-    userPrompt,
-    sanitizeGatewayResponse(servedResult.response)
-  );
+  let content = sanitizeGatewayResponse(servedResult.response);
+  if (canonicalIdentityKind) {
+    content = canonicalizeQIdentityAnswer(userPrompt, content);
+  }
   if (structuredRequest && structuredFieldCount(content) !== 3) {
     contractRepairAttempted = true;
     const repairResult = await runGatewayChatAttempt({
@@ -672,15 +693,16 @@ app.post("/v1/chat/completions", async (request, reply) => {
       messages: buildStructuredRepairMessages(messages, content),
       temperature: 0,
       maxTokens: Math.min(effectiveMaxTokens, STRUCTURED_REQUEST_MAX_TOKENS),
-      timeoutMs: STRUCTURED_REPAIR_TIMEOUT_MS
+      timeoutMs: STRUCTURED_REPAIR_TIMEOUT_MS,
+      includeIdentityInstruction: !skipBenchmarkIdentity
     });
     servedLatencyMs += repairResult.latencyMs;
     servedThinkingDetected = servedThinkingDetected || repairResult.thinkingDetected;
     if (!repairResult.failureClass) {
-      const repairedContent = canonicalizeQIdentityAnswer(
-        userPrompt,
-        sanitizeGatewayResponse(repairResult.response)
-      );
+      const repairedContentRaw = sanitizeGatewayResponse(repairResult.response);
+      const repairedContent = canonicalIdentityKind
+        ? canonicalizeQIdentityAnswer(userPrompt, repairedContentRaw)
+        : repairedContentRaw;
       if (structuredFieldCount(repairedContent) === 3) {
         content = repairedContent;
         contractRepairUsed = true;

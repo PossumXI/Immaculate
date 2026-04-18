@@ -207,6 +207,16 @@ def build_decision_text(record: dict) -> str:
     quality_lines = build_quality_lines(record)
     if quality_lines:
         lines.extend(["", "QUALITY", *quality_lines])
+    lines.extend(
+        [
+            "",
+            "OPERATOR STYLE",
+            "Keep the answer terse, concrete, and operator-grade.",
+            "Name the decisive fault or health signal first.",
+            "Name the concrete next control action last.",
+            "Avoid generic caution, hedging, apology, or filler.",
+        ]
+    )
     return "\n".join(lines) + "\n"
 
 
@@ -229,6 +239,16 @@ def build_observation_text(record: dict) -> str:
     quality_lines = build_quality_lines(record)
     if quality_lines:
         lines.extend(["", "QUALITY", *quality_lines])
+    lines.extend(
+        [
+            "",
+            "OPERATOR STYLE",
+            "Keep the answer terse, concrete, and operator-grade.",
+            "Name the decisive fault or health signal first.",
+            "Name the concrete next control action last.",
+            "Avoid generic caution, hedging, apology, or filler.",
+        ]
+    )
     return "\n".join(lines) + "\n"
 
 

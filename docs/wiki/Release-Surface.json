@@ -1,27 +1,27 @@
 {
-  "generatedAt": "2026-04-18T01:41:13.234Z",
+  "generatedAt": "2026-04-18T02:48:52.445Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "4d810449e49b887238564998aa6a731df03913bb",
-    "gitShortSha": "4d81044",
+    "gitSha": "35ab7e86c80ec367751e8bbc900d14042a3950de",
+    "gitShortSha": "35ab7e8",
     "gitBranch": "harbor-q-push",
-    "buildId": "0.1.0+4d81044",
+    "buildId": "0.1.0+35ab7e8",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
       "trainingLock": {
-        "generatedAt": "2026-04-18T01:28:24Z",
+        "generatedAt": "2026-04-18T02:33:22Z",
         "lockVersion": 1,
-        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v15-4d81044-ac6ea0d1",
-        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v15",
+        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16-35ab7e8-de7361fa",
+        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16",
         "modelName": "Q",
-        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v15.jsonl",
-        "trainDatasetSha256": "ac6ea0d1d16e5eb854ddb997be65d2a521d623837760016b75c3cff42b61afe0",
+        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16.jsonl",
+        "trainDatasetSha256": "de7361fa5b5f86a3475d5e6b1e25b00cf23b62ba0588bc5677b745e081542fb1",
         "trainDatasetRowCount": 109,
-        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v15.manifest.json",
-        "mixManifestSha256": "d9c6edaad9dbadd4249d7cfdfe42982be86e2d430cd6946ad3ce750c5954260c",
+        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16.manifest.json",
+        "mixManifestSha256": "3c12ca648d820cc2f7f0a32fe5d32d9fa3c9ff400c59097a68ea451283700aa4",
         "mixSupplementalCount": 5,
         "mixSupplementalPaths": [
           "training/q/q_harness_identity_seed.json",
@@ -34,14 +34,14 @@
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-18T01:28:37Z",
-        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v15",
-        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v15/hybrid-session.json",
+        "generatedAt": "2026-04-18T02:39:32Z",
+        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v16",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v16/hybrid-session.json",
         "localStatus": "ready",
         "cloudStatus": "ready",
         "cloudProvider": "hf_jobs",
-        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v15-4d81044-ac6ea0d1",
-        "immaculateBundleId": "immaculate-orchestration-4d81044-ec4b3cb6",
+        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16-35ab7e8-de7361fa",
+        "immaculateBundleId": "immaculate-orchestration-35ab7e8-ec4b3cb6",
         "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
       }
     }
@@ -65,7 +65,7 @@
     {
       "label": "Q readiness gate",
       "path": "docs\\wiki\\Q-Readiness-Gate.json",
-      "generatedAt": "2026-04-18T01:31:47.686Z"
+      "generatedAt": "2026-04-18T02:48:52.147Z"
     },
     {
       "label": "Q gateway validation",
@@ -75,12 +75,12 @@
     {
       "label": "Q gateway substrate",
       "path": "docs\\wiki\\Q-Gateway-Substrate.json",
-      "generatedAt": "2026-04-18T01:33:34.425Z"
+      "generatedAt": "2026-04-18T02:48:37.213Z"
     },
     {
       "label": "Q mediation drift",
       "path": "docs\\wiki\\Q-Mediation-Drift.json",
-      "generatedAt": "2026-04-18T01:33:34.477Z"
+      "generatedAt": "2026-04-18T02:48:36.533Z"
     },
     {
       "label": "Q API audit",
@@ -90,27 +90,27 @@
     {
       "label": "Q hybrid training",
       "path": "docs\\wiki\\Q-Hybrid-Training.json",
-      "generatedAt": "2026-04-18T01:28:37Z"
+      "generatedAt": "2026-04-18T02:39:32Z"
     },
     {
       "label": "HF Jobs training",
       "path": "docs\\wiki\\HF-Jobs-Training.json",
-      "generatedAt": "2026-04-18T01:29:44Z"
+      "generatedAt": "2026-04-18T02:38:38Z"
     },
     {
       "label": "Colab free training",
       "path": "docs\\wiki\\Colab-Free-Training.json",
-      "generatedAt": "2026-04-18T01:29:32Z"
+      "generatedAt": "2026-04-18T02:39:29Z"
     },
     {
       "label": "Cloudflare Q inference",
       "path": "docs\\wiki\\Cloudflare-Q-Inference.json",
-      "generatedAt": "2026-04-17T10:10:15Z"
+      "generatedAt": "2026-04-18T02:38:25Z"
     },
     {
       "label": "OCI GPU advisor",
       "path": "docs\\wiki\\OCI-GPU-Advisor.json",
-      "generatedAt": "2026-04-18T01:28:37Z"
+      "generatedAt": "2026-04-18T02:39:32Z"
     },
     {
       "label": "OCI region capacity",
@@ -120,32 +120,32 @@
     {
       "label": "Q benchmark corpus",
       "path": "docs\\wiki\\Q-Benchmark-Corpus.json",
-      "generatedAt": "2026-04-18T01:28:25Z"
+      "generatedAt": "2026-04-18T02:48:27Z"
     },
     {
       "label": "Q failure corpus",
       "path": "docs\\wiki\\Q-Failure-Corpus.json",
-      "generatedAt": "2026-04-18T01:28:24Z"
+      "generatedAt": "2026-04-18T02:48:27Z"
     },
     {
       "label": "Q benchmark promotion",
       "path": "docs\\wiki\\Q-Benchmark-Promotion.json",
-      "generatedAt": "2026-04-18T01:28:24Z"
+      "generatedAt": "2026-04-18T02:33:22Z"
     },
     {
       "label": "W&B benchmark export",
       "path": "docs\\wiki\\Benchmark-Wandb-Export.json",
-      "generatedAt": "2026-04-17T10:28:04.992947+00:00"
+      "generatedAt": "2026-04-17T20:58:29.164321+00:00"
     },
     {
       "label": "Harbor terminal bench",
       "path": "docs\\wiki\\Harbor-Terminal-Bench.json",
-      "generatedAt": "2026-04-18T01:29:50.329Z"
+      "generatedAt": "2026-04-18T01:43:40.336Z"
     },
     {
       "label": "Terminal-Bench receipt",
       "path": "docs\\wiki\\Terminal-Bench-Receipt.json",
-      "generatedAt": "2026-04-18T01:29:50.255Z"
+      "generatedAt": "2026-04-18T01:43:40.315Z"
     },
     {
       "label": "GitHub checks receipt",
@@ -164,8 +164,8 @@
     }
   ],
   "cloudflare": {
-    "generatedAt": "2026-04-17T10:10:15Z",
-    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v13",
+    "generatedAt": "2026-04-18T02:38:25Z",
+    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v16",
     "status": "auth-blocked",
     "authReady": false,
     "adapterReady": false,

@@ -17,14 +17,14 @@ If you want the fastest plain-English benchmark summary, read [[Harbor-Terminal-
 Right now the honest story is:
 
 - Q parses both tracked local contract lanes cleanly: `4/4` on [[Model-Benchmark-Comparison]] and `4/4` on [[BridgeBench]]
-- the hard `Q` mediation drift lane is green: four mixed-pressure scenarios, `0` failed assertions, route-alignment `P50 1`, runner-path `P95 7.43 ms`, and explicit Q plus Immaculate self-evaluation on every scenario; the exact trace lives on [[Q-Mediation-Drift]]
-- the new `Q` substrate benchmark is fully green: the dedicated Q gateway stayed live, rejected unauthenticated traffic, preserved `ROUTE/REASON/COMMIT`, and handed the work back into Immaculate arbitration with `0` failed assertions; current seam timing is gateway `P95 30018.66 ms` and arbitration `P95 2.04 ms` on [[Q-Gateway-Substrate]]
+- the hard `Q` mediation drift lane is green on the active `bench-v16` lock: four mixed-pressure scenarios, `0` failed assertions, route-alignment `P50 1`, runner-path `P95 24.61 ms`, and explicit Q plus Immaculate self-evaluation on every scenario; the exact trace lives on [[Q-Mediation-Drift]]
+- the new `Q` substrate benchmark is fully green: the dedicated Q gateway stayed live, rejected unauthenticated traffic, preserved `ROUTE/REASON/COMMIT`, and handed the work back into Immaculate arbitration with `0` failed assertions; current seam timing is gateway `P95 28012.43 ms` and arbitration `P95 2.66 ms` on [[Q-Gateway-Substrate]]
 - the dedicated Q gateway contract is also green: `/health 200`, authenticated `/api/q/info 200`, authenticated `/v1/models 200`, authenticated chat `200`, bounded `429` concurrency rejection, and a canonical identity smoke that answers as `Q`, `Arobi Technology Alliance`, `Gaetano Comparcola`, `Gemma 4`, and `Immaculate`; the exact current gateway overhead lives on [[Q-Gateway-Validation]]
 - the live `Q` API audit loop is now real: rejected and failed `/api/q/run` calls are written into a tracked audit spool, surfaced in [[Q-API-Audit]], and promoted into the strict failure corpus instead of being lost in runtime logs
 - Q is materially better on the Harbor operator pack, but it still loses points on grounding and operator wording: `0.950` on `q-structured-contract` and `0.925` on `immaculate-bridge-fail-closed`
 - the public Terminal-Bench receipt is still a real failing benchmark at `0.000`, and that failure now stays in the tracked Q repair loop instead of getting buried in marketing copy
-- the current Q improvement path is concrete and machine-stamped: the active Q bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v15-4d81044-ac6ea0d1`, the current benchmark corpus is `54` rows, the strict failure corpus is `6` rows, and the paired Immaculate orchestration bundle all live on [[Release-Surface]], [[Q-Benchmark-Corpus]], and [[Q-Failure-Corpus]]
-- the current cloud truth is also concrete: the promoted HF Jobs bundle is staged and authenticated on the real account, the launch lane is ready when you want it, and the Cloudflare inference lane is still blocked on auth and adapter export even though the profile and eval bundle are ready
+- the current Q improvement path is concrete and machine-stamped: the active Q bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16-35ab7e8-de7361fa`, the current benchmark corpus is `54` rows, the strict failure corpus is `6` rows, and the paired Immaculate orchestration bundle all live on [[Release-Surface]], [[Q-Benchmark-Corpus]], and [[Q-Failure-Corpus]]
+- the current cloud truth is also concrete: the promoted HF Jobs bundle is staged and authenticated on the real account for `bench-v16`, the launch lane is ready when you want it, and the Cloudflare inference lane is still blocked on auth and adapter export even though the profile and eval bundle are ready
 - Immaculate now treats healthy local Q as a first-class governed routing directive, so blocked cloud status no longer forces a false guarded hold when the local Q lane is already healthy
 
 ## What This Project Actually Prioritizes
@@ -67,7 +67,7 @@ Right now the honest story is:
 - [[Engineering-Doctrine]] defines the standing build philosophy and what qualifies as a real leap
 - [[Benchmark-Status]] points to the live public W&B project plus the latest published benchmark runs by pack
 - [[Benchmark-Wandb-Export]] is the committed pull-back from W&B itself, so benchmark results live in git wiki even when the W&B project stays private
-- the latest tracked W&B export is currently stamped on `2026-04-17`; if you see `2026-04-12`, you are looking at the historical hour-class soak lane rather than the newest published W&B result
+- the latest tracked W&B export is currently stamped on `2026-04-17`; the latest local mediation/substrate reruns are `2026-04-18`, so if you see `2026-04-12`, you are looking at the historical hour-class soak lane rather than the newest published W&B result
 - [[Harbor-Terminal-Bench]] records the repo-local Harbor task pack, the executed Q gateway scores, and the latest Harbor truth boundary
 - [[Terminal-Bench-Receipt]] records the official public-task Terminal-Bench receipt submission PR for the real `Q` lane; it is one public receipt on the official leaderboard repo, not a full leaderboard sweep
 - [[GitHub-Checks-Receipt]] records a raw GitHub REST verification of workflow-runs and check-runs when classic status contexts are empty, so release claims are tied to the checks GitHub Actions actually publishes

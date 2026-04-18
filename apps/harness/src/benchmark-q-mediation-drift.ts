@@ -58,6 +58,9 @@ type QMediationDriftScenarioResult = {
   qOnlyLayerSelection: boolean;
   selectedLayerCount: number;
   driftDetected: boolean;
+  qRoutingDirective: "primary-governed-local" | "guarded-hold";
+  mediationDiagnosticSummary: string;
+  mediationDiagnosticSignals: string[];
   qSelfEvaluation: string;
   immaculateSelfEvaluation: string;
   responsePreview: string;
@@ -246,6 +249,8 @@ function truncate(value: string, limit = 220): string {
   }
   return `${normalized.slice(0, Math.max(0, limit - 1)).trimEnd()}…`;
 }
+
+type BenchmarkSnapshot = ReturnType<typeof buildScenarioSnapshot>;
 
 async function allocateTcpPort(): Promise<number> {
   return new Promise((resolve, reject) => {
@@ -483,21 +488,27 @@ function buildScenarioSnapshot() {
   };
 }
 
+function buildBenchmarkChatHeaders(authorization: string): Record<string, string> {
+  return {
+    Authorization: authorization,
+    "content-type": "application/json",
+    "x-immaculate-benchmark-skip-q-identity": "1"
+  };
+}
+
 async function runScenario(options: {
   gatewayUrl: string;
   authorization: string;
   qTrainingBundleId?: string;
   scenario: ScenarioDefinition;
+  snapshot: BenchmarkSnapshot;
   adapters: ActuationAdapterState[];
   transports: ActuationTransportState[];
 }): Promise<QMediationDriftScenarioResult> {
   const prompt = buildStructuredPrompt(options.scenario);
   const chat = await checkHttp(`${options.gatewayUrl}/v1/chat/completions`, {
     method: "POST",
-    headers: {
-      Authorization: options.authorization,
-      "content-type": "application/json"
-    },
+    headers: buildBenchmarkChatHeaders(options.authorization),
     body: JSON.stringify({
       model: getQModelName(),
       stream: false,
@@ -524,7 +535,7 @@ async function runScenario(options: {
   const structuredFieldCount = [routeSuggestion, reasonSummary, commitStatement].filter(Boolean).length;
   const parseSuccess = chat.status === 200 && structuredFieldCount === 3;
 
-  const snapshot = buildScenarioSnapshot();
+  const snapshot = options.snapshot;
   const baseFrame = snapshot.neuroFrames[0];
   const baseExecution = snapshot.cognitiveExecutions[0];
   const frame = {
@@ -541,7 +552,17 @@ async function runScenario(options: {
     qRoutingDirective: options.scenario.qRoutingDirective,
     cloudLaneReady: false,
     cloudLaneStatus: "launch-blocked",
-    trainingBundleId: options.qTrainingBundleId
+    trainingBundleId: options.qTrainingBundleId,
+    mediationDiagnosticSummary:
+      options.scenario.qRoutingDirective === "primary-governed-local"
+        ? "Q should stay primary because the local governed lane is healthy while cloud Q is blocked."
+        : "Immaculate should hold or degrade because readiness or gateway substrate is not healthy enough for governed local cognition.",
+    mediationDiagnosticSignals: [
+      `readiness=${options.scenario.readinessReady ? "ready" : "not-ready"}`,
+      `substrate=${options.scenario.gatewaySubstrateHealthy ? "healthy" : "degraded"}`,
+      "cloud=blocked",
+      `directive=${options.scenario.qRoutingDirective}`
+    ]
   };
   const completedAt = new Date().toISOString();
   const execution = {
@@ -703,6 +724,7 @@ async function runScenario(options: {
       "Scheduling widened beyond Q-backed layers while the governed local Q lane was healthy."
     );
   }
+  const mediationDiagnosticSummary = qContext.mediationDiagnosticSummary;
   const driftDetected =
     !parseSuccess ||
     !routeAligned ||
@@ -711,12 +733,12 @@ async function runScenario(options: {
     (options.scenario.qRoutingDirective === "primary-governed-local" && !qOnlyLayerSelection);
   const qSelfEvaluation =
     qDriftReasons.length > 0
-      ? qDriftReasons.join(" ")
-      : "Q preserved the governed ROUTE/REASON/COMMIT contract without repair."
+      ? `${mediationDiagnosticSummary} ${qDriftReasons.join(" ")}`
+      : `${mediationDiagnosticSummary} Q preserved the governed ROUTE/REASON/COMMIT contract without repair.`
   const immaculateSelfEvaluation =
     immaculateDriftReasons.length > 0
-      ? immaculateDriftReasons.join(" ")
-      : "Immaculate preserved Q's governed route through arbitration, scheduling, and routing.";
+      ? `${mediationDiagnosticSummary} ${immaculateDriftReasons.join(" ")}`
+      : `${mediationDiagnosticSummary} Immaculate preserved Q's governed route through arbitration, scheduling, and routing.`;
 
   return {
     id: options.scenario.id,
@@ -744,6 +766,9 @@ async function runScenario(options: {
     qOnlyLayerSelection,
     selectedLayerCount: selectedLayers.length,
     driftDetected,
+    qRoutingDirective: options.scenario.qRoutingDirective,
+    mediationDiagnosticSummary,
+    mediationDiagnosticSignals: qContext.mediationDiagnosticSignals,
     qSelfEvaluation,
     immaculateSelfEvaluation,
     responsePreview: truncate(rawContent || JSON.stringify(responseBody)),
@@ -785,6 +810,7 @@ export async function runQMediationDriftBenchmark(options: {
   const actuationManager = await createActuationManager(actuationRuntimeDir);
   const adapters = actuationManager.listAdapters();
   const transports = actuationManager.listTransports();
+  const snapshot = buildScenarioSnapshot();
 
   const child = startGatewayProcess({
     repoRoot: options.repoRoot,
@@ -829,6 +855,7 @@ export async function runQMediationDriftBenchmark(options: {
           authorization,
           qTrainingBundleId: release.q.trainingLock?.bundleId,
           scenario,
+          snapshot,
           adapters,
           transports
         })

@@ -1,18 +1,18 @@
 {
-  "generatedAt": "2026-04-17T10:10:15Z",
+  "generatedAt": "2026-04-18T02:38:25Z",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "848d44f8dbe409a8227bab61f88eccbf078dd056",
-    "gitShortSha": "848d44f",
-    "buildId": "0.1.0+848d44f"
+    "gitSha": "35ab7e86c80ec367751e8bbc900d14042a3950de",
+    "gitShortSha": "35ab7e8",
+    "buildId": "0.1.0+35ab7e8"
   },
-  "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v13",
-  "sessionPath": ".training-output/q/latest-hybrid-session.json",
+  "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v16",
+  "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v16/hybrid-session.manifest.json",
   "auth": {
     "accountIdReady": false,
     "apiTokenReady": false,
     "envFiles": [
-      "deploy/cloudflare/env/immaculate-q-cloudflare.env.example"
+      "C:/Users/Knight/Desktop/cheeks/Asgard/.env"
     ]
   },
   "gateway": {
@@ -22,12 +22,12 @@
     "metadataLimit": 5
   },
   "profile": {
-    "generatedAt": "2026-04-17T10:10:13Z",
-    "profileId": "q-cloudflare-profile-848d44f",
+    "generatedAt": "2026-04-18T02:38:23Z",
+    "profileId": "q-cloudflare-profile-35ab7e8",
     "qName": "Q",
-    "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d",
-    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v13",
-    "buildId": "0.1.0+848d44f",
+    "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16-35ab7e8-de7361fa",
+    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v16",
+    "buildId": "0.1.0+35ab7e8",
     "rules": [
       {
         "id": "bridge-trust",
@@ -60,20 +60,20 @@
     }
   },
   "adapter": {
-    "generatedAt": "2026-04-17T10:10:14Z",
-    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v13",
+    "generatedAt": "2026-04-18T02:38:23Z",
+    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v16",
     "ready": false,
     "checkOnly": true,
-    "sourceDir": ".training-output/q/runs/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13",
+    "sourceDir": ".training-output/q/runs/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16",
     "trainingLockPath": ".training-output/q/latest-training-lock.json",
     "adapterConfigPath": null,
     "adapterWeightsPath": null,
     "weightsSizeBytes": null,
     "weightsSizeMb": null,
-    "outputDir": ".training-output/q/cloudflare/q-hybrid-harbor-opt-2384cf5-bench-v13/adapter",
+    "outputDir": ".training-output/q/cloudflare/q-hybrid-harbor-opt-2384cf5-bench-v16/adapter",
     "exportedPaths": [],
     "blockers": [
-      "Adapter source directory is missing: .training-output/q/runs/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13",
+      "Adapter source directory is missing: .training-output/q/runs/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16",
       "adapter_config.json is missing from the candidate adapter source.",
       "adapter_model.safetensors is missing from the candidate adapter source."
     ]
@@ -81,9 +81,9 @@
   "evalBundle": {
     "ready": true,
     "recordCount": 24,
-    "availableRecordCount": 49,
-    "jsonlPath": ".training-output/q/cloudflare/q-hybrid-harbor-opt-2384cf5-bench-v13/eval/cloudflare-q-eval-bundle.jsonl",
-    "manifestPath": ".training-output/q/cloudflare/q-hybrid-harbor-opt-2384cf5-bench-v13/eval/cloudflare-q-eval-bundle.json",
+    "availableRecordCount": 54,
+    "jsonlPath": ".training-output/q/cloudflare/q-hybrid-harbor-opt-2384cf5-bench-v16/eval/cloudflare-q-eval-bundle.jsonl",
+    "manifestPath": ".training-output/q/cloudflare/q-hybrid-harbor-opt-2384cf5-bench-v16/eval/cloudflare-q-eval-bundle.json",
     "sourceSurfaceCounts": {
       "bridgebench": 3,
       "bridgebench-soak": 1,
@@ -91,8 +91,9 @@
       "harbor-terminal-bench-soak": 4,
       "model-comparison": 3,
       "q-gateway-substrate": 1,
-      "q-harness-identity-seed": 4,
-      "q-immaculate-reasoning-seed": 6
+      "q-harness-identity-seed": 3,
+      "q-immaculate-reasoning-seed": 6,
+      "q-mediation-drift": 1
     },
     "selectionGroupCounts": {
       "bridgebench-soak:benchmark_observation:completed": 1,
@@ -102,9 +103,10 @@
       "harbor-terminal-bench:benchmark_observation:degraded": 2,
       "model-comparison:decision_triplet:completed": 3,
       "q-gateway-substrate:benchmark_observation:completed": 1,
-      "q-harness-identity-seed:benchmark_observation:curated": 4,
+      "q-harness-identity-seed:benchmark_observation:curated": 3,
       "q-immaculate-reasoning-seed:benchmark_observation:curated": 3,
-      "q-immaculate-reasoning-seed:decision_triplet:curated": 3
+      "q-immaculate-reasoning-seed:decision_triplet:curated": 3,
+      "q-mediation-drift:benchmark_observation:completed": 1
     }
   },
   "worker": {
@@ -151,7 +153,7 @@
     "recommendedNextStep": "Set CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN, and CLOUDFLARE_Q_BASE_MODEL, then rerun the Cloudflare inference check."
   },
   "output": {
-    "sessionJsonPath": ".training-output/q/cloudflare-q-inference.json",
+    "sessionJsonPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v16/cloudflare-q-inference.json",
     "wikiJsonPath": "docs/wiki/Cloudflare-Q-Inference.json",
     "wikiMarkdownPath": "docs/wiki/Cloudflare-Q-Inference.md"
   }

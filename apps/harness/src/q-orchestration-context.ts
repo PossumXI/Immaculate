@@ -88,6 +88,8 @@ export type QOrchestrationContext = {
   orchestrationDoctrine: string;
   operatorDisciplineSummary: string;
   reasoningDirective: string;
+  mediationDiagnosticSummary: string;
+  mediationDiagnosticSignals: string[];
   knownWeaknesses: string[];
   failureClassHints: string[];
   trainingBundleId?: string;
@@ -217,6 +219,18 @@ export async function resolveQOrchestrationContext(
   const gatewaySubstrateHealthy = (substrate?.benchmark?.failedAssertions ?? 1) === 0;
   const qRoutingDirective: QOrchestrationContext["qRoutingDirective"] =
     readinessReady && gatewaySubstrateHealthy ? "primary-governed-local" : "guarded-hold";
+  const mediationDiagnosticSignals = [
+    `readiness=${readinessReady ? "ready" : "not-ready"}`,
+    `substrate=${gatewaySubstrateHealthy ? "healthy" : "degraded"}`,
+    `cloud=${cloud?.summary?.ready ? "ready" : "blocked"}`,
+    `directive=${qRoutingDirective}`
+  ];
+  const mediationDiagnosticSummary =
+    qRoutingDirective === "primary-governed-local"
+      ? cloud?.summary?.ready
+        ? "Q should stay primary because the local governed lane is healthy and cloud Q is also ready."
+        : "Q should stay primary because the local governed lane is healthy while cloud Q is blocked."
+      : "Immaculate should hold or degrade because readiness or gateway substrate is not healthy enough for governed local cognition.";
 
   const harborStructuredScore =
     harbor?.tasks?.find((task) => task.id === "q-structured-contract")?.qGateway?.score;
@@ -291,6 +305,8 @@ export async function resolveQOrchestrationContext(
     orchestrationDoctrine: `${getImmaculateHarnessName()} should route context into ${getQModelName()}, enforce policy and arbitration around it, preserve durable receipts, and prefer the healthy local Q lane before any blocked cloud lane.`,
     operatorDisciplineSummary,
     reasoningDirective,
+    mediationDiagnosticSummary,
+    mediationDiagnosticSignals,
     knownWeaknesses,
     failureClassHints,
     trainingBundleId: release.q.trainingLock?.bundleId,

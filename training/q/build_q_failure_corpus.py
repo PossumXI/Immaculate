@@ -85,6 +85,16 @@ def collect_reward_gap_notes(reward_details: dict | None) -> list[str]:
     return notes
 
 
+def operator_style_lines() -> list[str]:
+    return [
+        "OPERATOR STYLE",
+        "Keep the answer terse, concrete, and operator-grade.",
+        "Name the decisive fault or health signal first.",
+        "Name the concrete next control action last.",
+        "Avoid generic caution, hedging, apology, or filler.",
+    ]
+
+
 def length_bucket(value: str) -> str:
     length = len(value.strip())
     if length == 0:
@@ -155,6 +165,8 @@ def build_failure_text(source: str, task: dict) -> str:
         f"{observed_heading}\n"
         + "\n".join(observed_lines)
         + "\n\n"
+        + "\n".join(operator_style_lines())
+        + "\n\n"
         "RESPONSE CONTRACT\n"
         "ROUTE: reflex, cognitive, guarded, or suppressed.\n"
         "REASON: one sentence.\n"
@@ -183,6 +195,8 @@ def build_terminal_bench_failure_text(receipt: dict) -> str:
         "failure_class=terminal_bench_public_task_underperforming\n"
         "status=official-receipt\n"
         f"preview={preview}\n\n"
+        + "\n".join(operator_style_lines())
+        + "\n\n"
         "RESPONSE CONTRACT\n"
         "ROUTE: reflex, cognitive, guarded, or suppressed.\n"
         "REASON: one sentence.\n"
@@ -210,7 +224,20 @@ def build_harbor_failure_text(
     ]
     if facts:
         lines.extend(["", "REFERENCE FACTS", *facts])
-    lines.extend(["", "OBSERVED FAILURE", *observed_lines, "", "RESPONSE CONTRACT", "ROUTE: reflex, cognitive, guarded, or suppressed.", "REASON: one sentence.", "COMMIT: one sentence."])
+    lines.extend(
+        [
+            "",
+            "OBSERVED FAILURE",
+            *observed_lines,
+            "",
+            *operator_style_lines(),
+            "",
+            "RESPONSE CONTRACT",
+            "ROUTE: reflex, cognitive, guarded, or suppressed.",
+            "REASON: one sentence.",
+            "COMMIT: one sentence.",
+        ]
+    )
     return "\n".join(lines) + "\n"
 
 
@@ -249,6 +276,8 @@ def build_q_gateway_substrate_failure_text(report: dict, assertion: dict | None,
         )
     parts.extend(
         [
+            "",
+            *operator_style_lines(),
             "",
             "RESPONSE CONTRACT",
             "ROUTE: reflex, cognitive, guarded, or suppressed.",
@@ -382,6 +411,8 @@ def build_q_api_failure_text(record: dict) -> str:
         "OBSERVED FAILURE\n"
         + "\n".join(observed_lines)
         + "\n\n"
+        + "\n".join(operator_style_lines())
+        + "\n\n"
         "RESPONSE CONTRACT\n"
         "ROUTE: reflex, cognitive, guarded, or suppressed.\n"
         "REASON: one sentence.\n"
@@ -416,6 +447,8 @@ def build_q_mediation_drift_failure_text(report: dict, assertion: dict | None) -
         )
     parts.extend(
         [
+            "",
+            *operator_style_lines(),
             "",
             "RESPONSE CONTRACT",
             "ROUTE: reflex, cognitive, guarded, or suppressed.",

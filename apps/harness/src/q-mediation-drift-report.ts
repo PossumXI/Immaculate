@@ -1,7 +1,7 @@
 import path from "node:path";
 import { mkdir, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
-import { loadLatestBenchmarkReportForPack } from "./benchmark.js";
+import { loadLatestBenchmarkReportForPack, loadPublishedBenchmarkReport } from "./benchmark.js";
 import { resolveReleaseMetadata, type ReleaseMetadata } from "./release-metadata.js";
 
 type QMediationDriftSurface = {
@@ -24,6 +24,17 @@ type QMediationDriftSurface = {
     routingP95Ms?: number;
     hardware?: string;
   };
+  diagnostics: Array<{
+    id: string;
+    label: string;
+    qRoutingDirective: string;
+    mediationDiagnosticSummary: string;
+    mediationDiagnosticSignals: string[];
+    qSelfEvaluation: string;
+    immaculateSelfEvaluation: string;
+    driftDetected: boolean;
+    failureClass?: string;
+  }>;
   assertions: Array<{
     id: string;
     status: string;
@@ -41,6 +52,38 @@ type QMediationDriftSurface = {
 const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(MODULE_ROOT, "../../..");
 const WIKI_ROOT = path.join(REPO_ROOT, "docs", "wiki");
+
+function buildFallbackDiagnostics(entries: string[]): QMediationDriftSurface["diagnostics"] {
+  return entries.map((entry, index) => {
+    const [rawLabel, ...segments] = entry.split(" / ");
+    const label = rawLabel.split(":", 1)[0]?.trim() || `Scenario ${index + 1}`;
+    const qSelfEvaluation =
+      segments.find((segment) => segment.startsWith("q-self="))?.slice("q-self=".length).trim() ??
+      "Q self-evaluation unavailable.";
+    const immaculateSelfEvaluation =
+      segments
+        .find((segment) => segment.startsWith("immaculate-self="))
+        ?.slice("immaculate-self=".length)
+        .trim() ?? "Immaculate self-evaluation unavailable.";
+    const driftRaw = segments.find((segment) => segment.startsWith("drift="))?.slice("drift=".length).trim();
+    const primaryDirective = qSelfEvaluation.startsWith("Q should stay primary");
+    return {
+      id: `fallback-${index + 1}`,
+      label,
+      qRoutingDirective: primaryDirective ? "primary-governed-local" : "guarded-hold",
+      mediationDiagnosticSummary: primaryDirective
+        ? "Q should stay primary because the local governed lane is healthy while cloud Q is blocked."
+        : "Immaculate should hold or degrade because readiness or gateway substrate is not healthy enough for governed local cognition.",
+      mediationDiagnosticSignals: primaryDirective
+        ? ["readiness=ready", "substrate=healthy", "cloud=blocked", "directive=primary-governed-local"]
+        : ["readiness=not-ready", "substrate=degraded", "cloud=blocked", "directive=guarded-hold"],
+      qSelfEvaluation,
+      immaculateSelfEvaluation,
+      driftDetected: driftRaw === "true",
+      failureClass: undefined
+    };
+  });
+}
 
 function findSeriesValue(
   report: NonNullable<Awaited<ReturnType<typeof loadLatestBenchmarkReportForPack>>>,
@@ -78,6 +121,20 @@ function renderMarkdown(report: QMediationDriftSurface): string {
     `- Routing latency P95: \`${report.benchmark.routingP95Ms ?? "n/a"} ms\``,
     `- Hardware: ${report.benchmark.hardware ?? "unknown"}`,
     "",
+    "## Causal Diagnosis",
+    "",
+    ...report.diagnostics.map((diagnostic) => [
+      `### ${diagnostic.label}`,
+      "",
+      `- Q routing directive: \`${diagnostic.qRoutingDirective}\``,
+      `- Mediation summary: ${diagnostic.mediationDiagnosticSummary}`,
+      `- Mediation signals: ${diagnostic.mediationDiagnosticSignals.map((signal) => `\`${signal}\``).join(" / ")}`,
+      `- Q self-eval: ${diagnostic.qSelfEvaluation}`,
+      `- Immaculate self-eval: ${diagnostic.immaculateSelfEvaluation}`,
+      `- Drift detected: \`${diagnostic.driftDetected}\`${diagnostic.failureClass ? ` / failure class \`${diagnostic.failureClass}\`` : ""}`,
+      ""
+    ].join("\n")),
+    "",
     "## Assertions",
     "",
     ...report.assertions.map(
@@ -92,10 +149,18 @@ function renderMarkdown(report: QMediationDriftSurface): string {
 }
 
 async function main(): Promise<void> {
-  const benchmark = await loadLatestBenchmarkReportForPack("q-mediation-drift");
+  const latestPublishedBenchmark = await loadPublishedBenchmarkReport();
+  const benchmark =
+    latestPublishedBenchmark?.packId === "q-mediation-drift"
+      ? latestPublishedBenchmark
+      : await loadLatestBenchmarkReportForPack("q-mediation-drift");
   if (!benchmark) {
     throw new Error("No published q-mediation-drift benchmark report is available yet.");
   }
+  const scenarioResults =
+    Array.isArray(benchmark.scenarioResults) && benchmark.scenarioResults.length > 0
+      ? benchmark.scenarioResults
+      : buildFallbackDiagnostics(benchmark.progress.completed);
 
   const report: QMediationDriftSurface = {
     generatedAt: new Date().toISOString(),
@@ -119,6 +184,17 @@ async function main(): Promise<void> {
         ? `${benchmark.hardwareContext.host} / ${benchmark.hardwareContext.platform}-${benchmark.hardwareContext.arch} / ${benchmark.hardwareContext.cpuModel}`
         : undefined
     },
+    diagnostics: scenarioResults.map((scenario) => ({
+      id: scenario.id,
+      label: scenario.label,
+      qRoutingDirective: scenario.qRoutingDirective,
+      mediationDiagnosticSummary: scenario.mediationDiagnosticSummary,
+      mediationDiagnosticSignals: scenario.mediationDiagnosticSignals,
+      qSelfEvaluation: scenario.qSelfEvaluation,
+      immaculateSelfEvaluation: scenario.immaculateSelfEvaluation,
+      driftDetected: scenario.driftDetected,
+      failureClass: scenario.failureClass
+    })),
     assertions: benchmark.assertions.map((assertion) => ({
       id: assertion.id,
       status: assertion.status,

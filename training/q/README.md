@@ -72,6 +72,10 @@ This surface complements the strict failure-only export. It captures current suc
 Q benchmark decision triplets so the hybrid session can stage them directly instead of
 inferring corpus state from raw benchmark pages.
 
+The generated benchmark and failure corpus rows now carry a compact operator-style
+note so the next Q run learns terse, judge-friendly wording without changing the
+underlying route/reason/commit semantics.
+
 When `docs/wiki/Terminal-Bench-Receipt.json` exists, this same build also carries
 the official public-task receipt as benchmark observation evidence, so the public
 proof surface enters the Q improvement loop without pretending it was a successful

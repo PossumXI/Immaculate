@@ -105,6 +105,7 @@ def _task_fact_flags(task_payload: dict[str, Any]) -> dict[str, bool]:
         "nonce_mismatch": "nonce mismatch" in joined,
         "nonce_replay": "nonce replay" in joined or "replayed" in joined,
         "bridge_degraded": "bridge path cannot be trusted" in joined or "bridge is degraded" in joined,
+        "bridge_untrusted": "bridge path cannot be trusted" in joined or "bridge untrusted" in joined,
         "direct_http2_healthy": "direct http/2" in joined and ("healthy" in joined or "policy-allowed" in joined),
     }
 
@@ -118,7 +119,7 @@ def _sharpen_operator_wording(
         return structured
 
     if (
-        (flags["late_ack"] or flags["bridge_degraded"])
+        (flags["late_ack"] or flags["bridge_degraded"] or flags["bridge_untrusted"])
         and (flags["nonce_replay"] or flags["nonce_mismatch"])
         and flags["direct_http2_healthy"]
     ):
@@ -128,10 +129,12 @@ def _sharpen_operator_wording(
             "commit": "Route through verified direct HTTP/2, keep the bridge untrusted, and preserve truthful delivery state.",
         }
 
-    if (flags["late_ack"] or flags["bridge_degraded"]) and (flags["nonce_replay"] or flags["nonce_mismatch"]):
+    if (flags["late_ack"] or flags["bridge_degraded"] or flags["bridge_untrusted"]) and (
+        flags["nonce_replay"] or flags["nonce_mismatch"]
+    ):
         return {
             "route": "guarded",
-            "reason": "Nonce mismatch and late ACK make the bridge untrusted and require fail-closed control.",
+            "reason": "Nonce mismatch and late ACK make the bridge untrusted.",
             "commit": "Reject the invalid ACK, keep delivery unresolved, and record containment in the audit trail.",
         }
 
@@ -285,6 +288,8 @@ class HarborQAgent(BaseAgent):
             "Commit must state the concrete next operator action that keeps the ledger truthful. "
             "Prefer technical operator status language like 'bridge untrusted', 'bridge health degraded', "
             "'nonce replay', and 'direct HTTP/2 is the trusted lane' over abstract safety phrasing. "
+            "Prefer declarative operator wording over narrative wording. "
+            "State the bridge status first, then the decisive action. "
             "If an ACK is late, mismatched, or replayed, say so explicitly instead of generic caution language. "
             "If the bridge is degraded but direct HTTP/2 is healthy and policy-allowed, say that direct HTTP/2 is the trusted path. "
             "Stay fail-closed and do not invent facts. "

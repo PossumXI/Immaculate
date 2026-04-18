@@ -1,21 +1,21 @@
 {
-  "generatedAt": "2026-04-18T01:28:37Z",
-  "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v15",
-  "manifestPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v15/hybrid-session.manifest.json",
+  "generatedAt": "2026-04-18T02:39:32Z",
+  "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v16",
+  "manifestPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v16/hybrid-session.manifest.json",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "4d810449e49b887238564998aa6a731df03913bb",
-    "gitShortSha": "4d81044",
-    "buildId": "0.1.0+4d81044"
+    "gitSha": "35ab7e86c80ec367751e8bbc900d14042a3950de",
+    "gitShortSha": "35ab7e8",
+    "buildId": "0.1.0+35ab7e8"
   },
   "q": {
-    "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v15-4d81044-ac6ea0d1",
+    "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16-35ab7e8-de7361fa",
     "trainingLockPath": ".training-output/q/latest-training-lock.json",
-    "configPath": ".training-output/q/q-lora-config-harbor-opt-2384cf5-bench-v15.json",
+    "configPath": ".training-output/q/q-lora-config-harbor-opt-2384cf5-bench-v16.json",
     "modelId": "Q",
-    "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v15.jsonl",
+    "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16.jsonl",
     "trainDatasetRowCount": 109,
-    "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v15.manifest.json",
+    "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16.manifest.json",
     "curationRunPath": null,
     "curationRunId": null,
     "benchmarkCorpusPath": "docs/wiki/Q-Benchmark-Corpus.json",
@@ -24,16 +24,16 @@
     "failureCorpusPath": "docs/wiki/Q-Failure-Corpus.json"
   },
   "immaculate": {
-    "bundleId": "immaculate-orchestration-4d81044-ec4b3cb6",
-    "bundlePath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-harbor-opt-2384cf5-bench-v15.json",
+    "bundleId": "immaculate-orchestration-35ab7e8-ec4b3cb6",
+    "bundlePath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-harbor-opt-2384cf5-bench-v16.json",
     "signalCount": 14
   },
   "cloudBundle": {
-    "bundleId": "q-hybrid-harbor-opt-2384cf5-bench-v15-4d81044",
-    "archivePath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v15/cloud-bundle/q-hybrid-harbor-opt-2384cf5-bench-v15-cloud-bundle.tar.gz",
-    "archiveSha256": "787531be0c634f7f3c0f37c27c9dd10e2c40571115a4e840a54a64b07c83e954",
-    "archiveSizeBytes": 32702,
-    "manifestPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v15/cloud-bundle/bundle-manifest.json",
+    "bundleId": "q-hybrid-harbor-opt-2384cf5-bench-v16-35ab7e8",
+    "archivePath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v16/cloud-bundle/q-hybrid-harbor-opt-2384cf5-bench-v16-cloud-bundle.tar.gz",
+    "archiveSha256": "f29b60bc788c1a2e5c3af04867cf0a170456d10cecb78b33a2bc63074e627db5",
+    "archiveSizeBytes": 33942,
+    "manifestPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v16/cloud-bundle/bundle-manifest.json",
     "fileCount": 9,
     "repoRemoteUrl": "https://github.com/PossumXI/Immaculate.git"
   },
@@ -91,7 +91,7 @@
         "python",
         "training/q/launch_hf_jobs_training.py",
         "--session",
-        ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v15/hybrid-session.manifest.json",
+        ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v16/hybrid-session.manifest.json",
         "--env-file",
         "C:/Users/Knight/Desktop/cheeks/Asgard/.env",
         "--check"
@@ -338,13 +338,13 @@
     },
     "suggestedEnvUpdates": {},
     "actions": [],
-    "generatedAt": "2026-04-18T01:28:37Z",
-    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v15",
+    "generatedAt": "2026-04-18T02:39:32Z",
+    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v16",
     "release": {
       "packageVersion": "0.1.0",
-      "gitSha": "4d810449e49b887238564998aa6a731df03913bb",
-      "gitShortSha": "4d81044",
-      "buildId": "0.1.0+4d81044"
+      "gitSha": "35ab7e86c80ec367751e8bbc900d14042a3950de",
+      "gitShortSha": "35ab7e8",
+      "buildId": "0.1.0+35ab7e8"
     },
     "output": {
       "jsonPath": "docs/wiki/OCI-GPU-Advisor.json",
@@ -455,14 +455,14 @@
     }
   },
   "hfJobsTraining": {
-    "generatedAt": "2026-04-17T20:51:27Z",
+    "generatedAt": "2026-04-18T02:38:38Z",
     "release": {
       "packageVersion": "0.1.0",
-      "gitSha": "30d48b7e6e99aaacd7284b2c4096d3e68f40f350",
-      "gitShortSha": "30d48b7",
-      "buildId": "0.1.0+30d48b7"
+      "gitSha": "35ab7e86c80ec367751e8bbc900d14042a3950de",
+      "gitShortSha": "35ab7e8",
+      "buildId": "0.1.0+35ab7e8"
     },
-    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v14",
+    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v16",
     "auth": {
       "hfCliBin": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-push-harbor\\.tools\\foundry-venv\\Scripts\\hf.exe",
       "tokenSource": "HF_TOKEN",
@@ -637,14 +637,14 @@
     "jobsVisibleCount": 0,
     "stagedBundle": {
       "repoId": "TruLumecreator/immaculate-q-cloud-bundles",
-      "archiveRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v14/q-hybrid-harbor-opt-2384cf5-bench-v14-cloud-bundle.tar.gz",
-      "manifestRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v14/bundle-manifest.json",
+      "archiveRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v16/q-hybrid-harbor-opt-2384cf5-bench-v16-cloud-bundle.tar.gz",
+      "manifestRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v16/bundle-manifest.json",
       "staged": true,
       "createRepoStdout": "repo_id=TruLumecreator/immaculate-q-cloud-bundles url=https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles",
       "createRepoStderr": "Warning: `hf repo` is deprecated in favor of `hf repos`.",
-      "uploadArchiveStdout": "url=https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles/commit/a3c6977e949606dae9cabe71d235a858095f0fb7",
+      "uploadArchiveStdout": "url=https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles/commit/4ae935dc76847fe00f692d88ed3e25528aef6d42",
       "uploadArchiveStderr": null,
-      "uploadManifestStdout": "url=https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles/commit/914a4208f4a5813c010510c8a32368d495b19348",
+      "uploadManifestStdout": "url=https://huggingface.co/datasets/TruLumecreator/immaculate-q-cloud-bundles/commit/5961f10ca5870f8bc3b219f1ca1307e4a5200002",
       "uploadManifestStderr": null
     },
     "smokeLaunch": {
@@ -681,42 +681,42 @@
     }
   },
   "colabFreeTraining": {
-    "generatedAt": "2026-04-17T20:51:05Z",
+    "generatedAt": "2026-04-18T02:39:29Z",
     "release": {
       "packageVersion": "0.1.0",
-      "gitSha": "30d48b7e6e99aaacd7284b2c4096d3e68f40f350",
-      "gitShortSha": "30d48b7",
-      "buildId": "0.1.0+30d48b7"
+      "gitSha": "35ab7e86c80ec367751e8bbc900d14042a3950de",
+      "gitShortSha": "35ab7e8",
+      "buildId": "0.1.0+35ab7e8"
     },
     "repo": {
       "slug": "PossumXI/Immaculate"
     },
-    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v14",
+    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v16",
     "session": {
-      "manifestPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v14/hybrid-session.manifest.json",
-      "configPath": ".training-output/q/q-lora-config-harbor-opt-2384cf5-bench-v14.json",
+      "manifestPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v16/hybrid-session.manifest.json",
+      "configPath": ".training-output/q/q-lora-config-harbor-opt-2384cf5-bench-v16.json",
       "trainingLockPath": ".training-output/q/latest-training-lock.json",
-      "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v14-30d48b7-248a8349",
-      "immaculateBundleOutputPath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-harbor-opt-2384cf5-bench-v14.json"
+      "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16-35ab7e8-de7361fa",
+      "immaculateBundleOutputPath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-harbor-opt-2384cf5-bench-v16.json"
     },
     "bundle": {
       "sourceType": "hf_dataset",
       "repoId": "TruLumecreator/immaculate-q-cloud-bundles",
-      "archiveRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v13/q-hybrid-harbor-opt-2384cf5-bench-v13-cloud-bundle.tar.gz",
-      "manifestRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v13/bundle-manifest.json",
+      "archiveRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v16/q-hybrid-harbor-opt-2384cf5-bench-v16-cloud-bundle.tar.gz",
+      "manifestRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v16/bundle-manifest.json",
       "staged": true
     },
     "microTrain": {
-      "configPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v14/colab/q-colab-micro-config.json",
+      "configPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v16/colab/q-colab-micro-config.json",
       "maxSteps": 24,
       "maxSeqLength": 2048,
       "minGpuMemoryGb": 20,
       "wandbOptional": true
     },
     "notebook": {
-      "path": "deploy/colab/notebooks/q-hybrid-harbor-opt-2384cf5-bench-v14-colab-free.ipynb",
-      "fileName": "q-hybrid-harbor-opt-2384cf5-bench-v14-colab-free.ipynb",
-      "openInColabUrl": "https://colab.research.google.com/github/PossumXI/Immaculate/blob/main/deploy/colab/notebooks/q-hybrid-harbor-opt-2384cf5-bench-v14-colab-free.ipynb"
+      "path": "deploy/colab/notebooks/q-hybrid-harbor-opt-2384cf5-bench-v16-colab-free.ipynb",
+      "fileName": "q-hybrid-harbor-opt-2384cf5-bench-v16-colab-free.ipynb",
+      "openInColabUrl": "https://colab.research.google.com/github/PossumXI/Immaculate/blob/main/deploy/colab/notebooks/q-hybrid-harbor-opt-2384cf5-bench-v16-colab-free.ipynb"
     },
     "summary": {
       "provider": "colab_free",
@@ -737,9 +737,9 @@
         "C:\\Users\\Knight\\AppData\\Local\\Microsoft\\WindowsApps\\python.EXE",
         "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-push-harbor\\training\\q\\train_q_lora_unsloth.py",
         "--config",
-        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-push-harbor\\.training-output\\q\\q-lora-config-harbor-opt-2384cf5-bench-v15.json",
+        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-push-harbor\\.training-output\\q\\q-lora-config-harbor-opt-2384cf5-bench-v16.json",
         "--session-manifest",
-        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-push-harbor\\.training-output\\q\\sessions\\q-hybrid-harbor-opt-2384cf5-bench-v15\\hybrid-session.manifest.json",
+        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-push-harbor\\.training-output\\q\\sessions\\q-hybrid-harbor-opt-2384cf5-bench-v16\\hybrid-session.manifest.json",
         "--dry-run"
       ]
     },
@@ -752,7 +752,7 @@
         "python",
         "training/q/launch_hf_jobs_training.py",
         "--session",
-        ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v15/hybrid-session.manifest.json",
+        ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v16/hybrid-session.manifest.json",
         "--env-file",
         "C:/Users/Knight/Desktop/cheeks/Asgard/.env",
         "--check"
@@ -760,8 +760,8 @@
     }
   },
   "output": {
-    "sessionJsonPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v15/hybrid-session.json",
-    "sessionMarkdownPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v15/hybrid-session.md",
+    "sessionJsonPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v16/hybrid-session.json",
+    "sessionMarkdownPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v16/hybrid-session.md",
     "wikiJsonPath": "docs/wiki/Q-Hybrid-Training.json",
     "wikiMarkdownPath": "docs/wiki/Q-Hybrid-Training.md",
     "hfJobsTrainingJsonPath": "docs/wiki/HF-Jobs-Training.json",

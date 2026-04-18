@@ -106,6 +106,8 @@ function truncate(value: string, limit = 220): string {
   return `${normalized.slice(0, Math.max(0, limit - 1)).trimEnd()}…`;
 }
 
+type BenchmarkSnapshot = ReturnType<typeof buildScenarioSnapshot>;
+
 async function allocateTcpPort(): Promise<number> {
   return new Promise((resolve, reject) => {
     const server = net.createServer();
@@ -173,6 +175,74 @@ async function waitForGateway(gatewayUrl: string): Promise<HttpCheck> {
   throw lastError instanceof Error ? lastError : new Error("Q gateway did not become healthy in time.");
 }
 
+function buildScenarioSnapshot() {
+  const engine = createEngine({
+    bootstrap: true,
+    recordEvents: false
+  });
+  for (let index = 0; index < 6; index += 1) {
+    engine.tick();
+  }
+  const baseSnapshot = engine.getSnapshot();
+  const registeredAt = new Date().toISOString();
+  const baseLayers =
+    baseSnapshot.intelligenceLayers.length > 0
+      ? baseSnapshot.intelligenceLayers
+      : [
+          {
+            id: "q-soul",
+            name: "Q Soul",
+            backend: "ollama" as const,
+            model: getQModelTarget(),
+            role: "soul" as const,
+            status: "ready" as const,
+            endpoint: DEFAULT_OLLAMA_URL,
+            registeredAt
+          },
+          {
+            id: "q-mid",
+            name: "Q Mid",
+            backend: "ollama" as const,
+            model: getQModelTarget(),
+            role: "mid" as const,
+            status: "ready" as const,
+            endpoint: DEFAULT_OLLAMA_URL,
+            registeredAt
+          },
+          {
+            id: "q-reasoner",
+            name: "Q Reasoner",
+            backend: "ollama" as const,
+            model: getQModelTarget(),
+            role: "reasoner" as const,
+            status: "ready" as const,
+            endpoint: DEFAULT_OLLAMA_URL,
+            registeredAt
+          },
+          {
+            id: "q-guard",
+            name: "Q Guard",
+            backend: "ollama" as const,
+            model: getQModelTarget(),
+            role: "guard" as const,
+            status: "busy" as const,
+            endpoint: DEFAULT_OLLAMA_URL,
+            registeredAt
+          }
+        ];
+  return {
+    ...baseSnapshot,
+    intelligenceLayers: baseLayers.map((layer, index) => ({
+      ...layer,
+      model: getQModelTarget(),
+      status: (index < 3 ? "ready" : index === 3 ? "busy" : "degraded") as
+        | "ready"
+        | "busy"
+        | "degraded"
+    }))
+  };
+}
+
 function resolveGatewayCommand(): { command: string; args: string[] } {
   const compiledGatewayPath = path.join(HARNESS_ROOT, "dist", "q-gateway.js");
   if (existsSync(compiledGatewayPath)) {
@@ -217,6 +287,14 @@ function startGatewayProcess(options: {
   });
 }
 
+function buildBenchmarkChatHeaders(authorization: string): Record<string, string> {
+  return {
+    Authorization: authorization,
+    "content-type": "application/json",
+    "x-immaculate-benchmark-skip-q-identity": "1"
+  };
+}
+
 async function stopGatewayProcess(child: ChildProcess | undefined): Promise<void> {
   if (!child || child.killed || child.exitCode !== null) {
     return;
@@ -251,15 +329,13 @@ async function runScenario(options: {
   gatewayUrl: string;
   authorization: string;
   scenario: ScenarioDefinition;
+  snapshot: BenchmarkSnapshot;
 }): Promise<QGatewaySubstrateScenarioResult> {
   const prompt = buildStructuredPrompt(options.scenario);
   const started = performance.now();
   const chat = await checkHttp(`${options.gatewayUrl}/v1/chat/completions`, {
     method: "POST",
-    headers: {
-      Authorization: options.authorization,
-      "content-type": "application/json"
-    },
+    headers: buildBenchmarkChatHeaders(options.authorization),
     body: JSON.stringify({
       model: getQModelName(),
       stream: false,
@@ -292,14 +368,7 @@ async function runScenario(options: {
   const structuredFieldCount = [routeSuggestion, reasonSummary, commitStatement].filter(Boolean).length;
   const parseSuccess = chat.status === 200 && structuredFieldCount === 3;
 
-  const engine = createEngine({
-    bootstrap: true,
-    recordEvents: false
-  });
-  for (let index = 0; index < 6; index += 1) {
-    engine.tick();
-  }
-  const snapshot = engine.getSnapshot();
+  const snapshot = options.snapshot;
   const frame = snapshot.neuroFrames[0];
   const layer = snapshot.intelligenceLayers.find((entry) => entry.role === "reasoner") ?? snapshot.intelligenceLayers[0];
   const completedAt = new Date().toISOString();
@@ -398,6 +467,7 @@ export async function runQGatewaySubstrateBenchmark(options: {
     endpoint: DEFAULT_OLLAMA_URL,
     model: getQModelTarget()
   });
+  const snapshot = buildScenarioSnapshot();
 
   const child = startGatewayProcess({
     repoRoot: options.repoRoot,
@@ -450,10 +520,7 @@ export async function runQGatewaySubstrateBenchmark(options: {
     });
     const concurrencyPrimary = fetch(`${gatewayUrl}/v1/chat/completions`, {
       method: "POST",
-      headers: {
-        Authorization: authorization,
-        "content-type": "application/json"
-      },
+      headers: buildBenchmarkChatHeaders(authorization),
       body: JSON.stringify({
         model: getQModelName(),
         stream: false,
@@ -468,10 +535,7 @@ export async function runQGatewaySubstrateBenchmark(options: {
     await delay(150);
     const concurrency = await checkHttp(`${gatewayUrl}/v1/chat/completions`, {
       method: "POST",
-      headers: {
-        Authorization: authorization,
-        "content-type": "application/json"
-      },
+      headers: buildBenchmarkChatHeaders(authorization),
       body: JSON.stringify({
         model: getQModelName(),
         stream: false,
@@ -488,7 +552,7 @@ export async function runQGatewaySubstrateBenchmark(options: {
 
     const scenarioResults: QGatewaySubstrateScenarioResult[] = [];
     for (const scenario of SCENARIOS) {
-      scenarioResults.push(await runScenario({ gatewayUrl, authorization, scenario }));
+      scenarioResults.push(await runScenario({ gatewayUrl, authorization, scenario, snapshot }));
     }
     const release = await resolveReleaseMetadata();
 

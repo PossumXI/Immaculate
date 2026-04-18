@@ -212,6 +212,40 @@ export type BenchmarkPublication = {
   markdownPath: string;
 };
 
+export type BenchmarkMediationDriftScenarioResult = {
+  id: string;
+  label: string;
+  status: "completed" | "failed";
+  parseSuccess: boolean;
+  structuredFieldCount: number;
+  latencyMs: number;
+  runnerPathLatencyMs: number;
+  arbitrationLatencyMs: number;
+  schedulingLatencyMs: number;
+  routingLatencyMs: number;
+  routeSuggestion?: string;
+  expectedRoute: string;
+  routeAligned: boolean;
+  routingMode: string;
+  expectedRoutingMode: string;
+  arbitrationMode: string;
+  arbitrationGovernancePressure: GovernancePressureLevel;
+  shouldDispatchActuation: boolean;
+  expectedDispatchAllowed: boolean;
+  scheduleAdmissionState: string;
+  expectedAdmissionState: string;
+  qOnlyLayerSelection: boolean;
+  selectedLayerCount: number;
+  driftDetected: boolean;
+  qRoutingDirective: "primary-governed-local" | "guarded-hold";
+  mediationDiagnosticSummary: string;
+  mediationDiagnosticSignals: string[];
+  qSelfEvaluation: string;
+  immaculateSelfEvaluation: string;
+  responsePreview: string;
+  failureClass?: string;
+};
+
 export type BenchmarkAttribution = {
   owner: string;
   role: string;
@@ -261,6 +295,7 @@ export type BenchmarkReport = {
   attribution?: BenchmarkAttribution;
   comparison?: BenchmarkComparison;
   publication?: BenchmarkPublication;
+  scenarioResults?: BenchmarkMediationDriftScenarioResult[];
 };
 
 export const datasetModalities = [
@@ -1070,6 +1105,40 @@ const benchmarkPublicationSchema = z.object({
   markdownPath: z.string()
 });
 
+const benchmarkMediationDriftScenarioResultSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  status: z.enum(["completed", "failed"]),
+  parseSuccess: z.boolean(),
+  structuredFieldCount: z.number().int().nonnegative(),
+  latencyMs: z.number().nonnegative(),
+  runnerPathLatencyMs: z.number().nonnegative(),
+  arbitrationLatencyMs: z.number().nonnegative(),
+  schedulingLatencyMs: z.number().nonnegative(),
+  routingLatencyMs: z.number().nonnegative(),
+  routeSuggestion: z.string().optional(),
+  expectedRoute: z.string(),
+  routeAligned: z.boolean(),
+  routingMode: z.string(),
+  expectedRoutingMode: z.string(),
+  arbitrationMode: z.string(),
+  arbitrationGovernancePressure: z.enum(governancePressureLevels),
+  shouldDispatchActuation: z.boolean(),
+  expectedDispatchAllowed: z.boolean(),
+  scheduleAdmissionState: z.string(),
+  expectedAdmissionState: z.string(),
+  qOnlyLayerSelection: z.boolean(),
+  selectedLayerCount: z.number().int().nonnegative(),
+  driftDetected: z.boolean(),
+  qRoutingDirective: z.enum(["primary-governed-local", "guarded-hold"]),
+  mediationDiagnosticSummary: z.string(),
+  mediationDiagnosticSignals: z.array(z.string()),
+  qSelfEvaluation: z.string(),
+  immaculateSelfEvaluation: z.string(),
+  responsePreview: z.string(),
+  failureClass: z.string().optional()
+});
+
 const benchmarkAttributionSchema = z.object({
   owner: z.string(),
   role: z.string(),
@@ -1126,7 +1195,8 @@ export const benchmarkReportSchema = z.object({
   progress: benchmarkProgressSchema,
   attribution: benchmarkAttributionSchema.optional(),
   comparison: benchmarkComparisonSchema.optional(),
-  publication: benchmarkPublicationSchema.optional()
+  publication: benchmarkPublicationSchema.optional(),
+  scenarioResults: z.array(benchmarkMediationDriftScenarioResultSchema).optional()
 });
 
 const datasetModalitySummarySchema = z.object({

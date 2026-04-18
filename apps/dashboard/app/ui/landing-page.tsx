@@ -18,11 +18,11 @@ const sectors = [
 const proofCards = [
   {
     label: "Q Mediation Drift",
-    body: "The four-scenario mixed-pressure reasoning lane is green. Q and Immaculate both self-evaluate every scenario, route alignment stays perfect, and runner-path P95 is 7.43 ms."
+    body: "The four-scenario mixed-pressure reasoning lane is green on the active bench-v16 lock. Q and Immaculate both self-evaluate every scenario, route alignment stays perfect, and runner-path P95 is 24.61 ms."
   },
   {
     label: "Q Substrate Benchmark",
-    body: "Gateway to Immaculate seam is green. Structured handoff survives arbitration with zero failed assertions, gateway P95 is 30.02s, and arbitration P95 is 2.04 ms."
+    body: "Gateway to Immaculate seam is green. Structured handoff survives arbitration with zero failed assertions, gateway P95 is 28.01s, and arbitration P95 is 2.66 ms."
   },
   {
     label: "Q Gateway Contract",
@@ -38,11 +38,11 @@ const proofCards = [
   },
   {
     label: "Cloud Lanes",
-    body: "HF Jobs auth, hardware visibility, and bundle staging are real on the active bench-v15 lock, and the staged cloud launch is ready. Cloudflare has the profile and eval bundle ready, but worker auth and adapter export are still blocked."
+    body: "HF Jobs auth, hardware visibility, and bundle staging are real on the active bench-v16 lock, and the staged cloud launch is ready. Cloudflare has the profile and eval bundle ready on bench-v16, but worker auth and adapter export are still blocked."
   },
   {
     label: "W&B Publication Surface",
-    body: "The newest tracked W&B export is April 17. The separate 60m soak page is historical evidence from the last hour-class rerun, not the default latest-publication claim."
+    body: "The newest tracked W&B export is April 17. The newer April 18 mediation and substrate reruns are local repo evidence, while the separate 60m soak page remains historical evidence from the last hour-class rerun."
   }
 ];
 
@@ -81,7 +81,7 @@ export function LandingPage() {
 
       <section className="landingHero">
         <div className="landingCopy">
-          <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 18 | W&B EXPORT CURRENT</p>
+          <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 18 | W&amp;B EXPORT APR 17</p>
           <h1 className="landingHeadline">Controlled intelligence for critical operations.</h1>
           <p className="landingLede">Defense and healthcare. Evidence before action. Q only. Benchmarked. Gateway seam proven. Audit loop live.</p>
 
@@ -89,13 +89,13 @@ export function LandingPage() {
             <span>Q 4/4 structured</span>
             <span>BridgeBench 4/4</span>
             <span>Mediation drift 4 scenarios</span>
-            <span>Runner path P95 7.43ms</span>
+            <span>Runner path P95 24.61ms</span>
             <span>Substrate seam green</span>
             <span>Gateway contract green</span>
             <span>Identity gate green</span>
             <span>Harbor 0.950 / 0.925</span>
             <span>Latest W&B export Apr 17</span>
-            <span>Machine-stamped bench-v15 lock</span>
+            <span>Machine-stamped bench-v16 lock</span>
             <span>54 benchmark rows</span>
             <span>6 failure seeds</span>
           </div>

@@ -478,7 +478,11 @@ def main() -> None:
     if config_path is None or not config_path.exists():
         raise FileNotFoundError("Tracked Q config is missing for Colab export.")
 
-    hf_jobs_report = try_load_json(root / "docs" / "wiki" / "HF-Jobs-Training.json") or {}
+    hf_jobs_report = (
+        try_load_json(session_root / "hf-jobs-launch.json")
+        or try_load_json(root / "docs" / "wiki" / "HF-Jobs-Training.json")
+        or {}
+    )
     staged_bundle = hf_jobs_report.get("stagedBundle", {}) if isinstance(hf_jobs_report.get("stagedBundle"), dict) else {}
     repo_id = str(staged_bundle.get("repoId", "")).strip()
     archive_repo_path = str(staged_bundle.get("archiveRepoPath", "")).strip()

@@ -1770,6 +1770,7 @@ export async function runPublishedBenchmark(
         remaining: []
       },
       attribution: BENCHMARK_ATTRIBUTION,
+      scenarioResults: mediationDrift.scenarioResults,
       comparison: previousReport
         ? compareBenchmarkReports(previousReport, [
             structuredFieldSeries,
@@ -3368,7 +3369,15 @@ export async function runPublishedBenchmark(
       preferredExecutionLane: "local-q",
       cloudLaneReady: false,
       cloudLaneStatus: "launch-blocked",
-      trainingBundleId: releaseMetadata.q.trainingLock?.bundleId
+      trainingBundleId: releaseMetadata.q.trainingLock?.bundleId,
+      mediationDiagnosticSummary:
+        "Q should stay primary because the local governed lane is healthy while cloud Q is blocked.",
+      mediationDiagnosticSignals: [
+        "readiness=ready",
+        "substrate=healthy",
+        "cloud=blocked",
+        "directive=primary-governed-local"
+      ]
     }
   });
   const preferredHttp2Actuation: ActuationOutput = {
@@ -3573,7 +3582,15 @@ export async function runPublishedBenchmark(
     qRoutingDirective: "primary-governed-local" as const,
     cloudLaneReady: false,
     cloudLaneStatus: "launch-blocked",
-    trainingBundleId: "tracked-q-bundle"
+    trainingBundleId: "tracked-q-bundle",
+    mediationDiagnosticSummary:
+      "Q should stay primary because the local governed lane is healthy while cloud Q is blocked.",
+    mediationDiagnosticSignals: [
+      "readiness=ready",
+      "substrate=healthy",
+      "cloud=blocked",
+      "directive=primary-governed-local"
+    ]
   };
   const arbitrationLatencySamples: number[] = [];
   const arbitrationCognitionSamples: number[] = [];

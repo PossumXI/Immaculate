@@ -42,6 +42,8 @@ type ExecutionArbitrationPlanInput = {
     | "cloudLaneReady"
     | "cloudLaneStatus"
     | "trainingBundleId"
+    | "mediationDiagnosticSummary"
+    | "mediationDiagnosticSignals"
   >;
 };
 
@@ -363,6 +365,7 @@ export function planExecutionArbitration(
     `qDirective=${qDirective ?? "none"}`,
     `qLane=${qGovernedLaneHealthy ? `local-ready:${input.qContext?.trainingBundleId ?? "tracked"}` : input.qContext ? "hold" : "none"}`,
     `qCloud=${input.qContext ? `${input.qContext.cloudLaneReady ? "ready" : "blocked"}:${input.qContext.cloudLaneStatus ?? "unknown"}` : "none"}`,
+    `qDiagnosis=${input.qContext?.mediationDiagnosticSummary ?? "none"}`,
     `sessionBlocked=${sessionBlockedVerdicts}`,
     `sessionApproved=${sessionApprovedVerdicts}`,
     `cognition=${shouldRunCognition ? "run" : "skip"}`,

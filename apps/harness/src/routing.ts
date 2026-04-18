@@ -47,6 +47,8 @@ type AdaptiveRoutePlanInput = {
     | "cloudLaneReady"
     | "cloudLaneStatus"
     | "qRoutingDirective"
+    | "mediationDiagnosticSummary"
+    | "mediationDiagnosticSignals"
   >;
 };
 
@@ -473,6 +475,7 @@ export function planAdaptiveRoute(input: AdaptiveRoutePlanInput): AdaptiveRouteP
     `qDirective=${input.qContext?.qRoutingDirective ?? "none"}`,
     `qLane=${qGovernedLocalPreference ? `local-ready:${input.qContext?.trainingBundleId ?? "tracked"}` : "none"}`,
     `qCloud=${input.qContext ? `${input.qContext.cloudLaneReady ? "ready" : "blocked"}:${input.qContext.cloudLaneStatus ?? "unknown"}` : "none"}`,
+    `qDiagnosis=${input.qContext?.mediationDiagnosticSummary ?? "none"}`,
     `transport=${selectedTransport?.kind ?? "none"}`,
     `health=${selectedTransport?.health ?? "none"}`
   ];
