@@ -2,9 +2,9 @@
 
 This page records the official public-task Terminal-Bench leaderboard receipt submission for the real `Q` lane. It is a real Harbor job plus a real public PR/discussion on the official leaderboard dataset repo.
 
-- Generated: `2026-04-18T01:29:50.255Z`
-- Release: `0.1.0+4d81044`
-- Repo commit: `4d810449e49b887238564998aa6a731df03913bb`
+- Generated: `2026-04-18T01:43:40.315Z`
+- Release: `0.1.0+8874851`
+- Repo commit: `887485123b57de8b4c6ea87c8c6911db3cf14dda`
 - Q serving label: `Q`
 - Leaderboard repo: `harborframework/terminal-bench-2-leaderboard`
 - Submission PR/discussion: https://huggingface.co/datasets/harborframework/terminal-bench-2-leaderboard/discussions/140

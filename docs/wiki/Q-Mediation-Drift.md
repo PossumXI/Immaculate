@@ -2,9 +2,9 @@
 
 This page is generated from the dedicated `q-mediation-drift` benchmark pack. It measures whether Immaculate preserves Q's governed route through arbitration, scheduling, and routing under mixed pressure without drift.
 
-- Generated: 2026-04-18T01:41:24.697Z
-- Release: `0.1.0+4d81044`
-- Repo commit: `4d81044`
+- Generated: 2026-04-18T01:43:45.400Z
+- Release: `0.1.0+8874851`
+- Repo commit: `8874851`
 - Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v15-4d81044-ac6ea0d1`
 
 ## Benchmark
