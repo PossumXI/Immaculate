@@ -134,6 +134,10 @@ export function buildAgentTurn(options: {
     reasonSummary: options.execution.reasonSummary,
     commitStatement: options.execution.commitStatement,
     guardVerdict: options.execution.guardVerdict,
+    decisionTraceId: options.execution.decisionTraceId,
+    decisionTraceHash: options.execution.decisionTraceHash,
+    policyDigest: options.execution.policyDigest,
+    evidenceDigest: options.execution.evidenceDigest,
     latencyMs: options.execution.latencyMs,
     startedAt: options.execution.startedAt,
     completedAt: options.execution.completedAt,
@@ -175,6 +179,14 @@ export function buildConversationRecord(options: {
     [...turns].reverse().find((turn) => turn.routeSuggestion)?.routeSuggestion ?? finalTurn?.routeSuggestion;
   const finalCommitStatement =
     [...turns].reverse().find((turn) => turn.commitStatement)?.commitStatement ?? finalTurn?.commitStatement;
+  const finalDecisionTraceId =
+    [...turns].reverse().find((turn) => turn.decisionTraceId)?.decisionTraceId ?? finalTurn?.decisionTraceId;
+  const finalDecisionTraceHash =
+    [...turns].reverse().find((turn) => turn.decisionTraceHash)?.decisionTraceHash ?? finalTurn?.decisionTraceHash;
+  const finalPolicyDigest =
+    [...turns].reverse().find((turn) => turn.policyDigest)?.policyDigest ?? finalTurn?.policyDigest;
+  const finalEvidenceDigest =
+    [...turns].reverse().find((turn) => turn.evidenceDigest)?.evidenceDigest ?? finalTurn?.evidenceDigest;
   const status = deriveConversationStatus(turns, guardVerdict);
   const roleChain = roles.join(">");
 
@@ -190,6 +202,10 @@ export function buildConversationRecord(options: {
     roles,
     turnCount: turns.length,
     guardVerdict,
+    decisionTraceId: finalDecisionTraceId,
+    decisionTraceHash: finalDecisionTraceHash,
+    policyDigest: finalPolicyDigest,
+    evidenceDigest: finalEvidenceDigest,
     finalRouteSuggestion,
     finalCommitStatement,
     summary: compact(

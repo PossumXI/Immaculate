@@ -13,6 +13,7 @@ import {
   getQModelName
 } from "./q-model.js";
 import { resolveReleaseMetadata, type ReleaseMetadata } from "./release-metadata.js";
+import { sha256Json } from "./utils.js";
 
 type QReadinessGateFile = {
   generatedAt?: string;
@@ -92,6 +93,9 @@ export type QOrchestrationContext = {
   mediationDiagnosticSignals: string[];
   knownWeaknesses: string[];
   failureClassHints: string[];
+  evidenceIds: string[];
+  evidenceDigest: string;
+  contextFingerprint: string;
   trainingBundleId?: string;
   readinessGeneratedAt?: string;
   readinessReady: boolean;
@@ -288,6 +292,30 @@ export async function resolveQOrchestrationContext(
     objective: options.objective,
     context: options.context
   });
+  const evidenceIds = [
+    readiness?.generatedAt ? "surface:q-readiness-gate" : undefined,
+    substrate?.generatedAt ? "surface:q-gateway-substrate" : undefined,
+    mediation?.generatedAt ? "surface:q-mediation-drift" : undefined,
+    cloud?.generatedAt ? "surface:cloudflare-q-inference" : undefined,
+    harbor?.generatedAt ? "surface:harbor-terminal-bench" : undefined,
+    failureCorpus?.generatedAt ? "surface:q-failure-corpus" : undefined
+  ].filter((entry): entry is string => Boolean(entry));
+  const contextFingerprint = sha256Json({
+    release: release.buildId,
+    trainingBundleId: release.q.trainingLock?.bundleId,
+    readinessReady,
+    gatewaySubstrateHealthy,
+    cloudLaneReady: Boolean(cloud?.summary?.ready),
+    qRoutingDirective,
+    groundedFacts,
+    failureClassHints
+  });
+  const evidenceDigest = sha256Json({
+    evidenceIds,
+    groundedFacts,
+    failureClassHints,
+    knownWeaknesses
+  });
 
   return {
     generatedAt: new Date().toISOString(),
@@ -309,6 +337,9 @@ export async function resolveQOrchestrationContext(
     mediationDiagnosticSignals,
     knownWeaknesses,
     failureClassHints,
+    evidenceIds,
+    evidenceDigest,
+    contextFingerprint,
     trainingBundleId: release.q.trainingLock?.bundleId,
     readinessGeneratedAt: readiness?.generatedAt,
     readinessReady,

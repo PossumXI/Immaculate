@@ -66,6 +66,8 @@ type QMediationDriftScenarioResult = {
   immaculateSelfEvaluation: string;
   qDriftReasons: string[];
   immaculateDriftReasons: string[];
+  contextFingerprint?: string;
+  evidenceDigest?: string;
   runnerPathBottleneckStage: "arbitration" | "scheduling" | "routing";
   parallelFormationMode?: "single-lane" | "vertical-pipeline" | "horizontal-swarm" | "hybrid-quorum";
   verticalStageCount?: number;
@@ -595,7 +597,14 @@ async function runScenario(options: {
       `substrate=${options.scenario.gatewaySubstrateHealthy ? "healthy" : "degraded"}`,
       "cloud=blocked",
       `directive=${options.scenario.qRoutingDirective}`
-    ]
+    ],
+    evidenceIds: [
+      "surface:q-readiness-gate",
+      "surface:q-gateway-substrate",
+      "surface:q-mediation-drift"
+    ],
+    evidenceDigest: `q-mediation-evidence-${options.scenario.id}`,
+    contextFingerprint: `q-mediation-context-${options.scenario.id}`
   };
   const completedAt = new Date().toISOString();
   const execution = {
@@ -845,6 +854,8 @@ async function runScenario(options: {
     immaculateSelfEvaluation,
     qDriftReasons,
     immaculateDriftReasons,
+    contextFingerprint: qContext.contextFingerprint,
+    evidenceDigest: qContext.evidenceDigest,
     runnerPathBottleneckStage: runnerPathBottleneckStage({
       arbitrationLatencyMs,
       schedulingLatencyMs,

@@ -88,8 +88,18 @@ export function createWorkGovernor(options?: WorkGovernorOptions) {
     benchmark: 0,
     cognitive: 0
   };
+  const queuedWeightByLane: Record<WorkGovernorLane, number> = {
+    benchmark: 0,
+    cognitive: 0
+  };
+  const queuedCountByLane: Record<WorkGovernorLane, number> = {
+    benchmark: 0,
+    cognitive: 0
+  };
   let activeWeight = 0;
+  let queuedWeight = 0;
   let sequence = 0;
+  let queueDirty = false;
   const queue: QueueEntry[] = [];
 
   function snapshot(): WorkGovernorSnapshot {
@@ -97,24 +107,20 @@ export function createWorkGovernor(options?: WorkGovernorOptions) {
       maxActiveWeight,
       activeWeight,
       queueDepth: queue.length,
-      queuedWeight: queue.reduce((sum, entry) => sum + entry.weight, 0),
+      queuedWeight,
       lanes: {
         benchmark: {
           maxActiveWeight: laneLimits.benchmark.maxActiveWeight,
           activeWeight: activeWeightByLane.benchmark,
-          queueDepth: queue.filter((entry) => entry.lane === "benchmark").length,
-          queuedWeight: queue
-            .filter((entry) => entry.lane === "benchmark")
-            .reduce((sum, entry) => sum + entry.weight, 0),
+          queueDepth: queuedCountByLane.benchmark,
+          queuedWeight: queuedWeightByLane.benchmark,
           maxQueueDepth: Math.max(1, laneLimits.benchmark.maxQueueDepth ?? DEFAULT_LANE_LIMITS.benchmark.maxQueueDepth ?? 4)
         },
         cognitive: {
           maxActiveWeight: laneLimits.cognitive.maxActiveWeight,
           activeWeight: activeWeightByLane.cognitive,
-          queueDepth: queue.filter((entry) => entry.lane === "cognitive").length,
-          queuedWeight: queue
-            .filter((entry) => entry.lane === "cognitive")
-            .reduce((sum, entry) => sum + entry.weight, 0),
+          queueDepth: queuedCountByLane.cognitive,
+          queuedWeight: queuedWeightByLane.cognitive,
           maxQueueDepth: Math.max(1, laneLimits.cognitive.maxQueueDepth ?? DEFAULT_LANE_LIMITS.cognitive.maxQueueDepth ?? 8)
         }
       }
@@ -152,11 +158,19 @@ export function createWorkGovernor(options?: WorkGovernorOptions) {
   function removeEntry(entryId: number): void {
     const index = queue.findIndex((entry) => entry.id === entryId);
     if (index >= 0) {
-      queue.splice(index, 1);
+      const [removed] = queue.splice(index, 1);
+      if (removed) {
+        queuedWeight = Math.max(0, queuedWeight - removed.weight);
+        queuedWeightByLane[removed.lane] = Math.max(0, queuedWeightByLane[removed.lane] - removed.weight);
+        queuedCountByLane[removed.lane] = Math.max(0, queuedCountByLane[removed.lane] - 1);
+      }
     }
   }
 
   function sortQueue(): void {
+    if (!queueDirty) {
+      return;
+    }
     queue.sort((left, right) => {
       const priorityDelta = PRIORITY_SCORE[right.priority] - PRIORITY_SCORE[left.priority];
       if (priorityDelta !== 0) {
@@ -167,6 +181,7 @@ export function createWorkGovernor(options?: WorkGovernorOptions) {
       }
       return left.id - right.id;
     });
+    queueDirty = false;
   }
 
   function drainQueue(): void {
@@ -194,7 +209,7 @@ export function createWorkGovernor(options?: WorkGovernorOptions) {
     const priority = request.priority ?? "normal";
     const weight = clampWeight(request.weight);
     const maxQueueMs = request.maxQueueMs;
-    const laneQueueDepth = queue.filter((entry) => entry.lane === lane).length;
+    const laneQueueDepth = queuedCountByLane[lane];
     const laneMaxQueueDepth = Math.max(1, laneLimits[lane].maxQueueDepth ?? DEFAULT_LANE_LIMITS[lane].maxQueueDepth ?? 4);
     if (canAcquire(lane, weight) && queue.length === 0) {
       return createGrant(lane, priority, weight);
@@ -231,6 +246,10 @@ export function createWorkGovernor(options?: WorkGovernorOptions) {
         }, maxQueueMs);
       }
       queue.push(entry);
+      queuedWeight += entry.weight;
+      queuedWeightByLane[entry.lane] += entry.weight;
+      queuedCountByLane[entry.lane] += 1;
+      queueDirty = true;
       drainQueue();
     });
   }

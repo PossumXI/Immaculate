@@ -36,6 +36,7 @@ import {
   buildConversationRecord,
   buildSessionConversationMemory
 } from "./conversation.js";
+import { appendDecisionTraceRecord, createDecisionTraceSeed } from "./decision-trace.js";
 import {
   loadPublishedBenchmarkIndex,
   loadPublishedBenchmarkReport,
@@ -118,7 +119,7 @@ import {
   type IntelligenceWorkerExecutionProfile
 } from "./workers.js";
 import { createWorkGovernor, type WorkGovernorGrant } from "./work-governor.js";
-import { hashValue, resolvePathWithinAllowedRoot } from "./utils.js";
+import { hashValue, resolvePathWithinAllowedRoot, sha256Hash, sha256Json } from "./utils.js";
 import {
   deriveVisibilityScope,
   projectActuationOutput,
@@ -503,8 +504,16 @@ type QApiAuditRecord = {
   source: "q-api";
   sessionId: string;
   executionId?: string;
+  decisionTraceId?: string;
+  decisionTraceHash?: string;
+  policyDigest?: string;
+  evidenceDigest?: string;
   modelName: string;
   model?: string;
+  foundationModel?: string;
+  releaseBuildId?: string;
+  releaseGitShortSha?: string;
+  trainingBundleId?: string;
   role: IntelligenceLayer["role"];
   status: "completed" | "failed";
   parseSuccess: boolean;
@@ -518,6 +527,15 @@ type QApiAuditRecord = {
   reasonSummary?: string;
   commitStatement?: string;
   responsePreview: string;
+  objectiveDigest?: string;
+  contextDigest?: string;
+  responseDigest?: string;
+  qRoutingDirective?: string;
+  governancePressure?: string;
+  selectedWorkerId?: string;
+  selectedWorkerLabel?: string;
+  selectedWorkerProfile?: string;
+  selectedWorkerNodeId?: string;
   principal: {
     kind: QApiRequestContext["principalKind"];
     subject: string;
@@ -574,6 +592,162 @@ function truncateAuditText(value: string | undefined, limit = 240): string | und
 async function appendQApiAuditRecord(record: QApiAuditRecord): Promise<void> {
   await mkdir(path.dirname(Q_API_AUDIT_PATH), { recursive: true });
   await appendFile(Q_API_AUDIT_PATH, `${JSON.stringify(record)}\n`, "utf8");
+}
+
+function digestOptionalText(value?: string): string | undefined {
+  const normalized = value?.trim();
+  if (!normalized) {
+    return undefined;
+  }
+  return sha256Hash(normalized);
+}
+
+async function traceCognitiveExecution(options: {
+  execution: ReturnType<typeof engine.getSnapshot>["cognitiveExecutions"][number];
+  objective?: string;
+  context?: string;
+  consentScope?: string;
+  qContext?: Awaited<ReturnType<typeof resolveQOrchestrationContext>>;
+}): Promise<ReturnType<typeof engine.getSnapshot>["cognitiveExecutions"][number]> {
+  const materialized = await appendDecisionTraceRecord({
+    rootDir: persistence.getStatus().rootDir,
+    record: {
+      decisionTraceId:
+        options.execution.decisionTraceId ??
+        createDecisionTraceSeed({
+          source: "cognitive-execution",
+          sessionId: options.execution.sessionId,
+          executionId: options.execution.id,
+          objective: options.execution.objective,
+          promptDigest: options.execution.promptDigest
+        }),
+      source: "cognitive-execution",
+      sessionId: options.execution.sessionId,
+      executionId: options.execution.id,
+      release: {
+        buildId: releaseMetadata.buildId,
+        gitShortSha: releaseMetadata.gitShortSha,
+        modelName: getQModelName(),
+        foundationModel: getQFoundationModelName(),
+        trainingBundleId: releaseMetadata.q.trainingLock?.bundleId
+      },
+      policy: {
+        consentScope: options.consentScope,
+        qRoutingDirective: options.qContext?.qRoutingDirective,
+        governancePressure: options.execution.governancePressure,
+        selectedLayerId: options.execution.layerId,
+        selectedWorkerId: options.execution.assignedWorkerId,
+        selectedWorkerLabel: options.execution.assignedWorkerLabel,
+        selectedWorkerProfile: options.execution.assignedWorkerProfile,
+        selectedWorkerNodeId: options.execution.assignedWorkerNodeId,
+        guardVerdict: options.execution.guardVerdict,
+        failureClass: options.execution.status === "failed" ? "execution_failed" : undefined
+      },
+      evidence: {
+        objectiveDigest: digestOptionalText(options.execution.objective || options.objective),
+        contextDigest: digestOptionalText(options.context),
+        promptDigest: options.execution.promptDigest,
+        responseDigest: digestOptionalText(options.execution.responsePreview),
+        sourceIds: [
+          options.execution.layerId,
+          options.execution.assignedWorkerId,
+          options.qContext?.gatewaySubstrateSuiteId
+        ].filter((entry): entry is string => Boolean(entry)),
+        evidenceDigest:
+          options.execution.evidenceDigest ??
+          sha256Json({
+            contextFingerprint: options.qContext?.contextFingerprint,
+            evidenceIds: options.qContext?.evidenceIds,
+            promptDigest: options.execution.promptDigest,
+            responseDigest: digestOptionalText(options.execution.responsePreview)
+          }),
+        contextFingerprint: options.qContext?.contextFingerprint
+      },
+      decisionSummary: {
+        routeSuggestion: options.execution.routeSuggestion,
+        reasonSummary: options.execution.reasonSummary,
+        commitStatement: options.execution.commitStatement,
+        responsePreview: truncateAuditText(options.execution.responsePreview, 320)
+      }
+    }
+  });
+
+  return {
+    ...options.execution,
+    decisionTraceId: materialized.decisionTraceId,
+    decisionTraceHash: materialized.ledger.eventHash,
+    policyDigest: sha256Json(materialized.policy),
+    evidenceDigest: materialized.evidence.evidenceDigest ?? sha256Json(materialized.evidence),
+    releaseBuildId: releaseMetadata.buildId,
+    releaseGitShortSha: releaseMetadata.gitShortSha,
+    trainingBundleId: releaseMetadata.q.trainingLock?.bundleId
+  };
+}
+
+async function traceConversationRecord(options: {
+  conversation: ReturnType<typeof buildConversationRecord>;
+  consentScope?: string;
+  schedule: ReturnType<typeof engine.getSnapshot>["executionSchedules"][number];
+}): Promise<ReturnType<typeof buildConversationRecord>> {
+  const materialized = await appendDecisionTraceRecord({
+    rootDir: persistence.getStatus().rootDir,
+    record: {
+      decisionTraceId:
+        options.conversation.decisionTraceId ??
+        createDecisionTraceSeed({
+          source: "conversation",
+          sessionId: options.conversation.sessionId,
+          conversationId: options.conversation.id,
+          objective: options.conversation.summary,
+          promptDigest: options.conversation.evidenceDigest
+        }),
+      source: "conversation",
+      sessionId: options.conversation.sessionId,
+      conversationId: options.conversation.id,
+      release: {
+        buildId: releaseMetadata.buildId,
+        gitShortSha: releaseMetadata.gitShortSha,
+        modelName: getQModelName(),
+        foundationModel: getQFoundationModelName(),
+        trainingBundleId: releaseMetadata.q.trainingLock?.bundleId
+      },
+      policy: {
+        consentScope: options.consentScope,
+        routeMode: options.schedule.mode,
+        selectedLayerId: options.conversation.turns.at(-1)?.layerId,
+        guardVerdict: options.conversation.guardVerdict
+      },
+      evidence: {
+        objectiveDigest: digestOptionalText(options.conversation.summary),
+        sourceIds: options.conversation.turns
+          .map((turn) => turn.decisionTraceId)
+          .filter((entry): entry is string => Boolean(entry)),
+        evidenceDigest:
+          options.conversation.evidenceDigest ??
+          sha256Json({
+            turnTraceIds: options.conversation.turns.map((turn) => turn.decisionTraceId).filter(Boolean),
+            summary: options.conversation.summary
+          })
+      },
+      decisionSummary: {
+        routeSuggestion: options.conversation.finalRouteSuggestion,
+        commitStatement: options.conversation.finalCommitStatement,
+        responsePreview: truncateAuditText(options.conversation.summary, 320)
+      },
+      selfEvaluation: {
+        status: options.conversation.status,
+        driftDetected: options.conversation.status !== "completed"
+      }
+    }
+  });
+
+  return {
+    ...options.conversation,
+    decisionTraceId: materialized.decisionTraceId,
+    decisionTraceHash: materialized.ledger.eventHash,
+    policyDigest: sha256Json(materialized.policy),
+    evidenceDigest: materialized.evidence.evidenceDigest ?? sha256Json(materialized.evidence)
+  };
 }
 
 function extractQueryToken(urlValue?: string): string | undefined {
@@ -2824,6 +2998,7 @@ async function executeCognitivePass(options: {
     endpoint: executionEndpoint
   };
   const startedAt = new Date().toISOString();
+  let qContext: Awaited<ReturnType<typeof resolveQOrchestrationContext>> | undefined;
 
   engine.registerIntelligenceLayer(busyLayer);
   await persistence.persist(engine.getDurableState());
@@ -2837,7 +3012,7 @@ async function executeCognitivePass(options: {
       governance.listDecisions()
     );
     const deniedCount = recentGovernanceDeniedCount();
-    const qContext = await resolveQOrchestrationContext({
+    qContext = await resolveQOrchestrationContext({
       snapshot: activeSnapshot,
       objective: options.objective,
       context: options.context,
@@ -2878,24 +3053,31 @@ async function executeCognitivePass(options: {
       retriedFromExecutionId: options.retriedFromExecutionId,
       repairCause: options.repairCause
     });
+    const tracedExecution = await traceCognitiveExecution({
+      execution: boundExecution,
+      objective: options.objective,
+      context: options.context,
+      consentScope: options.consentScope,
+      qContext
+    });
     const settledLayer: IntelligenceLayer = {
       ...busyLayer,
-      status: boundExecution.status === "completed" ? "ready" : "degraded"
+      status: tracedExecution.status === "completed" ? "ready" : "degraded"
     };
 
     engine.registerIntelligenceLayer(settledLayer);
     const snapshot = phaseSnapshotSchema.parse(
-      projectPhaseSnapshot(engine.commitCognitiveExecution(boundExecution))
+      projectPhaseSnapshot(engine.commitCognitiveExecution(tracedExecution))
     );
     await persistence.persist(engine.getDurableState());
     emitSnapshot();
     await recordFederatedExecutionOutcome({
-      execution: boundExecution
+      execution: tracedExecution
     });
 
     return {
       layer: settledLayer,
-      execution: boundExecution,
+      execution: tracedExecution,
       response: result.response,
       snapshot,
       failureClass: result.failureClass,
@@ -2951,23 +3133,30 @@ async function executeCognitivePass(options: {
       retriedFromExecutionId: options.retriedFromExecutionId,
       repairCause: options.repairCause
     };
+    const tracedExecution = await traceCognitiveExecution({
+      execution: failedExecution,
+      objective: options.objective,
+      context: options.context,
+      consentScope: options.consentScope,
+      qContext
+    });
     const failedLayer: IntelligenceLayer = {
       ...busyLayer,
       status: "degraded"
     };
     engine.registerIntelligenceLayer(failedLayer);
     const snapshot = phaseSnapshotSchema.parse(
-      projectPhaseSnapshot(engine.commitCognitiveExecution(failedExecution))
+      projectPhaseSnapshot(engine.commitCognitiveExecution(tracedExecution))
     );
     await persistence.persist(engine.getDurableState());
     emitSnapshot();
     await recordFederatedExecutionOutcome({
-      execution: failedExecution
+      execution: tracedExecution
     });
     return {
       layer: failedLayer,
-      execution: failedExecution,
-      response: failedExecution.responsePreview,
+      execution: tracedExecution,
+      response: tracedExecution.responsePreview,
       snapshot,
       failureClass: "http_error",
       thinkingDetected: false
@@ -3003,6 +3192,7 @@ async function executeScheduledCognitivePass(options: {
     endpoint: executionEndpoint
   };
   const startedAt = new Date().toISOString();
+  let qContext: Awaited<ReturnType<typeof resolveQOrchestrationContext>> | undefined;
 
   engine.registerIntelligenceLayer(busyLayer);
   await persistence.persist(engine.getDurableState());
@@ -3016,7 +3206,7 @@ async function executeScheduledCognitivePass(options: {
       governance.listDecisions()
     );
     const deniedCount = recentGovernanceDeniedCount();
-    const qContext = await resolveQOrchestrationContext({
+    qContext = await resolveQOrchestrationContext({
       snapshot: activeSnapshot,
       objective: options.objective,
       context: options.context,
@@ -3045,24 +3235,31 @@ async function executeScheduledCognitivePass(options: {
       parallelBatchSize: options.parallelBatchSize,
       parallelPosition: options.parallelPosition
     });
+    const tracedExecution = await traceCognitiveExecution({
+      execution: boundExecution,
+      objective: options.objective,
+      context: options.context,
+      consentScope: options.consentScope,
+      qContext
+    });
     const settledLayer: IntelligenceLayer = {
       ...busyLayer,
-      status: boundExecution.status === "completed" ? "ready" : "degraded"
+      status: tracedExecution.status === "completed" ? "ready" : "degraded"
     };
 
     engine.registerIntelligenceLayer(settledLayer);
     const snapshot = phaseSnapshotSchema.parse(
-      projectPhaseSnapshot(engine.commitCognitiveExecution(boundExecution))
+      projectPhaseSnapshot(engine.commitCognitiveExecution(tracedExecution))
     );
     await persistence.persist(engine.getDurableState());
     emitSnapshot();
     await recordFederatedExecutionOutcome({
-      execution: boundExecution
+      execution: tracedExecution
     });
 
     return {
       layer: settledLayer,
-      execution: boundExecution,
+      execution: tracedExecution,
       response: result.response,
       snapshot,
       failureClass: result.failureClass,
@@ -3110,6 +3307,13 @@ async function executeScheduledCognitivePass(options: {
       parallelBatchSize: options.parallelBatchSize,
       parallelPosition: options.parallelPosition
     };
+    const tracedExecution = await traceCognitiveExecution({
+      execution: failedExecution,
+      objective: options.objective,
+      context: options.context,
+      consentScope: options.consentScope,
+      qContext
+    });
     const settledLayer: IntelligenceLayer = {
       ...busyLayer,
       status: "degraded"
@@ -3117,18 +3321,18 @@ async function executeScheduledCognitivePass(options: {
 
     engine.registerIntelligenceLayer(settledLayer);
     const snapshot = phaseSnapshotSchema.parse(
-      projectPhaseSnapshot(engine.commitCognitiveExecution(failedExecution))
+      projectPhaseSnapshot(engine.commitCognitiveExecution(tracedExecution))
     );
     await persistence.persist(engine.getDurableState());
     emitSnapshot();
     await recordFederatedExecutionOutcome({
-      execution: failedExecution
+      execution: tracedExecution
     });
 
     return {
       layer: settledLayer,
-      execution: failedExecution,
-      response: failedExecution.responsePreview,
+      execution: tracedExecution,
+      response: tracedExecution.responsePreview,
       snapshot,
       failureClass: "http_error",
       thinkingDetected: false
@@ -3550,6 +3754,11 @@ async function executeCognitiveSchedule(options: {
         : undefined;
 
     if (conversation) {
+      conversation = await traceConversationRecord({
+        conversation,
+        consentScope: options.consentScope,
+        schedule: options.schedule
+      });
       latestSnapshot = phaseSnapshotSchema.parse(
         projectPhaseSnapshot(engine.recordConversation(conversation), options.consentScope)
       );
@@ -4280,6 +4489,10 @@ app.post("/api/q/run", async (request, reply) => {
         source: "q-api",
         sessionId,
         modelName: getQModelName(),
+        foundationModel: getQFoundationModelName(),
+        releaseBuildId: releaseMetadata.buildId,
+        releaseGitShortSha: releaseMetadata.gitShortSha,
+        trainingBundleId: releaseMetadata.q.trainingLock?.bundleId,
         role,
         objective: prompt,
         contextPreview: truncateAuditText(context),
@@ -4381,6 +4594,10 @@ app.post("/api/q/run", async (request, reply) => {
       ].filter(Boolean).length;
       await appendAudit({
         executionId: result.execution.id,
+        decisionTraceId: result.execution.decisionTraceId,
+        decisionTraceHash: result.execution.decisionTraceHash,
+        policyDigest: result.execution.policyDigest,
+        evidenceDigest: result.execution.evidenceDigest,
         model: getQModelName(),
         status: "failed",
         parseSuccess: structuredFieldCount === 3,
@@ -4391,7 +4608,16 @@ app.post("/api/q/run", async (request, reply) => {
         routeSuggestion: result.execution.routeSuggestion,
         reasonSummary: result.execution.reasonSummary,
         commitStatement: result.execution.commitStatement,
-        responsePreview: result.execution.responsePreview
+        responsePreview: result.execution.responsePreview,
+        objectiveDigest: digestOptionalText(prompt),
+        contextDigest: digestOptionalText(context),
+        responseDigest: digestOptionalText(result.execution.responsePreview),
+        qRoutingDirective: "primary-governed-local",
+        governancePressure: result.execution.governancePressure,
+        selectedWorkerId: result.execution.assignedWorkerId,
+        selectedWorkerLabel: result.execution.assignedWorkerLabel,
+        selectedWorkerProfile: result.execution.assignedWorkerProfile,
+        selectedWorkerNodeId: result.execution.assignedWorkerNodeId
       });
       reply.code(503);
       return {
@@ -4417,6 +4643,10 @@ app.post("/api/q/run", async (request, reply) => {
     ].filter(Boolean).length;
     await appendAudit({
       executionId: result.execution.id,
+      decisionTraceId: result.execution.decisionTraceId,
+      decisionTraceHash: result.execution.decisionTraceHash,
+      policyDigest: result.execution.policyDigest,
+      evidenceDigest: result.execution.evidenceDigest,
       model: getQModelName(),
       status: "completed",
       parseSuccess: structuredFieldCount === 3,
@@ -4427,7 +4657,16 @@ app.post("/api/q/run", async (request, reply) => {
       routeSuggestion: result.execution.routeSuggestion,
       reasonSummary: result.execution.reasonSummary,
       commitStatement: result.execution.commitStatement,
-      responsePreview: result.execution.responsePreview
+      responsePreview: result.execution.responsePreview,
+      objectiveDigest: digestOptionalText(prompt),
+      contextDigest: digestOptionalText(context),
+      responseDigest: digestOptionalText(result.execution.responsePreview),
+      qRoutingDirective: "primary-governed-local",
+      governancePressure: result.execution.governancePressure,
+      selectedWorkerId: result.execution.assignedWorkerId,
+      selectedWorkerLabel: result.execution.assignedWorkerLabel,
+      selectedWorkerProfile: result.execution.assignedWorkerProfile,
+      selectedWorkerNodeId: result.execution.assignedWorkerNodeId
     });
 
     return {

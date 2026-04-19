@@ -6,6 +6,7 @@ In plain English, Immaculate is a control system for AI and automation.
 It helps a machine decide what to do next, checks whether that action is allowed, keeps receipts, and publishes measurements so people can see what is real.
 
 Q is the public model name, built by Arobi Technology Alliance on Gemma 4; Gaetano Comparcola is the founder, CEO, lead architect, and lead engineer; Immaculate is the governed orchestration harness around Q.
+In the operating model, Arobi Network is the ledger-backed network where those governed AI decisions are anchored for review, replay, and insurability.
 
 Public website:
 
@@ -18,9 +19,10 @@ Right now the honest story is:
 
 - the latest real Harbor run on the official public Terminal-Bench task is green on the default Q-only path: [[Terminal-Bench-Public-Task]] now records `5/5`, mean reward `1.000`, `0` errors, and pass@2, pass@4, and pass@5 all at `1.000`
 - Q parses both tracked local contract lanes cleanly on same-day evidence: `4/4` on [[Model-Benchmark-Comparison]] and `4/4` on [[BridgeBench]]
-- the hard `Q` mediation drift lane is green on the active `bench-v23` lock: four mixed-pressure scenarios, `0` failed assertions, route-alignment `P50 1`, runner-path `P95 4.13 ms`, and explicit Q plus Immaculate self-evaluation on every scenario; the exact trace lives on [[Q-Mediation-Drift]]
-- the `Q` substrate benchmark is fully green: the dedicated Q gateway stayed live, rejected unauthenticated traffic, preserved `ROUTE/REASON/COMMIT`, and handed the work back into Immaculate arbitration with `0` failed assertions; current seam timing is gateway `P95 18109.65 ms` and arbitration `P95 1.83 ms` on [[Q-Gateway-Substrate]]
+- the hard `Q` mediation drift lane is green on the active `bench-v23` lock: four mixed-pressure scenarios, `0` failed assertions, route-alignment `P50 1`, runner-path `P95 6.68 ms`, and explicit Q plus Immaculate self-evaluation on every scenario; the exact trace lives on [[Q-Mediation-Drift]]
+- the `Q` substrate benchmark is fully green: the dedicated Q gateway stayed live, rejected unauthenticated traffic, preserved `ROUTE/REASON/COMMIT`, and handed the work back into Immaculate arbitration with `0` failed assertions; current seam timing is gateway `P95 15297.49 ms` and arbitration `P95 1.74 ms` on [[Q-Gateway-Substrate]]
 - the dedicated Q gateway contract is also green: `/health 200`, authenticated `/api/q/info 200`, authenticated `/v1/models 200`, authenticated chat `200`, bounded `429` concurrency rejection, and a canonical identity smoke that answers as `Q`, `Arobi Technology Alliance`, `Gaetano Comparcola`, `Gemma 4`, and `Immaculate`; the exact current gateway overhead lives on [[Q-Gateway-Validation]]
+- the live `Q` API audit loop is also now proving successful governed calls, not just rejects: [[Q-API-Audit]] records a real authenticated `/api/q/run` success with `parse success: true`, `decision trace linked`, and `23349.14 ms` latency on the current Q bundle
 - the current Q improvement path is machine-stamped: the active Q bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`, the current benchmark corpus is `55` rows, and the paired Immaculate orchestration bundle lives on [[Release-Surface]] and [[Q-Benchmark-Corpus]]
 - the current cloud truth is also concrete: the promoted HF Jobs bundle is staged and authenticated on the real account for `bench-v23`, the launch lane is ready when you want it, and the free Colab and Kaggle export lanes are stamped to the same bundle
 - the latest tracked W&B export remains current on `2026-04-18`, while the live mediation, substrate, gateway, and public-task Harbor reruns above are the newer repo-local wins

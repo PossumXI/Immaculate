@@ -705,6 +705,12 @@ function selectWorker(
     resolvedRequest.recommendedLayerId?.trim() || null,
     ...(resolvedRequest.preferredLayerIds ?? []).map((value) => value.trim()).filter(Boolean)
   ].filter((value): value is string => Boolean(value));
+  const avoidPeerIds = new Set(normalizeStringArray(resolvedRequest.avoidPeerIds));
+  const avoidHostLabels = new Set(normalizeStringArray(resolvedRequest.avoidHostLabels));
+  const avoidLocalities = new Set(normalizeStringArray(resolvedRequest.avoidLocalities));
+  const requestedAffinity = normalizeStringArray(resolvedRequest.preferredDeviceAffinityTags);
+  const requestedAffinitySet = new Set(requestedAffinity);
+  const avoidedAffinityTags = normalizeStringArray(resolvedRequest.avoidDeviceAffinityTags);
 
   const views = workers.map((worker) => buildWorkerView(worker, now, resolvedRequest));
   const summary = summarizeWorkers(views);
@@ -732,9 +738,28 @@ function selectWorker(
     };
   }
 
-  const scored = views
-    .filter((worker) => worker.assignmentEligible)
-    .map((worker) => {
+  type ScoredWorker = {
+    worker: IntelligenceWorkerView;
+    score: number;
+    reason: string;
+  };
+
+  function beats(left: ScoredWorker, right: ScoredWorker): boolean {
+    if (left.score !== right.score) {
+      return left.score > right.score;
+    }
+    if (left.worker.heartbeatAt !== right.worker.heartbeatAt) {
+      return left.worker.heartbeatAt > right.worker.heartbeatAt;
+    }
+    return left.worker.workerId < right.worker.workerId;
+  }
+
+  let winner: ScoredWorker | null = null;
+  let competingFailurePressure = 0;
+  for (const worker of views) {
+    if (!worker.assignmentEligible) {
+      continue;
+    }
       let score = 0;
       const reasons: string[] = [];
       if (
@@ -762,21 +787,21 @@ function selectWorker(
       }
       if (
         worker.peerId &&
-        normalizeStringArray(resolvedRequest.avoidPeerIds).includes(worker.peerId)
+        avoidPeerIds.has(worker.peerId)
       ) {
         score -= 4;
         reasons.push(`avoid-peer ${worker.peerId}`);
       }
       if (
         worker.hostLabel &&
-        normalizeStringArray(resolvedRequest.avoidHostLabels).includes(worker.hostLabel)
+        avoidHostLabels.has(worker.hostLabel)
       ) {
         score -= 3;
         reasons.push(`host-dup ${worker.hostLabel}`);
       }
       if (
         worker.locality &&
-        normalizeStringArray(resolvedRequest.avoidLocalities).includes(worker.locality)
+        avoidLocalities.has(worker.locality)
       ) {
         score -= 2;
         reasons.push(`locality-dup ${worker.locality}`);
@@ -852,7 +877,6 @@ function selectWorker(
         score += 3;
         reasons.push(`model ${resolvedRequest.baseModel}`);
       }
-      const requestedAffinity = normalizeStringArray(resolvedRequest.preferredDeviceAffinityTags);
       if (requestedAffinity.length > 0 && worker.deviceAffinityTags.length > 0) {
         const affinityMatches = requestedAffinity.filter((tag) => worker.deviceAffinityTags.includes(tag));
         if (affinityMatches.length > 0) {
@@ -861,7 +885,7 @@ function selectWorker(
         }
       }
       if (
-        requestedAffinity.includes("local-affinity") &&
+        requestedAffinitySet.has("local-affinity") &&
         resolvedRequest.requestedExecutionDecision !== "remote_required"
       ) {
         if (worker.executionProfile === "local") {
@@ -872,11 +896,11 @@ function selectWorker(
           reasons.push("remote-breaks-local-affinity");
         }
       }
-      if (requestedAffinity.includes("spill-affinity") && worker.executionProfile === "remote") {
+      if (requestedAffinitySet.has("spill-affinity") && worker.executionProfile === "remote") {
         score += 2;
         reasons.push("spill-affinity");
       }
-      if (requestedAffinity.includes("hard-deadline")) {
+      if (requestedAffinitySet.has("hard-deadline")) {
         if (worker.executionProfile === "local") {
           score += 4;
           reasons.push("hard-deadline local");
@@ -884,13 +908,12 @@ function selectWorker(
         if (typeof worker.observedLatencyMs === "number" && Number.isFinite(worker.observedLatencyMs)) {
           score -= Math.min(6, worker.observedLatencyMs / 30);
         }
-      } else if (requestedAffinity.includes("bounded-deadline")) {
+      } else if (requestedAffinitySet.has("bounded-deadline")) {
         if (typeof worker.observedLatencyMs === "number" && Number.isFinite(worker.observedLatencyMs)) {
           score -= Math.min(3, worker.observedLatencyMs / 60);
         }
       }
       if (resolvedRequest.preferDistinctDeviceAffinityTags && worker.deviceAffinityTags.length > 0) {
-        const avoidedAffinityTags = normalizeStringArray(resolvedRequest.avoidDeviceAffinityTags);
         const duplicateAffinities = avoidedAffinityTags.filter((tag) =>
           worker.deviceAffinityTags.includes(tag)
         );
@@ -937,25 +960,32 @@ function selectWorker(
         score += 1;
         reasons.push("watch");
       }
-      return {
+      const candidate: ScoredWorker = {
         worker,
         score,
         reason:
           reasons.join(" · ") ||
           (worker.executionProfile === "remote" ? "remote-ready" : "eligible")
       };
-    })
-    .sort((left, right) => {
-      if (left.score !== right.score) {
-        return right.score - left.score;
+      const candidateFailurePressure =
+        typeof worker.executionFailurePressure === "number" &&
+        Number.isFinite(worker.executionFailurePressure)
+          ? worker.executionFailurePressure
+          : 0;
+      if (!winner || beats(candidate, winner)) {
+        if (winner) {
+          const priorFailurePressure =
+            typeof winner.worker.executionFailurePressure === "number" &&
+            Number.isFinite(winner.worker.executionFailurePressure)
+              ? winner.worker.executionFailurePressure
+              : 0;
+          competingFailurePressure = Math.max(competingFailurePressure, priorFailurePressure);
+        }
+        winner = candidate;
+      } else {
+        competingFailurePressure = Math.max(competingFailurePressure, candidateFailurePressure);
       }
-      if (left.worker.heartbeatAt !== right.worker.heartbeatAt) {
-        return left.worker.heartbeatAt > right.worker.heartbeatAt ? -1 : 1;
-      }
-      return left.worker.workerId < right.worker.workerId ? -1 : 1;
-    });
-
-      const winner = scored[0];
+    }
   if (!winner) {
     return {
       assignment: null,
@@ -976,17 +1006,6 @@ function selectWorker(
       summary
     };
   }
-  const competingFailurePressure = Math.max(
-    0,
-    ...scored
-      .slice(1)
-      .map((entry) =>
-        typeof entry.worker.executionFailurePressure === "number" &&
-        Number.isFinite(entry.worker.executionFailurePressure)
-          ? entry.worker.executionFailurePressure
-          : 0
-      )
-  );
   if (
     competingFailurePressure >
       ((typeof winner.worker.executionFailurePressure === "number" &&

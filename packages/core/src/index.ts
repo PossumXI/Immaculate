@@ -244,6 +244,8 @@ export type BenchmarkMediationDriftScenarioResult = {
   immaculateSelfEvaluation: string;
   qDriftReasons: string[];
   immaculateDriftReasons: string[];
+  contextFingerprint?: string;
+  evidenceDigest?: string;
   runnerPathBottleneckStage: "arbitration" | "scheduling" | "routing";
   parallelFormationMode?: ExecutionParallelFormationMode;
   verticalStageCount?: number;
@@ -662,6 +664,13 @@ export type CognitiveExecution = {
   guardVerdict?: GuardVerdict;
   governancePressure?: GovernancePressureLevel;
   recentDeniedCount?: number;
+  decisionTraceId?: string;
+  decisionTraceHash?: string;
+  policyDigest?: string;
+  evidenceDigest?: string;
+  releaseBuildId?: string;
+  releaseGitShortSha?: string;
+  trainingBundleId?: string;
   assignedWorkerId?: string;
   assignedWorkerLabel?: string;
   assignedWorkerHostLabel?: string;
@@ -702,6 +711,10 @@ export type AgentTurn = {
   reasonSummary?: string;
   commitStatement?: string;
   guardVerdict?: GuardVerdict;
+  decisionTraceId?: string;
+  decisionTraceHash?: string;
+  policyDigest?: string;
+  evidenceDigest?: string;
   latencyMs: number;
   startedAt: string;
   completedAt: string;
@@ -723,6 +736,10 @@ export type MultiAgentConversation = {
   roles: IntelligenceLayerRole[];
   turnCount: number;
   guardVerdict: GuardVerdict;
+  decisionTraceId?: string;
+  decisionTraceHash?: string;
+  policyDigest?: string;
+  evidenceDigest?: string;
   finalRouteSuggestion?: string;
   finalCommitStatement?: string;
   summary: string;
@@ -1197,6 +1214,8 @@ const benchmarkMediationDriftScenarioResultSchema = z.object({
   immaculateSelfEvaluation: z.string(),
   qDriftReasons: z.array(z.string()),
   immaculateDriftReasons: z.array(z.string()),
+  contextFingerprint: z.string().optional(),
+  evidenceDigest: z.string().optional(),
   runnerPathBottleneckStage: z.enum(["arbitration", "scheduling", "routing"]),
   parallelFormationMode: z.enum(executionParallelFormationModes).optional(),
   verticalStageCount: z.number().int().nonnegative().optional(),
@@ -1643,6 +1662,13 @@ export const cognitiveExecutionSchema = z.object({
   guardVerdict: z.enum(guardVerdicts).optional(),
   governancePressure: z.enum(governancePressureLevels).optional(),
   recentDeniedCount: z.number().int().nonnegative().optional(),
+  decisionTraceId: z.string().optional(),
+  decisionTraceHash: z.string().optional(),
+  policyDigest: z.string().optional(),
+  evidenceDigest: z.string().optional(),
+  releaseBuildId: z.string().optional(),
+  releaseGitShortSha: z.string().optional(),
+  trainingBundleId: z.string().optional(),
   assignedWorkerId: z.string().optional(),
   assignedWorkerLabel: z.string().optional(),
   assignedWorkerHostLabel: z.string().optional(),
@@ -1683,6 +1709,10 @@ export const agentTurnSchema = z.object({
   reasonSummary: boundedPhraseSchema.optional(),
   commitStatement: boundedPhraseSchema.optional(),
   guardVerdict: z.enum(guardVerdicts).optional(),
+  decisionTraceId: z.string().optional(),
+  decisionTraceHash: z.string().optional(),
+  policyDigest: z.string().optional(),
+  evidenceDigest: z.string().optional(),
   latencyMs: z.number().nonnegative(),
   startedAt: z.string(),
   completedAt: z.string(),
@@ -1704,6 +1734,10 @@ export const multiAgentConversationSchema = z.object({
   roles: z.array(z.enum(intelligenceLayerRoles)),
   turnCount: z.number().int().nonnegative(),
   guardVerdict: z.enum(guardVerdicts),
+  decisionTraceId: z.string().optional(),
+  decisionTraceHash: z.string().optional(),
+  policyDigest: z.string().optional(),
+  evidenceDigest: z.string().optional(),
   finalRouteSuggestion: boundedPhraseSchema.optional(),
   finalCommitStatement: boundedPhraseSchema.optional(),
   summary: z.string(),

@@ -36,6 +36,8 @@ type QMediationDriftSurface = {
     immaculateSelfEvaluation: string;
     qDriftReasons: string[];
     immaculateDriftReasons: string[];
+    contextFingerprint?: string;
+    evidenceDigest?: string;
     runnerPathBottleneckStage: "arbitration" | "scheduling" | "routing";
     parallelFormationMode?: "single-lane" | "vertical-pipeline" | "horizontal-swarm" | "hybrid-quorum";
     localReplicaCount?: number;
@@ -151,6 +153,8 @@ function renderMarkdown(report: QMediationDriftSurface): string {
       `- Mediation signals: ${diagnostic.mediationDiagnosticSignals.map((signal) => `\`${signal}\``).join(" / ")}`,
       `- Q self-eval: ${diagnostic.qSelfEvaluation}`,
       `- Immaculate self-eval: ${diagnostic.immaculateSelfEvaluation}`,
+      `- Context fingerprint: \`${diagnostic.contextFingerprint ?? "n/a"}\``,
+      `- Evidence digest: \`${diagnostic.evidenceDigest ?? "n/a"}\``,
       `- Runner bottleneck stage: \`${diagnostic.runnerPathBottleneckStage}\``,
       `- Parallel formation: \`${diagnostic.parallelFormationMode ?? "none"}\` / local \`${diagnostic.localReplicaCount ?? 0}\` / remote \`${diagnostic.remoteReplicaCount ?? 0}\` / quorum \`${diagnostic.verificationQuorum ?? 0}\``,
       `- Affinity and deadline: \`${diagnostic.affinityMode ?? "none"}\` / \`${diagnostic.deadlineClass ?? "none"}\` / \`${diagnostic.deadlineBudgetMs ?? 0} ms\` / \`${diagnostic.backpressureAction ?? "none"}\``,
@@ -229,6 +233,9 @@ async function main(): Promise<void> {
       immaculateDriftReasons: Array.isArray(scenario.immaculateDriftReasons)
         ? scenario.immaculateDriftReasons
         : [],
+      contextFingerprint:
+        typeof scenario.contextFingerprint === "string" ? scenario.contextFingerprint : undefined,
+      evidenceDigest: typeof scenario.evidenceDigest === "string" ? scenario.evidenceDigest : undefined,
       runnerPathBottleneckStage:
         scenario.runnerPathBottleneckStage === "arbitration" ||
         scenario.runnerPathBottleneckStage === "scheduling" ||

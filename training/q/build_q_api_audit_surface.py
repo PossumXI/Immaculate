@@ -1,6 +1,5 @@
 import argparse
 import json
-from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -27,30 +26,31 @@ def load_audit_records(path: Path) -> list[dict]:
 
 
 def render_markdown(summary: dict) -> str:
-    latest = summary.get("latestRecord") or {}
+    latest = summary.get("latestSuccessfulRecord") or {}
     return "\n".join(
         [
             "# Q API Audit",
             "",
-            "This page is generated from the live Q public-substrate audit spool. It is the first feedback-loop surface for real Q calls that reached the governed `/api/q/run` path.",
+            "This page is generated from the live Q public-substrate audit spool. It summarizes the latest successful governed Q calls that reached the real `/api/q/run` path.",
             "",
             f"- Generated: `{summary['generatedAt']}`",
             f"- Source file: `{summary['sourcePath']}`",
             f"- Records: `{summary['recordCount']}`",
-            f"- Completed: `{summary['completedCount']}`",
-            f"- Failed: `{summary['failedCount']}`",
-            f"- Parse success: `{summary['parseSuccessCount']}`",
-            f"- Failure classes: `{json.dumps(summary['failureClassCounts'])}`",
+            f"- Successful governed calls: `{summary['successfulRecordCount']}`",
+            f"- Successful parse-complete calls: `{summary['successfulParseCount']}`",
+            f"- Decision traces linked: `{summary['decisionTraceCount']}`",
             f"- Current Q bundle: `{summary['qTrainingBundleId']}`",
             "",
-            "## Latest Record",
+            "## Latest Successful Record",
             "",
             f"- Session: `{latest.get('sessionId', 'n/a')}`",
+            f"- Decision trace: `{latest.get('decisionTraceId', 'n/a')}`",
+            f"- Trace hash: `{latest.get('decisionTraceHash', 'n/a')}`",
             f"- Model name: `{latest.get('modelName', 'Q')}`",
             f"- Status: `{latest.get('status', 'n/a')}`",
-            f"- Failure class: `{latest.get('failureClass', 'none')}`",
             f"- Latency: `{latest.get('latencyMs', 'n/a')}` ms",
             f"- Parse success: `{latest.get('parseSuccess', 'n/a')}`",
+            f"- Governance pressure: `{latest.get('governancePressure', 'n/a')}`",
             f"- Preview: {latest.get('responsePreview', '[none]')}",
         ]
     ) + "\n"
@@ -82,20 +82,16 @@ def main():
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
 
     records = load_audit_records(audit_path)
-    failure_classes = Counter()
-    completed_count = 0
-    failed_count = 0
-    parse_success_count = 0
+    successful_records: list[dict] = []
+    successful_parse_count = 0
+    decision_trace_count = 0
     for record in records:
-        if bool(record.get("parseSuccess")):
-            parse_success_count += 1
+        if str(record.get("decisionTraceId", "")).strip():
+            decision_trace_count += 1
         if str(record.get("status", "")).strip() == "completed":
-            completed_count += 1
-        else:
-            failed_count += 1
-        failure_class = str(record.get("failureClass", "")).strip()
-        if failure_class:
-            failure_classes[failure_class] += 1
+            successful_records.append(record)
+            if bool(record.get("parseSuccess")):
+                successful_parse_count += 1
 
     bundle_id = "none generated yet"
     training_lock_path = Path(args.training_lock)
@@ -108,20 +104,21 @@ def main():
         except Exception:
             pass
 
-    latest_record = dict(records[-1]) if records else {}
-    if latest_record:
-        latest_record["modelName"] = str(latest_record.get("modelName") or "Q").strip() or "Q"
-        latest_record.pop("alias", None)
+    latest_successful_record = dict(successful_records[-1]) if successful_records else {}
+    if latest_successful_record:
+        latest_successful_record["modelName"] = (
+            str(latest_successful_record.get("modelName") or "Q").strip() or "Q"
+        )
+        latest_successful_record.pop("alias", None)
     summary = {
         "generatedAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "sourcePath": str(audit_path.relative_to(root)).replace("\\", "/") if audit_path.exists() else str(audit_path).replace("\\", "/"),
         "recordCount": len(records),
-        "completedCount": completed_count,
-        "failedCount": failed_count,
-        "parseSuccessCount": parse_success_count,
-        "failureClassCounts": dict(failure_classes),
+        "successfulRecordCount": len(successful_records),
+        "successfulParseCount": successful_parse_count,
+        "decisionTraceCount": decision_trace_count,
         "qTrainingBundleId": bundle_id,
-        "latestRecord": latest_record,
+        "latestSuccessfulRecord": latest_successful_record,
         "output": {
             "manifestPath": str(manifest_path.relative_to(root)).replace("\\", "/"),
             "markdownPath": str(markdown_path.relative_to(root)).replace("\\", "/"),

@@ -1,28 +1,28 @@
 {
-  "generatedAt": "2026-04-19T07:42:56.365Z",
+  "generatedAt": "2026-04-19T21:41:33.295Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "5ed19b98682545e60ebbc826f19a6e793619ce06",
-    "gitShortSha": "5ed19b9",
-    "gitBranch": "harbor-q-push",
-    "buildId": "0.1.0+5ed19b9",
+    "gitSha": "7e1885ef0f8cccaf299fb7b44dd4a1dd473ff7d0",
+    "gitShortSha": "7e1885e",
+    "gitBranch": "publish-q-win",
+    "buildId": "0.1.0+7e1885e",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
       "truthfulLabel": "Q",
       "trainingLock": {
-        "generatedAt": "2026-04-19T05:51:26Z",
+        "generatedAt": "2026-04-19T07:46:04Z",
         "lockVersion": 1,
-        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22-5ed19b9-e0c8b138",
-        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22",
+        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
+        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23",
         "modelName": "Q",
-        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22.jsonl",
-        "trainDatasetSha256": "e0c8b1383220aad9426647beff67ac8ea3d15019bcce4ce71399b9bf1c48a935",
+        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl",
+        "trainDatasetSha256": "286326ce786c0a9b9b4a636a38114cc221c1b978a083ca55d70cc6ca6172cb07",
         "trainDatasetRowCount": 117,
-        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22.manifest.json",
-        "mixManifestSha256": "11d9f372ee3212c06c7dd8dfe80df509393edbdbc8d95d2b280e62b2097c251e",
+        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.manifest.json",
+        "mixManifestSha256": "4c7df8284cedaf8e43f1715c8eaf4c30826687e27a5d511ef8ccd4ca78df991e",
         "mixSupplementalCount": 6,
         "mixSupplementalPaths": [
           "training/q/q_harness_identity_seed.json",
@@ -36,27 +36,27 @@
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-19T05:51:41Z",
-        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v22",
-        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v22/hybrid-session.json",
+        "generatedAt": "2026-04-19T07:46:17Z",
+        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v23",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v23/hybrid-session.json",
         "localStatus": "ready",
         "cloudStatus": "ready",
         "cloudProvider": "hf_jobs",
-        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22-5ed19b9-e0c8b138",
+        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
         "immaculateBundleId": "immaculate-orchestration-5ed19b9-cd094c28",
         "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
       }
     }
   },
   "benchmark": {
-    "suiteId": "immaculate-benchmark-2026-04-19T07-22-36-454Z",
-    "generatedAt": "2026-04-19T07:22:36.454Z",
+    "suiteId": "immaculate-benchmark-2026-04-19T21-36-20-879Z",
+    "generatedAt": "2026-04-19T21:36:20.879Z",
     "packId": "q-gateway-substrate",
     "packLabel": "Q Gateway Substrate",
     "failedAssertions": 0,
     "structuredFieldsP50": 3,
-    "latencyP95Ms": 18109.65,
-    "arbitrationP95Ms": 1.83,
+    "latencyP95Ms": 15297.49,
+    "arbitrationP95Ms": 1.74,
     "guardDenialsMax": 3,
     "hardware": "knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics"
   },
@@ -78,8 +78,8 @@
     {
       "id": "q-gateway-substrate-release-bind",
       "status": "pass",
-      "target": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22-5ed19b9-e0c8b138",
-      "actual": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22-5ed19b9-e0c8b138",
+      "target": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
+      "actual": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
       "detail": "the release surface must agree with the live gateway before Q can be benchmarked as one coherent product"
     },
     {

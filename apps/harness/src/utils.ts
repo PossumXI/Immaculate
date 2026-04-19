@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
 import { unlink } from "node:fs/promises";
@@ -9,6 +10,27 @@ export function hashValue(value: string): string {
     hash = Math.imul(hash, 16777619);
   }
   return `fnv1a-${(hash >>> 0).toString(16).padStart(8, "0")}`;
+}
+
+export function sha256Hash(value: string): string {
+  return createHash("sha256").update(value, "utf8").digest("hex");
+}
+
+export function stableStringify(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map((entry) => stableStringify(entry)).join(",")}]`;
+  }
+  if (value && typeof value === "object") {
+    return `{${Object.entries(value as Record<string, unknown>)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, entry]) => `${JSON.stringify(key)}:${stableStringify(entry)}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+export function sha256Json(value: unknown): string {
+  return sha256Hash(stableStringify(value));
 }
 
 export async function safeUnlink(filePath: string): Promise<void> {

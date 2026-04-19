@@ -22,27 +22,27 @@ const proofCards = [
   },
   {
     label: "Q Mediation Drift",
-    body: "The four-scenario mixed-pressure reasoning lane is green on the active bench-v23 lock. Q and Immaculate both self-evaluate every scenario, route alignment stays perfect, and runner-path P95 is 4.13 ms."
+    body: "The four-scenario mixed-pressure reasoning lane is green on the active bench-v23 lock. Q and Immaculate both self-evaluate every scenario, route alignment stays perfect, and runner-path P95 is 6.68 ms."
   },
   {
     label: "Q Substrate Benchmark",
-    body: "Gateway to Immaculate seam is green. Structured handoff survives arbitration with zero failed assertions, gateway P95 is 18.11s, and arbitration P95 is 1.83 ms."
+    body: "Gateway to Immaculate seam is green. Structured handoff survives arbitration with zero failed assertions, gateway P95 is 15.30s, and arbitration P95 is 1.74 ms."
   },
   {
     label: "Q Gateway Contract",
     body: "The dedicated Q gateway is live and bounded: health 200, auth 401 without a key, Q-only model listing, chat 200 with a key, and concurrent pressure rejects at 429."
   },
   {
+    label: "Arobi Audit Trail",
+    body: "The live Q API audit loop now records successful governed calls into a chained Arobi decision ledger. The latest authenticated /api/q/run call completed with parse success, a linked decision trace, and a truthful ROUTE/REASON/COMMIT record."
+  },
+  {
     label: "Training State",
     body: "Q is the public model name built by Arobi Technology Alliance on Gemma 4. Gaetano Comparcola is the founder, CEO, lead architect, and lead engineer, and Immaculate is the governed orchestration harness around Q on the active bench-v23 lock."
   },
   {
-    label: "Cloud Lanes",
-    body: "HF Jobs auth, hardware visibility, and bundle staging are real on the active bench-v23 lock, and the staged cloud launch is ready. Colab and Kaggle free export lanes are stamped to the same bundle for replay and smoke work."
-  },
-  {
     label: "W&B Publication Surface",
-    body: "The newest tracked W&B export is April 18. The April 18 mediation and substrate reruns are also live repo evidence, while the separate 60m soak page remains historical evidence from the last hour-class rerun."
+    body: "The newest published W&B export is April 18. The newer April 19 mediation, substrate, and audit-trail wins are live repo evidence now, while the separate 60m soak page remains historical evidence from the last hour-class rerun."
   }
 ];
 
@@ -83,7 +83,7 @@ export function LandingPage() {
         <div className="landingCopy">
           <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 19 | W&amp;B EXPORT APR 18</p>
           <h1 className="landingHeadline">Controlled intelligence for critical operations.</h1>
-          <p className="landingLede">Defense and healthcare. Evidence before action. Q only. Benchmarked. Gateway seam proven. Audit loop live.</p>
+          <p className="landingLede">Defense and healthcare. Evidence before action. Q only. Benchmarked. Gateway seam proven. Arobi audit loop live.</p>
 
           <div className="landingPills">
             <span>Q 4/4 structured</span>
@@ -91,10 +91,12 @@ export function LandingPage() {
             <span>Terminal-Bench public task 5/5</span>
             <span>Mean reward 1.0</span>
             <span>Mediation drift 4 scenarios</span>
-            <span>Runner path P95 4.13ms</span>
+            <span>Runner path P95 6.68ms</span>
+            <span>Gateway P95 15.30s</span>
             <span>Substrate seam green</span>
             <span>Gateway contract green</span>
             <span>Identity gate green</span>
+            <span>Arobi decision trace live</span>
             <span>Latest W&B export Apr 18</span>
             <span>Machine-stamped bench-v23 lock</span>
             <span>55 benchmark rows</span>

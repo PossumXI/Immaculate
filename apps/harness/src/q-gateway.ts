@@ -338,6 +338,23 @@ function parseTimeoutOverrideMs(value: string | string[] | undefined): number | 
   return Math.max(1_000, Math.min(DEFAULT_TIMEOUT_MS, Math.round(parsed)));
 }
 
+function isRetryableStructuredFailure(failureClass: string | undefined): boolean {
+  return (
+    failureClass === "transport_timeout" ||
+    failureClass === "http_error" ||
+    failureClass === "empty_response"
+  );
+}
+
+function finalizeGatewayCircuit(failureClass?: string) {
+  if (failureClass) {
+    qPrimaryCircuit.recordFailure(failureClass);
+  } else {
+    qPrimaryCircuit.recordSuccess();
+  }
+  return qPrimaryCircuit.snapshot();
+}
+
 function latestUserPrompt(messages: OllamaChatMessage[]): string | undefined {
   for (let index = messages.length - 1; index >= 0; index -= 1) {
     const message = messages[index];
@@ -491,9 +508,9 @@ async function runGatewayStructuredAttempt(options: {
     timeoutMs: options.timeoutMs,
     format: "json",
     ollamaOptions: {
-      ...(options.ollamaOptions ?? {}),
       num_ctx: STRUCTURED_FAST_NUM_CTX,
-      num_batch: STRUCTURED_FAST_NUM_BATCH
+      num_batch: STRUCTURED_FAST_NUM_BATCH,
+      ...(options.ollamaOptions ?? {})
     }
   });
   if (generated.failureClass) {
@@ -769,6 +786,9 @@ app.post("/v1/chat/completions", async (request, reply) => {
   let primaryResult: OllamaChatCompletionResult | undefined;
   let primaryFailureClass: string | undefined = primaryDecision.reason;
   let servedResult: OllamaChatCompletionResult | undefined;
+  let structuredRetryAttempted = false;
+  let structuredRetryUsed = false;
+  let structuredRetryFailureClass: string | undefined;
   let contractRepairAttempted = false;
   let contractRepairUsed = false;
   let contractRepairFailureClass: string | undefined;
@@ -792,23 +812,42 @@ app.post("/v1/chat/completions", async (request, reply) => {
           includeIdentityInstruction: !skipBenchmarkIdentity,
           ollamaOptions: benchmarkOllamaOptions
         });
-    if (primaryResult.failureClass) {
-      primaryFailureClass = primaryResult.failureClass;
-      qPrimaryCircuit.recordFailure(primaryResult.failureClass);
-    } else {
-      qPrimaryCircuit.recordSuccess();
+    if (!primaryResult.failureClass || (structuredRequest && primaryResult.failureClass === "contract_invalid")) {
       servedResult = primaryResult;
+    } else if (structuredRequest && isRetryableStructuredFailure(primaryResult.failureClass)) {
+      structuredRetryAttempted = true;
+      const retryResult = await runGatewayStructuredAttempt({
+        model: qModel,
+        messages,
+        maxTokens: effectiveMaxTokens,
+        timeoutMs: Math.min(
+          effectiveTimeoutMs,
+          Math.max(STRUCTURED_REPAIR_TIMEOUT_MS * 2, Math.round(effectiveTimeoutMs * 0.5))
+        ),
+        includeIdentityInstruction: !skipBenchmarkIdentity,
+        ollamaOptions: benchmarkOllamaOptions
+      });
+      primaryResult = retryResult;
+      if (!retryResult.failureClass || retryResult.failureClass === "contract_invalid") {
+        servedResult = retryResult;
+        structuredRetryUsed = !retryResult.failureClass;
+      } else {
+        primaryFailureClass = retryResult.failureClass;
+        structuredRetryFailureClass = retryResult.failureClass;
+      }
+    } else {
+      primaryFailureClass = primaryResult.failureClass;
     }
   }
 
-  const circuit = qPrimaryCircuit.snapshot();
-  attachQResponseHeaders(reply, circuit, primaryFailureClass, primaryResult, servedResult);
-
-  if (!servedResult || servedResult.failureClass) {
+  if (!servedResult || (servedResult.failureClass && servedResult.failureClass !== "contract_invalid")) {
+    const failureClass = servedResult?.failureClass ?? primaryFailureClass ?? "http_error";
+    const circuit = finalizeGatewayCircuit(failureClass);
+    attachQResponseHeaders(reply, circuit, failureClass, primaryResult, servedResult);
     reply.code(503);
     return {
       error: "q_upstream_failure",
-      failureClass: servedResult?.failureClass ?? primaryFailureClass ?? "http_error",
+      failureClass,
       message: servedResult?.responsePreview ?? primaryResult?.responsePreview ?? "Q upstream failed.",
       model: getQModelName(),
       foundationModel: getQFoundationModelName(),
@@ -818,6 +857,9 @@ app.post("/v1/chat/completions", async (request, reply) => {
       circuitState: circuit.state,
       latencyMs: servedResult?.latencyMs ?? primaryResult?.latencyMs ?? 0,
       thinkingDetected: servedResult?.thinkingDetected ?? primaryResult?.thinkingDetected ?? false,
+      structuredRetryAttempted,
+      structuredRetryUsed,
+      structuredRetryFailureClass,
       contractRepairAttempted,
       contractRepairUsed,
       contractRepairFailureClass
@@ -870,10 +912,14 @@ app.post("/v1/chat/completions", async (request, reply) => {
     }
   }
   if (structuredRequest && structuredFieldCount(content) !== 3) {
+    const failureClass =
+      contractRepairFailureClass ?? servedResult.failureClass ?? primaryFailureClass ?? "contract_invalid";
+    const circuit = finalizeGatewayCircuit(failureClass);
+    attachQResponseHeaders(reply, circuit, failureClass, primaryResult, servedResult);
     reply.code(503);
     return {
       error: "q_upstream_failure",
-      failureClass: contractRepairFailureClass ?? "contract_invalid",
+      failureClass,
       message: content || "Structured contract invalid: missing ROUTE, REASON, or COMMIT.",
       model: getQModelName(),
       foundationModel: getQFoundationModelName(),
@@ -883,11 +929,17 @@ app.post("/v1/chat/completions", async (request, reply) => {
       circuitState: circuit.state,
       latencyMs: servedLatencyMs,
       thinkingDetected: servedThinkingDetected,
+      structuredRetryAttempted,
+      structuredRetryUsed,
+      structuredRetryFailureClass,
       contractRepairAttempted,
       contractRepairUsed,
       contractRepairFailureClass
     };
   }
+
+  const circuit = finalizeGatewayCircuit(undefined);
+  attachQResponseHeaders(reply, circuit, primaryFailureClass, primaryResult, servedResult);
 
   return {
     id: `chatcmpl-${Date.now().toString(36)}`,
@@ -901,6 +953,9 @@ app.post("/v1/chat/completions", async (request, reply) => {
     circuitState: circuit.state,
     latencyMs: servedLatencyMs,
     thinkingDetected: servedThinkingDetected,
+    structuredRetryAttempted,
+    structuredRetryUsed,
+    structuredRetryFailureClass,
     contractRepairAttempted,
     contractRepairUsed,
     contractRepairFailureClass,
