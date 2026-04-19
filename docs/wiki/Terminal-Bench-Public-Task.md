@@ -2,9 +2,9 @@
 
 This page records the latest real local Harbor run against the official public Terminal-Bench task using the default Q-only path.
 
-- Generated: `2026-04-19T07:43:11.245Z`
-- Immaculate release: `0.1.0+5ed19b9`
-- Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22-5ed19b9-e0c8b138`
+- Generated: `2026-04-19T14:31:45.217Z`
+- Immaculate release: `0.1.0+801fe27`
+- Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`
 - Harbor job: `q-terminal-bench-public-generic-smoke-v32`
 - Dataset: `terminal-bench/terminal-bench-2`
 - Public task: `terminal-bench/make-mips-interpreter`
@@ -23,18 +23,19 @@ This page records the latest real local Harbor run against the official public T
 - Duration: `494.35 s`
 - Trial ids: `make-mips-interpreter__4ar2oRd, make-mips-interpreter__Ai8MJ5R, make-mips-interpreter__BfoWoUZ, make-mips-interpreter__GQfgcuF, make-mips-interpreter__dddRzPB`
 
-## Historical Official Receipt
+## Leaderboard Status
 
-- Historical official receipt generated: `2026-04-18T06:23:47.663Z`
-- Historical official receipt mean reward: `0.000`
-- Historical discussion: https://huggingface.co/datasets/harborframework/terminal-bench-2-leaderboard/discussions/140
-- Historical commit: https://huggingface.co/datasets/harborframework/terminal-bench-2-leaderboard/commit/9a4ad15564f2a3c1303da7c89a08dc10cfec36c3
+- Status page generated: `2026-04-19T14:30:49.861Z`
+- Eligible official receipt active: `no`
+- Required unique tasks: `89`
+- Status: `waiting-for-full-sweep`
+- Note: The official leaderboard validator expects the full 89-task Terminal-Bench 2.0 sweep. A single-task public-task win is not an eligible leaderboard receipt by itself.
 
 ## Truth Boundary
 
 - This is a real Harbor run on the official public task `terminal-bench/make-mips-interpreter`.
 - It is the latest measured local Q-only win, not an official leaderboard claim by itself.
-- The official leaderboard receipt remains tracked separately on `docs/wiki/Terminal-Bench-Receipt.md` until a new public submission is made.
+- Official leaderboard publication remains gated on the full 89-task sweep requirement tracked on `docs/wiki/Terminal-Bench-Receipt.md`.
 
 ## Artifact Paths
 

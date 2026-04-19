@@ -1,71 +1,28 @@
-# Terminal-Bench Receipt
+# Terminal-Bench Leaderboard Status
 
-This page records the official public-task Terminal-Bench leaderboard receipt submission for the real `Q` lane. It is a real Harbor job plus a real public PR/discussion on the official leaderboard dataset repo.
+This page tracks the real public leaderboard state for Q. The local public-task Harbor win is real, but the official Terminal-Bench leaderboard validator currently requires the full 89-task sweep, so there is no eligible current public receipt claimed from this checkout.
 
-- Generated: `2026-04-18T06:23:47.663Z`
-- Release: `0.1.0+d0bdd00`
-- Repo commit: `d0bdd00c3784f262b445d969a2b3d510da035bbb`
+- Generated: `2026-04-19T14:31:45.545Z`
+- Release: `0.1.0+801fe27`
+- Repo commit: `801fe27ab25461ac6bfdf54f3564dff9ea90392c`
 - Q serving label: `Q`
-- Measured bundle boundary: this page is tied to the last verified public-task Harbor run and can remain on an older Q bundle than the active release surface until that public task is rerun.
 - Leaderboard repo: `harborframework/terminal-bench-2-leaderboard`
-- Submission PR/discussion: https://huggingface.co/datasets/harborframework/terminal-bench-2-leaderboard/discussions/140
-- Submission commit: https://huggingface.co/datasets/harborframework/terminal-bench-2-leaderboard/commit/9a4ad15564f2a3c1303da7c89a08dc10cfec36c3
+- Status: `waiting-for-full-sweep`
+- Eligible official receipt active: `no`
+- Required unique tasks: `89`
+- Local public-task win qualified for leaderboard by itself: `no`
 
-## What Ran
+## Current Truth
 
-- Dataset: `terminal-bench/terminal-bench-2`
-- Public task: `terminal-bench/make-mips-interpreter`
-- Dataset ref: `sha256:c6fc2e2382c1dbae99b2d5ecd2f4f4a60c3c01e0d84642d69b4afd92e99d078b`
-- Harbor agent import path: `benchmarks.harbor.q_harbor_agent:HarborQAgent`
-- Harbor model: `Q`
-- Harbor job name: `q-terminal-bench-public-receipt`
-- Attempts: `5`
-- Concurrent trials: `1`
-- Timeout multiplier: `1`
-- Timeout overrides present: `no`
-- Resource overrides present: `no`
+- The official leaderboard validator expects the full 89-task Terminal-Bench 2.0 sweep. A single-task public-task win is not an eligible leaderboard receipt by itself.
+- The wins-first public measurement for Q remains [Terminal-Bench-Public-Task](docs/wiki/Terminal-Bench-Public-Task.md).
 
-## Measured Result
+## Latest Draft Submission Attempt
 
-- Started: `2026-04-16T11:52:39.729045`
-- Finished: `2026-04-16T12:00:16.281122`
-- Duration: `456.55 s`
-- Trials: `5`
-- Errors: `0`
-- Mean reward: `0.000`
-- pass@2 `0.000`, pass@4 `0.000`, pass@5 `0.000`
-- Trial ids: `make-mips-interpreter__8rHSUQ2, make-mips-interpreter__Hho3A4K, make-mips-interpreter__MyvbUq7, make-mips-interpreter__UUSmarr, make-mips-interpreter__zYpyWMm`
-
-## Local Diagnostic Rerun Evidence
-
-- Generated: `2026-04-18T06:20:59.166Z`
-- Mean reward: `1.000`
-- Trials: `5`
-- Errors: `0`
-- Local rerun page: `docs/wiki/Terminal-Bench-Rerun.md`
-
-## Submission Package
-
-- Agent display name: `Immaculate Q Harbor`
-- Agent org: `PossumX.dev`
-- Agent URL: `https://github.com/PossumXI/Immaculate`
-- Model name: `Q`
-- Foundation model: `Gemma 4`
-- Model org: `Arobi Technology Alliance`
-- Discussion state observed: `open`
-- Merge state observed: `ready-to-merge`
-- Submission commit verified: `yes`
-
-## Why This Matters
-
-- This is not just a local benchmark note. It is a real public receipt on the official Terminal-Bench leaderboard submission repo.
-- The receipt proves the real `Q` lane can be packaged, evaluated on a public Terminal-Bench task, and submitted through the official Harbor/Hugging Face path without hiding behind a repo-local task pack.
-- The result is intentionally kept honest: the official public receipt here is poor, while any newer local diagnostic rerun stays separate until it is resubmitted through the public leaderboard path.
+- Generated: `2026-04-19T14:24:24.377708+00:00`
 
 ## Truth Boundary
 
-- This is one public-task receipt for `terminal-bench/make-mips-interpreter`, not a full Terminal-Bench leaderboard sweep.
-- The PR/discussion is currently open and ready to merge; this page does not claim it is already merged unless the discussion page says so later.
-- The published score here is `0.000`, so this page proves official receipt and submission, not strong public-task performance.
-- If a newer `Terminal-Bench-Rerun` page exists, it is current local engineering evidence only. It does not replace this public receipt until a new public submission is made.
-- Any local diagnostic rerun is there to prove the harness and verifier contract, not to silently rewrite the historical public leaderboard record.
+- This page is intentionally not a scorecard.
+- It does not claim a live official leaderboard win until a full 89-task sweep is submitted and accepted.
+- The local 5/5 Harbor public-task win is still real engineering evidence and remains published on the dedicated public-task page.

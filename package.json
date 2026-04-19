@@ -17,6 +17,7 @@
     "benchmark:harbor:report": "npm run benchmark:harbor:report -w @immaculate/harness",
     "benchmark:harbor:soak": "npm run benchmark:harbor:soak -w @immaculate/harness",
     "benchmark:terminalbench:receipt": "npm run benchmark:terminalbench:receipt -w @immaculate/harness",
+    "benchmark:terminalbench:submit": "node ./scripts/run-python.mjs ./benchmarks/harbor/submit_terminal_bench_public_receipt.py",
     "benchmark:terminalbench:public-task": "tsx ./apps/harness/src/terminal-bench-public-task.ts",
     "benchmark:terminalbench:rerun": "npm run benchmark:terminalbench:rerun -w @immaculate/harness",
     "benchmark:q:substrate": "npm run benchmark -w @immaculate/harness -- --pack=q-gateway-substrate",

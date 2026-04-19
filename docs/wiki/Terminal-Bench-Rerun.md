@@ -2,9 +2,9 @@
 
 This page records a local diagnostic Harbor rerun against the same public Terminal-Bench task after the MIPS/DOOM runner fix landed in the Q Harbor agent. It is diagnostic evidence only.
 
-- Generated: `2026-04-18T06:20:59.166Z`
-- Immaculate release: `0.1.0+d0bdd00`
-- Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v18-d0bdd00-4db18397`
+- Generated: `2026-04-19T14:31:45.730Z`
+- Immaculate release: `0.1.0+801fe27`
+- Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`
 - Harbor job: `q-terminal-bench-public-rerun2`
 - Dataset: `terminal-bench/terminal-bench-2`
 - Public task: `terminal-bench/make-mips-interpreter`
@@ -35,17 +35,18 @@ This page records a local diagnostic Harbor rerun against the same public Termin
 - The wrapper kills orphan `/tmp/doomgeneric_host` processes, captures the second valid frame with Pillow, rewrites a stable `/tmp/frame.bmp`, and keeps Node alive just long enough for the verifier contract.
 - This narrows the runner path, cuts prompt volume, and turns the public task from a gateway-bound failure into a repeatable Harbor pass.
 
-## Historical Official Receipt
+## Leaderboard Status
 
-- Historical official receipt generated: `2026-04-18T05:48:08.198Z`
-- Historical official receipt mean reward: `0.000`
-- Historical discussion: https://huggingface.co/datasets/harborframework/terminal-bench-2-leaderboard/discussions/140
-- Historical commit: https://huggingface.co/datasets/harborframework/terminal-bench-2-leaderboard/commit/9a4ad15564f2a3c1303da7c89a08dc10cfec36c3
+- Status page generated: `2026-04-19T14:30:49.861Z`
+- Eligible official receipt active: `no`
+- Required unique tasks: `89`
+- Status: `waiting-for-full-sweep`
+- Note: The official leaderboard validator expects the full 89-task Terminal-Bench 2.0 sweep. A single-task public-task win is not an eligible leaderboard receipt by itself.
 
 ## Truth Boundary
 
-- The old official receipt remains a real historical public submission and should stay published as history.
-- The result on this page is a fresh local diagnostic rerun against the same public task. It becomes an official leaderboard claim only after a new public submission is made.
+- The result on this page is a fresh local diagnostic rerun against the same public task.
+- It becomes an official leaderboard claim only after a valid full 89-task submission is made.
 - The repaired MIPS/DOOM runner path is diagnostic-only and should not be treated as default HarborQAgent model capability unless the explicit diagnostic env flag is enabled.
 
 ## Artifact Paths

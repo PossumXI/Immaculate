@@ -42,14 +42,13 @@ type HarborConfigFile = {
   }>;
 };
 
-type HistoricalReceiptFile = {
+type LeaderboardStatusFile = {
   generatedAt?: string;
-  harbor?: {
-    meanReward?: number;
-  };
   leaderboard?: {
-    discussionUrl?: string;
-    commitUrl?: string;
+    status?: string;
+    note?: string;
+    requiredUniqueTasks?: number;
+    eligibleSubmissionActive?: boolean;
   };
 };
 
@@ -77,11 +76,12 @@ type TerminalBenchPublicTaskReport = {
     passAtK: Record<string, number>;
     trialIds: string[];
   };
-  historicalReceipt?: {
+  leaderboardStatus?: {
     generatedAt?: string;
-    meanReward?: number;
-    discussionUrl?: string;
-    commitUrl?: string;
+    status?: string;
+    note?: string;
+    requiredUniqueTasks?: number;
+    eligibleSubmissionActive?: boolean;
   };
   output: {
     jsonPath: string;
@@ -218,7 +218,7 @@ function renderMarkdown(report: TerminalBenchPublicTaskReport): string {
         .map(([key, value]) => `pass@${key} \`${value.toFixed(3)}\``)
         .join(", ")
     : "no pass@k data reported";
-  const historical = report.historicalReceipt;
+  const leaderboardStatus = report.leaderboardStatus;
   return [
     "# Terminal-Bench Public Task",
     "",
@@ -245,16 +245,17 @@ function renderMarkdown(report: TerminalBenchPublicTaskReport): string {
     `- Duration: \`${report.harbor.durationSec ?? "n/a"} s\``,
     `- Trial ids: \`${report.harbor.trialIds.join(", ") || "none"}\``,
     "",
-    historical
-      ? "## Historical Official Receipt"
+    leaderboardStatus
+      ? "## Leaderboard Status"
       : "## Truth Boundary",
-    ...(historical
+    ...(leaderboardStatus
       ? [
           "",
-          `- Historical official receipt generated: \`${historical.generatedAt ?? "unknown"}\``,
-          `- Historical official receipt mean reward: \`${(historical.meanReward ?? 0).toFixed(3)}\``,
-          `- Historical discussion: ${historical.discussionUrl ?? "[missing]"}`,
-          `- Historical commit: ${historical.commitUrl ?? "[missing]"}`,
+          `- Status page generated: \`${leaderboardStatus.generatedAt ?? "unknown"}\``,
+          `- Eligible official receipt active: \`${leaderboardStatus.eligibleSubmissionActive ? "yes" : "no"}\``,
+          `- Required unique tasks: \`${leaderboardStatus.requiredUniqueTasks ?? "unknown"}\``,
+          `- Status: \`${leaderboardStatus.status ?? "unknown"}\``,
+          `- Note: ${leaderboardStatus.note ?? "No additional note."}`,
           "",
           "## Truth Boundary",
         ]
@@ -262,7 +263,7 @@ function renderMarkdown(report: TerminalBenchPublicTaskReport): string {
     "",
     "- This is a real Harbor run on the official public task `terminal-bench/make-mips-interpreter`.",
     "- It is the latest measured local Q-only win, not an official leaderboard claim by itself.",
-    "- The official leaderboard receipt remains tracked separately on `docs/wiki/Terminal-Bench-Receipt.md` until a new public submission is made.",
+    "- Official leaderboard publication remains gated on the full 89-task sweep requirement tracked on `docs/wiki/Terminal-Bench-Receipt.md`.",
     "",
     "## Artifact Paths",
     "",
@@ -291,7 +292,7 @@ async function main(): Promise<void> {
 
   const result = await readJsonFile<HarborResultFile>(resultPath);
   const config = await readJsonFile<HarborConfigFile>(configPath);
-  const historicalReceipt = await readJsonFile<HistoricalReceiptFile>(path.join(WIKI_ROOT, "Terminal-Bench-Receipt.json")).catch(
+  const leaderboardStatus = await readJsonFile<LeaderboardStatusFile>(path.join(WIKI_ROOT, "Terminal-Bench-Receipt.json")).catch(
     () => undefined
   );
   const [, stats] = requireSingleEvalEntry(result);
@@ -321,12 +322,13 @@ async function main(): Promise<void> {
       passAtK: stats.pass_at_k ?? {},
       trialIds: collectTrialIds(stats),
     },
-    historicalReceipt: historicalReceipt
+    leaderboardStatus: leaderboardStatus
       ? {
-          generatedAt: historicalReceipt.generatedAt,
-          meanReward: historicalReceipt.harbor?.meanReward,
-          discussionUrl: historicalReceipt.leaderboard?.discussionUrl,
-          commitUrl: historicalReceipt.leaderboard?.commitUrl,
+          generatedAt: leaderboardStatus.generatedAt,
+          status: leaderboardStatus.leaderboard?.status,
+          note: leaderboardStatus.leaderboard?.note,
+          requiredUniqueTasks: leaderboardStatus.leaderboard?.requiredUniqueTasks,
+          eligibleSubmissionActive: leaderboardStatus.leaderboard?.eligibleSubmissionActive,
         }
       : undefined,
     output: {

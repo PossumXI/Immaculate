@@ -69,7 +69,7 @@ Right now the honest story is:
 - the latest tracked W&B export is currently stamped on `2026-04-18`; the latest local mediation, substrate, gateway, and public-task reruns are stamped on `2026-04-19`, so if you see `2026-04-12`, you are looking at the historical hour-class soak lane rather than the newest published W&B result
 - [[Harbor-Terminal-Bench]] records the repo-local Harbor task pack, the executed Q gateway scores, and the latest Harbor truth boundary
 - [[Terminal-Bench-Public-Task]] records the latest real local Harbor run on the official public task using the default Q-only path
-- [[Terminal-Bench-Receipt]] records the historical official public-task Terminal-Bench receipt submission PR for the real `Q` lane; it is one public receipt on the official leaderboard repo, not a full leaderboard sweep
+- [[Terminal-Bench-Receipt]] records the current official leaderboard status for `Q`; the local public-task win is real, but leaderboard publication remains gated on the full `89`-task sweep requirement
 - [[GitHub-Checks-Receipt]] records a raw GitHub REST verification of workflow-runs and check-runs when classic status contexts are empty, so release claims are tied to the checks GitHub Actions actually publishes
 - [[Harbor-Terminal-Bench-Soak]] records the repeated Q-only Harbor hour-lane with oracle/Q side-by-side task scores
 - [[Q-Benchmark-Sweep-60m]] records the stitched historical 60-minute Q and Immaculate soak surface across W&B, BridgeBench, and Harbor; it is not the default “latest W&B” page unless that pack is rerun

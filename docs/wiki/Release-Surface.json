@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-19T07:51:14.562Z",
+  "generatedAt": "2026-04-19T14:33:14.012Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "5ed19b98682545e60ebbc826f19a6e793619ce06",
-    "gitShortSha": "5ed19b9",
-    "gitBranch": "harbor-q-push",
-    "buildId": "0.1.0+5ed19b9",
+    "gitSha": "801fe27ab25461ac6bfdf54f3564dff9ea90392c",
+    "gitShortSha": "801fe27",
+    "gitBranch": "publish-q-win",
+    "buildId": "0.1.0+801fe27",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -66,7 +66,7 @@
     {
       "label": "Q readiness gate",
       "path": "docs\\wiki\\Q-Readiness-Gate.json",
-      "generatedAt": "2026-04-19T07:51:13.628Z"
+      "generatedAt": "2026-04-19T14:32:25.688Z"
     },
     {
       "label": "Q gateway validation",
@@ -141,7 +141,7 @@
     {
       "label": "W&B benchmark export",
       "path": "docs\\wiki\\Benchmark-Wandb-Export.json",
-      "generatedAt": "2026-04-18T03:02:43.497039+00:00"
+      "generatedAt": "2026-04-19T01:15:13.741584+00:00"
     },
     {
       "label": "Harbor terminal bench",
@@ -151,17 +151,17 @@
     {
       "label": "Terminal-Bench public task",
       "path": "docs\\wiki\\Terminal-Bench-Public-Task.json",
-      "generatedAt": "2026-04-19T07:43:11.245Z"
+      "generatedAt": "2026-04-19T14:31:45.217Z"
     },
     {
-      "label": "Terminal-Bench receipt (historical public)",
+      "label": "Terminal-Bench leaderboard status",
       "path": "docs\\wiki\\Terminal-Bench-Receipt.json",
-      "generatedAt": "2026-04-18T06:23:47.663Z"
+      "generatedAt": "2026-04-19T14:31:45.545Z"
     },
     {
       "label": "Terminal-Bench rerun (diagnostic-only)",
       "path": "docs\\wiki\\Terminal-Bench-Rerun.json",
-      "generatedAt": "2026-04-18T06:20:59.166Z"
+      "generatedAt": "2026-04-19T14:31:45.730Z"
     },
     {
       "label": "GitHub checks receipt",

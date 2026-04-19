@@ -60,7 +60,7 @@ Why it matters:
 - gating the MIPS/DOOM shim matters because a diagnostic verifier pass is useful engineering evidence, but it is not the same thing as default Q capability on the public benchmark
 
 Evidence:
-- the historical official public receipt in `docs/wiki/Terminal-Bench-Receipt.md` remains `0.000`
+- the old single-task leaderboard draft in `docs/wiki/Terminal-Bench-Receipt.md` is no longer treated as an eligible official receipt
 - the local diagnostic rerun in `docs/wiki/Terminal-Bench-Rerun.md` remains `5/5` and is explicitly marked diagnostic-only
 - the fresh generic post-fix Harbor smoke at `.runtime/terminal-bench-jobs/q-terminal-bench-public-generic-smoke-postfix2/result.json` completed with `1` trial, `0` exceptions, reward `0.0`, and a full verifier pass after `10m 16s`
 - the generated payload for that completed run was `2921` characters and marked `/app/doomgeneric_mips` as `[binary file omitted: doomgeneric_mips, 1543608 bytes]`, proving the old prompt-bloat path is no longer the main blocker
@@ -321,7 +321,7 @@ What this unlocks next:
 #### The official Terminal-Bench receipt now feeds the Q repair loop instead of stopping at publication
 
 What changed:
-- the Q benchmark corpus builder now ingests `docs/wiki/Terminal-Bench-Receipt.json` as observation evidence instead of ignoring the official public receipt after publication
+- the Q benchmark corpus builder now ingests `docs/wiki/Terminal-Bench-Receipt.json` as leaderboard-status evidence instead of pretending a single-task draft was a fully eligible official receipt
 - the strict Q failure corpus builder now turns the official public-task underperformance into a real eval seed alongside live direct-Q failures
 - the training docs and release index now reflect that the public receipt is part of the Q improvement loop, not just a public proof artifact
 
@@ -343,30 +343,30 @@ What this unlocks next:
 
 ### 2026-04-16
 
-#### Q now has a real official public-task Terminal-Bench receipt submission, not just repo-local Harbor proof
+#### Q now has a real public-task submission packaging path, but the official leaderboard still requires the full 89-task sweep
 
 What changed:
 - the real `Q` lane was run through Harbor against the official public Terminal-Bench task `terminal-bench/make-mips-interpreter`
 - the run used the real Harbor custom-agent import path `benchmarks.harbor.q_harbor_agent:HarborQAgent` and the real served `Q` endpoint, not the oracle lane and not a repo-local hidden task pack
-- a five-trial receipt package was assembled in the official leaderboard submission layout and submitted as a PR/discussion on the public `harborframework/terminal-bench-2-leaderboard` dataset repo
-- the repo now publishes that receipt separately in `docs/wiki/Terminal-Bench-Receipt.md` instead of blurring it into the repo-local Harbor page
+- a five-trial receipt package was assembled in the official leaderboard submission layout and submitted as a draft PR/discussion on the public `harborframework/terminal-bench-2-leaderboard` dataset repo
+- the validator later proved that single-task drafts are not eligible leaderboard receipts by themselves; the repo now tracks that requirement explicitly on `docs/wiki/Terminal-Bench-Receipt.md` instead of overstating the draft as an accepted public receipt
 
 Why it matters:
-- this closes the last “prove it on the official path” gap for the current `Q` lane: the repo can now point to a real public-task submission receipt instead of only local Harbor evidence
-- it also keeps the truth boundary intact: official submission mechanics are now proven, but public-task performance is still poor and needs more model work
-- that distinction matters because a receipt proves the evaluation and packaging path is real, while the score still tells the hard truth about current model quality
+- this closed the “prove the packaging path” gap without closing the leaderboard gap: the repo can now submit a clean draft through the official Harbor/Hugging Face path, but it still cannot claim leaderboard publication until the full 89-task sweep exists
+- that distinction matters because submission mechanics and leaderboard eligibility are not the same thing
+- once the rule is explicit, the next real official move is obvious: keep the local public-task win, then run the full benchmark instead of treating a single-task draft as a leaderboard result
 
 Evidence:
-- Hugging Face discussion/PR: `https://huggingface.co/datasets/harborframework/terminal-bench-2-leaderboard/discussions/140`
-- Hugging Face verified commit: `https://huggingface.co/datasets/harborframework/terminal-bench-2-leaderboard/commit/9a4ad15564f2a3c1303da7c89a08dc10cfec36c3`
+- the draft submission path was real, but single-task drafts were not eligible under the leaderboard validator
+- the governing rule is now explicit on `docs/wiki/Terminal-Bench-Receipt.md`: the official leaderboard expects the full `89`-task Terminal-Bench 2.0 sweep
 - official public task: `terminal-bench/make-mips-interpreter`
-- receipt trial count: `5`
-- official receipt mean reward: `0.000`
+- draft trial count: `5`
+- leaderboard-eligible receipt count from this checkout at that stage: `0`
 
 What this unlocks next:
-- future Q improvement work can target a real public-task benchmark receipt instead of only a repo-local proxy
-- once Q improves, the same official packaging path can be reused for stronger public receipts or broader leaderboard submissions without rebuilding the tooling
-- the repo can now keep two benchmark languages honest at once: local Harbor task packs for targeted diagnosis, and official public-task receipts for public proof
+- future Q improvement work can target the real public task locally while the submission tooling waits for a full eligible sweep
+- the same packaging path can be reused for the eventual 89-task run without rebuilding the secret-scrubbing or submission logic
+- the repo can now keep two benchmark languages honest at once: local Harbor task packs for targeted diagnosis, and a separate explicit leaderboard-status surface for official publication truth
 
 ### 2026-04-16
 

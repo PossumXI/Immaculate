@@ -122,7 +122,7 @@ const SURFACE_FILES: SurfaceTimestamp[] = [
     path: path.join("docs", "wiki", "Terminal-Bench-Public-Task.json")
   },
   {
-    label: "Terminal-Bench receipt (historical public)",
+    label: "Terminal-Bench leaderboard status",
     path: path.join("docs", "wiki", "Terminal-Bench-Receipt.json")
   },
   {

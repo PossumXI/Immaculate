@@ -2,7 +2,7 @@
 
 This page explains the real public-task Terminal-Bench failure, the fixes already shipped, and the remaining gap.
 
-- Historical official public receipt: `0.000` on `terminal-bench/make-mips-interpreter`
+- Historical single-task leaderboard draft: `0.000` on `terminal-bench/make-mips-interpreter`
 - Local diagnostic rerun: `5/5`, diagnostic-only, not a new leaderboard claim
 - Latest default-path generic smoke: `1` trial, `0` errors, completed end-to-end at reward `0.0`
 
@@ -21,7 +21,7 @@ This page explains the real public-task Terminal-Bench failure, the fixes alread
 
 ## Current Measured State
 
-- Historical official public receipt remains `0.000` and stays published as history.
+- Historical single-task leaderboard draft remains `0.000` and is no longer treated as an eligible official receipt.
 - Local diagnostic rerun remains `1.000` / `5` trials and proves the harness plus verifier contract can pass when the explicit diagnostic shim is enabled.
 - A fresh default-path generic smoke now completes the full Harbor trial with `0` exceptions, `3` internal attempts, and a final reward of `0.0` after `10m 16s`.
 - That completed run used a `2921`-character generation payload and explicitly marked `/app/doomgeneric_mips` as `[binary file omitted: doomgeneric_mips, 1543608 bytes]`.

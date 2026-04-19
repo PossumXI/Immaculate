@@ -2,10 +2,10 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-04-19T07:51:14.562Z
-- Immaculate release: `0.1.0+5ed19b9`
-- Repo commit: `5ed19b98682545e60ebbc826f19a6e793619ce06`
-- Branch: `harbor-q-push`
+- Generated: 2026-04-19T14:33:14.012Z
+- Immaculate release: `0.1.0+801fe27`
+- Repo commit: `801fe27ab25461ac6bfdf54f3564dff9ea90392c`
+- Branch: `publish-q-win`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
 - Core package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+5ed19b9` is the current repo build stamp.
+- Immaculate build `0.1.0+801fe27` is the current repo build stamp.
 - Q is the only public model name used across the repo, and it is built on `Gemma 4`.
 - The latest tracked Q training bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`, tied to dataset `.training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
 - The latest hybrid session is `q-hybrid-harbor-opt-2384cf5-bench-v23`, with local lane `ready` and cloud lane `ready` on provider `hf_jobs`.
@@ -27,7 +27,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - BridgeBench: `2026-04-19T07:51:12.922Z` via `docs/wiki/BridgeBench.json`
 - BridgeBench soak: `2026-04-15T06:15:54.188Z` via `docs/wiki/BridgeBench-Soak.json`
 - Q structured contract benchmark: `2026-04-19T07:48:09.656Z` via `docs/wiki/Model-Benchmark-Comparison.json`
-- Q readiness gate: `2026-04-19T07:51:13.628Z` via `docs/wiki/Q-Readiness-Gate.json`
+- Q readiness gate: `2026-04-19T14:32:25.688Z` via `docs/wiki/Q-Readiness-Gate.json`
 - Q gateway validation: `2026-04-19T07:47:33.854Z` via `docs/wiki/Q-Gateway-Validation.json`
 - Q gateway substrate: `2026-04-19T07:42:56.365Z` via `docs/wiki/Q-Gateway-Substrate.json`
 - Q mediation drift: `2026-04-19T07:42:56.374Z` via `docs/wiki/Q-Mediation-Drift.json`
@@ -42,11 +42,11 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Q benchmark corpus: `2026-04-19T07:46:04Z` via `docs/wiki/Q-Benchmark-Corpus.json`
 - Q failure corpus: `2026-04-19T07:46:04Z` via `docs/wiki/Q-Failure-Corpus.json`
 - Q benchmark promotion: `2026-04-19T07:46:03Z` via `docs/wiki/Q-Benchmark-Promotion.json`
-- W&B benchmark export: `2026-04-18T03:02:43.497039+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
+- W&B benchmark export: `2026-04-19T01:15:13.741584+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
 - Harbor terminal bench: `2026-04-19T07:43:17.831Z` via `docs/wiki/Harbor-Terminal-Bench.json`
-- Terminal-Bench public task: `2026-04-19T07:43:11.245Z` via `docs/wiki/Terminal-Bench-Public-Task.json`
-- Terminal-Bench receipt (historical public): `2026-04-18T06:23:47.663Z` via `docs/wiki/Terminal-Bench-Receipt.json`
-- Terminal-Bench rerun (diagnostic-only): `2026-04-18T06:20:59.166Z` via `docs/wiki/Terminal-Bench-Rerun.json`
+- Terminal-Bench public task: `2026-04-19T14:31:45.217Z` via `docs/wiki/Terminal-Bench-Public-Task.json`
+- Terminal-Bench leaderboard status: `2026-04-19T14:31:45.545Z` via `docs/wiki/Terminal-Bench-Receipt.json`
+- Terminal-Bench rerun (diagnostic-only): `2026-04-19T14:31:45.730Z` via `docs/wiki/Terminal-Bench-Rerun.json`
 - GitHub checks receipt: `2026-04-16T17:54:12.583Z` via `docs/wiki/GitHub-Checks-Receipt.json`
 - Harbor terminal bench soak: `2026-04-16T13:05:24.510Z` via `docs/wiki/Harbor-Terminal-Bench-Soak.json`
 - Q benchmark sweep (60m): `2026-04-17T20:56:29.772Z` via `docs/wiki/Q-Benchmark-Sweep-60m.json`

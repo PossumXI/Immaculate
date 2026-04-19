@@ -42,14 +42,13 @@ type HarborConfigFile = {
   }>;
 };
 
-type HistoricalReceiptFile = {
+type LeaderboardStatusFile = {
   generatedAt?: string;
-  harbor?: {
-    meanReward?: number;
-  };
   leaderboard?: {
-    discussionUrl?: string;
-    commitUrl?: string;
+    status?: string;
+    note?: string;
+    requiredUniqueTasks?: number;
+    eligibleSubmissionActive?: boolean;
   };
 };
 
@@ -79,11 +78,12 @@ type TerminalBenchRerunReport = {
   };
   rootCause: string[];
   appliedFixes: string[];
-  historicalReceipt?: {
+  leaderboardStatus?: {
     generatedAt?: string;
-    meanReward?: number;
-    discussionUrl?: string;
-    commitUrl?: string;
+    status?: string;
+    note?: string;
+    requiredUniqueTasks?: number;
+    eligibleSubmissionActive?: boolean;
   };
   output: {
     jsonPath: string;
@@ -193,7 +193,7 @@ function renderMarkdown(report: TerminalBenchRerunReport): string {
         .map(([key, value]) => `pass@${key} \`${value.toFixed(3)}\``)
         .join(", ")
     : "no pass@k data reported";
-  const historical = report.historicalReceipt;
+  const leaderboardStatus = report.leaderboardStatus;
   return [
     "# Terminal-Bench Rerun",
     "",
@@ -228,21 +228,22 @@ function renderMarkdown(report: TerminalBenchRerunReport): string {
     "",
     ...report.appliedFixes.map((line) => `- ${line}`),
     "",
-    historical
-      ? "## Historical Official Receipt"
+    leaderboardStatus
+      ? "## Leaderboard Status"
       : "## Truth Boundary",
-    historical ? "" : "- This is a local diagnostic rerun against the official public task, not a new public leaderboard submission yet.",
-    ...(historical
+    leaderboardStatus ? "" : "- This is a local diagnostic rerun against the official public task, not a new public leaderboard submission yet.",
+    ...(leaderboardStatus
       ? [
-          `- Historical official receipt generated: \`${historical.generatedAt ?? "unknown"}\``,
-          `- Historical official receipt mean reward: \`${(historical.meanReward ?? 0).toFixed(3)}\``,
-          `- Historical discussion: ${historical.discussionUrl ?? "[missing]"}`,
-          `- Historical commit: ${historical.commitUrl ?? "[missing]"}`,
+          `- Status page generated: \`${leaderboardStatus.generatedAt ?? "unknown"}\``,
+          `- Eligible official receipt active: \`${leaderboardStatus.eligibleSubmissionActive ? "yes" : "no"}\``,
+          `- Required unique tasks: \`${leaderboardStatus.requiredUniqueTasks ?? "unknown"}\``,
+          `- Status: \`${leaderboardStatus.status ?? "unknown"}\``,
+          `- Note: ${leaderboardStatus.note ?? "No additional note."}`,
           "",
           "## Truth Boundary",
           "",
-          "- The old official receipt remains a real historical public submission and should stay published as history.",
-          "- The result on this page is a fresh local diagnostic rerun against the same public task. It becomes an official leaderboard claim only after a new public submission is made.",
+          "- The result on this page is a fresh local diagnostic rerun against the same public task.",
+          "- It becomes an official leaderboard claim only after a valid full 89-task submission is made.",
           "- The repaired MIPS/DOOM runner path is diagnostic-only and should not be treated as default HarborQAgent model capability unless the explicit diagnostic env flag is enabled.",
         ]
       : []),
@@ -277,7 +278,7 @@ async function main(): Promise<void> {
 
   const result = await readJsonFile<HarborResultFile>(resultPath);
   const config = await readJsonFile<HarborConfigFile>(configPath);
-  const historicalReceipt = await readJsonFile<HistoricalReceiptFile>(path.join(WIKI_ROOT, "Terminal-Bench-Receipt.json")).catch(
+  const leaderboardStatus = await readJsonFile<LeaderboardStatusFile>(path.join(WIKI_ROOT, "Terminal-Bench-Receipt.json")).catch(
     () => undefined
   );
   const [, stats] = requireSingleEvalEntry(result);
@@ -317,12 +318,13 @@ async function main(): Promise<void> {
       "The wrapper kills orphan `/tmp/doomgeneric_host` processes, captures the second valid frame with Pillow, rewrites a stable `/tmp/frame.bmp`, and keeps Node alive just long enough for the verifier contract.",
       "This narrows the runner path, cuts prompt volume, and turns the public task from a gateway-bound failure into a repeatable Harbor pass.",
     ],
-    historicalReceipt: historicalReceipt
+    leaderboardStatus: leaderboardStatus
       ? {
-          generatedAt: historicalReceipt.generatedAt,
-          meanReward: historicalReceipt.harbor?.meanReward,
-          discussionUrl: historicalReceipt.leaderboard?.discussionUrl,
-          commitUrl: historicalReceipt.leaderboard?.commitUrl,
+          generatedAt: leaderboardStatus.generatedAt,
+          status: leaderboardStatus.leaderboard?.status,
+          note: leaderboardStatus.leaderboard?.note,
+          requiredUniqueTasks: leaderboardStatus.leaderboard?.requiredUniqueTasks,
+          eligibleSubmissionActive: leaderboardStatus.leaderboard?.eligibleSubmissionActive,
         }
       : undefined,
     output: {

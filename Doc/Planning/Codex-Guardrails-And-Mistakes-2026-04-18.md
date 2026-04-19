@@ -171,6 +171,20 @@ Correction:
 Rule:
 - Never trust a gateway health response until the newly started process has a verified listening socket on the requested port.
 
+### 13. I treated a single-task Terminal-Bench draft as an official leaderboard receipt
+
+Mistake:
+- I conflated “the submission package uploaded successfully” with “the submission is leaderboard-eligible.”
+- The official validator rejected the single-task draft because the leaderboard expects the full `89`-task Terminal-Bench 2.0 sweep.
+
+Correction:
+- Treat single-task public-task wins as local/public engineering evidence only.
+- Treat the leaderboard as a separate publication surface with its own eligibility rules.
+- Before calling anything an official leaderboard receipt, verify the validator result and unique-task coverage.
+
+Rule:
+- Never describe a Terminal-Bench draft as an official leaderboard receipt unless the validator accepts the full required task coverage.
+
 ## Current Verified State
 
 As of the latest official Harbor rerun on `2026-04-18`:
@@ -222,3 +236,4 @@ Use this before any official public-task Harbor rerun:
 2. Train Q specifically against the semantic MIPS/doomgeneric miss once generation reaches verifier-backed execution again.
 3. Keep transport misses out of the semantic training target until generation clears the gateway reliably.
 4. Only resubmit a public Terminal-Bench receipt when the default Q-only path is green without diagnostic shims.
+5. For the official leaderboard, do not submit again until the run covers the full `89` unique Terminal-Bench 2.0 tasks.
