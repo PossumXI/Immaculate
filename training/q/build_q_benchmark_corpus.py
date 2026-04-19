@@ -763,6 +763,53 @@ def collect_q_mediation_drift_records(report: dict) -> list[dict]:
     return [finalize_record(record)]
 
 
+def collect_arobi_audit_integrity_records(report: dict) -> list[dict]:
+    benchmark = report.get("benchmark", {})
+    if not isinstance(benchmark, dict) or not benchmark:
+        return []
+    failed_assertions = int(benchmark.get("failedAssertions", 0) or 0)
+    scenario_count = int(benchmark.get("scenarioCount", 0) or 0)
+    linked_records_p50 = float(benchmark.get("linkedRecordsP50", 0) or 0)
+    source_coverage_p50 = float(benchmark.get("sourceCoverageP50", 0) or 0)
+    self_evaluations_p50 = float(benchmark.get("selfEvaluationsP50", 0) or 0)
+    audit_completeness_p50 = float(benchmark.get("auditCompletenessP50", 0) or 0)
+    latency_p95_ms = float(benchmark.get("latencyP95Ms", 0) or 0)
+    record = {
+        "id": "arobi-audit-integrity:aggregate",
+        "row_type": "benchmark_observation",
+        "source_surface": "arobi-audit-integrity",
+        "row_id": "aggregate",
+        "label": "Arobi audit integrity benchmark",
+        "objective": (
+            "Retain insurer-grade proof that governed Q requests stay linked from prompt to decision to outcome "
+            "through Immaculate and the Arobi ledger without losing reviewable context."
+        ),
+        "facts": [
+            f"Suite: {benchmark.get('suiteId', 'unknown')}",
+            f"Pack: {benchmark.get('packLabel', benchmark.get('packId', 'arobi-audit-integrity'))}",
+            f"Scenario count: {scenario_count}",
+            f"Failed assertions: {failed_assertions}",
+        ],
+        "observation": [
+            f"Linked records held at p50 {linked_records_p50:.2f}.",
+            f"Source coverage held at p50 {source_coverage_p50:.2f}.",
+            f"Self-evaluations held at p50 {self_evaluations_p50:.2f}.",
+            f"Audit completeness held at p50 {audit_completeness_p50:.2f}.",
+            f"End-to-end latency held at p95 {latency_p95_ms:.2f} ms.",
+        ],
+        "quality": {
+            "status": "completed" if failed_assertions == 0 else "degraded",
+            "parse_success": audit_completeness_p50 >= 0.95,
+            "structured_field_count": 0,
+            "thinking_detected": False,
+            "score": 1.0 if failed_assertions == 0 else max(0.0, 1.0 - failed_assertions * 0.1),
+            "task_count": scenario_count,
+            "p95_latency_ms": latency_p95_ms,
+        },
+    }
+    return [finalize_record(record)]
+
+
 def collect_bridgebench_soak_records(bridgebench_soak: dict) -> list[dict]:
     training_rows = bridgebench_soak.get("trainingRows", [])
     if isinstance(training_rows, list) and training_rows:
@@ -1063,6 +1110,11 @@ def main() -> None:
         help="Path to Q-Mediation-Drift.json",
     )
     parser.add_argument(
+        "--arobi-audit-integrity",
+        default=str(root / "docs" / "wiki" / "Arobi-Audit-Integrity.json"),
+        help="Path to Arobi-Audit-Integrity.json",
+    )
+    parser.add_argument(
         "--terminal-bench-receipt",
         default=str(root / "docs" / "wiki" / "Terminal-Bench-Receipt.json"),
         help="Path to Terminal-Bench-Receipt.json",
@@ -1114,6 +1166,7 @@ def main() -> None:
     harbor_path = Path(args.harbor)
     q_gateway_substrate_path = Path(args.q_gateway_substrate)
     q_mediation_drift_path = Path(args.q_mediation_drift)
+    arobi_audit_integrity_path = Path(args.arobi_audit_integrity)
     terminal_bench_receipt_path = Path(args.terminal_bench_receipt)
     terminal_bench_rerun_path = Path(args.terminal_bench_rerun)
     terminal_bench_public_task_path = Path(args.terminal_bench_public_task)
@@ -1130,6 +1183,7 @@ def main() -> None:
     harbor = load_json(harbor_path)
     q_gateway_substrate = load_optional_json(q_gateway_substrate_path)
     q_mediation_drift = load_optional_json(q_mediation_drift_path)
+    arobi_audit_integrity = load_optional_json(arobi_audit_integrity_path)
     terminal_bench_receipt = load_optional_json(terminal_bench_receipt_path)
     terminal_bench_rerun = load_optional_json(terminal_bench_rerun_path)
     terminal_bench_public_task = load_optional_json(terminal_bench_public_task_path)
@@ -1149,6 +1203,8 @@ def main() -> None:
         records.extend(collect_q_gateway_substrate_records(q_gateway_substrate))
     if q_mediation_drift:
         records.extend(collect_q_mediation_drift_records(q_mediation_drift))
+    if arobi_audit_integrity:
+        records.extend(collect_arobi_audit_integrity_records(arobi_audit_integrity))
     if bridgebench_soak:
         records.extend(collect_bridgebench_soak_records(bridgebench_soak))
     if harbor_soak:
@@ -1192,6 +1248,11 @@ def main() -> None:
             **(
                 {"q-mediation-drift": relative_path(root, q_mediation_drift_path)}
                 if q_mediation_drift
+                else {}
+            ),
+            **(
+                {"arobi-audit-integrity": relative_path(root, arobi_audit_integrity_path)}
+                if arobi_audit_integrity
                 else {}
             ),
             **(

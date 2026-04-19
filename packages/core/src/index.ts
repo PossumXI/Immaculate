@@ -168,7 +168,8 @@ export const benchmarkPackIds = [
   "neurodata-external",
   "temporal-baseline",
   "q-gateway-substrate",
-  "q-mediation-drift"
+  "q-mediation-drift",
+  "arobi-audit-integrity"
 ] as const;
 export type BenchmarkPackId = (typeof benchmarkPackIds)[number];
 
@@ -263,6 +264,36 @@ export type BenchmarkMediationDriftScenarioResult = {
   failureClass?: string;
 };
 
+export type BenchmarkArobiAuditScenarioResult = {
+  id: string;
+  label: string;
+  status: "completed" | "failed";
+  sessionId: string;
+  qAccepted: boolean;
+  mediationAccepted: boolean;
+  qLatencyMs: number;
+  mediationLatencyMs: number;
+  totalLatencyMs: number;
+  ledgerLinked: boolean;
+  linkedRecordCount: number;
+  sourceCoverage: string[];
+  sourceCoverageCount: number;
+  selfEvaluationCount: number;
+  evidenceDigestCount: number;
+  contextFingerprintCount: number;
+  qApiAuditCaptured: boolean;
+  promptCaptured: boolean;
+  reasoningCaptured: boolean;
+  routeSuggestion?: string;
+  latestRouteSuggestion?: string;
+  routeContinuous: boolean;
+  latestReviewStatus?: string;
+  governancePressure?: GovernancePressureLevel;
+  auditCompletenessScore: number;
+  latestEventHash?: string;
+  failureClass?: string;
+};
+
 export type BenchmarkAttribution = {
   owner: string;
   role: string;
@@ -313,6 +344,7 @@ export type BenchmarkReport = {
   comparison?: BenchmarkComparison;
   publication?: BenchmarkPublication;
   scenarioResults?: BenchmarkMediationDriftScenarioResult[];
+  auditScenarioResults?: BenchmarkArobiAuditScenarioResult[];
 };
 
 export const datasetModalities = [
@@ -1247,6 +1279,36 @@ const benchmarkMediationDriftScenarioResultSchema = z.object({
   failureClass: z.string().optional()
 });
 
+const benchmarkArobiAuditScenarioResultSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  status: z.enum(["completed", "failed"]),
+  sessionId: z.string(),
+  qAccepted: z.boolean(),
+  mediationAccepted: z.boolean(),
+  qLatencyMs: z.number().nonnegative(),
+  mediationLatencyMs: z.number().nonnegative(),
+  totalLatencyMs: z.number().nonnegative(),
+  ledgerLinked: z.boolean(),
+  linkedRecordCount: z.number().int().nonnegative(),
+  sourceCoverage: z.array(z.string()),
+  sourceCoverageCount: z.number().int().nonnegative(),
+  selfEvaluationCount: z.number().int().nonnegative(),
+  evidenceDigestCount: z.number().int().nonnegative(),
+  contextFingerprintCount: z.number().int().nonnegative(),
+  qApiAuditCaptured: z.boolean(),
+  promptCaptured: z.boolean(),
+  reasoningCaptured: z.boolean(),
+  routeSuggestion: z.string().optional(),
+  latestRouteSuggestion: z.string().optional(),
+  routeContinuous: z.boolean(),
+  latestReviewStatus: z.string().optional(),
+  governancePressure: z.enum(governancePressureLevels).optional(),
+  auditCompletenessScore: z.number().nonnegative().max(1),
+  latestEventHash: z.string().optional(),
+  failureClass: z.string().optional()
+});
+
 const benchmarkAttributionSchema = z.object({
   owner: z.string(),
   role: z.string(),
@@ -1304,7 +1366,8 @@ export const benchmarkReportSchema = z.object({
   attribution: benchmarkAttributionSchema.optional(),
   comparison: benchmarkComparisonSchema.optional(),
   publication: benchmarkPublicationSchema.optional(),
-  scenarioResults: z.array(benchmarkMediationDriftScenarioResultSchema).optional()
+  scenarioResults: z.array(benchmarkMediationDriftScenarioResultSchema).optional(),
+  auditScenarioResults: z.array(benchmarkArobiAuditScenarioResultSchema).optional()
 });
 
 const datasetModalitySummarySchema = z.object({

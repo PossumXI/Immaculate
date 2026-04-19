@@ -220,6 +220,25 @@ export const benchmarkPacks: BenchmarkPack[] = [
     cognitiveP95MaxMs: 250,
     maxRegressedSeries: 0,
     percentRegressionTolerance: 5
+  },
+  {
+    id: "arobi-audit-integrity",
+    label: "Arobi Audit Integrity",
+    description:
+      "Integration lane that runs real Q and Immaculate requests through the live harness, then scores whether Arobi Network preserves a reviewable request, decision, evidence, and outcome chain suitable for audit and insurability review.",
+    reportRunKind: "benchmark",
+    reportPlannedDurationMs: 0,
+    tickIntervalMs: 20,
+    maxTicks: 240,
+    ciEligible: false,
+    completionStrategy: "checkpoint-ready",
+    realTimePacing: false,
+    persistEveryTicks: 1,
+    liveFramesPerTick: 0,
+    reflexP95MaxMs: 100,
+    cognitiveP95MaxMs: 250,
+    maxRegressedSeries: 0,
+    percentRegressionTolerance: 5
   }
 ];
 

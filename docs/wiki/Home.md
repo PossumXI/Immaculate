@@ -24,8 +24,9 @@ Right now the honest story is:
 - the dedicated Q gateway contract is also green: `/health 200`, authenticated `/api/q/info 200`, authenticated `/v1/models 200`, authenticated chat `200`, bounded `429` concurrency rejection, and a canonical identity smoke that answers as `Q`, `Arobi Technology Alliance`, `Gaetano Comparcola`, `Gemma 4`, and `Immaculate`; the exact current gateway overhead lives on [[Q-Gateway-Validation]]
 - the live `Q` API audit loop is also now proving successful governed calls, not just rejects: [[Q-API-Audit]] records a real authenticated `/api/q/run` success with `parse success: true`, `decision trace linked`, and `23349.14 ms` latency on the current Q bundle
 - the live Arobi decision review is now proving the governed ledger chain itself, not just one API response: [[Arobi-Decision-Review]] records `2` linked ledgers, `9` linked records, `8` successful linked records, and the latest successful governed record for session `arobi-q-proof-20260419`
-- the current Q improvement path is machine-stamped: the active Q bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`, the current benchmark corpus is `55` rows, and the paired Immaculate orchestration bundle lives on [[Release-Surface]] and [[Q-Benchmark-Corpus]]
-- the latest tracked W&B export remains current on `2026-04-18`, while the live mediation, substrate, gateway, and public-task Harbor reruns above are the newer repo-local wins
+- the new live Arobi audit-integrity lane is green: [[Arobi-Audit-Integrity]] records `3` governed scenarios, `0` failed assertions, linked-records `P50 5`, source-coverage `P50 4`, self-evaluations `P50 3`, and audit-completeness `P50 1.00` without exposing raw chain-of-thought
+- the current Q improvement path is machine-stamped: the active Q bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`, the current benchmark corpus is `56` rows, and the paired Immaculate orchestration bundle lives on [[Release-Surface]] and [[Q-Benchmark-Corpus]]
+- the latest tracked W&B export remains current on `2026-04-19`, while the live mediation, substrate, gateway, public-task Harbor win, and audit-integrity benchmark above are the newer same-day repo-local wins
 - Immaculate now treats healthy local Q as a first-class governed routing directive, so blocked cloud status no longer forces a false guarded hold when the local Q lane is already healthy
 
 ## What This Project Actually Prioritizes
@@ -65,11 +66,12 @@ Right now the honest story is:
 
 - [[Release-Surface]] is the machine-stamped build-and-bundle page for the current Immaculate and `Q` release state
 - [[Arobi-Network-Architecture]] is the stable plain-English explainer for the product split: network, harness, and brain
+- [[Arobi-Audit-Integrity]] is the live insurer-grade proof that governed Q requests stay linked from prompt to decision to outcome inside the Arobi ledger
 - [[Breakthrough-Log]] tracks major leaps, missed-but-real insights, and hard system milestones as they land
 - [[Engineering-Doctrine]] defines the standing build philosophy and what qualifies as a real leap
 - [[Benchmark-Status]] points to the live public W&B project plus the latest published benchmark runs by pack
 - [[Benchmark-Wandb-Export]] is the committed pull-back from W&B itself, so benchmark results live in git wiki even when the W&B project stays private
-- the latest tracked W&B export is currently stamped on `2026-04-18`; the latest local mediation, substrate, gateway, and public-task reruns are stamped on `2026-04-19`, so if you see `2026-04-12`, you are looking at the historical hour-class soak lane rather than the newest published W&B result
+- the latest tracked W&B export is currently stamped on `2026-04-19`; the latest local mediation, substrate, gateway, public-task, and audit-integrity reruns are also stamped on `2026-04-19`, so if you see `2026-04-12`, you are looking at the historical hour-class soak lane rather than the newest published W&B result
 - [[Harbor-Terminal-Bench]] records the repo-local Harbor task pack, the executed Q gateway scores, and the latest Harbor truth boundary
 - [[Terminal-Bench-Public-Task]] records the latest real local Harbor run on the official public task using the default Q-only path
 - [[Terminal-Bench-Receipt]] records the current official leaderboard status for `Q`; the local public-task win is real, but leaderboard publication remains gated on the full `89`-task sweep requirement

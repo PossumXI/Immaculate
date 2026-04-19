@@ -1,0 +1,193 @@
+{
+  "generatedAt": "2026-04-19T23:41:05.513Z",
+  "release": {
+    "packageVersion": "0.1.0",
+    "harnessVersion": "0.1.0",
+    "coreVersion": "0.1.0",
+    "gitSha": "c2e42c5093fba0adad74d13d9d3ea84b6c29f07c",
+    "gitShortSha": "c2e42c5",
+    "gitBranch": "publish-q-win",
+    "buildId": "0.1.0+c2e42c5",
+    "q": {
+      "modelName": "Q",
+      "foundationModel": "Gemma 4",
+      "truthfulLabel": "Q",
+      "trainingLock": {
+        "generatedAt": "2026-04-19T07:46:04Z",
+        "lockVersion": 1,
+        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
+        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23",
+        "modelName": "Q",
+        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl",
+        "trainDatasetSha256": "286326ce786c0a9b9b4a636a38114cc221c1b978a083ca55d70cc6ca6172cb07",
+        "trainDatasetRowCount": 117,
+        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.manifest.json",
+        "mixManifestSha256": "4c7df8284cedaf8e43f1715c8eaf4c30826687e27a5d511ef8ccd4ca78df991e",
+        "mixSupplementalCount": 6,
+        "mixSupplementalPaths": [
+          "training/q/q_harness_identity_seed.json",
+          "training/q/q_immaculate_reasoning_seed.json",
+          "training/q/terminal_bench_semantic_seed.json",
+          "training/q/bridgebench_seed.json",
+          "training/q/coding_long_context_seed.json",
+          ".training-output/q/q-failure-corpus.jsonl"
+        ],
+        "curationRunId": null,
+        "lockPath": ".training-output/q/latest-training-lock.json"
+      },
+      "hybridSession": {
+        "generatedAt": "2026-04-19T07:46:17Z",
+        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v23",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v23/hybrid-session.json",
+        "localStatus": "ready",
+        "cloudStatus": "ready",
+        "cloudProvider": "hf_jobs",
+        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
+        "immaculateBundleId": "immaculate-orchestration-5ed19b9-cd094c28",
+        "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
+      }
+    }
+  },
+  "benchmark": {
+    "suiteId": "immaculate-benchmark-2026-04-19T23-37-35-687Z",
+    "generatedAt": "2026-04-19T23:37:35.687Z",
+    "packId": "arobi-audit-integrity",
+    "packLabel": "Arobi Audit Integrity",
+    "scenarioCount": 3,
+    "failedAssertions": 0,
+    "linkedRecordsP50": 5,
+    "sourceCoverageP50": 4,
+    "selfEvaluationsP50": 3,
+    "completenessP50": 1,
+    "latencyP95Ms": 64330.96,
+    "hardware": "knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics"
+  },
+  "diagnostics": [
+    {
+      "id": "defense-non-contested-review",
+      "label": "Defense non-contested review path",
+      "sessionId": "arobi-audit-defense-non-contested-review-mo6eozss",
+      "qAccepted": true,
+      "mediationAccepted": true,
+      "ledgerLinked": true,
+      "sourceCoverage": [
+        "cognitive-execution",
+        "conversation",
+        "orchestration-arbitration",
+        "orchestration-schedule"
+      ],
+      "selfEvaluationCount": 3,
+      "evidenceDigestCount": 5,
+      "contextFingerprintCount": 4,
+      "qApiAuditCaptured": true,
+      "promptCaptured": true,
+      "reasoningCaptured": true,
+      "routeSuggestion": "cognitive",
+      "latestRouteSuggestion": "cognitive",
+      "routeContinuous": true,
+      "latestReviewStatus": "completed",
+      "auditCompletenessScore": 1,
+      "latestEventHash": "5bcc617d6d4ee1de4557417848df5f5447efb2723eb92b38389643a9db343213"
+    },
+    {
+      "id": "healthcare-escalation-review",
+      "label": "Healthcare escalation review path",
+      "sessionId": "arobi-audit-healthcare-escalation-review-mo6eq7ep",
+      "qAccepted": true,
+      "mediationAccepted": true,
+      "ledgerLinked": true,
+      "sourceCoverage": [
+        "cognitive-execution",
+        "conversation",
+        "orchestration-arbitration",
+        "orchestration-schedule"
+      ],
+      "selfEvaluationCount": 3,
+      "evidenceDigestCount": 5,
+      "contextFingerprintCount": 4,
+      "qApiAuditCaptured": true,
+      "promptCaptured": true,
+      "reasoningCaptured": true,
+      "routeSuggestion": "cognitive",
+      "latestRouteSuggestion": "cognitive",
+      "routeContinuous": true,
+      "latestReviewStatus": "completed",
+      "auditCompletenessScore": 1,
+      "latestEventHash": "dabb96ec0bf4d870894d73980804b07b1a77ac42b932f36c86c1ee10243b1a4e"
+    },
+    {
+      "id": "critical-integrity-hold",
+      "label": "Critical integrity hold",
+      "sessionId": "arobi-audit-critical-integrity-hold-mo6erk2h",
+      "qAccepted": true,
+      "mediationAccepted": true,
+      "ledgerLinked": true,
+      "sourceCoverage": [
+        "cognitive-execution",
+        "conversation",
+        "orchestration-arbitration",
+        "orchestration-schedule"
+      ],
+      "selfEvaluationCount": 3,
+      "evidenceDigestCount": 5,
+      "contextFingerprintCount": 4,
+      "qApiAuditCaptured": true,
+      "promptCaptured": true,
+      "reasoningCaptured": true,
+      "routeSuggestion": "cognitive",
+      "latestRouteSuggestion": "cognitive",
+      "routeContinuous": true,
+      "latestReviewStatus": "completed",
+      "auditCompletenessScore": 1,
+      "latestEventHash": "68825049fd007a54f3f1daddcee6ebf20e96d4115a151794796c2822f0fb1015"
+    }
+  ],
+  "assertions": [
+    {
+      "id": "arobi-audit-integrity-health",
+      "status": "pass",
+      "target": "200 + status=ok",
+      "actual": "200",
+      "detail": "the benchmark only means anything if it is exercising the real live harness rather than a synthetic-only runner path"
+    },
+    {
+      "id": "arobi-audit-integrity-q-surface",
+      "status": "pass",
+      "target": "enabled Q surface on Gemma 4",
+      "actual": "200 / Q / Gemma 4",
+      "detail": "public identity has to agree with the real Q lane before the audit proof is worth publishing"
+    },
+    {
+      "id": "arobi-audit-integrity-path",
+      "status": "pass",
+      "target": "all scenarios qAccepted=true and mediationAccepted=true",
+      "actual": "defense-non-contested-review:q=true/mediate=true/none, healthcare-escalation-review:q=true/mediate=true/none, critical-integrity-hold:q=true/mediate=true/none",
+      "detail": "the insurer-grade lane has to prove the whole request path, not just one endpoint"
+    },
+    {
+      "id": "arobi-audit-integrity-ledger",
+      "status": "pass",
+      "target": "linked ledger + cognitive/arbitration/schedule/conversation coverage",
+      "actual": "defense-non-contested-review:true/5/cognitive-execution|conversation|orchestration-arbitration|orchestration-schedule, healthcare-escalation-review:true/5/cognitive-execution|conversation|orchestration-arbitration|orchestration-schedule, critical-integrity-hold:true/5/cognitive-execution|conversation|orchestration-arbitration|orchestration-schedule",
+      "detail": "auditors need the full request-decision-outcome chain, not a single success flag"
+    },
+    {
+      "id": "arobi-audit-integrity-context",
+      "status": "pass",
+      "target": "audit+prompt+reasoning+self-eval+digest coverage",
+      "actual": "defense-non-contested-review:audit=true/prompt=true/reason=true/self=3/evidence=5/fingerprint=4, healthcare-escalation-review:audit=true/prompt=true/reason=true/self=3/evidence=5/fingerprint=4, critical-integrity-hold:audit=true/prompt=true/reason=true/self=3/evidence=5/fingerprint=4",
+      "detail": "the point of this lane is proving reviewer-grade context without leaking hidden chain-of-thought"
+    },
+    {
+      "id": "arobi-audit-integrity-route",
+      "status": "pass",
+      "target": "route continuous + completeness >= 0.95",
+      "actual": "defense-non-contested-review:cognitive=>cognitive/score=1.00/none, healthcare-escalation-review:cognitive=>cognitive/score=1.00/none, critical-integrity-hold:cognitive=>cognitive/score=1.00/none",
+      "detail": "the published proof should show that the same governed route survives from Q through the Arobi review trail"
+    }
+  ],
+  "output": {
+    "jsonPath": "docs\\wiki\\Arobi-Audit-Integrity.json",
+    "markdownPath": "docs\\wiki\\Arobi-Audit-Integrity.md"
+  }
+}

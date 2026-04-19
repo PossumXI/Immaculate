@@ -2,9 +2,9 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-04-19T22:51:38.854Z
-- Immaculate release: `0.1.0+ae37843`
-- Repo commit: `ae37843defac7b7e0f6755d4e657c54a2f0756e2`
+- Generated: 2026-04-19T23:47:18.165Z
+- Immaculate release: `0.1.0+c2e42c5`
+- Repo commit: `c2e42c5093fba0adad74d13d9d3ea84b6c29f07c`
 - Branch: `publish-q-win`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+ae37843` is the current repo build stamp.
+- Immaculate build `0.1.0+c2e42c5` is the current repo build stamp.
 - Arobi Network is the ledger-backed private and public operator network and audit substrate. Immaculate is the governed harness and orchestrator inside it. Q is the reasoning brain inside that governed stack.
 - Q is the only public model name used across the repo, and it is built on `Gemma 4`.
 - The latest tracked Q training bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`, tied to dataset `.training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
@@ -32,6 +32,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Q gateway validation: `2026-04-19T07:47:33.854Z` via `docs/wiki/Q-Gateway-Validation.json`
 - Q gateway substrate: `2026-04-19T22:06:38.757Z` via `docs/wiki/Q-Gateway-Substrate.json`
 - Q mediation drift: `2026-04-19T22:06:40.025Z` via `docs/wiki/Q-Mediation-Drift.json`
+- Arobi audit integrity: `2026-04-19T23:41:05.513Z` via `docs/wiki/Arobi-Audit-Integrity.json`
 - Q API audit: `2026-04-19T22:47:48Z` via `docs/wiki/Q-API-Audit.json`
 - Arobi decision review: `2026-04-19T22:47:51.678Z` via `docs/wiki/Arobi-Decision-Review.json`
 - Q hybrid training: `2026-04-19T07:46:17Z` via `docs/wiki/Q-Hybrid-Training.json`
@@ -41,7 +42,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Cloudflare Q inference: `2026-04-19T05:52:31Z` via `docs/wiki/Cloudflare-Q-Inference.json`
 - OCI GPU advisor: `2026-04-19T07:46:17Z` via `docs/wiki/OCI-GPU-Advisor.json`
 - OCI region capacity: `2026-04-17T02:02:24Z` via `docs/wiki/OCI-Region-Capacity.json`
-- Q benchmark corpus: `2026-04-19T07:46:04Z` via `docs/wiki/Q-Benchmark-Corpus.json`
+- Q benchmark corpus: `2026-04-19T23:46:26Z` via `docs/wiki/Q-Benchmark-Corpus.json`
 - Q benchmark promotion: `2026-04-19T07:46:03Z` via `docs/wiki/Q-Benchmark-Promotion.json`
 - W&B benchmark export: `2026-04-19T22:41:44.367069+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
 - Harbor terminal bench: `2026-04-19T07:43:17.831Z` via `docs/wiki/Harbor-Terminal-Bench.json`

@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-19T22:51:38.854Z",
+  "generatedAt": "2026-04-19T23:47:18.165Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "ae37843defac7b7e0f6755d4e657c54a2f0756e2",
-    "gitShortSha": "ae37843",
+    "gitSha": "c2e42c5093fba0adad74d13d9d3ea84b6c29f07c",
+    "gitShortSha": "c2e42c5",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+ae37843",
+    "buildId": "0.1.0+c2e42c5",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -84,6 +84,11 @@
       "generatedAt": "2026-04-19T22:06:40.025Z"
     },
     {
+      "label": "Arobi audit integrity",
+      "path": "docs\\wiki\\Arobi-Audit-Integrity.json",
+      "generatedAt": "2026-04-19T23:41:05.513Z"
+    },
+    {
       "label": "Q API audit",
       "path": "docs\\wiki\\Q-API-Audit.json",
       "generatedAt": "2026-04-19T22:47:48Z"
@@ -131,7 +136,7 @@
     {
       "label": "Q benchmark corpus",
       "path": "docs\\wiki\\Q-Benchmark-Corpus.json",
-      "generatedAt": "2026-04-19T07:46:04Z"
+      "generatedAt": "2026-04-19T23:46:26Z"
     },
     {
       "label": "Q benchmark promotion",

@@ -21,6 +21,30 @@ For each breakthrough, record:
 
 ### 2026-04-19
 
+#### Arobi audit integrity is now a real live benchmark lane, not just a logging claim
+
+What changed:
+- the repo now has a real `arobi-audit-integrity` benchmark pack that boots the live harness on loopback, enables the real governed Q edge, runs three governed scenarios end to end, and then proves the ledger chain stayed linked across request, arbitration, schedule, conversation, and cognitive execution
+- the same pass now generates a dedicated [[Arobi-Audit-Integrity]] page and indexes it from [[Release-Surface]] instead of leaving insurer-grade audit proof scattered across private `.runtime` files
+- the Q benchmark corpus can now carry this new audit lane as positive benchmark evidence so the next Q pass learns from successful reviewable traces, not only direct route/reason/commit pages
+
+Why it matters:
+- the missed pattern was that the stack already emitted most of the right receipts, but there was no single benchmark lane proving that a governed request preserved enough linked context for an auditor or insurer to reconstruct what was asked, what route was chosen, and how execution completed
+- turning that into a live benchmark matters because insurer-grade claims stop being hand-written prose once the system proves them under the same benchmark discipline as the other lanes
+- pulling the result into the Q benchmark corpus matters because the next training pass can learn the shape of successful reviewable execution instead of optimizing only for direct answer formatting
+
+Evidence:
+- `docs/wiki/Arobi-Audit-Integrity.md` now records `3` governed scenarios, `0` failed assertions, linked-records `P50 5`, source-coverage `P50 4`, self-evaluations `P50 3`, and audit-completeness `P50 1.00`
+- `apps/harness/src/benchmark-arobi-audit-integrity.ts` now exercises the live harness, live Q API audit spool, and linked Arobi decision ledger in one benchmark lane
+- `training/q/build_q_benchmark_corpus.py` now ingests the new Arobi audit-integrity surface as benchmark-derived training evidence
+
+What this unlocks next:
+- the next Q training pass can optimize for reviewable, insurer-safe execution traces instead of only for direct contract phrasing
+- the next Immaculate pass can improve end-to-end latency while keeping the audit chain measurable instead of assumed
+- future healthcare and defense lanes can prove audit completeness under pressure with the same benchmark pack style instead of bespoke log reviews
+
+### 2026-04-19
+
 #### Arobi Network, Immaculate, and Q now share one explicit operating model
 
 What changed:

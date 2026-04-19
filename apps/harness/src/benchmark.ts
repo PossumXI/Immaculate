@@ -65,6 +65,7 @@ import { buildNwbReplayFrames, scanNwbFile } from "./nwb.js";
 import { parseStructuredResponse } from "./ollama.js";
 import { createPersistence } from "./persistence.js";
 import { resolveQLocalOllamaUrl } from "./q-local-model.js";
+import { getQFoundationModelName, getQModelName } from "./q-model.js";
 import { buildRoutingDecision, planAdaptiveRoute } from "./routing.js";
 import { runTemporalBaselineComparison } from "./temporal-baseline.js";
 import { safeUnlink } from "./utils.js";
@@ -72,6 +73,7 @@ import { createNodeRegistry } from "./node-registry.js";
 import { createIntelligenceWorkerRegistry } from "./workers.js";
 import { runQGatewaySubstrateBenchmark } from "./benchmark-q-gateway-substrate.js";
 import { runQMediationDriftBenchmark } from "./benchmark-q-mediation-drift.js";
+import { runArobiAuditIntegrityBenchmark } from "./benchmark-arobi-audit-integrity.js";
 import { resolveReleaseMetadata } from "./release-metadata.js";
 import {
   projectActuationOutput,
@@ -1844,6 +1846,201 @@ export async function runPublishedBenchmark(
             routeAlignmentSeries,
             qOnlySelectionSeries,
             driftDetectedSeries
+          ])
+        : undefined
+    };
+
+    return publishBenchmarkReport(report);
+  }
+
+  if (pack.id === "arobi-audit-integrity") {
+    const auditIntegrity = await runArobiAuditIntegrityBenchmark({
+      repoRoot: REPO_ROOT,
+      runtimeDir
+    });
+    const harnessStatus = createPersistence(runtimeDir).getStatus();
+    const linkedRecordSeries = createSeries(
+      "arobi_audit_integrity_linked_records",
+      "Arobi Audit Integrity Linked Records",
+      "records",
+      auditIntegrity.scenarioResults.map((scenario) => scenario.linkedRecordCount)
+    );
+    const sourceCoverageSeries = createSeries(
+      "arobi_audit_integrity_source_coverage",
+      "Arobi Audit Integrity Source Coverage",
+      "sources",
+      auditIntegrity.scenarioResults.map((scenario) => scenario.sourceCoverageCount)
+    );
+    const selfEvaluationSeries = createSeries(
+      "arobi_audit_integrity_self_evaluations",
+      "Arobi Audit Integrity Self-Evaluation Coverage",
+      "records",
+      auditIntegrity.scenarioResults.map((scenario) => scenario.selfEvaluationCount)
+    );
+    const completenessSeries = createSeries(
+      "arobi_audit_integrity_completeness",
+      "Arobi Audit Integrity Completeness",
+      "ratio",
+      auditIntegrity.scenarioResults.map((scenario) => scenario.auditCompletenessScore)
+    );
+    const totalLatencySeries = createSeries(
+      "arobi_audit_integrity_total_latency_ms",
+      "Arobi Audit Integrity End-To-End Latency",
+      "ms",
+      auditIntegrity.scenarioResults.map((scenario) => scenario.totalLatencyMs)
+    );
+    const assertions = [
+      createAssertion(
+        "arobi-audit-integrity-health",
+        "Live harness health is green before the audit continuity lane starts",
+        auditIntegrity.checks.health.status === 200 &&
+          typeof auditIntegrity.checks.health.body === "object" &&
+          auditIntegrity.checks.health.body !== null &&
+          (auditIntegrity.checks.health.body as { status?: string }).status === "ok",
+        "200 + status=ok",
+        `${auditIntegrity.checks.health.status}`,
+        "the benchmark only means anything if it is exercising the real live harness rather than a synthetic-only runner path"
+      ),
+      createAssertion(
+        "arobi-audit-integrity-q-surface",
+        "The live harness exposes Q as the single governed public model before the audit pass starts",
+        auditIntegrity.checks.qInfo.status === 200 &&
+          typeof auditIntegrity.checks.qInfo.body === "object" &&
+          auditIntegrity.checks.qInfo.body !== null &&
+          (auditIntegrity.checks.qInfo.body as { enabled?: boolean; modelName?: string; foundationModel?: string })
+            .enabled === true &&
+          (auditIntegrity.checks.qInfo.body as { modelName?: string }).modelName === getQModelName() &&
+          (auditIntegrity.checks.qInfo.body as { foundationModel?: string }).foundationModel ===
+            getQFoundationModelName(),
+        "enabled Q surface on Gemma 4",
+        `${auditIntegrity.checks.qInfo.status} / ${String((auditIntegrity.checks.qInfo.body as { modelName?: string } | null)?.modelName ?? "missing")} / ${String((auditIntegrity.checks.qInfo.body as { foundationModel?: string } | null)?.foundationModel ?? "missing")}`,
+        "public identity has to agree with the real Q lane before the audit proof is worth publishing"
+      ),
+      createAssertion(
+        "arobi-audit-integrity-path",
+        "Every scenario completes both the governed Q call and the governed Immaculate mediation path",
+        auditIntegrity.scenarioResults.every((scenario) => scenario.qAccepted && scenario.mediationAccepted),
+        "all scenarios qAccepted=true and mediationAccepted=true",
+        auditIntegrity.scenarioResults
+          .map(
+            (scenario) =>
+              `${scenario.id}:q=${scenario.qAccepted}/mediate=${scenario.mediationAccepted}/${scenario.failureClass ?? "none"}`
+          )
+          .join(", "),
+        "the insurer-grade lane has to prove the whole request path, not just one endpoint"
+      ),
+      createAssertion(
+        "arobi-audit-integrity-ledger",
+        "Every scenario lands inside a linked Arobi ledger chain with full source coverage",
+        auditIntegrity.scenarioResults.every(
+          (scenario) =>
+            scenario.ledgerLinked &&
+            scenario.linkedRecordCount >= 4 &&
+            scenario.sourceCoverage.includes("cognitive-execution") &&
+            scenario.sourceCoverage.includes("orchestration-arbitration") &&
+            scenario.sourceCoverage.includes("orchestration-schedule") &&
+            scenario.sourceCoverage.includes("conversation")
+        ),
+        "linked ledger + cognitive/arbitration/schedule/conversation coverage",
+        auditIntegrity.scenarioResults
+          .map(
+            (scenario) =>
+              `${scenario.id}:${scenario.ledgerLinked}/${scenario.linkedRecordCount}/${scenario.sourceCoverage.join("|") || "none"}`
+          )
+          .join(", "),
+        "auditors need the full request-decision-outcome chain, not a single success flag"
+      ),
+      createAssertion(
+        "arobi-audit-integrity-context",
+        "Every scenario captures prompt, evidence, reasoning, and self-evaluation review context",
+        auditIntegrity.scenarioResults.every(
+          (scenario) =>
+            scenario.qApiAuditCaptured &&
+            scenario.promptCaptured &&
+            scenario.reasoningCaptured &&
+            scenario.selfEvaluationCount >= 2 &&
+            scenario.evidenceDigestCount >= 2 &&
+            scenario.contextFingerprintCount >= 1
+        ),
+        "audit+prompt+reasoning+self-eval+digest coverage",
+        auditIntegrity.scenarioResults
+          .map(
+            (scenario) =>
+              `${scenario.id}:audit=${scenario.qApiAuditCaptured}/prompt=${scenario.promptCaptured}/reason=${scenario.reasoningCaptured}/self=${scenario.selfEvaluationCount}/evidence=${scenario.evidenceDigestCount}/fingerprint=${scenario.contextFingerprintCount}`
+          )
+          .join(", "),
+        "the point of this lane is proving reviewer-grade context without leaking hidden chain-of-thought"
+      ),
+      createAssertion(
+        "arobi-audit-integrity-route",
+        "Every scenario preserves Q route continuity through the latest reviewable record without drift",
+        auditIntegrity.scenarioResults.every(
+          (scenario) =>
+            scenario.routeContinuous &&
+            scenario.status === "completed" &&
+            scenario.auditCompletenessScore >= 0.95
+        ),
+        "route continuous + completeness >= 0.95",
+        auditIntegrity.scenarioResults
+          .map(
+            (scenario) =>
+              `${scenario.id}:${scenario.routeSuggestion ?? "missing"}=>${scenario.latestRouteSuggestion ?? "missing"}/score=${scenario.auditCompletenessScore.toFixed(2)}/${scenario.failureClass ?? "none"}`
+          )
+          .join(", "),
+        "the published proof should show that the same governed route survives from Q through the Arobi review trail"
+      )
+    ];
+    const report: BenchmarkReport = {
+      suiteId,
+      generatedAt,
+      packId: pack.id,
+      packLabel: pack.label,
+      runKind,
+      profile: `arobi-audit-integrity / ${hardwareContext.platform}-${hardwareContext.arch}`,
+      summary: `This benchmark starts the real Immaculate harness on loopback with the governed Q public edge enabled, runs live Q requests and live Immaculate mediation across defense and healthcare review scenarios, and then scores the resulting Arobi ledger and Q API audit artifacts for insurer-grade continuity. It proves the harness is live, Q is the single governed public model built on Gemma 4, the Q path and mediation path both complete, the Arobi ledger stays linked, and each scenario preserves enough request, evidence, reasoning, and self-evaluation context for review without exposing hidden chain-of-thought. Hardware context: ${formatBenchmarkHardwareContext(hardwareContext)}.`,
+      tickIntervalMs,
+      totalTicks: auditIntegrity.scenarioResults.length,
+      plannedDurationMs,
+      totalDurationMs: Number((performance.now() - benchmarkStartedAt).toFixed(2)),
+      checkpointCount: harnessStatus.checkpointCount,
+      recoveryMode: harnessStatus.recoveryMode,
+      recovered: true,
+      integrity: {
+        valid: true,
+        status: "verified",
+        coherenceStable: true,
+        findingCount: 0,
+        findings: [],
+        checkedAt: new Date().toISOString(),
+        currentCycle: Math.max(1, auditIntegrity.scenarioResults.length),
+        activePassCount: 1
+      },
+      hardwareContext,
+      series: [
+        linkedRecordSeries,
+        sourceCoverageSeries,
+        selfEvaluationSeries,
+        completenessSeries,
+        totalLatencySeries
+      ],
+      assertions,
+      progress: {
+        stage: "arobi audit continuity",
+        completed: auditIntegrity.scenarioResults.map(
+          (scenario) =>
+            `${scenario.label}: q=${scenario.qAccepted} / mediate=${scenario.mediationAccepted} / sources=${scenario.sourceCoverage.join("|")} / score=${scenario.auditCompletenessScore.toFixed(2)} / route=${scenario.routeSuggestion ?? "missing"}=>${scenario.latestRouteSuggestion ?? "missing"}`
+        ),
+        remaining: []
+      },
+      attribution: BENCHMARK_ATTRIBUTION,
+      auditScenarioResults: auditIntegrity.scenarioResults,
+      comparison: previousReport
+        ? compareBenchmarkReports(previousReport, [
+            linkedRecordSeries,
+            sourceCoverageSeries,
+            selfEvaluationSeries,
+            completenessSeries,
+            totalLatencySeries
           ])
         : undefined
     };

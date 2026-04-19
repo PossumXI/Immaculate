@@ -25,6 +25,10 @@ const proofCards = [
     body: "The four-scenario mixed-pressure reasoning lane is green on the active bench-v23 lock. Q and Immaculate both self-evaluate every scenario, route alignment stays perfect, and runner-path P95 is 4.4 ms."
   },
   {
+    label: "Arobi Audit Integrity",
+    body: "The live insurer-grade audit lane is green. Three governed scenarios kept the ledger chain intact with linked-records P50 5, source-coverage P50 4, self-evaluations P50 3, and audit-completeness P50 1.00."
+  },
+  {
     label: "Q Substrate Benchmark",
     body: "Gateway to Immaculate seam is green. Structured handoff survives arbitration with zero failed assertions, gateway P95 is 15.30s, and arbitration P95 is 1.74 ms."
   },
@@ -42,7 +46,7 @@ const proofCards = [
   },
   {
     label: "W&B Publication Surface",
-    body: "The newest published W&B export is April 18. The newer April 19 mediation, substrate, and audit-trail wins are live repo evidence now, while the separate 60m soak page remains historical evidence from the last hour-class rerun."
+    body: "The newest published W&B export is April 19. The April 19 mediation, substrate, public-task, and audit-integrity wins are all aligned across repo, wiki, and site, while the separate 60m soak page remains historical evidence from the last hour-class rerun."
   }
 ];
 
@@ -81,7 +85,7 @@ export function LandingPage() {
 
       <section className="landingHero">
         <div className="landingCopy">
-          <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 19 | AROBI REVIEW LIVE | W&amp;B EXPORT APR 18</p>
+          <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 19 | AROBI AUDIT LIVE | W&amp;B EXPORT APR 19</p>
           <h1 className="landingHeadline">Controlled intelligence for critical operations.</h1>
           <p className="landingLede">Arobi Network is the operator ledger and audit substrate. Immaculate is the harness and orchestrator. Q is the brain. Defense and healthcare. Evidence before action.</p>
 
@@ -97,12 +101,15 @@ export function LandingPage() {
             <span>Gateway contract green</span>
             <span>Identity gate green</span>
             <span>Arobi decision review live</span>
+            <span>Arobi audit integrity 3 scenarios</span>
+            <span>Audit completeness P50 1.00</span>
             <span>Arobi Network audit substrate</span>
             <span>2 linked ledgers</span>
             <span>8 successful linked records</span>
-            <span>Latest W&B export Apr 18</span>
+            <span>Linked records P50 5</span>
+            <span>Latest W&B export Apr 19</span>
             <span>Machine-stamped bench-v23 lock</span>
-            <span>55 benchmark rows</span>
+            <span>56 benchmark rows</span>
             <span>117 training rows</span>
             <span>HF Jobs launch ready</span>
             <span>Kaggle export ready</span>

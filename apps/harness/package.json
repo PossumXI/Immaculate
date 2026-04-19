@@ -15,6 +15,7 @@
     "benchmark:terminalbench:receipt": "tsx src/terminal-bench-receipt.ts",
     "benchmark:terminalbench:sweep": "tsx src/terminal-bench-sweep.ts",
     "benchmark:terminalbench:rerun": "tsx src/terminal-bench-rerun.ts",
+    "benchmark:arobi:audit:report": "tsx src/arobi-audit-integrity-report.ts",
     "benchmark:q:substrate:report": "tsx src/q-gateway-substrate-report.ts",
     "benchmark:q:mediation:report": "tsx src/q-mediation-drift-report.ts",
     "benchmark:q:sweep:report": "tsx src/q-benchmark-sweep-report.ts",
