@@ -31,7 +31,7 @@ def render_markdown(summary: dict) -> str:
         [
             "# Q API Audit",
             "",
-            "This page is generated from the live Q public-substrate audit spool. It summarizes the latest successful governed Q calls that reached the real `/api/q/run` path.",
+            "This page is generated from the live Q public-substrate audit spool. Arobi Network is the ledger-backed private and public operator network and audit substrate for this stack. Immaculate is the governed harness and orchestrator inside it, and Q is the reasoning brain. This page summarizes the latest successful governed Q calls that reached the real `/api/q/run` path.",
             "",
             f"- Generated: `{summary['generatedAt']}`",
             f"- Source file: `{summary['sourcePath']}`",
@@ -40,6 +40,7 @@ def render_markdown(summary: dict) -> str:
             f"- Successful parse-complete calls: `{summary['successfulParseCount']}`",
             f"- Decision traces linked: `{summary['decisionTraceCount']}`",
             f"- Current Q bundle: `{summary['qTrainingBundleId']}`",
+            "- Operating model: `Arobi Network = ledger and audit substrate | Immaculate = harness/orchestrator | Q = reasoning brain`",
             "",
             "## Latest Successful Record",
             "",

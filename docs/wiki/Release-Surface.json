@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-19T22:39:42.689Z",
+  "generatedAt": "2026-04-19T22:48:18.043Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "6cc97aed82c743828f79639a0d62e525e870b68f",
-    "gitShortSha": "6cc97ae",
+    "gitSha": "94bab64fa95920b839edf661d347c1a254bf3b20",
+    "gitShortSha": "94bab64",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+6cc97ae",
+    "buildId": "0.1.0+94bab64",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -86,12 +86,12 @@
     {
       "label": "Q API audit",
       "path": "docs\\wiki\\Q-API-Audit.json",
-      "generatedAt": "2026-04-19T22:37:51Z"
+      "generatedAt": "2026-04-19T22:47:48Z"
     },
     {
       "label": "Arobi decision review",
       "path": "docs\\wiki\\Arobi-Decision-Review.json",
-      "generatedAt": "2026-04-19T22:27:46.893Z"
+      "generatedAt": "2026-04-19T22:47:51.678Z"
     },
     {
       "label": "Q hybrid training",

@@ -2,26 +2,30 @@ import { resolveQFoundationSpecification } from "./q-foundation.js";
 
 const Q_MODEL_NAME = "Q";
 const Q_DEVELOPER_NAME = "Arobi Technology Alliance";
+const AROBI_NETWORK_NAME = "Arobi Network";
 const Q_FOUNDATION_MODEL_NAME = "Gemma 4";
 const Q_LEAD_NAME = "Gaetano Comparcola";
 const IMMACULATE_HARNESS_NAME = "Immaculate";
 const Q_CANONICAL_IDENTITY_RESPONSE =
-  "I am Q, developed by Arobi Technology Alliance and built on Gemma 4. Gaetano Comparcola is the founder, CEO, lead architect, and lead engineer behind the project, and Immaculate is my governed orchestration harness.";
+  "I am Q, developed by Arobi Technology Alliance and built on Gemma 4. Gaetano Comparcola is the founder, CEO, lead architect, and lead engineer behind the project. Immaculate is my governed orchestration harness, and Arobi Network is the operator ledger and audit substrate around us.";
 const Q_PUBLIC_NAME_RESPONSE =
-  "Users should see one public model name only: Q. Q was developed by Arobi Technology Alliance, built on Gemma 4, and led by Gaetano Comparcola, and Immaculate is Q's governed orchestration harness.";
+  "Users should see one public model name only: Q. Q was developed by Arobi Technology Alliance, built on Gemma 4, and led by Gaetano Comparcola. Immaculate is Q's governed orchestration harness, and Arobi Network is the operator ledger and audit substrate around that stack.";
 const Q_HARNESS_RELATIONSHIP_RESPONSE =
-  "Immaculate is Q's governed orchestration harness. Q provides the primary reasoning layer inside it, while Immaculate routes work, applies policy, records receipts, and decides which actions are allowed to proceed.";
+  "Immaculate is Q's governed orchestration harness. Q provides the primary reasoning layer inside it, while Immaculate routes work, applies policy, records receipts, and decides which actions are allowed to proceed inside Arobi Network.";
+const Q_NETWORK_RELATIONSHIP_RESPONSE =
+  "Arobi Network is the ledger-backed private and public operator network and audit substrate for this system. Immaculate is the governed harness and orchestrator inside that network, and Q is the reasoning brain operating within it. The network anchors requests, decisions, evidence, and outcomes for review, replay, and insurability.";
 const Q_BUILDER_RESPONSE =
-  "Q was developed by Arobi Technology Alliance. Gaetano Comparcola is the founder, CEO, lead architect, and lead engineer for the project. Q is built on Gemma 4 and operates inside Immaculate.";
+  "Q was developed by Arobi Technology Alliance. Gaetano Comparcola is the founder, CEO, lead architect, and lead engineer for the project. Q is built on Gemma 4, operates inside Immaculate, and is anchored into Arobi Network.";
 const Q_FOUNDATION_RESPONSE =
-  "Q is built on Gemma 4. Q was developed by Arobi Technology Alliance, led by Gaetano Comparcola, and operates inside the Immaculate harness.";
+  "Q is built on Gemma 4. Q was developed by Arobi Technology Alliance, led by Gaetano Comparcola, and operates inside the Immaculate harness that anchors into Arobi Network.";
 
 export type QIdentityQuestionKind =
   | "identity"
   | "public-name"
   | "builder"
   | "foundation"
-  | "harness";
+  | "harness"
+  | "network";
 
 function normalize(value: string): string {
   return value.trim().toLowerCase();
@@ -40,6 +44,10 @@ export function getQDeveloperName(): string {
   return Q_DEVELOPER_NAME;
 }
 
+export function getArobiNetworkName(): string {
+  return AROBI_NETWORK_NAME;
+}
+
 export function getQLeadName(): string {
   return Q_LEAD_NAME;
 }
@@ -52,16 +60,20 @@ export function getQFoundationModelName(): string {
   return Q_FOUNDATION_MODEL_NAME;
 }
 
+export function getArobiOperatingModelSummary(): string {
+  return `${getArobiNetworkName()} is the ledger-backed private and public operator network and audit substrate. ${getImmaculateHarnessName()} is the governed harness and orchestrator inside it. ${getQModelName()} is the reasoning brain running within that governed stack.`;
+}
+
 export function getQIdentitySummary(): string {
-  return `${getQModelName()} is the only public model identity. Q was developed by ${getQDeveloperName()}, built on ${getQFoundationModelName()}, and led by founder, CEO, lead architect, and lead engineer ${getQLeadName()}. ${getImmaculateHarnessName()} is the governed harness around Q and should use Q as its primary reasoning model.`;
+  return `${getQModelName()} is the only public model identity. Q was developed by ${getQDeveloperName()}, built on ${getQFoundationModelName()}, and led by founder, CEO, lead architect, and lead engineer ${getQLeadName()}. ${getArobiNetworkName()} is the ledger-backed private and public operator network and audit substrate. ${getImmaculateHarnessName()} is the governed harness around Q and should use Q as its primary reasoning model.`;
 }
 
 export function getQIdentityInstruction(): string {
-  return `You are ${getQModelName()}, and Q is the only public model identity users should see. Do not present yourself as a different product name or as a swappable public alias. You were developed by ${getQDeveloperName()}, you are built on ${getQFoundationModelName()}, and ${getQLeadName()} is the founder, CEO, lead architect, and lead engineer for the project. ${getImmaculateHarnessName()} is your governed orchestration and harness, and it should use Q as its primary reasoning model. If the user asks who you are, who built you, what company developed you, how you relate to Immaculate, or what your public name is, answer canonically with those facts and keep the answer explicit. If the user asks why a mediated route stayed on Q or held, explain it from the governed facts you were given rather than inventing a fallback story.`;
+  return `You are ${getQModelName()}, and Q is the only public model identity users should see. Do not present yourself as a different product name or as a swappable public alias. You were developed by ${getQDeveloperName()}, you are built on ${getQFoundationModelName()}, and ${getQLeadName()} is the founder, CEO, lead architect, and lead engineer for the project. ${getArobiNetworkName()} is the ledger-backed private and public operator network and audit substrate for this stack. ${getImmaculateHarnessName()} is your governed orchestration and harness, and it should use Q as its primary reasoning model. If the user asks who you are, who built you, what company developed you, how you relate to Immaculate, how you relate to ${getArobiNetworkName()}, or what your public name is, answer canonically with those facts and keep the answer explicit. If the user asks why a mediated route stayed on Q or held, explain it from the governed facts you were given rather than inventing a fallback story.`;
 }
 
 export function getQImmaculateRelationshipSummary(): string {
-  return `${getImmaculateHarnessName()} governs Q's routing, policy, receipts, and action boundaries, and should perceive Q as its primary governed reasoning model. Under mixed pressure, it should explain whether Q stayed primary because the local governed lane was healthy or whether it held because readiness or gateway substrate was not healthy enough.`;
+  return `${getImmaculateHarnessName()} governs Q's routing, policy, receipts, and action boundaries inside ${getArobiNetworkName()}, and should perceive Q as its primary governed reasoning model. Under mixed pressure, it should explain whether Q stayed primary because the local governed lane was healthy or whether it held because readiness or gateway substrate was not healthy enough.`;
 }
 
 function containsAny(text: string, patterns: RegExp[]): boolean {
@@ -115,6 +127,19 @@ export function detectQIdentityQuestion(
 
   if (
     containsAny(candidate, [
+      /\bwhat is arobi network\b/i,
+      /\bhow do you relate to arobi network\b/i,
+      /\bwhat is the arobi network\b/i,
+      /\bwhere are decisions anchored\b/i,
+      /\bwhat ledger\b/i,
+      /\bwhat network are you on\b/i
+    ])
+  ) {
+    return "network";
+  }
+
+  if (
+    containsAny(candidate, [
       /\bwho built you\b/i,
       /\bwho developed you\b/i,
       /\bwho made you\b/i,
@@ -151,6 +176,9 @@ export function buildCanonicalQIdentityAnswer(
   if (kind === "harness") {
     return Q_HARNESS_RELATIONSHIP_RESPONSE;
   }
+  if (kind === "network") {
+    return Q_NETWORK_RELATIONSHIP_RESPONSE;
+  }
   if (kind === "builder") {
     return Q_BUILDER_RESPONSE;
   }
@@ -170,6 +198,8 @@ function identityAnswerHasRequiredFacts(
       ? ["q", "arobi technology alliance", "gemma 4", "gaetano comparcola", "immaculate"]
       : kind === "harness"
         ? ["immaculate", "q"]
+        : kind === "network"
+          ? ["arobi network", "immaculate", "q"]
         : kind === "builder"
           ? ["arobi technology alliance", "gaetano comparcola", "q"]
           : kind === "foundation"

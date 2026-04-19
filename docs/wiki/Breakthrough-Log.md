@@ -21,6 +21,30 @@ For each breakthrough, record:
 
 ### 2026-04-19
 
+#### Arobi Network, Immaculate, and Q now share one explicit operating model
+
+What changed:
+- the shared Q identity layer now answers canonically about `Arobi Network`, not just `Q` and `Immaculate`
+- the release surface, Arobi decision review, and Q API audit surfaces now all spell out the same role split: `Arobi Network = ledger and audit substrate`, `Immaculate = harness/orchestrator`, `Q = brain`
+- the repo wiki now carries one stable explainer page at [[Arobi-Network-Architecture]] instead of scattering that definition across benchmark pages and README prose
+
+Why it matters:
+- the missed pattern was that the stack already had the right mechanics, but the public and operator explanation was still too distributed to serve as a stable review story
+- making the operating model explicit matters because auditors, insurers, operators, and contributors need the same answer to the same question
+- putting that wording into the shared Q identity layer matters because now the product model is executable truth, not just documentation
+
+Evidence:
+- `apps/harness/src/q-model.ts` now canonicalizes `Arobi Network` relationship questions
+- `docs/wiki/Arobi-Network-Architecture.md` now states the stack in one plain-English page
+- `docs/wiki/Release-Surface.md`, `docs/wiki/Arobi-Decision-Review.md`, and `docs/wiki/Q-API-Audit.md` now all restate the same operating model
+
+What this unlocks next:
+- stronger insured-system copy without drifting from runtime truth
+- cleaner audit and review surfaces that explain the ledger/harness/brain split without hand-written reinterpretation
+- future Q fine-tune seeds that can train on the exact operating model users and auditors are supposed to see
+
+### 2026-04-19
+
 #### Arobi decision review is now live, and governed Q mediation is green on the current lock
 
 What changed:

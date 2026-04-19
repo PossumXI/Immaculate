@@ -5,8 +5,8 @@ Welcome to the live field guide for Immaculate.
 In plain English, Immaculate is a control system for AI and automation.
 It helps a machine decide what to do next, checks whether that action is allowed, keeps receipts, and publishes measurements so people can see what is real.
 
-Q is the public model name, built by Arobi Technology Alliance on Gemma 4; Gaetano Comparcola is the founder, CEO, lead architect, and lead engineer; Immaculate is the governed orchestration harness around Q.
-In the operating model, Arobi Network is the ledger-backed network where those governed AI decisions are anchored for review, replay, and insurability.
+Q is the public model name, built by Arobi Technology Alliance on Gemma 4; Gaetano Comparcola is the founder, CEO, lead architect, and lead engineer.
+In the operating model, Arobi Network is the ledger-backed private and public operator network and audit substrate, Immaculate is the governed harness and orchestrator, and Q is the reasoning brain inside that governed stack.
 
 Public website:
 
@@ -64,6 +64,7 @@ Right now the honest story is:
 ## Living Record
 
 - [[Release-Surface]] is the machine-stamped build-and-bundle page for the current Immaculate and `Q` release state
+- [[Arobi-Network-Architecture]] is the stable plain-English explainer for the product split: network, harness, and brain
 - [[Breakthrough-Log]] tracks major leaps, missed-but-real insights, and hard system milestones as they land
 - [[Engineering-Doctrine]] defines the standing build philosophy and what qualifies as a real leap
 - [[Benchmark-Status]] points to the live public W&B project plus the latest published benchmark runs by pack

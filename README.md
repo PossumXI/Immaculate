@@ -13,7 +13,7 @@ Immaculate is software for running AI and automation carefully.
 In plain English: it helps a system decide what to do next, checks whether that action is allowed, records what happened, and publishes real benchmarks instead of hand-wavy claims.
 
 `Q` is the single custom model used across this repo. It is built on Gemma 4, developed by Arobi Technology Alliance, served everywhere here under the product name `Q`, and tied to a reproducible training-bundle path.
-In the product model: `Arobi Network` is the ledger-backed operating network, `Immaculate` is the governed harness and orchestrator, and `Q` is the reasoning model that runs inside it.
+In the product model: `Arobi Network` is the ledger-backed private and public operator network and audit substrate, `Immaculate` is the governed harness and orchestrator, and `Q` is the reasoning brain that runs inside it.
 The newest proof points are a real `Q` substrate benchmark where the gateway hands structured work back into Immaculate arbitration, a hard mixed-pressure reasoning lane where Immaculate follows Q without drift, and a real `Q` API audit loop where live `/api/q/run` calls land as chained Arobi decision records instead of disappearing into logs.
 
 Gaetano Comparcola is the founder and CEO of Arobi Technology Alliance and the lead architect and engineer behind Immaculate and Q.
@@ -38,6 +38,7 @@ This repository is prepared for public collaboration under the Apache 2.0 licens
 
 - public website: [iorch.net](https://iorch.net)
 - current release surface: [docs/wiki/Release-Surface.md](docs/wiki/Release-Surface.md)
+- Arobi architecture explainer: [docs/wiki/Arobi-Network-Architecture.md](docs/wiki/Arobi-Network-Architecture.md)
 - latest Harbor public-task win: [docs/wiki/Terminal-Bench-Public-Task.md](docs/wiki/Terminal-Bench-Public-Task.md)
 - live Q structured contract benchmark: [docs/wiki/Model-Benchmark-Comparison.md](docs/wiki/Model-Benchmark-Comparison.md)
 - live BridgeBench: [docs/wiki/BridgeBench.md](docs/wiki/BridgeBench.md)
@@ -74,6 +75,7 @@ Latest plain-English readout:
 - the dedicated Q gateway contract is green and Q-only: `/health 200`, authenticated `/api/q/info 200`, authenticated `/v1/models 200`, authenticated chat `200`, bounded `429` concurrency rejection, and a canonical identity smoke that answers as `Q`, `Arobi Technology Alliance`, `Gaetano Comparcola`, `Gemma 4`, and `Immaculate`; the current measured gateway overhead lives on [docs/wiki/Q-Gateway-Validation.md](docs/wiki/Q-Gateway-Validation.md)
 - the live `Q` API audit surface is now green on a real governed call: [docs/wiki/Q-API-Audit.md](docs/wiki/Q-API-Audit.md) records a successful authenticated `/api/q/run` with `parse success: true`, latency `23349.14 ms`, and a chained Arobi decision trace instead of a dead-end log line
 - the live Arobi review surface now proves the governed ledger chain stays intact across successful calls: [docs/wiki/Arobi-Decision-Review.md](docs/wiki/Arobi-Decision-Review.md) records `2` linked ledgers, `9` linked records, `8` successful linked records, and the latest successful governed record for session `arobi-q-proof-20260419`
+- the architecture split is now explicit in one stable public explainer: [docs/wiki/Arobi-Network-Architecture.md](docs/wiki/Arobi-Network-Architecture.md) states the product model as `Arobi Network = ledger/audit substrate`, `Immaculate = harness/orchestrator`, and `Q = brain`
 - the latest tracked W&B export is current on `2026-04-18` through [docs/wiki/Benchmark-Status.md](docs/wiki/Benchmark-Status.md) and [docs/wiki/Benchmark-Wandb-Export.md](docs/wiki/Benchmark-Wandb-Export.md); the separate [docs/wiki/Q-Benchmark-Sweep-60m.md](docs/wiki/Q-Benchmark-Sweep-60m.md) page remains the historical hour-class soak lane
 - the current Q bundle, hybrid session, benchmark corpus, and paired Immaculate orchestration bundle are machine-stamped on [docs/wiki/Release-Surface.md](docs/wiki/Release-Surface.md); the active tracked Q bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`
 - the tracked Q benchmark corpus currently carries `55` records, and the hybrid training session plus Kaggle and Colab export lanes are restamped to the same `bench-v23` lineage

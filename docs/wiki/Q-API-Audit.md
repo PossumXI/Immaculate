@@ -1,14 +1,15 @@
 # Q API Audit
 
-This page is generated from the live Q public-substrate audit spool. It summarizes the latest successful governed Q calls that reached the real `/api/q/run` path.
+This page is generated from the live Q public-substrate audit spool. Arobi Network is the ledger-backed private and public operator network and audit substrate for this stack. Immaculate is the governed harness and orchestrator inside it, and Q is the reasoning brain. This page summarizes the latest successful governed Q calls that reached the real `/api/q/run` path.
 
-- Generated: `2026-04-19T22:37:51Z`
+- Generated: `2026-04-19T22:47:48Z`
 - Source file: `.training-output/q/q-api-audit.ndjson`
 - Records: `8`
 - Successful governed calls: `2`
 - Successful parse-complete calls: `2`
 - Decision traces linked: `3`
 - Current Q bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`
+- Operating model: `Arobi Network = ledger and audit substrate | Immaculate = harness/orchestrator | Q = reasoning brain`
 
 ## Latest Successful Record
 

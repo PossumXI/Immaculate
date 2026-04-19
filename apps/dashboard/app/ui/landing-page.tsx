@@ -34,11 +34,11 @@ const proofCards = [
   },
   {
     label: "Arobi Decision Review",
-    body: "The live Arobi review page now summarizes the governed ledger itself: 2 linked ledgers, 9 linked records, 8 successful linked records, and the latest successful decision chain for the current Q-only harness."
+    body: "The live Arobi review page now summarizes the governed ledger itself: 2 linked ledgers, 9 linked records, 8 successful linked records, and the latest successful decision chain for the current Q-only harness inside the Arobi Network audit substrate."
   },
   {
     label: "Training State",
-    body: "Q is the public model name built by Arobi Technology Alliance on Gemma 4. Gaetano Comparcola is the founder, CEO, lead architect, and lead engineer, and Immaculate is the governed orchestration harness around Q on the active bench-v23 lock."
+    body: "Q is the public model name built by Arobi Technology Alliance on Gemma 4. Gaetano Comparcola is the founder, CEO, lead architect, and lead engineer. In the operating model, Arobi Network is the ledger and audit substrate, Immaculate is the harness and orchestrator, and Q is the brain on the active bench-v23 lock."
   },
   {
     label: "W&B Publication Surface",
@@ -83,7 +83,7 @@ export function LandingPage() {
         <div className="landingCopy">
           <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 19 | AROBI REVIEW LIVE | W&amp;B EXPORT APR 18</p>
           <h1 className="landingHeadline">Controlled intelligence for critical operations.</h1>
-          <p className="landingLede">Defense and healthcare. Evidence before action. Q only. Benchmarked. Gateway seam proven. Arobi audit loop live.</p>
+          <p className="landingLede">Arobi Network is the operator ledger and audit substrate. Immaculate is the harness and orchestrator. Q is the brain. Defense and healthcare. Evidence before action.</p>
 
           <div className="landingPills">
             <span>Q 4/4 structured</span>
@@ -97,6 +97,7 @@ export function LandingPage() {
             <span>Gateway contract green</span>
             <span>Identity gate green</span>
             <span>Arobi decision review live</span>
+            <span>Arobi Network audit substrate</span>
             <span>2 linked ledgers</span>
             <span>8 successful linked records</span>
             <span>Latest W&B export Apr 18</span>

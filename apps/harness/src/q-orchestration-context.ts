@@ -3,6 +3,8 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import type { PhaseSnapshot } from "@immaculate/core";
 import {
+  getArobiNetworkName,
+  getArobiOperatingModelSummary,
   getImmaculateHarnessName,
   getQDeveloperName,
   getQFoundationModelName,
@@ -79,12 +81,15 @@ export type QOrchestrationContext = {
   foundationModel: string;
   developer: string;
   lead: string;
+  network: string;
   harness: string;
   identitySummary: string;
   identityInstruction: string;
+  networkSummary: string;
   relationshipSummary: string;
   developerSummary: string;
   leadershipSummary: string;
+  networkDirective: string;
   harnessDirective: string;
   orchestrationDoctrine: string;
   operatorDisciplineSummary: string;
@@ -159,6 +164,7 @@ function collectContextGroundingFacts(options: {
   add(`Q built on ${getQFoundationModelName()}`);
   add(`Q developed by ${getQDeveloperName()}`);
   add(`Q led by ${getQLeadName()}`);
+  add(`${getArobiNetworkName()} anchors requests decisions evidence and outcomes`);
   add(`${getImmaculateHarnessName()} governs Q`);
   add(`${getImmaculateHarnessName()} should prefer the local governed Q lane when it is healthy`);
   add(`training bundle ${options.release.q.trainingLock?.bundleId ?? "unknown"}`);
@@ -323,14 +329,17 @@ export async function resolveQOrchestrationContext(
     foundationModel: getQFoundationModelName(),
     developer: getQDeveloperName(),
     lead: getQLeadName(),
+    network: getArobiNetworkName(),
     harness: getImmaculateHarnessName(),
     identitySummary: getQIdentitySummary(),
     identityInstruction: getQIdentityInstruction(),
+    networkSummary: getArobiOperatingModelSummary(),
     relationshipSummary: getQImmaculateRelationshipSummary(),
     developerSummary: `${getQModelName()} was developed by ${getQDeveloperName()}.`,
     leadershipSummary: `${getQLeadName()} is the founder, CEO, lead architect, and lead engineer for ${getQModelName()}.`,
-    harnessDirective: `${getImmaculateHarnessName()} should perceive ${getQModelName()} as its primary governed reasoning model and keep public identity fixed to Q.`,
-    orchestrationDoctrine: `${getImmaculateHarnessName()} should route context into ${getQModelName()}, enforce policy and arbitration around it, preserve durable receipts, and prefer the healthy local Q lane before any blocked cloud lane.`,
+    networkDirective: `${getArobiNetworkName()} should preserve the reviewable record of requests, decisions, evidence, and outcomes without exposing hidden chain-of-thought.`,
+    harnessDirective: `${getImmaculateHarnessName()} should perceive ${getQModelName()} as its primary governed reasoning model, keep public identity fixed to Q, and anchor governed execution into ${getArobiNetworkName()}.`,
+    orchestrationDoctrine: `${getImmaculateHarnessName()} should route context into ${getQModelName()}, enforce policy and arbitration around it, preserve durable receipts, and anchor the final request, decision, evidence, and outcome into ${getArobiNetworkName()} before any blocked cloud lane is treated as a substitute for the healthy local Q lane.`,
     operatorDisciplineSummary,
     reasoningDirective,
     mediationDiagnosticSummary,
@@ -352,6 +361,6 @@ export async function resolveQOrchestrationContext(
     qRoutingDirective,
     preferredExecutionLane: "local-q",
     groundedFacts,
-    summaryLine: `${getQModelName()} is the only public model identity, built by ${getQDeveloperName()} on ${getQFoundationModelName()}, led by ${getQLeadName()}, and governed by ${getImmaculateHarnessName()}. Keep reasoning on the healthy local Q lane, obey the ${qRoutingDirective} directive, stay bound to ${release.q.trainingLock?.bundleId ?? "the current tracked bundle"}, treat cloud Q as ${cloud?.summary?.ready ? "ready" : "not ready"}, and preserve operator-grade grounding on the Harbor and failure-corpus seams.`
+    summaryLine: `${getArobiNetworkName()} is the reviewable ledger and operator network, ${getImmaculateHarnessName()} is the governed harness, and ${getQModelName()} is the only public model identity and reasoning brain. Keep reasoning on the healthy local Q lane, obey the ${qRoutingDirective} directive, stay bound to ${release.q.trainingLock?.bundleId ?? "the current tracked bundle"}, treat cloud Q as ${cloud?.summary?.ready ? "ready" : "not ready"}, and preserve operator-grade grounding on the Harbor and failure-corpus seams.`
   };
 }

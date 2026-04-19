@@ -1,6 +1,7 @@
 import path from "node:path";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
+import { getArobiNetworkName, getImmaculateHarnessName, getQModelName } from "./q-model.js";
 import { resolveReleaseMetadata, type ReleaseMetadata } from "./release-metadata.js";
 
 type SurfaceTimestamp = {
@@ -213,6 +214,7 @@ function renderMarkdown(report: ReleaseSurfaceReport): string {
     "## What This Means In Plain English",
     "",
     `- Immaculate build \`${report.release.buildId}\` is the current repo build stamp.`,
+    `- ${getArobiNetworkName()} is the ledger-backed private and public operator network and audit substrate. ${getImmaculateHarnessName()} is the governed harness and orchestrator inside it. ${getQModelName()} is the reasoning brain inside that governed stack.`,
     `- Q is the only public model name used across the repo, and it is built on \`${report.release.q.foundationModel}\`.`,
     trainingLock
       ? `- The latest tracked Q training bundle is \`${trainingLock.bundleId}\`, tied to dataset \`${trainingLock.trainDatasetPath ?? "unknown"}\` and config/provenance captured in \`${trainingLock.lockPath}\`.`

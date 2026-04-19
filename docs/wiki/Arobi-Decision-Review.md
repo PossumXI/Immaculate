@@ -1,12 +1,13 @@
 # Arobi Decision Review
 
-This page is generated from the private Arobi decision ledgers under `.runtime`. It only surfaces structurally linked successful chains and the latest successful governed decision context.
+This page is generated from the private Arobi decision ledgers under `.runtime`. Arobi Network is the ledger-backed private and public operator network and audit substrate for this stack. Immaculate is the governed harness and orchestrator inside it, and Q is the reasoning brain. This review page only surfaces structurally linked successful chains and the latest successful governed decision context without exposing hidden chain-of-thought.
 
-- Generated: `2026-04-19T22:27:46.893Z`
+- Generated: `2026-04-19T22:47:51.678Z`
 - Ledger files: `2`
 - Linked ledgers: `2`
 - Linked records: `9`
 - Successful linked records: `8`
+- Operating model: `Arobi Network = ledger and audit substrate | Immaculate = harness/orchestrator | Q = reasoning brain`
 
 ## Latest Successful Governed Record
 

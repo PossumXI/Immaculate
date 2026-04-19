@@ -2,9 +2,9 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-04-19T22:39:42.689Z
-- Immaculate release: `0.1.0+6cc97ae`
-- Repo commit: `6cc97aed82c743828f79639a0d62e525e870b68f`
+- Generated: 2026-04-19T22:48:18.043Z
+- Immaculate release: `0.1.0+94bab64`
+- Repo commit: `94bab64fa95920b839edf661d347c1a254bf3b20`
 - Branch: `publish-q-win`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
@@ -16,7 +16,8 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+6cc97ae` is the current repo build stamp.
+- Immaculate build `0.1.0+94bab64` is the current repo build stamp.
+- Arobi Network is the ledger-backed private and public operator network and audit substrate. Immaculate is the governed harness and orchestrator inside it. Q is the reasoning brain inside that governed stack.
 - Q is the only public model name used across the repo, and it is built on `Gemma 4`.
 - The latest tracked Q training bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`, tied to dataset `.training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
 - The latest hybrid session is `q-hybrid-harbor-opt-2384cf5-bench-v23`, with local lane `ready` and cloud lane `ready` on provider `hf_jobs`.
@@ -31,8 +32,8 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Q gateway validation: `2026-04-19T07:47:33.854Z` via `docs/wiki/Q-Gateway-Validation.json`
 - Q gateway substrate: `2026-04-19T22:06:38.757Z` via `docs/wiki/Q-Gateway-Substrate.json`
 - Q mediation drift: `2026-04-19T22:06:40.025Z` via `docs/wiki/Q-Mediation-Drift.json`
-- Q API audit: `2026-04-19T22:37:51Z` via `docs/wiki/Q-API-Audit.json`
-- Arobi decision review: `2026-04-19T22:27:46.893Z` via `docs/wiki/Arobi-Decision-Review.json`
+- Q API audit: `2026-04-19T22:47:48Z` via `docs/wiki/Q-API-Audit.json`
+- Arobi decision review: `2026-04-19T22:47:51.678Z` via `docs/wiki/Arobi-Decision-Review.json`
 - Q hybrid training: `2026-04-19T07:46:17Z` via `docs/wiki/Q-Hybrid-Training.json`
 - HF Jobs training: `2026-04-19T05:52:40Z` via `docs/wiki/HF-Jobs-Training.json`
 - Colab free training: `2026-04-19T05:52:29Z` via `docs/wiki/Colab-Free-Training.json`
