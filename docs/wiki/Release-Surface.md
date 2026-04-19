@@ -2,9 +2,9 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-04-19T22:38:40.155Z
-- Immaculate release: `0.1.0+c7990ba`
-- Repo commit: `c7990ba8d7b88d19f0082e216db14b5260df596b`
+- Generated: 2026-04-19T22:39:42.689Z
+- Immaculate release: `0.1.0+6cc97ae`
+- Repo commit: `6cc97aed82c743828f79639a0d62e525e870b68f`
 - Branch: `publish-q-win`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+c7990ba` is the current repo build stamp.
+- Immaculate build `0.1.0+6cc97ae` is the current repo build stamp.
 - Q is the only public model name used across the repo, and it is built on `Gemma 4`.
 - The latest tracked Q training bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`, tied to dataset `.training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
 - The latest hybrid session is `q-hybrid-harbor-opt-2384cf5-bench-v23`, with local lane `ready` and cloud lane `ready` on provider `hf_jobs`.
@@ -27,7 +27,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - BridgeBench: `2026-04-19T07:51:12.922Z` via `docs/wiki/BridgeBench.json`
 - BridgeBench soak: `2026-04-15T06:15:54.188Z` via `docs/wiki/BridgeBench-Soak.json`
 - Q structured contract benchmark: `2026-04-19T07:48:09.656Z` via `docs/wiki/Model-Benchmark-Comparison.json`
-- Q readiness gate: `2026-04-19T22:38:32.674Z` via `docs/wiki/Q-Readiness-Gate.json`
+- Q readiness gate: `2026-04-19T22:39:42.296Z` via `docs/wiki/Q-Readiness-Gate.json`
 - Q gateway validation: `2026-04-19T07:47:33.854Z` via `docs/wiki/Q-Gateway-Validation.json`
 - Q gateway substrate: `2026-04-19T22:06:38.757Z` via `docs/wiki/Q-Gateway-Substrate.json`
 - Q mediation drift: `2026-04-19T22:06:40.025Z` via `docs/wiki/Q-Mediation-Drift.json`
@@ -42,7 +42,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - OCI region capacity: `2026-04-17T02:02:24Z` via `docs/wiki/OCI-Region-Capacity.json`
 - Q benchmark corpus: `2026-04-19T07:46:04Z` via `docs/wiki/Q-Benchmark-Corpus.json`
 - Q benchmark promotion: `2026-04-19T07:46:03Z` via `docs/wiki/Q-Benchmark-Promotion.json`
-- W&B benchmark export: `2026-04-19T14:35:38.563945+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
+- W&B benchmark export: `2026-04-19T22:31:29.020111+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
 - Harbor terminal bench: `2026-04-19T07:43:17.831Z` via `docs/wiki/Harbor-Terminal-Bench.json`
 - Terminal-Bench public task: `2026-04-19T14:31:45.217Z` via `docs/wiki/Terminal-Bench-Public-Task.json`
 - Terminal-Bench leaderboard status: `2026-04-19T14:31:45.545Z` via `docs/wiki/Terminal-Bench-Receipt.json`
