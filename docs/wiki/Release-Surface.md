@@ -2,9 +2,9 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-04-19T22:27:46.459Z
-- Immaculate release: `0.1.0+6fc8e11`
-- Repo commit: `6fc8e11ddd7a2ba01eb6debf3c5f0a44a225764a`
+- Generated: 2026-04-19T22:28:29.543Z
+- Immaculate release: `0.1.0+3307fa2`
+- Repo commit: `3307fa2fab5ce6470e700db7abb23d70704d086b`
 - Branch: `publish-q-win`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+6fc8e11` is the current repo build stamp.
+- Immaculate build `0.1.0+3307fa2` is the current repo build stamp.
 - Q is the only public model name used across the repo, and it is built on `Gemma 4`.
 - The latest tracked Q training bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`, tied to dataset `.training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
 - The latest hybrid session is `q-hybrid-harbor-opt-2384cf5-bench-v23`, with local lane `ready` and cloud lane `ready` on provider `hf_jobs`.
@@ -27,12 +27,12 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - BridgeBench: `2026-04-19T07:51:12.922Z` via `docs/wiki/BridgeBench.json`
 - BridgeBench soak: `2026-04-15T06:15:54.188Z` via `docs/wiki/BridgeBench-Soak.json`
 - Q structured contract benchmark: `2026-04-19T07:48:09.656Z` via `docs/wiki/Model-Benchmark-Comparison.json`
-- Q readiness gate: `2026-04-19T22:25:20.626Z` via `docs/wiki/Q-Readiness-Gate.json`
+- Q readiness gate: `2026-04-19T22:28:21.860Z` via `docs/wiki/Q-Readiness-Gate.json`
 - Q gateway validation: `2026-04-19T07:47:33.854Z` via `docs/wiki/Q-Gateway-Validation.json`
 - Q gateway substrate: `2026-04-19T22:06:38.757Z` via `docs/wiki/Q-Gateway-Substrate.json`
 - Q mediation drift: `2026-04-19T22:06:40.025Z` via `docs/wiki/Q-Mediation-Drift.json`
 - Q API audit: `2026-04-19T22:16:53Z` via `docs/wiki/Q-API-Audit.json`
-- Arobi decision review: `2026-04-19T22:22:01.815Z` via `docs/wiki/Arobi-Decision-Review.json`
+- Arobi decision review: `2026-04-19T22:27:46.893Z` via `docs/wiki/Arobi-Decision-Review.json`
 - Q hybrid training: `2026-04-19T07:46:17Z` via `docs/wiki/Q-Hybrid-Training.json`
 - HF Jobs training: `2026-04-19T05:52:40Z` via `docs/wiki/HF-Jobs-Training.json`
 - Colab free training: `2026-04-19T05:52:29Z` via `docs/wiki/Colab-Free-Training.json`

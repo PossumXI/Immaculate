@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-19T22:27:46.459Z",
+  "generatedAt": "2026-04-19T22:28:29.543Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "6fc8e11ddd7a2ba01eb6debf3c5f0a44a225764a",
-    "gitShortSha": "6fc8e11",
+    "gitSha": "3307fa2fab5ce6470e700db7abb23d70704d086b",
+    "gitShortSha": "3307fa2",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+6fc8e11",
+    "buildId": "0.1.0+3307fa2",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -66,7 +66,7 @@
     {
       "label": "Q readiness gate",
       "path": "docs\\wiki\\Q-Readiness-Gate.json",
-      "generatedAt": "2026-04-19T22:25:20.626Z"
+      "generatedAt": "2026-04-19T22:28:21.860Z"
     },
     {
       "label": "Q gateway validation",
@@ -91,7 +91,7 @@
     {
       "label": "Arobi decision review",
       "path": "docs\\wiki\\Arobi-Decision-Review.json",
-      "generatedAt": "2026-04-19T22:22:01.815Z"
+      "generatedAt": "2026-04-19T22:27:46.893Z"
     },
     {
       "label": "Q hybrid training",
