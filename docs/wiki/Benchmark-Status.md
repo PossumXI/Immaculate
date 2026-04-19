@@ -6,7 +6,7 @@ This page is the tracked public benchmark surface for Immaculate.
 - Owner: Gaetano Comparcola (PossumX)
 - Role: Program Originator, Systems Architect, and Engineering Lead
 - Website: https://PossumX.dev
-- Updated: 2026-04-19T22:53:01.821755+00:00
+- Updated: 2026-04-19T23:51:28.861609+00:00
 
 Raw benchmark ledgers remain generated runtime artifacts under `benchmarks/` and stay out of git.
 This page only carries the public summary and links for the latest published run per pack.
@@ -15,48 +15,48 @@ This page only carries the public summary and links for the latest published run
 
 ### Latency Smoke
 
-- Suite: `immaculate-benchmark-2026-04-19T22-52-28-110Z`
-- Generated: `2026-04-19T22:52:28.110Z`
-- Published: `2026-04-19T22:52:38.992807+00:00`
+- Suite: `immaculate-benchmark-2026-04-19T23-51-08-071Z`
+- Generated: `2026-04-19T23:51:08.071Z`
+- Published: `2026-04-19T23:51:14.176861+00:00`
 - Assertions: `122/122` passed
 - Run kind: `smoke`
 - Integrity: `verified`
 - Recovery mode: `checkpoint`
 - Planned duration: `12800` ms
-- Wall-clock duration: `567.87` ms
+- Wall-clock duration: `420.21` ms
 - Hardware: `{"host":"runnervmeorf1","platform":"linux","arch":"x64","osVersion":"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026","cpuModel":"AMD EPYC 7763 64-Core Processor","cpuCount":4,"memoryGiB":15.61,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
-- W&B run: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/ofoxe4qv
-- W&B artifact: `immaculate-immaculate-benchmark-2026-04-19T22-52-28-110Z` (`benchmark-report`)
+- W&B run: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/7p1u9xzd
+- W&B artifact: `immaculate-immaculate-benchmark-2026-04-19T23-51-08-071Z` (`benchmark-report`)
 
 ### Durability Recovery
 
-- Suite: `immaculate-benchmark-2026-04-19T22-52-27-657Z`
-- Generated: `2026-04-19T22:52:27.657Z`
-- Published: `2026-04-19T22:52:45.472376+00:00`
+- Suite: `immaculate-benchmark-2026-04-19T23-51-07-620Z`
+- Generated: `2026-04-19T23:51:07.620Z`
+- Published: `2026-04-19T23:51:21.526860+00:00`
 - Assertions: `122/122` passed
 - Run kind: `smoke`
 - Integrity: `verified`
 - Recovery mode: `checkpoint`
 - Planned duration: `20800` ms
-- Wall-clock duration: `441.45` ms
+- Wall-clock duration: `439.71` ms
 - Hardware: `{"host":"runnervmeorf1","platform":"linux","arch":"x64","osVersion":"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026","cpuModel":"AMD EPYC 7763 64-Core Processor","cpuCount":4,"memoryGiB":15.61,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
-- W&B run: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/23hvhxwg
-- W&B artifact: `immaculate-immaculate-benchmark-2026-04-19T22-52-27-657Z` (`benchmark-report`)
+- W&B run: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/kctjgdxz
+- W&B artifact: `immaculate-immaculate-benchmark-2026-04-19T23-51-07-620Z` (`benchmark-report`)
 
 ### Substrate Readiness
 
-- Suite: `immaculate-benchmark-2026-04-19T22-52-26-985Z`
-- Generated: `2026-04-19T22:52:26.985Z`
-- Published: `2026-04-19T22:53:01.821739+00:00`
+- Suite: `immaculate-benchmark-2026-04-19T23-51-06-942Z`
+- Generated: `2026-04-19T23:51:06.942Z`
+- Published: `2026-04-19T23:51:28.861587+00:00`
 - Assertions: `122/122` passed
 - Run kind: `smoke`
 - Integrity: `verified`
 - Recovery mode: `checkpoint`
 - Planned duration: `12800` ms
-- Wall-clock duration: `651.22` ms
+- Wall-clock duration: `657.16` ms
 - Hardware: `{"host":"runnervmeorf1","platform":"linux","arch":"x64","osVersion":"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026","cpuModel":"AMD EPYC 7763 64-Core Processor","cpuCount":4,"memoryGiB":15.61,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
-- W&B run: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/5omuz51i
-- W&B artifact: `immaculate-immaculate-benchmark-2026-04-19T22-52-26-985Z` (`benchmark-report`)
+- W&B run: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/vn1pgwf9
+- W&B artifact: `immaculate-immaculate-benchmark-2026-04-19T23-51-06-942Z` (`benchmark-report`)
 
 ### Latency Soak (30m)
 
