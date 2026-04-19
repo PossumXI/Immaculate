@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-19T22:16:53Z",
+  "generatedAt": "2026-04-19T22:37:51Z",
   "sourcePath": ".training-output/q/q-api-audit.ndjson",
   "recordCount": 8,
   "successfulRecordCount": 2,
@@ -18,12 +18,6 @@
     "role": "reasoner",
     "objective": "Assess the governed local Q lane and return the route, reason, and commit in production-safe language.",
     "contextPreview": "The local governed lane is healthy, the gateway substrate seam is green, and cloud Q is blocked.",
-    "principal": {
-      "kind": "key",
-      "subject": "qkey:qkey-mo6bkdzd-5adb32b9",
-      "keyId": "qkey-mo6bkdzd-5adb32b9",
-      "label": "arobi-review"
-    },
     "executionId": "cog-2026-04-19T22-11-18-438Z-782fc37a",
     "decisionTraceId": "trace-0b2f27a38ba781e0",
     "decisionTraceHash": "ba6b5b7464ff11e5d27f73256924ff53e7e72666ae7538608e3f06d2f45bb824",

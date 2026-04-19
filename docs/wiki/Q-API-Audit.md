@@ -2,7 +2,7 @@
 
 This page is generated from the live Q public-substrate audit spool. It summarizes the latest successful governed Q calls that reached the real `/api/q/run` path.
 
-- Generated: `2026-04-19T22:16:53Z`
+- Generated: `2026-04-19T22:37:51Z`
 - Source file: `.training-output/q/q-api-audit.ndjson`
 - Records: `8`
 - Successful governed calls: `2`

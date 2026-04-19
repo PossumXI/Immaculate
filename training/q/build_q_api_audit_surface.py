@@ -60,6 +60,14 @@ def render_markdown(summary: dict) -> str:
     ) + "\n"
 
 
+def sanitize_public_record(record: dict) -> dict:
+    sanitized = dict(record)
+    sanitized.pop("principal", None)
+    for key in ("keyId", "label", "subject", "plainTextKey", "token"):
+        sanitized.pop(key, None)
+    return sanitized
+
+
 def main():
     root = repo_root()
     parser = argparse.ArgumentParser(description="Build Q API audit summary from the live q-api audit spool.")
@@ -108,7 +116,7 @@ def main():
         except Exception:
             pass
 
-    latest_successful_record = dict(successful_records[-1]) if successful_records else {}
+    latest_successful_record = sanitize_public_record(successful_records[-1]) if successful_records else {}
     if latest_successful_record:
         latest_successful_record["modelName"] = (
             str(latest_successful_record.get("modelName") or "Q").strip() or "Q"

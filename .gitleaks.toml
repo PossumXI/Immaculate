@@ -1,0 +1,7 @@
+title = "Immaculate gitleaks config"
+
+[allowlist]
+description = "Allow public Q key identifiers that are not bearer secrets."
+regexes = [
+  '''qkey:[A-Za-z0-9-]+'''
+]
