@@ -3,10 +3,10 @@
 This page is generated from the tracked Q benchmark/report surfaces.
 It records the benchmark-derived corpus currently attached to Q. It is not a readiness gate and it does not replace the strict failure-only Q-Failure-Corpus surface.
 
-- Generated: `2026-04-18T06:21:15Z`
-- Release: `0.1.0+d0bdd00`
-- Repo commit: `d0bdd00`
-- Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v18-d0bdd00-4db18397`
+- Generated: `2026-04-19T07:46:04Z`
+- Release: `0.1.0+5ed19b9`
+- Repo commit: `5ed19b9`
+- Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`
 - Records: `55`
 - Row type: `mixed`
 - JSONL: `.training-output/q/q-benchmark-corpus.jsonl`
@@ -20,15 +20,20 @@ It records the benchmark-derived corpus currently attached to Q. It is not a rea
 - q-mediation-drift: `1` via `docs/wiki/Q-Mediation-Drift.json`
 - bridgebench-soak: `1` via `docs/wiki/BridgeBench-Soak.json`
 - harbor-terminal-bench-soak: `7` via `docs/wiki/Harbor-Terminal-Bench-Soak.json`
-- terminal-bench-rerun: `1` via `docs/wiki/Terminal-Bench-Rerun.json`
+- terminal-bench-public-task: `1` via `docs/wiki/Terminal-Bench-Public-Task.json`
 - q-harness-identity-seed: `14` via `training/q/q_harness_identity_seed.json`
 - q-immaculate-reasoning-seed: `20` via `training/q/q_immaculate_reasoning_seed.json`
+
+## Diagnostic-Only Sources Excluded
+
+- terminal-bench-rerun: `1`
 
 ## Truth Boundary
 
 - This surface records successful benchmark-derived decision rows for Q so the training path can reuse tracked outputs without scraping markdown by hand.
 - Harbor rows that stayed parse-valid but underperformed are carried as benchmark observations so Q can learn the miss without promoting the weak wording as gold output.
-- A repaired local Terminal-Bench rerun can enter the positive benchmark corpus while the older official public receipt remains in the strict failure/eval path until resubmission.
+- Successful local Harbor runs on the official public Terminal-Bench task can enter the positive benchmark corpus once the default Q-only path is genuinely green.
+- Diagnostic-only Terminal-Bench reruns stay out of the positive benchmark corpus until the default public-task path is genuinely green and resubmitted.
 - The official public Terminal-Bench receipt stays in the strict failure/eval path instead of being mixed into the positive benchmark corpus.
 - It is intentionally complementary to Q-Failure-Corpus, which remains strict failure-only and should stay empty when the current Q benchmark lane is green.
 - These rows are output-side evidence from executed Q benchmarks. They help stabilize route/reason/commit behavior, but they are not a substitute for broader curation or new external truth sources.

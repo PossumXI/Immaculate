@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-04-18T06:21:15Z",
+  "generatedAt": "2026-04-19T07:46:04Z",
   "recordCount": 6,
   "evalSeedCount": 6,
-  "resolvedSuccessCount": 8,
+  "resolvedSuccessCount": 9,
   "failureClassCounts": {
     "terminal_bench_public_task_underperforming": 1,
     "transport_timeout": 1,
@@ -17,6 +17,7 @@
     "qMediationDrift": "Q-Mediation-Drift.json",
     "qApiAudit": "q-api-audit.ndjson",
     "terminalBenchReceipt": "Terminal-Bench-Receipt.json",
+    "terminalBenchGenericSmoke": "Immaculate-push-harbor/.runtime/terminal-bench-jobs/q-terminal-bench-public-generic-smoke-v32/result.json",
     "harborTerminalBench": "Harbor-Terminal-Bench.json"
   },
   "output": {

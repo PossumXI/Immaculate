@@ -7,16 +7,21 @@ export type QModelFoundationSpecification = {
   modelName: string;
   displayName: string;
   baseModel: string;
+  lineageSource: string;
   terms: string[];
 };
 
 const DEFAULT_Q_MODEL_TOKEN = "q";
 const DEFAULT_Q_DISPLAY_NAME = "Q";
-const DEFAULT_Q_LINEAGE_SOURCE = "gemma4:e4b";
+const DEFAULT_Q_LINEAGE_SOURCE =
+  process.env.IMMACULATE_OLLAMA_Q_LINEAGE_SOURCE ??
+  process.env.IMMACULATE_OLLAMA_Q_SOURCE_MODEL ??
+  "gemma4:e2b";
 const DEFAULT_Q_BASE_MODEL =
   process.env.IMMACULATE_OLLAMA_Q_BASE_MODEL ??
   process.env.IMMACULATE_OLLAMA_Q_MODEL ??
-  DEFAULT_Q_LINEAGE_SOURCE;
+  process.env.IMMACULATE_OLLAMA_Q_NAME ??
+  DEFAULT_Q_MODEL_TOKEN;
 
 function normalizeToken(value: string): string {
   return value.trim().toLowerCase();
@@ -69,7 +74,8 @@ export function resolveQFoundationSpecification(): QModelFoundationSpecification
     modelName,
     displayName,
     baseModel: DEFAULT_Q_BASE_MODEL,
-    terms: dedupeTerms([DEFAULT_Q_BASE_MODEL, ...configuredTerms])
+    lineageSource: DEFAULT_Q_LINEAGE_SOURCE,
+    terms: dedupeTerms([DEFAULT_Q_BASE_MODEL, DEFAULT_Q_LINEAGE_SOURCE, ...configuredTerms])
   };
 }
 

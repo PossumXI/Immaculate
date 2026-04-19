@@ -72,6 +72,10 @@ export type IntelligenceWorkerAssignmentRequest = {
   preferredLocality?: string | null;
   preferredDeviceAffinityTags?: string[];
   avoidPeerIds?: string[];
+  avoidHostLabels?: string[];
+  avoidLocalities?: string[];
+  avoidDeviceAffinityTags?: string[];
+  preferDistinctDeviceAffinityTags?: boolean;
   maxObservedLatencyMs?: number | null;
   maxCostPerHourUsd?: number | null;
   requiredHealthyWorkerCount?: number | null;
@@ -763,6 +767,20 @@ function selectWorker(
         score -= 4;
         reasons.push(`avoid-peer ${worker.peerId}`);
       }
+      if (
+        worker.hostLabel &&
+        normalizeStringArray(resolvedRequest.avoidHostLabels).includes(worker.hostLabel)
+      ) {
+        score -= 3;
+        reasons.push(`host-dup ${worker.hostLabel}`);
+      }
+      if (
+        worker.locality &&
+        normalizeStringArray(resolvedRequest.avoidLocalities).includes(worker.locality)
+      ) {
+        score -= 2;
+        reasons.push(`locality-dup ${worker.locality}`);
+      }
       if (worker.identityVerified) {
         score += 9;
         reasons.push("identity verified");
@@ -840,6 +858,48 @@ function selectWorker(
         if (affinityMatches.length > 0) {
           score += Math.min(6, affinityMatches.length * 3);
           reasons.push(`affinity ${affinityMatches.join(",")}`);
+        }
+      }
+      if (
+        requestedAffinity.includes("local-affinity") &&
+        resolvedRequest.requestedExecutionDecision !== "remote_required"
+      ) {
+        if (worker.executionProfile === "local") {
+          score += 5;
+          reasons.push("local-affinity");
+        } else {
+          score -= 3;
+          reasons.push("remote-breaks-local-affinity");
+        }
+      }
+      if (requestedAffinity.includes("spill-affinity") && worker.executionProfile === "remote") {
+        score += 2;
+        reasons.push("spill-affinity");
+      }
+      if (requestedAffinity.includes("hard-deadline")) {
+        if (worker.executionProfile === "local") {
+          score += 4;
+          reasons.push("hard-deadline local");
+        }
+        if (typeof worker.observedLatencyMs === "number" && Number.isFinite(worker.observedLatencyMs)) {
+          score -= Math.min(6, worker.observedLatencyMs / 30);
+        }
+      } else if (requestedAffinity.includes("bounded-deadline")) {
+        if (typeof worker.observedLatencyMs === "number" && Number.isFinite(worker.observedLatencyMs)) {
+          score -= Math.min(3, worker.observedLatencyMs / 60);
+        }
+      }
+      if (resolvedRequest.preferDistinctDeviceAffinityTags && worker.deviceAffinityTags.length > 0) {
+        const avoidedAffinityTags = normalizeStringArray(resolvedRequest.avoidDeviceAffinityTags);
+        const duplicateAffinities = avoidedAffinityTags.filter((tag) =>
+          worker.deviceAffinityTags.includes(tag)
+        );
+        if (duplicateAffinities.length > 0) {
+          score -= Math.min(4, duplicateAffinities.length * 2);
+          reasons.push(`cap-dup ${duplicateAffinities.join(",")}`);
+        } else {
+          score += 2;
+          reasons.push("cap-spread");
         }
       }
       if (typeof worker.observedLatencyMs === "number" && Number.isFinite(worker.observedLatencyMs)) {
@@ -1321,6 +1381,156 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
             executionSmoothedLatencyMs:
               selection.assignment.executionSmoothedLatencyMs ?? null
           }
+        };
+      });
+    },
+    async assignWorkerBatch(args: {
+      requests: IntelligenceWorkerAssignmentRequest[];
+      avoidDuplicatePeers?: boolean;
+    }): Promise<{
+      workers: IntelligenceWorkerView[];
+      summary: IntelligenceWorkerSummary;
+      assignments: IntelligenceWorkerAssignment[];
+    }> {
+      return withRegistryLock(async () => {
+        const now = new Date().toISOString();
+        let workers = await readWorkers(now);
+        const assignments: IntelligenceWorkerAssignment[] = [];
+        const usedPeerIds = new Set<string>();
+        const usedHostLabels = new Set<string>();
+        const usedLocalities = new Set<string>();
+        const usedDeviceAffinityTags = new Set<string>();
+        const avoidDuplicatePeers = args.avoidDuplicatePeers !== false;
+
+        for (const request of args.requests) {
+          const nodeViewMap = request.nodeViewMap ?? buildNodeViewMap(request.nodeViews);
+          const executionOutcomeSummaryMap =
+            request.executionOutcomeSummaryMap ??
+            buildExecutionOutcomeSummaryMap(request.executionOutcomeSummaries);
+          const batchAvoidPeerIds = avoidDuplicatePeers
+            ? [
+                ...normalizeStringArray(request.avoidPeerIds),
+                ...[...usedPeerIds].filter(Boolean)
+              ]
+            : request.avoidPeerIds;
+          const batchAvoidHostLabels = [
+            ...normalizeStringArray(request.avoidHostLabels),
+            ...[...usedHostLabels].filter(Boolean)
+          ];
+          const batchAvoidLocalities = [
+            ...normalizeStringArray(request.avoidLocalities),
+            ...[...usedLocalities].filter(Boolean)
+          ];
+          const batchAvoidDeviceAffinityTags = [
+            ...normalizeStringArray(request.avoidDeviceAffinityTags),
+            ...[...usedDeviceAffinityTags].filter(Boolean)
+          ];
+          const peerViewMap =
+            request.peerViewMap ?? buildPeerViewMap(workers, nodeViewMap, request.peerViews);
+          const resolvedRequest: IntelligenceWorkerAssignmentRequest = {
+            ...request,
+            avoidPeerIds: batchAvoidPeerIds,
+            avoidHostLabels: batchAvoidHostLabels,
+            avoidLocalities: batchAvoidLocalities,
+            avoidDeviceAffinityTags: batchAvoidDeviceAffinityTags,
+            preferDistinctDeviceAffinityTags:
+              request.preferDistinctDeviceAffinityTags ?? args.requests.length > 1,
+            nodeViewMap,
+            peerViewMap,
+            executionOutcomeSummaryMap
+          };
+          const selection = selectWorker(workers, resolvedRequest, now);
+          if (!selection.assignment) {
+            return {
+              workers: selection.workers,
+              summary: selection.summary,
+              assignments: []
+            };
+          }
+          const selected = workers.find(
+            (worker) => worker.workerId === selection.assignment?.workerId
+          );
+          if (!selected) {
+            return {
+              workers: selection.workers,
+              summary: selection.summary,
+              assignments: []
+            };
+          }
+          const reservedWorker = applyAssignmentLease(selected, now, resolvedRequest.target);
+          workers = workers
+            .filter((worker) => worker.workerId !== selected.workerId)
+            .concat(reservedWorker);
+          const assignment: IntelligenceWorkerAssignment = {
+            ...selection.assignment,
+            executionEndpoint: reservedWorker.executionEndpoint ?? null,
+            nodeId: reservedWorker.nodeId ?? null,
+            locality: reservedWorker.locality ?? null,
+            leaseToken: reservedWorker.assignmentLeaseToken ?? selection.assignment.leaseToken,
+            leaseExpiresAt:
+              reservedWorker.assignmentLeaseExpiresAt ?? selection.assignment.leaseExpiresAt,
+            leaseDurationMs:
+              reservedWorker.assignmentLeaseDurationMs ?? selection.assignment.leaseDurationMs,
+            identityVerified: reservedWorker.identityVerified,
+            observedLatencyMs:
+              selection.assignment.observedLatencyMs ?? reservedWorker.observedLatencyMs ?? null,
+            costPerHourUsd:
+              selection.assignment.costPerHourUsd ?? reservedWorker.costPerHourUsd ?? null,
+            deviceAffinityTags:
+              selection.assignment.deviceAffinityTags ?? reservedWorker.deviceAffinityTags,
+            peerId: selection.assignment.peerId ?? null,
+            peerStatus: selection.assignment.peerStatus ?? null,
+            peerLeaseStatus: selection.assignment.peerLeaseStatus ?? null,
+            peerObservedLatencyMs: selection.assignment.peerObservedLatencyMs ?? null,
+            peerTrustRemainingMs: selection.assignment.peerTrustRemainingMs ?? null,
+            executionAttemptCount: selection.assignment.executionAttemptCount ?? 0,
+            executionSuccessRatio: selection.assignment.executionSuccessRatio ?? 1,
+            executionFailurePressure: selection.assignment.executionFailurePressure ?? 0,
+            executionSmoothedLatencyMs:
+              selection.assignment.executionSmoothedLatencyMs ?? null
+          };
+          assignments.push(assignment);
+          if (assignment.peerId) {
+            usedPeerIds.add(assignment.peerId);
+          }
+          if (assignment.hostLabel) {
+            usedHostLabels.add(assignment.hostLabel);
+          }
+          if (assignment.locality) {
+            usedLocalities.add(assignment.locality);
+          }
+          for (const tag of assignment.deviceAffinityTags ?? []) {
+            if (tag) {
+              usedDeviceAffinityTags.add(tag);
+            }
+          }
+        }
+
+        await writeWorkers(workers);
+        const representativeRequest = args.requests[0] ?? {};
+        const representativeNodeViewMap =
+          representativeRequest.nodeViewMap ?? buildNodeViewMap(representativeRequest.nodeViews);
+        const representativeExecutionOutcomeSummaryMap =
+          representativeRequest.executionOutcomeSummaryMap ??
+          buildExecutionOutcomeSummaryMap(representativeRequest.executionOutcomeSummaries);
+        const representativePeerViewMap = buildPeerViewMap(
+          workers,
+          representativeNodeViewMap,
+          representativeRequest.peerViews
+        );
+        const finalRequest: IntelligenceWorkerAssignmentRequest = {
+          ...representativeRequest,
+          nodeViewMap: representativeNodeViewMap,
+          peerViewMap: representativePeerViewMap,
+          executionOutcomeSummaryMap: representativeExecutionOutcomeSummaryMap
+        };
+        const finalViews = sortWorkers(workers).map((worker) =>
+          buildWorkerView(worker, now, finalRequest)
+        );
+        return {
+          workers: finalViews,
+          summary: summarizeWorkers(finalViews),
+          assignments
         };
       });
     },

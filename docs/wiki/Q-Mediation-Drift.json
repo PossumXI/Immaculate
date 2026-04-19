@@ -1,32 +1,33 @@
 {
-  "generatedAt": "2026-04-18T02:52:47.334Z",
+  "generatedAt": "2026-04-19T07:42:56.374Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "1b28d691c7ba778adea63d50b18fa292303a0faf",
-    "gitShortSha": "1b28d69",
+    "gitSha": "5ed19b98682545e60ebbc826f19a6e793619ce06",
+    "gitShortSha": "5ed19b9",
     "gitBranch": "harbor-q-push",
-    "buildId": "0.1.0+1b28d69",
+    "buildId": "0.1.0+5ed19b9",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
       "truthfulLabel": "Q",
       "trainingLock": {
-        "generatedAt": "2026-04-18T02:33:22Z",
+        "generatedAt": "2026-04-19T05:51:26Z",
         "lockVersion": 1,
-        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16-35ab7e8-de7361fa",
-        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16",
+        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22-5ed19b9-e0c8b138",
+        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22",
         "modelName": "Q",
-        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16.jsonl",
-        "trainDatasetSha256": "de7361fa5b5f86a3475d5e6b1e25b00cf23b62ba0588bc5677b745e081542fb1",
-        "trainDatasetRowCount": 109,
-        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16.manifest.json",
-        "mixManifestSha256": "3c12ca648d820cc2f7f0a32fe5d32d9fa3c9ff400c59097a68ea451283700aa4",
-        "mixSupplementalCount": 5,
+        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22.jsonl",
+        "trainDatasetSha256": "e0c8b1383220aad9426647beff67ac8ea3d15019bcce4ce71399b9bf1c48a935",
+        "trainDatasetRowCount": 117,
+        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22.manifest.json",
+        "mixManifestSha256": "11d9f372ee3212c06c7dd8dfe80df509393edbdbc8d95d2b280e62b2097c251e",
+        "mixSupplementalCount": 6,
         "mixSupplementalPaths": [
           "training/q/q_harness_identity_seed.json",
           "training/q/q_immaculate_reasoning_seed.json",
+          "training/q/terminal_bench_semantic_seed.json",
           "training/q/bridgebench_seed.json",
           "training/q/coding_long_context_seed.json",
           ".training-output/q/q-failure-corpus.jsonl"
@@ -35,21 +36,21 @@
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-18T02:39:32Z",
-        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v16",
-        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v16/hybrid-session.json",
+        "generatedAt": "2026-04-19T05:51:41Z",
+        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v22",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v22/hybrid-session.json",
         "localStatus": "ready",
         "cloudStatus": "ready",
         "cloudProvider": "hf_jobs",
-        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16-35ab7e8-de7361fa",
-        "immaculateBundleId": "immaculate-orchestration-35ab7e8-ec4b3cb6",
+        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22-5ed19b9-e0c8b138",
+        "immaculateBundleId": "immaculate-orchestration-5ed19b9-cd094c28",
         "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
       }
     }
   },
   "benchmark": {
-    "suiteId": "immaculate-benchmark-2026-04-18T02-41-05-582Z",
-    "generatedAt": "2026-04-18T02:41:05.582Z",
+    "suiteId": "immaculate-benchmark-2026-04-19T07-21-00-398Z",
+    "generatedAt": "2026-04-19T07:21:00.398Z",
     "packId": "q-mediation-drift",
     "packLabel": "Q Mediation Drift",
     "scenarioCount": 4,
@@ -57,11 +58,13 @@
     "routeAlignmentP50": 1,
     "qOnlySelectionP50": 1,
     "driftDetectedMax": 0,
-    "latencyP95Ms": 25862.66,
-    "runnerPathP95Ms": 24.61,
-    "arbitrationP95Ms": 18.55,
-    "schedulingP95Ms": 4.75,
-    "routingP95Ms": 1.31,
+    "localReplicaP50": 0,
+    "verificationQuorumP50": 1,
+    "latencyP95Ms": 21039.02,
+    "runnerPathP95Ms": 4.13,
+    "arbitrationP95Ms": 1.39,
+    "schedulingP95Ms": 2.01,
+    "routingP95Ms": 0.73,
     "hardware": "knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics"
   },
   "diagnostics": [
@@ -78,6 +81,14 @@
       ],
       "qSelfEvaluation": "Q should stay primary because the local governed lane is healthy while cloud Q is blocked. Q preserved the governed ROUTE/REASON/COMMIT contract without repair.",
       "immaculateSelfEvaluation": "Q should stay primary because the local governed lane is healthy while cloud Q is blocked. Immaculate preserved Q's governed route through arbitration, scheduling, and routing.",
+      "qDriftReasons": [],
+      "immaculateDriftReasons": [],
+      "runnerPathBottleneckStage": "scheduling",
+      "parallelFormationMode": "hybrid-quorum",
+      "localReplicaCount": 2,
+      "remoteReplicaCount": 0,
+      "verificationQuorum": 2,
+      "parallelFormationSummary": "mode=hybrid-quorum / stages=1 / horizontal=2 / local=2 / remote=0 / quorum=2 / retry=1 / aff=quorum-local / ddl=bounded:700ms / bp=degrade / align=0.50 / roles=reasoner>mid / gov=elevated / backlog=elevated / fed=elevated / qLane=local-primary",
       "driftDetected": false
     },
     {
@@ -93,6 +104,14 @@
       ],
       "qSelfEvaluation": "Q should stay primary because the local governed lane is healthy while cloud Q is blocked. Q preserved the governed ROUTE/REASON/COMMIT contract without repair.",
       "immaculateSelfEvaluation": "Q should stay primary because the local governed lane is healthy while cloud Q is blocked. Immaculate preserved Q's governed route through arbitration, scheduling, and routing.",
+      "qDriftReasons": [],
+      "immaculateDriftReasons": [],
+      "runnerPathBottleneckStage": "scheduling",
+      "parallelFormationMode": "hybrid-quorum",
+      "localReplicaCount": 2,
+      "remoteReplicaCount": 0,
+      "verificationQuorum": 2,
+      "parallelFormationSummary": "mode=hybrid-quorum / stages=1 / horizontal=2 / local=2 / remote=0 / quorum=2 / retry=1 / aff=quorum-local / ddl=bounded:700ms / bp=degrade / align=0.50 / roles=reasoner>mid / gov=elevated / backlog=elevated / fed=elevated / qLane=local-primary",
       "driftDetected": false
     },
     {
@@ -108,6 +127,14 @@
       ],
       "qSelfEvaluation": "Immaculate should hold or degrade because readiness or gateway substrate is not healthy enough for governed local cognition. Q preserved the governed ROUTE/REASON/COMMIT contract without repair.",
       "immaculateSelfEvaluation": "Immaculate should hold or degrade because readiness or gateway substrate is not healthy enough for governed local cognition. Immaculate preserved Q's governed route through arbitration, scheduling, and routing.",
+      "qDriftReasons": [],
+      "immaculateDriftReasons": [],
+      "runnerPathBottleneckStage": "arbitration",
+      "parallelFormationMode": "single-lane",
+      "localReplicaCount": 0,
+      "remoteReplicaCount": 0,
+      "verificationQuorum": 1,
+      "parallelFormationSummary": "mode=single-lane / stages=0 / horizontal=0 / local=0 / remote=0 / quorum=1 / retry=0 / aff=local-pinned / ddl=hard:400ms / bp=hold / align=0.01 / roles=none / gov=critical / backlog=critical / fed=critical / qLane=degraded",
       "driftDetected": false
     },
     {
@@ -123,6 +150,14 @@
       ],
       "qSelfEvaluation": "Immaculate should hold or degrade because readiness or gateway substrate is not healthy enough for governed local cognition. Q preserved the governed ROUTE/REASON/COMMIT contract without repair.",
       "immaculateSelfEvaluation": "Immaculate should hold or degrade because readiness or gateway substrate is not healthy enough for governed local cognition. Immaculate preserved Q's governed route through arbitration, scheduling, and routing.",
+      "qDriftReasons": [],
+      "immaculateDriftReasons": [],
+      "runnerPathBottleneckStage": "scheduling",
+      "parallelFormationMode": "single-lane",
+      "localReplicaCount": 0,
+      "remoteReplicaCount": 0,
+      "verificationQuorum": 1,
+      "parallelFormationSummary": "mode=single-lane / stages=0 / horizontal=0 / local=0 / remote=0 / quorum=1 / retry=0 / aff=local-pinned / ddl=hard:400ms / bp=hold / align=0.09 / roles=none / gov=critical / backlog=elevated / fed=elevated / qLane=degraded",
       "driftDetected": false
     }
   ],
@@ -131,7 +166,7 @@
       "id": "q-mediation-drift-health",
       "status": "pass",
       "target": "200 health / tracked bundle / one Q model entry",
-      "actual": "200 / q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16-35ab7e8-de7361fa / Q",
+      "actual": "200 / q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22-5ed19b9-e0c8b138 / Q",
       "detail": "the mediation drift lane is only honest if it starts from the same live Q gateway and tracked bundle the rest of the repo claims"
     },
     {
@@ -152,8 +187,22 @@
       "id": "q-mediation-drift-q-only-selection",
       "status": "pass",
       "target": "all local cognition scenarios keep Q-only selection with degraded admission",
-      "actual": "true/cognitive-assisted/degrade/1, true/cognitive-assisted/degrade/1",
+      "actual": "true/cognitive-assisted/degrade/2, true/cognitive-assisted/degrade/2",
       "detail": "when the governed local Q lane is healthy, Immaculate should keep mediation inside the Q-backed layer set even if pressure is elevated"
+    },
+    {
+      "id": "q-mediation-drift-parallel-formation",
+      "status": "pass",
+      "target": "local cognition scenarios keep at least 2 local replicas / no remote spill",
+      "actual": "hybrid-quorum/2/0/quorum=2, hybrid-quorum/2/0/quorum=2",
+      "detail": "the Ignite-inspired formation only counts as a win if healthy local Q mediation keeps a bounded local quorum instead of serializing or silently spilling remote"
+    },
+    {
+      "id": "q-mediation-drift-affinity-deadline",
+      "status": "pass",
+      "target": "all local cognition scenarios keep local affinity with non-hard deadlines",
+      "actual": "quorum-local/bounded/700ms/degrade, quorum-local/bounded/700ms/degrade",
+      "detail": "the widened Ignite-style runner only counts as a win if local Q keeps local-first affinity and bounded deadlines instead of promoting unnecessary hard-stop pressure"
     },
     {
       "id": "q-mediation-drift-guarded-hold",
@@ -171,10 +220,10 @@
     }
   ],
   "driftTrace": [
-    "Mixed pressure local cognition: route=cognitive / routing=cognitive-assisted / admission=degrade / drift=false / q-self=Q should stay primary because the local governed lane is healthy while cloud Q is blocked. Q preserved the governed ROUTE/REASON/COMMIT contract without repair. / immaculate-self=Q should stay primary because the local governed lane is healthy while cloud Q is blocked. Immaculate preserved Q's governed route through arbitration, scheduling, and routing.",
-    "Mixed pressure local memory cognition: route=cognitive / routing=cognitive-assisted / admission=degrade / drift=false / q-self=Q should stay primary because the local governed lane is healthy while cloud Q is blocked. Q preserved the governed ROUTE/REASON/COMMIT contract without repair. / immaculate-self=Q should stay primary because the local governed lane is healthy while cloud Q is blocked. Immaculate preserved Q's governed route through arbitration, scheduling, and routing.",
-    "Mixed pressure guarded hold: route=guarded / routing=guarded-fallback / admission=hold / drift=false / q-self=Immaculate should hold or degrade because readiness or gateway substrate is not healthy enough for governed local cognition. Q preserved the governed ROUTE/REASON/COMMIT contract without repair. / immaculate-self=Immaculate should hold or degrade because readiness or gateway substrate is not healthy enough for governed local cognition. Immaculate preserved Q's governed route through arbitration, scheduling, and routing.",
-    "Mixed pressure integrity guarded hold: route=guarded / routing=guarded-fallback / admission=hold / drift=false / q-self=Immaculate should hold or degrade because readiness or gateway substrate is not healthy enough for governed local cognition. Q preserved the governed ROUTE/REASON/COMMIT contract without repair. / immaculate-self=Immaculate should hold or degrade because readiness or gateway substrate is not healthy enough for governed local cognition. Immaculate preserved Q's governed route through arbitration, scheduling, and routing."
+    "Mixed pressure local cognition: route=cognitive / routing=cognitive-assisted / admission=degrade / formation=hybrid-quorum:2local/0remote/quorum=2 / drift=false / q-self=Q should stay primary because the local governed lane is healthy while cloud Q is blocked. Q preserved the governed ROUTE/REASON/COMMIT contract without repair. / immaculate-self=Q should stay primary because the local governed lane is healthy while cloud Q is blocked. Immaculate preserved Q's governed route through arbitration, scheduling, and routing.",
+    "Mixed pressure local memory cognition: route=cognitive / routing=cognitive-assisted / admission=degrade / formation=hybrid-quorum:2local/0remote/quorum=2 / drift=false / q-self=Q should stay primary because the local governed lane is healthy while cloud Q is blocked. Q preserved the governed ROUTE/REASON/COMMIT contract without repair. / immaculate-self=Q should stay primary because the local governed lane is healthy while cloud Q is blocked. Immaculate preserved Q's governed route through arbitration, scheduling, and routing.",
+    "Mixed pressure guarded hold: route=guarded / routing=guarded-fallback / admission=hold / formation=single-lane:0local/0remote/quorum=1 / drift=false / q-self=Immaculate should hold or degrade because readiness or gateway substrate is not healthy enough for governed local cognition. Q preserved the governed ROUTE/REASON/COMMIT contract without repair. / immaculate-self=Immaculate should hold or degrade because readiness or gateway substrate is not healthy enough for governed local cognition. Immaculate preserved Q's governed route through arbitration, scheduling, and routing.",
+    "Mixed pressure integrity guarded hold: route=guarded / routing=guarded-fallback / admission=hold / formation=single-lane:0local/0remote/quorum=1 / drift=false / q-self=Immaculate should hold or degrade because readiness or gateway substrate is not healthy enough for governed local cognition. Q preserved the governed ROUTE/REASON/COMMIT contract without repair. / immaculate-self=Immaculate should hold or degrade because readiness or gateway substrate is not healthy enough for governed local cognition. Immaculate preserved Q's governed route through arbitration, scheduling, and routing."
   ],
   "output": {
     "jsonPath": "docs\\wiki\\Q-Mediation-Drift.json",

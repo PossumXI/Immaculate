@@ -297,16 +297,14 @@ def main() -> None:
     current_supplemental = current_mix_manifest.get("supplemental", [])
     benchmark_rel_path = relative_path(root, benchmark_jsonl_path)
     failure_rel_path = relative_path(root, failure_jsonl_path)
-    benchmark_included = False
-    benchmark_sha_match = False
-    failure_included = not failure_corpus_available
-    failure_sha_match = not failure_corpus_available
     recorded_base_sha = str(current_mix_manifest.get("base", {}).get("sha256", "")).strip()
     supplemental_paths: list[Path] = []
+    current_input_hashes: dict[str, str] = {}
     current_base_path = resolve_repo_path(str(current_mix_manifest.get("base", {}).get("path", "")).strip())
     if current_base_path is not None and relative_path(root, current_base_path) == benchmark_rel_path:
-        benchmark_included = True
-        benchmark_sha_match = recorded_base_sha == benchmark_sha if recorded_base_sha else sha256_file(current_base_path) == benchmark_sha
+        current_input_hashes[benchmark_rel_path] = (
+            recorded_base_sha if recorded_base_sha else sha256_file(current_base_path)
+        )
     for entry in current_supplemental:
         if not isinstance(entry, dict):
             continue
@@ -315,12 +313,32 @@ def main() -> None:
         if supplemental_path is None:
             continue
         supplemental_paths.append(supplemental_path)
-        if relative_path(root, supplemental_path) == benchmark_rel_path:
-            benchmark_included = True
-            benchmark_sha_match = str(entry.get("sha256", "")).strip() == benchmark_sha
-        if failure_corpus_available and relative_path(root, supplemental_path) == failure_rel_path:
-            failure_included = True
-            failure_sha_match = str(entry.get("sha256", "")).strip() == failure_sha
+        current_input_hashes[relative_path(root, supplemental_path)] = str(entry.get("sha256", "")).strip()
+
+    identity_seed_path = root / "training" / "q" / "q_harness_identity_seed.json"
+    orchestration_seed_path = root / "training" / "q" / "q_immaculate_reasoning_seed.json"
+    terminal_bench_semantic_seed_path = root / "training" / "q" / "terminal_bench_semantic_seed.json"
+    bridgebench_seed_path = root / "training" / "q" / "bridgebench_seed.json"
+    coding_long_context_seed_path = root / "training" / "q" / "coding_long_context_seed.json"
+    desired_input_hashes: dict[str, str] = {benchmark_rel_path: benchmark_sha}
+    for candidate in (
+        identity_seed_path,
+        orchestration_seed_path,
+        terminal_bench_semantic_seed_path,
+        bridgebench_seed_path,
+        coding_long_context_seed_path,
+    ):
+        if candidate.exists():
+            desired_input_hashes[relative_path(root, candidate)] = sha256_file(candidate)
+    if failure_corpus_available and failure_sha:
+        desired_input_hashes[failure_rel_path] = failure_sha
+
+    benchmark_included = current_input_hashes.get(benchmark_rel_path) == benchmark_sha
+    failure_included = (not failure_corpus_available) or current_input_hashes.get(failure_rel_path) == failure_sha
+    current_inputs_are_current = all(
+        current_input_hashes.get(path_text) == expected_hash
+        for path_text, expected_hash in desired_input_hashes.items()
+    )
 
     active_session_manifest_path = resolve_repo_path(str(latest_session.get("manifestPath", "")).strip())
     if active_session_manifest_path is None or not active_session_manifest_path.exists():
@@ -338,8 +356,6 @@ def main() -> None:
         "gitShortSha": git_value(root, "rev-parse", "--short=7", "HEAD"),
     }
     release["buildId"] = f"{release['packageVersion']}+{release['gitShortSha']}"
-
-    current_inputs_are_current = benchmark_included and benchmark_sha_match and failure_included and failure_sha_match
 
     summary: dict[str, Any] = {
         "generatedAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
@@ -364,8 +380,8 @@ def main() -> None:
             "bundleId": latest_lock.get("bundleId"),
             "runName": active_run_name,
             "sessionId": active_session_id,
-            "benchmarkCorpusIncluded": benchmark_included and benchmark_sha_match,
-            "failureCorpusIncluded": failure_included and failure_sha_match,
+            "benchmarkCorpusIncluded": benchmark_included,
+            "failureCorpusIncluded": failure_included,
             "trainDatasetRowCount": latest_lock.get("run", {}).get("trainDatasetRowCount"),
             "mixManifestPath": relative_path(root, current_mix_manifest_path),
             "sessionManifestPath": relative_path(root, active_session_manifest_path),
@@ -404,13 +420,17 @@ def main() -> None:
 
     deduped_supplemental: list[Path] = []
     seen_rel_paths: set[str] = {relative_path(root, base_dataset_path)}
-    identity_seed_path = root / "training" / "q" / "q_harness_identity_seed.json"
-    orchestration_seed_path = root / "training" / "q" / "q_immaculate_reasoning_seed.json"
     seed_inputs: list[Path] = []
     if identity_seed_path.exists():
         seed_inputs.append(identity_seed_path)
     if orchestration_seed_path.exists():
         seed_inputs.append(orchestration_seed_path)
+    if terminal_bench_semantic_seed_path.exists():
+        seed_inputs.append(terminal_bench_semantic_seed_path)
+    if bridgebench_seed_path.exists():
+        seed_inputs.append(bridgebench_seed_path)
+    if coding_long_context_seed_path.exists():
+        seed_inputs.append(coding_long_context_seed_path)
     promotion_inputs = seed_inputs + supplemental_paths + [benchmark_jsonl_path]
     if failure_corpus_available:
         promotion_inputs.append(failure_jsonl_path)

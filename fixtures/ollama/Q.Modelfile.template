@@ -1,0 +1,3 @@
+# Local Q lineage for Immaculate
+# Q remains the only public model identity; this template only pins the local Gemma 4 runtime.
+FROM {{LINEAGE_SOURCE}}

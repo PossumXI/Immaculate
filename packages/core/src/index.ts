@@ -245,6 +245,18 @@ export type BenchmarkMediationDriftScenarioResult = {
   qDriftReasons: string[];
   immaculateDriftReasons: string[];
   runnerPathBottleneckStage: "arbitration" | "scheduling" | "routing";
+  parallelFormationMode?: ExecutionParallelFormationMode;
+  verticalStageCount?: number;
+  horizontalReplicaCount?: number;
+  localReplicaCount?: number;
+  remoteReplicaCount?: number;
+  verificationQuorum?: number;
+  affinityMode?: ExecutionParallelAffinityMode;
+  deadlineClass?: ExecutionParallelDeadlineClass;
+  deadlineBudgetMs?: number;
+  backpressureAction?: ExecutionParallelBackpressureAction;
+  intentAlignmentScore?: number;
+  parallelFormationSummary?: string;
   responsePreview: string;
   failureClass?: string;
 };
@@ -776,6 +788,37 @@ export type ExecutionAdmissionState = (typeof executionAdmissionStates)[number];
 export const executionTopologies = ["sequential", "parallel", "parallel-then-guard"] as const;
 export type ExecutionTopology = (typeof executionTopologies)[number];
 
+export const executionParallelFormationModes = [
+  "single-lane",
+  "vertical-pipeline",
+  "horizontal-swarm",
+  "hybrid-quorum"
+] as const;
+export type ExecutionParallelFormationMode =
+  (typeof executionParallelFormationModes)[number];
+
+export const executionParallelAffinityModes = [
+  "local-pinned",
+  "local-spread",
+  "quorum-local",
+  "hybrid-spill"
+] as const;
+export type ExecutionParallelAffinityMode =
+  (typeof executionParallelAffinityModes)[number];
+
+export const executionParallelDeadlineClasses = ["elastic", "bounded", "hard"] as const;
+export type ExecutionParallelDeadlineClass =
+  (typeof executionParallelDeadlineClasses)[number];
+
+export const executionParallelBackpressureActions = [
+  "steady",
+  "degrade",
+  "serialize",
+  "hold"
+] as const;
+export type ExecutionParallelBackpressureAction =
+  (typeof executionParallelBackpressureActions)[number];
+
 export type ActuationOutput = {
   id: string;
   sessionId?: string;
@@ -849,6 +892,20 @@ export type ExecutionSchedule = {
   mode: ExecutionScheduleMode;
   executionTopology: ExecutionTopology;
   parallelWidth: number;
+  parallelFormationMode?: ExecutionParallelFormationMode;
+  verticalStageCount?: number;
+  horizontalReplicaCount?: number;
+  localReplicaCount?: number;
+  remoteReplicaCount?: number;
+  verificationQuorum?: number;
+  boundedRetryBudget?: number;
+  capabilitySpreadCount?: number;
+  affinityMode?: ExecutionParallelAffinityMode;
+  deadlineClass?: ExecutionParallelDeadlineClass;
+  deadlineBudgetMs?: number;
+  backpressureAction?: ExecutionParallelBackpressureAction;
+  intentAlignmentScore?: number;
+  parallelFormationSummary?: string;
   admissionState?: ExecutionAdmissionState;
   backlogPressure?: GovernancePressureLevel;
   backlogScore?: number;
@@ -1141,6 +1198,18 @@ const benchmarkMediationDriftScenarioResultSchema = z.object({
   qDriftReasons: z.array(z.string()),
   immaculateDriftReasons: z.array(z.string()),
   runnerPathBottleneckStage: z.enum(["arbitration", "scheduling", "routing"]),
+  parallelFormationMode: z.enum(executionParallelFormationModes).optional(),
+  verticalStageCount: z.number().int().nonnegative().optional(),
+  horizontalReplicaCount: z.number().int().nonnegative().optional(),
+  localReplicaCount: z.number().int().nonnegative().optional(),
+  remoteReplicaCount: z.number().int().nonnegative().optional(),
+  verificationQuorum: z.number().int().nonnegative().optional(),
+  affinityMode: z.enum(executionParallelAffinityModes).optional(),
+  deadlineClass: z.enum(executionParallelDeadlineClasses).optional(),
+  deadlineBudgetMs: z.number().int().nonnegative().optional(),
+  backpressureAction: z.enum(executionParallelBackpressureActions).optional(),
+  intentAlignmentScore: z.number().nonnegative().max(1).optional(),
+  parallelFormationSummary: z.string().optional(),
   responsePreview: z.string(),
   failureClass: z.string().optional()
 });
@@ -1724,6 +1793,20 @@ export const executionScheduleSchema = z.object({
   mode: z.enum(executionScheduleModes),
   executionTopology: z.enum(executionTopologies).default("sequential"),
   parallelWidth: z.number().int().nonnegative().default(0),
+  parallelFormationMode: z.enum(executionParallelFormationModes).optional(),
+  verticalStageCount: z.number().int().nonnegative().optional(),
+  horizontalReplicaCount: z.number().int().nonnegative().optional(),
+  localReplicaCount: z.number().int().nonnegative().optional(),
+  remoteReplicaCount: z.number().int().nonnegative().optional(),
+  verificationQuorum: z.number().int().nonnegative().optional(),
+  boundedRetryBudget: z.number().int().nonnegative().optional(),
+  capabilitySpreadCount: z.number().int().nonnegative().optional(),
+  affinityMode: z.enum(executionParallelAffinityModes).optional(),
+  deadlineClass: z.enum(executionParallelDeadlineClasses).optional(),
+  deadlineBudgetMs: z.number().int().nonnegative().optional(),
+  backpressureAction: z.enum(executionParallelBackpressureActions).optional(),
+  intentAlignmentScore: z.number().nonnegative().max(1).optional(),
+  parallelFormationSummary: z.string().optional(),
   admissionState: z.enum(executionAdmissionStates).optional(),
   backlogPressure: z.enum(governancePressureLevels).optional(),
   backlogScore: z.number().nonnegative().optional(),

@@ -37,6 +37,12 @@ def load_optional_ndjson(path: Path):
     return records
 
 
+def load_optional_text(path: Path) -> str:
+    if not path.exists():
+        return ""
+    return path.read_text(encoding="utf-8-sig", errors="replace")
+
+
 def harbor_context(root: Path, task_id: str, fallback_label: str) -> tuple[str, list[str]]:
     context_map = {
         "q-structured-contract": root / "benchmarks" / "harbor" / "q-structured-contract" / "incident.json",
@@ -132,6 +138,18 @@ def q_api_failure_note(failure_class: str) -> str:
     if failure_class == "transport_timeout":
         return "The Q upstream transport timed out before a structured route/reason/commit answer returned."
     return "The governed Q API request failed before producing a valid structured response."
+
+
+def detect_terminal_bench_vm_js_syntax_error(text: str) -> bool:
+    lowered = str(text or "").lower()
+    markers = (
+        "syntaxerror",
+        "unexpected identifier",
+        "unexpected token",
+        "unexpected end of input",
+        "missing ) after argument list",
+    )
+    return any(marker in lowered for marker in markers)
 
 
 def normalize_q_model(model: dict) -> bool:
@@ -316,6 +334,166 @@ def collect_terminal_bench_receipt_records(receipt: dict):
             "text": build_terminal_bench_failure_text(receipt),
         }
     ]
+
+
+def terminal_bench_generic_smoke_result_path(root: Path) -> Path | None:
+    roots = [root, root.parent]
+    candidates: list[tuple[int, float, Path]] = []
+    for base in roots:
+        jobs_root = base / ".runtime" / "terminal-bench-jobs"
+        if not jobs_root.exists():
+            continue
+        for candidate in jobs_root.glob("q-terminal-bench-public-generic-smoke*/result.json"):
+            try:
+                payload = load_optional_json(candidate)
+                stats = payload.get("stats") if isinstance(payload, dict) else {}
+                evals = (stats or {}).get("evals") if isinstance(stats, dict) else {}
+                eval_entry = next(iter(evals.values()), {}) if isinstance(evals, dict) else {}
+                completed_score = int(
+                    bool((eval_entry.get("n_trials", 0) or 0) > 0 and (eval_entry.get("n_errors", 0) or 0) == 0)
+                )
+                candidates.append((completed_score, candidate.stat().st_mtime, candidate))
+            except Exception:
+                continue
+    if not candidates:
+        return None
+    candidates.sort(key=lambda entry: (entry[0], entry[1]), reverse=True)
+    return candidates[0][2]
+
+
+def build_terminal_bench_generic_smoke_failure_text(observation: dict) -> str:
+    task_name = str(observation.get("taskName", "terminal-bench-task")).strip() or "terminal-bench-task"
+    preview = str(observation.get("preview", "")).strip() or "[no preview]"
+    failure_class = str(observation.get("failureClass", "terminal_bench_generic_semantic_miss")).strip()
+    status = str(observation.get("status", "generic-smoke")).strip() or "generic-smoke"
+    observed_lines = [
+        f"failure_class={failure_class}",
+        f"status={status}",
+        f"mean_reward={float(observation.get('meanReward', 0) or 0):.3f}",
+        f"attempts={int(observation.get('attempts', 0) or 0)}",
+        f"verified={str(bool(observation.get('verified'))).lower()}",
+        f"payload_chars={int(observation.get('payloadChars', 0) or 0)}",
+        f"simulation_detected={str(bool(observation.get('simulationDetected'))).lower()}",
+        f"syntax_broken_vm_js={str(bool(observation.get('syntaxBrokenVmJs'))).lower()}",
+        f"expected_runtime_text_missing={str(bool(observation.get('expectedTextMissing'))).lower()}",
+        f"invalid_frame_artifact={str(bool(observation.get('invalidFrameArtifact'))).lower()}",
+        f"preview={preview}",
+    ]
+    return (
+        "Q defensive engineering failure corpus\n"
+        "source=terminal-bench-generic-smoke\n"
+        "language=text\n"
+        f"path=terminal-bench-generic-smoke/{task_name}\n"
+        "tags=q,failure-corpus,eval-seed,terminal-bench-generic-semantic-miss\n\n"
+        "OBJECTIVE\n"
+        f"{task_name}\n\n"
+        "OBSERVED FAILURE\n"
+        + "\n".join(observed_lines)
+        + "\n\n"
+        + "\n".join(operator_style_lines())
+        + "\n\n"
+        "RESPONSE CONTRACT\n"
+        "ROUTE: reflex, cognitive, guarded, or suppressed.\n"
+        "REASON: one sentence.\n"
+        "COMMIT: one sentence.\n"
+    )
+
+
+def collect_terminal_bench_generic_smoke_records(root: Path, result_path: Path | None):
+    if result_path is None or not result_path.exists():
+        return [], 0
+    job_result = load_optional_json(result_path)
+    if not isinstance(job_result, dict):
+        return [], 0
+    stats_payload = (job_result.get("stats") or {}) if isinstance(job_result, dict) else {}
+    eval_entry = (
+        next(iter((stats_payload.get("evals") or {}).values()), {})
+        if isinstance(stats_payload, dict)
+        else {}
+    )
+    job_errors = int((eval_entry.get("n_errors", 0) or 0)) if isinstance(eval_entry, dict) else 0
+    reward = (
+        float(
+            (
+                (
+                    next(iter((((job_result.get("stats") or {}).get("evals") or {}).values())), {}).get(
+                        "metrics", [{}]
+                    )[0].get("mean", 0)
+                )
+            )
+            or 0
+        )
+    )
+    job_dir = result_path.parent
+    trial_results = sorted(job_dir.glob("*/result.json"))
+    if not trial_results:
+        return [], 0
+    trial_result_path = trial_results[0]
+    trial_payload = load_optional_json(trial_result_path)
+    if not isinstance(trial_payload, dict):
+        return [], 0
+    trial_dir = trial_result_path.parent
+    agent_output = load_optional_json(trial_dir / "agent" / "q-agent-output.json") or {}
+    verifier_stdout = load_optional_text(trial_dir / "verifier" / "test-stdout.txt")
+    payload_chars_text = load_optional_text(trial_dir / "agent" / "terminal-generation-payload-size.txt").strip()
+    payload_chars = int(payload_chars_text or 0)
+    attempts = int((((trial_payload.get("agent_result") or {}).get("metadata") or {}).get("attempts", 0)) or 0)
+    verified = bool((((trial_payload.get("agent_result") or {}).get("metadata") or {}).get("verified")))
+    task_name = str(trial_payload.get("task_name", "")).strip() or "terminal-bench-task"
+    if reward >= 0.999 and job_errors == 0:
+        return [], 1
+    failure_text = "\n".join(
+        [
+            str(trial_payload.get("exception_info", {}).get("exception_message", "")) if isinstance(trial_payload.get("exception_info"), dict) else "",
+            str(trial_payload.get("exception_info", {}).get("exception_traceback", "")) if isinstance(trial_payload.get("exception_info"), dict) else "",
+            str((((agent_output.get("attempts") or [{}])[-1].get("verification") or {}).get("node_probe") or {}).get("stdout", "")),
+            verifier_stdout,
+        ]
+    )
+    lowered = failure_text.lower()
+    simulation_detected = "simulat" in lowered
+    syntax_broken_vm_js = detect_terminal_bench_vm_js_syntax_error(failure_text)
+    expected_text_missing = "expected text not found" in lowered or "i_initgraphics" in lowered
+    invalid_frame_artifact = "cannot identify image file" in lowered or "unidentifiedimageerror" in lowered
+    preview = " ".join(
+        line.strip()
+        for line in failure_text.splitlines()
+        if line.strip()
+    )
+    preview = preview[:700] if preview else "[no failure preview]"
+    if simulation_detected:
+        failure_class = "terminal_bench_fake_simulator_semantic_miss"
+    elif syntax_broken_vm_js:
+        failure_class = "terminal_bench_syntax_broken_vm_js_semantic_miss"
+    else:
+        failure_class = "terminal_bench_generic_semantic_miss"
+    observation = {
+        "taskName": task_name,
+        "status": "completed_but_unverified" if reward > 0 else "failed",
+        "meanReward": reward,
+        "attempts": attempts,
+        "verified": verified,
+        "payloadChars": payload_chars,
+        "simulationDetected": simulation_detected,
+        "syntaxBrokenVmJs": syntax_broken_vm_js,
+        "expectedTextMissing": expected_text_missing,
+        "invalidFrameArtifact": invalid_frame_artifact,
+        "preview": preview,
+        "failureClass": failure_class,
+    }
+    return [
+        {
+            "id": f"terminal-bench-generic-smoke:{task_name}",
+            "source": "terminal-bench-generic-smoke",
+            "label": f"Generic Terminal-Bench smoke miss: {task_name}",
+            "status": "completed_but_unverified" if reward > 0 else "failed",
+            "parseSuccess": False,
+            "failureClass": failure_class,
+            "responsePreview": preview,
+            "evalOnly": True,
+            "text": build_terminal_bench_generic_smoke_failure_text(observation),
+        }
+    ], 0
 
 
 def collect_harbor_records(root: Path, harbor: dict):
@@ -573,6 +751,7 @@ def collect_records(
     q_mediation_drift: dict | None,
     q_api_audit: list[dict],
     terminal_bench_receipt: dict | None,
+    terminal_bench_generic_smoke: Path | None,
     harbor: dict | None
 ):
     records = []
@@ -617,6 +796,16 @@ def collect_records(
             failure_class = record.get("failureClass")
             if failure_class:
                 failure_counter[str(failure_class)] += 1
+
+    generic_smoke_records, generic_smoke_resolved_successes = collect_terminal_bench_generic_smoke_records(
+        root, terminal_bench_generic_smoke
+    )
+    records.extend(generic_smoke_records)
+    resolved_successes += generic_smoke_resolved_successes
+    for record in generic_smoke_records:
+        failure_class = record.get("failureClass")
+        if failure_class:
+            failure_counter[str(failure_class)] += 1
 
     substrate_records = collect_q_gateway_substrate_records(q_gateway_substrate)
     records.extend(substrate_records)
@@ -724,6 +913,7 @@ def main():
     q_mediation_drift = load_optional_json(Path(args.q_mediation_drift))
     q_api_audit = load_optional_ndjson(Path(args.q_api_audit))
     terminal_bench_receipt = load_optional_json(Path(args.terminal_bench_receipt))
+    terminal_bench_generic_smoke = terminal_bench_generic_smoke_result_path(root)
     harbor = load_optional_json(Path(args.harbor))
     output_path = Path(args.output)
     manifest_path = Path(args.manifest)
@@ -740,6 +930,7 @@ def main():
         q_mediation_drift,
         q_api_audit,
         terminal_bench_receipt,
+        terminal_bench_generic_smoke,
         harbor
     )
     eval_seed_count = len(records)
@@ -761,6 +952,11 @@ def main():
             "qMediationDrift": Path(args.q_mediation_drift).name if q_mediation_drift else None,
             "qApiAudit": Path(args.q_api_audit).name if q_api_audit else None,
             "terminalBenchReceipt": Path(args.terminal_bench_receipt).name if terminal_bench_receipt else None,
+            "terminalBenchGenericSmoke": (
+                str(terminal_bench_generic_smoke.relative_to(root.parent)).replace("\\", "/")
+                if terminal_bench_generic_smoke and terminal_bench_generic_smoke.exists()
+                else None
+            ),
             "harborTerminalBench": Path(args.harbor).name if harbor else None,
         },
         "output": {

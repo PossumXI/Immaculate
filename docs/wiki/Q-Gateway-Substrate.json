@@ -1,32 +1,33 @@
 {
-  "generatedAt": "2026-04-18T02:52:47.563Z",
+  "generatedAt": "2026-04-19T07:42:56.365Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "1b28d691c7ba778adea63d50b18fa292303a0faf",
-    "gitShortSha": "1b28d69",
+    "gitSha": "5ed19b98682545e60ebbc826f19a6e793619ce06",
+    "gitShortSha": "5ed19b9",
     "gitBranch": "harbor-q-push",
-    "buildId": "0.1.0+1b28d69",
+    "buildId": "0.1.0+5ed19b9",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
       "truthfulLabel": "Q",
       "trainingLock": {
-        "generatedAt": "2026-04-18T02:33:22Z",
+        "generatedAt": "2026-04-19T05:51:26Z",
         "lockVersion": 1,
-        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16-35ab7e8-de7361fa",
-        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16",
+        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22-5ed19b9-e0c8b138",
+        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22",
         "modelName": "Q",
-        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16.jsonl",
-        "trainDatasetSha256": "de7361fa5b5f86a3475d5e6b1e25b00cf23b62ba0588bc5677b745e081542fb1",
-        "trainDatasetRowCount": 109,
-        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16.manifest.json",
-        "mixManifestSha256": "3c12ca648d820cc2f7f0a32fe5d32d9fa3c9ff400c59097a68ea451283700aa4",
-        "mixSupplementalCount": 5,
+        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22.jsonl",
+        "trainDatasetSha256": "e0c8b1383220aad9426647beff67ac8ea3d15019bcce4ce71399b9bf1c48a935",
+        "trainDatasetRowCount": 117,
+        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22.manifest.json",
+        "mixManifestSha256": "11d9f372ee3212c06c7dd8dfe80df509393edbdbc8d95d2b280e62b2097c251e",
+        "mixSupplementalCount": 6,
         "mixSupplementalPaths": [
           "training/q/q_harness_identity_seed.json",
           "training/q/q_immaculate_reasoning_seed.json",
+          "training/q/terminal_bench_semantic_seed.json",
           "training/q/bridgebench_seed.json",
           "training/q/coding_long_context_seed.json",
           ".training-output/q/q-failure-corpus.jsonl"
@@ -35,27 +36,27 @@
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-18T02:39:32Z",
-        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v16",
-        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v16/hybrid-session.json",
+        "generatedAt": "2026-04-19T05:51:41Z",
+        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v22",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v22/hybrid-session.json",
         "localStatus": "ready",
         "cloudStatus": "ready",
         "cloudProvider": "hf_jobs",
-        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16-35ab7e8-de7361fa",
-        "immaculateBundleId": "immaculate-orchestration-35ab7e8-ec4b3cb6",
+        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22-5ed19b9-e0c8b138",
+        "immaculateBundleId": "immaculate-orchestration-5ed19b9-cd094c28",
         "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
       }
     }
   },
   "benchmark": {
-    "suiteId": "immaculate-benchmark-2026-04-18T02-41-05-374Z",
-    "generatedAt": "2026-04-18T02:41:05.374Z",
+    "suiteId": "immaculate-benchmark-2026-04-19T07-22-36-454Z",
+    "generatedAt": "2026-04-19T07:22:36.454Z",
     "packId": "q-gateway-substrate",
     "packLabel": "Q Gateway Substrate",
     "failedAssertions": 0,
     "structuredFieldsP50": 3,
-    "latencyP95Ms": 28012.43,
-    "arbitrationP95Ms": 2.66,
+    "latencyP95Ms": 18109.65,
+    "arbitrationP95Ms": 1.83,
     "guardDenialsMax": 3,
     "hardware": "knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics"
   },
@@ -77,8 +78,8 @@
     {
       "id": "q-gateway-substrate-release-bind",
       "status": "pass",
-      "target": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16-35ab7e8-de7361fa",
-      "actual": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v16-35ab7e8-de7361fa",
+      "target": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22-5ed19b9-e0c8b138",
+      "actual": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22-5ed19b9-e0c8b138",
       "detail": "the release surface must agree with the live gateway before Q can be benchmarked as one coherent product"
     },
     {

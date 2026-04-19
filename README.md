@@ -37,13 +37,11 @@ This repository is prepared for public collaboration under the Apache 2.0 licens
 
 - public website: [iorch.net](https://iorch.net)
 - current release surface: [docs/wiki/Release-Surface.md](docs/wiki/Release-Surface.md)
+- latest Harbor public-task win: [docs/wiki/Terminal-Bench-Public-Task.md](docs/wiki/Terminal-Bench-Public-Task.md)
 - live Q structured contract benchmark: [docs/wiki/Model-Benchmark-Comparison.md](docs/wiki/Model-Benchmark-Comparison.md)
 - live BridgeBench: [docs/wiki/BridgeBench.md](docs/wiki/BridgeBench.md)
 - live BridgeBench soak: [docs/wiki/BridgeBench-Soak.md](docs/wiki/BridgeBench-Soak.md)
 - Harbor terminal bench: [docs/wiki/Harbor-Terminal-Bench.md](docs/wiki/Harbor-Terminal-Bench.md)
-- official Terminal-Bench public-task receipt: [docs/wiki/Terminal-Bench-Receipt.md](docs/wiki/Terminal-Bench-Receipt.md)
-- local diagnostic Terminal-Bench rerun: [docs/wiki/Terminal-Bench-Rerun.md](docs/wiki/Terminal-Bench-Rerun.md)
-- Terminal-Bench failure analysis: [docs/wiki/Terminal-Bench-Failure-Analysis.md](docs/wiki/Terminal-Bench-Failure-Analysis.md)
 - GitHub checks receipt: [docs/wiki/GitHub-Checks-Receipt.md](docs/wiki/GitHub-Checks-Receipt.md)
 - Harbor terminal bench soak: [docs/wiki/Harbor-Terminal-Bench-Soak.md](docs/wiki/Harbor-Terminal-Bench-Soak.md)
 - Q benchmark sweep (60m historical lane): [docs/wiki/Q-Benchmark-Sweep-60m.md](docs/wiki/Q-Benchmark-Sweep-60m.md)
@@ -52,6 +50,7 @@ This repository is prepared for public collaboration under the Apache 2.0 licens
 - hybrid Q training session: [docs/wiki/Q-Hybrid-Training.md](docs/wiki/Q-Hybrid-Training.md)
 - HF Jobs training lane: [docs/wiki/HF-Jobs-Training.md](docs/wiki/HF-Jobs-Training.md)
 - Colab free training lane: [docs/wiki/Colab-Free-Training.md](docs/wiki/Colab-Free-Training.md)
+- Kaggle free training lane: [docs/wiki/Kaggle-Free-Training.md](docs/wiki/Kaggle-Free-Training.md)
 - Cloudflare Q inference lane: [docs/wiki/Cloudflare-Q-Inference.md](docs/wiki/Cloudflare-Q-Inference.md)
 - OCI GPU advisor: [docs/wiki/OCI-GPU-Advisor.md](docs/wiki/OCI-GPU-Advisor.md)
 - OCI region capacity: [docs/wiki/OCI-Region-Capacity.md](docs/wiki/OCI-Region-Capacity.md)
@@ -66,19 +65,16 @@ This repository is prepared for public collaboration under the Apache 2.0 licens
 
 Latest plain-English readout:
 
-- direct `Q` is green on both tracked local contract lanes: `4/4` on [docs/wiki/Model-Benchmark-Comparison.md](docs/wiki/Model-Benchmark-Comparison.md) and `4/4` on [docs/wiki/BridgeBench.md](docs/wiki/BridgeBench.md), with `0` bridge-runtime assertion failures
-- the hard mixed-pressure reasoning lane is green on the active `bench-v18` lock: the live four-scenario [docs/wiki/Q-Mediation-Drift.md](docs/wiki/Q-Mediation-Drift.md) pack kept `ROUTE / REASON / COMMIT` intact, held route-alignment at `1`, emitted Q and Immaculate self-evaluations on every scenario, and split runner-path timing cleanly from model timing with runner-path `P95 24.61 ms`
-- the `Q` gateway-to-Immaculate seam is green end to end on the current tracked lock: `0` failed assertions, preserved `ROUTE / REASON / COMMIT`, carried real governance denials through the critical hold case, and now measures gateway latency `P95 28012.43 ms` with arbitration `P95 2.66 ms`; the exact current latencies live on [docs/wiki/Q-Gateway-Substrate.md](docs/wiki/Q-Gateway-Substrate.md)
+- the latest real Harbor run on the official public Terminal-Bench task is green on the default Q-only path: [docs/wiki/Terminal-Bench-Public-Task.md](docs/wiki/Terminal-Bench-Public-Task.md) now records `5/5`, mean reward `1.000`, `0` errors, and pass@2, pass@4, and pass@5 all at `1.000`
+- direct `Q` is green on both tracked local contract lanes: `4/4` on [docs/wiki/Model-Benchmark-Comparison.md](docs/wiki/Model-Benchmark-Comparison.md) with `23191.31 ms` average latency and `23715.52 ms` P95, and `4/4` on [docs/wiki/BridgeBench.md](docs/wiki/BridgeBench.md) with `0` bridge-runtime assertion failures, `20206.9 ms` average latency, and `23994 ms` P95
+- the hard mixed-pressure reasoning lane is green on the active `bench-v23` lock: the live four-scenario [docs/wiki/Q-Mediation-Drift.md](docs/wiki/Q-Mediation-Drift.md) pack kept `ROUTE / REASON / COMMIT` intact, held route-alignment at `1`, emitted Q and Immaculate self-evaluations on every scenario, and split runner-path timing cleanly from model timing with runner-path `P95 4.13 ms`
+- the `Q` gateway-to-Immaculate seam is green end to end on the current tracked lock: `0` failed assertions, preserved `ROUTE / REASON / COMMIT`, carried real governance denials through the critical hold case, and now measures gateway latency `P95 18109.65 ms` with arbitration `P95 1.83 ms`; the exact current latencies live on [docs/wiki/Q-Gateway-Substrate.md](docs/wiki/Q-Gateway-Substrate.md)
 - the dedicated Q gateway contract is green and Q-only: `/health 200`, authenticated `/api/q/info 200`, authenticated `/v1/models 200`, authenticated chat `200`, bounded `429` concurrency rejection, and a canonical identity smoke that answers as `Q`, `Arobi Technology Alliance`, `Gaetano Comparcola`, `Gemma 4`, and `Immaculate`; the current measured gateway overhead lives on [docs/wiki/Q-Gateway-Validation.md](docs/wiki/Q-Gateway-Validation.md)
-- the live `Q` API audit loop is real and now writes failures back into training surfaces instead of leaving them in logs; current failures include `transport_timeout`, `missing_prompt`, and `prompt_too_large`
-- on the repo-local Harbor operator pack, oracle is still `1.000` on both tasks while `Q` is currently `0.950` on the Q structured-contract task and `0.925` on the Immaculate bridge fail-closed task
-- the latest tracked W&B export is still current on `2026-04-18` through [docs/wiki/Benchmark-Status.md](docs/wiki/Benchmark-Status.md) and [docs/wiki/Benchmark-Wandb-Export.md](docs/wiki/Benchmark-Wandb-Export.md); the separate [docs/wiki/Q-Benchmark-Sweep-60m.md](docs/wiki/Q-Benchmark-Sweep-60m.md) page is a historical hour-class soak page and still points at the last rerun of that specific pack
-- the current Q bundle, hybrid session, benchmark corpus, failure corpus, and paired Immaculate orchestration bundle are machine-stamped on [docs/wiki/Release-Surface.md](docs/wiki/Release-Surface.md); the active tracked Q bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v18-d0bdd00-4db18397`
-- the tracked Q benchmark corpus currently carries `55` records, and the strict failure corpus currently carries `6` live eval seeds with resolved successes kept out of the failure lane
+- the latest tracked W&B export is current on `2026-04-18` through [docs/wiki/Benchmark-Status.md](docs/wiki/Benchmark-Status.md) and [docs/wiki/Benchmark-Wandb-Export.md](docs/wiki/Benchmark-Wandb-Export.md); the separate [docs/wiki/Q-Benchmark-Sweep-60m.md](docs/wiki/Q-Benchmark-Sweep-60m.md) page remains the historical hour-class soak lane
+- the current Q bundle, hybrid session, benchmark corpus, and paired Immaculate orchestration bundle are machine-stamped on [docs/wiki/Release-Surface.md](docs/wiki/Release-Surface.md); the active tracked Q bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`
+- the tracked Q benchmark corpus currently carries `55` records, and the hybrid training session plus Kaggle and Colab export lanes are restamped to the same `bench-v23` lineage
 - Immaculate now treats the healthy local Q lane as a first-class governed routing directive instead of a generic model slot, so blocked cloud status no longer forces a false guarded hold when local Q is healthy
-- the current HF Jobs lane is authenticated, hardware-visible, restaged against the active `bench-v18` lock, and launch-ready when you want to start the cloud run
-- the current Cloudflare lane is still an inference/eval lane, not a claimed training backend: the profile and eval bundle are ready on `bench-v18`, while auth, worker config, and adapter export are still blocked
-- the official public-task Terminal-Bench receipt for `terminal-bench/make-mips-interpreter` is still `0.000`, the separate local diagnostic rerun is `5/5` engineering evidence only, and the newest default-path Harbor smoke now completes end to end with `0` exceptions, a compact `2921`-character payload, and a final reward of `0.0`; the full breakdown lives on [docs/wiki/Terminal-Bench-Failure-Analysis.md](docs/wiki/Terminal-Bench-Failure-Analysis.md)
+- the current HF Jobs lane is authenticated, hardware-visible, restaged against the active `bench-v23` lock, and launch-ready when you want to start the cloud run
 
 ## Workspace
 
@@ -151,7 +147,6 @@ For the `Q` fine-tune path specifically:
 - direct readiness gate: [docs/wiki/Q-Readiness-Gate.md](docs/wiki/Q-Readiness-Gate.md)
 - benchmark corpus: [docs/wiki/Q-Benchmark-Corpus.md](docs/wiki/Q-Benchmark-Corpus.md)
 - benchmark promotion flow: [docs/wiki/Q-Benchmark-Promotion.md](docs/wiki/Q-Benchmark-Promotion.md)
-- failure corpus: [docs/wiki/Q-Failure-Corpus.md](docs/wiki/Q-Failure-Corpus.md)
 - hybrid training session surface: [docs/wiki/Q-Hybrid-Training.md](docs/wiki/Q-Hybrid-Training.md)
 - HF Jobs training surface: [docs/wiki/HF-Jobs-Training.md](docs/wiki/HF-Jobs-Training.md)
 - Colab free training surface: [docs/wiki/Colab-Free-Training.md](docs/wiki/Colab-Free-Training.md)
@@ -176,7 +171,7 @@ For the `Q` fine-tune path specifically:
 - OCI region capacity probe: `npm run q:oci:capacity -- --oci-bin C:/path/to/oci.exe --config-file .training-output/q/oci-controller/DEFAULT.config --profile DEFAULT --region-key PHX`
 - OCI controller launch script: `bash deploy/oci-training/scripts/launch-oci-q-training.sh --session-manifest .training-output/q/sessions/<session-id>/hybrid-session.manifest.json --env-file deploy/oci-training/env/immaculate-q-training.env.example`
 
-As of `2026-04-17`, the direct `Q` structured-contract lane is green on this machine:
+As of `2026-04-19`, the direct `Q` structured-contract lane is green on this machine:
 `Q` is `4/4` on both
 [docs/wiki/Model-Benchmark-Comparison.md](docs/wiki/Model-Benchmark-Comparison.md) and
 [docs/wiki/BridgeBench.md](docs/wiki/BridgeBench.md), and the tracked
@@ -333,7 +328,7 @@ Run the direct-Q readiness gate:
 npm run q:release-gate
 ```
 
-Refresh the tracked Q failure-only corpus:
+Refresh the tracked internal Q training-diagnostics corpus:
 
 ```powershell
 npm run q:failure-corpus
@@ -372,7 +367,7 @@ Current benchmark publication surfaces:
 - tracked repo/wiki Q gateway validation: [docs/wiki/Q-Gateway-Validation.md](docs/wiki/Q-Gateway-Validation.md)
 - tracked repo/wiki Q gateway architecture: [docs/wiki/Q-Gateway-Architecture.md](docs/wiki/Q-Gateway-Architecture.md)
 - tracked repo/wiki Q readiness gate: [docs/wiki/Q-Readiness-Gate.md](docs/wiki/Q-Readiness-Gate.md)
-- tracked repo/wiki Q failure-only corpus: [docs/wiki/Q-Failure-Corpus.md](docs/wiki/Q-Failure-Corpus.md)
+- tracked repo/wiki Terminal-Bench public-task win: [docs/wiki/Terminal-Bench-Public-Task.md](docs/wiki/Terminal-Bench-Public-Task.md)
 - latest run URL for every published pack lives in the tracked wiki status/export pages above
 
 Optional environment variables:

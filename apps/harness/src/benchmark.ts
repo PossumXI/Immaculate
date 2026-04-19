@@ -64,6 +64,7 @@ import {
 import { buildNwbReplayFrames, scanNwbFile } from "./nwb.js";
 import { parseStructuredResponse } from "./ollama.js";
 import { createPersistence } from "./persistence.js";
+import { resolveQLocalOllamaUrl } from "./q-local-model.js";
 import { buildRoutingDecision, planAdaptiveRoute } from "./routing.js";
 import { runTemporalBaselineComparison } from "./temporal-baseline.js";
 import { safeUnlink } from "./utils.js";
@@ -95,6 +96,7 @@ type BenchmarkRunOptions = {
 const DEFAULT_TICK_INTERVAL_MS = 40;
 const DEFAULT_MAX_TICKS = 320;
 const BENCHMARK_ADAPTER_DISPATCH_CADENCE_MS = 15;
+const DEFAULT_Q_RUNTIME_ENDPOINT = resolveQLocalOllamaUrl();
 const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(MODULE_ROOT, "../../..");
 const BENCHMARK_ROOT = path.join(REPO_ROOT, "benchmarks");
@@ -1601,6 +1603,18 @@ export async function runPublishedBenchmark(
         .filter((scenario) => scenario.expectedRoute === "cognitive")
         .map((scenario) => (scenario.qOnlyLayerSelection ? 1 : 0))
     );
+    const localReplicaSeries = createSeries(
+      "q_mediation_drift_local_replicas",
+      "Q Mediation Drift Local Replica Count",
+      "replicas",
+      mediationDrift.scenarioResults.map((scenario) => scenario.localReplicaCount ?? 0)
+    );
+    const verificationQuorumSeries = createSeries(
+      "q_mediation_drift_verification_quorum",
+      "Q Mediation Drift Verification Quorum",
+      "replicas",
+      mediationDrift.scenarioResults.map((scenario) => scenario.verificationQuorum ?? 0)
+    );
     const driftDetectedSeries = createSeries(
       "q_mediation_drift_drift_detected",
       "Q Mediation Drift Drift Detection",
@@ -1685,6 +1699,52 @@ export async function runPublishedBenchmark(
         "when the governed local Q lane is healthy, Immaculate should keep mediation inside the Q-backed layer set even if pressure is elevated"
       ),
       createAssertion(
+        "q-mediation-drift-parallel-formation",
+        "Healthy local Q mediation keeps a bounded local quorum instead of collapsing back to a single lane",
+        mediationDrift.scenarioResults
+          .filter((scenario) => scenario.expectedRoute === "cognitive")
+          .every(
+            (scenario) =>
+              (scenario.parallelFormationMode === "horizontal-swarm" ||
+                scenario.parallelFormationMode === "hybrid-quorum") &&
+              (scenario.localReplicaCount ?? 0) >= 2 &&
+              (scenario.remoteReplicaCount ?? 0) === 0 &&
+              (scenario.verificationQuorum ?? 0) >= 1
+          ),
+        "local cognition scenarios keep at least 2 local replicas / no remote spill",
+        mediationDrift.scenarioResults
+          .filter((scenario) => scenario.expectedRoute === "cognitive")
+          .map(
+            (scenario) =>
+              `${scenario.parallelFormationMode ?? "none"}/${scenario.localReplicaCount ?? 0}/${scenario.remoteReplicaCount ?? 0}/quorum=${scenario.verificationQuorum ?? 0}`
+          )
+          .join(", "),
+        "the Ignite-inspired formation only counts as a win if healthy local Q mediation keeps a bounded local quorum instead of serializing or silently spilling remote"
+      ),
+      createAssertion(
+        "q-mediation-drift-affinity-deadline",
+        "Healthy local Q mediation stays on a local-first affinity plan with a bounded deadline budget",
+        mediationDrift.scenarioResults
+          .filter((scenario) => scenario.expectedRoute === "cognitive")
+          .every(
+            (scenario) =>
+              (scenario.affinityMode === "quorum-local" ||
+                scenario.affinityMode === "local-spread") &&
+              scenario.deadlineClass !== "hard" &&
+              typeof scenario.deadlineBudgetMs === "number" &&
+              scenario.deadlineBudgetMs > 0
+          ),
+        "all local cognition scenarios keep local affinity with non-hard deadlines",
+        mediationDrift.scenarioResults
+          .filter((scenario) => scenario.expectedRoute === "cognitive")
+          .map(
+            (scenario) =>
+              `${scenario.affinityMode ?? "none"}/${scenario.deadlineClass ?? "none"}/${scenario.deadlineBudgetMs ?? 0}ms/${scenario.backpressureAction ?? "none"}`
+          )
+          .join(", "),
+        "the widened Ignite-style runner only counts as a win if local Q keeps local-first affinity and bounded deadlines instead of promoting unnecessary hard-stop pressure"
+      ),
+      createAssertion(
         "q-mediation-drift-guarded-hold",
         "Critical guarded mediation keeps dispatch closed while the guarded route survives",
         mediationDrift.scenarioResults
@@ -1730,7 +1790,7 @@ export async function runPublishedBenchmark(
       packLabel: pack.label,
       runKind,
       profile: `mediation-drift / ${hardwareContext.platform}-${hardwareContext.arch}`,
-      summary: `This benchmark starts the dedicated Q gateway on loopback, drives live Q route/reason/commit outputs through Immaculate arbitration, scheduling, and routing under mixed pressure, and measures whether the governed route survives without drift. It proves the live gateway is bound to the current tracked Q bundle, structured output remains parseable, primary-governed-local mediation stays inside Q-backed layers under elevated mixed pressure, guarded-hold mediation stays fail-closed under critical integrity pressure, and both Q and Immaculate emit explicit self-evaluations for every scenario. Hardware context: ${formatBenchmarkHardwareContext(hardwareContext)}.`,
+      summary: `This benchmark starts the dedicated Q gateway on loopback, drives live Q route/reason/commit outputs through Immaculate arbitration, scheduling, and routing under mixed pressure, and measures whether the governed route survives without drift. It proves the live gateway is bound to the current tracked Q bundle, structured output remains parseable, the Ignite-inspired local quorum formation keeps healthy primary-governed-local mediation inside Q-backed layers under elevated mixed pressure, guarded-hold mediation stays fail-closed under critical integrity pressure, and both Q and Immaculate emit explicit self-evaluations for every scenario. Hardware context: ${formatBenchmarkHardwareContext(hardwareContext)}.`,
       tickIntervalMs,
       totalTicks: mediationDrift.scenarioResults.length,
       plannedDurationMs,
@@ -1758,6 +1818,8 @@ export async function runPublishedBenchmark(
         routingLatencySeries,
         routeAlignmentSeries,
         qOnlySelectionSeries,
+        localReplicaSeries,
+        verificationQuorumSeries,
         driftDetectedSeries
       ],
       assertions,
@@ -1765,7 +1827,7 @@ export async function runPublishedBenchmark(
         stage: "q mediation drift integration",
         completed: mediationDrift.scenarioResults.map(
           (scenario) =>
-            `${scenario.label}: route=${scenario.routeSuggestion ?? "missing"} / routing=${scenario.routingMode} / admission=${scenario.scheduleAdmissionState} / drift=${scenario.driftDetected} / q-self=${scenario.qSelfEvaluation} / immaculate-self=${scenario.immaculateSelfEvaluation}`
+            `${scenario.label}: route=${scenario.routeSuggestion ?? "missing"} / routing=${scenario.routingMode} / admission=${scenario.scheduleAdmissionState} / formation=${scenario.parallelFormationMode ?? "none"}:${scenario.localReplicaCount ?? 0}local/${scenario.remoteReplicaCount ?? 0}remote/quorum=${scenario.verificationQuorum ?? 0} / drift=${scenario.driftDetected} / q-self=${scenario.qSelfEvaluation} / immaculate-self=${scenario.immaculateSelfEvaluation}`
         ),
         remaining: []
       },
@@ -1977,7 +2039,7 @@ export async function runPublishedBenchmark(
     model: "Q",
     role: "reasoner",
     status: "ready",
-    endpoint: "http://127.0.0.1:11434",
+    endpoint: DEFAULT_Q_RUNTIME_ENDPOINT,
     registeredAt: new Date().toISOString()
   };
   const benchmarkMidLayer: IntelligenceLayer = {
@@ -1987,7 +2049,7 @@ export async function runPublishedBenchmark(
     model: "Q",
     role: "mid",
     status: "ready",
-    endpoint: "http://127.0.0.1:11434",
+    endpoint: DEFAULT_Q_RUNTIME_ENDPOINT,
     registeredAt: new Date().toISOString()
   };
   const benchmarkGuardLayer: IntelligenceLayer = {
@@ -1997,7 +2059,7 @@ export async function runPublishedBenchmark(
     model: "Q",
     role: "guard",
     status: "ready",
-    endpoint: "http://127.0.0.1:11434",
+    endpoint: DEFAULT_Q_RUNTIME_ENDPOINT,
     registeredAt: new Date().toISOString()
   };
   const benchmarkSoulLayer: IntelligenceLayer = {
@@ -2007,7 +2069,7 @@ export async function runPublishedBenchmark(
     model: "Q",
     role: "soul",
     status: "ready",
-    endpoint: "http://127.0.0.1:11434",
+    endpoint: DEFAULT_Q_RUNTIME_ENDPOINT,
     registeredAt: new Date().toISOString()
   };
   engine.registerIntelligenceLayer(benchmarkMidLayer);
@@ -2076,7 +2138,7 @@ export async function runPublishedBenchmark(
       assignedWorkerPeerObservedLatencyMs: options.peerLatencyMs,
       assignmentReason: "benchmark remote execution outcome",
       assignmentScore: 1,
-      executionEndpoint: "http://127.0.0.1:11434",
+      executionEndpoint: DEFAULT_Q_RUNTIME_ENDPOINT,
       executionTopology: "parallel"
     };
   };
@@ -2106,7 +2168,7 @@ export async function runPublishedBenchmark(
     workerLabel: "Benchmark Remote Primary",
     hostLabel: "worker-host-remote-primary",
     executionProfile: "remote",
-    executionEndpoint: "http://127.0.0.1:11434",
+    executionEndpoint: DEFAULT_Q_RUNTIME_ENDPOINT,
     registeredAt: workerRegistryNow,
     heartbeatAt: workerRegistryNow,
     leaseDurationMs: 45_000,
@@ -2763,7 +2825,7 @@ export async function runPublishedBenchmark(
       nodeId: workerLocalityLocalNode.nodeId,
       locality: workerLocalityLocalNode.locality,
       executionProfile: "local",
-      executionEndpoint: "http://127.0.0.1:11434",
+      executionEndpoint: DEFAULT_Q_RUNTIME_ENDPOINT,
       registeredAt: workerRegistryNow,
       heartbeatAt: workerRegistryNow,
       leaseDurationMs: 45_000,

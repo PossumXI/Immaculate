@@ -82,6 +82,10 @@ const SURFACE_FILES: SurfaceTimestamp[] = [
     path: path.join("docs", "wiki", "Colab-Free-Training.json")
   },
   {
+    label: "Kaggle free training",
+    path: path.join("docs", "wiki", "Kaggle-Free-Training.json")
+  },
+  {
     label: "Cloudflare Q inference",
     path: path.join("docs", "wiki", "Cloudflare-Q-Inference.json")
   },
@@ -112,6 +116,10 @@ const SURFACE_FILES: SurfaceTimestamp[] = [
   {
     label: "Harbor terminal bench",
     path: path.join("docs", "wiki", "Harbor-Terminal-Bench.json")
+  },
+  {
+    label: "Terminal-Bench public task",
+    path: path.join("docs", "wiki", "Terminal-Bench-Public-Task.json")
   },
   {
     label: "Terminal-Bench receipt (historical public)",

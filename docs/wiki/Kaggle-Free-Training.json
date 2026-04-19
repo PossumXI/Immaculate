@@ -1,0 +1,54 @@
+{
+  "generatedAt": "2026-04-19T05:52:00Z",
+  "release": {
+    "packageVersion": "0.1.0",
+    "gitSha": "5ed19b98682545e60ebbc826f19a6e793619ce06",
+    "gitShortSha": "5ed19b9",
+    "buildId": "0.1.0+5ed19b9"
+  },
+  "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v22",
+  "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v22/hybrid-session.manifest.json",
+  "repo": {
+    "slug": "PossumXI/Immaculate"
+  },
+  "bundle": {
+    "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22-5ed19b9-e0c8b138",
+    "repoId": "TruLumecreator/immaculate-q-cloud-bundles",
+    "archiveRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v21/q-hybrid-harbor-opt-2384cf5-bench-v21-cloud-bundle.tar.gz",
+    "manifestRepoPath": "sessions/q-hybrid-harbor-opt-2384cf5-bench-v21/bundle-manifest.json"
+  },
+  "session": {
+    "manifestPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v22/hybrid-session.manifest.json",
+    "configPath": ".training-output/q/q-lora-config-harbor-opt-2384cf5-bench-v22.json",
+    "immaculateBundleOutputPath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-harbor-opt-2384cf5-bench-v22.json"
+  },
+  "microTrain": {
+    "configPath": ".training-output/q/q-hybrid-harbor-opt-2384cf5-bench-v22-micro-config.json",
+    "maxSteps": 40,
+    "maxSeqLength": 4096,
+    "minGpuMemoryGb": 15
+  },
+  "auth": {
+    "cliBin": "C:\\Users\\Knight\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python313\\Scripts\\kaggle.exe",
+    "cliReady": true,
+    "usernameReady": false,
+    "apiKeyReady": false,
+    "authReady": false,
+    "usernameSource": "missing",
+    "configPath": null
+  },
+  "notebook": {
+    "path": "deploy/kaggle/notebooks/q-hybrid-harbor-opt-2384cf5-bench-v22.ipynb",
+    "metadataPath": null,
+    "exported": true,
+    "pushReady": false
+  },
+  "output": {
+    "wikiJsonPath": "docs/wiki/Kaggle-Free-Training.json",
+    "wikiMarkdownPath": "docs/wiki/Kaggle-Free-Training.md"
+  },
+  "summary": {
+    "status": "auth-blocked",
+    "recommendedNextStep": "Set KAGGLE_USERNAME and KAGGLE_KEY or add ~/.kaggle/kaggle.json, then rerun the Kaggle export."
+  }
+}

@@ -619,6 +619,72 @@ def collect_terminal_bench_rerun_records(report: dict) -> list[dict]:
     return [finalize_record(record)]
 
 
+def collect_terminal_bench_public_task_records(report: dict) -> list[dict]:
+    harbor = report.get("harbor", {})
+    if not isinstance(harbor, dict):
+        return []
+
+    task_name = str(harbor.get("taskName", "")).strip()
+    dataset_name = str(harbor.get("datasetName", "")).strip()
+    attempts = int(harbor.get("attempts", 0) or 0)
+    trials = int(harbor.get("trials", 0) or 0)
+    errors = int(harbor.get("errors", 0) or 0)
+    mean_reward = float(harbor.get("meanReward", 0) or 0)
+    if not task_name or not dataset_name or mean_reward < 1 or errors > 0:
+        return []
+
+    pass_at_k = harbor.get("passAtK", {})
+    pass_at_k_lines = []
+    if isinstance(pass_at_k, dict):
+        for key in sorted(pass_at_k.keys(), key=lambda value: int(str(value)) if str(value).isdigit() else 9999):
+            pass_at_k_lines.append(f"pass@{key}: {pass_at_k[key]}")
+
+    record = {
+        "id": "terminal-bench-public-task:aggregate",
+        "row_type": "benchmark_observation",
+        "source_surface": "terminal-bench-public-task",
+        "row_id": "aggregate",
+        "label": "Terminal-Bench public-task local win",
+        "objective": (
+            "Keep the latest successful Q-only Harbor run on the official public Terminal-Bench task in the "
+            "tracked benchmark corpus so the next Q training pass learns the winning solver shape, not only "
+            "historical misses."
+        ),
+        "facts": [
+            f"Dataset: {dataset_name}",
+            f"Task: {task_name}",
+            f"Attempts: {attempts}",
+            f"Trials: {trials}",
+            f"Errors: {errors}",
+            f"Mean reward: {mean_reward:.3f}",
+        ],
+        "observation": [
+            (
+                f"The default Q-only Harbor path completed the official public task {task_name} with mean reward "
+                f"{mean_reward:.3f} across {trials} trials and {errors} errors."
+            ),
+            (
+                ", ".join(pass_at_k_lines) if pass_at_k_lines else "No pass@k data reported."
+            ),
+            (
+                "This is a real local run on the official public task and is suitable as positive benchmark evidence, "
+                "while the historical public receipt stays separate until a new leaderboard submission is made."
+            ),
+        ],
+        "quality": {
+            "status": "completed",
+            "parse_success": True,
+            "structured_field_count": 0,
+            "thinking_detected": False,
+            "score": mean_reward,
+            "run_count": attempts,
+            "task_count": 1,
+            "average_duration_sec": float(harbor.get("durationSec", 0) or 0),
+        },
+    }
+    return [finalize_record(record)]
+
+
 def collect_q_gateway_substrate_records(report: dict) -> list[dict]:
     benchmark = report.get("benchmark", {})
     if not isinstance(benchmark, dict) or not benchmark:
@@ -940,6 +1006,17 @@ def build_markdown(summary: dict) -> str:
     for source_name, count in summary["sourceCounts"].items():
         source_path = summary["sources"][source_name]
         lines.append(f"- {source_name}: `{count}` via `{source_path}`")
+    diagnostic_only_excluded = summary.get("diagnosticOnlyExcluded", {})
+    if isinstance(diagnostic_only_excluded, dict) and diagnostic_only_excluded:
+        lines.extend(
+            [
+                "",
+                "## Diagnostic-Only Sources Excluded",
+                "",
+            ]
+        )
+        for source_name, count in diagnostic_only_excluded.items():
+            lines.append(f"- {source_name}: `{count}`")
     lines.extend(
         [
             "",
@@ -947,7 +1024,8 @@ def build_markdown(summary: dict) -> str:
             "",
             "- This surface records successful benchmark-derived decision rows for Q so the training path can reuse tracked outputs without scraping markdown by hand.",
             "- Harbor rows that stayed parse-valid but underperformed are carried as benchmark observations so Q can learn the miss without promoting the weak wording as gold output.",
-            "- A repaired local Terminal-Bench rerun can enter the positive benchmark corpus while the older official public receipt remains in the strict failure/eval path until resubmission.",
+            "- Successful local Harbor runs on the official public Terminal-Bench task can enter the positive benchmark corpus once the default Q-only path is genuinely green.",
+            "- Diagnostic-only Terminal-Bench reruns stay out of the positive benchmark corpus until the default public-task path is genuinely green and resubmitted.",
             "- The official public Terminal-Bench receipt stays in the strict failure/eval path instead of being mixed into the positive benchmark corpus.",
             "- It is intentionally complementary to Q-Failure-Corpus, which remains strict failure-only and should stay empty when the current Q benchmark lane is green.",
             "- These rows are output-side evidence from executed Q benchmarks. They help stabilize route/reason/commit behavior, but they are not a substitute for broader curation or new external truth sources.",
@@ -995,6 +1073,11 @@ def main() -> None:
         help="Path to Terminal-Bench-Rerun.json",
     )
     parser.add_argument(
+        "--terminal-bench-public-task",
+        default=str(root / "docs" / "wiki" / "Terminal-Bench-Public-Task.json"),
+        help="Path to Terminal-Bench-Public-Task.json",
+    )
+    parser.add_argument(
         "--bridgebench-soak",
         default=str(root / "docs" / "wiki" / "BridgeBench-Soak.json"),
         help="Path to BridgeBench-Soak.json",
@@ -1033,6 +1116,7 @@ def main() -> None:
     q_mediation_drift_path = Path(args.q_mediation_drift)
     terminal_bench_receipt_path = Path(args.terminal_bench_receipt)
     terminal_bench_rerun_path = Path(args.terminal_bench_rerun)
+    terminal_bench_public_task_path = Path(args.terminal_bench_public_task)
     bridgebench_soak_path = Path(args.bridgebench_soak)
     harbor_soak_path = Path(args.harbor_soak)
     identity_seed_path = Path(args.identity_seed)
@@ -1048,6 +1132,7 @@ def main() -> None:
     q_mediation_drift = load_optional_json(q_mediation_drift_path)
     terminal_bench_receipt = load_optional_json(terminal_bench_receipt_path)
     terminal_bench_rerun = load_optional_json(terminal_bench_rerun_path)
+    terminal_bench_public_task = load_optional_json(terminal_bench_public_task_path)
     bridgebench_soak = load_optional_json(bridgebench_soak_path)
     harbor_soak = load_optional_json(harbor_soak_path)
 
@@ -1068,8 +1153,11 @@ def main() -> None:
         records.extend(collect_bridgebench_soak_records(bridgebench_soak))
     if harbor_soak:
         records.extend(collect_harbor_soak_records(root, harbor_soak))
+    if terminal_bench_public_task:
+        records.extend(collect_terminal_bench_public_task_records(terminal_bench_public_task))
+    diagnostic_only_excluded: dict[str, int] = {}
     if terminal_bench_rerun:
-        records.extend(collect_terminal_bench_rerun_records(terminal_bench_rerun))
+        diagnostic_only_excluded["terminal-bench-rerun"] = len(collect_terminal_bench_rerun_records(terminal_bench_rerun))
     records.extend(collect_seed_benchmark_records(identity_seed_path, "q-harness-identity-seed"))
     records.extend(collect_seed_benchmark_records(reasoning_seed_path, "q-immaculate-reasoning-seed"))
 
@@ -1086,13 +1174,14 @@ def main() -> None:
         "rowType": summarize_row_type(records),
         "recordCount": len(records),
         "sourceCounts": dict(source_counts),
+        "diagnosticOnlyExcluded": diagnostic_only_excluded,
         "sources": {
             "model-comparison": relative_path(root, comparison_path),
             "bridgebench": relative_path(root, bridgebench_path),
             "harbor-terminal-bench": relative_path(root, harbor_path),
             **(
-                {"terminal-bench-rerun": relative_path(root, terminal_bench_rerun_path)}
-                if terminal_bench_rerun
+                {"terminal-bench-public-task": relative_path(root, terminal_bench_public_task_path)}
+                if terminal_bench_public_task
                 else {}
             ),
             **(

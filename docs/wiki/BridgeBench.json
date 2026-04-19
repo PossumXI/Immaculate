@@ -1,34 +1,35 @@
 {
-  "generatedAt": "2026-04-17T10:18:04.934Z",
+  "generatedAt": "2026-04-19T07:51:12.922Z",
   "modelLaneSurface": "direct-q-structured-contract",
-  "qRuntimeBaseUrl": "http://127.0.0.1:11434",
+  "qRuntimeBaseUrl": "http://127.0.0.1:11435",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "848d44f8dbe409a8227bab61f88eccbf078dd056",
-    "gitShortSha": "848d44f",
+    "gitSha": "5ed19b98682545e60ebbc826f19a6e793619ce06",
+    "gitShortSha": "5ed19b9",
     "gitBranch": "harbor-q-push",
-    "buildId": "0.1.0+848d44f",
+    "buildId": "0.1.0+5ed19b9",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
       "truthfulLabel": "Q",
       "trainingLock": {
-        "generatedAt": "2026-04-17T09:49:31Z",
+        "generatedAt": "2026-04-19T07:46:04Z",
         "lockVersion": 1,
-        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d",
-        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13",
+        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
+        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23",
         "modelName": "Q",
-        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13.jsonl",
-        "trainDatasetSha256": "beff091d4d9ace3fcbfc1552b1f3bea3feff5e65fdf9a6cf65b719973b4f812f",
-        "trainDatasetRowCount": 100,
-        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13.manifest.json",
-        "mixManifestSha256": "3575e0d551a38b23dc43d45e154fd0ce50dfffebc029e8f17fbfea6beba78f44",
-        "mixSupplementalCount": 5,
+        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl",
+        "trainDatasetSha256": "286326ce786c0a9b9b4a636a38114cc221c1b978a083ca55d70cc6ca6172cb07",
+        "trainDatasetRowCount": 117,
+        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.manifest.json",
+        "mixManifestSha256": "4c7df8284cedaf8e43f1715c8eaf4c30826687e27a5d511ef8ccd4ca78df991e",
+        "mixSupplementalCount": 6,
         "mixSupplementalPaths": [
           "training/q/q_harness_identity_seed.json",
           "training/q/q_immaculate_reasoning_seed.json",
+          "training/q/terminal_bench_semantic_seed.json",
           "training/q/bridgebench_seed.json",
           "training/q/coding_long_context_seed.json",
           ".training-output/q/q-failure-corpus.jsonl"
@@ -37,14 +38,14 @@
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-17T10:11:18Z",
-        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v13",
-        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v13/hybrid-session.json",
+        "generatedAt": "2026-04-19T07:46:17Z",
+        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v23",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v23/hybrid-session.json",
         "localStatus": "ready",
         "cloudStatus": "ready",
         "cloudProvider": "hf_jobs",
-        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v13-848d44f-beff091d",
-        "immaculateBundleId": "immaculate-orchestration-848d44f-6e631f6b",
+        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
+        "immaculateBundleId": "immaculate-orchestration-5ed19b9-cd094c28",
         "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
       }
     }
@@ -70,70 +71,70 @@
       "taskCount": 4,
       "parseSuccessCount": 4,
       "parseSuccessRate": 1,
-      "averageLatencyMs": 39349.05,
-      "p95LatencyMs": 46980.06,
+      "averageLatencyMs": 20206.9,
+      "p95LatencyMs": 23994,
       "tasks": [
         {
           "scenarioId": "bridge-ack-fail-closed",
           "label": "Bridge ACK fail-closed",
-          "latencyMs": 32872.29,
-          "wallLatencyMs": 33130.19,
+          "latencyMs": 23792.85,
+          "wallLatencyMs": 24044.65,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
           "routeSuggestion": "guarded",
-          "reasonSummary": "Late ACK on the haptic bridge indicates a degraded path requiring caution.",
-          "commitStatement": "Re-evaluate the bridge connection using fail-closed semantics to maintain safety.",
-          "responsePreview": "ROUTE: guarded REASON: Late ACK on the haptic bridge indicates a degraded path requiring caution. COMMIT: Re-evaluate the bridge connection using fail-closed semantics to maintain safety."
+          "reasonSummary": "Late ACK indicates a potential transport timeout requiring fail-closed behavior.",
+          "commitStatement": "Maintain fail-closed state and await further confirmation from the bridge.",
+          "responsePreview": "ROUTE: guarded REASON: Late ACK indicates a potential transport timeout requiring fail-closed behavior. COMMIT: Maintain fail-closed state and await further confirmation from the bridge."
         },
         {
           "scenarioId": "nonce-forgery-response",
           "label": "ACK nonce forgery response",
-          "latencyMs": 33680.03,
-          "wallLatencyMs": 33690.41,
+          "latencyMs": 16742.7,
+          "wallLatencyMs": 16752.77,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
-          "routeSuggestion": "guarded",
-          "reasonSummary": "Forged ACK replay without correct nonce signals an untrusted bridge state.",
-          "commitStatement": "Immediately enforce fail-closed state and await explicit manual re-authentication.",
-          "responsePreview": "ROUTE: guarded REASON: Forged ACK replay without correct nonce signals an untrusted bridge state. COMMIT: Immediately enforce fail-closed state and await explicit manual re-authentication."
+          "routeSuggestion": "suppressed",
+          "reasonSummary": "Forged bridge ACK without the correct nonce indicates the bridge is untrusted and must remain fail-closed.",
+          "commitStatement": "Maintain fail-closed state due to untrusted bridge acknowledgment replay.",
+          "responsePreview": "ROUTE: suppressed REASON: Forged bridge ACK without the correct nonce indicates the bridge is untrusted and must remain fail-closed. COMMIT: Maintain fail-closed state due to untrusted bridge acknowledgment replay."
         },
         {
           "scenarioId": "public-q-rate-limit",
           "label": "Public Q edge throttling",
-          "latencyMs": 43863.83,
-          "wallLatencyMs": 43873.79,
+          "latencyMs": 23994,
+          "wallLatencyMs": 24007.45,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
-          "routeSuggestion": "guarded",
-          "reasonSummary": "Public API quota burst signals rate limiting, not global system failure.",
-          "commitStatement": "Throttle public access requests while maintaining stable private operator plane operations.",
-          "responsePreview": "ROUTE: guarded REASON: Public API quota burst signals rate limiting, not global system failure. COMMIT: Throttle public access requests while maintaining stable private operator plane operations."
+          "routeSuggestion": "cognitive",
+          "reasonSummary": "Public quota burst occurred while the private operator plane remained stable.",
+          "commitStatement": "Maintain the local governed Q lane to ensure operator plane stability.",
+          "responsePreview": "ROUTE: cognitive REASON: Public quota burst occurred while the private operator plane remained stable. COMMIT: Maintain the local governed Q lane to ensure operator plane stability."
         },
         {
           "scenarioId": "bridge-continuity-routing",
           "label": "Bridge continuity routing",
-          "latencyMs": 46980.06,
-          "wallLatencyMs": 46988.1,
+          "latencyMs": 16298.06,
+          "wallLatencyMs": 16305.14,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
           "routeSuggestion": "guarded",
-          "reasonSummary": "The websocket bridge degradation mandates caution despite the healthy direct path.",
-          "commitStatement": "Prioritize local Q lane operations while acknowledging the degraded bridge state.",
-          "responsePreview": "ROUTE: guarded REASON: The websocket bridge degradation mandates caution despite the healthy direct path. COMMIT: Prioritize local Q lane operations while acknowledging the degraded bridge state."
+          "reasonSummary": "HTTP/2 direct is healthy while the websocket bridge is degraded.",
+          "commitStatement": "Proceed using the healthy HTTP/2 direct path for transport.",
+          "responsePreview": "ROUTE: cognitive REASON: HTTP/2 direct is healthy while the websocket bridge is degraded. COMMIT: Proceed using the healthy HTTP/2 direct path for transport."
         }
       ]
     }
   ],
   "bridgeRuntime": {
-    "suiteId": "immaculate-benchmark-2026-04-17T10-18-00-195Z",
+    "suiteId": "immaculate-benchmark-2026-04-19T07-51-08-756Z",
     "packId": "substrate-readiness",
     "failedAssertions": 0,
     "selectedAssertions": [
@@ -174,7 +175,7 @@
         "label": "Supervised serial transport registration exposes vendor/device identity and heartbeat policy",
         "status": "pass",
         "target": "registered serial-json transport with vendor/model and heartbeat policy",
-        "actual": "atx-fnv1a-06e1740e:http2-json:immaculate-labs:healthy, atx-fnv1a-9203367a:serial-json:immaculate-labs:healthy, atx-fnv1a-88b68096:udp-osc:generic:healthy",
+        "actual": "atx-fnv1a-df1a2865:http2-json:immaculate-labs:healthy, atx-fnv1a-1794ee96:serial-json:immaculate-labs:healthy, atx-fnv1a-319f9069:udp-osc:generic:healthy",
         "detail": "vendor/device lanes should be durable registry entries with explicit supervision policy, not anonymous direct writes"
       },
       {
@@ -214,7 +215,7 @@
         "label": "HTTP/2 direct transport registration exposes a supervised RPC-class device endpoint",
         "status": "pass",
         "target": "registered http2-json transport with vendor/model and heartbeat policy",
-        "actual": "atx-fnv1a-06e1740e:http2-json:immaculate-labs:haptic-rpc-s2:20/5000:healthy, atx-fnv1a-9203367a:serial-json:immaculate-labs:haptic-bridge-s1:20/5000:healthy, atx-fnv1a-88b68096:udp-osc:generic:udp-osc:5000/15000:healthy",
+        "actual": "atx-fnv1a-df1a2865:http2-json:immaculate-labs:haptic-rpc-s2:20/5000:healthy, atx-fnv1a-1794ee96:serial-json:immaculate-labs:haptic-bridge-s1:20/5000:healthy, atx-fnv1a-319f9069:udp-osc:generic:udp-osc:5000/15000:healthy",
         "detail": "the next direct device lane should be a typed RPC-class endpoint, not just another file or datagram bridge"
       },
       {

@@ -2,11 +2,11 @@
 
 This page records the free supplemental Colab lane for the active Q and Immaculate hybrid session.
 
-- Generated: `2026-04-18T06:20:57Z`
-- Release: `0.1.0+d0bdd00`
-- Session id: `q-hybrid-harbor-opt-2384cf5-bench-v18`
-- Notebook path: `deploy/colab/notebooks/q-hybrid-harbor-opt-2384cf5-bench-v18-colab-free.ipynb`
-- Open in Colab: `https://colab.research.google.com/github/PossumXI/Immaculate/blob/main/deploy/colab/notebooks/q-hybrid-harbor-opt-2384cf5-bench-v18-colab-free.ipynb`
+- Generated: `2026-04-19T05:52:29Z`
+- Release: `0.1.0+5ed19b9`
+- Session id: `q-hybrid-harbor-opt-2384cf5-bench-v22`
+- Notebook path: `deploy/colab/notebooks/q-hybrid-harbor-opt-2384cf5-bench-v22-colab-free.ipynb`
+- Open in Colab: `https://colab.research.google.com/github/PossumXI/Immaculate/blob/main/deploy/colab/notebooks/q-hybrid-harbor-opt-2384cf5-bench-v22-colab-free.ipynb`
 
 ## What This Lane Does
 
@@ -19,13 +19,13 @@ This page records the free supplemental Colab lane for the active Q and Immacula
 
 - Source type: `hf_dataset`
 - Dataset repo: `TruLumecreator/immaculate-q-cloud-bundles`
-- Archive path: `sessions/q-hybrid-harbor-opt-2384cf5-bench-v18/q-hybrid-harbor-opt-2384cf5-bench-v18-cloud-bundle.tar.gz`
-- Manifest path: `sessions/q-hybrid-harbor-opt-2384cf5-bench-v18/bundle-manifest.json`
+- Archive path: `sessions/q-hybrid-harbor-opt-2384cf5-bench-v21/q-hybrid-harbor-opt-2384cf5-bench-v21-cloud-bundle.tar.gz`
+- Manifest path: `sessions/q-hybrid-harbor-opt-2384cf5-bench-v21/bundle-manifest.json`
 - Bundle staged: `True`
 
 ## Micro-Train Defaults
 
-- Derived config path: `.training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v18/colab/q-colab-micro-config.json`
+- Derived config path: `.training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v22/colab/q-colab-micro-config.json`
 - Max steps: `24`
 - Max sequence length: `2048`
 - Minimum GPU memory for train: `20 GB`

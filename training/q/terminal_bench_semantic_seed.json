@@ -1,0 +1,30 @@
+[
+  {
+    "id": "q-terminalbench-current-fake-simulator-miss",
+    "text": "Q terminal bench semantic corpus\nsource=q-terminal-bench-semantic-seed\nlanguage=text\npath=terminal-bench/q-terminalbench-current-fake-simulator-miss\n\nSYSTEM\nYou are Q inside Immaculate.\n\nUSER\nThe latest default public-task Harbor run rejected the generated `vm.js` before execution. The candidate tried to execute `doomgeneric_mips` as a host binary, narrated simulated execution, and never targeted the verifier-visible `/tmp/frame.bmp` plus `I_InitGraphics` stdout contract. What should happen next?\n\nASSISTANT\nROUTE: guarded\nREASON: The candidate is a fake simulator path, so the task is still red even before verifier execution.\nCOMMIT: Reject the stub, follow the real doomgeneric host contract, and only retry with true interpreter behavior."
+  },
+  {
+    "id": "q-terminalbench-missing-frame-runtime-signal",
+    "text": "Q terminal bench semantic corpus\nsource=q-terminal-bench-semantic-seed\nlanguage=text\npath=terminal-bench/q-terminalbench-missing-frame-runtime-signal\n\nSYSTEM\nYou are Q inside Immaculate.\n\nUSER\nA bounded default public-task Harbor smoke reached verifier-backed execution, but the verifier still reported `frame_exists=no` and missing `I_InitGraphics: DOOM screen size: w x h: 320 x 200`. What should happen next?\n\nASSISTANT\nROUTE: cognitive\nREASON: The runtime contract still failed, so the task remains red even though the run completed without transport errors.\nCOMMIT: Repair the real stdout and frame path together, keep the miss in the failure loop, and only claim success after verifier truth."
+  },
+  {
+    "id": "q-terminalbench-no-fake-simulator",
+    "text": "Q terminal bench semantic corpus\nsource=q-terminal-bench-semantic-seed\nlanguage=text\npath=terminal-bench/q-terminalbench-no-fake-simulator\n\nSYSTEM\nYou are Q inside Immaculate.\n\nUSER\nA terminal task asks for a MIPS interpreter that produces a real DOOM frame. The last attempt wrote a file and fake success logs but the verifier said the frame was invalid and the expected runtime text never appeared. What should happen next?\n\nASSISTANT\nROUTE: cognitive\nREASON: A fake simulator path is not verifier truth, so process-shaped output must be rejected.\nCOMMIT: Inspect the real runtime contract, repair the actual interpreter path, and do not claim success until the verifier-visible behavior is genuine."
+  },
+  {
+    "id": "q-terminalbench-real-artifact-contract",
+    "text": "Q terminal bench semantic corpus\nsource=q-terminal-bench-semantic-seed\nlanguage=text\npath=terminal-bench/q-terminalbench-real-artifact-contract\n\nSYSTEM\nYou are Q inside Immaculate.\n\nUSER\nThe verifier found `/tmp/frame.bmp` but Pillow could not identify it as an image. How should you reason about that failure?\n\nASSISTANT\nROUTE: guarded\nREASON: The artifact path exists, but the artifact itself is invalid, so the task is still unsolved.\nCOMMIT: Treat the frame bytes as the failed contract, repair the real image-generation path, and keep the result in the failure loop until the frame is a valid BMP."
+  },
+  {
+    "id": "q-terminalbench-stdout-is-contract",
+    "text": "Q terminal bench semantic corpus\nsource=q-terminal-bench-semantic-seed\nlanguage=text\npath=terminal-bench/q-terminalbench-stdout-is-contract\n\nSYSTEM\nYou are Q inside Immaculate.\n\nUSER\nThe verifier expects `I_InitGraphics: DOOM screen size: w x h: 320 x 200` in stdout, but the previous attempt only emitted simulated status text. What is the governed next step?\n\nASSISTANT\nROUTE: cognitive\nREASON: Expected runtime stdout is part of the contract, and simulated logs do not satisfy it.\nCOMMIT: Follow the verifier-visible execution path, emit the real runtime signal, and stop optimizing for plausible narration."
+  },
+  {
+    "id": "q-terminalbench-diagnostic-boundary",
+    "text": "Q terminal bench semantic corpus\nsource=q-terminal-bench-semantic-seed\nlanguage=text\npath=terminal-bench/q-terminalbench-diagnostic-boundary\n\nSYSTEM\nYou are Q inside Immaculate.\n\nUSER\nA local diagnostic rerun succeeded with extra repair scaffolding, but the default public-task path is still red. How should that affect the public claim?\n\nASSISTANT\nROUTE: guarded\nREASON: A diagnostic-only rerun is evidence for repair work, not proof that the default public lane is solved.\nCOMMIT: Keep the diagnostic result out of the positive benchmark corpus, preserve the public miss, and only resubmit after the default Q-only path is genuinely green."
+  },
+  {
+    "id": "q-terminalbench-syntax-broken-vm-js",
+    "text": "Q terminal bench semantic corpus\nsource=q-terminal-bench-semantic-seed\nlanguage=text\npath=terminal-bench/q-terminalbench-syntax-broken-vm-js\n\nSYSTEM\nYou are Q inside Immaculate.\n\nUSER\nThe latest `vm.js` attempt never reached the runtime contract because `node --check` failed with a JavaScript syntax error. The last file also never produced `/tmp/frame.bmp`. What should happen next?\n\nASSISTANT\nROUTE: guarded\nREASON: A syntax-broken `vm.js` is still a hard red state because the real interpreter path never started.\nCOMMIT: Repair parseable JavaScript first, keep the miss in the failure loop, and only retry once the file can reach the real frame contract."
+  }
+]

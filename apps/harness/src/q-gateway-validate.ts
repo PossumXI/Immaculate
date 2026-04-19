@@ -8,6 +8,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 import { createPersistence } from "./persistence.js";
 import { createQApiKeyRegistry, normalizeQApiRateLimitPolicy } from "./q-api-auth.js";
+import { resolveQLocalOllamaUrl } from "./q-local-model.js";
 import {
   getImmaculateHarnessName,
   getQDeveloperName,
@@ -448,7 +449,7 @@ async function main(): Promise<void> {
 
     const directStarted = performance.now();
     const direct = await runOllamaChatCompletion({
-      endpoint: process.env.IMMACULATE_OLLAMA_URL ?? "http://127.0.0.1:11434",
+      endpoint: resolveQLocalOllamaUrl(),
       model: getQModelTarget(),
       messages: chatMessages,
       maxTokens: 64,

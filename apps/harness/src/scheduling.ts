@@ -1,5 +1,9 @@
 import type {
+  ExecutionParallelAffinityMode,
+  ExecutionParallelBackpressureAction,
+  ExecutionParallelDeadlineClass,
   ExecutionArbitration,
+  ExecutionParallelFormationMode,
   ExecutionSchedule,
   ExecutionScheduleMode,
   ExecutionTopology,
@@ -9,6 +13,7 @@ import type {
   PhaseSnapshot
 } from "@immaculate/core";
 import type { FederatedExecutionPressure } from "./federation-pressure.js";
+import { buildParallelFormation } from "./parallel-engine.js";
 import type { QOrchestrationContext } from "./q-orchestration-context.js";
 import type { SessionConversationMemory } from "./conversation.js";
 import { getQModelName, truthfulModelLabel } from "./q-model.js";
@@ -39,6 +44,20 @@ export type ExecutionSchedulePlan = {
   mode: ExecutionScheduleMode;
   executionTopology: ExecutionTopology;
   parallelWidth: number;
+  parallelFormationMode?: ExecutionParallelFormationMode;
+  verticalStageCount?: number;
+  horizontalReplicaCount?: number;
+  localReplicaCount?: number;
+  remoteReplicaCount?: number;
+  verificationQuorum?: number;
+  boundedRetryBudget?: number;
+  capabilitySpreadCount?: number;
+  affinityMode?: ExecutionParallelAffinityMode;
+  deadlineClass?: ExecutionParallelDeadlineClass;
+  deadlineBudgetMs?: number;
+  backpressureAction?: ExecutionParallelBackpressureAction;
+  intentAlignmentScore?: number;
+  parallelFormationSummary?: string;
   admissionState: "admit" | "degrade" | "hold";
   backlogPressure: GovernancePressureLevel;
   backlogScore: number;
@@ -343,7 +362,15 @@ export function planExecutionSchedule(input: ExecutionSchedulePlanInput): Execut
   const sessionBlockedVerdicts = sessionConversationMemory?.blockedVerdictCount ?? 0;
   const sessionApprovedVerdicts = sessionConversationMemory?.approvedVerdictCount ?? 0;
   if (sessionBlockedVerdicts >= 2 && input.arbitration.shouldRunCognition) {
-    preferredRoles = uniqueRoles(["guard", "reasoner", ...preferredRoles]);
+    preferredRoles =
+      qGovernedLaneHealthy && input.arbitration.governancePressure !== "critical"
+        ? uniqueRoles([
+            preferredRoles.find((role) => role !== "guard") ?? "reasoner",
+            "mid",
+            "reasoner",
+            "guard"
+          ])
+        : uniqueRoles(["guard", "reasoner", ...preferredRoles]);
   } else if (sessionApprovedVerdicts >= 2 && input.arbitration.governancePressure === "clear") {
     preferredRoles = uniqueRoles([...preferredRoles, "mid"]);
   }
@@ -440,6 +467,14 @@ export function planExecutionSchedule(input: ExecutionSchedulePlanInput): Execut
           backlogPressure,
           federationPressure: federatedPressure
         });
+  const qGovernedParallelFloor =
+    qGovernedLaneHealthy &&
+    input.arbitration.shouldRunCognition &&
+    backlogPressure !== "critical" &&
+    selectedLayers.length > 1 &&
+    readyLayerCount >= 1
+      ? Math.min(2, selectedLayers.length)
+      : 1;
   const admittedLayers =
     admissionState === "hold"
       ? []
@@ -447,7 +482,7 @@ export function planExecutionSchedule(input: ExecutionSchedulePlanInput): Execut
           0,
           admissionState === "degrade"
             ? Math.max(
-                1,
+                qGovernedParallelFloor,
                 Math.min(
                   selectedLayers.length,
                   backlogPressure === "critical" ? 1 : rawHealthWeightedWidth
@@ -457,12 +492,45 @@ export function planExecutionSchedule(input: ExecutionSchedulePlanInput): Execut
         );
   const mode = scheduleModeForSelection(input.arbitration, admittedLayers, federatedPressure);
   const executionTopology = executionTopologyForMode(mode, admittedLayers);
-  const parallelWidth = Math.min(
+  const preliminaryParallelWidth = Math.min(
     parallelWidthForTopology(executionTopology, admittedLayers),
     Math.max(1, rawHealthWeightedWidth || admittedLayers.length || 1)
   );
   const primaryLayer = admittedLayers.at(-1);
   const layerRoles = admittedLayers.map((layer) => layer.role);
+  const workerReliabilityFloor = Number(
+    (
+      (input.arbitration.shouldRunCognition ? 8 : 4) +
+      (admittedLayers.length > 1 ? 3 : 0) +
+      (backlogPressure === "critical" ? 8 : backlogPressure === "elevated" ? 4 : 0) +
+      (federatedPressure?.pressure === "critical" ? 5 : federatedPressure?.pressure === "elevated" ? 2 : 0) +
+      Math.min(3, busyLayerCount) +
+      Math.min(4, degradedLayerCount * 2)
+    ).toFixed(2)
+  );
+  const parallelFormation = buildParallelFormation({
+    mode,
+    executionTopology,
+    admittedLayers,
+    healthWeightedWidth: rawHealthWeightedWidth,
+    backlogPressure,
+    governancePressure: input.arbitration.governancePressure,
+    workerReliabilityFloor,
+    qGovernedLaneHealthy,
+    signalQuality,
+    sessionBlockedVerdictCount: sessionBlockedVerdicts,
+    sessionApprovedVerdictCount: sessionApprovedVerdicts,
+    federatedPressure
+  });
+  const parallelWidth = Math.min(
+    preliminaryParallelWidth,
+    Math.max(
+      1,
+      parallelFormation.localReplicaCount > 0
+        ? parallelFormation.localReplicaCount
+        : parallelFormation.horizontalReplicaCount || preliminaryParallelWidth || 1
+    )
+  );
   const estimatedLatencyMs = estimateLatencyMs(
     admittedLayers,
     input.arbitration.governancePressure,
@@ -475,16 +543,6 @@ export function planExecutionSchedule(input: ExecutionSchedulePlanInput): Execut
     input.arbitration.shouldDispatchActuation &&
     (!input.arbitration.shouldRunCognition || admittedLayers.length > 0) &&
     admissionState !== "hold";
-  const workerReliabilityFloor = Number(
-    (
-      (input.arbitration.shouldRunCognition ? 8 : 4) +
-      (admittedLayers.length > 1 ? 3 : 0) +
-      (backlogPressure === "critical" ? 8 : backlogPressure === "elevated" ? 4 : 0) +
-      (federatedPressure?.pressure === "critical" ? 5 : federatedPressure?.pressure === "elevated" ? 2 : 0) +
-      Math.min(3, busyLayerCount) +
-      Math.min(4, degradedLayerCount * 2)
-    ).toFixed(2)
-  );
   const rationale = [
     `mode=${mode}`,
     `admission=${admissionState}`,
@@ -505,6 +563,11 @@ export function planExecutionSchedule(input: ExecutionSchedulePlanInput): Execut
     `federation=${federatedPressure?.pressure ?? "none"}`,
     `federationLatency=${typeof federatedPressure?.crossNodeLatencyMs === "number" ? federatedPressure.crossNodeLatencyMs.toFixed(2) : "none"}`,
     `federationSuccess=${typeof federatedPressure?.remoteSuccessRatio === "number" ? federatedPressure.remoteSuccessRatio.toFixed(2) : "none"}`,
+    `formation=${parallelFormation.summary}`,
+    `affinity=${parallelFormation.affinityMode}`,
+    `deadline=${parallelFormation.deadlineClass}:${parallelFormation.deadlineBudgetMs}ms`,
+    `backpressureAction=${parallelFormation.backpressureAction}`,
+    `intentAlignment=${parallelFormation.intentAlignmentScore.toFixed(2)}`,
     `qDirective=${qDirective ?? "none"}`,
     `qLane=${qGovernedLaneHealthy ? `local-ready:${input.qContext?.trainingBundleId ?? "tracked"}` : input.qContext ? "hold" : "none"}`,
     `qCloud=${input.qContext ? `${input.qContext.cloudLaneReady ? "ready" : "blocked"}:${input.qContext.cloudLaneStatus ?? "unknown"}` : "none"}`,
@@ -518,6 +581,20 @@ export function planExecutionSchedule(input: ExecutionSchedulePlanInput): Execut
     mode,
     executionTopology,
     parallelWidth,
+    parallelFormationMode: parallelFormation.mode,
+    verticalStageCount: parallelFormation.verticalStageCount,
+    horizontalReplicaCount: parallelFormation.horizontalReplicaCount,
+    localReplicaCount: parallelFormation.localReplicaCount,
+    remoteReplicaCount: parallelFormation.remoteReplicaCount,
+    verificationQuorum: parallelFormation.verificationQuorum,
+    boundedRetryBudget: parallelFormation.boundedRetryBudget,
+    capabilitySpreadCount: parallelFormation.capabilitySpreadCount,
+    affinityMode: parallelFormation.affinityMode,
+    deadlineClass: parallelFormation.deadlineClass,
+    deadlineBudgetMs: parallelFormation.deadlineBudgetMs,
+    backpressureAction: parallelFormation.backpressureAction,
+    intentAlignmentScore: parallelFormation.intentAlignmentScore,
+    parallelFormationSummary: parallelFormation.summary,
     admissionState,
     backlogPressure,
     backlogScore,
@@ -558,6 +635,20 @@ export function buildExecutionScheduleDecision(options: {
     mode: options.plan.mode,
     executionTopology: options.plan.executionTopology,
     parallelWidth: options.plan.parallelWidth,
+    parallelFormationMode: options.plan.parallelFormationMode,
+    verticalStageCount: options.plan.verticalStageCount,
+    horizontalReplicaCount: options.plan.horizontalReplicaCount,
+    localReplicaCount: options.plan.localReplicaCount,
+    remoteReplicaCount: options.plan.remoteReplicaCount,
+    verificationQuorum: options.plan.verificationQuorum,
+    boundedRetryBudget: options.plan.boundedRetryBudget,
+    capabilitySpreadCount: options.plan.capabilitySpreadCount,
+    affinityMode: options.plan.affinityMode,
+    deadlineClass: options.plan.deadlineClass,
+    deadlineBudgetMs: options.plan.deadlineBudgetMs,
+    backpressureAction: options.plan.backpressureAction,
+    intentAlignmentScore: options.plan.intentAlignmentScore,
+    parallelFormationSummary: options.plan.parallelFormationSummary,
     admissionState: options.plan.admissionState,
     backlogPressure: options.plan.backlogPressure,
     backlogScore: options.plan.backlogScore,

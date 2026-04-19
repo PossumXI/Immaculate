@@ -2,12 +2,12 @@
 
 This page records the generated Q-only Cloudflare worker profile used to keep the Cloudflare lane grounded even before a LoRA artifact is available.
 
-- Generated: `2026-04-18T06:20:57Z`
-- Profile id: `q-cloudflare-profile-d0bdd00`
+- Generated: `2026-04-19T05:52:29Z`
+- Profile id: `q-cloudflare-profile-5ed19b9`
 - Q name: `Q`
-- Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v18-d0bdd00-4db18397`
-- Hybrid session: `q-hybrid-harbor-opt-2384cf5-bench-v18`
-- Release: `0.1.0+d0bdd00`
+- Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22-5ed19b9-e0c8b138`
+- Hybrid session: `q-hybrid-harbor-opt-2384cf5-bench-v22`
+- Release: `0.1.0+5ed19b9`
 - Rule count: `5`
 - Worker module: `deploy/cloudflare/worker/src/q-profile.generated.ts`
 

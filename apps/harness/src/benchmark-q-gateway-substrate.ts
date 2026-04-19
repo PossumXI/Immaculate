@@ -14,6 +14,7 @@ import {
 import { buildExecutionArbitrationDecision, planExecutionArbitration } from "./arbitration.js";
 import { createQApiKeyRegistry, normalizeQApiRateLimitPolicy } from "./q-api-auth.js";
 import { parseStructuredResponse, prewarmOllamaModel } from "./ollama.js";
+import { resolveQLocalOllamaUrl } from "./q-local-model.js";
 import { getQFoundationModelName, getQModelName, getQModelTarget } from "./q-model.js";
 import { resolveReleaseMetadata } from "./release-metadata.js";
 
@@ -67,7 +68,7 @@ type ScenarioDefinition = {
   expectDispatchAllowed: boolean;
 };
 
-const DEFAULT_OLLAMA_URL = process.env.IMMACULATE_OLLAMA_URL ?? "http://127.0.0.1:11434";
+const DEFAULT_OLLAMA_URL = resolveQLocalOllamaUrl();
 const HARNESS_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const REPO_ROOT = path.resolve(HARNESS_ROOT, "../..");
 

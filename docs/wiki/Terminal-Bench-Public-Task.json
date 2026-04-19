@@ -1,0 +1,92 @@
+{
+  "generatedAt": "2026-04-19T07:43:11.245Z",
+  "release": {
+    "packageVersion": "0.1.0",
+    "harnessVersion": "0.1.0",
+    "coreVersion": "0.1.0",
+    "gitSha": "5ed19b98682545e60ebbc826f19a6e793619ce06",
+    "gitShortSha": "5ed19b9",
+    "gitBranch": "harbor-q-push",
+    "buildId": "0.1.0+5ed19b9",
+    "q": {
+      "modelName": "Q",
+      "foundationModel": "Gemma 4",
+      "truthfulLabel": "Q",
+      "trainingLock": {
+        "generatedAt": "2026-04-19T05:51:26Z",
+        "lockVersion": 1,
+        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22-5ed19b9-e0c8b138",
+        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22",
+        "modelName": "Q",
+        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22.jsonl",
+        "trainDatasetSha256": "e0c8b1383220aad9426647beff67ac8ea3d15019bcce4ce71399b9bf1c48a935",
+        "trainDatasetRowCount": 117,
+        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22.manifest.json",
+        "mixManifestSha256": "11d9f372ee3212c06c7dd8dfe80df509393edbdbc8d95d2b280e62b2097c251e",
+        "mixSupplementalCount": 6,
+        "mixSupplementalPaths": [
+          "training/q/q_harness_identity_seed.json",
+          "training/q/q_immaculate_reasoning_seed.json",
+          "training/q/terminal_bench_semantic_seed.json",
+          "training/q/bridgebench_seed.json",
+          "training/q/coding_long_context_seed.json",
+          ".training-output/q/q-failure-corpus.jsonl"
+        ],
+        "curationRunId": null,
+        "lockPath": ".training-output/q/latest-training-lock.json"
+      },
+      "hybridSession": {
+        "generatedAt": "2026-04-19T05:51:41Z",
+        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v22",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v22/hybrid-session.json",
+        "localStatus": "ready",
+        "cloudStatus": "ready",
+        "cloudProvider": "hf_jobs",
+        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22-5ed19b9-e0c8b138",
+        "immaculateBundleId": "immaculate-orchestration-5ed19b9-cd094c28",
+        "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
+      }
+    }
+  },
+  "harbor": {
+    "jobName": "q-terminal-bench-public-generic-smoke-v32",
+    "resultPath": ".runtime\\terminal-bench-jobs\\q-terminal-bench-public-generic-smoke-v32\\result.json",
+    "configPath": ".runtime\\terminal-bench-jobs\\q-terminal-bench-public-generic-smoke-v32\\config.json",
+    "datasetName": "terminal-bench/terminal-bench-2",
+    "datasetRef": "sha256:c6fc2e2382c1dbae99b2d5ecd2f4f4a60c3c01e0d84642d69b4afd92e99d078b",
+    "taskName": "terminal-bench/make-mips-interpreter",
+    "harborAgentImportPath": "benchmarks.harbor.q_harbor_agent:HarborQAgent",
+    "harborModelName": "Q",
+    "attempts": 5,
+    "concurrentTrials": 1,
+    "timeoutMultiplier": 1,
+    "startedAt": "2026-04-19T03:31:39.042080",
+    "finishedAt": "2026-04-19T03:39:53.394675",
+    "durationSec": 494.35,
+    "trials": 5,
+    "errors": 0,
+    "meanReward": 1,
+    "passAtK": {
+      "2": 1,
+      "4": 1,
+      "5": 1
+    },
+    "trialIds": [
+      "make-mips-interpreter__4ar2oRd",
+      "make-mips-interpreter__Ai8MJ5R",
+      "make-mips-interpreter__BfoWoUZ",
+      "make-mips-interpreter__GQfgcuF",
+      "make-mips-interpreter__dddRzPB"
+    ]
+  },
+  "historicalReceipt": {
+    "generatedAt": "2026-04-18T06:23:47.663Z",
+    "meanReward": 0,
+    "discussionUrl": "https://huggingface.co/datasets/harborframework/terminal-bench-2-leaderboard/discussions/140",
+    "commitUrl": "https://huggingface.co/datasets/harborframework/terminal-bench-2-leaderboard/commit/9a4ad15564f2a3c1303da7c89a08dc10cfec36c3"
+  },
+  "output": {
+    "jsonPath": "docs\\wiki\\Terminal-Bench-Public-Task.json",
+    "markdownPath": "docs\\wiki\\Terminal-Bench-Public-Task.md"
+  }
+}

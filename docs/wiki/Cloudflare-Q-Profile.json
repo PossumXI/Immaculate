@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-04-18T06:20:57Z",
-  "profileId": "q-cloudflare-profile-d0bdd00",
+  "generatedAt": "2026-04-19T05:52:29Z",
+  "profileId": "q-cloudflare-profile-5ed19b9",
   "qName": "Q",
-  "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v18-d0bdd00-4db18397",
-  "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v18",
-  "buildId": "0.1.0+d0bdd00",
+  "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v22-5ed19b9-e0c8b138",
+  "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v22",
+  "buildId": "0.1.0+5ed19b9",
   "rules": [
     {
       "id": "bridge-trust",

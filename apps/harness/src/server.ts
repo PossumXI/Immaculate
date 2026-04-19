@@ -109,6 +109,7 @@ import {
   matchesModelReference,
   truthfulModelLabel
 } from "./q-model.js";
+import { resolveQLocalOllamaUrl } from "./q-local-model.js";
 import { resolveReleaseMetadata } from "./release-metadata.js";
 import { emitHarnessStartupBanner } from "./startup-banner.js";
 import {
@@ -271,10 +272,18 @@ function benchmarkGovernorPriority(packId?: BenchmarkPackId): "low" | "normal" |
 function scheduleGovernorPriority(
   schedule: ReturnType<typeof engine.getSnapshot>["executionSchedules"][number]
 ): "critical" | "high" | "normal" {
-  if (schedule.backlogPressure === "critical" || schedule.mode === "guarded-swarm") {
+  if (
+    schedule.backlogPressure === "critical" ||
+    schedule.mode === "guarded-swarm" ||
+    schedule.deadlineClass === "hard"
+  ) {
     return "critical";
   }
-  if (schedule.executionTopology === "parallel" || schedule.parallelWidth > 1) {
+  if (
+    schedule.executionTopology === "parallel" ||
+    schedule.parallelWidth > 1 ||
+    schedule.deadlineClass === "bounded"
+  ) {
     return "high";
   }
   return "normal";
@@ -284,14 +293,29 @@ function effectiveScheduleParallelWidth(
   schedule: ReturnType<typeof engine.getSnapshot>["executionSchedules"][number],
   plannedWidth: number
 ): number {
-  const scheduledWidth = (schedule.healthWeightedWidth ?? schedule.parallelWidth) || 1;
+  const scheduledWidth =
+    (schedule.localReplicaCount ??
+      schedule.horizontalReplicaCount ??
+      schedule.healthWeightedWidth ??
+      schedule.parallelWidth) || 1;
   const baselineWidth = Math.max(1, Math.min(plannedWidth, scheduledWidth));
   const governorSnapshot = workGovernor.snapshot();
   const cognitiveLane = governorSnapshot.lanes.cognitive;
   const laneNearSaturation =
     cognitiveLane.activeWeight >= Math.max(1, cognitiveLane.maxActiveWeight - 1);
+  if (schedule.backpressureAction === "hold") {
+    return 0;
+  }
+  if (schedule.backpressureAction === "serialize") {
+    return Math.min(1, baselineWidth);
+  }
 
-  if (governorSnapshot.queueDepth > 0 || cognitiveLane.queueDepth > 0 || laneNearSaturation) {
+  if (
+    schedule.backpressureAction === "degrade" ||
+    governorSnapshot.queueDepth > 0 ||
+    cognitiveLane.queueDepth > 0 ||
+    laneNearSaturation
+  ) {
     return Math.max(1, baselineWidth - 1);
   }
   return baselineWidth;
@@ -331,8 +355,7 @@ const LOCAL_EXECUTION_WORKER_SLOT_CAP = Math.max(
   1,
   Number(process.env.IMMACULATE_LOCAL_WORKER_SLOTS ?? 4) || 4
 );
-const LOCAL_OLLAMA_ENDPOINT =
-  process.env.IMMACULATE_OLLAMA_URL ?? "http://127.0.0.1:11434";
+const LOCAL_OLLAMA_ENDPOINT = resolveQLocalOllamaUrl();
 const LOCAL_WORKER_COST_PER_HOUR_USD =
   typeof process.env.IMMACULATE_WORKER_COST_PER_HOUR_USD === "string"
     ? Number(process.env.IMMACULATE_WORKER_COST_PER_HOUR_USD)
@@ -2317,48 +2340,79 @@ async function reserveExecutionWorkerBatch(options: {
   targetPrefix: string;
   backlogPressure?: ReturnType<typeof engine.getSnapshot>["executionSchedules"][number]["backlogPressure"];
   reliabilityFloor?: number;
+  formation?: Pick<
+    ReturnType<typeof engine.getSnapshot>["executionSchedules"][number],
+    | "parallelFormationMode"
+    | "verificationQuorum"
+    | "localReplicaCount"
+    | "remoteReplicaCount"
+    | "boundedRetryBudget"
+    | "capabilitySpreadCount"
+    | "affinityMode"
+    | "deadlineClass"
+    | "deadlineBudgetMs"
+    | "backpressureAction"
+    | "intentAlignmentScore"
+  >;
 }): Promise<IntelligenceWorkerAssignment[]> {
-  const reservedAssignments: IntelligenceWorkerAssignment[] = [];
-  const usedPeerIds = new Set<string>();
-  const selectionContext = await buildExecutionWorkerSelectionContext();
-
-  try {
-    for (const layer of options.layers) {
-      const assignment = await reserveExecutionWorker({
-        layer,
-        requestedExecutionDecision: options.requestedExecutionDecision,
-        target: `${options.targetPrefix}:${layer.role}`,
-        fallbackLocalPoolSize: options.layers.length,
-        requiredHealthyWorkerCount: Math.max(1, options.layers.length - reservedAssignments.length),
-        backlogPressure: options.backlogPressure,
-        reliabilityFloor: options.reliabilityFloor,
-        preferredDeviceAffinityTags: [
-          layer.role,
-          ...(options.targetPrefix.includes("swarm") ? ["swarm"] : [])
-        ],
-        avoidPeerIds: [...usedPeerIds],
-        selectionContext
-      });
-      reservedAssignments.push(assignment);
-      if (assignment.peerId) {
-        usedPeerIds.add(assignment.peerId);
-      }
-    }
-    return reservedAssignments;
-  } catch (error) {
-    await Promise.allSettled(
-      reservedAssignments.map((assignment) => releaseExecutionWorker(assignment))
-    );
-    app.log.warn(
-      {
-        requestedWidth: options.layers.length,
-        releasedWidth: reservedAssignments.length,
-        message: error instanceof Error ? error.message : "unknown error"
-      },
-      "Parallel worker batch reservation failed; released partially reserved leases."
-    );
-    throw error;
+  if (options.requestedExecutionDecision !== "remote_required") {
+    await ensureLocalExecutionWorkers(options.layers.length);
   }
+  const selectionContext = await buildExecutionWorkerSelectionContext();
+  const batch = await intelligenceWorkerRegistry.assignWorkerBatch({
+    avoidDuplicatePeers: true,
+    requests: options.layers.map((layer, index) => ({
+      requestedExecutionDecision: options.requestedExecutionDecision,
+      baseModel: layer.model,
+      preferredLayerIds: [layer.id],
+      recommendedLayerId: layer.id,
+      target: `${options.targetPrefix}:${layer.role}`,
+      preferredNodeId:
+        options.requestedExecutionDecision === "remote_required"
+          ? undefined
+          : selectionContext.localNode.nodeId,
+      preferredLocality: selectionContext.localNode.locality,
+      preferredDeviceAffinityTags: [
+        layer.role,
+        ...(options.targetPrefix.includes("swarm") ? ["swarm"] : []),
+        ...(options.formation?.parallelFormationMode === "hybrid-quorum" ? ["quorum"] : []),
+        ...(options.formation?.affinityMode === "quorum-local"
+          ? ["local-affinity", "quorum-local"]
+          : options.formation?.affinityMode === "local-spread"
+            ? ["local-affinity", "local-spread"]
+            : options.formation?.affinityMode === "hybrid-spill"
+              ? ["spill-affinity"]
+              : ["local-pinned"]),
+        ...(options.formation?.deadlineClass === "hard"
+          ? ["hard-deadline"]
+          : options.formation?.deadlineClass === "bounded"
+            ? ["bounded-deadline"]
+            : ["elastic-deadline"]),
+        ...(options.formation?.backpressureAction
+          ? [`pressure-${options.formation.backpressureAction}`]
+          : []),
+        ...(index < (options.formation?.localReplicaCount ?? options.layers.length)
+          ? ["local-slot"]
+          : ["spill-slot"])
+      ],
+      preferDistinctDeviceAffinityTags:
+        (options.formation?.capabilitySpreadCount ?? 0) > 1 ||
+        options.layers.length > 1,
+      requiredHealthyWorkerCount: Math.max(1, options.layers.length - index),
+      backlogPressure: options.backlogPressure,
+      reliabilityFloor: options.reliabilityFloor,
+      nodeViews: selectionContext.nodeViews,
+      peerViews: selectionContext.peerViews,
+      executionOutcomeSummaries: selectionContext.executionOutcomeSummaries
+    }))
+  });
+  if (batch.assignments.length !== options.layers.length) {
+    const availability = `${batch.summary.healthyWorkerCount} healthy · ${batch.summary.staleWorkerCount} stale · ${batch.summary.faultedWorkerCount} faulted · ${batch.summary.eligibleWorkerCount} eligible`;
+    throw new Error(
+      `Parallel worker batch reservation failed for ${options.layers.length} layers. ${availability}`
+    );
+  }
+  return batch.assignments;
 }
 
 async function releaseExecutionWorker(assignment: ExecutionWorkerAssignment): Promise<void> {
@@ -3187,15 +3241,10 @@ function buildSwarmSharedContext(options: {
     options.layers.find((layer) => layer.id === options.schedule.primaryLayerId)?.role ?? "none";
   return [
     `SWARM OBJECTIVE: ${options.objective}`,
-    `SWARM MODE: ${options.schedule.mode}`,
-    `SWARM ADMISSION: ${options.schedule.admissionState ?? "admit"}`,
-    `SWARM BACKLOG: ${options.schedule.backlogPressure ?? "clear"} (${options.schedule.backlogScore ?? 0})`,
-    `SWARM TOPOLOGY: ${options.schedule.executionTopology}`,
-    `PARALLEL WIDTH: ${options.schedule.parallelWidth}`,
-    `HEALTH-WEIGHTED WIDTH: ${options.schedule.healthWeightedWidth ?? options.schedule.parallelWidth}`,
-    `WORKER RELIABILITY FLOOR: ${options.schedule.workerReliabilityFloor ?? 0}`,
-    `FORMATION: ${roleChain || "none"}`,
-    `PRIMARY ROLE: ${primaryRole}`,
+    `SWARM PLAN: mode=${options.schedule.mode} / admission=${options.schedule.admissionState ?? "admit"} / topology=${options.schedule.executionTopology} / width=${options.schedule.parallelWidth} / quorum=${options.schedule.verificationQuorum ?? 1}`,
+    `SWARM PRESSURE: backlog=${options.schedule.backlogPressure ?? "clear"}(${options.schedule.backlogScore ?? 0}) / retry=${options.schedule.boundedRetryBudget ?? 0} / hw=${options.schedule.healthWeightedWidth ?? options.schedule.parallelWidth} / floor=${options.schedule.workerReliabilityFloor ?? 0}`,
+    `SWARM ENVELOPE: ${options.schedule.affinityMode ?? "local-pinned"} / ${options.schedule.deadlineClass ?? "elastic"}:${options.schedule.deadlineBudgetMs ?? 0}ms / ${options.schedule.backpressureAction ?? "steady"} / ${typeof options.schedule.intentAlignmentScore === "number" ? options.schedule.intentAlignmentScore.toFixed(2) : "n/a"}`,
+    `SWARM FORMATION: ${roleChain || "none"} / primary=${primaryRole} / ${options.schedule.parallelFormationSummary ?? "none"}`,
     "COORDINATION RULE: you are one member of a simultaneous cognition batch operating over the same substrate state.",
     "Do not assume peer outputs are visible while you are running. Produce a role-specific route, reason, and commit that downstream integration or guard review can reconcile."
   ].join("\n");
@@ -3229,11 +3278,15 @@ async function executeCognitiveSchedule(options: {
             Math.min(4, (options.schedule.healthWeightedWidth ?? options.schedule.parallelWidth) || 1)
           ),
           maxQueueMs:
-            options.schedule.backlogPressure === "critical"
-              ? 4_000
-              : options.schedule.backlogPressure === "elevated"
-                ? 8_000
-                : 12_000,
+            options.schedule.deadlineClass === "hard"
+              ? Math.min(3_000, options.schedule.deadlineBudgetMs ?? 3_000)
+              : options.schedule.deadlineClass === "bounded"
+                ? Math.min(6_000, options.schedule.deadlineBudgetMs ?? 6_000)
+                : options.schedule.backlogPressure === "critical"
+                  ? 4_000
+                  : options.schedule.backlogPressure === "elevated"
+                    ? 8_000
+                    : 12_000,
           label: options.schedule.mode
         })
       : undefined;
@@ -3278,7 +3331,20 @@ async function executeCognitiveSchedule(options: {
         requestedExecutionDecision: options.requestedExecutionDecision,
         targetPrefix: options.schedule.mode,
         backlogPressure: options.schedule.backlogPressure,
-        reliabilityFloor: options.schedule.workerReliabilityFloor
+        reliabilityFloor: options.schedule.workerReliabilityFloor,
+        formation: {
+          parallelFormationMode: options.schedule.parallelFormationMode,
+          verificationQuorum: options.schedule.verificationQuorum,
+          localReplicaCount: options.schedule.localReplicaCount,
+          remoteReplicaCount: options.schedule.remoteReplicaCount,
+          boundedRetryBudget: options.schedule.boundedRetryBudget,
+          capabilitySpreadCount: options.schedule.capabilitySpreadCount,
+          affinityMode: options.schedule.affinityMode,
+          deadlineClass: options.schedule.deadlineClass,
+          deadlineBudgetMs: options.schedule.deadlineBudgetMs,
+          backpressureAction: options.schedule.backpressureAction,
+          intentAlignmentScore: options.schedule.intentAlignmentScore
+        }
       });
       const parallelResults = await Promise.all(
         admittedNonGuardLayers.map(async (layer, index) => {
@@ -3303,9 +3369,12 @@ async function executeCognitiveSchedule(options: {
               requestedExecutionDecision: options.requestedExecutionDecision,
               target: `${options.schedule.mode}:${layer.role}`,
               maxObservedLatencyMs:
-                options.schedule.backlogPressure === "critical"
+                options.schedule.deadlineClass === "hard"
+                  ? 90
+                  : options.schedule.backlogPressure === "critical"
                   ? 120
-                  : options.schedule.backlogPressure === "elevated"
+                  : options.schedule.deadlineClass === "bounded" ||
+                      options.schedule.backlogPressure === "elevated"
                     ? 220
                     : undefined,
               requiredHealthyWorkerCount: Math.max(1, admittedNonGuardLayers.length - index),
@@ -3313,7 +3382,19 @@ async function executeCognitiveSchedule(options: {
               reliabilityFloor: options.schedule.workerReliabilityFloor,
               preferredDeviceAffinityTags: [
                 layer.role,
-                ...(options.schedule.mode.includes("swarm") ? ["swarm"] : [])
+                ...(options.schedule.mode.includes("swarm") ? ["swarm"] : []),
+                ...(options.schedule.affinityMode === "quorum-local"
+                  ? ["local-affinity", "quorum-local"]
+                  : options.schedule.affinityMode === "local-spread"
+                    ? ["local-affinity", "local-spread"]
+                    : options.schedule.affinityMode === "hybrid-spill"
+                      ? ["spill-affinity"]
+                      : ["local-pinned"]),
+                ...(options.schedule.deadlineClass === "hard"
+                  ? ["hard-deadline"]
+                  : options.schedule.deadlineClass === "bounded"
+                    ? ["bounded-deadline"]
+                    : ["elastic-deadline"])
               ]
             }
           });

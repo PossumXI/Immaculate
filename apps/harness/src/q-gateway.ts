@@ -10,8 +10,11 @@ import {
 import { createQRateLimiter } from "./q-rate-limit.js";
 import {
   listOllamaModels,
+  parseStructuredJsonResponse,
   parseStructuredResponse,
+  renderStructuredResponseContract,
   runOllamaChatCompletion,
+  runOllamaGenerateCompletion,
   type OllamaChatCompletionResult,
   type OllamaChatMessage
 } from "./ollama.js";
@@ -30,6 +33,7 @@ import {
   getImmaculateHarnessName,
   matchesModelReference,
 } from "./q-model.js";
+import { resolveQLocalOllamaUrl } from "./q-local-model.js";
 import { createFailureCircuitBreaker } from "./q-resilience.js";
 
 type GatewayPrincipal = {
@@ -64,7 +68,7 @@ const app = Fastify({
 const persistence = createPersistence(process.env.IMMACULATE_RUNTIME_DIR);
 const GATEWAY_HOST = process.env.IMMACULATE_Q_GATEWAY_HOST ?? "127.0.0.1";
 const GATEWAY_PORT = Number(process.env.IMMACULATE_Q_GATEWAY_PORT ?? 8897);
-const OLLAMA_URL = process.env.IMMACULATE_OLLAMA_URL ?? "http://127.0.0.1:11434";
+const OLLAMA_URL = resolveQLocalOllamaUrl();
 const MAX_MESSAGE_COUNT = Math.max(1, Number(process.env.IMMACULATE_Q_GATEWAY_MAX_MESSAGES ?? 24) || 24);
 const MAX_INPUT_CHARS = Math.max(512, Number(process.env.IMMACULATE_Q_GATEWAY_MAX_INPUT_CHARS ?? 16_000) || 16_000);
 const DEFAULT_TIMEOUT_MS = Math.max(
@@ -85,6 +89,22 @@ const STRUCTURED_REQUEST_TIMEOUT_MS = Math.max(
 const STRUCTURED_REPAIR_TIMEOUT_MS = Math.max(
   3_000,
   Number(process.env.IMMACULATE_Q_GATEWAY_STRUCTURED_REPAIR_TIMEOUT_MS ?? 12_000) || 12_000
+);
+const STRUCTURED_FAST_NUM_CTX = Math.max(
+  256,
+  Number(process.env.IMMACULATE_Q_GATEWAY_STRUCTURED_FAST_NUM_CTX ?? 768) || 768
+);
+const STRUCTURED_FAST_NUM_BATCH = Math.max(
+  1,
+  Number(process.env.IMMACULATE_Q_GATEWAY_STRUCTURED_FAST_NUM_BATCH ?? 64) || 64
+);
+const BENCHMARK_NUM_CTX = Math.max(
+  512,
+  Number(process.env.IMMACULATE_Q_GATEWAY_BENCHMARK_NUM_CTX ?? 2048) || 2048
+);
+const BENCHMARK_NUM_BATCH = Math.max(
+  1,
+  Number(process.env.IMMACULATE_Q_GATEWAY_BENCHMARK_NUM_BATCH ?? 32) || 32
 );
 const Q_MODEL_TARGET = getQModelTarget();
 const PRIMARY_FAILURE_THRESHOLD = Math.max(
@@ -373,6 +393,45 @@ function buildStructuredRepairMessages(
   ];
 }
 
+function compactStructuredPromptSource(messages: OllamaChatMessage[]): string {
+  const latestPrompt = latestUserPrompt(messages);
+  const source =
+    latestPrompt ??
+    messages
+      .filter((message) => message.role !== "assistant")
+      .map((message) => message.content.trim())
+      .filter(Boolean)
+      .join("\n");
+  return source
+    .replace(/\r/g, "")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function buildStructuredGeneratePrompt(options: {
+  messages: OllamaChatMessage[];
+  previousResponse?: string;
+  repair?: boolean;
+}): string {
+  const task = compactStructuredPromptSource(options.messages);
+  const lines = [
+    "You are Q inside Immaculate.",
+    "Return JSON only with keys route, reason, commit.",
+    "route must be one of reflex, cognitive, guarded, suppressed.",
+    "reason must be one short sentence naming the decisive fault or health signal.",
+    "commit must be one short sentence naming the next truthful control action.",
+    "Do not emit analysis, markdown, or extra keys.",
+    "",
+    "TASK:",
+    task
+  ];
+  if (options.repair && options.previousResponse?.trim()) {
+    lines.push("", "PREVIOUS_ATTEMPT:", options.previousResponse.trim(), "", "Fix the prior attempt and return only valid JSON.");
+  }
+  return lines.join("\n").trim();
+}
+
 function buildGatewayMessages(
   messages: OllamaChatMessage[],
   includeIdentityInstruction = true
@@ -394,6 +453,7 @@ async function runGatewayChatAttempt(options: {
   maxTokens?: number;
   timeoutMs: number;
   includeIdentityInstruction?: boolean;
+  ollamaOptions?: Record<string, unknown>;
 }): Promise<OllamaChatCompletionResult> {
   return runOllamaChatCompletion({
     endpoint: OLLAMA_URL,
@@ -402,8 +462,57 @@ async function runGatewayChatAttempt(options: {
     temperature: options.temperature,
     maxTokens: options.maxTokens,
     timeoutMs: options.timeoutMs,
-    think: false
+    think: false,
+    ollamaOptions: options.ollamaOptions
   });
+}
+
+async function runGatewayStructuredAttempt(options: {
+  model: string;
+  messages: OllamaChatMessage[];
+  timeoutMs: number;
+  maxTokens: number;
+  previousResponse?: string;
+  repair?: boolean;
+  includeIdentityInstruction?: boolean;
+  ollamaOptions?: Record<string, unknown>;
+}): Promise<OllamaChatCompletionResult> {
+  const prompt = buildStructuredGeneratePrompt({
+    messages: options.messages,
+    previousResponse: options.previousResponse,
+    repair: options.repair
+  });
+  const generated = await runOllamaGenerateCompletion({
+    endpoint: OLLAMA_URL,
+    model: options.model,
+    prompt,
+    temperature: 0,
+    maxTokens: Math.min(options.maxTokens, STRUCTURED_REQUEST_MAX_TOKENS),
+    timeoutMs: options.timeoutMs,
+    format: "json",
+    ollamaOptions: {
+      ...(options.ollamaOptions ?? {}),
+      num_ctx: STRUCTURED_FAST_NUM_CTX,
+      num_batch: STRUCTURED_FAST_NUM_BATCH
+    }
+  });
+  if (generated.failureClass) {
+    return generated;
+  }
+  const parsed = parseStructuredJsonResponse(generated.response, "reasoner");
+  if (!parsed) {
+    return {
+      ...generated,
+      failureClass: "contract_invalid",
+      responsePreview:
+        generated.responsePreview || "Structured contract invalid: missing route, reason, or commit."
+    };
+  }
+  return {
+    ...generated,
+    response: renderStructuredResponseContract(parsed),
+    responsePreview: renderStructuredResponseContract(parsed)
+  };
 }
 
 function attachQResponseHeaders(
@@ -609,13 +718,19 @@ app.post("/v1/chat/completions", async (request, reply) => {
     ? Math.min(DEFAULT_TIMEOUT_MS, STRUCTURED_REQUEST_TIMEOUT_MS)
     : DEFAULT_TIMEOUT_MS;
   const effectiveTimeoutMs = timeoutOverrideMs
-    ? Math.min(baseTimeoutMs, timeoutOverrideMs)
+    ? Math.max(1_000, Math.min(DEFAULT_TIMEOUT_MS, timeoutOverrideMs))
     : baseTimeoutMs;
   const userPrompt = latestUserPrompt(messages);
   const canonicalIdentityKind = detectQIdentityQuestion(userPrompt);
   const skipBenchmarkIdentity = isTruthyHeaderValue(
     request.headers[BENCHMARK_SKIP_Q_IDENTITY_HEADER]
   );
+  const benchmarkOllamaOptions = skipBenchmarkIdentity
+    ? {
+        num_ctx: BENCHMARK_NUM_CTX,
+        num_batch: BENCHMARK_NUM_BATCH
+      }
+    : undefined;
   if (canonicalIdentityKind && !skipBenchmarkIdentity) {
     const circuit = qPrimaryCircuit.snapshot();
     attachQResponseHeaders(reply, circuit);
@@ -659,14 +774,24 @@ app.post("/v1/chat/completions", async (request, reply) => {
   let contractRepairFailureClass: string | undefined;
 
   if (primaryDecision.allowPrimary) {
-    primaryResult = await runGatewayChatAttempt({
-      model: qModel,
-      messages,
-      temperature,
-      maxTokens: effectiveMaxTokens,
-      timeoutMs: effectiveTimeoutMs,
-      includeIdentityInstruction: !skipBenchmarkIdentity
-    });
+    primaryResult = structuredRequest
+      ? await runGatewayStructuredAttempt({
+          model: qModel,
+          messages,
+          maxTokens: effectiveMaxTokens,
+          timeoutMs: effectiveTimeoutMs,
+          includeIdentityInstruction: !skipBenchmarkIdentity,
+          ollamaOptions: benchmarkOllamaOptions
+        })
+      : await runGatewayChatAttempt({
+          model: qModel,
+          messages,
+          temperature,
+          maxTokens: effectiveMaxTokens,
+          timeoutMs: effectiveTimeoutMs,
+          includeIdentityInstruction: !skipBenchmarkIdentity,
+          ollamaOptions: benchmarkOllamaOptions
+        });
     if (primaryResult.failureClass) {
       primaryFailureClass = primaryResult.failureClass;
       qPrimaryCircuit.recordFailure(primaryResult.failureClass);
@@ -707,14 +832,26 @@ app.post("/v1/chat/completions", async (request, reply) => {
   }
   if (structuredRequest && structuredFieldCount(content) !== 3) {
     contractRepairAttempted = true;
-    const repairResult = await runGatewayChatAttempt({
-      model: qModel,
-      messages: buildStructuredRepairMessages(messages, content),
-      temperature: 0,
-      maxTokens: Math.min(effectiveMaxTokens, STRUCTURED_REQUEST_MAX_TOKENS),
-      timeoutMs: STRUCTURED_REPAIR_TIMEOUT_MS,
-      includeIdentityInstruction: !skipBenchmarkIdentity
-    });
+    const repairResult = structuredRequest
+      ? await runGatewayStructuredAttempt({
+          model: qModel,
+          messages,
+          previousResponse: content,
+          repair: true,
+          maxTokens: Math.min(effectiveMaxTokens, STRUCTURED_REQUEST_MAX_TOKENS),
+          timeoutMs: STRUCTURED_REPAIR_TIMEOUT_MS,
+          includeIdentityInstruction: !skipBenchmarkIdentity,
+          ollamaOptions: benchmarkOllamaOptions
+        })
+      : await runGatewayChatAttempt({
+          model: qModel,
+          messages: buildStructuredRepairMessages(messages, content),
+          temperature: 0,
+          maxTokens: Math.min(effectiveMaxTokens, STRUCTURED_REQUEST_MAX_TOKENS),
+          timeoutMs: STRUCTURED_REPAIR_TIMEOUT_MS,
+          includeIdentityInstruction: !skipBenchmarkIdentity,
+          ollamaOptions: benchmarkOllamaOptions
+        });
     servedLatencyMs += repairResult.latencyMs;
     servedThinkingDetected = servedThinkingDetected || repairResult.thinkingDetected;
     if (!repairResult.failureClass) {

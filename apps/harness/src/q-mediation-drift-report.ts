@@ -17,6 +17,8 @@ type QMediationDriftSurface = {
     routeAlignmentP50?: number;
     qOnlySelectionP50?: number;
     driftDetectedMax?: number;
+    localReplicaP50?: number;
+    verificationQuorumP50?: number;
     latencyP95Ms?: number;
     runnerPathP95Ms?: number;
     arbitrationP95Ms?: number;
@@ -35,6 +37,16 @@ type QMediationDriftSurface = {
     qDriftReasons: string[];
     immaculateDriftReasons: string[];
     runnerPathBottleneckStage: "arbitration" | "scheduling" | "routing";
+    parallelFormationMode?: "single-lane" | "vertical-pipeline" | "horizontal-swarm" | "hybrid-quorum";
+    localReplicaCount?: number;
+    remoteReplicaCount?: number;
+    verificationQuorum?: number;
+    affinityMode?: "local-pinned" | "local-spread" | "quorum-local" | "hybrid-spill";
+    deadlineClass?: "elastic" | "bounded" | "hard";
+    deadlineBudgetMs?: number;
+    backpressureAction?: "steady" | "degrade" | "serialize" | "hold";
+    intentAlignmentScore?: number;
+    parallelFormationSummary?: string;
     driftDetected: boolean;
     failureClass?: string;
   }>;
@@ -120,6 +132,8 @@ function renderMarkdown(report: QMediationDriftSurface): string {
     `- Route alignment P50: \`${report.benchmark.routeAlignmentP50 ?? "n/a"}\``,
     `- Q-only layer selection P50: \`${report.benchmark.qOnlySelectionP50 ?? "n/a"}\``,
     `- Drift detected max: \`${report.benchmark.driftDetectedMax ?? "n/a"}\``,
+    `- Local replicas P50: \`${report.benchmark.localReplicaP50 ?? "n/a"}\``,
+    `- Verification quorum P50: \`${report.benchmark.verificationQuorumP50 ?? "n/a"}\``,
     `- Mediation latency P95: \`${report.benchmark.latencyP95Ms ?? "n/a"} ms\``,
     `- Runner path latency P95: \`${report.benchmark.runnerPathP95Ms ?? "n/a"} ms\``,
     `- Arbitration latency P95: \`${report.benchmark.arbitrationP95Ms ?? "n/a"} ms\``,
@@ -138,6 +152,10 @@ function renderMarkdown(report: QMediationDriftSurface): string {
       `- Q self-eval: ${diagnostic.qSelfEvaluation}`,
       `- Immaculate self-eval: ${diagnostic.immaculateSelfEvaluation}`,
       `- Runner bottleneck stage: \`${diagnostic.runnerPathBottleneckStage}\``,
+      `- Parallel formation: \`${diagnostic.parallelFormationMode ?? "none"}\` / local \`${diagnostic.localReplicaCount ?? 0}\` / remote \`${diagnostic.remoteReplicaCount ?? 0}\` / quorum \`${diagnostic.verificationQuorum ?? 0}\``,
+      `- Affinity and deadline: \`${diagnostic.affinityMode ?? "none"}\` / \`${diagnostic.deadlineClass ?? "none"}\` / \`${diagnostic.deadlineBudgetMs ?? 0} ms\` / \`${diagnostic.backpressureAction ?? "none"}\``,
+      `- Intent alignment: \`${typeof diagnostic.intentAlignmentScore === "number" ? diagnostic.intentAlignmentScore.toFixed(2) : "n/a"}\``,
+      `- Formation summary: ${diagnostic.parallelFormationSummary ?? "none"}`,
       `- Q drift reasons: ${diagnostic.qDriftReasons.length > 0 ? diagnostic.qDriftReasons.map((reason) => `\`${reason}\``).join(" / ") : "`none`"}`,
       `- Immaculate drift reasons: ${diagnostic.immaculateDriftReasons.length > 0 ? diagnostic.immaculateDriftReasons.map((reason) => `\`${reason}\``).join(" / ") : "`none`"}`,
       `- Drift detected: \`${diagnostic.driftDetected}\`${diagnostic.failureClass ? ` / failure class \`${diagnostic.failureClass}\`` : ""}`,
@@ -184,6 +202,12 @@ async function main(): Promise<void> {
       routeAlignmentP50: findSeriesValue(benchmark, "q_mediation_drift_route_alignment", "p50"),
       qOnlySelectionP50: findSeriesValue(benchmark, "q_mediation_drift_q_only_selection", "p50"),
       driftDetectedMax: findSeriesValue(benchmark, "q_mediation_drift_drift_detected", "max"),
+      localReplicaP50: findSeriesValue(benchmark, "q_mediation_drift_local_replicas", "p50"),
+      verificationQuorumP50: findSeriesValue(
+        benchmark,
+        "q_mediation_drift_verification_quorum",
+        "p50"
+      ),
       latencyP95Ms: findSeriesValue(benchmark, "q_mediation_drift_latency_ms", "p95"),
       runnerPathP95Ms: findSeriesValue(benchmark, "q_mediation_drift_runner_path_ms", "p95"),
       arbitrationP95Ms: findSeriesValue(benchmark, "q_mediation_drift_arbitration_ms", "p95"),
@@ -211,6 +235,16 @@ async function main(): Promise<void> {
         scenario.runnerPathBottleneckStage === "routing"
           ? scenario.runnerPathBottleneckStage
           : "routing",
+      parallelFormationMode: scenario.parallelFormationMode,
+      localReplicaCount: scenario.localReplicaCount,
+      remoteReplicaCount: scenario.remoteReplicaCount,
+      verificationQuorum: scenario.verificationQuorum,
+      affinityMode: scenario.affinityMode,
+      deadlineClass: scenario.deadlineClass,
+      deadlineBudgetMs: scenario.deadlineBudgetMs,
+      backpressureAction: scenario.backpressureAction,
+      intentAlignmentScore: scenario.intentAlignmentScore,
+      parallelFormationSummary: scenario.parallelFormationSummary,
       driftDetected: scenario.driftDetected,
       failureClass: scenario.failureClass
     })),

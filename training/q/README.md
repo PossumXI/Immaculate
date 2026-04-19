@@ -160,6 +160,14 @@ The active session can also emit a free supplemental Colab lane:
 - let the notebook rebuild the Immaculate bundle and run the Q dry-run on any runtime, then only allow the bounded Q micro-train when Colab exposes a large enough GPU
 - treat `docs/wiki/Colab-Free-Training.md` as the truth surface for what the free lane can honestly do
 
+The active session can also emit a free supplemental Kaggle lane:
+
+- use `deploy/kaggle/env/immaculate-q-kaggle.env.example` as the non-secret Kaggle reference
+- export the tracked notebook with `npm run q:kaggle:export -- --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json`
+- provide `HF_TOKEN` inside Kaggle so the staged bundle can be pulled from the tracked dataset repo
+- treat `docs/wiki/Kaggle-Free-Training.md` as the truth surface for notebook export state, CLI/auth readiness, and any push blocker
+- keep this lane truthful: notebook export and readiness can be green before any real Kaggle run exists
+
 The active session can also stage a Q-only Cloudflare deploy and eval lane:
 
 - use `deploy/cloudflare/env/immaculate-q-cloudflare.env.example` as the non-secret Cloudflare reference
@@ -182,6 +190,7 @@ The repo now carries a dedicated richer supplement for that purpose:
 - `training/q/coding_long_context_seed.json`
 - `training/q/q_harness_identity_seed.json`
 - `training/q/q_immaculate_reasoning_seed.json`
+- `training/q/terminal_bench_semantic_seed.json`
 - `training/q/q_lora_config.long_context.example.json`
 
 `training/q/q_harness_identity_seed.json` now includes a consolidated one-sentence Q plus Immaculate truth-boundary example.

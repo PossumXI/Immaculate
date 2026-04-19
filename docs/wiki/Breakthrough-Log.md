@@ -19,6 +19,31 @@ For each breakthrough, record:
 
 ## Current Entries
 
+### 2026-04-19
+
+#### Q now clears the official public Terminal-Bench task locally on the default Harbor path
+
+What changed:
+- the fresh Harbor job `q-terminal-bench-public-generic-smoke-v32` was rerun against the official public task `terminal-bench/make-mips-interpreter` using the default Q-only Harbor path and the current structured-generate gateway fix
+- the same pass then restamped the active Q release line forward to `bench-v23`, keeping the training lock, hybrid session, benchmark corpus, and readiness surfaces on one same-day lineage
+- direct Q contract, BridgeBench, gateway validation, mediation drift, and gateway-substrate pages were rerun or restamped so the repo no longer mixes April 17 direct-Q results with the April 19 public-task win
+
+Why it matters:
+- the missed systems pattern was that Q could already survive the public task transport path, but the repo still did not have one clean same-day proof showing the default Q-only lane solving the official public task under Harbor
+- clearing the public task locally matters because it proves the current Q serving path, Immaculate harness context, and Harbor agent contract are aligned on a real task instead of only on synthetic operator packs
+- restamping to `bench-v23` matters because the next cloud run now inherits the public-task win inside the benchmark corpus and training lock instead of pointing at the older `bench-v22` lineage
+
+Evidence:
+- `docs/wiki/Terminal-Bench-Public-Task.md` now records `5/5`, mean reward `1.000`, `0` errors, pass@2 `1.000`, pass@4 `1.000`, and pass@5 `1.000` for Harbor job `q-terminal-bench-public-generic-smoke-v32`
+- `docs/wiki/Model-Benchmark-Comparison.md` now records same-day direct-Q structured-contract results at `4/4` with `23191.31 ms` average latency and `23715.52 ms` P95
+- `docs/wiki/BridgeBench.md` now records same-day direct-Q bridge results at `4/4` with `0` bridge-runtime assertion failures, `20206.9 ms` average latency, and `23994 ms` P95
+- `docs/wiki/Q-Mediation-Drift.md`, `docs/wiki/Q-Gateway-Substrate.md`, `docs/wiki/Q-Gateway-Validation.md`, `docs/wiki/Q-Readiness-Gate.md`, and `docs/wiki/Release-Surface.md` now all point at the active `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce` bundle
+
+What this unlocks next:
+- the next official leaderboard submission can be based on a real current public-task win instead of an older failing receipt
+- the next Q training pass can prioritize generalization and speed from a known-good public-task baseline instead of another transport repair cycle
+- the next Immaculate optimization pass can push runner-path and gateway latency down while keeping the public-task solve path green
+
 ### 2026-04-18
 
 #### Terminal-Bench is no longer failing on prompt overflow; it is now failing on the real Q-only task boundary

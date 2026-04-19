@@ -21,6 +21,7 @@ import type { SessionConversationMemory } from "./conversation.js";
 import type { FederatedExecutionPressure } from "./federation-pressure.js";
 import { parseStructuredResponse, prewarmOllamaModel } from "./ollama.js";
 import { createQApiKeyRegistry, normalizeQApiRateLimitPolicy } from "./q-api-auth.js";
+import { resolveQLocalOllamaUrl } from "./q-local-model.js";
 import { getQFoundationModelName, getQModelName, getQModelTarget, truthfulModelLabel } from "./q-model.js";
 import { resolveReleaseMetadata } from "./release-metadata.js";
 import { planAdaptiveRoute } from "./routing.js";
@@ -63,6 +64,21 @@ type QMediationDriftScenarioResult = {
   mediationDiagnosticSignals: string[];
   qSelfEvaluation: string;
   immaculateSelfEvaluation: string;
+  qDriftReasons: string[];
+  immaculateDriftReasons: string[];
+  runnerPathBottleneckStage: "arbitration" | "scheduling" | "routing";
+  parallelFormationMode?: "single-lane" | "vertical-pipeline" | "horizontal-swarm" | "hybrid-quorum";
+  verticalStageCount?: number;
+  horizontalReplicaCount?: number;
+  localReplicaCount?: number;
+  remoteReplicaCount?: number;
+  verificationQuorum?: number;
+  affinityMode?: "local-pinned" | "local-spread" | "quorum-local" | "hybrid-spill";
+  deadlineClass?: "elastic" | "bounded" | "hard";
+  deadlineBudgetMs?: number;
+  backpressureAction?: "steady" | "degrade" | "serialize" | "hold";
+  intentAlignmentScore?: number;
+  parallelFormationSummary?: string;
   responsePreview: string;
   failureClass?: string;
 };
@@ -99,7 +115,7 @@ type ScenarioDefinition = {
   federatedPressure: FederatedExecutionPressure;
 };
 
-const DEFAULT_OLLAMA_URL = process.env.IMMACULATE_OLLAMA_URL ?? "http://127.0.0.1:11434";
+const DEFAULT_OLLAMA_URL = resolveQLocalOllamaUrl();
 const MEDIATION_BENCHMARK_MAX_TOKENS = Math.max(
   48,
   Number(process.env.IMMACULATE_BENCHMARK_Q_MEDIATION_MAX_TOKENS ?? 96) || 96
@@ -107,6 +123,10 @@ const MEDIATION_BENCHMARK_MAX_TOKENS = Math.max(
 const MEDIATION_BENCHMARK_TIMEOUT_MS = Math.max(
   5_000,
   Number(process.env.IMMACULATE_BENCHMARK_Q_MEDIATION_TIMEOUT_MS ?? 45_000) || 45_000
+);
+const MEDIATION_BENCHMARK_TIMEOUT_OVERRIDE_MS = Math.max(
+  MEDIATION_BENCHMARK_TIMEOUT_MS,
+  Number(process.env.IMMACULATE_BENCHMARK_Q_MEDIATION_TIMEOUT_OVERRIDE_MS ?? 90_000) || 90_000
 );
 const HARNESS_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const REPO_ROOT = path.resolve(HARNESS_ROOT, "../..");
@@ -116,9 +136,9 @@ const SCENARIOS: ScenarioDefinition[] = [
     id: "mixed-pressure-local-cognition",
     label: "Mixed pressure local cognition",
     objective:
-      "The cloud lane is blocked, the local Q lane is healthy, governance pressure is elevated but not critical, one recent guard denial exists, and remote lease jitter is rising. There is no nonce replay, late ACK, or bridge integrity fault. Choose the governed mediation route without drifting off the healthy local Q lane.",
+      "Cloud blocked. Local Q healthy. Elevated governance, one guard denial, rising remote jitter, no replay or integrity fault. Keep the governed local-Q route.",
     context:
-      "Reply with ROUTE, REASON, and COMMIT only. Keep the answer terse, operator-grade, and explicit that blocked cloud capability must not be claimed. Do not choose guarded merely because the cloud lane is blocked or because one prior denial exists.",
+      "Do not claim cloud readiness. Do not choose guarded just because cloud is blocked or one prior denial exists.",
     governancePressure: "elevated",
     expectedRoute: "cognitive",
     expectedRoutingMode: "cognitive-assisted",
@@ -250,6 +270,20 @@ function truncate(value: string, limit = 220): string {
   return `${normalized.slice(0, Math.max(0, limit - 1)).trimEnd()}…`;
 }
 
+function runnerPathBottleneckStage(latencies: {
+  arbitrationLatencyMs: number;
+  schedulingLatencyMs: number;
+  routingLatencyMs: number;
+}): "arbitration" | "scheduling" | "routing" {
+  const ranked = [
+    { stage: "arbitration" as const, value: latencies.arbitrationLatencyMs },
+    { stage: "scheduling" as const, value: latencies.schedulingLatencyMs },
+    { stage: "routing" as const, value: latencies.routingLatencyMs }
+  ];
+  ranked.sort((left, right) => right.value - left.value);
+  return ranked[0]?.stage ?? "routing";
+}
+
 type BenchmarkSnapshot = ReturnType<typeof buildScenarioSnapshot>;
 
 async function allocateTcpPort(): Promise<number> {
@@ -357,10 +391,11 @@ function startGatewayProcess(options: {
       IMMACULATE_Q_GATEWAY_PORT: String(options.port),
       IMMACULATE_OLLAMA_URL: DEFAULT_OLLAMA_URL,
       IMMACULATE_Q_API_DEFAULT_MAX_CONCURRENT: "1",
-      IMMACULATE_Q_GATEWAY_TIMEOUT_MS: String(MEDIATION_BENCHMARK_TIMEOUT_MS),
+      IMMACULATE_Q_GATEWAY_TIMEOUT_MS: String(MEDIATION_BENCHMARK_TIMEOUT_OVERRIDE_MS),
       IMMACULATE_Q_GATEWAY_STRUCTURED_TIMEOUT_MS: String(MEDIATION_BENCHMARK_TIMEOUT_MS),
       IMMACULATE_Q_GATEWAY_STRUCTURED_MAX_TOKENS: String(MEDIATION_BENCHMARK_MAX_TOKENS),
       IMMACULATE_Q_GATEWAY_STRUCTURED_REPAIR_TIMEOUT_MS: "12000",
+      IMMACULATE_OLLAMA_CONTROL_TIMEOUT_MS: String(MEDIATION_BENCHMARK_TIMEOUT_OVERRIDE_MS),
       IMMACULATE_OLLAMA_Q_EXECUTION_MAX_TOKENS: String(MEDIATION_BENCHMARK_MAX_TOKENS),
       IMMACULATE_OLLAMA_Q_EXECUTION_TEMPERATURE: "0"
     },
@@ -385,18 +420,15 @@ async function stopGatewayProcess(child: ChildProcess | undefined): Promise<void
 function buildStructuredPrompt(scenario: ScenarioDefinition): { system: string; user: string } {
   return {
     system:
-      "You are Q inside Immaculate. Reply using exactly three lines and no extra text. ROUTE must be one canonical label: reflex, cognitive, guarded, or suppressed. REASON and COMMIT must each be one sentence.",
+      "You are Q inside Immaculate. Reply with exactly three lines and no extra text. ROUTE must be one canonical label: reflex, cognitive, guarded, or suppressed. REASON and COMMIT must each be one short sentence.",
     user: [
-      `OBJECTIVE: ${scenario.objective}`,
-      `CONTEXT: ${scenario.context}`,
-      `GOVERNANCE_PRESSURE: ${scenario.governancePressure}`,
-      `RECENT_GUARD_DENIALS: ${scenario.guardDeniedCount}`,
-      `SESSION_BLOCKED_VERDICTS: ${scenario.sessionBlockedVerdictCount}`,
-      `Q_DIRECTIVE: ${scenario.qRoutingDirective}`,
+      `SCENARIO: ${scenario.objective}`,
+      `RULES: ${scenario.context}`,
+      `PRESSURE=${scenario.governancePressure} DENIALS=${scenario.guardDeniedCount} BLOCKED=${scenario.sessionBlockedVerdictCount} DIRECTIVE=${scenario.qRoutingDirective}`,
       "FORMAT:",
       "ROUTE: one label only from reflex, cognitive, guarded, suppressed.",
-      "REASON: one sentence, max 18 words, naming the decisive fault or health signal.",
-      "COMMIT: one sentence, max 18 words, naming the concrete next control action."
+      "REASON: one short sentence naming the decisive fault or health signal.",
+      "COMMIT: one short sentence naming the concrete next control action."
     ].join("\n")
   };
 }
@@ -492,7 +524,8 @@ function buildBenchmarkChatHeaders(authorization: string): Record<string, string
   return {
     Authorization: authorization,
     "content-type": "application/json",
-    "x-immaculate-benchmark-skip-q-identity": "1"
+    "x-immaculate-benchmark-skip-q-identity": "1",
+    "x-immaculate-request-timeout-ms": String(MEDIATION_BENCHMARK_TIMEOUT_OVERRIDE_MS)
   };
 }
 
@@ -724,13 +757,52 @@ async function runScenario(options: {
       "Scheduling widened beyond Q-backed layers while the governed local Q lane was healthy."
     );
   }
+  if (
+    options.scenario.qRoutingDirective === "primary-governed-local" &&
+    (schedulePlan.localReplicaCount ?? 0) < Math.min(2, Math.max(1, selectedLayers.length))
+  ) {
+    immaculateDriftReasons.push(
+      "Scheduling collapsed the healthy local Q quorum below the bounded two-lane parallel floor."
+    );
+  }
+  if (
+    options.scenario.qRoutingDirective === "primary-governed-local" &&
+    (schedulePlan.remoteReplicaCount ?? 0) > 0
+  ) {
+    immaculateDriftReasons.push(
+      "Scheduling spilled into remote replicas even though the healthy local Q lane should stay primary."
+    );
+  }
+  if (
+    options.scenario.qRoutingDirective === "primary-governed-local" &&
+    schedulePlan.affinityMode !== "quorum-local" &&
+    schedulePlan.affinityMode !== "local-spread"
+  ) {
+    immaculateDriftReasons.push(
+      `Scheduling selected ${schedulePlan.affinityMode ?? "unknown"} instead of a local-first affinity mode.`
+    );
+  }
+  if (
+    options.scenario.qRoutingDirective === "primary-governed-local" &&
+    schedulePlan.deadlineClass === "hard"
+  ) {
+    immaculateDriftReasons.push(
+      "Scheduling escalated the healthy local Q lane to a hard deadline instead of a bounded local quorum budget."
+    );
+  }
   const mediationDiagnosticSummary = qContext.mediationDiagnosticSummary;
   const driftDetected =
     !parseSuccess ||
     !routeAligned ||
     schedulePlan.admissionState !== options.scenario.expectedAdmissionState ||
     arbitrationDecision.shouldDispatchActuation !== options.scenario.expectedDispatchAllowed ||
-    (options.scenario.qRoutingDirective === "primary-governed-local" && !qOnlyLayerSelection);
+    (options.scenario.qRoutingDirective === "primary-governed-local" &&
+      (!qOnlyLayerSelection ||
+        (schedulePlan.localReplicaCount ?? 0) < Math.min(2, Math.max(1, selectedLayers.length)) ||
+        (schedulePlan.remoteReplicaCount ?? 0) > 0 ||
+        (schedulePlan.affinityMode !== "quorum-local" &&
+          schedulePlan.affinityMode !== "local-spread") ||
+        schedulePlan.deadlineClass === "hard"));
   const qSelfEvaluation =
     qDriftReasons.length > 0
       ? `${mediationDiagnosticSummary} ${qDriftReasons.join(" ")}`
@@ -771,6 +843,25 @@ async function runScenario(options: {
     mediationDiagnosticSignals: qContext.mediationDiagnosticSignals,
     qSelfEvaluation,
     immaculateSelfEvaluation,
+    qDriftReasons,
+    immaculateDriftReasons,
+    runnerPathBottleneckStage: runnerPathBottleneckStage({
+      arbitrationLatencyMs,
+      schedulingLatencyMs,
+      routingLatencyMs
+    }),
+    parallelFormationMode: schedulePlan.parallelFormationMode,
+    verticalStageCount: schedulePlan.verticalStageCount,
+    horizontalReplicaCount: schedulePlan.horizontalReplicaCount,
+    localReplicaCount: schedulePlan.localReplicaCount,
+    remoteReplicaCount: schedulePlan.remoteReplicaCount,
+    verificationQuorum: schedulePlan.verificationQuorum,
+    affinityMode: schedulePlan.affinityMode,
+    deadlineClass: schedulePlan.deadlineClass,
+    deadlineBudgetMs: schedulePlan.deadlineBudgetMs,
+    backpressureAction: schedulePlan.backpressureAction,
+    intentAlignmentScore: schedulePlan.intentAlignmentScore,
+    parallelFormationSummary: schedulePlan.parallelFormationSummary,
     responsePreview: truncate(rawContent || JSON.stringify(responseBody)),
     failureClass:
       driftDetected

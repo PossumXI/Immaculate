@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { createEngine, type BenchmarkReport, type GovernancePressureLevel, type IntelligenceLayerRole } from "@immaculate/core";
 import { loadLatestBenchmarkReportForPack } from "./benchmark.js";
 import { listOllamaModels, prewarmOllamaModel, runOllamaExecution } from "./ollama.js";
+import { resolveQLocalOllamaUrl } from "./q-local-model.js";
 import { resolveReleaseMetadata, type ReleaseMetadata } from "./release-metadata.js";
 import {
   displayModelName,
@@ -119,7 +120,7 @@ export type ModelComparisonReport = {
 const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(MODULE_ROOT, "../../..");
 const WIKI_ROOT = path.join(REPO_ROOT, "docs", "wiki");
-const DEFAULT_OLLAMA_URL = process.env.IMMACULATE_OLLAMA_URL ?? "http://127.0.0.1:11434";
+const DEFAULT_OLLAMA_URL = resolveQLocalOllamaUrl();
 
 const COMPARISON_TASKS: ComparisonTask[] = [
   {
