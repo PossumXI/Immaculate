@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-19T23:47:18.165Z",
+  "generatedAt": "2026-04-19T23:50:00.133Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "c2e42c5093fba0adad74d13d9d3ea84b6c29f07c",
-    "gitShortSha": "c2e42c5",
+    "gitSha": "b4e09296ab0d2ddb2dd4c8fc2b4e183a7e4ebe73",
+    "gitShortSha": "b4e0929",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+c2e42c5",
+    "buildId": "0.1.0+b4e0929",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -66,7 +66,7 @@
     {
       "label": "Q readiness gate",
       "path": "docs\\wiki\\Q-Readiness-Gate.json",
-      "generatedAt": "2026-04-19T22:39:42.296Z"
+      "generatedAt": "2026-04-19T23:49:59.869Z"
     },
     {
       "label": "Q gateway validation",
@@ -136,7 +136,7 @@
     {
       "label": "Q benchmark corpus",
       "path": "docs\\wiki\\Q-Benchmark-Corpus.json",
-      "generatedAt": "2026-04-19T23:46:26Z"
+      "generatedAt": "2026-04-19T23:49:59Z"
     },
     {
       "label": "Q benchmark promotion",
@@ -146,7 +146,7 @@
     {
       "label": "W&B benchmark export",
       "path": "docs\\wiki\\Benchmark-Wandb-Export.json",
-      "generatedAt": "2026-04-19T22:41:44.367069+00:00"
+      "generatedAt": "2026-04-19T22:53:23.308016+00:00"
     },
     {
       "label": "Harbor terminal bench",
