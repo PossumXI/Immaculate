@@ -19,12 +19,12 @@ Right now the honest story is:
 
 - the latest real Harbor run on the official public Terminal-Bench task is green on the default Q-only path: [[Terminal-Bench-Public-Task]] now records `5/5`, mean reward `1.000`, `0` errors, and pass@2, pass@4, and pass@5 all at `1.000`
 - Q parses both tracked local contract lanes cleanly on same-day evidence: `4/4` on [[Model-Benchmark-Comparison]] and `4/4` on [[BridgeBench]]
-- the hard `Q` mediation drift lane is green on the active `bench-v23` lock: four mixed-pressure scenarios, `0` failed assertions, route-alignment `P50 1`, runner-path `P95 6.68 ms`, and explicit Q plus Immaculate self-evaluation on every scenario; the exact trace lives on [[Q-Mediation-Drift]]
+- the hard `Q` mediation drift lane is green on the active `bench-v23` lock: four mixed-pressure scenarios, `0` failed assertions, route-alignment `P50 1`, runner-path `P95 4.4 ms`, and explicit Q plus Immaculate self-evaluation on every scenario; the exact trace lives on [[Q-Mediation-Drift]]
 - the `Q` substrate benchmark is fully green: the dedicated Q gateway stayed live, rejected unauthenticated traffic, preserved `ROUTE/REASON/COMMIT`, and handed the work back into Immaculate arbitration with `0` failed assertions; current seam timing is gateway `P95 15297.49 ms` and arbitration `P95 1.74 ms` on [[Q-Gateway-Substrate]]
 - the dedicated Q gateway contract is also green: `/health 200`, authenticated `/api/q/info 200`, authenticated `/v1/models 200`, authenticated chat `200`, bounded `429` concurrency rejection, and a canonical identity smoke that answers as `Q`, `Arobi Technology Alliance`, `Gaetano Comparcola`, `Gemma 4`, and `Immaculate`; the exact current gateway overhead lives on [[Q-Gateway-Validation]]
 - the live `Q` API audit loop is also now proving successful governed calls, not just rejects: [[Q-API-Audit]] records a real authenticated `/api/q/run` success with `parse success: true`, `decision trace linked`, and `23349.14 ms` latency on the current Q bundle
+- the live Arobi decision review is now proving the governed ledger chain itself, not just one API response: [[Arobi-Decision-Review]] records `2` linked ledgers, `9` linked records, `8` successful linked records, and the latest successful governed record for session `arobi-q-proof-20260419`
 - the current Q improvement path is machine-stamped: the active Q bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`, the current benchmark corpus is `55` rows, and the paired Immaculate orchestration bundle lives on [[Release-Surface]] and [[Q-Benchmark-Corpus]]
-- the current cloud truth is also concrete: the promoted HF Jobs bundle is staged and authenticated on the real account for `bench-v23`, the launch lane is ready when you want it, and the free Colab and Kaggle export lanes are stamped to the same bundle
 - the latest tracked W&B export remains current on `2026-04-18`, while the live mediation, substrate, gateway, and public-task Harbor reruns above are the newer repo-local wins
 - Immaculate now treats healthy local Q as a first-class governed routing directive, so blocked cloud status no longer forces a false guarded hold when the local Q lane is already healthy
 
@@ -90,6 +90,7 @@ Right now the honest story is:
 - [[Q-Gateway-Validation]] carries the live dedicated-gateway contract proof for `Q`: health, auth, model listing, served completion, concurrency rejection, and measured gateway-added latency
 - [[Q-Gateway-Substrate]] carries the live seam benchmark where the dedicated `Q` gateway hands structured work back into Immaculate arbitration under real governance pressure
 - [[Q-API-Audit]] carries the live `/api/q/run` audit spool summary so Q failures on the private harness edge can feed the repair loop instead of staying trapped in logs
+- [[Arobi-Decision-Review]] carries the wins-only review page for linked successful Arobi ledger records, so auditors and insurers can see what was asked, which governed route was chosen, and which successful decision chain landed
 - [[Q-Gateway-Architecture]] tracks the dedicated private OCI-first gateway boundary for `Q`, separate from the full harness
 - [[Q-Readiness-Gate]] keeps the direct-Q structured contract honest and is currently green: direct `Q` is release-eligible on the tracked local contract lane on this machine
 - [[Q-Benchmark-Corpus]] records the tracked benchmark-derived corpus surface for `Q`, including current record counts, source benchmark pages, and export path

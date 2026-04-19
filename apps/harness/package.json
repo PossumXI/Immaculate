@@ -26,6 +26,7 @@
     "bridgebench": "tsx src/bridgebench-cli.ts",
     "bridgebench:soak": "tsx src/bridgebench-soak.ts",
     "compare:models": "tsx src/model-comparison-cli.ts",
+    "arobi:decision:review": "tsx src/arobi-decision-review.ts",
     "banner": "tsx src/banner.ts",
     "q:gateway": "tsx src/q-gateway.ts",
     "q:gateway:validate": "tsx src/q-gateway-validate.ts",

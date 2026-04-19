@@ -898,6 +898,13 @@ export type ExecutionArbitration = {
   federationRemoteSuccessRatio?: number;
   objective: string;
   rationale: string;
+  decisionTraceId?: string;
+  decisionTraceHash?: string;
+  policyDigest?: string;
+  evidenceDigest?: string;
+  releaseBuildId?: string;
+  releaseGitShortSha?: string;
+  trainingBundleId?: string;
   selectedAt: string;
 };
 
@@ -945,6 +952,13 @@ export type ExecutionSchedule = {
   estimatedCost: number;
   objective: string;
   rationale: string;
+  decisionTraceId?: string;
+  decisionTraceHash?: string;
+  policyDigest?: string;
+  evidenceDigest?: string;
+  releaseBuildId?: string;
+  releaseGitShortSha?: string;
+  trainingBundleId?: string;
   selectedAt: string;
 };
 
@@ -1816,6 +1830,13 @@ export const executionArbitrationSchema = z.object({
   federationRemoteSuccessRatio: z.number().nonnegative().max(1).optional(),
   objective: z.string(),
   rationale: z.string(),
+  decisionTraceId: z.string().optional(),
+  decisionTraceHash: z.string().optional(),
+  policyDigest: z.string().optional(),
+  evidenceDigest: z.string().optional(),
+  releaseBuildId: z.string().optional(),
+  releaseGitShortSha: z.string().optional(),
+  trainingBundleId: z.string().optional(),
   selectedAt: z.string()
 });
 
@@ -1863,6 +1884,13 @@ export const executionScheduleSchema = z.object({
   estimatedCost: z.number().nonnegative(),
   objective: z.string(),
   rationale: z.string(),
+  decisionTraceId: z.string().optional(),
+  decisionTraceHash: z.string().optional(),
+  policyDigest: z.string().optional(),
+  evidenceDigest: z.string().optional(),
+  releaseBuildId: z.string().optional(),
+  releaseGitShortSha: z.string().optional(),
+  trainingBundleId: z.string().optional(),
   selectedAt: z.string()
 });
 

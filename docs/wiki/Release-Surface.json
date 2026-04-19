@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-19T14:33:14.012Z",
+  "generatedAt": "2026-04-19T22:27:46.459Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "801fe27ab25461ac6bfdf54f3564dff9ea90392c",
-    "gitShortSha": "801fe27",
+    "gitSha": "6fc8e11ddd7a2ba01eb6debf3c5f0a44a225764a",
+    "gitShortSha": "6fc8e11",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+801fe27",
+    "buildId": "0.1.0+6fc8e11",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -66,7 +66,7 @@
     {
       "label": "Q readiness gate",
       "path": "docs\\wiki\\Q-Readiness-Gate.json",
-      "generatedAt": "2026-04-19T14:32:25.688Z"
+      "generatedAt": "2026-04-19T22:25:20.626Z"
     },
     {
       "label": "Q gateway validation",
@@ -76,17 +76,22 @@
     {
       "label": "Q gateway substrate",
       "path": "docs\\wiki\\Q-Gateway-Substrate.json",
-      "generatedAt": "2026-04-19T07:42:56.365Z"
+      "generatedAt": "2026-04-19T22:06:38.757Z"
     },
     {
       "label": "Q mediation drift",
       "path": "docs\\wiki\\Q-Mediation-Drift.json",
-      "generatedAt": "2026-04-19T07:42:56.374Z"
+      "generatedAt": "2026-04-19T22:06:40.025Z"
     },
     {
       "label": "Q API audit",
       "path": "docs\\wiki\\Q-API-Audit.json",
-      "generatedAt": "2026-04-17T10:09:27Z"
+      "generatedAt": "2026-04-19T22:16:53Z"
+    },
+    {
+      "label": "Arobi decision review",
+      "path": "docs\\wiki\\Arobi-Decision-Review.json",
+      "generatedAt": "2026-04-19T22:22:01.815Z"
     },
     {
       "label": "Q hybrid training",
@@ -129,11 +134,6 @@
       "generatedAt": "2026-04-19T07:46:04Z"
     },
     {
-      "label": "Q failure corpus",
-      "path": "docs\\wiki\\Q-Failure-Corpus.json",
-      "generatedAt": "2026-04-19T07:46:04Z"
-    },
-    {
       "label": "Q benchmark promotion",
       "path": "docs\\wiki\\Q-Benchmark-Promotion.json",
       "generatedAt": "2026-04-19T07:46:03Z"
@@ -141,7 +141,7 @@
     {
       "label": "W&B benchmark export",
       "path": "docs\\wiki\\Benchmark-Wandb-Export.json",
-      "generatedAt": "2026-04-19T01:15:13.741584+00:00"
+      "generatedAt": "2026-04-19T08:02:31.678442+00:00"
     },
     {
       "label": "Harbor terminal bench",

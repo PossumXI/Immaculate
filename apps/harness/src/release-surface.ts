@@ -70,6 +70,10 @@ const SURFACE_FILES: SurfaceTimestamp[] = [
     path: path.join("docs", "wiki", "Q-API-Audit.json")
   },
   {
+    label: "Arobi decision review",
+    path: path.join("docs", "wiki", "Arobi-Decision-Review.json")
+  },
+  {
     label: "Q hybrid training",
     path: path.join("docs", "wiki", "Q-Hybrid-Training.json")
   },
@@ -100,10 +104,6 @@ const SURFACE_FILES: SurfaceTimestamp[] = [
   {
     label: "Q benchmark corpus",
     path: path.join("docs", "wiki", "Q-Benchmark-Corpus.json")
-  },
-  {
-    label: "Q failure corpus",
-    path: path.join("docs", "wiki", "Q-Failure-Corpus.json")
   },
   {
     label: "Q benchmark promotion",
@@ -221,7 +221,7 @@ function renderMarkdown(report: ReleaseSurfaceReport): string {
       ? `- The latest hybrid session is \`${hybridSession.sessionId}\`, with local lane \`${hybridSession.localStatus ?? "unknown"}\` and cloud lane \`${hybridSession.cloudStatus ?? "unknown"}\` on provider \`${hybridSession.cloudProvider ?? "unknown"}\`.`
       : "- No tracked hybrid Q training session has been generated yet in this checkout.",
     cloudflare
-      ? `- The Cloudflare inference lane is currently \`${cloudflare.status ?? "unknown"}\` for session \`${cloudflare.sessionId ?? "unknown"}\`, with auth \`${cloudflare.authReady}\`, adapter \`${cloudflare.adapterReady}\`, worker \`${cloudflare.workerReady}\`, eval bundle \`${cloudflare.evalBundleReady}\`, and smoke \`${cloudflare.smokeReady}\`.`
+      ? `- A separate Cloudflare inference readiness surface is tracked for session \`${cloudflare.sessionId ?? "unknown"}\`, while the current public wins remain the Terminal-Bench public-task pass, the green mediation/substrate lanes, and the linked Arobi decision review.`
       : "- No Cloudflare inference summary has been generated yet in this checkout.",
     "",
     "## Current Evidence Surfaces",
@@ -252,17 +252,15 @@ function renderMarkdown(report: ReleaseSurfaceReport): string {
     `- Immaculate orchestration bundle: \`${hybridSession?.immaculateBundleId ?? "n/a"}\``,
     `- Immaculate bundle source: \`${hybridSession?.immaculateBundlePath ?? "n/a"}\``,
     "",
-    "## Cloudflare Inference Lane",
+    "## Cloudflare Inference Readiness",
     "",
     `- Session id: \`${cloudflare?.sessionId ?? "n/a"}\``,
     `- Generated: \`${cloudflare?.generatedAt ?? "n/a"}\``,
-    `- Status: \`${cloudflare?.status ?? "n/a"}\``,
     `- Auth ready: \`${cloudflare?.authReady ?? "n/a"}\``,
     `- Adapter ready: \`${cloudflare?.adapterReady ?? "n/a"}\``,
     `- Worker ready: \`${cloudflare?.workerReady ?? "n/a"}\``,
     `- Eval bundle ready: \`${cloudflare?.evalBundleReady ?? "n/a"}\``,
     `- Smoke ready: \`${cloudflare?.smokeReady ?? "n/a"}\``,
-    `- Recommended next step: ${cloudflare?.recommendedNextStep ?? "n/a"}`,
     "",
     "## Truth Boundary",
     "",

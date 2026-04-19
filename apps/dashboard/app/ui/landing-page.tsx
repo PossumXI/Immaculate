@@ -22,7 +22,7 @@ const proofCards = [
   },
   {
     label: "Q Mediation Drift",
-    body: "The four-scenario mixed-pressure reasoning lane is green on the active bench-v23 lock. Q and Immaculate both self-evaluate every scenario, route alignment stays perfect, and runner-path P95 is 6.68 ms."
+    body: "The four-scenario mixed-pressure reasoning lane is green on the active bench-v23 lock. Q and Immaculate both self-evaluate every scenario, route alignment stays perfect, and runner-path P95 is 4.4 ms."
   },
   {
     label: "Q Substrate Benchmark",
@@ -33,8 +33,8 @@ const proofCards = [
     body: "The dedicated Q gateway is live and bounded: health 200, auth 401 without a key, Q-only model listing, chat 200 with a key, and concurrent pressure rejects at 429."
   },
   {
-    label: "Arobi Audit Trail",
-    body: "The live Q API audit loop now records successful governed calls into a chained Arobi decision ledger. The latest authenticated /api/q/run call completed with parse success, a linked decision trace, and a truthful ROUTE/REASON/COMMIT record."
+    label: "Arobi Decision Review",
+    body: "The live Arobi review page now summarizes the governed ledger itself: 2 linked ledgers, 9 linked records, 8 successful linked records, and the latest successful decision chain for the current Q-only harness."
   },
   {
     label: "Training State",
@@ -81,7 +81,7 @@ export function LandingPage() {
 
       <section className="landingHero">
         <div className="landingCopy">
-          <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 19 | W&amp;B EXPORT APR 18</p>
+          <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 19 | AROBI REVIEW LIVE | W&amp;B EXPORT APR 18</p>
           <h1 className="landingHeadline">Controlled intelligence for critical operations.</h1>
           <p className="landingLede">Defense and healthcare. Evidence before action. Q only. Benchmarked. Gateway seam proven. Arobi audit loop live.</p>
 
@@ -91,12 +91,14 @@ export function LandingPage() {
             <span>Terminal-Bench public task 5/5</span>
             <span>Mean reward 1.0</span>
             <span>Mediation drift 4 scenarios</span>
-            <span>Runner path P95 6.68ms</span>
+            <span>Runner path P95 4.4ms</span>
             <span>Gateway P95 15.30s</span>
             <span>Substrate seam green</span>
             <span>Gateway contract green</span>
             <span>Identity gate green</span>
-            <span>Arobi decision trace live</span>
+            <span>Arobi decision review live</span>
+            <span>2 linked ledgers</span>
+            <span>8 successful linked records</span>
             <span>Latest W&B export Apr 18</span>
             <span>Machine-stamped bench-v23 lock</span>
             <span>55 benchmark rows</span>

@@ -2,7 +2,7 @@ import net from "node:net";
 import os from "node:os";
 import path from "node:path";
 import { spawn, execFileSync, type ChildProcess } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, openSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { performance } from "node:perf_hooks";
 import { setTimeout as delay } from "node:timers/promises";
@@ -50,6 +50,8 @@ type SweepReceipt = {
     health: SweepCheck;
     runtimeDir: string;
     keysPath: string;
+    stdoutPath: string;
+    stderrPath: string;
   };
   config: {
     path: string;
@@ -63,8 +65,13 @@ type SweepReceipt = {
     fullSweep: boolean;
   };
   launch?: {
+    status: "running" | "completed" | "failed";
+    startedAt: string;
+    finishedAt?: string;
     completed: boolean;
     exitCode?: number;
+    stdoutPath: string;
+    stderrPath: string;
     command: string[];
   };
 };
@@ -275,6 +282,8 @@ function startGatewayProcess(options: {
   runtimeDir: string;
   keysPath: string;
   port: number;
+  stdoutPath: string;
+  stderrPath: string;
 }): ChildProcess {
   const gateway = resolveGatewayCommand();
   return spawn(gateway.command, gateway.args, {
@@ -289,7 +298,7 @@ function startGatewayProcess(options: {
       IMMACULATE_Q_API_DEFAULT_MAX_CONCURRENT: "1",
       IMMACULATE_ENABLE_TERMINAL_BENCH_DIAGNOSTIC_SHIMS: "0"
     },
-    stdio: "ignore",
+    stdio: ["ignore", openSync(options.stdoutPath, "a"), openSync(options.stderrPath, "a")],
     windowsHide: true
   });
 }
@@ -393,7 +402,12 @@ function buildJobConfig(options: {
   };
 }
 
-async function runHarbor(harborBin: string, configPath: string): Promise<number> {
+async function runHarbor(
+  harborBin: string,
+  configPath: string,
+  stdoutPath: string,
+  stderrPath: string
+): Promise<number> {
   return await new Promise<number>((resolve, reject) => {
     const child = spawn(
       harborBin,
@@ -405,7 +419,7 @@ async function runHarbor(harborBin: string, configPath: string): Promise<number>
           NO_COLOR: "1",
           TERM: "dumb"
         },
-        stdio: "inherit",
+        stdio: ["ignore", openSync(stdoutPath, "a"), openSync(stderrPath, "a")],
         windowsHide: true
       }
     );
@@ -424,6 +438,10 @@ async function main(): Promise<void> {
   const configPath = path.join(jobRoot, "config.json");
   const resultPath = path.join(jobRoot, "result.json");
   const receiptPath = path.join(jobRoot, "full-sweep-launch.json");
+  const gatewayStdoutPath = path.join(jobRoot, "q-gateway.stdout.log");
+  const gatewayStderrPath = path.join(jobRoot, "q-gateway.stderr.log");
+  const harborStdoutPath = path.join(jobRoot, "harbor.stdout.log");
+  const harborStderrPath = path.join(jobRoot, "harbor.stderr.log");
   const harborBin = detectHarborBinary();
   const docker = dockerVersion();
   const port = await allocateTcpPort();
@@ -440,7 +458,9 @@ async function main(): Promise<void> {
     gateway = startGatewayProcess({
       runtimeDir,
       keysPath,
-      port
+      port,
+      stdoutPath: gatewayStdoutPath,
+      stderrPath: gatewayStderrPath
     });
     const registry = await createQApiKeyRegistry({
       rootDir: runtimeDir,
@@ -488,7 +508,9 @@ async function main(): Promise<void> {
         url: gatewayUrl,
         health,
         runtimeDir: path.relative(REPO_ROOT, runtimeDir).replaceAll("\\", "/"),
-        keysPath: path.relative(REPO_ROOT, keysPath).replaceAll("\\", "/")
+        keysPath: path.relative(REPO_ROOT, keysPath).replaceAll("\\", "/"),
+        stdoutPath: path.relative(REPO_ROOT, gatewayStdoutPath).replaceAll("\\", "/"),
+        stderrPath: path.relative(REPO_ROOT, gatewayStderrPath).replaceAll("\\", "/")
       },
       config: {
         path: path.relative(REPO_ROOT, configPath).replaceAll("\\", "/"),
@@ -507,11 +529,22 @@ async function main(): Promise<void> {
       if (!harborBin) {
         throw new Error("Harbor CLI is not available. Run in check mode or install Harbor first.");
       }
-      const exitCode = await runHarbor(harborBin, configPath);
       receipt.launch = {
-        completed: exitCode === 0,
-        exitCode,
+        status: "running",
+        startedAt: new Date().toISOString(),
+        completed: false,
+        stdoutPath: path.relative(REPO_ROOT, harborStdoutPath).replaceAll("\\", "/"),
+        stderrPath: path.relative(REPO_ROOT, harborStderrPath).replaceAll("\\", "/"),
         command: [harborBin, "run", "--config", configPath, "--yes"]
+      };
+      await writeFile(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`, "utf8");
+      const exitCode = await runHarbor(harborBin, configPath, harborStdoutPath, harborStderrPath);
+      receipt.launch = {
+        ...receipt.launch,
+        status: exitCode === 0 ? "completed" : "failed",
+        finishedAt: new Date().toISOString(),
+        completed: exitCode === 0,
+        exitCode
       };
       if (exitCode !== 0) {
         await writeFile(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`, "utf8");

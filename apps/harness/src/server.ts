@@ -16,6 +16,8 @@ import {
   type BenchmarkPackId,
   type BenchmarkReport,
   type ControlEnvelope,
+  type ExecutionArbitration,
+  type ExecutionSchedule,
   type IntelligenceLayer,
   type RoutingDecision
 } from "@immaculate/core";
@@ -747,6 +749,141 @@ async function traceConversationRecord(options: {
     decisionTraceHash: materialized.ledger.eventHash,
     policyDigest: sha256Json(materialized.policy),
     evidenceDigest: materialized.evidence.evidenceDigest ?? sha256Json(materialized.evidence)
+  };
+}
+
+async function traceOrchestrationDecision<T extends ExecutionArbitration | ExecutionSchedule>(options: {
+  kind: "orchestration-arbitration" | "orchestration-schedule";
+  decision: T;
+  consentScope?: string;
+  qContext?: Awaited<ReturnType<typeof resolveQOrchestrationContext>>;
+}): Promise<T> {
+  const isSchedule = options.kind === "orchestration-schedule";
+  const selectedLayerId = isSchedule
+    ? (options.decision as ExecutionSchedule).primaryLayerId
+    : (options.decision as ExecutionArbitration).preferredLayerId;
+  const targetNodeId = isSchedule
+    ? undefined
+    : (options.decision as ExecutionArbitration).targetNodeId;
+  const routeMode = isSchedule
+    ? (options.decision as ExecutionSchedule).mode
+    : (options.decision as ExecutionArbitration).routeModeHint;
+  const sourceIds = isSchedule
+    ? [
+        ...(options.decision as ExecutionSchedule).layerIds,
+        options.qContext?.gatewaySubstrateSuiteId
+      ].filter((entry): entry is string => Boolean(entry))
+    : [
+        selectedLayerId,
+        targetNodeId,
+        options.qContext?.gatewaySubstrateSuiteId
+      ].filter((entry): entry is string => Boolean(entry));
+  const driftReasonCodes: string[] = [];
+  if (
+    options.qContext?.qRoutingDirective === "primary-governed-local" &&
+    options.qContext.readinessReady &&
+    options.qContext.gatewaySubstrateHealthy
+  ) {
+    if (isSchedule) {
+      const schedule = options.decision as ExecutionSchedule;
+      if (!schedule.shouldRunCognition) {
+        driftReasonCodes.push("governed_local_cognition_not_run");
+      }
+      if ((schedule.layerIds?.length ?? 0) === 0) {
+        driftReasonCodes.push("governed_local_layer_missing");
+      }
+      if (schedule.admissionState === "hold") {
+        driftReasonCodes.push("governed_local_admission_hold");
+      }
+    } else {
+      const arbitration = options.decision as ExecutionArbitration;
+      if (arbitration.mode === "guarded-review" && arbitration.governancePressure === "clear") {
+        driftReasonCodes.push("governed_local_guarded_review_under_clear_pressure");
+      }
+      if (!arbitration.shouldRunCognition && arbitration.targetPlane === "cognitive") {
+        driftReasonCodes.push("governed_local_cognition_suppressed");
+      }
+    }
+  }
+
+  const materialized = await appendDecisionTraceRecord({
+    rootDir: persistence.getStatus().rootDir,
+    record: {
+      decisionTraceId:
+        options.decision.decisionTraceId ??
+        createDecisionTraceSeed({
+          source: options.kind,
+          sessionId: options.decision.sessionId,
+          executionId: options.decision.id,
+          objective: options.decision.objective,
+          promptDigest: options.qContext?.evidenceDigest
+        }),
+      source: options.kind,
+      sessionId: options.decision.sessionId,
+      executionId: options.decision.id,
+      release: {
+        buildId: releaseMetadata.buildId,
+        gitShortSha: releaseMetadata.gitShortSha,
+        modelName: getQModelName(),
+        foundationModel: getQFoundationModelName(),
+        trainingBundleId: releaseMetadata.q.trainingLock?.bundleId
+      },
+      policy: {
+        consentScope: options.consentScope,
+        qRoutingDirective: options.qContext?.qRoutingDirective,
+        governancePressure: options.decision.governancePressure,
+        routeMode,
+        targetNodeId,
+        selectedLayerId,
+        failureClass: driftReasonCodes.length > 0 ? driftReasonCodes[0] : undefined
+      },
+      evidence: {
+        objectiveDigest: digestOptionalText(options.decision.objective),
+        contextDigest: digestOptionalText(options.qContext?.mediationDiagnosticSummary),
+        sourceIds,
+        evidenceDigest:
+          options.decision.evidenceDigest ??
+          options.qContext?.evidenceDigest ??
+          sha256Json({
+            contextFingerprint: options.qContext?.contextFingerprint,
+            sourceIds,
+            rationale: options.decision.rationale
+          }),
+        contextFingerprint: options.qContext?.contextFingerprint
+      },
+      decisionSummary: {
+        routeSuggestion: routeMode,
+        reasonSummary: truncateAuditText(options.decision.rationale, 320),
+        commitStatement: isSchedule
+          ? truncateAuditText(
+              `Execute ${routeMode} with ${(options.decision as ExecutionSchedule).parallelFormationSummary ?? "single-lane"}.`,
+              220
+            )
+          : truncateAuditText(
+              `Route through ${(options.decision as ExecutionArbitration).targetNodeId} on ${(options.decision as ExecutionArbitration).targetPlane}.`,
+              220
+            ),
+        responsePreview: truncateAuditText(options.decision.objective, 220)
+      },
+      selfEvaluation: {
+        status: isSchedule
+          ? (options.decision as ExecutionSchedule).admissionState ?? "admit"
+          : (options.decision as ExecutionArbitration).mode,
+        driftDetected: driftReasonCodes.length > 0,
+        driftReasonCodes
+      }
+    }
+  });
+
+  return {
+    ...options.decision,
+    decisionTraceId: materialized.decisionTraceId,
+    decisionTraceHash: materialized.ledger.eventHash,
+    policyDigest: sha256Json(materialized.policy),
+    evidenceDigest: materialized.evidence.evidenceDigest ?? sha256Json(materialized.evidence),
+    releaseBuildId: releaseMetadata.buildId,
+    releaseGitShortSha: releaseMetadata.gitShortSha,
+    trainingBundleId: releaseMetadata.q.trainingLock?.bundleId
   };
 }
 
@@ -6468,8 +6605,14 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
     execution,
     requestedLayerId: body.layerId?.trim() || undefined
   });
+  const tracedArbitrationDecision = await traceOrchestrationDecision({
+    kind: "orchestration-arbitration",
+    decision: arbitrationDecision,
+    consentScope,
+    qContext: mediationQContext
+  });
   const arbitrationSnapshot = phaseSnapshotSchema.parse(
-    projectPhaseSnapshot(engine.recordExecutionArbitration(arbitrationDecision))
+    projectPhaseSnapshot(engine.recordExecutionArbitration(tracedArbitrationDecision))
   );
   await persistence.persist(engine.getDurableState());
   emitSnapshot();
@@ -6489,7 +6632,7 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
       return;
     }
 
-    const rolesToEnsure = preferredScheduleRoles(arbitrationDecision);
+    const rolesToEnsure = preferredScheduleRoles(tracedArbitrationDecision);
     if (rolesToEnsure.length > 0) {
       await ensurePreferredIntelligenceLayers(rolesToEnsure);
     }
@@ -6497,18 +6640,24 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
 
   const schedulePlan = planExecutionSchedule({
     snapshot: engine.getSnapshot(),
-    arbitration: arbitrationDecision,
+    arbitration: tracedArbitrationDecision,
     requestedLayerId: body.layerId?.trim() || undefined,
     sessionConversationMemory,
     federationPressure: federatedPressureState.pressure,
     qContext: mediationQContext
   });
   const scheduleDecision = buildExecutionScheduleDecision({
-    arbitration: arbitrationDecision,
+    arbitration: tracedArbitrationDecision,
     plan: schedulePlan
   });
+  const tracedScheduleDecision = await traceOrchestrationDecision({
+    kind: "orchestration-schedule",
+    decision: scheduleDecision,
+    consentScope,
+    qContext: mediationQContext
+  });
   const scheduleSnapshot = phaseSnapshotSchema.parse(
-    projectPhaseSnapshot(engine.recordExecutionSchedule(scheduleDecision))
+    projectPhaseSnapshot(engine.recordExecutionSchedule(tracedScheduleDecision))
   );
   await persistence.persist(engine.getDurableState());
   emitSnapshot();
@@ -6522,15 +6671,15 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
   let cognitionSnapshot = scheduleSnapshot;
   const dispatchOnApproval = Boolean(body.dispatchOnApproval);
 
-  if (scheduleDecision.shouldRunCognition) {
-    if (scheduleDecision.layerIds.length === 0) {
+  if (tracedScheduleDecision.shouldRunCognition) {
+    if (tracedScheduleDecision.layerIds.length === 0) {
       reply.code(404);
       return {
         error: "no_intelligence_layer",
         message: "Register a Q runtime layer before running the mediated cognitive schedule.",
-        arbitrationDecision,
+        arbitrationDecision: tracedArbitrationDecision,
         arbitrationPlan,
-        scheduleDecision,
+        scheduleDecision: tracedScheduleDecision,
         schedulePlan,
         snapshot: scheduleSnapshot
       };
@@ -6538,11 +6687,11 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
 
     try {
       const cognition = await executeCognitiveSchedule({
-        schedule: scheduleDecision,
-        objective: scheduleDecision.objective,
+        schedule: tracedScheduleDecision,
+        objective: tracedScheduleDecision.objective,
         consentScope,
         sessionId: resolvedSessionId,
-        arbitrationId: arbitrationDecision.id,
+        arbitrationId: tracedArbitrationDecision.id,
         requestedExecutionDecision: body.requestedExecutionDecision
       });
       mediationLayer = cognition.primaryLayer;
@@ -6555,9 +6704,9 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
       return {
         error: "cognitive_execution_failed",
         message: error instanceof Error ? error.message : "Unable to run the mediated cognitive schedule.",
-        arbitrationDecision,
+        arbitrationDecision: tracedArbitrationDecision,
         arbitrationPlan,
-        scheduleDecision,
+        scheduleDecision: tracedScheduleDecision,
         schedulePlan,
         snapshot: cognitionSnapshot
       };
@@ -6620,9 +6769,9 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
 
     return {
       accepted: true,
-      arbitrationDecision,
+      arbitrationDecision: tracedArbitrationDecision,
       arbitrationPlan,
-      scheduleDecision,
+      scheduleDecision: tracedScheduleDecision,
       schedulePlan,
       layer: mediationLayer,
       execution: mediationExecution,
@@ -6654,9 +6803,9 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
 
     return {
       accepted: true,
-      arbitrationDecision,
+      arbitrationDecision: tracedArbitrationDecision,
       arbitrationPlan,
-      scheduleDecision,
+      scheduleDecision: tracedScheduleDecision,
       schedulePlan,
       layer: mediationLayer,
       execution: mediationExecution,
@@ -6673,9 +6822,9 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
     return {
       error: "orchestration_mediation_failed",
       message: error instanceof Error ? error.message : "Unable to complete the mediated orchestration pass.",
-      arbitrationDecision,
+      arbitrationDecision: tracedArbitrationDecision,
       arbitrationPlan,
-      scheduleDecision,
+      scheduleDecision: tracedScheduleDecision,
       schedulePlan,
       snapshot: cognitionSnapshot
     };

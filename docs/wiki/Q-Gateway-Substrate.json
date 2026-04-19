@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-19T21:41:33.295Z",
+  "generatedAt": "2026-04-19T22:06:38.757Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "7e1885ef0f8cccaf299fb7b44dd4a1dd473ff7d0",
-    "gitShortSha": "7e1885e",
+    "gitSha": "6fc8e11ddd7a2ba01eb6debf3c5f0a44a225764a",
+    "gitShortSha": "6fc8e11",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+7e1885e",
+    "buildId": "0.1.0+6fc8e11",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",

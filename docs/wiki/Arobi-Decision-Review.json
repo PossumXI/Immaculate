@@ -1,0 +1,73 @@
+{
+  "generatedAt": "2026-04-19T22:27:46.893Z",
+  "ledgerFiles": [
+    {
+      "path": ".runtime/harness/arobi-network/decision-ledger.ndjson",
+      "recordCount": 7,
+      "linked": true,
+      "latestGeneratedAt": "2026-04-19T22:13:48.322Z"
+    },
+    {
+      "path": ".runtime/harness-audit-live/arobi-network/decision-ledger.ndjson",
+      "recordCount": 2,
+      "linked": true,
+      "latestGeneratedAt": "2026-04-19T21:39:37.165Z"
+    }
+  ],
+  "linkedLedgerCount": 2,
+  "linkedRecordCount": 9,
+  "successfulLinkedRecordCount": 8,
+  "latestSuccessfulRecord": {
+    "decisionTraceId": "trace-c0247552a946be80",
+    "source": "cognitive-execution",
+    "sessionId": "arobi-q-proof-20260419",
+    "executionId": "cog-2026-04-19T22-13-47-028Z-41698285",
+    "release": {
+      "buildId": "0.1.0+6fc8e11",
+      "gitShortSha": "6fc8e11",
+      "modelName": "Q",
+      "foundationModel": "Gemma 4",
+      "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce"
+    },
+    "policy": {
+      "consentScope": "session:arobi-q-proof-20260419",
+      "qRoutingDirective": "primary-governed-local",
+      "governancePressure": "critical",
+      "selectedLayerId": "ollama-mid-q-latest",
+      "selectedWorkerId": "worker-local-127-0-0-1-8791-slot-1",
+      "selectedWorkerLabel": "Immaculate Local Worker",
+      "selectedWorkerProfile": "local",
+      "selectedWorkerNodeId": "node-127-0-0-1-8791"
+    },
+    "evidence": {
+      "objectiveDigest": "13047924273e4692e4275c4e80c48135f24b8ce1a3f778f548c2bcdc6553e956",
+      "contextDigest": "fa586f03dade26bd17b2b741c3f0919afcdfe9fba3f21f0463160c887cccf997",
+      "promptDigest": "b845f2cdc215733595d11324",
+      "responseDigest": "4cb5a62e41f9aa4bf04eac4e25a020ba8528eec6fb5f969acf807190884ba3fc",
+      "sourceIds": [
+        "ollama-mid-q-latest",
+        "worker-local-127-0-0-1-8791-slot-1",
+        "immaculate-benchmark-2026-04-19T21-36-20-879Z"
+      ],
+      "evidenceDigest": "007337a90b33ff67b3b8b0194eb590529b898abcb7ce2eace49bceec8c52d6cc",
+      "contextFingerprint": "14c2faafbb457b44dd32e16d15e49f0aaf1218c0401eeb5578f147a427aeda0e"
+    },
+    "decisionSummary": {
+      "routeSuggestion": "cognitive",
+      "reasonSummary": "Local Q lane health was sufficient to maintain the primary reasoning path.",
+      "commitStatement": "Hold outward dispatch while continuing to optimize the queued operation.",
+      "responsePreview": "ROUTE: cognitive REASON: Local Q lane health was sufficient to maintain the primary reasoning path. COMMIT:Hold outward dispatch while continuing to optimize the queued operation."
+    },
+    "generatedAt": "2026-04-19T22:13:47.164Z",
+    "ledger": {
+      "eventSeq": 6,
+      "parentEventHash": "d0dc2180c081f2a4cf6afe889bcb8744793695260cb328bc0ec56ec94f24a237",
+      "eventHash": "136f6bd63442d54fd7cc6b2e3b0d6ae17df05b27e8befe72fbced44497c9a0af"
+    },
+    "sourcePath": ".runtime/harness/arobi-network/decision-ledger.ndjson"
+  },
+  "output": {
+    "jsonPath": "docs\\wiki\\Arobi-Decision-Review.json",
+    "markdownPath": "docs\\wiki\\Arobi-Decision-Review.md"
+  }
+}

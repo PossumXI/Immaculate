@@ -130,8 +130,26 @@ export function buildParallelFormation(input: BuildParallelFormationInput): Para
         : input.federatedPressure?.pressure === "critical"
           ? 0
           : input.healthWeightedWidth > 1 || input.workerReliabilityFloor >= 10
-            ? 1
-            : 0;
+          ? 1
+          : 0;
+  const backupReplicaCount =
+    boundedRetryBudget <= 0 || horizontalReplicaCount <= 1
+      ? 0
+      : Math.min(Math.max(1, verificationQuorum - 1), Math.max(0, horizontalReplicaCount - 1));
+  const verificationStrategy =
+    horizontalReplicaCount <= 1
+      ? "single-trust"
+      : remoteReplicaCount > 0
+        ? "hybrid-majority"
+        : "local-quorum";
+  const failoverStrategy =
+    backupReplicaCount <= 0
+      ? "none"
+      : remoteReplicaCount > 0
+        ? "hybrid-spare"
+        : input.backlogPressure === "critical" || input.governancePressure === "critical"
+          ? "serialize-on-pressure"
+          : "local-spare";
   const affinityMode: ExecutionParallelAffinityMode =
     horizontalReplicaCount <= 1
       ? "local-pinned"
@@ -204,6 +222,9 @@ export function buildParallelFormation(input: BuildParallelFormationInput): Para
     `local=${localReplicaCount}`,
     `remote=${remoteReplicaCount}`,
     `quorum=${verificationQuorum}`,
+    `backup=${backupReplicaCount}`,
+    `verify=${verificationStrategy}`,
+    `failover=${failoverStrategy}`,
     `retry=${boundedRetryBudget}`,
     `aff=${affinityMode}`,
     `ddl=${deadlineClass}:${deadlineBudgetMs}ms`,

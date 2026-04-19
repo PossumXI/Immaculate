@@ -21,24 +21,27 @@ For each breakthrough, record:
 
 ### 2026-04-19
 
-#### Q now preserves governed routing through mixed-pressure mediation again, and the Arobi audit trail is live on real successful calls
+#### Arobi decision review is now live, and governed Q mediation is green on the current lock
 
 What changed:
 - the dedicated Q gateway now gives structured benchmark requests one bounded retry on upstream timeout/error instead of failing the first malformed or slow attempt as terminal
 - structured benchmark requests now honor benchmark-specific Ollama context settings instead of silently overriding them with the smaller default fast-lane settings
 - the hard four-scenario `Q` mediation drift lane was rerun clean at `0` failed assertions, and the gateway-to-Immaculate substrate seam was rerun clean at `0` failed assertions on the same same-day lock
-- the governed `/api/q/run` path was exercised with a real authenticated success and now lands a chained Arobi decision record plus a successful public audit-surface record instead of only failure examples
+- the governed `/api/q/run` path was exercised with a real authenticated success and now lands a chained Arobi decision record plus a successful public audit-surface record
+- the new [[Arobi-Decision-Review]] surface now summarizes structurally linked successful ledger chains instead of leaving those governed records buried in `.runtime`
 
 Why it matters:
 - the missed pattern was that Immaculate’s fast runner path was already healthy, but one gateway timeout in the first local-cognition scenario could still collapse the whole mediation proof into a guarded fallback even though Q, arbitration, and scheduling logic were otherwise correct
 - restoring the mixed-pressure lane matters because it proves Q and Immaculate can hold a governed local-Q route under real pressure without drift, not just under the easier bridge or direct-contract lanes
 - proving a successful chained Arobi decision record matters because insurable systems need more than pass/fail benchmarks; they need a durable receipt for what was asked, what route was chosen, why it was chosen, and which governed worker actually executed it
+- surfacing the linked ledger review matters because it turns a private trace into a reviewable artifact without leaking raw internal reasoning or resorting to hand-written proof claims
 
 Evidence:
-- `docs/wiki/Q-Mediation-Drift.md` now records `4` scenarios, `0` failed assertions, route-alignment `P50 1`, max drift `0`, and runner-path `P95 6.68 ms`
+- `docs/wiki/Q-Mediation-Drift.md` now records `4` scenarios, `0` failed assertions, route-alignment `P50 1`, max drift `0`, and runner-path `P95 4.4 ms`
 - `docs/wiki/Q-Gateway-Substrate.md` now records `0` failed assertions with gateway-latency `P95 15297.49 ms` and arbitration-latency `P95 1.74 ms`
 - `docs/wiki/Q-API-Audit.md` now records a real successful authenticated governed call with `parse success: true`, decision trace `trace-9c1cc380a96fb10d`, and latency `23349.14 ms`
 - `.runtime/harness-audit-live/arobi-network/decision-ledger.ndjson` now carries a chained completed decision record for session `audit-proof-1`
+- `docs/wiki/Arobi-Decision-Review.md` now records `2` linked ledgers, `9` linked records, `8` successful linked records, and the latest successful governed record for session `arobi-q-proof-20260419`
 
 What this unlocks next:
 - the next Q improvement pass can target full Terminal-Bench sweep generalization instead of re-fixing the same mediation timeout edge

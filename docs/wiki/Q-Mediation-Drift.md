@@ -2,14 +2,14 @@
 
 This page is generated from the dedicated `q-mediation-drift` benchmark pack. It measures whether Immaculate preserves Q's governed route through arbitration, scheduling, and routing under mixed pressure without drift.
 
-- Generated: 2026-04-19T21:41:32.466Z
-- Release: `0.1.0+7e1885e`
-- Repo commit: `7e1885e`
+- Generated: 2026-04-19T22:06:40.025Z
+- Release: `0.1.0+6fc8e11`
+- Repo commit: `6fc8e11`
 - Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`
 
 ## Benchmark
 
-- Suite: `immaculate-benchmark-2026-04-19T21-36-20-880Z`
+- Suite: `immaculate-benchmark-2026-04-19T22-04-57-220Z`
 - Pack: `Q Mediation Drift (q-mediation-drift)`
 - Scenario count: `4`
 - Failed assertions: `0`
@@ -18,11 +18,11 @@ This page is generated from the dedicated `q-mediation-drift` benchmark pack. It
 - Drift detected max: `0`
 - Local replicas P50: `0`
 - Verification quorum P50: `1`
-- Mediation latency P95: `30700.51 ms`
-- Runner path latency P95: `6.68 ms`
-- Arbitration latency P95: `2.07 ms`
-- Scheduling latency P95: `3.45 ms`
-- Routing latency P95: `1.16 ms`
+- Mediation latency P95: `26054.67 ms`
+- Runner path latency P95: `4.4 ms`
+- Arbitration latency P95: `1.61 ms`
+- Scheduling latency P95: `2.04 ms`
+- Routing latency P95: `0.75 ms`
 - Hardware: knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics
 
 ## Causal Diagnosis
@@ -40,7 +40,7 @@ This page is generated from the dedicated `q-mediation-drift` benchmark pack. It
 - Parallel formation: `hybrid-quorum` / local `2` / remote `0` / quorum `2`
 - Affinity and deadline: `quorum-local` / `bounded` / `700 ms` / `degrade`
 - Intent alignment: `0.50`
-- Formation summary: mode=hybrid-quorum / stages=1 / horizontal=2 / local=2 / remote=0 / quorum=2 / retry=1 / aff=quorum-local / ddl=bounded:700ms / bp=degrade / align=0.50 / roles=reasoner>mid / gov=elevated / backlog=elevated / fed=elevated / qLane=local-primary
+- Formation summary: mode=hybrid-quorum / stages=1 / horizontal=2 / local=2 / remote=0 / quorum=2 / backup=1 / verify=local-quorum / failover=local-spare / retry=1 / aff=quorum-local / ddl=bounded:700ms / bp=degrade / align=0.50 / roles=reasoner>mid / gov=elevated / backlog=elevated / fed=elevated / qLane=local-primary
 - Q drift reasons: `none`
 - Immaculate drift reasons: `none`
 - Drift detected: `false`
@@ -58,7 +58,7 @@ This page is generated from the dedicated `q-mediation-drift` benchmark pack. It
 - Parallel formation: `hybrid-quorum` / local `2` / remote `0` / quorum `2`
 - Affinity and deadline: `quorum-local` / `bounded` / `700 ms` / `degrade`
 - Intent alignment: `0.50`
-- Formation summary: mode=hybrid-quorum / stages=1 / horizontal=2 / local=2 / remote=0 / quorum=2 / retry=1 / aff=quorum-local / ddl=bounded:700ms / bp=degrade / align=0.50 / roles=reasoner>mid / gov=elevated / backlog=elevated / fed=elevated / qLane=local-primary
+- Formation summary: mode=hybrid-quorum / stages=1 / horizontal=2 / local=2 / remote=0 / quorum=2 / backup=1 / verify=local-quorum / failover=local-spare / retry=1 / aff=quorum-local / ddl=bounded:700ms / bp=degrade / align=0.50 / roles=reasoner>mid / gov=elevated / backlog=elevated / fed=elevated / qLane=local-primary
 - Q drift reasons: `none`
 - Immaculate drift reasons: `none`
 - Drift detected: `false`
@@ -76,7 +76,7 @@ This page is generated from the dedicated `q-mediation-drift` benchmark pack. It
 - Parallel formation: `single-lane` / local `0` / remote `0` / quorum `1`
 - Affinity and deadline: `local-pinned` / `hard` / `400 ms` / `hold`
 - Intent alignment: `0.01`
-- Formation summary: mode=single-lane / stages=0 / horizontal=0 / local=0 / remote=0 / quorum=1 / retry=0 / aff=local-pinned / ddl=hard:400ms / bp=hold / align=0.01 / roles=none / gov=critical / backlog=critical / fed=critical / qLane=degraded
+- Formation summary: mode=single-lane / stages=0 / horizontal=0 / local=0 / remote=0 / quorum=1 / backup=0 / verify=single-trust / failover=none / retry=0 / aff=local-pinned / ddl=hard:400ms / bp=hold / align=0.01 / roles=none / gov=critical / backlog=critical / fed=critical / qLane=degraded
 - Q drift reasons: `none`
 - Immaculate drift reasons: `none`
 - Drift detected: `false`
@@ -90,11 +90,11 @@ This page is generated from the dedicated `q-mediation-drift` benchmark pack. It
 - Immaculate self-eval: Immaculate should hold or degrade because readiness or gateway substrate is not healthy enough for governed local cognition. Immaculate preserved Q's governed route through arbitration, scheduling, and routing.
 - Context fingerprint: `q-mediation-context-mixed-pressure-integrity-guarded-hold`
 - Evidence digest: `q-mediation-evidence-mixed-pressure-integrity-guarded-hold`
-- Runner bottleneck stage: `arbitration`
+- Runner bottleneck stage: `scheduling`
 - Parallel formation: `single-lane` / local `0` / remote `0` / quorum `1`
 - Affinity and deadline: `local-pinned` / `hard` / `400 ms` / `hold`
 - Intent alignment: `0.09`
-- Formation summary: mode=single-lane / stages=0 / horizontal=0 / local=0 / remote=0 / quorum=1 / retry=0 / aff=local-pinned / ddl=hard:400ms / bp=hold / align=0.09 / roles=none / gov=critical / backlog=elevated / fed=elevated / qLane=degraded
+- Formation summary: mode=single-lane / stages=0 / horizontal=0 / local=0 / remote=0 / quorum=1 / backup=0 / verify=single-trust / failover=none / retry=0 / aff=local-pinned / ddl=hard:400ms / bp=hold / align=0.09 / roles=none / gov=critical / backlog=elevated / fed=elevated / qLane=degraded
 - Q drift reasons: `none`
 - Immaculate drift reasons: `none`
 - Drift detected: `false`

@@ -3,7 +3,13 @@ import { appendFile, mkdir, open } from "node:fs/promises";
 import type { GuardVerdict, GovernancePressureLevel } from "@immaculate/core";
 import { sha256Hash, sha256Json } from "./utils.js";
 
-type DecisionTraceSource = "q-api" | "cognitive-execution" | "conversation" | "benchmark";
+type DecisionTraceSource =
+  | "q-api"
+  | "cognitive-execution"
+  | "conversation"
+  | "benchmark"
+  | "orchestration-arbitration"
+  | "orchestration-schedule";
 
 type DecisionTracePrincipal = {
   kind: string;
