@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-20T18:38:19.445Z",
+  "generatedAt": "2026-04-20T18:41:52.041Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "dc0ece0021f91f55c23700b594f1412ff961682e",
-    "gitShortSha": "dc0ece0",
+    "gitSha": "ff341231a31681b823a5a26099dbfd43cb6916b7",
+    "gitShortSha": "ff34123",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+dc0ece0",
+    "buildId": "0.1.0+ff34123",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -64,7 +64,7 @@
       "repoId": "immaculate",
       "repoLabel": "Immaculate",
       "gitBranch": "publish-q-win",
-      "repoSha": "dc0ece0"
+      "repoSha": "ff34123"
     },
     {
       "repoId": "openjaws",

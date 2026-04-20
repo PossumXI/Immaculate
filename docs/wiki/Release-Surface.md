@@ -2,9 +2,9 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-04-20T18:40:53.256Z
-- Immaculate release: `0.1.0+dc0ece0`
-- Repo commit: `dc0ece0021f91f55c23700b594f1412ff961682e`
+- Generated: 2026-04-20T18:42:37.075Z
+- Immaculate release: `0.1.0+ff34123`
+- Repo commit: `ff341231a31681b823a5a26099dbfd43cb6916b7`
 - Branch: `publish-q-win`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+dc0ece0` is the current repo build stamp.
+- Immaculate build `0.1.0+ff34123` is the current repo build stamp.
 - Arobi Network is the ledger-backed private and public operator network and audit substrate. Immaculate is the governed harness and orchestrator inside it. Q is the reasoning brain inside that governed stack.
 - Q is the only public model name used across the repo, and it is built on `Gemma 4`.
 - The latest tracked Q training bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`, tied to dataset `.training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
@@ -28,14 +28,14 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - BridgeBench: `2026-04-19T07:51:12.922Z` via `docs/wiki/BridgeBench.json`
 - BridgeBench soak: `2026-04-15T06:15:54.188Z` via `docs/wiki/BridgeBench-Soak.json`
 - Q structured contract benchmark: `2026-04-19T07:48:09.656Z` via `docs/wiki/Model-Benchmark-Comparison.json`
-- Q readiness gate: `2026-04-20T18:39:41.204Z` via `docs/wiki/Q-Readiness-Gate.json`
+- Q readiness gate: `2026-04-20T18:41:51.714Z` via `docs/wiki/Q-Readiness-Gate.json`
 - Q gateway validation: `2026-04-19T07:47:33.854Z` via `docs/wiki/Q-Gateway-Validation.json`
 - Q gateway substrate: `2026-04-19T22:06:38.757Z` via `docs/wiki/Q-Gateway-Substrate.json`
 - Q mediation drift: `2026-04-19T22:06:40.025Z` via `docs/wiki/Q-Mediation-Drift.json`
 - Arobi audit integrity: `2026-04-19T23:41:05.513Z` via `docs/wiki/Arobi-Audit-Integrity.json`
 - Arobi live ledger receipt: `2026-04-20T17:22:38.533Z` via `docs/wiki/Arobi-Live-Ledger-Receipt.json`
-- Roundtable actionability: `2026-04-20T18:38:19.445Z` via `docs/wiki/Roundtable-Actionability.json`
-- Roundtable runtime: `2026-04-20T18:39:21.299Z` via `docs/wiki/Roundtable-Runtime.json`
+- Roundtable actionability: `2026-04-20T18:41:52.041Z` via `docs/wiki/Roundtable-Actionability.json`
+- Roundtable runtime: `2026-04-20T18:42:32.736Z` via `docs/wiki/Roundtable-Runtime.json`
 - Q API audit: `2026-04-19T22:47:48Z` via `docs/wiki/Q-API-Audit.json`
 - Arobi decision review: `2026-04-19T22:47:51.678Z` via `docs/wiki/Arobi-Decision-Review.json`
 - Q hybrid training: `2026-04-19T07:46:17Z` via `docs/wiki/Q-Hybrid-Training.json`
@@ -45,9 +45,9 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Cloudflare Q inference: `2026-04-19T05:52:31Z` via `docs/wiki/Cloudflare-Q-Inference.json`
 - OCI GPU advisor: `2026-04-19T07:46:17Z` via `docs/wiki/OCI-GPU-Advisor.json`
 - OCI region capacity: `2026-04-17T02:02:24Z` via `docs/wiki/OCI-Region-Capacity.json`
-- Q benchmark corpus: `2026-04-20T18:39:41Z` via `docs/wiki/Q-Benchmark-Corpus.json`
+- Q benchmark corpus: `2026-04-20T18:41:51Z` via `docs/wiki/Q-Benchmark-Corpus.json`
 - Q benchmark promotion: `2026-04-19T07:46:03Z` via `docs/wiki/Q-Benchmark-Promotion.json`
-- W&B benchmark export: `2026-04-20T13:33:36.938460+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
+- W&B benchmark export: `2026-04-20T17:24:47.129689+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
 - Harbor terminal bench: `2026-04-19T07:43:17.831Z` via `docs/wiki/Harbor-Terminal-Bench.json`
 - Terminal-Bench public task: `2026-04-19T14:31:45.217Z` via `docs/wiki/Terminal-Bench-Public-Task.json`
 - Terminal-Bench leaderboard status: `2026-04-19T14:31:45.545Z` via `docs/wiki/Terminal-Bench-Receipt.json`
