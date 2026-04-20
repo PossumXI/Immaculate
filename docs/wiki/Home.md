@@ -25,7 +25,7 @@ Right now the honest story is:
 - the live `Q` API audit loop is also now proving successful governed calls, not just rejects: [[Q-API-Audit]] records a real authenticated `/api/q/run` success with `parse success: true`, `decision trace linked`, and `23349.14 ms` latency on the current Q bundle
 - the live Arobi decision review is now proving the governed ledger chain itself, not just one API response: [[Arobi-Decision-Review]] records `2` linked ledgers, `9` linked records, `8` successful linked records, and the latest successful governed record for session `arobi-q-proof-20260419`
 - the new live Arobi audit-integrity lane is green: [[Arobi-Audit-Integrity]] records `3` governed scenarios, `0` failed assertions, linked-records `P50 5`, source-coverage `P50 4`, self-evaluations `P50 3`, and audit-completeness `P50 1.00` without exposing raw chain-of-thought
-- the roundtable planning lane is now green both as a planner and as a live runtime proof: [[Roundtable-Actionability]] records `3` isolated repo-scoped actions across Immaculate, OpenJaws, and Asgard, and [[Roundtable-Runtime]] proves those same lanes survive the live mediated harness path with `3` scenarios and `0` failed assertions
+- the roundtable planning lane is now green both as a planner and as a live runtime proof: [[Roundtable-Actionability]] records `3` isolated repo-scoped actions across Immaculate, OpenJaws, and Asgard with explicit agent-branch-only authority, and [[Roundtable-Runtime]] proves those same lanes survive the live mediated harness path with `3` scenarios, `0` failed assertions, `3` repo probes, and `3` authority-bound lanes
 - the current Q improvement path is machine-stamped: the active Q bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`, the current benchmark corpus is `58` rows, and the paired Immaculate orchestration bundle lives on [[Release-Surface]] and [[Q-Benchmark-Corpus]]
 - the latest tracked W&B export remains current on `2026-04-19`, while the live mediation, substrate, gateway, public-task Harbor win, and audit-integrity benchmark above are the newer same-day repo-local wins
 - Immaculate now treats healthy local Q as a first-class governed routing directive, so blocked cloud status no longer forces a false guarded hold when the local Q lane is already healthy
@@ -68,8 +68,8 @@ Right now the honest story is:
 - [[Release-Surface]] is the machine-stamped build-and-bundle page for the current Immaculate and `Q` release state
 - [[Arobi-Network-Architecture]] is the stable plain-English explainer for the product split: network, harness, and brain
 - [[Arobi-Audit-Integrity]] is the live insurer-grade proof that governed Q requests stay linked from prompt to decision to outcome inside the Arobi ledger
-- [[Roundtable-Actionability]] is the live proof that Immaculate can turn a cross-project objective into isolated agent lanes instead of storing a roundtable transcript without an execution plan
-- [[Roundtable-Runtime]] is the live proof that the roundtable plan survives a real bounded Q run, mediated schedule, and recorded repo-scoped conversation trail instead of staying a planner-only claim
+- [[Roundtable-Actionability]] is the live proof that Immaculate can turn a cross-project objective into isolated agent lanes with agent-branch-only write authority instead of storing a roundtable transcript without an execution plan
+- [[Roundtable-Runtime]] is the live proof that the roundtable plan survives a real bounded Q run, mediated schedule, repo probe, and recorded repo-scoped conversation trail instead of staying a planner-only claim
 - [[Breakthrough-Log]] tracks major leaps, missed-but-real insights, and hard system milestones as they land
 - [[Engineering-Doctrine]] defines the standing build philosophy and what qualifies as a real leap
 - [[Benchmark-Status]] points to the live public W&B project plus the latest published benchmark runs by pack

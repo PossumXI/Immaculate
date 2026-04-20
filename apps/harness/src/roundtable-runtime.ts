@@ -17,7 +17,8 @@ import { getQFoundationModelName, getQModelTarget } from "./q-model.js";
 import {
   buildRoundtableActionPlan,
   cleanupRoundtableActionWorktree,
-  materializeRoundtableActionWorktree
+  materializeRoundtableActionWorktree,
+  probeRoundtableActionWorkspace
 } from "./roundtable.js";
 import { resolveReleaseMetadata, type ReleaseMetadata } from "./release-metadata.js";
 
@@ -46,6 +47,8 @@ type RoundtableRuntimeScenarioResult = {
   totalLatencyMs: number;
   readyActionCount: number;
   materializedActionCount: number;
+  probedActionCount: number;
+  authorityBoundActionCount: number;
   isolatedBranchCount: number;
   repoCoverageCount: number;
   recordedActionCount: number;
@@ -54,6 +57,8 @@ type RoundtableRuntimeScenarioResult = {
   scheduleRoundtableActionCount: number;
   scheduleRoundtableRepoCount: number;
   sessionScopePreserved: boolean;
+  trackedFileCountP50: number;
+  sampleFiles: string[];
   guardVerdict?: string;
   routeSuggestion?: string;
   roundtableSummary?: string;
@@ -69,8 +74,11 @@ type RoundtableRuntimeSurface = {
     failedAssertions: number;
     repoCoverageP50: number;
     materializedActionsP50: number;
+    probedActionsP50: number;
+    authorityBoundActionsP50: number;
     workspaceScopedTurnsP50: number;
     recordedActionsP50: number;
+    trackedFilesP50: number;
     runnerPathP95Ms: number;
     seedLatencyP95Ms: number;
     mediationLatencyP95Ms: number;
@@ -84,11 +92,15 @@ type RoundtableRuntimeSurface = {
     guardVerdict?: string;
     repoCoverageCount: number;
     materializedActionCount: number;
+    probedActionCount: number;
+    authorityBoundActionCount: number;
     recordedActionCount: number;
     workspaceScopedTurnCount: number;
     scheduleRoundtableActionCount: number;
     scheduleRoundtableRepoCount: number;
     sessionScopePreserved: boolean;
+    trackedFileCountP50: number;
+    sampleFiles: string[];
     roundtableSummary?: string;
   }>;
   assertions: Array<{
@@ -340,6 +352,9 @@ async function runScenario(options: {
   });
   const readyActions = plan.actions.filter((action) => action.status === "ready");
   const materialized = readyActions.map((action) => materializeRoundtableActionWorktree(action));
+  const probes = readyActions.map((action, index) =>
+    probeRoundtableActionWorkspace(action, materialized[index]?.worktreePath)
+  );
   const started = performance.now();
 
   try {
@@ -400,6 +415,8 @@ async function runScenario(options: {
       totalLatencyMs: Number((performance.now() - started).toFixed(2)),
       readyActionCount: readyActions.length,
       materializedActionCount: materialized.length,
+      probedActionCount: probes.filter((entry) => entry.probeSucceeded).length,
+      authorityBoundActionCount: probes.filter((entry) => entry.authorityBranchPreserved).length,
       isolatedBranchCount: materialized.filter((entry) => entry.branch.startsWith("agents/")).length,
       repoCoverageCount: plan.repoCount,
       recordedActionCount,
@@ -409,6 +426,8 @@ async function runScenario(options: {
       scheduleRoundtableRepoCount: schedule?.roundtableRepoCount ?? 0,
       sessionScopePreserved:
         conversation?.sessionScope === consentScope && schedule?.sessionScope === consentScope,
+      trackedFileCountP50: median(probes.map((entry) => entry.trackedFileCount)),
+      sampleFiles: [...new Set(probes.flatMap((entry) => entry.sampleFiles))].slice(0, 6),
       guardVerdict: conversation?.guardVerdict,
       routeSuggestion:
         (mediation.body as { execution?: { routeSuggestion?: string } })?.execution?.routeSuggestion ??
@@ -450,8 +469,11 @@ function renderMarkdown(report: RoundtableRuntimeSurface): string {
     `- Failed assertions: \`${report.benchmark.failedAssertions}\``,
     `- Repo coverage P50: \`${report.benchmark.repoCoverageP50}\``,
     `- Materialized actions P50: \`${report.benchmark.materializedActionsP50}\``,
+    `- Probed actions P50: \`${report.benchmark.probedActionsP50}\``,
+    `- Branch-authority matches P50: \`${report.benchmark.authorityBoundActionsP50}\``,
     `- Recorded roundtable actions P50: \`${report.benchmark.recordedActionsP50}\``,
     `- Workspace-scoped turns P50: \`${report.benchmark.workspaceScopedTurnsP50}\``,
+    `- Tracked files P50: \`${report.benchmark.trackedFilesP50}\``,
     `- Seed latency P95: \`${report.benchmark.seedLatencyP95Ms}\` ms`,
     `- Mediation latency P95: \`${report.benchmark.mediationLatencyP95Ms}\` ms`,
     `- Runner path latency P95: \`${report.benchmark.runnerPathP95Ms}\` ms`,
@@ -468,10 +490,14 @@ function renderMarkdown(report: RoundtableRuntimeSurface): string {
         `- Guard verdict: \`${scenario.guardVerdict ?? "unknown"}\``,
         `- Repo coverage: \`${scenario.repoCoverageCount}\``,
         `- Materialized actions: \`${scenario.materializedActionCount}\``,
+        `- Probed actions: \`${scenario.probedActionCount}\``,
+        `- Branch-authority matches: \`${scenario.authorityBoundActionCount}\``,
         `- Recorded roundtable actions: \`${scenario.recordedActionCount}\``,
         `- Workspace-scoped turns: \`${scenario.workspaceScopedTurnCount}\``,
+        `- Tracked files P50: \`${scenario.trackedFileCountP50}\``,
         `- Schedule roundtable counts: actions \`${scenario.scheduleRoundtableActionCount}\` / repos \`${scenario.scheduleRoundtableRepoCount}\``,
         `- Session scope preserved: \`${scenario.sessionScopePreserved}\``,
+        `- Sample files: ${scenario.sampleFiles.length > 0 ? scenario.sampleFiles.map((entry) => `\`${entry}\``).join(", ") : "n/a"}`,
         `- Summary: ${scenario.roundtableSummary ?? "n/a"}`,
         ""
       ].join("\n")
@@ -540,6 +566,19 @@ async function main(): Promise<void> {
         detail: "Every ready roundtable action should materialize a dedicated worktree on an agent branch."
       },
       {
+        id: "roundtable-runtime-branch-authority-bound",
+        status: scenarioResults.every(
+          (entry) => entry.probedActionCount >= entry.readyActionCount && entry.authorityBoundActionCount >= entry.readyActionCount
+        )
+          ? "pass"
+          : "fail",
+        target: "all ready actions probed and bound to their agent branch authority",
+        actual: scenarioResults
+          .map((entry) => `${entry.id}:probes=${entry.probedActionCount}/${entry.readyActionCount},authority=${entry.authorityBoundActionCount}/${entry.readyActionCount}`)
+          .join(" | "),
+        detail: "Every ready action should touch its repo lane and preserve the allowed agent-only push branch instead of drifting to an uncontrolled branch."
+      },
+      {
         id: "roundtable-runtime-audit-captured",
         status: scenarioResults.every(
           (entry) =>
@@ -569,8 +608,11 @@ async function main(): Promise<void> {
         failedAssertions: assertions.filter((entry) => entry.status === "fail").length,
         repoCoverageP50: median(scenarioResults.map((entry) => entry.repoCoverageCount)),
         materializedActionsP50: median(scenarioResults.map((entry) => entry.materializedActionCount)),
+        probedActionsP50: median(scenarioResults.map((entry) => entry.probedActionCount)),
+        authorityBoundActionsP50: median(scenarioResults.map((entry) => entry.authorityBoundActionCount)),
         workspaceScopedTurnsP50: median(scenarioResults.map((entry) => entry.workspaceScopedTurnCount)),
         recordedActionsP50: median(scenarioResults.map((entry) => entry.recordedActionCount)),
+        trackedFilesP50: median(scenarioResults.map((entry) => entry.trackedFileCountP50)),
         runnerPathP95Ms: percentile(scenarioResults.map((entry) => entry.totalLatencyMs), 95),
         seedLatencyP95Ms: percentile(scenarioResults.map((entry) => entry.seedLatencyMs), 95),
         mediationLatencyP95Ms: percentile(scenarioResults.map((entry) => entry.mediationLatencyMs), 95),
@@ -584,11 +626,15 @@ async function main(): Promise<void> {
         guardVerdict: entry.guardVerdict,
         repoCoverageCount: entry.repoCoverageCount,
         materializedActionCount: entry.materializedActionCount,
+        probedActionCount: entry.probedActionCount,
+        authorityBoundActionCount: entry.authorityBoundActionCount,
         recordedActionCount: entry.recordedActionCount,
         workspaceScopedTurnCount: entry.workspaceScopedTurnCount,
         scheduleRoundtableActionCount: entry.scheduleRoundtableActionCount,
         scheduleRoundtableRepoCount: entry.scheduleRoundtableRepoCount,
         sessionScopePreserved: entry.sessionScopePreserved,
+        trackedFileCountP50: entry.trackedFileCountP50,
+        sampleFiles: entry.sampleFiles,
         roundtableSummary: entry.roundtableSummary
       })),
       assertions,

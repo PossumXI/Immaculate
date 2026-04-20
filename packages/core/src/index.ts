@@ -735,6 +735,10 @@ export const agentWorkspaceIsolationModes = ["repo", "branch", "worktree"] as co
 export type AgentWorkspaceIsolationMode =
   (typeof agentWorkspaceIsolationModes)[number];
 
+export const agentWorkspaceWriteAuthorities = ["repo-read-only", "agent-branch-only"] as const;
+export type AgentWorkspaceWriteAuthority =
+  (typeof agentWorkspaceWriteAuthorities)[number];
+
 export type AgentWorkspaceScope = {
   repoId: string;
   repoLabel: string;
@@ -744,6 +748,9 @@ export type AgentWorkspaceScope = {
   repoSha?: string;
   sessionScope?: string;
   isolationMode: AgentWorkspaceIsolationMode;
+  writeAuthority?: AgentWorkspaceWriteAuthority;
+  allowedPushRemote?: string;
+  allowedPushBranch?: string;
 };
 
 export const roundtableActionStatuses = ["planned", "ready", "blocked"] as const;
@@ -1844,7 +1851,10 @@ export const agentTurnSchema = z.object({
       gitBranch: z.string().optional(),
       repoSha: z.string().optional(),
       sessionScope: z.string().optional(),
-      isolationMode: z.enum(agentWorkspaceIsolationModes)
+      isolationMode: z.enum(agentWorkspaceIsolationModes),
+      writeAuthority: z.enum(agentWorkspaceWriteAuthorities).optional(),
+      allowedPushRemote: z.string().optional(),
+      allowedPushBranch: z.string().optional()
     })
     .optional()
 });
@@ -1888,7 +1898,10 @@ export const multiAgentConversationSchema = z.object({
           gitBranch: z.string().optional(),
           repoSha: z.string().optional(),
           sessionScope: z.string().optional(),
-          isolationMode: z.enum(agentWorkspaceIsolationModes)
+          isolationMode: z.enum(agentWorkspaceIsolationModes),
+          writeAuthority: z.enum(agentWorkspaceWriteAuthorities).optional(),
+          allowedPushRemote: z.string().optional(),
+          allowedPushBranch: z.string().optional()
         })
       })
     )

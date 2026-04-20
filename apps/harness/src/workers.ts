@@ -72,6 +72,7 @@ export type IntelligenceWorkerAssignmentRequest = {
   preferredLocality?: string | null;
   preferredDeviceAffinityTags?: string[];
   avoidPeerIds?: string[];
+  avoidNodeIds?: string[];
   avoidHostLabels?: string[];
   avoidLocalities?: string[];
   avoidDeviceAffinityTags?: string[];
@@ -706,6 +707,7 @@ function selectWorker(
     ...(resolvedRequest.preferredLayerIds ?? []).map((value) => value.trim()).filter(Boolean)
   ].filter((value): value is string => Boolean(value));
   const avoidPeerIds = new Set(normalizeStringArray(resolvedRequest.avoidPeerIds));
+  const avoidNodeIds = new Set(normalizeStringArray(resolvedRequest.avoidNodeIds));
   const avoidHostLabels = new Set(normalizeStringArray(resolvedRequest.avoidHostLabels));
   const avoidLocalities = new Set(normalizeStringArray(resolvedRequest.avoidLocalities));
   const requestedAffinity = normalizeStringArray(resolvedRequest.preferredDeviceAffinityTags);
@@ -791,6 +793,13 @@ function selectWorker(
       ) {
         score -= 4;
         reasons.push(`avoid-peer ${worker.peerId}`);
+      }
+      if (
+        worker.nodeId &&
+        avoidNodeIds.has(worker.nodeId)
+      ) {
+        score -= 6;
+        reasons.push(`node-dup ${worker.nodeId}`);
       }
       if (
         worker.hostLabel &&
@@ -1406,6 +1415,7 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
     async assignWorkerBatch(args: {
       requests: IntelligenceWorkerAssignmentRequest[];
       avoidDuplicatePeers?: boolean;
+      avoidDuplicateNodes?: boolean;
     }): Promise<{
       workers: IntelligenceWorkerView[];
       summary: IntelligenceWorkerSummary;
@@ -1416,10 +1426,12 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
         let workers = await readWorkers(now);
         const assignments: IntelligenceWorkerAssignment[] = [];
         const usedPeerIds = new Set<string>();
+        const usedNodeIds = new Set<string>();
         const usedHostLabels = new Set<string>();
         const usedLocalities = new Set<string>();
         const usedDeviceAffinityTags = new Set<string>();
         const avoidDuplicatePeers = args.avoidDuplicatePeers !== false;
+        const avoidDuplicateNodes = args.avoidDuplicateNodes === true;
 
         for (const request of args.requests) {
           const nodeViewMap = request.nodeViewMap ?? buildNodeViewMap(request.nodeViews);
@@ -1432,6 +1444,12 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
                 ...[...usedPeerIds].filter(Boolean)
               ]
             : request.avoidPeerIds;
+          const batchAvoidNodeIds = avoidDuplicateNodes
+            ? [
+                ...normalizeStringArray(request.avoidNodeIds),
+                ...[...usedNodeIds].filter(Boolean)
+              ]
+            : request.avoidNodeIds;
           const batchAvoidHostLabels = [
             ...normalizeStringArray(request.avoidHostLabels),
             ...[...usedHostLabels].filter(Boolean)
@@ -1446,9 +1464,10 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
           ];
           const peerViewMap =
             request.peerViewMap ?? buildPeerViewMap(workers, nodeViewMap, request.peerViews);
-          const resolvedRequest: IntelligenceWorkerAssignmentRequest = {
+          let resolvedRequest: IntelligenceWorkerAssignmentRequest = {
             ...request,
             avoidPeerIds: batchAvoidPeerIds,
+            avoidNodeIds: batchAvoidNodeIds,
             avoidHostLabels: batchAvoidHostLabels,
             avoidLocalities: batchAvoidLocalities,
             avoidDeviceAffinityTags: batchAvoidDeviceAffinityTags,
@@ -1458,7 +1477,19 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
             peerViewMap,
             executionOutcomeSummaryMap
           };
-          const selection = selectWorker(workers, resolvedRequest, now);
+          let selection = selectWorker(workers, resolvedRequest, now);
+          if (
+            !selection.assignment &&
+            avoidDuplicateNodes &&
+            Array.isArray(batchAvoidNodeIds) &&
+            batchAvoidNodeIds.length > 0
+          ) {
+            resolvedRequest = {
+              ...resolvedRequest,
+              avoidNodeIds: request.avoidNodeIds
+            };
+            selection = selectWorker(workers, resolvedRequest, now);
+          }
           if (!selection.assignment) {
             return {
               workers: selection.workers,
@@ -1511,6 +1542,9 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
           assignments.push(assignment);
           if (assignment.peerId) {
             usedPeerIds.add(assignment.peerId);
+          }
+          if (assignment.nodeId) {
+            usedNodeIds.add(assignment.nodeId);
           }
           if (assignment.hostLabel) {
             usedHostLabels.add(assignment.hostLabel);

@@ -30,7 +30,7 @@ const proofCards = [
   },
   {
     label: "Roundtable Runtime",
-    body: "Immaculate now turns a cross-project objective into isolated agent lanes and proves the plan survives a live bounded run. The runtime benchmark covers Immaculate, OpenJaws, and Asgard with 3 repo-scoped isolated actions recorded through the mediated harness path."
+    body: "Immaculate now turns a cross-project objective into isolated agent lanes and proves the plan survives a live bounded run. The runtime benchmark covers Immaculate, OpenJaws, and Asgard with 3 repo-scoped isolated actions, 3 live repo probes, and branch-authority held across every lane."
   },
   {
     label: "Q Substrate Benchmark",
@@ -107,7 +107,8 @@ export function LandingPage() {
             <span>Arobi decision review live</span>
             <span>Arobi audit integrity 3 scenarios</span>
             <span>Roundtable runtime 3 scenarios</span>
-            <span>Roundtable 3 isolated actions</span>
+            <span>Roundtable probes 3 repo lanes</span>
+            <span>Agent-branch authority P50 3</span>
             <span>Audit completeness P50 1.00</span>
             <span>Arobi Network audit substrate</span>
             <span>2 linked ledgers</span>

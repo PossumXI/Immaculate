@@ -29,6 +29,9 @@ type RoundtableActionabilitySurface = {
     role: string;
     gitBranch?: string;
     isolationMode: string;
+    writeAuthority?: string;
+    allowedPushRemote?: string;
+    allowedPushBranch?: string;
     status: string;
   }>;
   output: {
@@ -76,7 +79,7 @@ function renderMarkdown(report: RoundtableActionabilitySurface): string {
     "",
     ...report.actions.map(
       (action) =>
-        `- ${action.repoLabel} / ${action.role}: branch \`${action.gitBranch ?? "none"}\` / isolation \`${action.isolationMode}\` / status \`${action.status}\``
+        `- ${action.repoLabel} / ${action.role}: branch \`${action.gitBranch ?? "none"}\` / isolation \`${action.isolationMode}\` / authority \`${action.writeAuthority ?? "none"}\` / push \`${action.allowedPushRemote ?? "none"}/${action.allowedPushBranch ?? "none"}\` / status \`${action.status}\``
     )
   ].join("\n");
 }
@@ -127,6 +130,9 @@ async function main(): Promise<void> {
       role: action.role,
       gitBranch: action.workspaceScope.gitBranch,
       isolationMode: action.workspaceScope.isolationMode,
+      writeAuthority: action.workspaceScope.writeAuthority,
+      allowedPushRemote: action.workspaceScope.allowedPushRemote,
+      allowedPushBranch: action.workspaceScope.allowedPushBranch,
       status: action.status
     })),
     output: {

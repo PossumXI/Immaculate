@@ -22,6 +22,22 @@ type DiscoveredRoundtableRepo = AgentWorkspaceScope & {
   dirty: boolean;
 };
 
+export type RoundtableActionWorkspaceProbe = {
+  repoId: string;
+  repoLabel: string;
+  cwd: string;
+  activeBranch?: string;
+  repoSha?: string;
+  trackedFileCount: number;
+  statusLineCount: number;
+  sampleFiles: string[];
+  writeAuthority?: AgentWorkspaceScope["writeAuthority"];
+  allowedPushRemote?: string;
+  allowedPushBranch?: string;
+  authorityBranchPreserved: boolean;
+  probeSucceeded: boolean;
+};
+
 export type RoundtablePlan = {
   sessionScope?: string;
   repositories: DiscoveredRoundtableRepo[];
@@ -207,6 +223,12 @@ function actionStatusForRepo(repo: DiscoveredRoundtableRepo): RoundtableActionSt
   return "ready";
 }
 
+function workspaceWriteAuthorityForRepo(
+  repo: DiscoveredRoundtableRepo
+): AgentWorkspaceScope["writeAuthority"] {
+  return repo.available ? "agent-branch-only" : "repo-read-only";
+}
+
 function actionRationale(args: {
   repo: DiscoveredRoundtableRepo;
   role: IntelligenceLayerRole;
@@ -258,7 +280,10 @@ export function buildRoundtableActionPlan(
       gitBranch,
       repoSha: repo.repoSha,
       sessionScope,
-      isolationMode: repo.isolationMode
+      isolationMode: repo.isolationMode,
+      writeAuthority: workspaceWriteAuthorityForRepo(repo),
+      allowedPushRemote: repo.available ? "origin" : undefined,
+      allowedPushBranch: repo.available ? gitBranch : undefined
     };
     const status = actionStatusForRepo(repo);
     return {
@@ -289,7 +314,7 @@ export function buildRoundtableActionPlan(
     summary,
     ...actions.map(
       (action) =>
-        `${action.role.toUpperCase()} -> ${action.repoLabel} branch=${action.workspaceScope.gitBranch ?? "none"} worktree=${action.workspaceScope.worktreePath ?? "none"} status=${action.status}`
+        `${action.role.toUpperCase()} -> ${action.repoLabel} branch=${action.workspaceScope.gitBranch ?? "none"} worktree=${action.workspaceScope.worktreePath ?? "none"} status=${action.status} authority=${action.workspaceScope.writeAuthority ?? "none"}`
     )
   ].join("\n");
   return {
@@ -370,4 +395,77 @@ export function cleanupRoundtableActionWorktree(action: RoundtableAction): void 
       `Unable to remove roundtable worktree for ${action.repoLabel}: ${(result.stderr || result.stdout || "git worktree remove failed").trim()}`
     );
   }
+}
+
+function selectSampleFiles(trackedFiles: string[]): string[] {
+  const preferred = trackedFiles.filter((file) =>
+    /(^|\/)(README\.md|package\.json|pyproject\.toml|Cargo\.toml|tsconfig\.json|src\/q\/preflight\.ts|apps\/harness\/src\/server\.ts|ignite\/arobi-network\/src\/compute\/scheduler\.rs)$/i.test(
+      file
+    )
+  );
+  const ordered = [...preferred, ...trackedFiles].filter(
+    (file, index, items) => items.indexOf(file) === index
+  );
+  return ordered.slice(0, 6);
+}
+
+export function probeRoundtableActionWorkspace(
+  action: RoundtableAction,
+  materializedPath?: string
+): RoundtableActionWorkspaceProbe {
+  const cwd =
+    materializedPath ||
+    action.workspaceScope.worktreePath ||
+    action.workspaceScope.repoPath;
+  const branch =
+    runGit(cwd, ["branch", "--show-current"]) ||
+    runGit(cwd, ["rev-parse", "--abbrev-ref", "HEAD"]) ||
+    action.workspaceScope.gitBranch;
+  const repoSha = runGit(cwd, ["rev-parse", "--short", "HEAD"]) || action.workspaceScope.repoSha;
+  const allowedBranchExists =
+    Boolean(action.workspaceScope.allowedPushBranch) &&
+    Boolean(
+      runGit(
+        action.workspaceScope.repoPath,
+        ["rev-parse", "--verify", action.workspaceScope.allowedPushBranch as string]
+      )
+    );
+  const trackedFilesResult = runGitDetailed(cwd, ["ls-files"]);
+  const trackedFiles =
+    trackedFilesResult.status === 0
+      ? trackedFilesResult.stdout
+          .split(/\r?\n/)
+          .map((entry) => entry.trim())
+          .filter(Boolean)
+      : [];
+  const statusResult = runGitDetailed(cwd, ["status", "--short"]);
+  const statusLineCount =
+    statusResult.status === 0
+      ? statusResult.stdout
+          .split(/\r?\n/)
+          .map((entry) => entry.trim())
+          .filter(Boolean).length
+      : 0;
+  return {
+    repoId: action.repoId,
+    repoLabel: action.repoLabel,
+    cwd,
+    activeBranch: branch,
+    repoSha,
+    trackedFileCount: trackedFiles.length,
+    statusLineCount,
+    sampleFiles: selectSampleFiles(trackedFiles),
+    writeAuthority: action.workspaceScope.writeAuthority,
+    allowedPushRemote: action.workspaceScope.allowedPushRemote,
+    allowedPushBranch: action.workspaceScope.allowedPushBranch,
+    authorityBranchPreserved:
+      action.workspaceScope.writeAuthority !== "agent-branch-only"
+        ? true
+        : action.workspaceScope.isolationMode === "branch"
+          ? allowedBranchExists
+          : Boolean(branch) &&
+            Boolean(action.workspaceScope.allowedPushBranch) &&
+            branch === action.workspaceScope.allowedPushBranch,
+    probeSucceeded: trackedFilesResult.status === 0 && Boolean(branch)
+  };
 }

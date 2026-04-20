@@ -858,8 +858,11 @@ def collect_roundtable_runtime_records(report: dict) -> list[dict]:
     failed_assertions = int(benchmark.get("failedAssertions", 0) or 0)
     repo_coverage_p50 = float(benchmark.get("repoCoverageP50", 0) or 0)
     materialized_actions_p50 = float(benchmark.get("materializedActionsP50", 0) or 0)
+    probed_actions_p50 = float(benchmark.get("probedActionsP50", 0) or 0)
+    authority_bound_actions_p50 = float(benchmark.get("authorityBoundActionsP50", 0) or 0)
     recorded_actions_p50 = float(benchmark.get("recordedActionsP50", 0) or 0)
     scoped_turns_p50 = float(benchmark.get("workspaceScopedTurnsP50", 0) or 0)
+    tracked_files_p50 = float(benchmark.get("trackedFilesP50", 0) or 0)
     runner_latency_p95_ms = float(benchmark.get("runnerPathP95Ms", 0) or 0)
     record = {
         "id": "roundtable-runtime:aggregate",
@@ -875,12 +878,16 @@ def collect_roundtable_runtime_records(report: dict) -> list[dict]:
             f"Scenario count: {scenario_count}",
             f"Failed assertions: {failed_assertions}",
             f"Repo coverage p50: {repo_coverage_p50:.2f}",
+            f"Branch authority p50: {authority_bound_actions_p50:.2f}",
         ],
         "observation": [
             f"Live runtime preserved repo coverage at p50 {repo_coverage_p50:.2f}.",
             f"Materialized isolated actions held at p50 {materialized_actions_p50:.2f}.",
+            f"Repo probes held at p50 {probed_actions_p50:.2f}.",
+            f"Agent-branch authority held at p50 {authority_bound_actions_p50:.2f}.",
             f"Recorded roundtable actions held at p50 {recorded_actions_p50:.2f}.",
             f"Workspace-scoped turns held at p50 {scoped_turns_p50:.2f}.",
+            f"Tracked file visibility held at p50 {tracked_files_p50:.2f}.",
             f"Runner path latency held at p95 {runner_latency_p95_ms:.2f} ms.",
         ],
         "quality": {

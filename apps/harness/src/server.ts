@@ -2673,6 +2673,8 @@ async function reserveExecutionWorkerBatch(options: {
   const selectionContext = await buildExecutionWorkerSelectionContext();
   const batch = await intelligenceWorkerRegistry.assignWorkerBatch({
     avoidDuplicatePeers: true,
+    avoidDuplicateNodes:
+      (options.formation?.capabilitySpreadCount ?? 0) > 1 && options.layers.length > 1,
     requests: options.layers.map((layer, index) => ({
       requestedExecutionDecision: options.requestedExecutionDecision,
       baseModel: layer.model,

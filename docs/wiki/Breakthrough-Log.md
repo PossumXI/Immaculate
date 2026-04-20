@@ -25,17 +25,18 @@ For each breakthrough, record:
 
 What changed:
 - the repo now has a live [[Roundtable-Runtime]] benchmark that starts the harness, seeds a bounded Q source, runs mediated cognition, and proves the recorded conversation and execution schedule preserve the same repo-scoped roundtable plan
+- that same runtime lane now performs a bounded repo probe inside every isolated lane and proves the allowed agent-only push branch stayed intact, so the roundtable is touching real project state instead of only materializing folders
 - Immaculate now uses repo-specific isolation modes honestly: Immaculate and OpenJaws materialize worktree lanes, while the much larger Asgard repo stays on an agent-only branch lane instead of pretending a full extra worktree is always the right primitive
 - the Q benchmark corpus now carries this new roundtable runtime win as positive benchmark evidence, so future Q tuning learns from successful harness-aware multi-repo execution traces rather than planner prose alone
 
 Why it matters:
 - the missed pattern was that a planner surface is not enough for insurer-grade or operator-grade confidence; the system has to prove that the plan survives a real bounded run through the same mediation path that unsupervised work would use
-- making the roundtable runtime live matters because the harness can now show not only what repo-scoped actions were planned, but that those actions were actually carried through cognition and recorded in the decision trail
+- making the roundtable runtime live matters because the harness can now show not only what repo-scoped actions were planned, but that those actions were actually carried through cognition, touched real repo state, and stayed bound to an agent-only branch authority
 - adding repo-specific isolation modes matters because it keeps the system truthful under real machine limits instead of overcommitting to heavyweight worktrees where branch isolation is the better operational fit
 
 Evidence:
 - `apps/harness/src/roundtable-runtime.ts` now runs the live roundtable benchmark and writes [[Roundtable-Runtime]]
-- `docs/wiki/Roundtable-Runtime.md` now records `3` governed scenarios, `0` failed assertions, `3` repos covered, `3` isolated actions recorded, and workspace-scoped turns preserved through the mediated harness path
+- `docs/wiki/Roundtable-Runtime.md` now records `3` governed scenarios, `0` failed assertions, `3` repo probes, `3` authority-bound lanes, `3` repos covered, and workspace-scoped turns preserved through the mediated harness path
 - `training/q/build_q_benchmark_corpus.py` now carries `roundtable-runtime` as positive benchmark-derived evidence, bringing the tracked Q benchmark corpus to `58` rows
 
 What this unlocks next:
