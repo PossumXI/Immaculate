@@ -2,14 +2,14 @@
 
 This page is generated from a live harness pass. It proves the roundtable planner is not just text: Immaculate runs a governed mediation route, records repo-scoped roundtable actions, and binds those actions to isolated agent worktrees across Immaculate, OpenJaws, and Asgard. The direct seed step is a best-effort warm-up signal; the governed mediation path is the authoritative route.
 
-- Generated: 2026-04-20T21:11:27.639Z
-- Release: `0.1.0+b39d614`
-- Repo commit: `b39d614`
+- Generated: 2026-04-20T21:36:25.174Z
+- Release: `0.1.0+92eead3`
+- Repo commit: `92eead3`
 - Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`
 
 ## Benchmark
 
-- Harness URL: `http://127.0.0.1:61226`
+- Harness URL: `http://127.0.0.1:50978`
 - Scenario count: `3`
 - Failed assertions: `0`
 - Repo coverage P50: `3`
@@ -23,9 +23,9 @@ This page is generated from a live harness pass. It proves the roundtable planne
 - Recorded roundtable actions P50: `3`
 - Workspace-scoped turns P50: `0`
 - Tracked files P50: `2241`
-- Seed latency P95: `49874.41` ms
-- Mediation latency P95: `77698.91` ms
-- Runner path latency P95: `127600.71` ms
+- Seed latency P95: `40279.38` ms
+- Mediation latency P95: `72739.03` ms
+- Runner path latency P95: `113042.33` ms
 - Hardware: knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics / 16 cores / Q foundation Gemma 4
 
 ## Scenarios

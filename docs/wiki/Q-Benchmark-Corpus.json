@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-04-20T21:11:35Z",
+  "generatedAt": "2026-04-20T21:36:36Z",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "b39d614ba367ac6d7a1324ccd7218b3dcc2f0c33",
-    "gitShortSha": "b39d614",
-    "buildId": "0.1.0+b39d614",
+    "gitSha": "92eead326010854f0a42cd743c392059905ca078",
+    "gitShortSha": "92eead3",
+    "buildId": "0.1.0+92eead3",
     "qTrainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce"
   },
   "rowType": "mixed",
