@@ -3,11 +3,11 @@
 This page is generated from the tracked Q benchmark/report surfaces.
 It records the benchmark-derived corpus currently attached to Q. It is not a readiness gate and it does not replace the strict failure-only Q-Failure-Corpus surface.
 
-- Generated: `2026-04-19T23:49:59Z`
-- Release: `0.1.0+b4e0929`
-- Repo commit: `b4e0929`
+- Generated: `2026-04-20T00:36:20Z`
+- Release: `0.1.0+3af176b`
+- Repo commit: `3af176b`
 - Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`
-- Records: `56`
+- Records: `57`
 - Row type: `mixed`
 - JSONL: `.training-output/q/q-benchmark-corpus.jsonl`
 
@@ -19,6 +19,7 @@ It records the benchmark-derived corpus currently attached to Q. It is not a rea
 - q-gateway-substrate: `1` via `docs/wiki/Q-Gateway-Substrate.json`
 - q-mediation-drift: `1` via `docs/wiki/Q-Mediation-Drift.json`
 - arobi-audit-integrity: `1` via `docs/wiki/Arobi-Audit-Integrity.json`
+- roundtable-actionability: `1` via `docs/wiki/Roundtable-Actionability.json`
 - bridgebench-soak: `1` via `docs/wiki/BridgeBench-Soak.json`
 - harbor-terminal-bench-soak: `7` via `docs/wiki/Harbor-Terminal-Bench-Soak.json`
 - terminal-bench-public-task: `1` via `docs/wiki/Terminal-Bench-Public-Task.json`

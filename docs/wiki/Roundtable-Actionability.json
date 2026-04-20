@@ -1,7 +1,5 @@
 {
-  "generatedAt": "2026-04-20T00:36:21.068Z",
-  "threshold": 0.75,
-  "ready": true,
+  "generatedAt": "2026-04-20T00:36:22.177Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
@@ -50,26 +48,64 @@
       }
     }
   },
-  "reasons": [],
-  "sources": {
-    "modelComparisonGeneratedAt": "2026-04-19T07:48:09.656Z",
-    "bridgeBenchGeneratedAt": "2026-04-19T07:51:12.922Z",
-    "qGatewayValidationGeneratedAt": "2026-04-19T07:47:33.854Z"
+  "planner": {
+    "objective": "Strengthen Q, Immaculate, OpenJaws, and Arobi Network audit routing under mixed pressure without drift while keeping agent work isolated per repo.",
+    "sessionScope": "session:roundtable-actionability",
+    "repoCount": 3,
+    "actionCount": 3,
+    "readyCount": 3,
+    "isolatedActionCount": 3,
+    "parallelFormationMode": "hybrid-quorum",
+    "parallelFormationSummary": "Roundtable hybrid-quorum plan across 3 repo(s) with 3 isolated agent action(s); 3 ready for immediate worktree materialization."
   },
-  "q": {
-    "modelComparison": {
-      "parseSuccessRate": 1,
-      "completedTaskCount": 4,
-      "taskCount": 4
+  "repositories": [
+    {
+      "repoId": "immaculate",
+      "repoLabel": "Immaculate",
+      "gitBranch": "publish-q-win",
+      "repoSha": "3af176b"
     },
-    "bridgeBench": {
-      "parseSuccessRate": 1,
-      "taskCount": 4
+    {
+      "repoId": "openjaws",
+      "repoLabel": "OpenJaws",
+      "gitBranch": "main",
+      "repoSha": "7381d8a"
     },
-    "gatewayIdentityCanonical": true
-  },
+    {
+      "repoId": "asgard",
+      "repoLabel": "Asgard",
+      "gitBranch": "main",
+      "repoSha": "88ad56e"
+    }
+  ],
+  "actions": [
+    {
+      "id": "rt-fnv1a-418c35f3",
+      "repoLabel": "Immaculate",
+      "role": "mid",
+      "gitBranch": "agents/session-roundtable-actionability/immaculate-mid",
+      "isolationMode": "worktree",
+      "status": "ready"
+    },
+    {
+      "id": "rt-fnv1a-608f89b3",
+      "repoLabel": "OpenJaws",
+      "role": "reasoner",
+      "gitBranch": "agents/session-roundtable-actionability/openjaws-reasoner",
+      "isolationMode": "worktree",
+      "status": "ready"
+    },
+    {
+      "id": "rt-fnv1a-6f3069e0",
+      "repoLabel": "Asgard",
+      "role": "guard",
+      "gitBranch": "agents/session-roundtable-actionability/asgard-guard",
+      "isolationMode": "worktree",
+      "status": "ready"
+    }
+  ],
   "output": {
-    "jsonPath": "docs\\wiki\\Q-Readiness-Gate.json",
-    "markdownPath": "docs\\wiki\\Q-Readiness-Gate.md"
+    "jsonPath": "docs/wiki/Roundtable-Actionability.json",
+    "markdownPath": "docs/wiki/Roundtable-Actionability.md"
   }
 }

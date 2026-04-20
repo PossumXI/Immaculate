@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-19T23:50:00.133Z",
+  "generatedAt": "2026-04-20T00:36:21.321Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "b4e09296ab0d2ddb2dd4c8fc2b4e183a7e4ebe73",
-    "gitShortSha": "b4e0929",
+    "gitSha": "3af176bc22b141b59f1e839b5e45c54b56b69b76",
+    "gitShortSha": "3af176b",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+b4e0929",
+    "buildId": "0.1.0+3af176b",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -66,7 +66,7 @@
     {
       "label": "Q readiness gate",
       "path": "docs\\wiki\\Q-Readiness-Gate.json",
-      "generatedAt": "2026-04-19T23:49:59.869Z"
+      "generatedAt": "2026-04-20T00:28:37.865Z"
     },
     {
       "label": "Q gateway validation",
@@ -87,6 +87,11 @@
       "label": "Arobi audit integrity",
       "path": "docs\\wiki\\Arobi-Audit-Integrity.json",
       "generatedAt": "2026-04-19T23:41:05.513Z"
+    },
+    {
+      "label": "Roundtable actionability",
+      "path": "docs\\wiki\\Roundtable-Actionability.json",
+      "generatedAt": "2026-04-20T00:28:18.370Z"
     },
     {
       "label": "Q API audit",
@@ -136,7 +141,7 @@
     {
       "label": "Q benchmark corpus",
       "path": "docs\\wiki\\Q-Benchmark-Corpus.json",
-      "generatedAt": "2026-04-19T23:49:59Z"
+      "generatedAt": "2026-04-20T00:36:20Z"
     },
     {
       "label": "Q benchmark promotion",
@@ -146,7 +151,7 @@
     {
       "label": "W&B benchmark export",
       "path": "docs\\wiki\\Benchmark-Wandb-Export.json",
-      "generatedAt": "2026-04-19T22:53:23.308016+00:00"
+      "generatedAt": "2026-04-19T23:51:35.555094+00:00"
     },
     {
       "label": "Harbor terminal bench",
