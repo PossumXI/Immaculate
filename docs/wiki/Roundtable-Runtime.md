@@ -2,14 +2,14 @@
 
 This page is generated from a live harness pass. It proves the roundtable planner is not just text: Immaculate runs a governed mediation route, records repo-scoped roundtable actions, and binds those actions to isolated agent worktrees across Immaculate, OpenJaws, and Asgard. The direct seed step is a best-effort warm-up signal; the governed mediation path is the authoritative route.
 
-- Generated: 2026-04-20T19:12:15.041Z
-- Release: `0.1.0+a071f7e`
-- Repo commit: `a071f7e`
+- Generated: 2026-04-20T21:11:27.639Z
+- Release: `0.1.0+b39d614`
+- Repo commit: `b39d614`
 - Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`
 
 ## Benchmark
 
-- Harness URL: `http://127.0.0.1:54144`
+- Harness URL: `http://127.0.0.1:61226`
 - Scenario count: `3`
 - Failed assertions: `0`
 - Repo coverage P50: `3`
@@ -23,9 +23,9 @@ This page is generated from a live harness pass. It proves the roundtable planne
 - Recorded roundtable actions P50: `3`
 - Workspace-scoped turns P50: `0`
 - Tracked files P50: `2241`
-- Seed latency P95: `21819.11` ms
-- Mediation latency P95: `57284.36` ms
-- Runner path latency P95: `79124.08` ms
+- Seed latency P95: `49874.41` ms
+- Mediation latency P95: `77698.91` ms
+- Runner path latency P95: `127600.71` ms
 - Hardware: knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics / 16 cores / Q foundation Gemma 4
 
 ## Scenarios
@@ -33,7 +33,7 @@ This page is generated from a live harness pass. It proves the roundtable planne
 ### Immaculate and OpenJaws governed repair
 
 - Status: `completed`
-- Route suggestion: `unknown`
+- Route suggestion: `cognitive`
 - Guard verdict: `unknown`
 - Repo coverage: `3`
 - Materialized actions: `3`
@@ -54,7 +54,7 @@ This page is generated from a live harness pass. It proves the roundtable planne
 ### Asgard audit and ledger continuity
 
 - Status: `completed`
-- Route suggestion: `unknown`
+- Route suggestion: `cognitive`
 - Guard verdict: `unknown`
 - Repo coverage: `3`
 - Materialized actions: `3`
@@ -75,7 +75,7 @@ This page is generated from a live harness pass. It proves the roundtable planne
 ### Mixed-pressure roundtable
 
 - Status: `completed`
-- Route suggestion: `unknown`
+- Route suggestion: `cognitive`
 - Guard verdict: `unknown`
 - Repo coverage: `3`
 - Materialized actions: `3`
