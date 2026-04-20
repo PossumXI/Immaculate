@@ -21,6 +21,30 @@ For each breakthrough, record:
 
 ### 2026-04-20
 
+#### The live Arobi public-node receipt is now first-class and machine-stamped
+
+What changed:
+- the repo now generates [[Arobi-Live-Ledger-Receipt]], a live public-node receipt that reads `aura-genesis.org` and `arobi.aura-genesis.org` directly instead of inferring public-node health from a local harness-only benchmark
+- the same pass reran the existing Asgard `run-fabric-audit-soak.ps1` method on the real `Arobi Network v3.3.1` lane and confirmed a fresh governed `control_fabric` record surfaced publicly on the live decisions feed
+- [[Release-Surface]], README, wiki home, and the site now point to that receipt so the public “is the node actually live and receiving new audit records?” question has one explicit answer
+
+Why it matters:
+- the missed pattern was that local insurer-grade audit proof and public-node visibility are related but not identical; the public site needed its own machine-stamped receipt instead of forcing operators to reverse-engineer the live page
+- making the live public-node receipt first-class matters because it closes the last gap between local benchmark truth and public network truth for Arobi
+- restamping the public surfaces matters because operators, auditors, and insurers can now see the latest fresh public-node receipt without shell access
+
+Evidence:
+- `apps/harness/src/arobi-live-ledger-receipt.ts` now generates [[Arobi-Live-Ledger-Receipt]]
+- `docs/wiki/Arobi-Live-Ledger-Receipt.md` now records the fresh `2026-04-20T02:26:54Z` `control_fabric` entry, live public version `3.3.1`, and public ledger entries moving `396 -> 397`
+- the latest supervised rerun `fabric-audit-soak-20260420T022653Z` matches the live public entry receipt instead of staying trapped in local artifacts
+
+What this unlocks next:
+- future live-node checks can be restamped as one small receipt page instead of a long shell transcript
+- Arobi audit demonstrations can now prove both local governed execution and public-node visibility without conflating the two
+- the next Arobi pass can focus on richer live public summaries because the base public-write truth is now explicit
+
+### 2026-04-20
+
 #### Roundtable execution is now live, bounded, and repo-scoped
 
 What changed:

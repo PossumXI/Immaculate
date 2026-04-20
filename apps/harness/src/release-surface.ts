@@ -71,6 +71,10 @@ const SURFACE_FILES: SurfaceTimestamp[] = [
     path: path.join("docs", "wiki", "Arobi-Audit-Integrity.json")
   },
   {
+    label: "Arobi live ledger receipt",
+    path: path.join("docs", "wiki", "Arobi-Live-Ledger-Receipt.json")
+  },
+  {
     label: "Roundtable actionability",
     path: path.join("docs", "wiki", "Roundtable-Actionability.json")
   },

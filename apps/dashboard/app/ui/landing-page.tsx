@@ -17,6 +17,10 @@ const sectors = [
 
 const proofCards = [
   {
+    label: "Arobi Live Ledger Receipt",
+    body: "The live public Arobi node is now machine-stamped too. Aura Genesis is reading Arobi Network v3.3.1, the ledger moved from 396 to 397 entries on the latest supervised rerun, and the fresh control_fabric record is publicly visible."
+  },
+  {
     label: "Terminal-Bench Public Task",
     body: "The latest real Harbor run on the official public task is green on the default Q-only path: 5 trials, mean reward 1.0, zero errors, and pass@2, pass@4, and pass@5 all at 1.0."
   },
@@ -89,7 +93,7 @@ export function LandingPage() {
 
       <section className="landingHero">
         <div className="landingCopy">
-          <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 20 | AROBI AUDIT LIVE | W&amp;B EXPORT APR 19</p>
+          <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 20 | AROBI V3.3.1 LIVE | W&amp;B EXPORT APR 19</p>
           <h1 className="landingHeadline">Controlled intelligence for critical operations.</h1>
           <p className="landingLede">Arobi Network is the operator ledger and audit substrate. Immaculate is the harness and orchestrator. Q is the brain. Defense and healthcare. Evidence before action.</p>
 
@@ -106,6 +110,9 @@ export function LandingPage() {
             <span>Identity gate green</span>
             <span>Arobi decision review live</span>
             <span>Arobi audit integrity 3 scenarios</span>
+            <span>Arobi v3.3.1 live</span>
+            <span>Fresh public ledger Apr 20</span>
+            <span>Public ledger 397 entries</span>
             <span>Roundtable runtime 3 scenarios</span>
             <span>Roundtable probes 3 repo lanes</span>
             <span>Agent-branch authority P50 3</span>
