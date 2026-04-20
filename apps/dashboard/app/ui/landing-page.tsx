@@ -34,7 +34,7 @@ const proofCards = [
   },
   {
     label: "Roundtable Runtime",
-    body: "Immaculate now turns a cross-project objective into isolated agent lanes and proves the plan survives a live bounded loop. The runtime benchmark covers Immaculate, OpenJaws, and Asgard with 3 repo-scoped isolated actions, 3 governed execution bundles, 3 task documents, branch-authority held across every lane, and 0 failed assertions."
+    body: "Immaculate now turns a cross-project objective into isolated agent lanes and proves the plan survives a live bounded loop. The runtime benchmark covers Immaculate, OpenJaws, and Asgard with 3 repo-scoped isolated actions, 3 governed execution bundles, 3 repo audit receipts, 3 task documents, branch-authority held across every lane, and 0 failed assertions."
   },
   {
     label: "Q Substrate Benchmark",
@@ -54,7 +54,7 @@ const proofCards = [
   },
   {
     label: "W&B Publication Surface",
-    body: "The newest published W&B export is April 19. The April 19 mediation, substrate, public-task, and audit-integrity wins are all aligned across repo, wiki, and site, while the separate 60m soak page remains historical evidence from the last hour-class rerun."
+    body: "The newest published W&B export is April 20. The current mediation, substrate, public-task, and audit-integrity wins are aligned across repo, wiki, and site, while the separate 60m soak page remains historical evidence from the last hour-class rerun."
   }
 ];
 
@@ -93,7 +93,7 @@ export function LandingPage() {
 
       <section className="landingHero">
         <div className="landingCopy">
-          <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 20 | AROBI RECEIPT CURRENT | W&amp;B EXPORT APR 19</p>
+          <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 20 | AROBI RECEIPT CURRENT | W&amp;B EXPORT APR 20</p>
           <h1 className="landingHeadline">Controlled intelligence for critical operations.</h1>
           <p className="landingLede">Arobi Network is the operator ledger and audit substrate. Immaculate is the harness and orchestrator. Q is the brain. Defense and healthcare. Evidence before action.</p>
 
@@ -124,7 +124,8 @@ export function LandingPage() {
             <span>2 linked ledgers</span>
             <span>8 successful linked records</span>
             <span>Linked records P50 5</span>
-            <span>Latest W&B export Apr 19</span>
+            <span>Audit receipts P50 3</span>
+            <span>Latest W&B export Apr 20</span>
             <span>Machine-stamped bench-v23 lock</span>
             <span>58 benchmark rows</span>
             <span>117 training rows</span>

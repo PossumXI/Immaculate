@@ -102,8 +102,6 @@ type RoundtableRuntimeSurface = {
     executionReadyP50: number;
     taskDocumentsP50: number;
     auditReceiptsP50: number;
-    findingsP50: number;
-    actionableFindingsP50: number;
     workspaceScopedTurnsP50: number;
     recordedActionsP50: number;
     trackedFilesP50: number;
@@ -126,8 +124,6 @@ type RoundtableRuntimeSurface = {
     executionReadyCount: number;
     taskDocumentCount: number;
     auditReceiptCount: number;
-    findingCount: number;
-    actionableFindingCount: number;
     recordedActionCount: number;
     workspaceScopedTurnCount: number;
     scheduleRoundtableActionCount: number;
@@ -843,8 +839,7 @@ function buildRoundtableRuntimeSurface(options: {
       target: "all ready actions emitted repo audit receipts",
       actual: options.scenarioResults
         .map(
-          (entry) =>
-            `${entry.id}:receipts=${entry.auditReceiptCount}/${entry.readyActionCount},findings=${entry.findingCount},actionable=${entry.actionableFindingCount}`
+          (entry) => `${entry.id}:receipts=${entry.auditReceiptCount}/${entry.readyActionCount}`
         )
         .join(" | "),
       detail:
@@ -887,10 +882,6 @@ function buildRoundtableRuntimeSurface(options: {
       executionReadyP50: median(options.scenarioResults.map((entry) => entry.executionReadyCount)),
       taskDocumentsP50: median(options.scenarioResults.map((entry) => entry.taskDocumentCount)),
       auditReceiptsP50: median(options.scenarioResults.map((entry) => entry.auditReceiptCount)),
-      findingsP50: median(options.scenarioResults.map((entry) => entry.findingCount)),
-      actionableFindingsP50: median(
-        options.scenarioResults.map((entry) => entry.actionableFindingCount)
-      ),
       workspaceScopedTurnsP50: median(options.scenarioResults.map((entry) => entry.workspaceScopedTurnCount)),
       recordedActionsP50: median(options.scenarioResults.map((entry) => entry.recordedActionCount)),
       trackedFilesP50: median(options.scenarioResults.map((entry) => entry.trackedFileCountP50)),
@@ -913,8 +904,6 @@ function buildRoundtableRuntimeSurface(options: {
       executionReadyCount: entry.executionReadyCount,
       taskDocumentCount: entry.taskDocumentCount,
       auditReceiptCount: entry.auditReceiptCount,
-      findingCount: entry.findingCount,
-      actionableFindingCount: entry.actionableFindingCount,
       recordedActionCount: entry.recordedActionCount,
       workspaceScopedTurnCount: entry.workspaceScopedTurnCount,
       scheduleRoundtableActionCount: entry.scheduleRoundtableActionCount,
@@ -1044,8 +1033,6 @@ function buildFailedRoundtableRuntimeSurface(options: {
       executionReadyP50: 0,
       taskDocumentsP50: 0,
       auditReceiptsP50: 0,
-      findingsP50: 0,
-      actionableFindingsP50: 0,
       workspaceScopedTurnsP50: 0,
       recordedActionsP50: 0,
       trackedFilesP50: 0,
@@ -1095,8 +1082,6 @@ function renderMarkdown(report: RoundtableRuntimeSurface): string {
     `- Execution-ready lanes P50: \`${report.benchmark.executionReadyP50}\``,
     `- Task documents P50: \`${report.benchmark.taskDocumentsP50}\``,
     `- Audit receipts P50: \`${report.benchmark.auditReceiptsP50}\``,
-    `- Findings P50: \`${report.benchmark.findingsP50}\``,
-    `- Actionable follow-ups P50: \`${report.benchmark.actionableFindingsP50}\``,
     `- Recorded roundtable actions P50: \`${report.benchmark.recordedActionsP50}\``,
     `- Workspace-scoped turns P50: \`${report.benchmark.workspaceScopedTurnsP50}\``,
     `- Tracked files P50: \`${report.benchmark.trackedFilesP50}\``,
@@ -1122,8 +1107,6 @@ function renderMarkdown(report: RoundtableRuntimeSurface): string {
         `- Execution-ready lanes: \`${scenario.executionReadyCount}\``,
         `- Task documents: \`${scenario.taskDocumentCount}\``,
         `- Audit receipts: \`${scenario.auditReceiptCount}\``,
-        `- Findings: \`${scenario.findingCount}\``,
-        `- Actionable follow-ups: \`${scenario.actionableFindingCount}\``,
         `- Recorded roundtable actions: \`${scenario.recordedActionCount}\``,
         `- Workspace-scoped turns: \`${scenario.workspaceScopedTurnCount}\``,
         `- Tracked files P50: \`${scenario.trackedFileCountP50}\``,

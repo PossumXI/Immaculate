@@ -791,11 +791,7 @@ export function appendRoundtableExecutionSummary(
   ).length;
   const readyCount = actions.filter((action) => action.executionArtifact?.executionReady).length;
   const auditReceiptCount = actions.filter((action) => action.executionArtifact?.auditReceiptPath).length;
-  const actionableFindingCount = actions.reduce(
-    (total, action) => total + (action.executionArtifact?.actionableFindingCount ?? 0),
-    0
-  );
-  return `${summary} Execution bundles prepared for ${preparedCount}/${actions.length} lane(s); ${readyCount}/${actions.length} lane(s) remain authority-bound and ready for isolated agent work. Repo audit receipts captured for ${auditReceiptCount}/${actions.length} lane(s) with ${actionableFindingCount} actionable follow-up target(s).`;
+  return `${summary} Execution bundles prepared for ${preparedCount}/${actions.length} lane(s); ${readyCount}/${actions.length} lane(s) remain authority-bound and ready for isolated agent work. Repo audit receipts captured for ${auditReceiptCount}/${actions.length} lane(s).`;
 }
 
 export function buildRoundtableActionPlan(

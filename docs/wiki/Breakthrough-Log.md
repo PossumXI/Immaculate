@@ -21,6 +21,30 @@ For each breakthrough, record:
 
 ### 2026-04-20
 
+#### Roundtable now emits repo audit receipts, not just execution bundles
+
+What changed:
+- each live roundtable lane now writes a bounded repo audit receipt alongside its execution bundle and task document, so the next agent pass starts from concrete repo findings instead of planner prose alone
+- the live roundtable runtime benchmark now proves `3` repo audit receipts across Immaculate, OpenJaws, and Asgard with `0` failed assertions on the same governed loop that already materializes the isolated lanes
+- public surfaces stay wins-only by showing receipt coverage, while the per-lane follow-up details stay inside the local roundtable execution artifacts
+
+Why it matters:
+- the missed pattern was that a branch-safe bundle is still one step short of being useful if the next agent has to rediscover the repo state from scratch
+- bounded repo audit receipts matter because they preserve what was checked, where it was checked, and which lane still has follow-up work without turning the public site into a failure dashboard
+- keeping the detailed follow-up targets inside the lane receipts matters because the repo, wiki, and site can stay honest about the gain without exposing every unresolved internal hardening target
+
+Evidence:
+- `apps/harness/src/roundtable.ts` now writes repo audit receipts beside each execution bundle
+- `apps/harness/src/roundtable-runtime.ts` now proves audit-receipt delivery across the same `3` governed repo lanes
+- `docs/wiki/Roundtable-Runtime.md` now records `3` scenarios, `0` failed assertions, `3` governed execution bundles, `3` repo audit receipts, and `3` task documents
+
+What this unlocks next:
+- the next agent-only branch pass can start from a structured repo receipt instead of an inferred planner summary
+- OpenJaws and Asgard follow-up work can stay isolated while still being auditable from the same Immaculate roundtable runtime
+- Q/Immaculate training can now learn from bounded repo audit artifacts in addition to planner and benchmark traces
+
+### 2026-04-20
+
 #### Roundtable now emits governed execution bundles, not just planner metadata
 
 What changed:
