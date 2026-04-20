@@ -1,0 +1,109 @@
+{
+  "generatedAt": "2026-04-20T02:34:31.076Z",
+  "release": {
+    "packageVersion": "0.1.0",
+    "harnessVersion": "0.1.0",
+    "coreVersion": "0.1.0",
+    "gitSha": "24be0218adb30c31fafd7ffb246a344ed8ebc7e7",
+    "gitShortSha": "24be021",
+    "gitBranch": "publish-q-win",
+    "buildId": "0.1.0+24be021",
+    "q": {
+      "modelName": "Q",
+      "foundationModel": "Gemma 4",
+      "truthfulLabel": "Q",
+      "trainingLock": {
+        "generatedAt": "2026-04-19T07:46:04Z",
+        "lockVersion": 1,
+        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
+        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23",
+        "modelName": "Q",
+        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl",
+        "trainDatasetSha256": "286326ce786c0a9b9b4a636a38114cc221c1b978a083ca55d70cc6ca6172cb07",
+        "trainDatasetRowCount": 117,
+        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.manifest.json",
+        "mixManifestSha256": "4c7df8284cedaf8e43f1715c8eaf4c30826687e27a5d511ef8ccd4ca78df991e",
+        "mixSupplementalCount": 6,
+        "mixSupplementalPaths": [
+          "training/q/q_harness_identity_seed.json",
+          "training/q/q_immaculate_reasoning_seed.json",
+          "training/q/terminal_bench_semantic_seed.json",
+          "training/q/bridgebench_seed.json",
+          "training/q/coding_long_context_seed.json",
+          ".training-output/q/q-failure-corpus.jsonl"
+        ],
+        "curationRunId": null,
+        "lockPath": ".training-output/q/latest-training-lock.json"
+      },
+      "hybridSession": {
+        "generatedAt": "2026-04-19T07:46:17Z",
+        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v23",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v23/hybrid-session.json",
+        "localStatus": "ready",
+        "cloudStatus": "ready",
+        "cloudProvider": "hf_jobs",
+        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
+        "immaculateBundleId": "immaculate-orchestration-5ed19b9-cd094c28",
+        "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
+      }
+    }
+  },
+  "liveNode": {
+    "statusUrl": "https://aura-genesis.org/status",
+    "ledgerUrl": "https://aura-genesis.org/ledger",
+    "apiBaseUrl": "https://arobi.aura-genesis.org",
+    "version": "3.3.1",
+    "network": "AROBI1",
+    "height": 32895,
+    "peerCount": 1,
+    "consensusType": "proof_of_intelligence",
+    "poiSolved": 278,
+    "totalEntries": 397,
+    "chainValid": true,
+    "fabricSource": "nysus",
+    "orchestrationAvailable": true,
+    "brainReady": true
+  },
+  "latestVisibleEntry": {
+    "entryId": "000000000000000018a7ef97fcd89d18-000000000655bd469141e22d40a86371",
+    "timestamp": "2026-04-20T02:26:54.082101500Z",
+    "blockHeight": 397,
+    "sourceLabel": "control_fabric",
+    "modelId": "Q+Immaculate+Arobi",
+    "modelVersion": "3.3.1",
+    "inputSummary": "Supervised non-actuating private audit cycle 1 of 1",
+    "decision": "Recorded full supervised non-actuating private audit trace",
+    "networkContext": "00",
+    "reasoning": "Cycle 1/1 recorded the full supervised non-actuating audit snapshot. Objective was 'Cycle 52461: executing verify against integrity-gate.'. Q soak progress was 0/0 successful probes with 0 errors. Public entries before write: 396. Private entries before write: 396."
+  },
+  "latestLocalRerun": {
+    "runId": "fabric-audit-soak-20260420T022653Z",
+    "startedAt": "2026-04-20T02:26:53.8134029Z",
+    "finishedAt": "2026-04-20T02:27:01.9547529Z",
+    "outputDir": "D:\\openjaws\\OpenJaws\\artifacts\\fabric-audit-soak-20260420T022653Z",
+    "qProcessExitedCleanly": true,
+    "publicEntriesBefore": 396,
+    "publicEntriesAfter": 397,
+    "privateEntriesBefore": 396,
+    "privateEntriesAfter": 397,
+    "latestPrivateEntryId": "000000000000000018a7ef97fcd89d18-000000000655bd469141e22d40a86371",
+    "latestPrivateEntryTimestamp": "2026-04-20T02:26:54.082101500Z",
+    "latestPrivateBlockHeight": 397
+  },
+  "proof": {
+    "liveRecordVisible": true,
+    "entryMatchesLatestRerun": true,
+    "publicEntryDelta": 1,
+    "privateEntryDelta": 1
+  },
+  "truthBoundary": [
+    "This page is a live-node receipt, not a benchmark score.",
+    "It is generated from the public aura-genesis status and ledger endpoints plus the latest local supervised fabric-audit rerun receipt.",
+    "The public visible record currently comes from the governed control_fabric private-trace path surfaced on the public ledger feed.",
+    "This page does not expose secrets, raw private payloads, or raw chain-of-thought."
+  ],
+  "output": {
+    "jsonPath": "docs\\wiki\\Arobi-Live-Ledger-Receipt.json",
+    "markdownPath": "docs\\wiki\\Arobi-Live-Ledger-Receipt.md"
+  }
+}

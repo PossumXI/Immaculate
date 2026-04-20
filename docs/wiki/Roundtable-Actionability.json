@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-20T01:17:15.722Z",
+  "generatedAt": "2026-04-20T02:34:31.124Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "6399fb156e52ee6784dc56b43b6e4b47983890d2",
-    "gitShortSha": "6399fb1",
+    "gitSha": "24be0218adb30c31fafd7ffb246a344ed8ebc7e7",
+    "gitShortSha": "24be021",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+6399fb1",
+    "buildId": "0.1.0+24be021",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -63,13 +63,13 @@
       "repoId": "immaculate",
       "repoLabel": "Immaculate",
       "gitBranch": "publish-q-win",
-      "repoSha": "6399fb1"
+      "repoSha": "24be021"
     },
     {
       "repoId": "openjaws",
       "repoLabel": "OpenJaws",
-      "gitBranch": "agent/openjaws-q-hardening",
-      "repoSha": "2db7963"
+      "gitBranch": "agent/openjaws-terminalbench-provenance",
+      "repoSha": "b2b2dc5"
     },
     {
       "repoId": "asgard",
@@ -85,6 +85,9 @@
       "role": "mid",
       "gitBranch": "agents/session-roundtable-actionability/immaculate-mid",
       "isolationMode": "worktree",
+      "writeAuthority": "agent-branch-only",
+      "allowedPushRemote": "origin",
+      "allowedPushBranch": "agents/session-roundtable-actionability/immaculate-mid",
       "status": "ready"
     },
     {
@@ -93,6 +96,9 @@
       "role": "reasoner",
       "gitBranch": "agents/session-roundtable-actionability/openjaws-reasoner",
       "isolationMode": "worktree",
+      "writeAuthority": "agent-branch-only",
+      "allowedPushRemote": "origin",
+      "allowedPushBranch": "agents/session-roundtable-actionability/openjaws-reasoner",
       "status": "ready"
     },
     {
@@ -101,6 +107,9 @@
       "role": "guard",
       "gitBranch": "agents/session-roundtable-actionability/asgard-guard",
       "isolationMode": "branch",
+      "writeAuthority": "agent-branch-only",
+      "allowedPushRemote": "origin",
+      "allowedPushBranch": "agents/session-roundtable-actionability/asgard-guard",
       "status": "ready"
     }
   ],

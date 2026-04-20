@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-20T01:22:35.054Z",
+  "generatedAt": "2026-04-20T02:37:16.499Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "6399fb156e52ee6784dc56b43b6e4b47983890d2",
-    "gitShortSha": "6399fb1",
+    "gitSha": "24be0218adb30c31fafd7ffb246a344ed8ebc7e7",
+    "gitShortSha": "24be021",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+6399fb1",
+    "buildId": "0.1.0+24be021",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -49,16 +49,19 @@
     }
   },
   "benchmark": {
-    "harnessUrl": "http://127.0.0.1:56796",
+    "harnessUrl": "http://127.0.0.1:64278",
     "scenarioCount": 3,
     "failedAssertions": 0,
     "repoCoverageP50": 3,
     "materializedActionsP50": 3,
+    "probedActionsP50": 3,
+    "authorityBoundActionsP50": 3,
     "workspaceScopedTurnsP50": 1,
     "recordedActionsP50": 3,
-    "runnerPathP95Ms": 147638.55,
-    "seedLatencyP95Ms": 31575.54,
-    "mediationLatencyP95Ms": 119055.29,
+    "trackedFilesP50": 2235,
+    "runnerPathP95Ms": 47362.18,
+    "seedLatencyP95Ms": 24082.29,
+    "mediationLatencyP95Ms": 23723.81,
     "hardware": "knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics / 16 cores / Q foundation Gemma 4"
   },
   "scenarios": [
@@ -70,11 +73,22 @@
       "guardVerdict": "unknown",
       "repoCoverageCount": 3,
       "materializedActionCount": 3,
+      "probedActionCount": 3,
+      "authorityBoundActionCount": 3,
       "recordedActionCount": 3,
       "workspaceScopedTurnCount": 1,
       "scheduleRoundtableActionCount": 3,
       "scheduleRoundtableRepoCount": 3,
       "sessionScopePreserved": true,
+      "trackedFileCountP50": 2235,
+      "sampleFiles": [
+        "Doc/Planning/README.md",
+        "README.md",
+        "apps/dashboard/package.json",
+        "apps/dashboard/tsconfig.json",
+        "apps/harness/package.json",
+        "apps/harness/src/server.ts"
+      ],
       "roundtableSummary": "Roundtable single-lane plan across 3 repo(s) with 3 isolated agent action(s); 3 ready for immediate worktree materialization."
     },
     {
@@ -85,11 +99,22 @@
       "guardVerdict": "unknown",
       "repoCoverageCount": 3,
       "materializedActionCount": 3,
+      "probedActionCount": 3,
+      "authorityBoundActionCount": 3,
       "recordedActionCount": 3,
       "workspaceScopedTurnCount": 1,
       "scheduleRoundtableActionCount": 3,
       "scheduleRoundtableRepoCount": 3,
       "sessionScopePreserved": true,
+      "trackedFileCountP50": 2235,
+      "sampleFiles": [
+        "Doc/Planning/README.md",
+        "README.md",
+        "apps/dashboard/package.json",
+        "apps/dashboard/tsconfig.json",
+        "apps/harness/package.json",
+        "apps/harness/src/server.ts"
+      ],
       "roundtableSummary": "Roundtable single-lane plan across 3 repo(s) with 3 isolated agent action(s); 3 ready for immediate worktree materialization."
     },
     {
@@ -100,11 +125,22 @@
       "guardVerdict": "unknown",
       "repoCoverageCount": 3,
       "materializedActionCount": 3,
+      "probedActionCount": 3,
+      "authorityBoundActionCount": 3,
       "recordedActionCount": 3,
       "workspaceScopedTurnCount": 1,
       "scheduleRoundtableActionCount": 3,
       "scheduleRoundtableRepoCount": 3,
       "sessionScopePreserved": true,
+      "trackedFileCountP50": 2235,
+      "sampleFiles": [
+        "Doc/Planning/README.md",
+        "README.md",
+        "apps/dashboard/package.json",
+        "apps/dashboard/tsconfig.json",
+        "apps/harness/package.json",
+        "apps/harness/src/server.ts"
+      ],
       "roundtableSummary": "Roundtable single-lane plan across 3 repo(s) with 3 isolated agent action(s); 3 ready for immediate worktree materialization."
     }
   ],
@@ -122,6 +158,13 @@
       "target": "all ready actions materialized on agent branches",
       "actual": "immaculate-openjaws:3/3, asgard-audit-ledger:3/3, mixed-pressure-roundtable:3/3",
       "detail": "Every ready roundtable action should materialize a dedicated worktree on an agent branch."
+    },
+    {
+      "id": "roundtable-runtime-branch-authority-bound",
+      "status": "pass",
+      "target": "all ready actions probed and bound to their agent branch authority",
+      "actual": "immaculate-openjaws:probes=3/3,authority=3/3 | asgard-audit-ledger:probes=3/3,authority=3/3 | mixed-pressure-roundtable:probes=3/3,authority=3/3",
+      "detail": "Every ready action should touch its repo lane and preserve the allowed agent-only push branch instead of drifting to an uncontrolled branch."
     },
     {
       "id": "roundtable-runtime-audit-captured",
