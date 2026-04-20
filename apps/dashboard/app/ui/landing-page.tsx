@@ -29,8 +29,8 @@ const proofCards = [
     body: "The live insurer-grade audit lane is green. Three governed scenarios kept the ledger chain intact with linked-records P50 5, source-coverage P50 4, self-evaluations P50 3, and audit-completeness P50 1.00."
   },
   {
-    label: "Roundtable Actionability",
-    body: "Immaculate now turns a cross-project objective into isolated agent lanes. The live planner covers Immaculate, OpenJaws, and Asgard with 3 repo-scoped worktree actions ready for materialization."
+    label: "Roundtable Runtime",
+    body: "Immaculate now turns a cross-project objective into isolated agent lanes and proves the plan survives a live bounded run. The runtime benchmark covers Immaculate, OpenJaws, and Asgard with 3 repo-scoped isolated actions recorded through the mediated harness path."
   },
   {
     label: "Q Substrate Benchmark",
@@ -89,7 +89,7 @@ export function LandingPage() {
 
       <section className="landingHero">
         <div className="landingCopy">
-          <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 19 | AROBI AUDIT LIVE | W&amp;B EXPORT APR 19</p>
+          <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 20 | AROBI AUDIT LIVE | W&amp;B EXPORT APR 19</p>
           <h1 className="landingHeadline">Controlled intelligence for critical operations.</h1>
           <p className="landingLede">Arobi Network is the operator ledger and audit substrate. Immaculate is the harness and orchestrator. Q is the brain. Defense and healthcare. Evidence before action.</p>
 
@@ -106,6 +106,7 @@ export function LandingPage() {
             <span>Identity gate green</span>
             <span>Arobi decision review live</span>
             <span>Arobi audit integrity 3 scenarios</span>
+            <span>Roundtable runtime 3 scenarios</span>
             <span>Roundtable 3 isolated actions</span>
             <span>Audit completeness P50 1.00</span>
             <span>Arobi Network audit substrate</span>
@@ -114,7 +115,7 @@ export function LandingPage() {
             <span>Linked records P50 5</span>
             <span>Latest W&B export Apr 19</span>
             <span>Machine-stamped bench-v23 lock</span>
-            <span>57 benchmark rows</span>
+            <span>58 benchmark rows</span>
             <span>117 training rows</span>
             <span>HF Jobs launch ready</span>
             <span>Kaggle export ready</span>

@@ -64,6 +64,13 @@ function normalizeSessionScope(sessionId?: string, consentScope?: string): strin
   return sessionId ? `session:${sessionId}` : undefined;
 }
 
+function preferredIsolationMode(repoId: string): AgentWorkspaceScope["isolationMode"] {
+  if (repoId === "asgard") {
+    return "branch";
+  }
+  return "worktree";
+}
+
 function runGit(root: string, args: string[]): string | undefined {
   const result = spawnSync("git", ["-C", root, ...args], {
     encoding: "utf8",
@@ -74,6 +81,22 @@ function runGit(root: string, args: string[]): string | undefined {
   }
   const value = (result.stdout || "").trim();
   return value.length > 0 ? value : undefined;
+}
+
+function runGitDetailed(root: string, args: string[]): {
+  status: number | null;
+  stdout: string;
+  stderr: string;
+} {
+  const result = spawnSync("git", ["-C", root, ...args], {
+    encoding: "utf8",
+    windowsHide: true
+  });
+  return {
+    status: result.status,
+    stdout: (result.stdout || "").trim(),
+    stderr: (result.stderr || "").trim()
+  };
 }
 
 function repoDirty(root: string): boolean {
@@ -102,7 +125,7 @@ function discoverRepo(args: {
     gitBranch,
     repoSha,
     sessionScope: args.sessionScope,
-    isolationMode: "worktree",
+    isolationMode: preferredIsolationMode(args.repoId),
     available,
     dirty
   };
@@ -197,7 +220,11 @@ function actionRationale(args: {
   const dirtiness = args.repo.dirty
     ? "The base repo is currently dirty, so the isolated agent worktree should start from the current HEAD and leave unstaged local changes untouched."
     : "The repo is clean enough to materialize an isolated agent worktree immediately.";
-  return `${args.repo.repoLabel} is the ${locality} for the ${args.role} role. ${dirtiness}`;
+  const isolation =
+    args.repo.isolationMode === "worktree"
+      ? dirtiness
+      : "The repo is large or operationally dense enough that the safest default is an agent-only branch lane without expanding another full worktree on disk.";
+  return `${args.repo.repoLabel} is the ${locality} for the ${args.role} role. ${isolation}`;
 }
 
 export function buildRoundtableActionPlan(
@@ -210,16 +237,19 @@ export function buildRoundtableActionPlan(
     input.schedule.layerRoles.length > 0 ? [...input.schedule.layerRoles] : ["mid"];
   const actions: RoundtableAction[] = selectedRepos.map((repo, index) => {
     const role: IntelligenceLayerRole = roleOrder[index % roleOrder.length] ?? "mid";
-    const worktreePath = buildWorktreePath({
-      repoId: repo.repoId,
-      sessionScope,
-      role
-    });
     const gitBranch = buildBranchName({
       repoId: repo.repoId,
       sessionScope,
       role
     });
+    const worktreePath =
+      repo.isolationMode === "worktree"
+        ? buildWorktreePath({
+            repoId: repo.repoId,
+            sessionScope,
+            role
+          })
+        : undefined;
     const workspaceScope: AgentWorkspaceScope = {
       repoId: repo.repoId,
       repoLabel: repo.repoLabel,
@@ -228,7 +258,7 @@ export function buildRoundtableActionPlan(
       gitBranch,
       repoSha: repo.repoSha,
       sessionScope,
-      isolationMode: "worktree"
+      isolationMode: repo.isolationMode
     };
     const status = actionStatusForRepo(repo);
     return {
@@ -246,7 +276,9 @@ export function buildRoundtableActionPlan(
       commandHint:
         status === "blocked"
           ? undefined
-          : `git -C "${repo.repoPath}" worktree add "${worktreePath}" -b "${gitBranch}" HEAD`,
+          : repo.isolationMode === "worktree" && worktreePath
+            ? `git -C "${repo.repoPath}" worktree add "${worktreePath}" -b "${gitBranch}" HEAD`
+            : `git -C "${repo.repoPath}" branch "${gitBranch}" HEAD`,
       workspaceScope
     } satisfies RoundtableAction;
   });
@@ -278,18 +310,39 @@ export function materializeRoundtableActionWorktree(action: RoundtableAction): {
   const repoPath = action.workspaceScope.repoPath;
   const worktreePath = action.workspaceScope.worktreePath;
   const branch = action.workspaceScope.gitBranch;
-  if (!worktreePath || !branch) {
+  if (!branch) {
     throw new Error(`Roundtable action ${action.id} is missing worktree metadata.`);
   }
   if (action.status === "blocked") {
     throw new Error(`Roundtable action ${action.id} is blocked and cannot materialize a worktree.`);
   }
+  if (action.workspaceScope.isolationMode === "branch") {
+    const branchExists = Boolean(runGit(repoPath, ["rev-parse", "--verify", branch]));
+    if (!branchExists) {
+      const result = runGitDetailed(repoPath, ["branch", branch, "HEAD"]);
+      if (result.status !== 0) {
+        throw new Error(
+          `Unable to materialize roundtable branch for ${action.repoLabel}: ${(result.stderr || result.stdout || "git branch failed").trim()}`
+        );
+      }
+    }
+    return {
+      branch,
+      worktreePath: repoPath
+    };
+  }
+  if (!worktreePath) {
+    throw new Error(`Roundtable action ${action.id} is missing worktree metadata.`);
+  }
   mkdirSync(path.dirname(worktreePath), { recursive: true });
   if (!existsSync(worktreePath)) {
-    const result = spawnSync("git", ["-C", repoPath, "worktree", "add", worktreePath, "-b", branch, "HEAD"], {
-      encoding: "utf8",
-      windowsHide: true
-    });
+    const branchExists = Boolean(runGit(repoPath, ["rev-parse", "--verify", branch]));
+    const result = runGitDetailed(
+      repoPath,
+      branchExists
+        ? ["worktree", "add", worktreePath, branch]
+        : ["worktree", "add", worktreePath, "-b", branch, "HEAD"]
+    );
     if (result.status !== 0) {
       throw new Error(
         `Unable to materialize roundtable worktree for ${action.repoLabel}: ${(result.stderr || result.stdout || "git worktree add failed").trim()}`
@@ -300,4 +353,21 @@ export function materializeRoundtableActionWorktree(action: RoundtableAction): {
     branch,
     worktreePath
   };
+}
+
+export function cleanupRoundtableActionWorktree(action: RoundtableAction): void {
+  const repoPath = action.workspaceScope.repoPath;
+  const worktreePath = action.workspaceScope.worktreePath;
+  if (action.workspaceScope.isolationMode === "branch") {
+    return;
+  }
+  if (!worktreePath || !existsSync(worktreePath)) {
+    return;
+  }
+  const result = runGitDetailed(repoPath, ["worktree", "remove", "--force", worktreePath]);
+  if (result.status !== 0) {
+    throw new Error(
+      `Unable to remove roundtable worktree for ${action.repoLabel}: ${(result.stderr || result.stdout || "git worktree remove failed").trim()}`
+    );
+  }
 }

@@ -850,6 +850,52 @@ def collect_roundtable_actionability_records(report: dict) -> list[dict]:
     return [finalize_record(record)]
 
 
+def collect_roundtable_runtime_records(report: dict) -> list[dict]:
+    benchmark = report.get("benchmark", {})
+    if not isinstance(benchmark, dict) or not benchmark:
+        return []
+    scenario_count = int(benchmark.get("scenarioCount", 0) or 0)
+    failed_assertions = int(benchmark.get("failedAssertions", 0) or 0)
+    repo_coverage_p50 = float(benchmark.get("repoCoverageP50", 0) or 0)
+    materialized_actions_p50 = float(benchmark.get("materializedActionsP50", 0) or 0)
+    recorded_actions_p50 = float(benchmark.get("recordedActionsP50", 0) or 0)
+    scoped_turns_p50 = float(benchmark.get("workspaceScopedTurnsP50", 0) or 0)
+    runner_latency_p95_ms = float(benchmark.get("runnerPathP95Ms", 0) or 0)
+    record = {
+        "id": "roundtable-runtime:aggregate",
+        "row_type": "benchmark_observation",
+        "source_surface": "roundtable-runtime",
+        "row_id": "aggregate",
+        "label": "Roundtable runtime benchmark",
+        "objective": (
+            "Prove that Immaculate can seed a bounded Q source, mediate a governed route, and record repo-scoped "
+            "roundtable actions through live runtime execution instead of leaving multi-project coordination as text only."
+        ),
+        "facts": [
+            f"Scenario count: {scenario_count}",
+            f"Failed assertions: {failed_assertions}",
+            f"Repo coverage p50: {repo_coverage_p50:.2f}",
+        ],
+        "observation": [
+            f"Live runtime preserved repo coverage at p50 {repo_coverage_p50:.2f}.",
+            f"Materialized isolated actions held at p50 {materialized_actions_p50:.2f}.",
+            f"Recorded roundtable actions held at p50 {recorded_actions_p50:.2f}.",
+            f"Workspace-scoped turns held at p50 {scoped_turns_p50:.2f}.",
+            f"Runner path latency held at p95 {runner_latency_p95_ms:.2f} ms.",
+        ],
+        "quality": {
+            "status": "completed" if failed_assertions == 0 else "degraded",
+            "parse_success": failed_assertions == 0 and recorded_actions_p50 >= 1,
+            "structured_field_count": 0,
+            "thinking_detected": False,
+            "score": 1.0 if failed_assertions == 0 else max(0.0, 1.0 - failed_assertions * 0.1),
+            "task_count": scenario_count,
+            "p95_latency_ms": runner_latency_p95_ms,
+        },
+    }
+    return [finalize_record(record)]
+
+
 def collect_bridgebench_soak_records(bridgebench_soak: dict) -> list[dict]:
     training_rows = bridgebench_soak.get("trainingRows", [])
     if isinstance(training_rows, list) and training_rows:
@@ -1160,6 +1206,11 @@ def main() -> None:
         help="Path to Roundtable-Actionability.json",
     )
     parser.add_argument(
+        "--roundtable-runtime",
+        default=str(root / "docs" / "wiki" / "Roundtable-Runtime.json"),
+        help="Path to Roundtable-Runtime.json",
+    )
+    parser.add_argument(
         "--terminal-bench-receipt",
         default=str(root / "docs" / "wiki" / "Terminal-Bench-Receipt.json"),
         help="Path to Terminal-Bench-Receipt.json",
@@ -1213,6 +1264,7 @@ def main() -> None:
     q_mediation_drift_path = Path(args.q_mediation_drift)
     arobi_audit_integrity_path = Path(args.arobi_audit_integrity)
     roundtable_actionability_path = Path(args.roundtable_actionability)
+    roundtable_runtime_path = Path(args.roundtable_runtime)
     terminal_bench_receipt_path = Path(args.terminal_bench_receipt)
     terminal_bench_rerun_path = Path(args.terminal_bench_rerun)
     terminal_bench_public_task_path = Path(args.terminal_bench_public_task)
@@ -1231,6 +1283,7 @@ def main() -> None:
     q_mediation_drift = load_optional_json(q_mediation_drift_path)
     arobi_audit_integrity = load_optional_json(arobi_audit_integrity_path)
     roundtable_actionability = load_optional_json(roundtable_actionability_path)
+    roundtable_runtime = load_optional_json(roundtable_runtime_path)
     terminal_bench_receipt = load_optional_json(terminal_bench_receipt_path)
     terminal_bench_rerun = load_optional_json(terminal_bench_rerun_path)
     terminal_bench_public_task = load_optional_json(terminal_bench_public_task_path)
@@ -1254,6 +1307,8 @@ def main() -> None:
         records.extend(collect_arobi_audit_integrity_records(arobi_audit_integrity))
     if roundtable_actionability:
         records.extend(collect_roundtable_actionability_records(roundtable_actionability))
+    if roundtable_runtime:
+        records.extend(collect_roundtable_runtime_records(roundtable_runtime))
     if bridgebench_soak:
         records.extend(collect_bridgebench_soak_records(bridgebench_soak))
     if harbor_soak:
@@ -1307,6 +1362,11 @@ def main() -> None:
             **(
                 {"roundtable-actionability": relative_path(root, roundtable_actionability_path)}
                 if roundtable_actionability
+                else {}
+            ),
+            **(
+                {"roundtable-runtime": relative_path(root, roundtable_runtime_path)}
+                if roundtable_runtime
                 else {}
             ),
             **(
