@@ -2,7 +2,7 @@ import net from "node:net";
 import os from "node:os";
 import path from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
-import { existsSync } from "node:fs";
+import { createWriteStream, existsSync, mkdirSync } from "node:fs";
 import { appendFile, mkdir, writeFile } from "node:fs/promises";
 import { performance } from "node:perf_hooks";
 import { setTimeout as delay } from "node:timers/promises";
@@ -179,6 +179,18 @@ type CliOptions = {
   intervalMs: number;
 };
 
+type HarnessProcessHandle = {
+  child: ChildProcess;
+  stdoutPath: string;
+  stderrPath: string;
+};
+
+type OllamaProcessHandle = {
+  child: ChildProcess;
+  stdoutPath: string;
+  stderrPath: string;
+};
+
 const DEFAULT_OLLAMA_URL = resolveQLocalOllamaUrl();
 const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const HARNESS_ROOT = path.resolve(MODULE_ROOT, "..");
@@ -301,6 +313,15 @@ function compactSummary(value: string, maxLength = 240): string {
     return normalized;
   }
   return `${normalized.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
+}
+
+function resolveOllamaHost(endpoint: string): string {
+  try {
+    const parsed = new URL(endpoint);
+    return `${parsed.hostname}${parsed.port ? `:${parsed.port}` : ""}`;
+  } catch {
+    return endpoint.replace(/^https?:\/\//i, "").replace(/\/+$/, "");
+  }
 }
 
 async function writeJsonArtifact(filePath: string, value: unknown): Promise<void> {
@@ -475,9 +496,21 @@ async function postArobiRoundtableRecord(options: {
   }
 }
 
-async function waitForHarness(harnessUrl: string): Promise<HttpCheck> {
+async function waitForHarness(
+  harnessUrl: string,
+  harness?: HarnessProcessHandle
+): Promise<HttpCheck> {
   let lastError: unknown;
   for (let attempt = 0; attempt < 80; attempt += 1) {
+    if (harness && harness.child.exitCode !== null) {
+      const exitLabel =
+        harness.child.signalCode !== null && harness.child.signalCode !== undefined
+          ? `signal=${harness.child.signalCode}`
+          : `code=${harness.child.exitCode}`;
+      throw new Error(
+        `Harness exited before becoming healthy (${exitLabel}). stdout=${harness.stdoutPath} stderr=${harness.stderrPath}`
+      );
+    }
     try {
       const health = await checkHttp(`${harnessUrl}/api/health`);
       if (
@@ -495,6 +528,109 @@ async function waitForHarness(harnessUrl: string): Promise<HttpCheck> {
     await delay(250);
   }
   throw lastError instanceof Error ? lastError : new Error("Harness did not become healthy in time.");
+}
+
+async function waitForOllama(
+  endpoint: string,
+  handle?: OllamaProcessHandle
+): Promise<HttpCheck> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 40; attempt += 1) {
+    if (handle && handle.child.exitCode !== null) {
+      const exitLabel =
+        handle.child.signalCode !== null && handle.child.signalCode !== undefined
+          ? `signal=${handle.child.signalCode}`
+          : `code=${handle.child.exitCode}`;
+      throw new Error(
+        `Local Ollama exited before becoming healthy (${exitLabel}). stdout=${handle.stdoutPath} stderr=${handle.stderrPath}`
+      );
+    }
+    try {
+      const tags = await checkHttp(`${endpoint.replace(/\/+$/, "")}/api/tags`);
+      if (tags.status === 200) {
+        return tags;
+      }
+      lastError = new Error(`Ollama tags returned ${tags.status}.`);
+    } catch (error) {
+      lastError = error;
+    }
+    await delay(500);
+  }
+  throw lastError instanceof Error ? lastError : new Error("Ollama did not become healthy in time.");
+}
+
+async function ensureHarnessQRuntimeLayer(
+  harnessUrl: string,
+  consentScope: string
+): Promise<void> {
+  const registration = await checkHttp(`${harnessUrl}/api/intelligence/q/register`, {
+    method: "POST",
+    headers: buildHeaders(consentScope, "cognitive-registration"),
+    body: JSON.stringify({
+      role: "mid",
+      model: getQModelName()
+    })
+  });
+  if (registration.status !== 200 || !responseAccepted(registration.body)) {
+    throw new Error(
+      `Unable to register the Q runtime layer for roundtable runtime: ${registration.status}`
+    );
+  }
+}
+
+function startOllamaProcess(options: {
+  runtimeDir: string;
+  endpoint: string;
+}): OllamaProcessHandle {
+  mkdirSync(options.runtimeDir, { recursive: true });
+  const stdoutPath = path.join(options.runtimeDir, "ollama.stdout.log");
+  const stderrPath = path.join(options.runtimeDir, "ollama.stderr.log");
+  const stdoutStream = createWriteStream(stdoutPath, { flags: "a" });
+  const stderrStream = createWriteStream(stderrPath, { flags: "a" });
+  const child = spawn("ollama", ["serve"], {
+    cwd: REPO_ROOT,
+    env: {
+      ...process.env,
+      OLLAMA_HOST: resolveOllamaHost(options.endpoint)
+    },
+    stdio: ["ignore", "pipe", "pipe"],
+    windowsHide: true
+  });
+  child.stdout?.pipe(stdoutStream);
+  child.stderr?.pipe(stderrStream);
+  child.once("exit", () => {
+    stdoutStream.end();
+    stderrStream.end();
+  });
+  return {
+    child,
+    stdoutPath,
+    stderrPath
+  };
+}
+
+async function ensureOllamaEndpoint(options: {
+  endpoint: string;
+  runtimeDir: string;
+}): Promise<OllamaProcessHandle | null> {
+  try {
+    const tags = await checkHttp(`${options.endpoint.replace(/\/+$/, "")}/api/tags`);
+    if (tags.status === 200) {
+      return null;
+    }
+  } catch {
+    // Fall through to headless bootstrap.
+  }
+  const handle = startOllamaProcess(options);
+  await delay(8_000);
+  try {
+    await waitForOllama(options.endpoint, handle);
+  } catch (error) {
+    throw new Error(
+      `Unable to bootstrap local Ollama at ${options.endpoint}: ${error instanceof Error ? error.message : "unknown error"}. stdout=${handle.stdoutPath} stderr=${handle.stderrPath}`
+    );
+  }
+  return handle;
 }
 
 function resolveHarnessCommand(): { command: string; args: string[] } {
@@ -522,9 +658,14 @@ function startHarnessProcess(options: {
   runtimeDir: string;
   keysPath: string;
   port: number;
-}): ChildProcess {
+}): HarnessProcessHandle {
   const harness = resolveHarnessCommand();
-  return spawn(harness.command, harness.args, {
+  mkdirSync(options.runtimeDir, { recursive: true });
+  const stdoutPath = path.join(options.runtimeDir, "roundtable-harness.stdout.log");
+  const stderrPath = path.join(options.runtimeDir, "roundtable-harness.stderr.log");
+  const stdoutStream = createWriteStream(stdoutPath, { flags: "a" });
+  const stderrStream = createWriteStream(stderrPath, { flags: "a" });
+  const child = spawn(harness.command, harness.args, {
     cwd: options.repoRoot,
     env: {
       ...process.env,
@@ -534,12 +675,46 @@ function startHarnessProcess(options: {
       IMMACULATE_HARNESS_HOST: "127.0.0.1",
       IMMACULATE_HARNESS_PORT: String(options.port)
     },
-    stdio: "ignore",
+    stdio: ["ignore", "pipe", "pipe"],
     windowsHide: true
   });
+  child.stdout?.pipe(stdoutStream);
+  child.stderr?.pipe(stderrStream);
+  child.once("exit", () => {
+    stdoutStream.end();
+    stderrStream.end();
+  });
+  return {
+    child,
+    stdoutPath,
+    stderrPath
+  };
 }
 
-async function stopHarnessProcess(child: ChildProcess): Promise<void> {
+async function stopHarnessProcess(handle: HarnessProcessHandle): Promise<void> {
+  const child = handle.child;
+  if (child.exitCode !== null || child.killed) {
+    return;
+  }
+  child.kill("SIGTERM");
+  const exited = await Promise.race([
+    new Promise<boolean>((resolve) => child.once("exit", () => resolve(true))),
+    delay(3_000).then(() => false)
+  ]);
+  if (!exited && child.exitCode === null && !child.killed) {
+    child.kill("SIGKILL");
+    await Promise.race([
+      new Promise<void>((resolve) => child.once("exit", () => resolve())),
+      delay(2_000)
+    ]);
+  }
+}
+
+async function stopOllamaProcess(handle: OllamaProcessHandle | null): Promise<void> {
+  if (!handle) {
+    return;
+  }
+  const child = handle.child;
   if (child.exitCode !== null || child.killed) {
     return;
   }
@@ -652,7 +827,7 @@ async function runScenario(options: {
         objective: options.scenario.mediationObjective,
         requestedExecutionDecision: "allow_local",
         dispatchOnApproval: false,
-        forceCognition: true
+        suppressed: true
       })
     });
     const conversations = await checkHttp(`${options.harnessUrl}/api/intelligence/conversations`, {
@@ -1141,15 +1316,25 @@ async function main(): Promise<void> {
   const port = await allocateTcpPort();
   const harnessUrl = `http://127.0.0.1:${port}`;
   const release = await resolveReleaseMetadata();
+  const ollamaRuntimeDir = path.join(ROUNDTABLE_RUNTIME_ROOT, "ollama");
   await mkdir(harnessRuntimeDir, { recursive: true });
   await mkdir(iterationsRoot, { recursive: true });
   await mkdir(WIKI_ROOT, { recursive: true });
-  await prewarmOllamaModel({
+  const ollamaProcess = await ensureOllamaEndpoint({
+    endpoint: DEFAULT_OLLAMA_URL,
+    runtimeDir: ollamaRuntimeDir
+  });
+  const prewarm = await prewarmOllamaModel({
     endpoint: DEFAULT_OLLAMA_URL,
     model: getQModelTarget()
   });
+  if (prewarm.failureClass) {
+    throw new Error(
+      `Unable to prewarm the local Q runtime at ${DEFAULT_OLLAMA_URL}: ${prewarm.failureClass}${prewarm.errorMessage ? ` / ${prewarm.errorMessage}` : ""}`
+    );
+  }
 
-  const child = startHarnessProcess({
+  const harnessProcess = startHarnessProcess({
     repoRoot: REPO_ROOT,
     runtimeDir: harnessRuntimeDir,
     keysPath,
@@ -1161,7 +1346,8 @@ async function main(): Promise<void> {
   let latestFailureMessage: string | undefined;
 
   try {
-    await waitForHarness(harnessUrl);
+    await waitForHarness(harnessUrl, harnessProcess);
+    await ensureHarnessQRuntimeLayer(harnessUrl, `session:${runId}`);
 
     for (let iterationIndex = 0; iterationIndex < cli.iterations; iterationIndex += 1) {
       const iterationStartedAt = new Date().toISOString();
@@ -1347,7 +1533,8 @@ async function main(): Promise<void> {
       )}\n`
     );
   } finally {
-    await stopHarnessProcess(child);
+    await stopHarnessProcess(harnessProcess);
+    await stopOllamaProcess(ollamaProcess);
   }
 }
 

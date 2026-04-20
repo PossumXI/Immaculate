@@ -21,6 +21,28 @@ For each breakthrough, record:
 
 ### 2026-04-20
 
+#### Roundtable runtime is now cold-start reproducible
+
+What changed:
+- the live roundtable runtime benchmark now self-starts the local `Q` runtime on demand instead of only passing when a human prestarted the local Ollama process
+- the same governed runtime path stayed green on `3` scenarios with `0` failed assertions while still materializing `3` execution bundles, `3` repo audit receipts, and `3` task documents across Immaculate, OpenJaws, and Asgard
+- tracked workspace probing is now cached, so repeated repo scans do not waste extra git I/O inside the same runtime pass
+
+Why it matters:
+- the missed pattern was that a benchmark which only works after manual local prep is still half a demo; a truthful orchestration receipt has to survive a cold start
+- getting the cold-start path green matters because operators can now rerun the governed roundtable proof without handholding the local `Q` lane first
+- caching repo probes matters because the roundtable is repeatedly reading the same roots during one bounded pass, so the right optimization is to stop rediscovering identical tracked-file state
+
+Evidence:
+- `apps/harness/src/roundtable-runtime.ts` now bootstraps the local `Q` runtime before starting the harness and registers the live `Q` layer before the runtime scenarios execute
+- `apps/harness/src/roundtable.ts` now caches tracked-workspace probes and bounded repo audit findings per repo/SHA instead of rescanning the same repo state for every action
+- `docs/wiki/Roundtable-Runtime.md` now records a green cold-start run with `3` scenarios, `0` failed assertions, `3` execution bundles, `3` repo audit receipts, and `3` task documents
+
+What this unlocks next:
+- the roundtable runtime can now be treated as a real release gate instead of a manually primed lab drill
+- the next scheduler pass can optimize the governed route itself instead of paying down local runner setup debt
+- Q/Immaculate training can now consume the roundtable runtime lane as a reproducible positive benchmark instead of a conditionally valid one
+
 #### Roundtable now emits repo audit receipts, not just execution bundles
 
 What changed:

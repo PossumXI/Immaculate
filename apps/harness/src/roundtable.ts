@@ -33,7 +33,6 @@ export type RoundtableActionWorkspaceProbe = {
   activeBranch?: string;
   repoSha?: string;
   trackedFileCount: number;
-  statusLineCount: number;
   sampleFiles: string[];
   writeAuthority?: AgentWorkspaceScope["writeAuthority"];
   allowedPushRemote?: string;
@@ -82,6 +81,15 @@ type RoundtableRepoAuditReceipt = {
   summary: string;
   findings: RoundtableRepoAuditFinding[];
 };
+
+type RoundtableTrackedWorkspaceSnapshot = {
+  trackedFileCount: number;
+  sampleFiles: string[];
+  probeSucceeded: boolean;
+};
+
+const roundtableTrackedWorkspaceCache = new Map<string, RoundtableTrackedWorkspaceSnapshot>();
+const roundtableRepoAuditFindingCache = new Map<string, RoundtableRepoAuditFinding[]>();
 
 type BuildRoundtableActionPlanInput = {
   objective: string;
@@ -297,6 +305,10 @@ function uniqueStrings(values: Array<string | undefined>): string[] {
   });
 }
 
+function buildRoundtableCacheKey(...parts: Array<string | undefined>): string {
+  return parts.map((part) => part?.trim() || "none").join("|");
+}
+
 function relevantFilesForRepo(action: RoundtableAction, probe: RoundtableActionWorkspaceProbe): string[] {
   const defaults: Record<string, string[]> = {
     immaculate: [
@@ -364,14 +376,56 @@ function pushFinding(
   }
 }
 
-async function buildRoundtableRepoAuditReceipt(args: {
-  action: RoundtableAction;
-  branch: string;
-  objective: string;
+function cloneRoundtableAuditFindings(
+  findings: RoundtableRepoAuditFinding[]
+): RoundtableRepoAuditFinding[] {
+  return findings.map((finding) => ({ ...finding }));
+}
+
+function getTrackedWorkspaceSnapshot(args: {
+  cwd: string;
+  repoSha?: string;
+}): RoundtableTrackedWorkspaceSnapshot {
+  const cacheKey = buildRoundtableCacheKey("tracked-workspace", args.cwd, args.repoSha);
+  const cached = roundtableTrackedWorkspaceCache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+  const trackedFilesResult = runGitDetailed(args.cwd, ["ls-files"]);
+  const trackedFiles =
+    trackedFilesResult.status === 0
+      ? trackedFilesResult.stdout
+          .split(/\r?\n/)
+          .map((entry) => entry.trim())
+          .filter(Boolean)
+      : [];
+  const snapshot: RoundtableTrackedWorkspaceSnapshot = {
+    trackedFileCount: trackedFiles.length,
+    sampleFiles: selectSampleFiles(trackedFiles),
+    probeSucceeded: trackedFilesResult.status === 0
+  };
+  roundtableTrackedWorkspaceCache.set(cacheKey, snapshot);
+  return snapshot;
+}
+
+async function collectRoundtableRepoAuditFindings(args: {
+  repoId: string;
   repoRoot: string;
-}): Promise<RoundtableRepoAuditReceipt> {
+  repoSha?: string;
+}): Promise<RoundtableRepoAuditFinding[]> {
+  const cacheKey = buildRoundtableCacheKey(
+    "repo-audit-findings",
+    args.repoId,
+    args.repoRoot,
+    args.repoSha
+  );
+  const cached = roundtableRepoAuditFindingCache.get(cacheKey);
+  if (cached) {
+    return cloneRoundtableAuditFindings(cached);
+  }
+
   const findings: RoundtableRepoAuditFinding[] = [];
-  if (args.action.repoId === "immaculate") {
+  if (args.repoId === "immaculate") {
     const serverSource = await readRepoFileIfPresent(args.repoRoot, "apps/harness/src/server.ts");
     const runtimeSource = await readRepoFileIfPresent(
       args.repoRoot,
@@ -415,7 +469,7 @@ async function buildRoundtableRepoAuditReceipt(args: {
           }
         : undefined
     );
-  } else if (args.action.repoId === "openjaws") {
+  } else if (args.repoId === "openjaws") {
     const coherenceSource = await readRepoFileIfPresent(
       args.repoRoot,
       "src/immaculate/runtimeCoherence.ts"
@@ -451,7 +505,7 @@ async function buildRoundtableRepoAuditReceipt(args: {
           }
         : undefined
     );
-  } else if (args.action.repoId === "asgard") {
+  } else if (args.repoId === "asgard") {
     const fabricSource = await readRepoFileIfPresent(args.repoRoot, "internal/fabric/service.go");
     const orchestratorSource = await readRepoFileIfPresent(
       args.repoRoot,
@@ -496,6 +550,23 @@ async function buildRoundtableRepoAuditReceipt(args: {
         : undefined
     );
   }
+
+  roundtableRepoAuditFindingCache.set(cacheKey, cloneRoundtableAuditFindings(findings));
+  return findings;
+}
+
+async function buildRoundtableRepoAuditReceipt(args: {
+  action: RoundtableAction;
+  branch: string;
+  objective: string;
+  repoRoot: string;
+  repoSha?: string;
+}): Promise<RoundtableRepoAuditReceipt> {
+  const findings = await collectRoundtableRepoAuditFindings({
+    repoId: args.action.repoId,
+    repoRoot: args.repoRoot,
+    repoSha: args.repoSha
+  });
 
   const actionableFindingCount = findings.filter((entry) => entry.severity === "warning").length;
   const summary =
@@ -619,7 +690,8 @@ async function writeExecutionArtifactFiles(args: {
     action: args.action,
     branch: args.branch,
     objective: args.objective,
-    repoRoot: args.materializedPath
+    repoRoot: args.materializedPath,
+    repoSha: args.probe.repoSha
   });
 
   const workspaceTaskPath =
@@ -968,6 +1040,7 @@ export function probeRoundtableActionWorkspace(
     action.workspaceScope.gitBranch;
   const repoSha = runGit(cwd, ["rev-parse", "--short", "HEAD"]) || action.workspaceScope.repoSha;
   const allowedBranchExists =
+    action.workspaceScope.isolationMode === "branch" &&
     Boolean(action.workspaceScope.allowedPushBranch) &&
     Boolean(
       runGit(
@@ -975,31 +1048,18 @@ export function probeRoundtableActionWorkspace(
         ["rev-parse", "--verify", action.workspaceScope.allowedPushBranch as string]
       )
     );
-  const trackedFilesResult = runGitDetailed(cwd, ["ls-files"]);
-  const trackedFiles =
-    trackedFilesResult.status === 0
-      ? trackedFilesResult.stdout
-          .split(/\r?\n/)
-          .map((entry) => entry.trim())
-          .filter(Boolean)
-      : [];
-  const statusResult = runGitDetailed(cwd, ["status", "--short"]);
-  const statusLineCount =
-    statusResult.status === 0
-      ? statusResult.stdout
-          .split(/\r?\n/)
-          .map((entry) => entry.trim())
-          .filter(Boolean).length
-      : 0;
+  const trackedWorkspaceSnapshot = getTrackedWorkspaceSnapshot({
+    cwd,
+    repoSha
+  });
   return {
     repoId: action.repoId,
     repoLabel: action.repoLabel,
     cwd,
     activeBranch: branch,
     repoSha,
-    trackedFileCount: trackedFiles.length,
-    statusLineCount,
-    sampleFiles: selectSampleFiles(trackedFiles),
+    trackedFileCount: trackedWorkspaceSnapshot.trackedFileCount,
+    sampleFiles: trackedWorkspaceSnapshot.sampleFiles,
     writeAuthority: action.workspaceScope.writeAuthority,
     allowedPushRemote: action.workspaceScope.allowedPushRemote,
     allowedPushBranch: action.workspaceScope.allowedPushBranch,
@@ -1007,10 +1067,10 @@ export function probeRoundtableActionWorkspace(
       action.workspaceScope.writeAuthority !== "agent-branch-only"
         ? true
         : action.workspaceScope.isolationMode === "branch"
-          ? allowedBranchExists
-          : Boolean(branch) &&
+        ? allowedBranchExists
+        : Boolean(branch) &&
             Boolean(action.workspaceScope.allowedPushBranch) &&
             branch === action.workspaceScope.allowedPushBranch,
-    probeSucceeded: trackedFilesResult.status === 0 && Boolean(branch)
+    probeSucceeded: trackedWorkspaceSnapshot.probeSucceeded && Boolean(branch)
   };
 }
