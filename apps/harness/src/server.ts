@@ -114,7 +114,12 @@ import {
 } from "./q-model.js";
 import { resolveQLocalOllamaUrl } from "./q-local-model.js";
 import { resolveReleaseMetadata } from "./release-metadata.js";
-import { buildRoundtableActionPlan, type RoundtablePlan } from "./roundtable.js";
+import {
+  appendRoundtableExecutionSummary,
+  buildRoundtableActionPlan,
+  materializeRoundtableActionExecutionArtifacts,
+  type RoundtablePlan
+} from "./roundtable.js";
 import { emitHarnessStartupBanner } from "./startup-banner.js";
 import {
   createIntelligenceWorkerRegistry,
@@ -3901,6 +3906,19 @@ async function executeCognitiveSchedule(options: {
       latestSnapshot = guardResult.snapshot;
     }
 
+    const executedRoundtableActions =
+      turns.length > 0
+        ? await materializeRoundtableActionExecutionArtifacts({
+            objective: baseObjective,
+            actions: roundtablePlan.actions,
+            turns
+          })
+        : roundtablePlan.actions;
+    const roundtableSummary = appendRoundtableExecutionSummary(
+      roundtablePlan.summary,
+      executedRoundtableActions
+    );
+
     conversation =
       turns.length > 0
         ? buildConversationRecord({
@@ -3909,8 +3927,8 @@ async function executeCognitiveSchedule(options: {
             arbitrationId: options.arbitrationId,
             schedule: options.schedule,
             turns,
-            roundtableSummary: roundtablePlan.summary,
-            roundtableActions: roundtablePlan.actions
+            roundtableSummary,
+            roundtableActions: executedRoundtableActions
           })
         : undefined;
 
@@ -6707,6 +6725,35 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
     | undefined;
   let cognitionSnapshot = scheduleSnapshot;
   const dispatchOnApproval = Boolean(body.dispatchOnApproval);
+
+  if (!tracedScheduleDecision.shouldRunCognition) {
+    const roundtableActions = await materializeRoundtableActionExecutionArtifacts({
+      objective: tracedScheduleDecision.objective,
+      actions: roundtablePlan.actions
+    });
+    const roundtableSummary = appendRoundtableExecutionSummary(
+      roundtablePlan.summary,
+      roundtableActions
+    );
+    mediationConversation = await traceConversationRecord({
+      conversation: buildConversationRecord({
+        sessionId: resolvedSessionId,
+        sessionScope: roundtablePlan.sessionScope,
+        arbitrationId: tracedArbitrationDecision.id,
+        schedule: tracedScheduleDecision,
+        turns: [],
+        roundtableSummary,
+        roundtableActions
+      }),
+      consentScope,
+      schedule: tracedScheduleDecision
+    });
+    cognitionSnapshot = phaseSnapshotSchema.parse(
+      projectPhaseSnapshot(engine.recordConversation(mediationConversation), consentScope)
+    );
+    await persistence.persist(engine.getDurableState());
+    emitSnapshot();
+  }
 
   if (tracedScheduleDecision.shouldRunCognition) {
     if (tracedScheduleDecision.layerIds.length === 0) {

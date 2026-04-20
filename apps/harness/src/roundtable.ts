@@ -1,19 +1,23 @@
 import path from "node:path";
 import { existsSync, mkdirSync } from "node:fs";
+import { mkdir, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import type {
+  AgentTurn,
   AgentWorkspaceScope,
   ExecutionSchedule,
   IntelligenceLayerRole,
   RoundtableAction,
-  RoundtableActionStatus
+  RoundtableActionStatus,
+  RoundtableExecutionArtifact
 } from "@immaculate/core";
 import { hashValue } from "./utils.js";
 
 const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(MODULE_ROOT, "../../..");
 const WORKTREE_ROOT = path.join(REPO_ROOT, ".runtime", "agent-worktrees");
+const ROUNDTABLE_EXECUTION_ROOT = path.join(REPO_ROOT, ".runtime", "roundtable-execution");
 const DEFAULT_OPENJAWS_ROOT = "D:\\openjaws\\OpenJaws";
 const DEFAULT_ASGARD_ROOT = "C:\\Users\\Knight\\Desktop\\cheeks\\Asgard";
 
@@ -46,6 +50,16 @@ export type RoundtablePlan = {
   sharedContext: string;
   readyCount: number;
   repoCount: number;
+};
+
+type MaterializedRoundtableActionExecution = {
+  action: RoundtableAction;
+  branch: string;
+  worktreePath: string;
+  bundlePath: string;
+  taskDocumentPath: string;
+  workspaceTaskPath?: string;
+  probe: RoundtableActionWorkspaceProbe;
 };
 
 type BuildRoundtableActionPlanInput = {
@@ -247,6 +261,308 @@ function actionRationale(args: {
       ? dirtiness
       : "The repo is large or operationally dense enough that the safest default is an agent-only branch lane without expanding another full worktree on disk.";
   return `${args.repo.repoLabel} is the ${locality} for the ${args.role} role. ${isolation}`;
+}
+
+function relativeRepoPath(value: string | undefined): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+  return path.relative(REPO_ROOT, value).replaceAll("\\", "/");
+}
+
+function uniqueStrings(values: Array<string | undefined>): string[] {
+  return values.filter((value, index, items): value is string => {
+    return typeof value === "string" && value.trim().length > 0 && items.indexOf(value) === index;
+  });
+}
+
+function relevantFilesForRepo(action: RoundtableAction, probe: RoundtableActionWorkspaceProbe): string[] {
+  const defaults: Record<string, string[]> = {
+    immaculate: [
+      "apps/harness/src/server.ts",
+      "apps/harness/src/roundtable.ts",
+      "apps/harness/src/roundtable-runtime.ts",
+      "apps/harness/src/decision-trace.ts"
+    ],
+    openjaws: [
+      "src/immaculate/runtimeCoherence.ts",
+      "src/utils/discordQAgentRuntime.ts",
+      "scripts/q-terminalbench.ts",
+      "src/immaculate/benchmarkTrace.ts"
+    ],
+    asgard: [
+      "internal/fabric/roundtable.go",
+      "internal/fabric/service.go",
+      "internal/cortex/orchestrator.go",
+      "internal/services/audit.go"
+    ]
+  };
+  return uniqueStrings([...probe.sampleFiles, ...(defaults[action.repoId] ?? [])]).slice(0, 8);
+}
+
+function focusAreasForRepo(action: RoundtableAction): string[] {
+  if (action.repoId === "openjaws") {
+    return [
+      "Tighten runtime coherence and benchmark provenance.",
+      "Keep Q-facing runtime receipts structurally trustworthy.",
+      "Stay on the agent-only branch and preserve terminal-task traceability."
+    ];
+  }
+  if (action.repoId === "asgard") {
+    return [
+      "Preserve Arobi audit continuity and do not claim unavailable public-edge writes.",
+      "Keep fabric roundtable governance reviewable under pressure.",
+      "Treat branch-only isolation as plan-and-handoff until a clean working lane exists."
+    ];
+  }
+  return [
+    "Improve governed mediation and roundtable execution without drift.",
+    "Keep Q primary, Immaculate reviewable, and audit evidence linked.",
+    "Only edit inside the isolated agent branch or worktree."
+  ];
+}
+
+function renderTaskDocument(args: {
+  action: RoundtableAction;
+  branch: string;
+  bundlePath: string;
+  taskDocumentPath: string;
+  workspaceTaskPath?: string;
+  objective: string;
+  probe: RoundtableActionWorkspaceProbe;
+  relevantFiles: string[];
+  focusAreas: string[];
+  turn?: AgentTurn;
+}): string {
+  return [
+    `# ${args.action.repoLabel} Roundtable Task`,
+    "",
+    "This file is generated from a live governed roundtable pass. It is the bounded execution brief for the isolated agent lane.",
+    "",
+    `- Repo: ${args.action.repoLabel}`,
+    `- Role: ${args.action.role}`,
+    `- Branch: \`${args.branch}\``,
+    `- Isolation mode: \`${args.action.workspaceScope.isolationMode}\``,
+    `- Write authority: \`${args.action.workspaceScope.writeAuthority ?? "none"}\``,
+    `- Allowed push: \`${args.action.workspaceScope.allowedPushRemote ?? "none"}/${args.action.workspaceScope.allowedPushBranch ?? "none"}\``,
+    `- Bundle path: \`${args.bundlePath}\``,
+    `- Task document path: \`${args.taskDocumentPath}\``,
+    `- Workspace task path: \`${args.workspaceTaskPath ?? "n/a"}\``,
+    "",
+    "## Objective",
+    "",
+    args.objective,
+    "",
+    "## Repo Rationale",
+    "",
+    args.action.rationale,
+    "",
+    "## Focus Areas",
+    "",
+    ...args.focusAreas.map((entry) => `- ${entry}`),
+    "",
+    "## Relevant Files",
+    "",
+    ...args.relevantFiles.map((entry) => `- \`${entry}\``),
+    "",
+    "## Latest Governed Turn",
+    "",
+    `- Route: \`${args.turn?.routeSuggestion ?? "n/a"}\``,
+    `- Commit: \`${args.turn?.commitStatement ?? "n/a"}\``,
+    `- Decision trace: \`${args.turn?.decisionTraceId ?? "n/a"}\``,
+    "",
+    "## Boundaries",
+    "",
+    "- Keep edits inside the isolated agent branch or worktree only.",
+    "- Preserve auditability: tie code changes back to the governed route and commit statement.",
+    "- Do not rewrite unrelated local changes in the source repo.",
+    "",
+    "## Probe Snapshot",
+    "",
+    `- Branch preserved: \`${args.probe.authorityBranchPreserved}\``,
+    `- Tracked files: \`${args.probe.trackedFileCount}\``,
+    `- Sample files: \`${args.probe.sampleFiles.join(", ") || "n/a"}\``
+  ].join("\n");
+}
+
+async function writeExecutionArtifactFiles(args: {
+  action: RoundtableAction;
+  branch: string;
+  objective: string;
+  materializedPath: string;
+  probe: RoundtableActionWorkspaceProbe;
+  turn?: AgentTurn;
+}): Promise<MaterializedRoundtableActionExecution> {
+  const sessionSlug = slugify(
+    args.action.workspaceScope.sessionScope ?? `${args.action.repoId}-${args.action.role}`
+  );
+  const executionRoot = path.join(ROUNDTABLE_EXECUTION_ROOT, sessionSlug, slugify(args.action.id));
+  await mkdir(executionRoot, { recursive: true });
+
+  const bundleRelativePath = path
+    .join(".runtime", "roundtable-execution", sessionSlug, slugify(args.action.id), `${args.action.repoId}.json`)
+    .replaceAll("\\", "/");
+  const taskDocumentRelativePath = path
+    .join(".runtime", "roundtable-execution", sessionSlug, slugify(args.action.id), `${args.action.repoId}.md`)
+    .replaceAll("\\", "/");
+  const relevantFiles = relevantFilesForRepo(args.action, args.probe);
+  const focusAreas = focusAreasForRepo(args.action);
+
+  const workspaceTaskPath =
+    args.action.workspaceScope.isolationMode === "worktree"
+      ? path.join(args.materializedPath, "ROUNDTABLE_TASK.md")
+      : undefined;
+  const workspaceTaskRelativePath = relativeRepoPath(workspaceTaskPath);
+
+  const artifact: RoundtableExecutionArtifact = {
+    status: "prepared",
+    bundlePath: bundleRelativePath,
+    taskDocumentPath: taskDocumentRelativePath,
+    workspaceTaskPath: workspaceTaskRelativePath,
+    executionReady: args.probe.authorityBranchPreserved,
+    workspaceMaterialized: args.action.workspaceScope.isolationMode === "worktree",
+    requiresManualCheckout: args.action.workspaceScope.isolationMode === "branch",
+    authorityBound: args.probe.authorityBranchPreserved,
+    relevantFiles,
+    focusAreas,
+    routeSuggestion: args.turn?.routeSuggestion,
+    commitStatement: args.turn?.commitStatement,
+    decisionTraceId: args.turn?.decisionTraceId
+  };
+
+  const taskDocument = renderTaskDocument({
+    action: args.action,
+    branch: args.branch,
+    bundlePath: bundleRelativePath,
+    taskDocumentPath: taskDocumentRelativePath,
+    workspaceTaskPath: workspaceTaskRelativePath,
+    objective: args.objective,
+    probe: args.probe,
+    relevantFiles,
+    focusAreas,
+    turn: args.turn
+  });
+
+  const bundlePayload = {
+    generatedAt: new Date().toISOString(),
+    repoId: args.action.repoId,
+    repoLabel: args.action.repoLabel,
+    role: args.action.role,
+    objective: args.objective,
+    rationale: args.action.rationale,
+    branch: args.branch,
+    isolationMode: args.action.workspaceScope.isolationMode,
+    writeAuthority: args.action.workspaceScope.writeAuthority,
+    allowedPushRemote: args.action.workspaceScope.allowedPushRemote,
+    allowedPushBranch: args.action.workspaceScope.allowedPushBranch,
+    worktreePath: relativeRepoPath(args.materializedPath),
+    latestTurn: args.turn
+      ? {
+          turnId: args.turn.id,
+          routeSuggestion: args.turn.routeSuggestion,
+          commitStatement: args.turn.commitStatement,
+          decisionTraceId: args.turn.decisionTraceId
+        }
+      : undefined,
+    probe: args.probe,
+    executionArtifact: artifact
+  };
+
+  await writeFile(path.join(REPO_ROOT, bundleRelativePath), `${JSON.stringify(bundlePayload, null, 2)}\n`, "utf8");
+  await writeFile(path.join(REPO_ROOT, taskDocumentRelativePath), `${taskDocument}\n`, "utf8");
+  if (workspaceTaskPath) {
+    await mkdir(path.dirname(workspaceTaskPath), { recursive: true });
+    await writeFile(workspaceTaskPath, `${taskDocument}\n`, "utf8");
+  }
+
+  return {
+    action: {
+      ...args.action,
+      commandHint:
+        args.action.workspaceScope.isolationMode === "worktree" && workspaceTaskRelativePath
+          ? `cd "${relativeRepoPath(args.materializedPath) ?? args.materializedPath}" && type ROUNDTABLE_TASK.md`
+          : `type "${taskDocumentRelativePath}"`,
+      executionArtifact: artifact
+    },
+    branch: args.branch,
+    worktreePath: args.materializedPath,
+    bundlePath: bundleRelativePath,
+    taskDocumentPath: taskDocumentRelativePath,
+    workspaceTaskPath: workspaceTaskRelativePath,
+    probe: args.probe
+  };
+}
+
+export async function materializeRoundtableActionExecutionArtifacts(args: {
+  objective: string;
+  actions: RoundtableAction[];
+  turns?: AgentTurn[];
+}): Promise<RoundtableAction[]> {
+  const turns = args.turns ?? [];
+  const updatedActions: RoundtableAction[] = [];
+
+  for (const action of args.actions) {
+    if (action.status !== "ready") {
+      updatedActions.push({
+        ...action,
+        executionArtifact: {
+          status: "skipped",
+          executionReady: false,
+          workspaceMaterialized: false,
+          requiresManualCheckout: action.workspaceScope.isolationMode === "branch",
+          authorityBound: false,
+          relevantFiles: [],
+          focusAreas: focusAreasForRepo(action)
+        }
+      });
+      continue;
+    }
+
+    const turn = [...turns].reverse().find((entry) => entry.role === action.role);
+    try {
+      const materialized = materializeRoundtableActionWorktree(action);
+      const probe = probeRoundtableActionWorkspace(action, materialized.worktreePath);
+      const execution = await writeExecutionArtifactFiles({
+        action,
+        branch: materialized.branch,
+        objective: args.objective,
+        materializedPath: materialized.worktreePath,
+        probe,
+        turn
+      });
+      updatedActions.push(execution.action);
+    } catch (error) {
+      updatedActions.push({
+        ...action,
+        executionArtifact: {
+          status: "failed",
+          executionReady: false,
+          workspaceMaterialized: false,
+          requiresManualCheckout: action.workspaceScope.isolationMode === "branch",
+          authorityBound: false,
+          relevantFiles: [],
+          focusAreas: focusAreasForRepo(action),
+          routeSuggestion: turn?.routeSuggestion,
+          commitStatement: turn?.commitStatement,
+          decisionTraceId: turn?.decisionTraceId,
+          error: error instanceof Error ? error.message : "Unknown roundtable execution artifact failure."
+        }
+      });
+    }
+  }
+
+  return updatedActions;
+}
+
+export function appendRoundtableExecutionSummary(
+  summary: string,
+  actions: RoundtableAction[]
+): string {
+  const preparedCount = actions.filter(
+    (action) => action.executionArtifact?.status === "prepared" && action.executionArtifact.bundlePath
+  ).length;
+  const readyCount = actions.filter((action) => action.executionArtifact?.executionReady).length;
+  return `${summary} Execution bundles prepared for ${preparedCount}/${actions.length} lane(s); ${readyCount}/${actions.length} lane(s) remain authority-bound and ready for isolated agent work.`;
 }
 
 export function buildRoundtableActionPlan(

@@ -21,6 +21,30 @@ For each breakthrough, record:
 
 ### 2026-04-20
 
+#### Roundtable now emits governed execution bundles, not just planner metadata
+
+What changed:
+- Immaculate now materializes central roundtable execution bundles under `.runtime/roundtable-execution/` and mirrored `ROUNDTABLE_TASK.md` documents inside isolated worktree lanes when a repo is safe for direct worktree execution
+- the live mediation path now records those execution bundles even when cognition is intentionally suppressed, so the audit trail still captures what repo lane was prepared, which branch authority was bound, and what the next bounded task actually is
+- the roundtable runtime benchmark now scores bundle creation directly and stays green on `3` scenarios with `0` failed assertions, `3` execution bundles, and `3` task documents across Immaculate, OpenJaws, and Asgard
+
+Why it matters:
+- the missed pattern was that agent-only branches and worktrees were already being planned and materialized, but the harness still lacked the one artifact an operator or auditor actually needs next: the bounded repo-specific task bundle
+- emitting those bundles matters because the roundtable can now hand off executable work without pretending a multi-agent conversation alone is sufficient proof
+- recording bundles even when cognition suppresses matters because a truthful audit system cannot let “no turn was generated” collapse the repo-scoped execution receipt
+
+Evidence:
+- `apps/harness/src/roundtable.ts` now writes governed bundle JSON plus task documents for ready lanes
+- `apps/harness/src/server.ts` now records a roundtable conversation receipt even when mediated cognition does not run, as long as the repo-scoped execution bundle path is real and authority-bound
+- `docs/wiki/Roundtable-Runtime.md` now records `3` scenarios, `0` failed assertions, `3` execution bundles, `3` task documents, `3` repo probes, and `3` authority-bound lanes
+
+What this unlocks next:
+- agent-only repo work can now start from one stable bounded bundle instead of a free-form transcript
+- OpenJaws and Asgard lanes can be audited from the same Immaculate roundtable receipt without requiring a shared mutable working copy
+- the next Q/Immaculate training pass can learn from explicit repo-scoped handoff artifacts instead of planner prose only
+
+### 2026-04-20
+
 #### The live Arobi public-node receipt is now first-class and machine-stamped
 
 What changed:

@@ -65,6 +65,9 @@ type RoundtableRuntimeScenarioResult = {
   materializedActionCount: number;
   probedActionCount: number;
   authorityBoundActionCount: number;
+  executionBundleCount: number;
+  executionReadyCount: number;
+  taskDocumentCount: number;
   isolatedBranchCount: number;
   repoCoverageCount: number;
   recordedActionCount: number;
@@ -92,6 +95,9 @@ type RoundtableRuntimeSurface = {
     materializedActionsP50: number;
     probedActionsP50: number;
     authorityBoundActionsP50: number;
+    executionBundlesP50: number;
+    executionReadyP50: number;
+    taskDocumentsP50: number;
     workspaceScopedTurnsP50: number;
     recordedActionsP50: number;
     trackedFilesP50: number;
@@ -110,6 +116,9 @@ type RoundtableRuntimeSurface = {
     materializedActionCount: number;
     probedActionCount: number;
     authorityBoundActionCount: number;
+    executionBundleCount: number;
+    executionReadyCount: number;
+    taskDocumentCount: number;
     recordedActionCount: number;
     workspaceScopedTurnCount: number;
     scheduleRoundtableActionCount: number;
@@ -564,9 +573,18 @@ function pickLatestConversation(
   if (!Array.isArray(conversations)) {
     return undefined;
   }
-  return conversations
-    .filter((entry) => entry.sessionId === sessionId)
-    .sort((left, right) => Date.parse(right.completedAt) - Date.parse(left.completedAt))[0];
+  const matching = conversations.filter((entry) => entry.sessionId === sessionId);
+  const mediated = matching.filter(
+    (entry) =>
+      entry.executionTopology === "parallel-then-guard" ||
+      entry.mode === "multi-turn" ||
+      entry.turnCount > 1 ||
+      entry.turns.some((turn) => turn.role === "guard") ||
+      entry.roundtableActions?.some((action) => Boolean(action.executionArtifact))
+  );
+  return (mediated.length > 0 ? mediated : matching).sort(
+    (left, right) => Date.parse(right.completedAt) - Date.parse(left.completedAt)
+  )[0];
 }
 
 function pickLatestSchedule(
@@ -586,8 +604,11 @@ async function runScenario(options: {
   harnessUrl: string;
   scenario: ScenarioDefinition;
 }): Promise<RoundtableRuntimeScenarioResult> {
-  const sessionId = `roundtable-runtime-${options.scenario.id}`;
-  const consentScope = `${CONSENT_PREFIX}-${options.scenario.id}`;
+  const scenarioRunSeed = `${options.scenario.id}-${Date.now().toString(36)}-${hashValue(
+    options.scenario.mediationObjective
+  ).slice(-6)}`;
+  const sessionId = `roundtable-runtime-${scenarioRunSeed}`;
+  const consentScope = `${CONSENT_PREFIX}-${scenarioRunSeed}`;
   const plan = buildRoundtableActionPlan({
     objective: options.scenario.mediationObjective,
     consentScope,
@@ -635,8 +656,12 @@ async function runScenario(options: {
     const schedules = await checkHttp(`${options.harnessUrl}/api/intelligence/schedules`, {
       headers: buildHeaders("system:benchmark", "cognitive-trace-read")
     });
-    const conversation = pickLatestConversation(conversations.body, sessionId);
-    const schedule = pickLatestSchedule(schedules.body, consentScope);
+    const conversation =
+      (mediation.body as { conversation?: MultiAgentConversation })?.conversation ??
+      pickLatestConversation(conversations.body, sessionId);
+    const schedule =
+      (mediation.body as { scheduleDecision?: ExecutionSchedule })?.scheduleDecision ??
+      pickLatestSchedule(schedules.body, consentScope);
     const seedAccepted = seed.status === 200 && responseAccepted(seed.body);
     const mediationAccepted = mediation.status === 200 && responseAccepted(mediation.body);
     const workspaceScopedTurnCount = Array.isArray(conversation?.turns)
@@ -645,6 +670,16 @@ async function runScenario(options: {
     const recordedActionCount = Array.isArray(conversation?.roundtableActions)
       ? conversation.roundtableActions.length
       : 0;
+    const executionArtifacts = Array.isArray(conversation?.roundtableActions)
+      ? conversation.roundtableActions
+          .map((action) => action.executionArtifact)
+          .filter((artifact): artifact is NonNullable<typeof artifact> => Boolean(artifact))
+      : [];
+    const executionBundleCount = executionArtifacts.filter(
+      (artifact) => artifact.status === "prepared" && artifact.bundlePath
+    ).length;
+    const executionReadyCount = executionArtifacts.filter((artifact) => artifact.executionReady).length;
+    const taskDocumentCount = executionArtifacts.filter((artifact) => artifact.taskDocumentPath).length;
     const recordedRepoCount = new Set(
       (conversation?.roundtableActions ?? []).map((action) => action.repoId).filter(Boolean)
     ).size;
@@ -652,8 +687,9 @@ async function runScenario(options: {
       (schedule?.roundtableActionCount ?? 0) >= readyActions.length &&
       (schedule?.roundtableRepoCount ?? 0) >= plan.repoCount;
     const auditCapturesPlan =
-      workspaceScopedTurnCount > 0 &&
       recordedActionCount >= readyActions.length &&
+      executionBundleCount >= readyActions.length &&
+      executionReadyCount >= readyActions.length &&
       recordedRepoCount >= plan.repoCount &&
       conversation?.sessionScope === consentScope &&
       schedule?.sessionScope === consentScope;
@@ -673,6 +709,9 @@ async function runScenario(options: {
       materializedActionCount: materialized.length,
       probedActionCount: probes.filter((entry) => entry.probeSucceeded).length,
       authorityBoundActionCount: probes.filter((entry) => entry.authorityBranchPreserved).length,
+      executionBundleCount,
+      executionReadyCount,
+      taskDocumentCount,
       isolatedBranchCount: materialized.filter((entry) => entry.branch.startsWith("agents/")).length,
       repoCoverageCount: plan.repoCount,
       recordedActionCount,
@@ -755,24 +794,43 @@ function buildRoundtableRuntimeSurface(options: {
         "Every ready action should touch its repo lane and preserve the allowed agent-only push branch instead of drifting to an uncontrolled branch."
     },
     {
+      id: "roundtable-runtime-execution-bundles",
+      status: options.scenarioResults.every(
+        (entry) =>
+          entry.executionBundleCount >= entry.readyActionCount &&
+          entry.executionReadyCount >= entry.readyActionCount
+      )
+        ? "pass"
+        : "fail",
+      target: "all ready actions emitted execution bundles",
+      actual: options.scenarioResults
+        .map(
+          (entry) =>
+            `${entry.id}:bundles=${entry.executionBundleCount}/${entry.readyActionCount},ready=${entry.executionReadyCount}/${entry.readyActionCount},docs=${entry.taskDocumentCount}`
+        )
+        .join(" | "),
+      detail:
+        "The live mediated path should leave every ready repo lane with a governed execution bundle instead of planner metadata only."
+    },
+    {
       id: "roundtable-runtime-audit-captured",
       status: options.scenarioResults.every(
         (entry) =>
           entry.recordedActionCount >= entry.readyActionCount &&
-          entry.workspaceScopedTurnCount > 0 &&
+          entry.executionBundleCount >= entry.readyActionCount &&
           entry.sessionScopePreserved
       )
         ? "pass"
         : "fail",
-      target: "roundtable actions and scoped turns recorded",
+      target: "roundtable actions and execution bundles recorded",
       actual: options.scenarioResults
         .map(
           (entry) =>
-            `${entry.id}:actions=${entry.recordedActionCount},turns=${entry.workspaceScopedTurnCount},scope=${entry.sessionScopePreserved}`
+            `${entry.id}:actions=${entry.recordedActionCount},turns=${entry.workspaceScopedTurnCount},bundles=${entry.executionBundleCount},scope=${entry.sessionScopePreserved}`
         )
         .join(" | "),
       detail:
-        "The live conversation and schedule should carry the same repo-scoped action plan and session scope the planner created."
+        "The live conversation and schedule should carry the same repo-scoped action plan, actionable execution bundles, and preserved session scope the planner created."
     }
   ] satisfies RoundtableRuntimeSurface["assertions"];
 
@@ -787,6 +845,9 @@ function buildRoundtableRuntimeSurface(options: {
       materializedActionsP50: median(options.scenarioResults.map((entry) => entry.materializedActionCount)),
       probedActionsP50: median(options.scenarioResults.map((entry) => entry.probedActionCount)),
       authorityBoundActionsP50: median(options.scenarioResults.map((entry) => entry.authorityBoundActionCount)),
+      executionBundlesP50: median(options.scenarioResults.map((entry) => entry.executionBundleCount)),
+      executionReadyP50: median(options.scenarioResults.map((entry) => entry.executionReadyCount)),
+      taskDocumentsP50: median(options.scenarioResults.map((entry) => entry.taskDocumentCount)),
       workspaceScopedTurnsP50: median(options.scenarioResults.map((entry) => entry.workspaceScopedTurnCount)),
       recordedActionsP50: median(options.scenarioResults.map((entry) => entry.recordedActionCount)),
       trackedFilesP50: median(options.scenarioResults.map((entry) => entry.trackedFileCountP50)),
@@ -805,6 +866,9 @@ function buildRoundtableRuntimeSurface(options: {
       materializedActionCount: entry.materializedActionCount,
       probedActionCount: entry.probedActionCount,
       authorityBoundActionCount: entry.authorityBoundActionCount,
+      executionBundleCount: entry.executionBundleCount,
+      executionReadyCount: entry.executionReadyCount,
+      taskDocumentCount: entry.taskDocumentCount,
       recordedActionCount: entry.recordedActionCount,
       workspaceScopedTurnCount: entry.workspaceScopedTurnCount,
       scheduleRoundtableActionCount: entry.scheduleRoundtableActionCount,
@@ -930,6 +994,9 @@ function buildFailedRoundtableRuntimeSurface(options: {
       materializedActionsP50: 0,
       probedActionsP50: 0,
       authorityBoundActionsP50: 0,
+      executionBundlesP50: 0,
+      executionReadyP50: 0,
+      taskDocumentsP50: 0,
       workspaceScopedTurnsP50: 0,
       recordedActionsP50: 0,
       trackedFilesP50: 0,
@@ -975,6 +1042,9 @@ function renderMarkdown(report: RoundtableRuntimeSurface): string {
     `- Materialized actions P50: \`${report.benchmark.materializedActionsP50}\``,
     `- Probed actions P50: \`${report.benchmark.probedActionsP50}\``,
     `- Branch-authority matches P50: \`${report.benchmark.authorityBoundActionsP50}\``,
+    `- Execution bundles P50: \`${report.benchmark.executionBundlesP50}\``,
+    `- Execution-ready lanes P50: \`${report.benchmark.executionReadyP50}\``,
+    `- Task documents P50: \`${report.benchmark.taskDocumentsP50}\``,
     `- Recorded roundtable actions P50: \`${report.benchmark.recordedActionsP50}\``,
     `- Workspace-scoped turns P50: \`${report.benchmark.workspaceScopedTurnsP50}\``,
     `- Tracked files P50: \`${report.benchmark.trackedFilesP50}\``,
@@ -996,6 +1066,9 @@ function renderMarkdown(report: RoundtableRuntimeSurface): string {
         `- Materialized actions: \`${scenario.materializedActionCount}\``,
         `- Probed actions: \`${scenario.probedActionCount}\``,
         `- Branch-authority matches: \`${scenario.authorityBoundActionCount}\``,
+        `- Execution bundles: \`${scenario.executionBundleCount}\``,
+        `- Execution-ready lanes: \`${scenario.executionReadyCount}\``,
+        `- Task documents: \`${scenario.taskDocumentCount}\``,
         `- Recorded roundtable actions: \`${scenario.recordedActionCount}\``,
         `- Workspace-scoped turns: \`${scenario.workspaceScopedTurnCount}\``,
         `- Tracked files P50: \`${scenario.trackedFileCountP50}\``,

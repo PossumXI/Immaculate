@@ -16,6 +16,7 @@ type RoundtableActionabilitySurface = {
     isolatedActionCount: number;
     parallelFormationMode?: string;
     parallelFormationSummary?: string;
+    bundleCommand: string;
   };
   repositories: Array<{
     repoId: string;
@@ -67,6 +68,7 @@ function renderMarkdown(report: RoundtableActionabilitySurface): string {
     `- Ready actions: \`${report.planner.readyCount}\``,
     `- Parallel formation: \`${report.planner.parallelFormationMode ?? "n/a"}\``,
     `- Formation summary: ${report.planner.parallelFormationSummary ?? "n/a"}`,
+    `- Bundle command: \`${report.planner.bundleCommand}\``,
     "",
     "## Repo Coverage",
     "",
@@ -114,7 +116,8 @@ async function main(): Promise<void> {
         (action) => action.workspaceScope.isolationMode === "branch" || action.workspaceScope.isolationMode === "worktree"
       ).length,
       parallelFormationMode: "hybrid-quorum",
-      parallelFormationSummary: plan.summary
+      parallelFormationSummary: plan.summary,
+      bundleCommand: "npm run agent:worktree:bundle -- --consent-scope session:roundtable-actionability"
     },
     repositories: plan.repositories
       .filter((repo) => repo.available)

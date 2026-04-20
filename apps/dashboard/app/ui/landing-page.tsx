@@ -34,7 +34,7 @@ const proofCards = [
   },
   {
     label: "Roundtable Runtime",
-    body: "Immaculate now turns a cross-project objective into isolated agent lanes and proves the plan survives a live bounded loop. The runtime benchmark covers Immaculate, OpenJaws, and Asgard with 3 repo-scoped isolated actions, 3 live repo probes, branch-authority held across every lane, and 0 failed assertions."
+    body: "Immaculate now turns a cross-project objective into isolated agent lanes and proves the plan survives a live bounded loop. The runtime benchmark covers Immaculate, OpenJaws, and Asgard with 3 repo-scoped isolated actions, 3 governed execution bundles, 3 task documents, branch-authority held across every lane, and 0 failed assertions."
   },
   {
     label: "Q Substrate Benchmark",
@@ -116,6 +116,8 @@ export function LandingPage() {
             <span>Roundtable runtime 3 scenarios</span>
             <span>Roundtable loop 0 failed assertions</span>
             <span>Roundtable probes 3 repo lanes</span>
+            <span>Execution bundles P50 3</span>
+            <span>Task docs P50 3</span>
             <span>Agent-branch authority P50 3</span>
             <span>Audit completeness P50 1.00</span>
             <span>Arobi Network audit substrate</span>

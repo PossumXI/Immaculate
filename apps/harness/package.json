@@ -32,6 +32,7 @@
     "roundtable:runtime": "tsx src/roundtable-runtime.ts",
     "roundtable:runtime:loop": "tsx src/roundtable-runtime.ts --iterations=3 --interval-ms=30000",
     "agent:worktree": "tsx src/agent-worktree-cli.ts",
+    "agent:worktree:bundle": "tsx src/agent-worktree-cli.ts bundle",
     "banner": "tsx src/banner.ts",
     "q:gateway": "tsx src/q-gateway.ts",
     "q:gateway:validate": "tsx src/q-gateway-validate.ts",

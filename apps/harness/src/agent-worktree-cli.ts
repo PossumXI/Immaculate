@@ -1,9 +1,13 @@
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
-import { buildRoundtableActionPlan, materializeRoundtableActionWorktree } from "./roundtable.js";
+import {
+  buildRoundtableActionPlan,
+  materializeRoundtableActionExecutionArtifacts,
+  materializeRoundtableActionWorktree
+} from "./roundtable.js";
 
 type CliOptions = {
-  command: "plan" | "materialize";
+  command: "plan" | "materialize" | "bundle";
   objective: string;
   sessionId?: string;
   consentScope?: string;
@@ -18,7 +22,7 @@ function parseArgs(argv: string[]): CliOptions {
   };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
-    if (arg === "plan" || arg === "materialize") {
+    if (arg === "plan" || arg === "materialize" || arg === "bundle") {
       options.command = arg;
       continue;
     }
@@ -59,7 +63,7 @@ async function main(): Promise<void> {
   });
 
   const materialized =
-    options.command === "materialize"
+    options.command === "materialize" || options.command === "bundle"
       ? plan.actions
           .filter((action) => action.status === "ready")
           .map((action) => ({
@@ -67,10 +71,18 @@ async function main(): Promise<void> {
             ...materializeRoundtableActionWorktree(action)
           }))
       : [];
+  const bundled =
+    options.command === "bundle"
+      ? await materializeRoundtableActionExecutionArtifacts({
+          objective: options.objective,
+          actions: plan.actions
+        })
+      : plan.actions;
 
   const payload = {
     generatedAt: new Date().toISOString(),
     ...plan,
+    actions: bundled,
     materialized
   };
 

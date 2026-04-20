@@ -756,6 +756,27 @@ export type AgentWorkspaceScope = {
 export const roundtableActionStatuses = ["planned", "ready", "blocked"] as const;
 export type RoundtableActionStatus = (typeof roundtableActionStatuses)[number];
 
+export const roundtableExecutionArtifactStatuses = ["prepared", "failed", "skipped"] as const;
+export type RoundtableExecutionArtifactStatus =
+  (typeof roundtableExecutionArtifactStatuses)[number];
+
+export type RoundtableExecutionArtifact = {
+  status: RoundtableExecutionArtifactStatus;
+  bundlePath?: string;
+  taskDocumentPath?: string;
+  workspaceTaskPath?: string;
+  executionReady: boolean;
+  workspaceMaterialized: boolean;
+  requiresManualCheckout: boolean;
+  authorityBound: boolean;
+  relevantFiles: string[];
+  focusAreas: string[];
+  routeSuggestion?: string;
+  commitStatement?: string;
+  decisionTraceId?: string;
+  error?: string;
+};
+
 export type RoundtableAction = {
   id: string;
   repoId: string;
@@ -766,6 +787,7 @@ export type RoundtableAction = {
   rationale: string;
   commandHint?: string;
   workspaceScope: AgentWorkspaceScope;
+  executionArtifact?: RoundtableExecutionArtifact;
 };
 
 export type AgentTurn = {
@@ -1890,6 +1912,24 @@ export const multiAgentConversationSchema = z.object({
         objective: z.string(),
         rationale: z.string(),
         commandHint: z.string().optional(),
+        executionArtifact: z
+          .object({
+            status: z.enum(roundtableExecutionArtifactStatuses),
+            bundlePath: z.string().optional(),
+            taskDocumentPath: z.string().optional(),
+            workspaceTaskPath: z.string().optional(),
+            executionReady: z.boolean(),
+            workspaceMaterialized: z.boolean(),
+            requiresManualCheckout: z.boolean(),
+            authorityBound: z.boolean(),
+            relevantFiles: z.array(z.string()),
+            focusAreas: z.array(z.string()),
+            routeSuggestion: z.string().optional(),
+            commitStatement: z.string().optional(),
+            decisionTraceId: z.string().optional(),
+            error: z.string().optional()
+          })
+          .optional(),
         workspaceScope: z.object({
           repoId: z.string(),
           repoLabel: z.string(),
