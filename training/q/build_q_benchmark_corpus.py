@@ -810,6 +810,46 @@ def collect_arobi_audit_integrity_records(report: dict) -> list[dict]:
     return [finalize_record(record)]
 
 
+def collect_roundtable_actionability_records(report: dict) -> list[dict]:
+    planner = report.get("planner", {})
+    if not isinstance(planner, dict) or not planner:
+        return []
+    action_count = int(planner.get("actionCount", 0) or 0)
+    isolated_action_count = int(planner.get("isolatedActionCount", 0) or 0)
+    ready_count = int(planner.get("readyCount", 0) or 0)
+    repo_count = int(planner.get("repoCount", 0) or 0)
+    record = {
+        "id": "roundtable-actionability:aggregate",
+        "row_type": "benchmark_observation",
+        "source_surface": "roundtable-actionability",
+        "row_id": "aggregate",
+        "label": "Roundtable actionability planner",
+        "objective": (
+            "Turn cross-project objectives into isolated repo-scoped Q and Immaculate action lanes so multi-agent planning "
+            "stays actionable instead of remaining text-only."
+        ),
+        "facts": [
+            f"Repo count: {repo_count}",
+            f"Action count: {action_count}",
+            f"Ready actions: {ready_count}",
+        ],
+        "observation": [
+            f"Roundtable planner covered {repo_count} repos with {action_count} isolated actions.",
+            f"Branch or worktree isolation held for {isolated_action_count} actions.",
+            f"Immediate ready actions held at {ready_count} without exposing local repo paths in the public surface.",
+        ],
+        "quality": {
+            "status": "completed" if action_count > 0 else "degraded",
+            "parse_success": isolated_action_count >= 1,
+            "structured_field_count": 0,
+            "thinking_detected": False,
+            "score": 1.0 if action_count > 0 else 0.0,
+            "task_count": action_count,
+        },
+    }
+    return [finalize_record(record)]
+
+
 def collect_bridgebench_soak_records(bridgebench_soak: dict) -> list[dict]:
     training_rows = bridgebench_soak.get("trainingRows", [])
     if isinstance(training_rows, list) and training_rows:
@@ -1115,6 +1155,11 @@ def main() -> None:
         help="Path to Arobi-Audit-Integrity.json",
     )
     parser.add_argument(
+        "--roundtable-actionability",
+        default=str(root / "docs" / "wiki" / "Roundtable-Actionability.json"),
+        help="Path to Roundtable-Actionability.json",
+    )
+    parser.add_argument(
         "--terminal-bench-receipt",
         default=str(root / "docs" / "wiki" / "Terminal-Bench-Receipt.json"),
         help="Path to Terminal-Bench-Receipt.json",
@@ -1167,6 +1212,7 @@ def main() -> None:
     q_gateway_substrate_path = Path(args.q_gateway_substrate)
     q_mediation_drift_path = Path(args.q_mediation_drift)
     arobi_audit_integrity_path = Path(args.arobi_audit_integrity)
+    roundtable_actionability_path = Path(args.roundtable_actionability)
     terminal_bench_receipt_path = Path(args.terminal_bench_receipt)
     terminal_bench_rerun_path = Path(args.terminal_bench_rerun)
     terminal_bench_public_task_path = Path(args.terminal_bench_public_task)
@@ -1184,6 +1230,7 @@ def main() -> None:
     q_gateway_substrate = load_optional_json(q_gateway_substrate_path)
     q_mediation_drift = load_optional_json(q_mediation_drift_path)
     arobi_audit_integrity = load_optional_json(arobi_audit_integrity_path)
+    roundtable_actionability = load_optional_json(roundtable_actionability_path)
     terminal_bench_receipt = load_optional_json(terminal_bench_receipt_path)
     terminal_bench_rerun = load_optional_json(terminal_bench_rerun_path)
     terminal_bench_public_task = load_optional_json(terminal_bench_public_task_path)
@@ -1205,6 +1252,8 @@ def main() -> None:
         records.extend(collect_q_mediation_drift_records(q_mediation_drift))
     if arobi_audit_integrity:
         records.extend(collect_arobi_audit_integrity_records(arobi_audit_integrity))
+    if roundtable_actionability:
+        records.extend(collect_roundtable_actionability_records(roundtable_actionability))
     if bridgebench_soak:
         records.extend(collect_bridgebench_soak_records(bridgebench_soak))
     if harbor_soak:
@@ -1253,6 +1302,11 @@ def main() -> None:
             **(
                 {"arobi-audit-integrity": relative_path(root, arobi_audit_integrity_path)}
                 if arobi_audit_integrity
+                else {}
+            ),
+            **(
+                {"roundtable-actionability": relative_path(root, roundtable_actionability_path)}
+                if roundtable_actionability
                 else {}
             ),
             **(

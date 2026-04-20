@@ -1,11 +1,13 @@
 import {
   type AgentTurn,
+  type AgentWorkspaceScope,
   type CognitiveExecution,
   type ExecutionSchedule,
   type GuardVerdict,
   type IntelligenceLayer,
   type IntelligenceLayerRole,
-  type MultiAgentConversation
+  type MultiAgentConversation,
+  type RoundtableAction
 } from "@immaculate/core";
 import { hashValue } from "./utils.js";
 
@@ -65,7 +67,7 @@ export function buildConversationObjective(options: {
   const priorContext = options.priorTurns
     .map(
       (turn) =>
-        `${turn.role.toUpperCase()} route=${turn.routeSuggestion ?? "none"} reason=${turn.reasonSummary ?? "none"} commit=${turn.commitStatement ?? "none"} verdict=${turn.guardVerdict ?? "unknown"}`
+        `${turn.role.toUpperCase()} route=${turn.routeSuggestion ?? "none"} reason=${turn.reasonSummary ?? "none"} commit=${turn.commitStatement ?? "none"} verdict=${turn.guardVerdict ?? "unknown"} repo=${turn.workspaceScope?.repoLabel ?? "none"} branch=${turn.workspaceScope?.gitBranch ?? "none"}`
     )
     .join("\n");
 
@@ -121,6 +123,7 @@ export function buildSessionConversationMemory(options: {
 export function buildAgentTurn(options: {
   execution: CognitiveExecution;
   layer: IntelligenceLayer;
+  workspaceScope?: AgentWorkspaceScope;
 }): AgentTurn {
   return {
     id: `turn-${hashValue(`${options.execution.id}:${options.layer.role}:${options.execution.completedAt}`)}`,
@@ -144,7 +147,8 @@ export function buildAgentTurn(options: {
     executionTopology: options.execution.executionTopology,
     parallelBatchId: options.execution.parallelBatchId,
     parallelBatchSize: options.execution.parallelBatchSize,
-    parallelPosition: options.execution.parallelPosition
+    parallelPosition: options.execution.parallelPosition,
+    workspaceScope: options.workspaceScope
   };
 }
 
@@ -165,9 +169,12 @@ function deriveConversationStatus(turns: AgentTurn[], verdict: GuardVerdict): Mu
 
 export function buildConversationRecord(options: {
   sessionId?: string;
+  sessionScope?: string;
   arbitrationId?: string;
   schedule: ExecutionSchedule;
   turns: AgentTurn[];
+  roundtableSummary?: string;
+  roundtableActions?: RoundtableAction[];
 }): MultiAgentConversation {
   const turns = options.turns.slice(0, 24);
   const startedAt = turns[0]?.startedAt ?? options.schedule.selectedAt;
@@ -193,6 +200,7 @@ export function buildConversationRecord(options: {
   return {
     id: `conv-${hashValue(`${options.schedule.id}:${completedAt}:${roleChain}`)}`,
     sessionId: options.sessionId,
+    sessionScope: options.sessionScope,
     arbitrationId: options.arbitrationId,
     scheduleId: options.schedule.id,
     mode: turns.length > 1 ? "multi-turn" : "single-turn",
@@ -208,8 +216,10 @@ export function buildConversationRecord(options: {
     evidenceDigest: finalEvidenceDigest,
     finalRouteSuggestion,
     finalCommitStatement,
+    roundtableSummary: options.roundtableSummary,
+    roundtableActions: options.roundtableActions,
     summary: compact(
-      `${options.schedule.mode} ${status} topology=${options.schedule.executionTopology} parallelWidth=${options.schedule.parallelWidth} roles=${roleChain || "none"} verdict=${guardVerdict} route=${finalRouteSuggestion ?? "none"}`
+      `${options.schedule.mode} ${status} topology=${options.schedule.executionTopology} parallelWidth=${options.schedule.parallelWidth} roles=${roleChain || "none"} verdict=${guardVerdict} route=${finalRouteSuggestion ?? "none"} roundtable=${options.roundtableActions?.length ?? 0}`
     ),
     startedAt,
     completedAt,

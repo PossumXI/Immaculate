@@ -41,6 +41,8 @@
     "q:training:promote-benchmark": "node ./scripts/run-python.mjs ./training/q/promote_q_benchmark_lineage.py",
     "q:api:audit": "node ./scripts/run-python.mjs ./training/q/build_q_api_audit_surface.py",
     "arobi:decision:review": "npm run arobi:decision:review -w @immaculate/harness",
+    "roundtable:actionability": "npm run roundtable:actionability -w @immaculate/harness",
+    "agent:worktree": "npm run agent:worktree -w @immaculate/harness",
     "q:oci:capacity": "node ./scripts/run-python.mjs ./training/q/probe_oci_region_capacity.py",
     "q:oci:limit-request": "node ./scripts/run-python.mjs ./training/q/create_oci_region_limit_request.py",
     "q:hf:jobs": "node ./scripts/run-python.mjs ./training/q/launch_hf_jobs_training.py",

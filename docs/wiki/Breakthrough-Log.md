@@ -19,6 +19,31 @@ For each breakthrough, record:
 
 ## Current Entries
 
+### 2026-04-20
+
+#### Roundtable planning is now an execution surface with isolated repo lanes
+
+What changed:
+- Immaculate now builds a real roundtable action plan instead of storing only a multi-agent transcript; the plan names repo-scoped work for Immaculate, OpenJaws, and Asgard and gives each lane an isolated agent branch/worktree target
+- the conversation and execution-schedule model now carries session-scoped workspace metadata, so the audit trail can prove which repo, branch, and worktree a lane was meant to touch
+- the repo now has a live [[Roundtable-Actionability]] surface plus an `agent:worktree` CLI so the plan is measurable and materializable instead of remaining a prompt-only concept
+
+Why it matters:
+- the missed pattern was that the stack already had multi-agent conversation and a parallel-formation engine, but not a first-class way to turn that into isolated branch/worktree action lanes across the real adjacent repos
+- making roundtable planning executable matters because the orchestrator can now tell an auditor or operator not just what was discussed, but where each agent lane was supposed to work
+- adding repo/worktree scope to the conversation trail matters because it closes a real provenance gap for unsupervised or semi-supervised multi-agent execution
+
+Evidence:
+- `apps/harness/src/roundtable.ts` now discovers Immaculate, OpenJaws, and Asgard and emits isolated agent actions with branch/worktree targets
+- `apps/harness/src/agent-worktree-cli.ts` now exposes that plan as a reusable operator surface
+- `docs/wiki/Roundtable-Actionability.md` now records `3` isolated repo-scoped actions, all ready for worktree materialization on the current release state
+- `training/q/build_q_benchmark_corpus.py` now carries the new roundtable actionability lane into the positive Q benchmark corpus
+
+What this unlocks next:
+- real agent-only worktree execution across the adjacent repos without mixing changes into the primary worktrees
+- better Q fine-tune examples for harness-aware planning, because roundtable actions are now benchmark-derived evidence instead of hand-written descriptions
+- tighter insurer-grade review, because the audit trail can show the intended repo/branch/worktree lane alongside the route, reasoning, and commit chain
+
 ### 2026-04-19
 
 #### Arobi audit integrity is now a real live benchmark lane, not just a logging claim

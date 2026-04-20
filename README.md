@@ -64,6 +64,7 @@ This repository is prepared for public collaboration under the Apache 2.0 licens
 - Q mediation drift benchmark: [docs/wiki/Q-Mediation-Drift.md](docs/wiki/Q-Mediation-Drift.md)
 - Q API audit feedback loop: [docs/wiki/Q-API-Audit.md](docs/wiki/Q-API-Audit.md)
 - Arobi decision review: [docs/wiki/Arobi-Decision-Review.md](docs/wiki/Arobi-Decision-Review.md)
+- roundtable actionability planner: [docs/wiki/Roundtable-Actionability.md](docs/wiki/Roundtable-Actionability.md)
 - W&B pull-back committed into git: [docs/wiki/Benchmark-Wandb-Export.md](docs/wiki/Benchmark-Wandb-Export.md)
 
 Latest plain-English readout:
@@ -76,10 +77,11 @@ Latest plain-English readout:
 - the live `Q` API audit surface is now green on a real governed call: [docs/wiki/Q-API-Audit.md](docs/wiki/Q-API-Audit.md) records a successful authenticated `/api/q/run` with `parse success: true`, latency `23349.14 ms`, and a chained Arobi decision trace instead of a dead-end log line
 - the live Arobi review surface now proves the governed ledger chain stays intact across successful calls: [docs/wiki/Arobi-Decision-Review.md](docs/wiki/Arobi-Decision-Review.md) records `2` linked ledgers, `9` linked records, `8` successful linked records, and the latest successful governed record for session `arobi-q-proof-20260419`
 - the new insurer-grade audit lane is green on the live harness: [docs/wiki/Arobi-Audit-Integrity.md](docs/wiki/Arobi-Audit-Integrity.md) proves `3` real governed scenarios with `0` failed assertions, linked-records `P50 5`, source-coverage `P50 4`, self-evaluations `P50 3`, and audit-completeness `P50 1.00`
+- the roundtable planner is now actionable instead of cosmetic: [docs/wiki/Roundtable-Actionability.md](docs/wiki/Roundtable-Actionability.md) records `3` repo-scoped isolated actions across Immaculate, OpenJaws, and Asgard, all on agent-only worktree branches ready for materialization from the current release state
 - the architecture split is now explicit in one stable public explainer: [docs/wiki/Arobi-Network-Architecture.md](docs/wiki/Arobi-Network-Architecture.md) states the product model as `Arobi Network = ledger/audit substrate`, `Immaculate = harness/orchestrator`, and `Q = brain`
 - the latest tracked W&B export is current on `2026-04-19` through [docs/wiki/Benchmark-Status.md](docs/wiki/Benchmark-Status.md) and [docs/wiki/Benchmark-Wandb-Export.md](docs/wiki/Benchmark-Wandb-Export.md); the separate [docs/wiki/Q-Benchmark-Sweep-60m.md](docs/wiki/Q-Benchmark-Sweep-60m.md) page remains the historical hour-class soak lane
 - the current Q bundle, hybrid session, benchmark corpus, and paired Immaculate orchestration bundle are machine-stamped on [docs/wiki/Release-Surface.md](docs/wiki/Release-Surface.md); the active tracked Q bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`
-- the tracked Q benchmark corpus currently carries `56` records, now including the Arobi audit-integrity lane as positive benchmark evidence, and the hybrid training session plus Kaggle and Colab export lanes are restamped to the same `bench-v23` lineage
+- the tracked Q benchmark corpus currently carries `57` records, now including the Arobi audit-integrity lane and the new roundtable-actionability lane as positive benchmark evidence, and the hybrid training session plus Kaggle and Colab export lanes are restamped to the same `bench-v23` lineage
 - Immaculate now treats the healthy local Q lane as a first-class governed routing directive instead of a generic model slot, so blocked cloud status no longer forces a false guarded hold when local Q is healthy
 - the current HF Jobs lane is authenticated, hardware-visible, restaged against the active `bench-v23` lock, and launch-ready when you want to start the cloud run
 

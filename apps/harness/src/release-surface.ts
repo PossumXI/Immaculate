@@ -71,6 +71,10 @@ const SURFACE_FILES: SurfaceTimestamp[] = [
     path: path.join("docs", "wiki", "Arobi-Audit-Integrity.json")
   },
   {
+    label: "Roundtable actionability",
+    path: path.join("docs", "wiki", "Roundtable-Actionability.json")
+  },
+  {
     label: "Q API audit",
     path: path.join("docs", "wiki", "Q-API-Audit.json")
   },

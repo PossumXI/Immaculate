@@ -1,5 +1,6 @@
 import type {
   AgentTurn,
+  AgentWorkspaceScope,
   ActuationOutput,
   CognitiveExecution,
   ExecutionSchedule,
@@ -12,7 +13,8 @@ import type {
   NeuroSessionSummary,
   NeuroStreamSummary,
   MultiAgentConversation,
-  PhaseSnapshot
+  PhaseSnapshot,
+  RoundtableAction
 } from "@immaculate/core";
 import type { BidsDatasetFile, BidsDatasetRecord } from "./bids.js";
 import type { NwbSessionRecord } from "./nwb.js";
@@ -449,6 +451,22 @@ export function redactExecutionSchedule(schedule: ExecutionSchedule): ExecutionS
   };
 }
 
+function redactWorkspaceScope(scope: AgentWorkspaceScope): AgentWorkspaceScope {
+  return {
+    ...scope,
+    repoPath: REDACTED,
+    worktreePath: scope.worktreePath ? REDACTED : undefined
+  };
+}
+
+function redactRoundtableAction(action: RoundtableAction): RoundtableAction {
+  return {
+    ...action,
+    commandHint: action.commandHint ? REDACTED : undefined,
+    workspaceScope: redactWorkspaceScope(action.workspaceScope)
+  };
+}
+
 function redactConversationTurn(turn: AgentTurn): AgentTurn {
   return {
     ...turn,
@@ -457,7 +475,8 @@ function redactConversationTurn(turn: AgentTurn): AgentTurn {
     routeSuggestion: REDACTED,
     reasonSummary: REDACTED,
     commitStatement: REDACTED,
-    guardVerdict: turn.guardVerdict
+    guardVerdict: turn.guardVerdict,
+    workspaceScope: turn.workspaceScope ? redactWorkspaceScope(turn.workspaceScope) : undefined
   };
 }
 
@@ -469,6 +488,7 @@ function redactConversationRecord(record: MultiAgentConversation): MultiAgentCon
     ...record,
     finalRouteSuggestion: REDACTED,
     finalCommitStatement: REDACTED,
+    roundtableActions: record.roundtableActions?.map(redactRoundtableAction),
     summary: `mode=${record.mode} status=${record.status} turns=${record.turnCount} verdict=${record.guardVerdict} order=${safeOrder || "none"}`,
     turns: Array.isArray(record.turns) ? record.turns.map(redactConversationTurn) : [],
   };
@@ -508,7 +528,10 @@ export function projectExecutionSchedule(
       rationale: REDACTED
     };
   }
-  return redactExecutionSchedule(schedule);
+  return {
+    ...redactExecutionSchedule(schedule),
+    roundtableSummary: schedule.roundtableSummary
+  };
 }
 
 export function projectPhaseSnapshot(

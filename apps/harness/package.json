@@ -28,6 +28,8 @@
     "bridgebench:soak": "tsx src/bridgebench-soak.ts",
     "compare:models": "tsx src/model-comparison-cli.ts",
     "arobi:decision:review": "tsx src/arobi-decision-review.ts",
+    "roundtable:actionability": "tsx src/roundtable-actionability.ts",
+    "agent:worktree": "tsx src/agent-worktree-cli.ts",
     "banner": "tsx src/banner.ts",
     "q:gateway": "tsx src/q-gateway.ts",
     "q:gateway:validate": "tsx src/q-gateway-validate.ts",

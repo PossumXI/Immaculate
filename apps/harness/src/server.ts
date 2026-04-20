@@ -114,6 +114,7 @@ import {
 } from "./q-model.js";
 import { resolveQLocalOllamaUrl } from "./q-local-model.js";
 import { resolveReleaseMetadata } from "./release-metadata.js";
+import { buildRoundtableActionPlan, type RoundtablePlan } from "./roundtable.js";
 import { emitHarnessStartupBanner } from "./startup-banner.js";
 import {
   createIntelligenceWorkerRegistry,
@@ -3598,6 +3599,7 @@ async function executeCognitiveSchedule(options: {
   sessionId?: string;
   arbitrationId?: string;
   requestedExecutionDecision?: RequestedExecutionDecision;
+  roundtablePlan?: RoundtablePlan;
 }) {
   const executions: ReturnType<typeof engine.getSnapshot>["cognitiveExecutions"] = [];
   const layers: IntelligenceLayer[] = [];
@@ -3605,6 +3607,14 @@ async function executeCognitiveSchedule(options: {
   const responses: string[] = [];
   let conversation: ReturnType<typeof buildConversationRecord> | undefined;
   const baseObjective = options.objective?.trim() || options.schedule.objective;
+  const roundtablePlan =
+    options.roundtablePlan ??
+    buildRoundtableActionPlan({
+      objective: baseObjective,
+      sessionId: options.sessionId,
+      consentScope: options.consentScope,
+      schedule: options.schedule
+    });
   let latestSnapshot = phaseSnapshotSchema.parse(engine.getSnapshot());
   const scheduleLayerOrder = new Map(
     options.schedule.layerIds.map((layerId, index) => [layerId, index] as const)
@@ -3665,6 +3675,9 @@ async function executeCognitiveSchedule(options: {
             layers: admittedNonGuardLayers
           })
         : undefined;
+    const coordinationContext = [sharedSwarmContext, roundtablePlan.sharedContext]
+      .filter(Boolean)
+      .join("\n\n");
 
     if (parallelEligible && admittedNonGuardLayers.length > 1) {
       const reservedAssignments = await reserveExecutionWorkerBatch({
@@ -3693,7 +3706,7 @@ async function executeCognitiveSchedule(options: {
             baseObjective,
             role: layer.role,
             priorTurns: [],
-            sharedContext: sharedSwarmContext
+            sharedContext: coordinationContext
           });
           return executeScheduledCognitivePassWithRetry({
             layer,
@@ -3756,7 +3769,9 @@ async function executeCognitiveSchedule(options: {
         turns.push(
           buildAgentTurn({
             execution: result.execution,
-            layer: result.layer
+            layer: result.layer,
+            workspaceScope:
+              roundtablePlan.actions.find((action) => action.role === result.layer.role)?.workspaceScope
           })
         );
         latestSnapshot = result.snapshot;
@@ -3781,7 +3796,7 @@ async function executeCognitiveSchedule(options: {
           baseObjective,
           role: layer.role,
           priorTurns: turns,
-          sharedContext: sharedSwarmContext
+          sharedContext: coordinationContext
         });
         const result = await executeScheduledCognitivePassWithRetry({
           layer,
@@ -3816,7 +3831,9 @@ async function executeCognitiveSchedule(options: {
         turns.push(
           buildAgentTurn({
             execution: result.execution,
-            layer: result.layer
+            layer: result.layer,
+            workspaceScope:
+              roundtablePlan.actions.find((action) => action.role === result.layer.role)?.workspaceScope
           })
         );
         latestSnapshot = result.snapshot;
@@ -3842,7 +3859,7 @@ async function executeCognitiveSchedule(options: {
         baseObjective,
         role: guardLayer.role,
         priorTurns: turns,
-        sharedContext: sharedSwarmContext
+        sharedContext: coordinationContext
       });
       const guardResult = await executeScheduledCognitivePassWithRetry({
         layer: guardLayer,
@@ -3874,7 +3891,9 @@ async function executeCognitiveSchedule(options: {
       turns.push(
         buildAgentTurn({
           execution: guardResult.execution,
-          layer: guardResult.layer
+          layer: guardResult.layer,
+          workspaceScope:
+            roundtablePlan.actions.find((action) => action.role === guardResult.layer.role)?.workspaceScope
         })
       );
       latestSnapshot = guardResult.snapshot;
@@ -3884,9 +3903,12 @@ async function executeCognitiveSchedule(options: {
       turns.length > 0
         ? buildConversationRecord({
             sessionId: options.sessionId,
+            sessionScope: roundtablePlan.sessionScope,
             arbitrationId: options.arbitrationId,
             schedule: options.schedule,
-            turns
+            turns,
+            roundtableSummary: roundtablePlan.summary,
+            roundtableActions: roundtablePlan.actions
           })
         : undefined;
 
@@ -6646,10 +6668,23 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
     federationPressure: federatedPressureState.pressure,
     qContext: mediationQContext
   });
-  const scheduleDecision = buildExecutionScheduleDecision({
+  const scheduleDecisionBase = buildExecutionScheduleDecision({
     arbitration: tracedArbitrationDecision,
     plan: schedulePlan
   });
+  const roundtablePlan = buildRoundtableActionPlan({
+    objective: scheduleDecisionBase.objective,
+    sessionId: resolvedSessionId,
+    consentScope,
+    schedule: scheduleDecisionBase
+  });
+  const scheduleDecision = {
+    ...scheduleDecisionBase,
+    sessionScope: roundtablePlan.sessionScope,
+    roundtableSummary: roundtablePlan.summary,
+    roundtableActionCount: roundtablePlan.actions.length,
+    roundtableRepoCount: roundtablePlan.repoCount
+  };
   const tracedScheduleDecision = await traceOrchestrationDecision({
     kind: "orchestration-schedule",
     decision: scheduleDecision,
@@ -6692,7 +6727,8 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
         consentScope,
         sessionId: resolvedSessionId,
         arbitrationId: tracedArbitrationDecision.id,
-        requestedExecutionDecision: body.requestedExecutionDecision
+        requestedExecutionDecision: body.requestedExecutionDecision,
+        roundtablePlan
       });
       mediationLayer = cognition.primaryLayer;
       mediationExecution = cognition.primaryExecution;

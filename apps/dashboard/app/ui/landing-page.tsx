@@ -29,6 +29,10 @@ const proofCards = [
     body: "The live insurer-grade audit lane is green. Three governed scenarios kept the ledger chain intact with linked-records P50 5, source-coverage P50 4, self-evaluations P50 3, and audit-completeness P50 1.00."
   },
   {
+    label: "Roundtable Actionability",
+    body: "Immaculate now turns a cross-project objective into isolated agent lanes. The live planner covers Immaculate, OpenJaws, and Asgard with 3 repo-scoped worktree actions ready for materialization."
+  },
+  {
     label: "Q Substrate Benchmark",
     body: "Gateway to Immaculate seam is green. Structured handoff survives arbitration with zero failed assertions, gateway P95 is 15.30s, and arbitration P95 is 1.74 ms."
   },
@@ -102,6 +106,7 @@ export function LandingPage() {
             <span>Identity gate green</span>
             <span>Arobi decision review live</span>
             <span>Arobi audit integrity 3 scenarios</span>
+            <span>Roundtable 3 isolated actions</span>
             <span>Audit completeness P50 1.00</span>
             <span>Arobi Network audit substrate</span>
             <span>2 linked ledgers</span>
@@ -109,7 +114,7 @@ export function LandingPage() {
             <span>Linked records P50 5</span>
             <span>Latest W&B export Apr 19</span>
             <span>Machine-stamped bench-v23 lock</span>
-            <span>56 benchmark rows</span>
+            <span>57 benchmark rows</span>
             <span>117 training rows</span>
             <span>HF Jobs launch ready</span>
             <span>Kaggle export ready</span>

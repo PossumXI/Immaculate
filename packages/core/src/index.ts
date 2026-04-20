@@ -731,6 +731,36 @@ export type CognitiveExecution = {
   parallelPosition?: number;
 };
 
+export const agentWorkspaceIsolationModes = ["repo", "branch", "worktree"] as const;
+export type AgentWorkspaceIsolationMode =
+  (typeof agentWorkspaceIsolationModes)[number];
+
+export type AgentWorkspaceScope = {
+  repoId: string;
+  repoLabel: string;
+  repoPath: string;
+  worktreePath?: string;
+  gitBranch?: string;
+  repoSha?: string;
+  sessionScope?: string;
+  isolationMode: AgentWorkspaceIsolationMode;
+};
+
+export const roundtableActionStatuses = ["planned", "ready", "blocked"] as const;
+export type RoundtableActionStatus = (typeof roundtableActionStatuses)[number];
+
+export type RoundtableAction = {
+  id: string;
+  repoId: string;
+  repoLabel: string;
+  role: IntelligenceLayerRole;
+  status: RoundtableActionStatus;
+  objective: string;
+  rationale: string;
+  commandHint?: string;
+  workspaceScope: AgentWorkspaceScope;
+};
+
 export type AgentTurn = {
   id: string;
   layerId: string;
@@ -754,11 +784,13 @@ export type AgentTurn = {
   parallelBatchId?: string;
   parallelBatchSize?: number;
   parallelPosition?: number;
+  workspaceScope?: AgentWorkspaceScope;
 };
 
 export type MultiAgentConversation = {
   id: string;
   sessionId?: string;
+  sessionScope?: string;
   arbitrationId?: string;
   scheduleId?: string;
   mode: "single-turn" | "multi-turn";
@@ -774,6 +806,8 @@ export type MultiAgentConversation = {
   evidenceDigest?: string;
   finalRouteSuggestion?: string;
   finalCommitStatement?: string;
+  roundtableSummary?: string;
+  roundtableActions?: RoundtableAction[];
   summary: string;
   startedAt: string;
   completedAt: string;
@@ -943,6 +977,7 @@ export type ExecutionArbitration = {
 export type ExecutionSchedule = {
   id: string;
   sessionId?: string;
+  sessionScope?: string;
   source: RoutingDecisionSource;
   arbitrationId?: string;
   mode: ExecutionScheduleMode;
@@ -962,6 +997,9 @@ export type ExecutionSchedule = {
   backpressureAction?: ExecutionParallelBackpressureAction;
   intentAlignmentScore?: number;
   parallelFormationSummary?: string;
+  roundtableSummary?: string;
+  roundtableActionCount?: number;
+  roundtableRepoCount?: number;
   admissionState?: ExecutionAdmissionState;
   backlogPressure?: GovernancePressureLevel;
   backlogScore?: number;
@@ -1796,12 +1834,25 @@ export const agentTurnSchema = z.object({
   executionTopology: z.enum(executionTopologies).optional(),
   parallelBatchId: z.string().optional(),
   parallelBatchSize: z.number().int().positive().optional(),
-  parallelPosition: z.number().int().positive().optional()
+  parallelPosition: z.number().int().positive().optional(),
+  workspaceScope: z
+    .object({
+      repoId: z.string(),
+      repoLabel: z.string(),
+      repoPath: z.string(),
+      worktreePath: z.string().optional(),
+      gitBranch: z.string().optional(),
+      repoSha: z.string().optional(),
+      sessionScope: z.string().optional(),
+      isolationMode: z.enum(agentWorkspaceIsolationModes)
+    })
+    .optional()
 });
 
 export const multiAgentConversationSchema = z.object({
   id: z.string(),
   sessionId: z.string().optional(),
+  sessionScope: z.string().optional(),
   arbitrationId: z.string().optional(),
   scheduleId: z.string().optional(),
   mode: z.enum(["single-turn", "multi-turn"]),
@@ -1817,6 +1868,31 @@ export const multiAgentConversationSchema = z.object({
   evidenceDigest: z.string().optional(),
   finalRouteSuggestion: boundedPhraseSchema.optional(),
   finalCommitStatement: boundedPhraseSchema.optional(),
+  roundtableSummary: z.string().optional(),
+  roundtableActions: z
+    .array(
+      z.object({
+        id: z.string(),
+        repoId: z.string(),
+        repoLabel: z.string(),
+        role: z.enum(intelligenceLayerRoles),
+        status: z.enum(roundtableActionStatuses),
+        objective: z.string(),
+        rationale: z.string(),
+        commandHint: z.string().optional(),
+        workspaceScope: z.object({
+          repoId: z.string(),
+          repoLabel: z.string(),
+          repoPath: z.string(),
+          worktreePath: z.string().optional(),
+          gitBranch: z.string().optional(),
+          repoSha: z.string().optional(),
+          sessionScope: z.string().optional(),
+          isolationMode: z.enum(agentWorkspaceIsolationModes)
+        })
+      })
+    )
+    .optional(),
   summary: z.string(),
   startedAt: z.string(),
   completedAt: z.string(),
@@ -1906,6 +1982,7 @@ export const executionArbitrationSchema = z.object({
 export const executionScheduleSchema = z.object({
   id: z.string(),
   sessionId: z.string().optional(),
+  sessionScope: z.string().optional(),
   source: z.enum(routingDecisionSources),
   arbitrationId: z.string().optional(),
   mode: z.enum(executionScheduleModes),
@@ -1925,6 +2002,9 @@ export const executionScheduleSchema = z.object({
   backpressureAction: z.enum(executionParallelBackpressureActions).optional(),
   intentAlignmentScore: z.number().nonnegative().max(1).optional(),
   parallelFormationSummary: z.string().optional(),
+  roundtableSummary: z.string().optional(),
+  roundtableActionCount: z.number().int().nonnegative().optional(),
+  roundtableRepoCount: z.number().int().nonnegative().optional(),
   admissionState: z.enum(executionAdmissionStates).optional(),
   backlogPressure: z.enum(governancePressureLevels).optional(),
   backlogScore: z.number().nonnegative().optional(),
