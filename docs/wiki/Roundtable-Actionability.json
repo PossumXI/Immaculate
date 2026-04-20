@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-20T02:38:44.879Z",
+  "generatedAt": "2026-04-20T18:38:19.445Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "a160517c17724ee9697276d5b99c74565ef02d31",
-    "gitShortSha": "a160517",
+    "gitSha": "dc0ece0021f91f55c23700b594f1412ff961682e",
+    "gitShortSha": "dc0ece0",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+a160517",
+    "buildId": "0.1.0+dc0ece0",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -56,20 +56,21 @@
     "readyCount": 3,
     "isolatedActionCount": 3,
     "parallelFormationMode": "hybrid-quorum",
-    "parallelFormationSummary": "Roundtable hybrid-quorum plan across 3 repo(s) with 3 isolated agent action(s); 3 ready for immediate worktree materialization."
+    "parallelFormationSummary": "Roundtable hybrid-quorum plan across 3 repo(s) with 3 isolated agent action(s); 3 ready for immediate worktree materialization.",
+    "bundleCommand": "npm run agent:worktree:bundle -- --consent-scope session:roundtable-actionability"
   },
   "repositories": [
     {
       "repoId": "immaculate",
       "repoLabel": "Immaculate",
       "gitBranch": "publish-q-win",
-      "repoSha": "a160517"
+      "repoSha": "dc0ece0"
     },
     {
       "repoId": "openjaws",
       "repoLabel": "OpenJaws",
       "gitBranch": "agent/openjaws-terminalbench-provenance",
-      "repoSha": "b2b2dc5"
+      "repoSha": "0860fa6"
     },
     {
       "repoId": "asgard",

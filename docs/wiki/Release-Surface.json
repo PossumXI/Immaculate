@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-20T17:22:37.622Z",
+  "generatedAt": "2026-04-20T18:40:53.256Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "ad30f3a71f6ac344c50fe67d1899f8736bdc687e",
-    "gitShortSha": "ad30f3a",
+    "gitSha": "dc0ece0021f91f55c23700b594f1412ff961682e",
+    "gitShortSha": "dc0ece0",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+ad30f3a",
+    "buildId": "0.1.0+dc0ece0",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -66,7 +66,7 @@
     {
       "label": "Q readiness gate",
       "path": "docs\\wiki\\Q-Readiness-Gate.json",
-      "generatedAt": "2026-04-20T17:15:10.591Z"
+      "generatedAt": "2026-04-20T18:39:41.204Z"
     },
     {
       "label": "Q gateway validation",
@@ -91,17 +91,17 @@
     {
       "label": "Arobi live ledger receipt",
       "path": "docs\\wiki\\Arobi-Live-Ledger-Receipt.json",
-      "generatedAt": "2026-04-20T17:21:04.730Z"
+      "generatedAt": "2026-04-20T17:22:38.533Z"
     },
     {
       "label": "Roundtable actionability",
       "path": "docs\\wiki\\Roundtable-Actionability.json",
-      "generatedAt": "2026-04-20T02:38:44.879Z"
+      "generatedAt": "2026-04-20T18:38:19.445Z"
     },
     {
       "label": "Roundtable runtime",
       "path": "docs\\wiki\\Roundtable-Runtime.json",
-      "generatedAt": "2026-04-20T17:12:58.781Z"
+      "generatedAt": "2026-04-20T18:39:21.299Z"
     },
     {
       "label": "Q API audit",
@@ -151,7 +151,7 @@
     {
       "label": "Q benchmark corpus",
       "path": "docs\\wiki\\Q-Benchmark-Corpus.json",
-      "generatedAt": "2026-04-20T17:22:37Z"
+      "generatedAt": "2026-04-20T18:39:41Z"
     },
     {
       "label": "Q benchmark promotion",

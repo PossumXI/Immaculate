@@ -2,9 +2,9 @@
 
 This page is generated from the live roundtable planner. It proves Immaculate can turn a cross-project objective into isolated repo-scoped agent lanes instead of treating roundtable conversation as text only.
 
-- Generated: 2026-04-20T02:38:44.879Z
-- Release: `0.1.0+a160517`
-- Repo commit: `a160517`
+- Generated: 2026-04-20T18:38:19.445Z
+- Release: `0.1.0+dc0ece0`
+- Repo commit: `dc0ece0`
 - Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`
 
 ## Planner
@@ -17,11 +17,12 @@ This page is generated from the live roundtable planner. It proves Immaculate ca
 - Ready actions: `3`
 - Parallel formation: `hybrid-quorum`
 - Formation summary: Roundtable hybrid-quorum plan across 3 repo(s) with 3 isolated agent action(s); 3 ready for immediate worktree materialization.
+- Bundle command: `npm run agent:worktree:bundle -- --consent-scope session:roundtable-actionability`
 
 ## Repo Coverage
 
-- Immaculate: branch `publish-q-win` / commit `a160517`
-- OpenJaws: branch `agent/openjaws-terminalbench-provenance` / commit `b2b2dc5`
+- Immaculate: branch `publish-q-win` / commit `dc0ece0`
+- OpenJaws: branch `agent/openjaws-terminalbench-provenance` / commit `0860fa6`
 - Asgard: branch `main` / commit `88ad56e`
 
 ## Isolated Actions
