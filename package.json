@@ -44,6 +44,7 @@
     "arobi:live:ledger": "tsx ./apps/harness/src/arobi-live-ledger-receipt.ts",
     "roundtable:actionability": "npm run roundtable:actionability -w @immaculate/harness",
     "roundtable:runtime": "npm run roundtable:runtime -w @immaculate/harness",
+    "roundtable:runtime:loop": "npm run roundtable:runtime:loop -w @immaculate/harness",
     "agent:worktree": "npm run agent:worktree -w @immaculate/harness",
     "q:oci:capacity": "node ./scripts/run-python.mjs ./training/q/probe_oci_region_capacity.py",
     "q:oci:limit-request": "node ./scripts/run-python.mjs ./training/q/create_oci_region_limit_request.py",

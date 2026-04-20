@@ -18,7 +18,7 @@ const sectors = [
 const proofCards = [
   {
     label: "Arobi Live Ledger Receipt",
-    body: "The live public Arobi node is now machine-stamped too. Aura Genesis is reading Arobi Network v3.3.1, the ledger moved from 396 to 397 entries on the latest supervised rerun, and the fresh control_fabric record is publicly visible."
+    body: "The receipt now keeps both truths at once. The last verified supervised public rerun moved the ledger from 396 to 397 on Apr 20, and the same page also shows when the current public aura-genesis telemetry edge is synthesized/offline instead of pretending the old green state is still live."
   },
   {
     label: "Terminal-Bench Public Task",
@@ -34,7 +34,7 @@ const proofCards = [
   },
   {
     label: "Roundtable Runtime",
-    body: "Immaculate now turns a cross-project objective into isolated agent lanes and proves the plan survives a live bounded run. The runtime benchmark covers Immaculate, OpenJaws, and Asgard with 3 repo-scoped isolated actions, 3 live repo probes, and branch-authority held across every lane."
+    body: "Immaculate now turns a cross-project objective into isolated agent lanes and proves the plan survives a live bounded loop. The runtime benchmark covers Immaculate, OpenJaws, and Asgard with 3 repo-scoped isolated actions, 3 live repo probes, branch-authority held across every lane, and 0 failed assertions."
   },
   {
     label: "Q Substrate Benchmark",
@@ -93,7 +93,7 @@ export function LandingPage() {
 
       <section className="landingHero">
         <div className="landingCopy">
-          <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 20 | AROBI V3.3.1 LIVE | W&amp;B EXPORT APR 19</p>
+          <p className="landingEyebrow">INTELLIGENT ORCHESTRATION | VERIFIED APRIL 20 | AROBI RECEIPT CURRENT | W&amp;B EXPORT APR 19</p>
           <h1 className="landingHeadline">Controlled intelligence for critical operations.</h1>
           <p className="landingLede">Arobi Network is the operator ledger and audit substrate. Immaculate is the harness and orchestrator. Q is the brain. Defense and healthcare. Evidence before action.</p>
 
@@ -110,10 +110,11 @@ export function LandingPage() {
             <span>Identity gate green</span>
             <span>Arobi decision review live</span>
             <span>Arobi audit integrity 3 scenarios</span>
-            <span>Arobi v3.3.1 live</span>
-            <span>Fresh public ledger Apr 20</span>
-            <span>Public ledger 397 entries</span>
+            <span>Arobi receipt current</span>
+            <span>Last public rerun Apr 20</span>
+            <span>Public edge truth surfaced</span>
             <span>Roundtable runtime 3 scenarios</span>
+            <span>Roundtable loop 0 failed assertions</span>
             <span>Roundtable probes 3 repo lanes</span>
             <span>Agent-branch authority P50 3</span>
             <span>Audit completeness P50 1.00</span>

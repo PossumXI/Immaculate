@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-20T02:41:13.606Z",
+  "generatedAt": "2026-04-20T17:23:10.631Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "a160517c17724ee9697276d5b99c74565ef02d31",
-    "gitShortSha": "a160517",
+    "gitSha": "ad30f3a71f6ac344c50fe67d1899f8736bdc687e",
+    "gitShortSha": "ad30f3a",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+a160517",
+    "buildId": "0.1.0+ad30f3a",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -49,7 +49,7 @@
     }
   },
   "benchmark": {
-    "harnessUrl": "http://127.0.0.1:59133",
+    "harnessUrl": "http://127.0.0.1:58827",
     "scenarioCount": 3,
     "failedAssertions": 0,
     "repoCoverageP50": 3,
@@ -59,9 +59,9 @@
     "workspaceScopedTurnsP50": 1,
     "recordedActionsP50": 3,
     "trackedFilesP50": 2235,
-    "runnerPathP95Ms": 49979.41,
-    "seedLatencyP95Ms": 25436.6,
-    "mediationLatencyP95Ms": 24523.93,
+    "runnerPathP95Ms": 2639.31,
+    "seedLatencyP95Ms": 1106.37,
+    "mediationLatencyP95Ms": 1506.47,
     "hardware": "knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics / 16 cores / Q foundation Gemma 4"
   },
   "scenarios": [
@@ -69,7 +69,7 @@
       "id": "immaculate-openjaws",
       "label": "Immaculate and OpenJaws governed repair",
       "status": "completed",
-      "routeSuggestion": "cognitive",
+      "routeSuggestion": "[redacted]",
       "guardVerdict": "unknown",
       "repoCoverageCount": 3,
       "materializedActionCount": 3,
@@ -95,7 +95,7 @@
       "id": "asgard-audit-ledger",
       "label": "Asgard audit and ledger continuity",
       "status": "completed",
-      "routeSuggestion": "cognitive",
+      "routeSuggestion": "[redacted]",
       "guardVerdict": "unknown",
       "repoCoverageCount": 3,
       "materializedActionCount": 3,
@@ -121,7 +121,7 @@
       "id": "mixed-pressure-roundtable",
       "label": "Mixed-pressure roundtable",
       "status": "completed",
-      "routeSuggestion": "cognitive",
+      "routeSuggestion": "[redacted]",
       "guardVerdict": "unknown",
       "repoCoverageCount": 3,
       "materializedActionCount": 3,

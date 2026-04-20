@@ -9,7 +9,8 @@ type DecisionTraceSource =
   | "conversation"
   | "benchmark"
   | "orchestration-arbitration"
-  | "orchestration-schedule";
+  | "orchestration-schedule"
+  | "roundtable-runtime";
 
 type DecisionTracePrincipal = {
   kind: string;

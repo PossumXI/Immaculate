@@ -196,6 +196,14 @@ async function fetchJson<T>(url: string): Promise<T> {
   return (await response.json()) as T;
 }
 
+async function fetchJsonOptional<T>(url: string): Promise<T | undefined> {
+  try {
+    return await fetchJson<T>(url);
+  } catch {
+    return undefined;
+  }
+}
+
 async function readOptionalText(filePath: string): Promise<string | undefined> {
   try {
     return await readFile(filePath, "utf8");
@@ -234,6 +242,11 @@ async function findLatestFabricAuditSummary(): Promise<{
 }
 
 function renderMarkdown(report: ArobiLiveLedgerReceiptReport): string {
+  const publicEdgeOffline =
+    report.liveNode.fabricSource === "synthesized" &&
+    report.liveNode.orchestrationAvailable === false &&
+    report.liveNode.brainReady === false;
+
   return [
     "# Arobi Live Ledger Receipt",
     "",
@@ -285,10 +298,14 @@ function renderMarkdown(report: ArobiLiveLedgerReceiptReport): string {
     "",
     "## Plain-English Readout",
     "",
-    `- The public aura-genesis status and ledger surfaces are reading the live ${report.liveNode.version ?? "unknown"} Arobi node, not a stale local-only file.`,
+    publicEdgeOffline
+      ? "- The public aura-genesis telemetry edge is currently synthesized/offline, so the public site is not proving a live Arobi node right now."
+      : `- The public aura-genesis status and ledger surfaces are reading the live ${report.liveNode.version ?? "unknown"} Arobi node, not a stale local-only file.`,
     report.proof.liveRecordVisible
       ? `- A fresh governed control_fabric audit record is visible publicly at \`${report.latestVisibleEntry?.timestamp ?? "unknown"}\`, which proves the audit trail is landing on the live public node.`
-      : "- No fresh live governed record was detected on the public node from the latest rerun.",
+      : report.latestLocalRerun
+        ? `- The latest supervised rerun \`${report.latestLocalRerun.runId ?? "unknown"}\` still shows a public delta of \`${report.proof.publicEntryDelta ?? "n/a"}\` and a private delta of \`${report.proof.privateEntryDelta ?? "n/a"}\`, but no fresh governed record is visible through the current public edge.`
+        : "- No fresh live governed record was detected on the public node from the latest rerun.",
     report.proof.entryMatchesLatestRerun
       ? `- The latest visible public record matches the latest supervised rerun receipt \`${report.latestLocalRerun?.runId ?? "unknown"}\`, so the same write path used locally is what the public node surfaced.`
       : "- The latest visible public record does not match the latest local rerun receipt.",
@@ -304,8 +321,8 @@ async function main(): Promise<void> {
   const [telemetry, decisions, info, verify, latestArtifact] = await Promise.all([
     fetchJson<TelemetryStatus>(AROBI_TELEMETRY_URL),
     fetchJson<DecisionFeed>(AROBI_DECISIONS_URL),
-    fetchJson<InfoResponse>(AROBI_API_INFO_URL),
-    fetchJson<VerifyResponse>(AROBI_API_VERIFY_URL),
+    fetchJsonOptional<InfoResponse>(AROBI_API_INFO_URL),
+    fetchJsonOptional<VerifyResponse>(AROBI_API_VERIFY_URL),
     findLatestFabricAuditSummary()
   ]);
 
@@ -321,14 +338,14 @@ async function main(): Promise<void> {
       statusUrl: AROBI_STATUS_URL,
       ledgerUrl: AROBI_LEDGER_URL,
       apiBaseUrl: "https://arobi.aura-genesis.org",
-      version: info.version ?? telemetry.network?.info?.version ?? telemetry.fabric?.publicLane?.version,
-      network: info.network ?? telemetry.fabric?.publicLane?.network,
-      height: info.height ?? telemetry.network?.info?.height ?? telemetry.fabric?.publicLane?.height,
-      peerCount: info.peer_count ?? telemetry.network?.info?.peerCount,
-      consensusType: info.consensus_type ?? telemetry.network?.info?.consensusType,
-      poiSolved: info.poi_challenges_solved ?? telemetry.network?.info?.poiSolved,
-      totalEntries: verify.total_entries ?? telemetry.ledger?.verification?.totalEntries,
-      chainValid: verify.valid ?? telemetry.ledger?.verification?.chainValid,
+      version: info?.version ?? telemetry.network?.info?.version ?? telemetry.fabric?.publicLane?.version,
+      network: info?.network ?? telemetry.fabric?.publicLane?.network,
+      height: info?.height ?? telemetry.network?.info?.height ?? telemetry.fabric?.publicLane?.height,
+      peerCount: info?.peer_count ?? telemetry.network?.info?.peerCount,
+      consensusType: info?.consensus_type ?? telemetry.network?.info?.consensusType,
+      poiSolved: info?.poi_challenges_solved ?? telemetry.network?.info?.poiSolved,
+      totalEntries: verify?.total_entries ?? telemetry.ledger?.verification?.totalEntries,
+      chainValid: verify?.valid ?? telemetry.ledger?.verification?.chainValid,
       fabricSource: telemetry.fabric?.source,
       orchestrationAvailable: telemetry.fabric?.orchestration?.available,
       brainReady: telemetry.fabric?.brain?.ready
@@ -379,6 +396,9 @@ async function main(): Promise<void> {
       "This page is a live-node receipt, not a benchmark score.",
       "It is generated from the public aura-genesis status and ledger endpoints plus the latest local supervised fabric-audit rerun receipt.",
       "The public visible record currently comes from the governed control_fabric private-trace path surfaced on the public ledger feed.",
+      telemetry.fabric?.source === "synthesized"
+        ? "At generation time, the public aura-genesis telemetry edge was synthesized/offline, so this receipt falls back to the last verified supervised rerun instead of claiming a live public-node match."
+        : "At generation time, the public aura-genesis telemetry edge was reachable enough to compare the latest visible public record against the latest supervised rerun.",
       "This page does not expose secrets, raw private payloads, or raw chain-of-thought."
     ],
     output: {

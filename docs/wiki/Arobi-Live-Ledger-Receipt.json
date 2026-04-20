@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-20T02:38:44.942Z",
+  "generatedAt": "2026-04-20T17:22:38.533Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "a160517c17724ee9697276d5b99c74565ef02d31",
-    "gitShortSha": "a160517",
+    "gitSha": "ad30f3a71f6ac344c50fe67d1899f8736bdc687e",
+    "gitShortSha": "ad30f3a",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+a160517",
+    "buildId": "0.1.0+ad30f3a",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -52,29 +52,12 @@
     "statusUrl": "https://aura-genesis.org/status",
     "ledgerUrl": "https://aura-genesis.org/ledger",
     "apiBaseUrl": "https://arobi.aura-genesis.org",
-    "version": "3.3.1",
-    "network": "AROBI1",
-    "height": 32900,
-    "peerCount": 1,
-    "consensusType": "proof_of_intelligence",
-    "poiSolved": 283,
-    "totalEntries": 397,
-    "chainValid": true,
-    "fabricSource": "nysus",
-    "orchestrationAvailable": true,
-    "brainReady": true
-  },
-  "latestVisibleEntry": {
-    "entryId": "000000000000000018a7ef97fcd89d18-000000000655bd469141e22d40a86371",
-    "timestamp": "2026-04-20T02:26:54.082101500Z",
-    "blockHeight": 397,
-    "sourceLabel": "control_fabric",
-    "modelId": "Q+Immaculate+Arobi",
-    "modelVersion": "3.3.1",
-    "inputSummary": "Supervised non-actuating private audit cycle 1 of 1",
-    "decision": "Recorded full supervised non-actuating private audit trace",
-    "networkContext": "00",
-    "reasoning": "Cycle 1/1 recorded the full supervised non-actuating audit snapshot. Objective was 'Cycle 52461: executing verify against integrity-gate.'. Q soak progress was 0/0 successful probes with 0 errors. Public entries before write: 396. Private entries before write: 396."
+    "version": null,
+    "network": null,
+    "height": null,
+    "fabricSource": "synthesized",
+    "orchestrationAvailable": false,
+    "brainReady": false
   },
   "latestLocalRerun": {
     "runId": "fabric-audit-soak-20260420T022653Z",
@@ -91,8 +74,8 @@
     "latestPrivateBlockHeight": 397
   },
   "proof": {
-    "liveRecordVisible": true,
-    "entryMatchesLatestRerun": true,
+    "liveRecordVisible": false,
+    "entryMatchesLatestRerun": false,
     "publicEntryDelta": 1,
     "privateEntryDelta": 1
   },
@@ -100,6 +83,7 @@
     "This page is a live-node receipt, not a benchmark score.",
     "It is generated from the public aura-genesis status and ledger endpoints plus the latest local supervised fabric-audit rerun receipt.",
     "The public visible record currently comes from the governed control_fabric private-trace path surfaced on the public ledger feed.",
+    "At generation time, the public aura-genesis telemetry edge was synthesized/offline, so this receipt falls back to the last verified supervised rerun instead of claiming a live public-node match.",
     "This page does not expose secrets, raw private payloads, or raw chain-of-thought."
   ],
   "output": {

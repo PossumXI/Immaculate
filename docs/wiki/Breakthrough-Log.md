@@ -25,7 +25,7 @@ For each breakthrough, record:
 
 What changed:
 - the repo now generates [[Arobi-Live-Ledger-Receipt]], a live public-node receipt that reads `aura-genesis.org` and `arobi.aura-genesis.org` directly instead of inferring public-node health from a local harness-only benchmark
-- the same pass reran the existing Asgard `run-fabric-audit-soak.ps1` method on the real `Arobi Network v3.3.1` lane and confirmed a fresh governed `control_fabric` record surfaced publicly on the live decisions feed
+- the same pass reran the existing Asgard `run-fabric-audit-soak.ps1` method on the real public lane at the time and confirmed a fresh governed `control_fabric` record surfaced publicly on the live decisions feed
 - [[Release-Surface]], README, wiki home, and the site now point to that receipt so the public “is the node actually live and receiving new audit records?” question has one explicit answer
 
 Why it matters:
@@ -35,7 +35,7 @@ Why it matters:
 
 Evidence:
 - `apps/harness/src/arobi-live-ledger-receipt.ts` now generates [[Arobi-Live-Ledger-Receipt]]
-- `docs/wiki/Arobi-Live-Ledger-Receipt.md` now records the fresh `2026-04-20T02:26:54Z` `control_fabric` entry, live public version `3.3.1`, and public ledger entries moving `396 -> 397`
+- `docs/wiki/Arobi-Live-Ledger-Receipt.md` first captured the fresh `2026-04-20T02:26:54Z` `control_fabric` entry and public ledger entries moving `396 -> 397`; the same receipt now also tells the truth when the current public edge falls back to a synthesized/offline state
 - the latest supervised rerun `fabric-audit-soak-20260420T022653Z` matches the live public entry receipt instead of staying trapped in local artifacts
 
 What this unlocks next:
