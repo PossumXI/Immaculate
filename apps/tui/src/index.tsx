@@ -31,7 +31,14 @@ type GovernanceRequest = {
   actor?: string;
 };
 
-type FocusPane = "nodes" | "passes" | "logs";
+const auditReadGovernance: GovernanceRequest = {
+  purpose: ["audit-read"],
+  policyId: "event-read-default",
+  consentScope: "system:audit",
+  actor: "tui"
+};
+
+type FocusPane = "nodes" | "passes" | "logs" | "routing";
 type PersistenceState = {
   recovered: boolean;
   recoveryMode: "fresh" | "checkpoint" | "checkpoint-replay" | "snapshot" | "replay";
@@ -101,9 +108,6 @@ function useAltScreen() {
 
 function withOperatorWsUrl(urlValue: string, governance?: GovernanceRequest): string {
   const nextUrl = new URL(urlValue);
-  if (harnessApiKey) {
-    nextUrl.searchParams.set("token", harnessApiKey);
-  }
   if (governance) {
     nextUrl.searchParams.delete("purpose");
     for (const purpose of governance.purpose) {
@@ -554,7 +558,11 @@ function App() {
     let retryMs = 500;
     const loadPersistence = async () => {
       try {
-        const response = await harnessFetch(`${harnessBaseUrl}/api/persistence`);
+        const response = await harnessFetch(
+          `${harnessBaseUrl}/api/persistence`,
+          undefined,
+          auditReadGovernance
+        );
         const payload = (await response.json()) as { persistence: PersistenceState };
         if (!disposed) {
           setPersistence(payload.persistence);
@@ -582,7 +590,11 @@ function App() {
 
     const loadGovernance = async () => {
       try {
-        const response = await harnessFetch(`${harnessBaseUrl}/api/governance/status`);
+        const response = await harnessFetch(
+          `${harnessBaseUrl}/api/governance/status`,
+          undefined,
+          auditReadGovernance
+        );
         const payload = (await response.json()) as { governance: GovernanceState };
         if (!disposed) {
           setGovernance(payload.governance);
@@ -643,7 +655,14 @@ function App() {
         return;
       }
 
-      socket = new WebSocket(withOperatorWsUrl(harnessWsUrlBase));
+      socket = new WebSocket(
+        withOperatorWsUrl(harnessWsUrlBase, {
+          purpose: ["operator-control"],
+          policyId: "operator-control-default",
+          consentScope: "operator:tui",
+          actor: "tui"
+        })
+      );
 
       socket.onopen = () => {
         if (!disposed) {
@@ -734,7 +753,13 @@ function App() {
 
     if (key.tab) {
       setFocusPane((value) =>
-        value === "nodes" ? "passes" : value === "passes" ? "logs" : "nodes"
+        value === "nodes"
+          ? "passes"
+          : value === "passes"
+            ? "logs"
+            : value === "logs"
+              ? "routing"
+              : "nodes"
       );
       return;
     }
@@ -775,7 +800,7 @@ function App() {
       return;
     }
 
-    if (input === "a") {
+    if (input === "a" || input === "d") {
       void dispatchActuation(snapshot.neuroSessions[0]?.id);
       return;
     }
@@ -836,8 +861,15 @@ function App() {
         setNodeIndex((value) => Math.min(snapshot.nodes.length - 1, value + 1));
       } else if (focusPane === "passes") {
         setPassIndex((value) => Math.min(snapshot.passes.length - 1, value + 1));
-      } else {
+      } else if (focusPane === "logs") {
         setLogIndex((value) => Math.min(snapshot.logTail.length - 1, value + 1));
+      } else {
+        setLogIndex((value) =>
+          Math.min(
+            Math.max(0, (snapshot.routingDecisions?.length ?? 0) - 1),
+            value + 1
+          )
+        );
       }
     }
   });
@@ -914,25 +946,82 @@ function App() {
           ))}
         </Box>
 
-        <Box
-          width="33%"
-          marginLeft={1}
-          borderStyle="round"
-          borderColor={focusPane === "logs" ? "magenta" : "gray"}
-          flexDirection="column"
-          paddingX={1}
-        >
-          <Text color="magentaBright">Logs</Text>
-          {snapshot?.logTail.map((line, index) => (
-            <Text
-              key={`${line}-${index}`}
-              color={index === logIndex ? "black" : undefined}
-              backgroundColor={index === logIndex ? "magenta" : undefined}
-            >
-              {index === logIndex ? "▶" : " "} {line}
-            </Text>
-          ))}
-        </Box>
+        {focusPane === "routing" ? (
+          <Box
+            width="33%"
+            marginLeft={1}
+            borderStyle="round"
+            borderColor="cyan"
+            flexDirection="column"
+            paddingX={1}
+          >
+            <Text color="cyanBright">Routing</Text>
+            {snapshot ? (
+              <>
+                <Text>
+                  Route{" "}
+                  {snapshot.routingDecisions?.[0]
+                    ? `${snapshot.routingDecisions[0].mode} / ${snapshot.routingDecisions[0].channel}`
+                    : "none"}
+                </Text>
+                <Text>
+                  Transport{" "}
+                  {snapshot.routingDecisions?.[0]?.transportId ?? "none"}
+                </Text>
+                <Text>
+                  Governance{" "}
+                  {snapshot.routingDecisions?.[0]?.governancePressure ?? "-"}
+                </Text>
+                <Text>
+                  Arbitration{" "}
+                  {snapshot.executionArbitrations?.[0]?.mode ?? "none"}
+                </Text>
+                <Text>
+                  Schedule{" "}
+                  {snapshot.executionSchedules?.[0]?.mode ?? "none"} /{" "}
+                  {snapshot.executionSchedules?.[0]?.layerRoles?.join(">") ?? "none"}
+                </Text>
+                <Text>
+                  Guard{" "}
+                  {snapshot.conversations?.[0]?.guardVerdict ?? "none"}
+                </Text>
+                <Text>
+                  Session {snapshot.sessionConversationSummary.conversationCount} convs /{" "}
+                  {snapshot.sessionConversationSummary.blockedVerdictCount} blocked /{" "}
+                  {snapshot.sessionConversationSummary.approvedVerdictCount} approved
+                </Text>
+                <Text>
+                  Coherence {formatPercent(snapshot.metrics.coherence)} /{" "}
+                  FEP {snapshot.metrics.freeEnergyProxy.toFixed(2)} /{" "}
+                  PE {snapshot.metrics.predictionError.toFixed(4)}
+                </Text>
+                <Text color="gray">tab=cycle panes  d=dispatch actuation</Text>
+              </>
+            ) : (
+              <Text color="gray">Waiting for snapshot...</Text>
+            )}
+          </Box>
+        ) : (
+          <Box
+            width="33%"
+            marginLeft={1}
+            borderStyle="round"
+            borderColor={focusPane === "logs" ? "magenta" : "gray"}
+            flexDirection="column"
+            paddingX={1}
+          >
+            <Text color="magentaBright">Logs</Text>
+            {snapshot?.logTail.map((line, index) => (
+              <Text
+                key={`${line}-${index}`}
+                color={index === logIndex ? "black" : undefined}
+                backgroundColor={index === logIndex ? "magenta" : undefined}
+              >
+                {index === logIndex ? "▶" : " "} {line}
+              </Text>
+            ))}
+          </Box>
+        )}
       </Box>
 
       <Box marginTop={1}>
@@ -1057,8 +1146,8 @@ function App() {
       {showHelp ? (
         <Box marginTop={1} borderStyle="double" borderColor="white" flexDirection="column" paddingX={1}>
           <Text color="whiteBright">Help</Text>
-          <Text>`tab` cycle pane  `j/k` or arrows move  `space` pause/resume</Text>
-          <Text>`b` boost  `p` pulse  `n` single-step  `g` run cognition  `a` dispatch actuation  `v` replay latest NWB  `s` stop replay  `l` inject live frame  `o` stop live  `w` publish W&B  `r` reroute  `x` reset  `q` quit</Text>
+          <Text>`tab` cycle panes (nodes → passes → logs → routing)  `j/k` or arrows move  `space` pause/resume</Text>
+          <Text>`b` boost  `p` pulse  `n` single-step  `g` run cognition  `a`/`d` dispatch actuation  `v` replay latest NWB  `s` stop replay  `l` inject live frame  `o` stop live  `w` publish W&B  `r` reroute  `x` reset  `q` quit</Text>
           <Text>The TUI runs in an alternate screen and stays keyboard-primary by design.</Text>
         </Box>
       ) : null}

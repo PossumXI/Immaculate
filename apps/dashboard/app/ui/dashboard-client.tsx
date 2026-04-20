@@ -31,6 +31,20 @@ type GovernanceRequest = {
   actor?: string;
 };
 
+const auditReadGovernance: GovernanceRequest = {
+  purpose: ["audit-read"],
+  policyId: "event-read-default",
+  consentScope: "system:audit",
+  actor: "dashboard"
+};
+
+const benchmarkReadGovernance: GovernanceRequest = {
+  purpose: ["benchmark-publication"],
+  policyId: "benchmark-publication-default",
+  consentScope: "system:benchmark",
+  actor: "dashboard"
+};
+
 function withOperatorHeaders(init?: RequestInit, governance?: GovernanceRequest): RequestInit {
   const headers = new Headers(init?.headers);
   if (harnessApiKey) {
@@ -53,9 +67,6 @@ function withOperatorHeaders(init?: RequestInit, governance?: GovernanceRequest)
 
 function withOperatorWsUrl(urlValue: string, governance?: GovernanceRequest): string {
   const nextUrl = new URL(urlValue);
-  if (harnessApiKey) {
-    nextUrl.searchParams.set("token", harnessApiKey);
-  }
   if (governance) {
     nextUrl.searchParams.delete("purpose");
     for (const purpose of governance.purpose) {
@@ -534,7 +545,7 @@ export function DashboardClient() {
 
     const loadHistory = async () => {
       try {
-        const response = await harnessFetch(`${harnessBaseUrl}/api/history`, {
+        const response = await governedHarnessFetch(`${harnessBaseUrl}/api/history`, auditReadGovernance, {
           cache: "no-store"
         });
         const payload = (await response.json()) as { history: SnapshotHistoryPoint[] };
@@ -552,7 +563,7 @@ export function DashboardClient() {
 
     const loadPersistence = async () => {
       try {
-        const response = await harnessFetch(`${harnessBaseUrl}/api/persistence`, {
+        const response = await governedHarnessFetch(`${harnessBaseUrl}/api/persistence`, auditReadGovernance, {
           cache: "no-store"
         });
         const payload = (await response.json()) as { persistence: PersistenceState };
@@ -588,9 +599,13 @@ export function DashboardClient() {
 
     const loadBenchmarkHistory = async () => {
       try {
-        const response = await harnessFetch(`${harnessBaseUrl}/api/benchmarks/history`, {
-          cache: "no-store"
-        });
+        const response = await governedHarnessFetch(
+          `${harnessBaseUrl}/api/benchmarks/history`,
+          benchmarkReadGovernance,
+          {
+            cache: "no-store"
+          }
+        );
         const payload = (await response.json()) as { history: BenchmarkIndex };
         if (!cancelled) {
           startTransition(() => {
@@ -642,9 +657,15 @@ export function DashboardClient() {
           modelsResponse
         ] = await Promise.all([
           harnessFetch(`${harnessBaseUrl}/api/topology`, { cache: "no-store" }),
-          harnessFetch(`${harnessBaseUrl}/api/integrity`, { cache: "no-store" }),
-          harnessFetch(`${harnessBaseUrl}/api/checkpoints`, { cache: "no-store" }),
-          harnessFetch(`${harnessBaseUrl}/api/governance/status`, { cache: "no-store" }),
+          governedHarnessFetch(`${harnessBaseUrl}/api/integrity`, auditReadGovernance, {
+            cache: "no-store"
+          }),
+          governedHarnessFetch(`${harnessBaseUrl}/api/checkpoints`, auditReadGovernance, {
+            cache: "no-store"
+          }),
+          governedHarnessFetch(`${harnessBaseUrl}/api/governance/status`, auditReadGovernance, {
+            cache: "no-store"
+          }),
           harnessFetch(`${harnessBaseUrl}/api/benchmarks/packs`, { cache: "no-store" }),
           governedHarnessFetch(
             `${harnessBaseUrl}/api/events`,
@@ -860,7 +881,14 @@ export function DashboardClient() {
         return;
       }
 
-      socket = new WebSocket(withOperatorWsUrl(harnessWsUrlBase));
+      socket = new WebSocket(
+        withOperatorWsUrl(harnessWsUrlBase, {
+          purpose: ["operator-control"],
+          policyId: "operator-control-default",
+          consentScope: "operator:dashboard",
+          actor: "dashboard"
+        })
+      );
 
       socket.onopen = () => {
         if (!cancelled) {
@@ -965,9 +993,13 @@ export function DashboardClient() {
         }
       }
 
-      const historyResponse = await harnessFetch(`${harnessBaseUrl}/api/benchmarks/history`, {
-        cache: "no-store"
-      });
+      const historyResponse = await governedHarnessFetch(
+        `${harnessBaseUrl}/api/benchmarks/history`,
+        benchmarkReadGovernance,
+        {
+          cache: "no-store"
+        }
+      );
       const historyPayload = (await historyResponse.json()) as { history: BenchmarkIndex };
       startTransition(() => {
         setBenchmarkHistory(historyPayload.history);

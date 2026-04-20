@@ -1065,15 +1065,9 @@ export function createIntelligenceWorkerRegistry(rootDir: string) {
               ? existing.assignmentLeaseDurationMs
               : leaseDurationMs,
           assignmentLeaseExpiresAt:
-            isLeaseActive(existing.assignmentLeaseExpiresAt, heartbeatAt) &&
-            typeof existing.assignmentLeaseDurationMs === "number" &&
-            existing.assignmentLeaseDurationMs > 0
-              ? new Date(
-                  Date.parse(heartbeatAt) + existing.assignmentLeaseDurationMs
-                ).toISOString()
-              : isLeaseActive(existing.assignmentLeaseExpiresAt, heartbeatAt)
-                ? new Date(Date.parse(heartbeatAt) + leaseDurationMs).toISOString()
-                : null,
+            isLeaseActive(existing.assignmentLeaseExpiresAt, heartbeatAt)
+              ? existing.assignmentLeaseExpiresAt ?? null
+              : null,
           assignmentLeaseToken:
             isLeaseActive(existing.assignmentLeaseExpiresAt, heartbeatAt)
               ? existing.assignmentLeaseToken ?? null

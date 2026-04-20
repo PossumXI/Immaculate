@@ -1312,8 +1312,7 @@ function isAuthorizedRequest(request: {
     typeof authHeader === "string" && authHeader.startsWith("Bearer ")
       ? authHeader.slice("Bearer ".length).trim()
       : undefined;
-  const queryToken = extractQueryToken(request.raw.url);
-  return bearerToken === API_KEY || queryToken === API_KEY;
+  return bearerToken === API_KEY;
 }
 
 app.addHook("onRequest", (request, reply, done) => {
@@ -2681,9 +2680,15 @@ app.get("/api/snapshot", async () => ({
   redacted: true
 }));
 
-app.get("/api/history", async () => ({
-  history: engine.getHistory().map((point) => snapshotHistoryPointSchema.parse(point))
-}));
+app.get("/api/history", async (request, reply) => {
+  if (!authorizeGovernedAction("event-read", "/api/history", request, reply)) {
+    return;
+  }
+
+  return {
+    history: engine.getHistory().map((point) => snapshotHistoryPointSchema.parse(point))
+  };
+});
 
 app.get("/api/events", async (request, reply) => {
   if (
@@ -2749,37 +2754,86 @@ app.get("/api/replay", async (request, reply) => {
   };
 });
 
-app.get("/api/persistence", async () => ({
-  persistence: persistence.getStatus()
-}));
+app.get("/api/persistence", async (request, reply) => {
+  if (!authorizeGovernedAction("event-read", "/api/persistence", request, reply)) {
+    return;
+  }
 
-app.get("/api/integrity", async () => ({
-  integrity: inspectDurableState(engine.getDurableState())
-}));
+  return {
+    persistence: persistence.getStatus()
+  };
+});
 
-app.get("/api/checkpoints", async () => ({
-  checkpoints: persistence.listCheckpoints()
-}));
+app.get("/api/integrity", async (request, reply) => {
+  if (!authorizeGovernedAction("event-read", "/api/integrity", request, reply)) {
+    return;
+  }
 
-app.get("/api/governance/status", async () => ({
-  governance: governance.getStatus()
-}));
+  return {
+    integrity: inspectDurableState(engine.getDurableState())
+  };
+});
 
-app.get("/api/governance/policies", async () => ({
-  policies: governance.listPolicies()
-}));
+app.get("/api/checkpoints", async (request, reply) => {
+  if (!authorizeGovernedAction("event-read", "/api/checkpoints", request, reply)) {
+    return;
+  }
 
-app.get("/api/governance/decisions", async () => ({
-  decisions: governance.listDecisions()
-}));
+  return {
+    checkpoints: persistence.listCheckpoints()
+  };
+});
+
+app.get("/api/governance/status", async (request, reply) => {
+  if (!authorizeGovernedAction("event-read", "/api/governance/status", request, reply)) {
+    return;
+  }
+
+  return {
+    governance: governance.getStatus()
+  };
+});
+
+app.get("/api/governance/policies", async (request, reply) => {
+  if (!authorizeGovernedAction("event-read", "/api/governance/policies", request, reply)) {
+    return;
+  }
+
+  return {
+    policies: governance.listPolicies()
+  };
+});
+
+app.get("/api/governance/decisions", async (request, reply) => {
+  if (!authorizeGovernedAction("event-read", "/api/governance/decisions", request, reply)) {
+    return;
+  }
+
+  return {
+    decisions: governance.listDecisions()
+  };
+});
 
 app.get("/api/benchmarks/latest", async () => ({
   benchmark: await loadPublishedBenchmarkReport()
 }));
 
-app.get("/api/benchmarks/history", async () => ({
-  history: await loadPublishedBenchmarkIndex()
-}));
+app.get("/api/benchmarks/history", async (request, reply) => {
+  if (
+    !authorizeGovernedAction(
+      "benchmark-publication",
+      "/api/benchmarks/history",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  return {
+    history: await loadPublishedBenchmarkIndex()
+  };
+});
 
 app.get("/api/benchmarks/trend", async (request, reply) => {
   const query = (request.query as { packId?: BenchmarkPackId; window?: string } | undefined) ?? {};
@@ -5391,6 +5445,23 @@ app.post("/api/control", async (request, reply) => {
 });
 
 app.get("/stream", { websocket: true }, (socket, request) => {
+  const decision = evaluateGovernedSocketAction(
+    "operator-control",
+    "/stream",
+    request
+  );
+  if (!decision.allowed) {
+    socket.send(
+      JSON.stringify({
+        type: "error",
+        message: `Governance denied: ${decision.reason}`,
+        decision
+      })
+    );
+    socket.close();
+    return;
+  }
+
   clients.add(socket);
   socket.send(
     JSON.stringify({
@@ -5401,22 +5472,6 @@ app.get("/stream", { websocket: true }, (socket, request) => {
 
   socket.on("message", (raw: Buffer) => {
     try {
-      const decision = evaluateGovernedSocketAction(
-        "operator-control",
-        "/stream",
-        request
-      );
-      if (!decision.allowed) {
-        socket.send(
-          JSON.stringify({
-            type: "error",
-            message: `Governance denied: ${decision.reason}`,
-            decision
-          })
-        );
-        return;
-      }
-
       const parsed = controlEnvelopeSchema.parse(JSON.parse(String(raw)));
       applyControl(parsed);
     } catch (error) {
@@ -5612,6 +5667,8 @@ app.get("/stream/actuation/device", { websocket: true }, (socket, request) => {
 });
 
 let interval: NodeJS.Timeout | null = null;
+let lastTickerPersistErrorAt = 0;
+const TICKER_PERSIST_ERROR_LOG_WINDOW_MS = 30_000;
 
 function startTicker(): void {
   if (interval) {
@@ -5620,7 +5677,31 @@ function startTicker(): void {
 
   interval = setInterval(() => {
     engine.tick();
-    void persistence.persist(engine.getDurableState());
+    try {
+      void persistence.persist(engine.getDurableState()).catch((error) => {
+        const now = Date.now();
+        if (now - lastTickerPersistErrorAt >= TICKER_PERSIST_ERROR_LOG_WINDOW_MS) {
+          lastTickerPersistErrorAt = now;
+          app.log.error(
+            {
+              err: error
+            },
+            "Ticker persistence failed; keeping the harness online in degraded persistence mode."
+          );
+        }
+      });
+    } catch (error) {
+      const now = Date.now();
+      if (now - lastTickerPersistErrorAt >= TICKER_PERSIST_ERROR_LOG_WINDOW_MS) {
+        lastTickerPersistErrorAt = now;
+        app.log.error(
+          {
+            err: error
+          },
+          "Ticker durable-state snapshot failed; keeping the harness online in degraded persistence mode."
+        );
+      }
+    }
     emitSnapshot();
   }, tickIntervalMs);
 }
