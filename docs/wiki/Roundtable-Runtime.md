@@ -2,14 +2,14 @@
 
 This page is generated from a live harness pass. It proves the roundtable planner is not just text: Immaculate seeds a bounded Q source, mediates a governed route, records repo-scoped roundtable actions, and binds those actions to isolated agent worktrees across Immaculate, OpenJaws, and Asgard.
 
-- Generated: 2026-04-20T02:37:16.499Z
-- Release: `0.1.0+24be021`
-- Repo commit: `24be021`
+- Generated: 2026-04-20T02:41:13.606Z
+- Release: `0.1.0+a160517`
+- Repo commit: `a160517`
 - Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`
 
 ## Benchmark
 
-- Harness URL: `http://127.0.0.1:64278`
+- Harness URL: `http://127.0.0.1:59133`
 - Scenario count: `3`
 - Failed assertions: `0`
 - Repo coverage P50: `3`
@@ -19,9 +19,9 @@ This page is generated from a live harness pass. It proves the roundtable planne
 - Recorded roundtable actions P50: `3`
 - Workspace-scoped turns P50: `1`
 - Tracked files P50: `2235`
-- Seed latency P95: `24082.29` ms
-- Mediation latency P95: `23723.81` ms
-- Runner path latency P95: `47362.18` ms
+- Seed latency P95: `25436.6` ms
+- Mediation latency P95: `24523.93` ms
+- Runner path latency P95: `49979.41` ms
 - Hardware: knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics / 16 cores / Q foundation Gemma 4
 
 ## Scenarios
