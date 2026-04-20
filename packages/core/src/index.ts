@@ -765,6 +765,10 @@ export type RoundtableExecutionArtifact = {
   bundlePath?: string;
   taskDocumentPath?: string;
   workspaceTaskPath?: string;
+  auditReceiptPath?: string;
+  auditSummary?: string;
+  findingCount?: number;
+  actionableFindingCount?: number;
   executionReady: boolean;
   workspaceMaterialized: boolean;
   requiresManualCheckout: boolean;
@@ -1918,6 +1922,10 @@ export const multiAgentConversationSchema = z.object({
             bundlePath: z.string().optional(),
             taskDocumentPath: z.string().optional(),
             workspaceTaskPath: z.string().optional(),
+            auditReceiptPath: z.string().optional(),
+            auditSummary: z.string().optional(),
+            findingCount: z.number().int().nonnegative().optional(),
+            actionableFindingCount: z.number().int().nonnegative().optional(),
             executionReady: z.boolean(),
             workspaceMaterialized: z.boolean(),
             requiresManualCheckout: z.boolean(),

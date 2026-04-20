@@ -1,6 +1,6 @@
 import path from "node:path";
 import { existsSync, mkdirSync } from "node:fs";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import type {
@@ -58,8 +58,29 @@ type MaterializedRoundtableActionExecution = {
   worktreePath: string;
   bundlePath: string;
   taskDocumentPath: string;
+  auditReceiptPath?: string;
   workspaceTaskPath?: string;
   probe: RoundtableActionWorkspaceProbe;
+};
+
+type RoundtableRepoAuditFinding = {
+  id: string;
+  severity: "info" | "warning";
+  summary: string;
+  file?: string;
+  evidence?: string;
+};
+
+type RoundtableRepoAuditReceipt = {
+  generatedAt: string;
+  repoId: string;
+  repoLabel: string;
+  branch: string;
+  objective: string;
+  findingCount: number;
+  actionableFindingCount: number;
+  summary: string;
+  findings: RoundtableRepoAuditFinding[];
 };
 
 type BuildRoundtableActionPlanInput = {
@@ -322,11 +343,188 @@ function focusAreasForRepo(action: RoundtableAction): string[] {
   ];
 }
 
+async function readRepoFileIfPresent(repoRoot: string, relativePath: string): Promise<string | undefined> {
+  const absolutePath = path.join(repoRoot, relativePath);
+  if (!existsSync(absolutePath)) {
+    return undefined;
+  }
+  try {
+    return await readFile(absolutePath, "utf8");
+  } catch {
+    return undefined;
+  }
+}
+
+function pushFinding(
+  findings: RoundtableRepoAuditFinding[],
+  finding: RoundtableRepoAuditFinding | undefined
+): void {
+  if (finding) {
+    findings.push(finding);
+  }
+}
+
+async function buildRoundtableRepoAuditReceipt(args: {
+  action: RoundtableAction;
+  branch: string;
+  objective: string;
+  repoRoot: string;
+}): Promise<RoundtableRepoAuditReceipt> {
+  const findings: RoundtableRepoAuditFinding[] = [];
+  if (args.action.repoId === "immaculate") {
+    const serverSource = await readRepoFileIfPresent(args.repoRoot, "apps/harness/src/server.ts");
+    const runtimeSource = await readRepoFileIfPresent(
+      args.repoRoot,
+      "apps/harness/src/roundtable-runtime.ts"
+    );
+    pushFinding(
+      findings,
+      serverSource?.includes("materializeRoundtableActionExecutionArtifacts({")
+        ? {
+            id: "execution-bundles-live",
+            severity: "info",
+            summary: "Roundtable execution bundles are wired into the live mediated server path.",
+            file: "apps/harness/src/server.ts"
+          }
+        : {
+            id: "execution-bundles-missing",
+            severity: "warning",
+            summary: "Live mediated server path is missing roundtable execution bundle wiring.",
+            file: "apps/harness/src/server.ts"
+          }
+    );
+    pushFinding(
+      findings,
+      serverSource?.includes("if (!tracedScheduleDecision.shouldRunCognition)")
+        ? {
+            id: "suppressed-cognition-audit",
+            severity: "info",
+            summary: "Suppressed cognition still records a governed roundtable receipt.",
+            file: "apps/harness/src/server.ts"
+          }
+        : undefined
+    );
+    pushFinding(
+      findings,
+      runtimeSource?.includes("roundtable-runtime-execution-bundles")
+        ? {
+            id: "runtime-bundle-benchmark",
+            severity: "info",
+            summary: "Roundtable runtime benchmark scores execution-bundle delivery explicitly.",
+            file: "apps/harness/src/roundtable-runtime.ts"
+          }
+        : undefined
+    );
+  } else if (args.action.repoId === "openjaws") {
+    const coherenceSource = await readRepoFileIfPresent(
+      args.repoRoot,
+      "src/immaculate/runtimeCoherence.ts"
+    );
+    const discordRuntimeSource = await readRepoFileIfPresent(
+      args.repoRoot,
+      "src/utils/discordQAgentRuntime.ts"
+    );
+    pushFinding(
+      findings,
+      coherenceSource?.includes("id: 'voice-runtime'") || coherenceSource?.includes('id: "voice-runtime"')
+        ? {
+            id: "voice-runtime-coherence",
+            severity: "info",
+            summary: "Runtime coherence now checks the voice plane explicitly when it is enabled.",
+            file: "src/immaculate/runtimeCoherence.ts"
+          }
+        : undefined
+    );
+    pushFinding(
+      findings,
+      discordRuntimeSource &&
+      (discordRuntimeSource.includes("as DiscordQAgentRouteState[]") ||
+        discordRuntimeSource.includes("as DiscordQAgentReceipt['guilds']") ||
+        discordRuntimeSource.includes("as DiscordQAgentEvent[]"))
+        ? {
+            id: "receipt-normalization-hardening",
+            severity: "warning",
+            summary:
+              "Discord/Q receipt normalization still relies on direct casts in a few lanes; tighten schema validation before treating every local receipt as trusted.",
+            file: "src/utils/discordQAgentRuntime.ts",
+            evidence: "direct array casts remain in normalizeDiscordQAgentReceipt()"
+          }
+        : undefined
+    );
+  } else if (args.action.repoId === "asgard") {
+    const fabricSource = await readRepoFileIfPresent(args.repoRoot, "internal/fabric/service.go");
+    const orchestratorSource = await readRepoFileIfPresent(
+      args.repoRoot,
+      "internal/cortex/orchestrator.go"
+    );
+    const nysusSource = await readRepoFileIfPresent(args.repoRoot, "cmd/nysus/main.go");
+    pushFinding(
+      findings,
+      fabricSource?.includes("GetPublicChainData") && fabricSource.includes("GetPrivateChainData")
+        ? {
+            id: "dual-telemetry-probes",
+            severity: "info",
+            summary: "Asgard fabric still probes both public and private chain telemetry surfaces.",
+            file: "internal/fabric/service.go"
+          }
+        : undefined
+    );
+    pushFinding(
+      findings,
+      orchestratorSource?.includes("PublicChain: false")
+        ? {
+            id: "single-ledger-write-path",
+            severity: "warning",
+            summary:
+              "Asgard still routes accountability through a single ledger write path instead of a live dual public/private write path.",
+            file: "internal/cortex/orchestrator.go",
+            evidence: "PublicChain: false"
+          }
+        : undefined
+    );
+    pushFinding(
+      findings,
+      nysusSource?.includes("AROBI_LEDGER_URL")
+        ? {
+            id: "single-ledger-endpoint-config",
+            severity: "warning",
+            summary:
+              "Asgard controller wiring still depends on one AROBI_LEDGER_URL path; split public/private launch targets are not yet first-class.",
+            file: "cmd/nysus/main.go",
+            evidence: "AROBI_LEDGER_URL"
+          }
+        : undefined
+    );
+  }
+
+  const actionableFindingCount = findings.filter((entry) => entry.severity === "warning").length;
+  const summary =
+    actionableFindingCount > 0
+      ? `${args.action.repoLabel} audit captured ${findings.length} receipt(s) with ${actionableFindingCount} actionable follow-up target(s).`
+      : `${args.action.repoLabel} audit captured ${findings.length} receipt(s) with no actionable follow-up target exposed by the bounded scan.`;
+
+  return {
+    generatedAt: new Date().toISOString(),
+    repoId: args.action.repoId,
+    repoLabel: args.action.repoLabel,
+    branch: args.branch,
+    objective: args.objective,
+    findingCount: findings.length,
+    actionableFindingCount,
+    summary,
+    findings
+  };
+}
+
 function renderTaskDocument(args: {
   action: RoundtableAction;
   branch: string;
   bundlePath: string;
   taskDocumentPath: string;
+  auditReceiptPath?: string;
+  auditSummary?: string;
+  findingCount?: number;
+  actionableFindingCount?: number;
   workspaceTaskPath?: string;
   objective: string;
   probe: RoundtableActionWorkspaceProbe;
@@ -347,6 +545,7 @@ function renderTaskDocument(args: {
     `- Allowed push: \`${args.action.workspaceScope.allowedPushRemote ?? "none"}/${args.action.workspaceScope.allowedPushBranch ?? "none"}\``,
     `- Bundle path: \`${args.bundlePath}\``,
     `- Task document path: \`${args.taskDocumentPath}\``,
+    `- Audit receipt path: \`${args.auditReceiptPath ?? "n/a"}\``,
     `- Workspace task path: \`${args.workspaceTaskPath ?? "n/a"}\``,
     "",
     "## Objective",
@@ -370,6 +569,12 @@ function renderTaskDocument(args: {
     `- Route: \`${args.turn?.routeSuggestion ?? "n/a"}\``,
     `- Commit: \`${args.turn?.commitStatement ?? "n/a"}\``,
     `- Decision trace: \`${args.turn?.decisionTraceId ?? "n/a"}\``,
+    "",
+    "## Repo Audit Receipt",
+    "",
+    `- Summary: ${args.auditSummary ?? "n/a"}`,
+    `- Findings: \`${args.findingCount ?? 0}\``,
+    `- Actionable follow-ups: \`${args.actionableFindingCount ?? 0}\``,
     "",
     "## Boundaries",
     "",
@@ -405,8 +610,17 @@ async function writeExecutionArtifactFiles(args: {
   const taskDocumentRelativePath = path
     .join(".runtime", "roundtable-execution", sessionSlug, slugify(args.action.id), `${args.action.repoId}.md`)
     .replaceAll("\\", "/");
+  const auditReceiptRelativePath = path
+    .join(".runtime", "roundtable-execution", sessionSlug, slugify(args.action.id), `${args.action.repoId}.audit.json`)
+    .replaceAll("\\", "/");
   const relevantFiles = relevantFilesForRepo(args.action, args.probe);
   const focusAreas = focusAreasForRepo(args.action);
+  const auditReceipt = await buildRoundtableRepoAuditReceipt({
+    action: args.action,
+    branch: args.branch,
+    objective: args.objective,
+    repoRoot: args.materializedPath
+  });
 
   const workspaceTaskPath =
     args.action.workspaceScope.isolationMode === "worktree"
@@ -419,6 +633,10 @@ async function writeExecutionArtifactFiles(args: {
     bundlePath: bundleRelativePath,
     taskDocumentPath: taskDocumentRelativePath,
     workspaceTaskPath: workspaceTaskRelativePath,
+    auditReceiptPath: auditReceiptRelativePath,
+    auditSummary: auditReceipt.summary,
+    findingCount: auditReceipt.findingCount,
+    actionableFindingCount: auditReceipt.actionableFindingCount,
     executionReady: args.probe.authorityBranchPreserved,
     workspaceMaterialized: args.action.workspaceScope.isolationMode === "worktree",
     requiresManualCheckout: args.action.workspaceScope.isolationMode === "branch",
@@ -435,6 +653,10 @@ async function writeExecutionArtifactFiles(args: {
     branch: args.branch,
     bundlePath: bundleRelativePath,
     taskDocumentPath: taskDocumentRelativePath,
+    auditReceiptPath: auditReceiptRelativePath,
+    auditSummary: auditReceipt.summary,
+    findingCount: auditReceipt.findingCount,
+    actionableFindingCount: auditReceipt.actionableFindingCount,
     workspaceTaskPath: workspaceTaskRelativePath,
     objective: args.objective,
     probe: args.probe,
@@ -469,6 +691,11 @@ async function writeExecutionArtifactFiles(args: {
   };
 
   await writeFile(path.join(REPO_ROOT, bundleRelativePath), `${JSON.stringify(bundlePayload, null, 2)}\n`, "utf8");
+  await writeFile(
+    path.join(REPO_ROOT, auditReceiptRelativePath),
+    `${JSON.stringify(auditReceipt, null, 2)}\n`,
+    "utf8"
+  );
   await writeFile(path.join(REPO_ROOT, taskDocumentRelativePath), `${taskDocument}\n`, "utf8");
   if (workspaceTaskPath) {
     await mkdir(path.dirname(workspaceTaskPath), { recursive: true });
@@ -488,6 +715,7 @@ async function writeExecutionArtifactFiles(args: {
     worktreePath: args.materializedPath,
     bundlePath: bundleRelativePath,
     taskDocumentPath: taskDocumentRelativePath,
+    auditReceiptPath: auditReceiptRelativePath,
     workspaceTaskPath: workspaceTaskRelativePath,
     probe: args.probe
   };
@@ -562,7 +790,12 @@ export function appendRoundtableExecutionSummary(
     (action) => action.executionArtifact?.status === "prepared" && action.executionArtifact.bundlePath
   ).length;
   const readyCount = actions.filter((action) => action.executionArtifact?.executionReady).length;
-  return `${summary} Execution bundles prepared for ${preparedCount}/${actions.length} lane(s); ${readyCount}/${actions.length} lane(s) remain authority-bound and ready for isolated agent work.`;
+  const auditReceiptCount = actions.filter((action) => action.executionArtifact?.auditReceiptPath).length;
+  const actionableFindingCount = actions.reduce(
+    (total, action) => total + (action.executionArtifact?.actionableFindingCount ?? 0),
+    0
+  );
+  return `${summary} Execution bundles prepared for ${preparedCount}/${actions.length} lane(s); ${readyCount}/${actions.length} lane(s) remain authority-bound and ready for isolated agent work. Repo audit receipts captured for ${auditReceiptCount}/${actions.length} lane(s) with ${actionableFindingCount} actionable follow-up target(s).`;
 }
 
 export function buildRoundtableActionPlan(

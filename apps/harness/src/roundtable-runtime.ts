@@ -68,6 +68,9 @@ type RoundtableRuntimeScenarioResult = {
   executionBundleCount: number;
   executionReadyCount: number;
   taskDocumentCount: number;
+  auditReceiptCount: number;
+  findingCount: number;
+  actionableFindingCount: number;
   isolatedBranchCount: number;
   repoCoverageCount: number;
   recordedActionCount: number;
@@ -98,6 +101,9 @@ type RoundtableRuntimeSurface = {
     executionBundlesP50: number;
     executionReadyP50: number;
     taskDocumentsP50: number;
+    auditReceiptsP50: number;
+    findingsP50: number;
+    actionableFindingsP50: number;
     workspaceScopedTurnsP50: number;
     recordedActionsP50: number;
     trackedFilesP50: number;
@@ -119,6 +125,9 @@ type RoundtableRuntimeSurface = {
     executionBundleCount: number;
     executionReadyCount: number;
     taskDocumentCount: number;
+    auditReceiptCount: number;
+    findingCount: number;
+    actionableFindingCount: number;
     recordedActionCount: number;
     workspaceScopedTurnCount: number;
     scheduleRoundtableActionCount: number;
@@ -680,6 +689,15 @@ async function runScenario(options: {
     ).length;
     const executionReadyCount = executionArtifacts.filter((artifact) => artifact.executionReady).length;
     const taskDocumentCount = executionArtifacts.filter((artifact) => artifact.taskDocumentPath).length;
+    const auditReceiptCount = executionArtifacts.filter((artifact) => artifact.auditReceiptPath).length;
+    const findingCount = executionArtifacts.reduce(
+      (total, artifact) => total + (artifact.findingCount ?? 0),
+      0
+    );
+    const actionableFindingCount = executionArtifacts.reduce(
+      (total, artifact) => total + (artifact.actionableFindingCount ?? 0),
+      0
+    );
     const recordedRepoCount = new Set(
       (conversation?.roundtableActions ?? []).map((action) => action.repoId).filter(Boolean)
     ).size;
@@ -712,6 +730,9 @@ async function runScenario(options: {
       executionBundleCount,
       executionReadyCount,
       taskDocumentCount,
+      auditReceiptCount,
+      findingCount,
+      actionableFindingCount,
       isolatedBranchCount: materialized.filter((entry) => entry.branch.startsWith("agents/")).length,
       repoCoverageCount: plan.repoCount,
       recordedActionCount,
@@ -813,6 +834,23 @@ function buildRoundtableRuntimeSurface(options: {
         "The live mediated path should leave every ready repo lane with a governed execution bundle instead of planner metadata only."
     },
     {
+      id: "roundtable-runtime-audit-receipts",
+      status: options.scenarioResults.every(
+        (entry) => entry.auditReceiptCount >= entry.readyActionCount
+      )
+        ? "pass"
+        : "fail",
+      target: "all ready actions emitted repo audit receipts",
+      actual: options.scenarioResults
+        .map(
+          (entry) =>
+            `${entry.id}:receipts=${entry.auditReceiptCount}/${entry.readyActionCount},findings=${entry.findingCount},actionable=${entry.actionableFindingCount}`
+        )
+        .join(" | "),
+      detail:
+        "Every ready repo lane should leave behind a bounded audit receipt so the next agent pass starts from findings instead of planner prose only."
+    },
+    {
       id: "roundtable-runtime-audit-captured",
       status: options.scenarioResults.every(
         (entry) =>
@@ -848,6 +886,11 @@ function buildRoundtableRuntimeSurface(options: {
       executionBundlesP50: median(options.scenarioResults.map((entry) => entry.executionBundleCount)),
       executionReadyP50: median(options.scenarioResults.map((entry) => entry.executionReadyCount)),
       taskDocumentsP50: median(options.scenarioResults.map((entry) => entry.taskDocumentCount)),
+      auditReceiptsP50: median(options.scenarioResults.map((entry) => entry.auditReceiptCount)),
+      findingsP50: median(options.scenarioResults.map((entry) => entry.findingCount)),
+      actionableFindingsP50: median(
+        options.scenarioResults.map((entry) => entry.actionableFindingCount)
+      ),
       workspaceScopedTurnsP50: median(options.scenarioResults.map((entry) => entry.workspaceScopedTurnCount)),
       recordedActionsP50: median(options.scenarioResults.map((entry) => entry.recordedActionCount)),
       trackedFilesP50: median(options.scenarioResults.map((entry) => entry.trackedFileCountP50)),
@@ -869,6 +912,9 @@ function buildRoundtableRuntimeSurface(options: {
       executionBundleCount: entry.executionBundleCount,
       executionReadyCount: entry.executionReadyCount,
       taskDocumentCount: entry.taskDocumentCount,
+      auditReceiptCount: entry.auditReceiptCount,
+      findingCount: entry.findingCount,
+      actionableFindingCount: entry.actionableFindingCount,
       recordedActionCount: entry.recordedActionCount,
       workspaceScopedTurnCount: entry.workspaceScopedTurnCount,
       scheduleRoundtableActionCount: entry.scheduleRoundtableActionCount,
@@ -997,6 +1043,9 @@ function buildFailedRoundtableRuntimeSurface(options: {
       executionBundlesP50: 0,
       executionReadyP50: 0,
       taskDocumentsP50: 0,
+      auditReceiptsP50: 0,
+      findingsP50: 0,
+      actionableFindingsP50: 0,
       workspaceScopedTurnsP50: 0,
       recordedActionsP50: 0,
       trackedFilesP50: 0,
@@ -1045,6 +1094,9 @@ function renderMarkdown(report: RoundtableRuntimeSurface): string {
     `- Execution bundles P50: \`${report.benchmark.executionBundlesP50}\``,
     `- Execution-ready lanes P50: \`${report.benchmark.executionReadyP50}\``,
     `- Task documents P50: \`${report.benchmark.taskDocumentsP50}\``,
+    `- Audit receipts P50: \`${report.benchmark.auditReceiptsP50}\``,
+    `- Findings P50: \`${report.benchmark.findingsP50}\``,
+    `- Actionable follow-ups P50: \`${report.benchmark.actionableFindingsP50}\``,
     `- Recorded roundtable actions P50: \`${report.benchmark.recordedActionsP50}\``,
     `- Workspace-scoped turns P50: \`${report.benchmark.workspaceScopedTurnsP50}\``,
     `- Tracked files P50: \`${report.benchmark.trackedFilesP50}\``,
@@ -1069,6 +1121,9 @@ function renderMarkdown(report: RoundtableRuntimeSurface): string {
         `- Execution bundles: \`${scenario.executionBundleCount}\``,
         `- Execution-ready lanes: \`${scenario.executionReadyCount}\``,
         `- Task documents: \`${scenario.taskDocumentCount}\``,
+        `- Audit receipts: \`${scenario.auditReceiptCount}\``,
+        `- Findings: \`${scenario.findingCount}\``,
+        `- Actionable follow-ups: \`${scenario.actionableFindingCount}\``,
         `- Recorded roundtable actions: \`${scenario.recordedActionCount}\``,
         `- Workspace-scoped turns: \`${scenario.workspaceScopedTurnCount}\``,
         `- Tracked files P50: \`${scenario.trackedFileCountP50}\``,
