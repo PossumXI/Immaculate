@@ -2,14 +2,14 @@
 
 This page is generated from a live harness pass. It proves the roundtable planner is not just text: Immaculate runs a governed mediation route, records repo-scoped roundtable actions, and binds those actions to isolated agent worktrees across Immaculate, OpenJaws, and Asgard. The direct seed step is a best-effort warm-up signal; the governed mediation path is the authoritative route.
 
-- Generated: 2026-04-21T12:55:25.345Z
-- Release: `0.1.0+350bd94`
-- Repo commit: `350bd94`
+- Generated: 2026-04-21T16:03:51.775Z
+- Release: `0.1.0+ab495bc`
+- Repo commit: `ab495bc`
 - Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`
 
 ## Benchmark
 
-- Harness URL: `http://127.0.0.1:61508`
+- Harness URL: `http://127.0.0.1:62585`
 - Scenario count: `3`
 - Failed assertions: `0`
 - Seed accepted scenarios: `3/3`
@@ -26,15 +26,23 @@ This page is generated from a live harness pass. It proves the roundtable planne
 - Recorded roundtable actions P50: `3`
 - Workspace-scoped turns P50: `0`
 - Tracked files P50: `369`
-- Seed latency P95: `85620.35` ms
-- Mediation latency P95: `8500.76` ms
-- Runner path latency P95: `94121.57` ms
+- Seed latency P95: `29985.21` ms
+- Mediation latency P95: `18831` ms
+- Runner path latency P95: `48816.76` ms
 - Hardware: knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics / 16 cores / Q foundation Gemma 4
-- Execution integrity digest: `e2013c102482e11a`
+- Execution integrity digest: `23604462212dd303`
 - Decision trace ledger: `verified`
 - Decision trace events: `1`
 - Decision trace findings: `0`
-- Decision trace head hash: `d11d4f580b1485dd`
+- Decision trace head hash: `07572ca37a928b8f`
+
+## Shared Readiness
+
+- Mission-surface ready: `false`
+- Summary: shared readiness blocked: unconfigured: public ledger endpoint not configured for this pass | unconfigured: private ledger endpoint not configured for this pass
+- ledger.public: `not_configured` | public ledger endpoint not configured for this pass
+- ledger.private: `not_configured` | private ledger endpoint not configured for this pass
+- q.local: `ready` @ `http://127.0.0.1:11434` | local Q accepted 3/3 seed+mediation scenario pair(s)
 
 ## Scenarios
 
