@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-21T23:24:05.216Z",
+  "generatedAt": "2026-04-21T23:24:06.172Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
@@ -48,6 +48,13 @@
       }
     }
   },
+  "showcase": {
+    "status": "closed",
+    "publicWindowRequested": false,
+    "publicWindowOpen": false,
+    "privateMissionLanePublished": false,
+    "summary": "supervised public showcase remains closed because shared readiness blocked: https://arobi.aura-genesis.org: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true | D:\\openjaws\\OpenJaws\\artifacts\\fabric-audit-soak-20260420T022653Z: verified private node is blocked by mission treasury signer mismatch despite rerun delta 1"
+  },
   "readiness": {
     "ledger": {
       "public": {
@@ -93,34 +100,46 @@
     "missionSurfaceReady": false,
     "summary": "shared readiness blocked: https://arobi.aura-genesis.org: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true | D:\\openjaws\\OpenJaws\\artifacts\\fabric-audit-soak-20260420T022653Z: verified private node is blocked by mission treasury signer mismatch despite rerun delta 1"
   },
-  "evidence": {
-    "roundtableRuntimePath": "docs/wiki/Roundtable-Runtime.json",
-    "arobiLiveLedgerPath": "docs/wiki/Arobi-Live-Ledger-Receipt.json",
-    "discordAgentReceiptPath": "D:\\openjaws\\OpenJaws\\local-command-station\\discord-q-agent-receipt.json",
-    "discordAgentHealthUrl": "http://127.0.0.1:8788/health",
-    "openjawsRoot": "D:\\openjaws\\OpenJaws",
-    "roundtableRuntimeGeneratedAt": "2026-04-21T22:19:50.626Z",
-    "arobiLiveLedgerGeneratedAt": "2026-04-21T22:18:04.712Z",
-    "discordAgentReceiptUpdatedAt": "2026-04-21T23:21:04.672Z",
-    "qOciBackend": "Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1)",
-    "discordHealth": {
-      "status": 200,
-      "ok": true,
-      "body": "ok"
+  "publishableSnippets": [
+    {
+      "label": "Roundtable runtime",
+      "status": "publishable",
+      "summary": "3 scenarios, 0 failed assertions, 3 execution bundles P50, 3 execution receipts P50, seed accepted 3/3, mediation accepted 3/3",
+      "sourcePath": "docs/wiki/Roundtable-Runtime.json",
+      "generatedAt": "2026-04-21T22:19:50.626Z"
     },
-    "arobiLocalPublicReady": true,
-    "arobiLocalPrivateReady": false
-  },
+    {
+      "label": "Terminal-Bench public task",
+      "status": "publishable",
+      "summary": "terminal-bench/make-mips-interpreter: 5 trials, 0 errors, mean reward 1.000, pass@2 1.000, pass@4 1.000, pass@5 1.000; leaderboard eligibility remains waiting-for-full-sweep",
+      "sourcePath": "docs/wiki/Terminal-Bench-Public-Task.json",
+      "generatedAt": "2026-04-19T14:31:45.217Z"
+    },
+    {
+      "label": "Harbor supervised tasks",
+      "status": "publishable",
+      "summary": "2 repo-local supervised task(s) through Q: Q structured contract 0.950 | Immaculate bridge fail-closed 0.925. These are supervised local receipts, not a public leaderboard claim.",
+      "sourcePath": "docs/wiki/Harbor-Terminal-Bench.json",
+      "generatedAt": "2026-04-19T07:43:17.831Z"
+    },
+    {
+      "label": "Arobi public-edge summary",
+      "status": "publishable",
+      "summary": "public node 3.3.1 on height 34832, peers 2, chain valid true, fabric source synthesized, live record visible false, latest supervised public delta 1. This is a safe public-edge summary only; it does not expose private mission-lane payloads.",
+      "sourcePath": "docs/wiki/Arobi-Live-Ledger-Receipt.json",
+      "generatedAt": "2026-04-21T22:18:04.712Z"
+    }
+  ],
   "truthBoundary": [
-    "This page is a readiness receipt, not proof that a live Discord operator command or multi-subsystem mission was executed.",
-    "q.local is taken from the latest machine-stamped roundtable runtime receipt and remains blocked if that receipt is missing or failed.",
-    "q.oci is receipt-backed from the live Discord Q agent runtime plus the local health endpoint; it is not a fresh direct provider probe unless a separate OCI probe surface says so explicitly.",
-    "ledger.public is only ready when the public aura-genesis edge surfaced a fresh governed audit record, not merely when the public read endpoints responded.",
-    "ledger.private is only ready when the latest supervised rerun proved private ledger advance.",
-    "This page does not expose secrets, Discord tokens, OCI keys, or private ledger payloads."
+    "This page is a supervised showcase receipt, not proof that a live Discord operator command or a live 16-subsystem mission was executed on this pass.",
+    "The public showcase remains fail-closed by default until the shared mission gate is green and an explicit operator opt-in opens the window.",
+    "The private mission lane remains closed here even when safe public snippets are publishable.",
+    "The Arobi summary here is limited to safe public-edge status and rerun-delta context; it does not expose raw private payloads, private ledger internals, or chain-of-thought.",
+    "The Harbor and Terminal-Bench snippets are supervised receipts, not an official public leaderboard submission beyond the explicit public-task receipt.",
+    "This page does not prove a fresh live public Arobi write or a fresh live OCI provider probe unless those claims appear on their own dedicated machine-stamped surfaces."
   ],
   "output": {
-    "jsonPath": "docs\\wiki\\Live-Mission-Readiness.json",
-    "markdownPath": "docs\\wiki\\Live-Mission-Readiness.md"
+    "jsonPath": "docs\\wiki\\Supervised-Mission-Showcase.json",
+    "markdownPath": "docs\\wiki\\Supervised-Mission-Showcase.md"
   }
 }

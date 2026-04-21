@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-21T22:19:56.233Z",
+  "generatedAt": "2026-04-21T23:24:07.259Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "10e6816632ef94f923762f27421f77a6e2ffc52a",
-    "gitShortSha": "10e6816",
+    "gitSha": "cf60c04c8c226e7484cbfb71811867c34d05a13d",
+    "gitShortSha": "cf60c04",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+10e6816",
+    "buildId": "0.1.0+cf60c04",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -96,7 +96,12 @@
     {
       "label": "Live mission readiness",
       "path": "docs\\wiki\\Live-Mission-Readiness.json",
-      "generatedAt": "2026-04-21T22:19:55.023Z"
+      "generatedAt": "2026-04-21T23:24:05.216Z"
+    },
+    {
+      "label": "Supervised mission showcase",
+      "path": "docs\\wiki\\Supervised-Mission-Showcase.json",
+      "generatedAt": "2026-04-21T23:24:06.172Z"
     },
     {
       "label": "Roundtable actionability",
