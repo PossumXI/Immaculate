@@ -3,23 +3,23 @@
 This page is the machine-stamped GitHub Actions truth surface for the three coordinated repos in the current workstation orbit.
 It exists so operational claims do not rely on one green repo while another repo is red, inaccessible, or only visible through private GitHub auth.
 
-- Generated: `2026-04-21T23:55:11.807Z`
-- Immaculate release: `0.1.0+86cd2f2`
-- Repo commit: `86cd2f2d9a73c48f2c8b59092753443dee2d0804`
+- Generated: `2026-04-21T23:58:39.554Z`
+- Immaculate release: `0.1.0+3432833`
+- Repo commit: `34328335397451c30b6ee12c3edf832fd22a95e6`
 
 ## Summary
 
 - Repo count: `3`
 - Fully healthy repos: `2`
 - All observed workflow runs successful: `false`
-- Detail: Immaculate (public repo, github-rest-public): some observed runs not green; observed 6/8 active workflows, 2 not recently observed | OpenJaws (public repo, github-rest-public): latest observed runs green; observed 4/5 active workflows, 1 not recently observed | Asgard_Arobi (private repo, gh-auth): latest observed runs green; observed 7/7 active workflows
+- Detail: Immaculate (public repo, gh-auth): some observed runs not green; observed 6/8 active workflows, 2 not recently observed | OpenJaws (public repo, gh-auth): latest observed runs green; observed 4/5 active workflows, 1 not recently observed | Asgard_Arobi (private repo, gh-auth): latest observed runs green; observed 7/7 active workflows
 
 ## Immaculate
 
 - Repository: `PossumXI/Immaculate`
 - Visibility: `public`
 - Default branch: `main`
-- Access path: `github-rest-public` | public repo verified through GitHub Actions REST surfaces
+- Access path: `gh-auth` | public repo verified through GitHub Actions REST surfaces
 - Active workflows: `8`
 - Latest observed workflow runs: `6`
 - Not recently observed in the sampled branch window: `2`
@@ -29,11 +29,11 @@ It exists so operational claims do not rely on one green repo while another repo
 ### Latest Observed Workflow Runs
 
 - Benchmark Credibility #9: `cancelled` (https://github.com/PossumXI/Immaculate/actions/runs/24715721859)
-- Benchmark Publication #101: `success` (https://github.com/PossumXI/Immaculate/actions/runs/24751743516)
-- CI #111: `success` (https://github.com/PossumXI/Immaculate/actions/runs/24751743502)
+- Benchmark Publication #103: `success` (https://github.com/PossumXI/Immaculate/actions/runs/24752666386)
+- CI #113: `success` (https://github.com/PossumXI/Immaculate/actions/runs/24752666400)
 - npm_and_yarn in / for next - Update #1332334989 #17: `success` (https://github.com/PossumXI/Immaculate/actions/runs/24751762785)
-- GitGuardian #105: `success` (https://github.com/PossumXI/Immaculate/actions/runs/24751743507)
-- Security #111: `success` (https://github.com/PossumXI/Immaculate/actions/runs/24751743491)
+- GitGuardian #107: `success` (https://github.com/PossumXI/Immaculate/actions/runs/24752666393)
+- Security #113: `success` (https://github.com/PossumXI/Immaculate/actions/runs/24752666385)
 
 ### Active Workflow Definitions
 
@@ -56,7 +56,7 @@ It exists so operational claims do not rely on one green repo while another repo
 - Repository: `PossumXI/OpenJaws`
 - Visibility: `public`
 - Default branch: `main`
-- Access path: `github-rest-public` | public repo verified through GitHub Actions REST surfaces
+- Access path: `gh-auth` | public repo verified through GitHub Actions REST surfaces
 - Active workflows: `5`
 - Latest observed workflow runs: `4`
 - Not recently observed in the sampled branch window: `1`
