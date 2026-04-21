@@ -30,6 +30,7 @@ That lane is intentionally separate so the roundtable benchmark can:
 - boot its own Ollama process if needed
 - keep benchmark startup bounded and reproducible
 - avoid inheriting stale or overloaded state from the normal local lane
+- keep `Q` aliases such as `q-e2b:test` on the structured control path instead of silently falling back to the heavier generic chat route
 
 ## OpenJaws Alignment
 

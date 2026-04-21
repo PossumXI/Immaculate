@@ -168,7 +168,23 @@ function normalizeModel(value: string | undefined): string {
 }
 
 function isQExecutionModel(value: string | undefined): boolean {
-  return normalizeModel(value) === normalizeModel(resolveQFoundationSpecification().baseModel);
+  const candidate = normalizeModel(value);
+  if (!candidate) {
+    return false;
+  }
+
+  const qFoundation = resolveQFoundationSpecification();
+  const normalizedBase = normalizeModel(qFoundation.baseModel);
+  const normalizedBaseWithoutTag = normalizedBase.split(":")[0] ?? normalizedBase;
+
+  return (
+    candidate === normalizedBase ||
+    candidate === normalizedBaseWithoutTag ||
+    candidate === normalizeModel(qFoundation.modelName) ||
+    candidate === normalizeModel(qFoundation.displayName) ||
+    candidate.startsWith(`${normalizedBaseWithoutTag}:`) ||
+    candidate.startsWith(`${normalizedBaseWithoutTag}-`)
+  );
 }
 
 function digest(value: string): string {
