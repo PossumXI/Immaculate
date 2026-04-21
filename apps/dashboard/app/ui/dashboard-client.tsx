@@ -4,9 +4,7 @@ import { startTransition, useDeferredValue, useEffect, useEffectEvent, useState 
 import {
   type ActuationOutput,
   type CognitiveExecution,
-  formatPercent,
   type NeuroFrameWindow,
-  planeColor,
   type BenchmarkIndex,
   type BenchmarkReport,
   type ConnectomeNode,
@@ -15,14 +13,11 @@ import {
   type SnapshotHistoryPoint,
   type MultiAgentConversation
 } from "@immaculate/core";
+import { formatPercent, planeColor } from "../lib/core-browser";
 import { ConnectomeScene } from "./connectome-scene";
 
-const harnessBaseUrl = process.env.NEXT_PUBLIC_IMMACULATE_HARNESS_URL ?? "http://127.0.0.1:8787";
-const harnessApiKey = process.env.NEXT_PUBLIC_IMMACULATE_API_KEY;
-const harnessWsUrlBase =
-  process.env.NEXT_PUBLIC_IMMACULATE_HARNESS_WS_URL ?? "ws://127.0.0.1:8787/stream";
-const liveNeuroWsUrlBase =
-  process.env.NEXT_PUBLIC_IMMACULATE_NEURO_WS_URL ?? "ws://127.0.0.1:8787/stream/neuro/live";
+const harnessBaseUrl = "/api/operator/harness";
+const harnessSocketTicketEndpoint = "/api/operator/socket-ticket";
 
 type GovernanceRequest = {
   purpose: string[];
@@ -31,11 +26,24 @@ type GovernanceRequest = {
   actor?: string;
 };
 
+type DashboardSocketRoute = "/stream" | "/stream/neuro/live";
+
+const auditReadGovernance: GovernanceRequest = {
+  purpose: ["audit-read"],
+  policyId: "event-read-default",
+  consentScope: "system:audit",
+  actor: "dashboard"
+};
+
+const benchmarkReadGovernance: GovernanceRequest = {
+  purpose: ["benchmark-publication"],
+  policyId: "benchmark-publication-default",
+  consentScope: "system:benchmark",
+  actor: "dashboard"
+};
+
 function withOperatorHeaders(init?: RequestInit, governance?: GovernanceRequest): RequestInit {
   const headers = new Headers(init?.headers);
-  if (harnessApiKey) {
-    headers.set("authorization", `Bearer ${harnessApiKey}`);
-  }
   if (governance) {
     headers.set("x-immaculate-purpose", governance.purpose.join(","));
     headers.set("x-immaculate-policy-id", governance.policyId);
@@ -51,25 +59,6 @@ function withOperatorHeaders(init?: RequestInit, governance?: GovernanceRequest)
   };
 }
 
-function withOperatorWsUrl(urlValue: string, governance?: GovernanceRequest): string {
-  const nextUrl = new URL(urlValue);
-  if (harnessApiKey) {
-    nextUrl.searchParams.set("token", harnessApiKey);
-  }
-  if (governance) {
-    nextUrl.searchParams.delete("purpose");
-    for (const purpose of governance.purpose) {
-      nextUrl.searchParams.append("purpose", purpose);
-    }
-    nextUrl.searchParams.set("policyId", governance.policyId);
-    nextUrl.searchParams.set("consentScope", governance.consentScope);
-    if (governance.actor) {
-      nextUrl.searchParams.set("actor", governance.actor);
-    }
-  }
-  return nextUrl.toString();
-}
-
 async function harnessFetch(input: string, init?: RequestInit): Promise<Response> {
   return fetch(input, withOperatorHeaders(init));
 }
@@ -80,6 +69,32 @@ async function governedHarnessFetch(
   init?: RequestInit
 ): Promise<Response> {
   return fetch(input, withOperatorHeaders(init, governance));
+}
+
+async function openGovernedHarnessSocket(
+  route: DashboardSocketRoute,
+  governance: GovernanceRequest
+): Promise<WebSocket> {
+  const response = await fetch(harnessSocketTicketEndpoint, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json"
+    },
+    body: JSON.stringify({
+      route,
+      governance
+    })
+  });
+  const payload = (await response.json().catch(() => null)) as {
+    error?: string;
+    message?: string;
+    url?: string;
+  } | null;
+  if (!response.ok || !payload?.url) {
+    throw new Error(payload?.message ?? payload?.error ?? "Unable to open authenticated harness socket.");
+  }
+
+  return new WebSocket(payload.url);
 }
 
 function MetricCard({
@@ -371,7 +386,7 @@ type NeuroSessionDetail = {
   streamCount: number;
 };
 
-type QModelState = {
+type OllamaModelState = {
   model: string;
   name?: string;
 };
@@ -506,7 +521,7 @@ export function DashboardClient() {
   const [actuationProtocols, setActuationProtocols] = useState<ActuationProtocolState[]>([]);
   const [actuationTransports, setActuationTransports] = useState<ActuationTransportState[]>([]);
   const [actuationDeliveries, setActuationDeliveries] = useState<ActuationDeliveryState[]>([]);
-  const [qModels, setQModels] = useState<QModelState[]>([]);
+  const [ollamaModels, setOllamaModels] = useState<OllamaModelState[]>([]);
   const deferredSnapshot = useDeferredValue(snapshot);
   const [connected, setConnected] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
@@ -534,7 +549,7 @@ export function DashboardClient() {
 
     const loadHistory = async () => {
       try {
-        const response = await harnessFetch(`${harnessBaseUrl}/api/history`, {
+        const response = await governedHarnessFetch(`${harnessBaseUrl}/api/history`, auditReadGovernance, {
           cache: "no-store"
         });
         const payload = (await response.json()) as { history: SnapshotHistoryPoint[] };
@@ -552,7 +567,7 @@ export function DashboardClient() {
 
     const loadPersistence = async () => {
       try {
-        const response = await harnessFetch(`${harnessBaseUrl}/api/persistence`, {
+        const response = await governedHarnessFetch(`${harnessBaseUrl}/api/persistence`, auditReadGovernance, {
           cache: "no-store"
         });
         const payload = (await response.json()) as { persistence: PersistenceState };
@@ -588,9 +603,13 @@ export function DashboardClient() {
 
     const loadBenchmarkHistory = async () => {
       try {
-        const response = await harnessFetch(`${harnessBaseUrl}/api/benchmarks/history`, {
-          cache: "no-store"
-        });
+        const response = await governedHarnessFetch(
+          `${harnessBaseUrl}/api/benchmarks/history`,
+          benchmarkReadGovernance,
+          {
+            cache: "no-store"
+          }
+        );
         const payload = (await response.json()) as { history: BenchmarkIndex };
         if (!cancelled) {
           startTransition(() => {
@@ -642,9 +661,15 @@ export function DashboardClient() {
           modelsResponse
         ] = await Promise.all([
           harnessFetch(`${harnessBaseUrl}/api/topology`, { cache: "no-store" }),
-          harnessFetch(`${harnessBaseUrl}/api/integrity`, { cache: "no-store" }),
-          harnessFetch(`${harnessBaseUrl}/api/checkpoints`, { cache: "no-store" }),
-          harnessFetch(`${harnessBaseUrl}/api/governance/status`, { cache: "no-store" }),
+          governedHarnessFetch(`${harnessBaseUrl}/api/integrity`, auditReadGovernance, {
+            cache: "no-store"
+          }),
+          governedHarnessFetch(`${harnessBaseUrl}/api/checkpoints`, auditReadGovernance, {
+            cache: "no-store"
+          }),
+          governedHarnessFetch(`${harnessBaseUrl}/api/governance/status`, auditReadGovernance, {
+            cache: "no-store"
+          }),
           harnessFetch(`${harnessBaseUrl}/api/benchmarks/packs`, { cache: "no-store" }),
           governedHarnessFetch(
             `${harnessBaseUrl}/api/events`,
@@ -682,7 +707,7 @@ export function DashboardClient() {
             },
             { cache: "no-store" }
           ),
-          harnessFetch(`${harnessBaseUrl}/api/intelligence/q/models`, { cache: "no-store" })
+          harnessFetch(`${harnessBaseUrl}/api/intelligence/ollama/models`, { cache: "no-store" })
         ]);
 
         const topologyPayload = (await topologyResponse.json()) as { profile: string; objective: string; nodes: number; edges: number; planes: string[]; cycle: number; lastEventId?: string };
@@ -699,7 +724,7 @@ export function DashboardClient() {
         const actuationAdaptersPayload = (await actuationAdaptersResponse.json()) as { adapters: ActuationAdapterState[] };
         const actuationProtocolsPayload = (await actuationProtocolsResponse.json()) as { protocols: ActuationProtocolState[] };
         const actuationTransportsPayload = (await actuationTransportsResponse.json()) as { transports: ActuationTransportState[] };
-        const modelsPayload = (await modelsResponse.json()) as { models?: QModelState[]; error?: string };
+        const modelsPayload = (await modelsResponse.json()) as { models?: OllamaModelState[]; error?: string };
 
         let nextDatasetDetail: DatasetDetail | null = null;
         if (datasetsPayload.datasets[0]?.id) {
@@ -813,7 +838,7 @@ export function DashboardClient() {
               setActuationDeliveries(actuationDeliveriesPayload.deliveries ?? []);
             setActiveReplayCount(replaysPayload.replays.length);
             setActiveLiveSourceCount(liveSourcesPayload.sources.length);
-            setQModels(modelsPayload.models ?? []);
+            setOllamaModels(modelsPayload.models ?? []);
           });
         }
       } catch (error) {
@@ -860,51 +885,74 @@ export function DashboardClient() {
         return;
       }
 
-      socket = new WebSocket(withOperatorWsUrl(harnessWsUrlBase));
-
-      socket.onopen = () => {
-        if (!cancelled) {
-          retryMs = 500;
-          setConnected(true);
-          setErrorText(null);
-        }
-      };
-
-      socket.onmessage = (event) => {
+      void (async () => {
         try {
-          const message = JSON.parse(String(event.data)) as {
-            type: "snapshot" | "error";
-            data?: PhaseSnapshot;
-            message?: string;
+          const nextSocket = await openGovernedHarnessSocket("/stream", {
+            purpose: ["operator-control"],
+            policyId: "operator-control-default",
+            consentScope: "operator:dashboard",
+            actor: "dashboard"
+          });
+          if (cancelled) {
+            nextSocket.close();
+            return;
+          }
+          socket = nextSocket;
+
+          socket.onopen = () => {
+            if (!cancelled) {
+              retryMs = 500;
+              setConnected(true);
+              setErrorText(null);
+            }
           };
 
-          if (message.type === "snapshot" && message.data) {
-            handleSnapshot(message.data);
-          } else if (message.type === "error" && !cancelled) {
-            setErrorText(message.message ?? "Harness error");
-          }
+          socket.onmessage = (event) => {
+            try {
+              const message = JSON.parse(String(event.data)) as {
+                type: "snapshot" | "error";
+                data?: PhaseSnapshot;
+                message?: string;
+              };
+
+              if (message.type === "snapshot" && message.data) {
+                handleSnapshot(message.data);
+              } else if (message.type === "error" && !cancelled) {
+                setErrorText(message.message ?? "Harness error");
+              }
+            } catch (error) {
+              if (!cancelled) {
+                setErrorText(error instanceof Error ? error.message : "Invalid stream payload.");
+              }
+            }
+          };
+
+          socket.onerror = () => {
+            if (!cancelled) {
+              setConnected(false);
+              setErrorText("Harness stream failed.");
+            }
+          };
+
+          socket.onclose = () => {
+            if (!cancelled) {
+              setConnected(false);
+              void boot();
+              reconnectTimer = window.setTimeout(connect, retryMs);
+              retryMs = Math.min(Math.round(retryMs * 1.6), 30000);
+            }
+          };
         } catch (error) {
           if (!cancelled) {
-            setErrorText(error instanceof Error ? error.message : "Invalid stream payload.");
+            setConnected(false);
+            setErrorText(
+              error instanceof Error ? error.message : "Unable to open authenticated harness socket."
+            );
+            reconnectTimer = window.setTimeout(connect, retryMs);
+            retryMs = Math.min(Math.round(retryMs * 1.6), 30000);
           }
         }
-      };
-
-      socket.onerror = () => {
-        if (!cancelled) {
-          setConnected(false);
-          setErrorText("Harness stream failed.");
-        }
-      };
-
-      socket.onclose = () => {
-        if (!cancelled) {
-          setConnected(false);
-          void boot();
-          reconnectTimer = window.setTimeout(connect, retryMs);
-          retryMs = Math.min(Math.round(retryMs * 1.6), 30000);
-        }
-      };
+      })();
     };
 
     connect();
@@ -965,9 +1013,13 @@ export function DashboardClient() {
         }
       }
 
-      const historyResponse = await harnessFetch(`${harnessBaseUrl}/api/benchmarks/history`, {
-        cache: "no-store"
-      });
+      const historyResponse = await governedHarnessFetch(
+        `${harnessBaseUrl}/api/benchmarks/history`,
+        benchmarkReadGovernance,
+        {
+          cache: "no-store"
+        }
+      );
       const historyPayload = (await historyResponse.json()) as { history: BenchmarkIndex };
       startTransition(() => {
         setBenchmarkHistory(historyPayload.history);
@@ -1156,15 +1208,13 @@ export function DashboardClient() {
     try {
       setLiveIngressRunning(true);
       const sessionId = snapshot?.neuroSessions[0]?.id;
+      const socket = await openGovernedHarnessSocket("/stream/neuro/live", {
+        purpose: ["neuro-streaming"],
+        policyId: "neuro-stream-default",
+        consentScope: sessionId ? `session:${sessionId}` : "live-source:dashboard-live-socket",
+        actor: "dashboard"
+      });
       await new Promise<void>((resolve, reject) => {
-        const socket = new WebSocket(
-          withOperatorWsUrl(liveNeuroWsUrlBase, {
-            purpose: ["neuro-streaming"],
-            policyId: "neuro-stream-default",
-            consentScope: sessionId ? `session:${sessionId}` : "live-source:dashboard-live-socket",
-            actor: "dashboard"
-          })
-        );
         let settled = false;
         const timeout = window.setTimeout(() => {
           if (!settled) {
@@ -1278,7 +1328,7 @@ export function DashboardClient() {
     try {
       setRegisteringLayer(true);
       const response = await governedHarnessFetch(
-        `${harnessBaseUrl}/api/intelligence/q/register`,
+        `${harnessBaseUrl}/api/intelligence/ollama/register`,
         {
           purpose: ["cognitive-registration"],
           policyId: "cognitive-ops-default",
@@ -1882,7 +1932,7 @@ export function DashboardClient() {
               disabled={cognitionRunning}
               type="button"
             >
-              {cognitionRunning ? "Running local cognition..." : "Run local Q pass"}
+              {cognitionRunning ? "Running local cognition..." : "Run local Gemma pass"}
             </button>
             <button
               className="benchmark-button"
@@ -1907,7 +1957,7 @@ export function DashboardClient() {
                 <h2>Registered cognition backends</h2>
               </div>
               <div className="benchmark-actions">
-                <span>{snapshot?.intelligenceLayers.length ?? 0} layers / {qModels.length} Q runtime records</span>
+                <span>{snapshot?.intelligenceLayers.length ?? 0} layers / {ollamaModels.length} local models</span>
                 <button
                   className="benchmark-button"
                   onClick={() => {
@@ -2033,7 +2083,7 @@ export function DashboardClient() {
                       ? adapter.bridgeReady
                         ? `ready ${adapter.bridgeDeviceId ?? "device"}${adapter.bridgeSessionId ? ` (${adapter.bridgeSessionId})` : ""}`
                         : "connected / awaiting hello"
-                      : "file-backed path"}
+                      : "file fallback"}
                   </span>
                   <span>{formatPercent(adapter.maxIntensity)}</span>
                   <span>{adapter.lastDeliveryTransport ?? "--"}</span>
@@ -2355,10 +2405,10 @@ export function DashboardClient() {
             <span>/api/neuro/replays + /api/neuro/live/sources</span>
           </div>
           <div className="data-row">
-            <span>Q local runtime</span>
-            <span>{qModels.length}</span>
-            <span>{qModels[0]?.model ?? "Q unavailable"}</span>
-            <span>Q discovery + registration</span>
+            <span>Ollama registry</span>
+            <span>{ollamaModels.length}</span>
+            <span>{ollamaModels[0]?.model ?? "no models"}</span>
+            <span>/api/intelligence/ollama/models + register</span>
           </div>
           <div className="data-row">
             <span>Derived reads</span>

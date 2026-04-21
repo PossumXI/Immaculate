@@ -1,5 +1,11 @@
-import { LandingPage } from "./ui/landing-page";
+import { isDashboardSessionActive } from "./lib/operator-auth";
+import { DashboardClient } from "./ui/dashboard-client";
+import { DashboardLogin } from "./ui/dashboard-login";
 
-export default function Page() {
-  return <LandingPage />;
+export default async function Page() {
+  if (!(await isDashboardSessionActive())) {
+    return <DashboardLogin />;
+  }
+
+  return <DashboardClient />;
 }

@@ -23,7 +23,6 @@ const contentSecurityPolicy = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
-  output: "export",
   transpilePackages: ["@immaculate/core"],
   poweredByHeader: false,
   images: {

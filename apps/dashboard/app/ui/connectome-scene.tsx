@@ -3,7 +3,8 @@
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { planeColor, type PhaseSnapshot } from "@immaculate/core";
+import type { PhaseSnapshot } from "@immaculate/core";
+import { planeColor } from "../lib/core-browser";
 
 function EdgeLink({
   start,

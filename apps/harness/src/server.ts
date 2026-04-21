@@ -21,6 +21,7 @@ import {
   type IntelligenceLayer,
   type RoutingDecision
 } from "@immaculate/core";
+import { verifyDashboardSocketTicketFromUrl } from "./dashboard-socket-ticket.js";
 import { createActuationManager } from "./actuation.js";
 import {
   buildExecutionArbitrationDecision,
@@ -356,6 +357,8 @@ const DEFAULT_Q_API_RATE_LIMIT = normalizeQApiRateLimitPolicy(
     maxConcurrentRequests: 2
   }
 );
+const DASHBOARD_SOCKET_SECRET =
+  process.env.IMMACULATE_DASHBOARD_SOCKET_SECRET?.trim() || API_KEY || null;
 const FEDERATION_SHARED_SECRET = resolveFederationSecret();
 const LOCAL_WORKER_ID_PREFIX =
   process.env.IMMACULATE_WORKER_ID ??
@@ -959,6 +962,14 @@ function getGovernancePurposeValues(request: {
   headers: Record<string, string | string[] | undefined>;
   raw: { url?: string };
 }): string[] | undefined {
+  const dashboardTicket = verifyDashboardSocketTicketFromUrl(
+    request.raw.url,
+    DASHBOARD_SOCKET_SECRET
+  );
+  if (dashboardTicket) {
+    return dashboardTicket.purpose;
+  }
+
   const headerValue = getHeaderValue(request.headers["x-immaculate-purpose"]);
   const searchParams = getSearchParams(request.raw.url);
   const queryValues = searchParams.getAll("purpose");
@@ -982,7 +993,12 @@ function getGovernanceBinding(
   }
 ): GovernanceBinding {
   const searchParams = getSearchParams(request.raw.url);
+  const dashboardTicket = verifyDashboardSocketTicketFromUrl(
+    request.raw.url,
+    DASHBOARD_SOCKET_SECRET
+  );
   const actor =
+    dashboardTicket?.actor ??
     getHeaderValue(request.headers["x-immaculate-actor"]) ??
     searchParams.get("actor") ??
     (isLoopbackAddress(request.ip) ? `loopback:${request.ip}` : `remote:${request.ip}`);
@@ -993,12 +1009,14 @@ function getGovernanceBinding(
     actor,
     policyId:
       options?.policyIdOverride ??
+      dashboardTicket?.policyId ??
       getHeaderValue(request.headers["x-immaculate-policy-id"]) ??
       searchParams.get("policyId") ??
       searchParams.get("x-immaculate-policy-id") ??
       undefined,
     purpose: getGovernancePurposeValues(request),
     consentScope:
+      dashboardTicket?.consentScope ??
       getHeaderValue(request.headers["x-immaculate-consent-scope"]) ??
       searchParams.get("consentScope") ??
       searchParams.get("x-immaculate-consent-scope") ??
@@ -2175,8 +2193,16 @@ function isAuthorizedRequest(request: {
     return false;
   }
 
-  const token = extractAuthorizationToken(request.headers);
-  return token === API_KEY;
+  const authHeader = request.headers.authorization;
+  const bearerToken =
+    typeof authHeader === "string" && authHeader.startsWith("Bearer ")
+      ? authHeader.slice("Bearer ".length).trim()
+      : undefined;
+  return (
+    extractAuthorizationToken(request.headers) === API_KEY ||
+    bearerToken === API_KEY ||
+    Boolean(verifyDashboardSocketTicketFromUrl(request.raw.url, DASHBOARD_SOCKET_SECRET))
+  );
 }
 
 function attachQApiRateLimitHeaders(
