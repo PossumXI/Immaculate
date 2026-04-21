@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-20T21:36:25.174Z",
+  "generatedAt": "2026-04-21T04:50:38.849Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "92eead326010854f0a42cd743c392059905ca078",
-    "gitShortSha": "92eead3",
+    "gitSha": "7c8074dd9671c5e6e97d09505acb1e2b57f259b1",
+    "gitShortSha": "7c8074d",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+92eead3",
+    "buildId": "0.1.0+7c8074d",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -49,9 +49,11 @@
     }
   },
   "benchmark": {
-    "harnessUrl": "http://127.0.0.1:50978",
+    "harnessUrl": "http://127.0.0.1:52151",
     "scenarioCount": 3,
     "failedAssertions": 0,
+    "seedAcceptedCount": 0,
+    "mediationAcceptedCount": 3,
     "repoCoverageP50": 3,
     "materializedActionsP50": 3,
     "probedActionsP50": 3,
@@ -60,20 +62,29 @@
     "executionReadyP50": 3,
     "taskDocumentsP50": 3,
     "auditReceiptsP50": 3,
+    "executionReceiptsP50": 3,
     "workspaceScopedTurnsP50": 0,
     "recordedActionsP50": 3,
-    "trackedFilesP50": 2241,
-    "runnerPathP95Ms": 113042.33,
-    "seedLatencyP95Ms": 40279.38,
-    "mediationLatencyP95Ms": 72739.03,
-    "hardware": "knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics / 16 cores / Q foundation Gemma 4"
+    "trackedFilesP50": 369,
+    "runnerPathP95Ms": 6007.34,
+    "seedLatencyP95Ms": 1741.09,
+    "mediationLatencyP95Ms": 4266.08,
+    "hardware": "knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics / 16 cores / Q foundation Gemma 4",
+    "executionIntegrityDigest": "e2013c102482e11a4449743ca9c867f0364a2cf3d5a04dd4105c2be0df56c525",
+    "decisionTraceStatus": "verified",
+    "decisionTraceEventCount": 1,
+    "decisionTraceFindingCount": 0,
+    "decisionTraceHeadHash": "6729b4bd66570fe5a0ab2b428d7182583eff86b1df17f40ce0beb12669a0cb76"
   },
   "scenarios": [
     {
       "id": "immaculate-openjaws",
       "label": "Immaculate and OpenJaws governed repair",
       "status": "completed",
-      "routeSuggestion": "cognitive",
+      "seedStatus": 503,
+      "mediationStatus": 200,
+      "seedAccepted": false,
+      "mediationAccepted": true,
       "guardVerdict": "unknown",
       "repoCoverageCount": 3,
       "materializedActionCount": 3,
@@ -83,12 +94,13 @@
       "executionReadyCount": 3,
       "taskDocumentCount": 3,
       "auditReceiptCount": 3,
+      "executionReceiptCount": 3,
       "recordedActionCount": 3,
       "workspaceScopedTurnCount": 0,
       "scheduleRoundtableActionCount": 3,
       "scheduleRoundtableRepoCount": 3,
       "sessionScopePreserved": true,
-      "trackedFileCountP50": 2241,
+      "trackedFileCountP50": 369,
       "sampleFiles": [
         "Doc/Planning/README.md",
         "README.md",
@@ -97,13 +109,16 @@
         "apps/harness/package.json",
         "apps/harness/src/server.ts"
       ],
-      "roundtableSummary": "Roundtable single-lane plan across 3 repo(s) with 3 isolated agent action(s); 3 ready for immediate worktree materialization. Execution bundles prepared for 3/3 lane(s); 3/3 lane(s) remain authority-bound and ready for isolated agent work. Repo audit receipts captured for 3/3 lane(s)."
+      "roundtableSummary": "Roundtable single-lane plan across 3 repo(s) with 3 isolated agent action(s); 3 ready for immediate worktree materialization. Execution bundles prepared for 3/3 lane(s); 3/3 lane(s) remain authority-bound and ready for isolated agent work. Repo audit receipts captured for 3/3 lane(s), and bounded execution receipts captured for 3/3 lane(s)."
     },
     {
       "id": "asgard-audit-ledger",
       "label": "Asgard audit and ledger continuity",
       "status": "completed",
-      "routeSuggestion": "cognitive",
+      "seedStatus": 503,
+      "mediationStatus": 200,
+      "seedAccepted": false,
+      "mediationAccepted": true,
       "guardVerdict": "unknown",
       "repoCoverageCount": 3,
       "materializedActionCount": 3,
@@ -113,12 +128,13 @@
       "executionReadyCount": 3,
       "taskDocumentCount": 3,
       "auditReceiptCount": 3,
+      "executionReceiptCount": 3,
       "recordedActionCount": 3,
       "workspaceScopedTurnCount": 0,
       "scheduleRoundtableActionCount": 3,
       "scheduleRoundtableRepoCount": 3,
       "sessionScopePreserved": true,
-      "trackedFileCountP50": 2241,
+      "trackedFileCountP50": 369,
       "sampleFiles": [
         "Doc/Planning/README.md",
         "README.md",
@@ -127,13 +143,16 @@
         "apps/harness/package.json",
         "apps/harness/src/server.ts"
       ],
-      "roundtableSummary": "Roundtable single-lane plan across 3 repo(s) with 3 isolated agent action(s); 3 ready for immediate worktree materialization. Execution bundles prepared for 3/3 lane(s); 3/3 lane(s) remain authority-bound and ready for isolated agent work. Repo audit receipts captured for 3/3 lane(s)."
+      "roundtableSummary": "Roundtable single-lane plan across 3 repo(s) with 3 isolated agent action(s); 3 ready for immediate worktree materialization. Execution bundles prepared for 3/3 lane(s); 3/3 lane(s) remain authority-bound and ready for isolated agent work. Repo audit receipts captured for 3/3 lane(s), and bounded execution receipts captured for 3/3 lane(s)."
     },
     {
       "id": "mixed-pressure-roundtable",
       "label": "Mixed-pressure roundtable",
       "status": "completed",
-      "routeSuggestion": "cognitive",
+      "seedStatus": 503,
+      "mediationStatus": 200,
+      "seedAccepted": false,
+      "mediationAccepted": true,
       "guardVerdict": "unknown",
       "repoCoverageCount": 3,
       "materializedActionCount": 3,
@@ -143,12 +162,13 @@
       "executionReadyCount": 3,
       "taskDocumentCount": 3,
       "auditReceiptCount": 3,
+      "executionReceiptCount": 3,
       "recordedActionCount": 3,
       "workspaceScopedTurnCount": 0,
       "scheduleRoundtableActionCount": 3,
       "scheduleRoundtableRepoCount": 3,
       "sessionScopePreserved": true,
-      "trackedFileCountP50": 2235,
+      "trackedFileCountP50": 363,
       "sampleFiles": [
         "Doc/Planning/README.md",
         "README.md",
@@ -157,7 +177,7 @@
         "apps/harness/package.json",
         "apps/harness/src/server.ts"
       ],
-      "roundtableSummary": "Roundtable single-lane plan across 3 repo(s) with 3 isolated agent action(s); 3 ready for immediate worktree materialization. Execution bundles prepared for 3/3 lane(s); 3/3 lane(s) remain authority-bound and ready for isolated agent work. Repo audit receipts captured for 3/3 lane(s)."
+      "roundtableSummary": "Roundtable single-lane plan across 3 repo(s) with 3 isolated agent action(s); 3 ready for immediate worktree materialization. Execution bundles prepared for 3/3 lane(s); 3/3 lane(s) remain authority-bound and ready for isolated agent work. Repo audit receipts captured for 3/3 lane(s), and bounded execution receipts captured for 3/3 lane(s)."
     }
   ],
   "assertions": [
@@ -195,6 +215,13 @@
       "target": "all ready actions emitted repo audit receipts",
       "actual": "immaculate-openjaws:receipts=3/3 | asgard-audit-ledger:receipts=3/3 | mixed-pressure-roundtable:receipts=3/3",
       "detail": "Every ready repo lane should leave behind a bounded audit receipt so the next agent pass starts from findings instead of planner prose only."
+    },
+    {
+      "id": "roundtable-runtime-execution-receipts",
+      "status": "pass",
+      "target": "all ready actions emitted bounded execution receipts",
+      "actual": "immaculate-openjaws:receipts=3/3 | asgard-audit-ledger:receipts=3/3 | mixed-pressure-roundtable:receipts=3/3",
+      "detail": "Every ready repo lane should leave behind a bounded execution receipt so the live mediated path proves it actually ran its isolated audit task."
     },
     {
       "id": "roundtable-runtime-audit-captured",
