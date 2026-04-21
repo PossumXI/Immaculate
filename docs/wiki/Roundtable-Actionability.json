@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-21T04:49:52.630Z",
+  "generatedAt": "2026-04-21T12:51:04.001Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "7c8074dd9671c5e6e97d09505acb1e2b57f259b1",
-    "gitShortSha": "7c8074d",
+    "gitSha": "350bd94f196eaaddd62f137cdac34ff4ff2d7f27",
+    "gitShortSha": "350bd94",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+7c8074d",
+    "buildId": "0.1.0+350bd94",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -64,13 +64,13 @@
       "repoId": "immaculate",
       "repoLabel": "Immaculate",
       "gitBranch": "publish-q-win",
-      "repoSha": "7c8074d"
+      "repoSha": "350bd94"
     },
     {
       "repoId": "openjaws",
       "repoLabel": "OpenJaws",
       "gitBranch": "agent/openjaws-terminalbench-provenance",
-      "repoSha": "e9b92eb"
+      "repoSha": "5efef0e"
     },
     {
       "repoId": "asgard",

@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-21T04:51:00.736Z",
+  "generatedAt": "2026-04-21T12:55:59.703Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "7c8074dd9671c5e6e97d09505acb1e2b57f259b1",
-    "gitShortSha": "7c8074d",
+    "gitSha": "350bd94f196eaaddd62f137cdac34ff4ff2d7f27",
+    "gitShortSha": "350bd94",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+7c8074d",
+    "buildId": "0.1.0+350bd94",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -66,7 +66,7 @@
     {
       "label": "Q readiness gate",
       "path": "docs\\wiki\\Q-Readiness-Gate.json",
-      "generatedAt": "2026-04-21T04:50:54.293Z"
+      "generatedAt": "2026-04-21T12:55:51.674Z"
     },
     {
       "label": "Q gateway validation",
@@ -96,12 +96,12 @@
     {
       "label": "Roundtable actionability",
       "path": "docs\\wiki\\Roundtable-Actionability.json",
-      "generatedAt": "2026-04-21T04:49:52.630Z"
+      "generatedAt": "2026-04-21T12:51:04.001Z"
     },
     {
       "label": "Roundtable runtime",
       "path": "docs\\wiki\\Roundtable-Runtime.json",
-      "generatedAt": "2026-04-21T04:50:38.849Z"
+      "generatedAt": "2026-04-21T12:55:25.345Z"
     },
     {
       "label": "Q API audit",
@@ -151,7 +151,7 @@
     {
       "label": "Q benchmark corpus",
       "path": "docs\\wiki\\Q-Benchmark-Corpus.json",
-      "generatedAt": "2026-04-21T04:50:54Z"
+      "generatedAt": "2026-04-21T12:55:45Z"
     },
     {
       "label": "Q benchmark promotion",
@@ -161,7 +161,7 @@
     {
       "label": "W&B benchmark export",
       "path": "docs\\wiki\\Benchmark-Wandb-Export.json",
-      "generatedAt": "2026-04-20T21:13:53.888521+00:00"
+      "generatedAt": "2026-04-21T01:48:10.975345+00:00"
     },
     {
       "label": "Harbor terminal bench",

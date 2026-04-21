@@ -2,17 +2,17 @@
 
 This page is generated from a live harness pass. It proves the roundtable planner is not just text: Immaculate runs a governed mediation route, records repo-scoped roundtable actions, and binds those actions to isolated agent worktrees across Immaculate, OpenJaws, and Asgard. The direct seed step is a best-effort warm-up signal; the governed mediation path is the authoritative route.
 
-- Generated: 2026-04-21T04:50:38.849Z
-- Release: `0.1.0+7c8074d`
-- Repo commit: `7c8074d`
+- Generated: 2026-04-21T12:55:25.345Z
+- Release: `0.1.0+350bd94`
+- Repo commit: `350bd94`
 - Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`
 
 ## Benchmark
 
-- Harness URL: `http://127.0.0.1:52151`
+- Harness URL: `http://127.0.0.1:61508`
 - Scenario count: `3`
 - Failed assertions: `0`
-- Seed accepted scenarios: `0/3`
+- Seed accepted scenarios: `3/3`
 - Mediation accepted scenarios: `3/3`
 - Repo coverage P50: `3`
 - Materialized actions P50: `3`
@@ -26,24 +26,24 @@ This page is generated from a live harness pass. It proves the roundtable planne
 - Recorded roundtable actions P50: `3`
 - Workspace-scoped turns P50: `0`
 - Tracked files P50: `369`
-- Seed latency P95: `1741.09` ms
-- Mediation latency P95: `4266.08` ms
-- Runner path latency P95: `6007.34` ms
+- Seed latency P95: `85620.35` ms
+- Mediation latency P95: `8500.76` ms
+- Runner path latency P95: `94121.57` ms
 - Hardware: knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics / 16 cores / Q foundation Gemma 4
 - Execution integrity digest: `e2013c102482e11a`
 - Decision trace ledger: `verified`
 - Decision trace events: `1`
 - Decision trace findings: `0`
-- Decision trace head hash: `6729b4bd66570fe5`
+- Decision trace head hash: `d11d4f580b1485dd`
 
 ## Scenarios
 
 ### Immaculate and OpenJaws governed repair
 
 - Status: `completed`
-- Seed status: `503` / accepted `false`
+- Seed status: `200` / accepted `true`
 - Mediation status: `200` / accepted `true`
-- Route suggestion: `unknown`
+- Route suggestion: `cognitive`
 - Guard verdict: `unknown`
 - Repo coverage: `3`
 - Materialized actions: `3`
@@ -65,9 +65,9 @@ This page is generated from a live harness pass. It proves the roundtable planne
 ### Asgard audit and ledger continuity
 
 - Status: `completed`
-- Seed status: `503` / accepted `false`
+- Seed status: `200` / accepted `true`
 - Mediation status: `200` / accepted `true`
-- Route suggestion: `unknown`
+- Route suggestion: `cognitive`
 - Guard verdict: `unknown`
 - Repo coverage: `3`
 - Materialized actions: `3`
@@ -89,9 +89,9 @@ This page is generated from a live harness pass. It proves the roundtable planne
 ### Mixed-pressure roundtable
 
 - Status: `completed`
-- Seed status: `503` / accepted `false`
+- Seed status: `200` / accepted `true`
 - Mediation status: `200` / accepted `true`
-- Route suggestion: `unknown`
+- Route suggestion: `cognitive`
 - Guard verdict: `unknown`
 - Repo coverage: `3`
 - Materialized actions: `3`
