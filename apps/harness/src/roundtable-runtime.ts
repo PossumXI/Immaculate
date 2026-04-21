@@ -1659,6 +1659,8 @@ function renderMarkdown(report: RoundtableRuntimeSurface): string {
     `- ledger.public: \`${report.readiness.ledger.public.status}\`${report.readiness.ledger.public.endpoint ? ` @ \`${report.readiness.ledger.public.endpoint}\`` : ""} | ${report.readiness.ledger.public.detail}`,
     `- ledger.private: \`${report.readiness.ledger.private.status}\`${report.readiness.ledger.private.endpoint ? ` @ \`${report.readiness.ledger.private.endpoint}\`` : ""} | ${report.readiness.ledger.private.detail}`,
     `- q.local: \`${report.readiness.q.local.status}\`${report.readiness.q.local.endpoint ? ` @ \`${report.readiness.q.local.endpoint}\`` : ""} | ${report.readiness.q.local.detail}`,
+    `- q.oci: \`${report.readiness.q.oci.status}\`${report.readiness.q.oci.endpoint ? ` @ \`${report.readiness.q.oci.endpoint}\`` : ""} | ${report.readiness.q.oci.detail}`,
+    `- discord.transport: \`${report.readiness.discord.transport.status}\`${report.readiness.discord.transport.endpoint ? ` @ \`${report.readiness.discord.transport.endpoint}\`` : ""} | ${report.readiness.discord.transport.detail}`,
     "",
     "## Scenarios",
     "",

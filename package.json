@@ -42,6 +42,7 @@
     "q:api:audit": "node ./scripts/run-python.mjs ./training/q/build_q_api_audit_surface.py",
     "arobi:decision:review": "npm run arobi:decision:review -w @immaculate/harness",
     "arobi:live:ledger": "tsx ./apps/harness/src/arobi-live-ledger-receipt.ts",
+    "live:mission:readiness": "tsx ./apps/harness/src/live-mission-readiness.ts",
     "roundtable:actionability": "npm run roundtable:actionability -w @immaculate/harness",
     "roundtable:runtime": "npm run roundtable:runtime -w @immaculate/harness",
     "roundtable:runtime:loop": "npm run roundtable:runtime:loop -w @immaculate/harness",

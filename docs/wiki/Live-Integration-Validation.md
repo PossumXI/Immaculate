@@ -1,6 +1,6 @@
 # Live Integration Validation
 
-Generated from the April 21, 2026 cross-project validation pass. This page records what was actually exercised from this machine and what remained blocked, so the runtime and public surfaces do not over-claim.
+Generated from the April 21, 2026 cross-project validation pass. This page is the hand-written companion to `docs/wiki/Live-Mission-Readiness.md`, which is now the machine-stamped owner of the current cross-project gate.
 
 ## Immaculate
 
@@ -15,10 +15,18 @@ Generated from the April 21, 2026 cross-project validation pass. This page recor
 
 ## Live Checks
 
-- Discord transport: a live Q Discord agent was already listening on port `8788` during this pass. The shared receipt at `local-command-station/discord-q-agent-receipt.json` reported `status=ready`, `gatewayConnected=true`, and `guildCount=1`. No operator command was sent from this pass, so this proves live transport/auth, not live Discord work execution.
-- OCI Q: OpenJaws performed a real `oci:Q` probe through `probeExternalProviderModel('oci:Q')` under the local Discord/OCI env. The live OCI `/responses` endpoint returned HTTP `200` using OCI IAM auth.
-- Arobi public read path: `https://arobi.aura-genesis.org/api/v1/info` and `/api/v1/audit/verify` were reachable and reported a live `3.3.1` node with a valid chain.
-- Arobi public write path: `https://arobi.aura-genesis.org/api/v1/audit/record` returned HTTP `403` with `This API route is restricted to local admin access` from this machine. This pass does not claim a live public write.
+- Current machine-stamped gate: `docs/wiki/Live-Mission-Readiness.md` is now the truth surface for `ledger.public`, `ledger.private`, `q.local`, `q.oci`, and `discord.transport`.
+- Current `q.local` state is still green through `docs/wiki/Roundtable-Runtime.md`: `3` scenarios, `0` failed assertions, `seedAcceptedCount=3`, `mediationAcceptedCount=3`, and `decisionTraceStatus=verified`.
+- Current `discord.transport` state is blocked, not green: the last receipt in `D:\openjaws\OpenJaws\local-command-station\discord-q-agent-receipt.json` is stale and `http://127.0.0.1:8788/health` is currently refusing connections from this machine.
+- Current `q.oci` state is therefore also blocked in the shared gate: the last receipt still reports `oci:Q via OCI IAM`, but the live Discord Q runtime that carried that backend is not currently healthy enough to count as a fresh ready lane.
+- Current `ledger.public` state is blocked: the local public-node contract is configured, but the public aura-genesis telemetry edge is synthesized/offline and is not surfacing a fresh governed record right now.
+- Current `ledger.private` state is blocked: the latest supervised rerun still shows a private delta, but the verified local node logs also show `Mission treasury signer disabled`, so the private verified lane is not treated as ready.
+
+Historical same-day direct probes from this workstation still matter, but they are now historical notes rather than the current gate:
+
+- Earlier in the same April 21 pass, OpenJaws performed a real `oci:Q` probe through `probeExternalProviderModel('oci:Q')` and the live OCI `/responses` endpoint returned HTTP `200` using OCI IAM auth.
+- Earlier in the same April 21 pass, `https://arobi.aura-genesis.org/api/v1/info` and `/api/v1/audit/verify` were reachable.
+- Earlier in the same April 21 pass, `https://arobi.aura-genesis.org/api/v1/audit/record` returned HTTP `403` with `This API route is restricted to local admin access`, so this workstation still does not prove a live public write.
 
 ## Runtime Result
 
@@ -30,12 +38,13 @@ Generated from the April 21, 2026 cross-project validation pass. This page recor
   - `mediationAcceptedCount=3`
   - `executionReceiptsP50=3`
   - `decisionTraceStatus=verified`
-- The same green run still reported `ledger.public` blocked because the public writer returned `403` and did not advance the ledger.
+- The same green run now also carries the widened mission gate, which leaves `q.oci` and `discord.transport` explicitly unconfigured on the benchmark surface itself and pushes the full cross-project gate into `docs/wiki/Live-Mission-Readiness.md`.
 
 ## Truth Boundary
 
 - This pass did not claim live Discord-agent execution beyond transport/auth readiness.
 - This pass did not claim a successful fresh public Arobi write.
 - This pass did not claim a live OCI daemon; it only claimed a successful live OCI `oci:Q` endpoint probe.
+- This page now distinguishes historical same-day direct probes from the current machine-stamped readiness gate.
 - Asgard remained read-only audit context.
 - OpenJaws main was not touched.

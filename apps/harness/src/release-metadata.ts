@@ -67,6 +67,10 @@ export type HarnessReadinessSummary = {
   };
   q: {
     local: HarnessReadinessLane;
+    oci: HarnessReadinessLane;
+  };
+  discord: {
+    transport: HarnessReadinessLane;
   };
   missionSurfaceReady: boolean;
   summary: string;
@@ -82,6 +86,12 @@ export type ResolveHarnessReadinessOptions = {
   qLocalEndpoint?: string;
   qLocalHealthy?: boolean;
   qLocalDetail?: string;
+  qOciEndpoint?: string;
+  qOciHealthy?: boolean;
+  qOciDetail?: string;
+  discordTransportEndpoint?: string;
+  discordTransportHealthy?: boolean;
+  discordTransportDetail?: string;
 };
 
 const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
@@ -245,7 +255,23 @@ export function resolveHarnessReadiness(
       options.qLocalDetail ?? "local Q did not accept the bounded runtime path for every scenario",
     notConfiguredDetail: "local Q endpoint not configured for this pass"
   });
-  const missionLanes = [publicLedger, privateLedger, qLocal];
+  const qOci = buildHarnessReadinessLane({
+    endpoint: options.qOciEndpoint,
+    ready: options.qOciHealthy,
+    successDetail: options.qOciDetail ?? "OCI-backed Q runtime is ready for this pass",
+    blockedDetail: options.qOciDetail ?? "OCI-backed Q runtime did not prove readiness for this pass",
+    notConfiguredDetail: "OCI-backed Q runtime not configured for this pass"
+  });
+  const discordTransport = buildHarnessReadinessLane({
+    endpoint: options.discordTransportEndpoint,
+    ready: options.discordTransportHealthy,
+    successDetail:
+      options.discordTransportDetail ?? "Discord transport is live and reachable for this pass",
+    blockedDetail:
+      options.discordTransportDetail ?? "Discord transport did not prove live reachability for this pass",
+    notConfiguredDetail: "Discord transport not configured for this pass"
+  });
+  const missionLanes = [publicLedger, privateLedger, qLocal, qOci, discordTransport];
   const missionSurfaceReady =
     missionLanes.every((lane) => lane.configured) && missionLanes.every((lane) => lane.ready);
   const blockedLanes = missionLanes
@@ -257,11 +283,15 @@ export function resolveHarnessReadiness(
       private: privateLedger
     },
     q: {
-      local: qLocal
+      local: qLocal,
+      oci: qOci
+    },
+    discord: {
+      transport: discordTransport
     },
     missionSurfaceReady,
     summary: missionSurfaceReady
-      ? "shared ledger.public, ledger.private, and q.local readiness verified for this pass"
+      ? "shared ledger.public, ledger.private, q.local, q.oci, and discord.transport readiness verified for this pass"
       : `shared readiness blocked: ${blockedLanes.join(" | ")}`
   };
 }
