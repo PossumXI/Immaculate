@@ -102,6 +102,8 @@ type RoundtableRuntimeSurface = {
     harnessUrl: string;
     scenarioCount: number;
     failedAssertions: number;
+    seedAcceptedCount: number;
+    mediationAcceptedCount: number;
     repoCoverageP50: number;
     materializedActionsP50: number;
     probedActionsP50: number;
@@ -128,6 +130,10 @@ type RoundtableRuntimeSurface = {
     id: string;
     label: string;
     status: string;
+    seedStatus: number;
+    mediationStatus: number;
+    seedAccepted: boolean;
+    mediationAccepted: boolean;
     routeSuggestion?: string;
     guardVerdict?: string;
     repoCoverageCount: number;
@@ -1141,6 +1147,8 @@ function buildRoundtableRuntimeSurface(options: {
       harnessUrl: options.harnessUrl,
       scenarioCount: options.scenarioResults.length,
       failedAssertions: assertions.filter((entry) => entry.status === "fail").length,
+      seedAcceptedCount: options.scenarioResults.filter((entry) => entry.seedAccepted).length,
+      mediationAcceptedCount: options.scenarioResults.filter((entry) => entry.mediationAccepted).length,
       repoCoverageP50: median(options.scenarioResults.map((entry) => entry.repoCoverageCount)),
       materializedActionsP50: median(options.scenarioResults.map((entry) => entry.materializedActionCount)),
       probedActionsP50: median(options.scenarioResults.map((entry) => entry.probedActionCount)),
@@ -1185,6 +1193,10 @@ function buildRoundtableRuntimeSurface(options: {
       id: entry.id,
       label: entry.label,
       status: entry.status,
+      seedStatus: entry.seedStatus,
+      mediationStatus: entry.mediationStatus,
+      seedAccepted: entry.seedAccepted,
+      mediationAccepted: entry.mediationAccepted,
       routeSuggestion: entry.routeSuggestion,
       guardVerdict: entry.guardVerdict,
       repoCoverageCount: entry.repoCoverageCount,
@@ -1333,6 +1345,8 @@ function buildFailedRoundtableRuntimeSurface(options: {
       harnessUrl: options.harnessUrl,
       scenarioCount: 0,
       failedAssertions: 1,
+      seedAcceptedCount: 0,
+      mediationAcceptedCount: 0,
       repoCoverageP50: 0,
       materializedActionsP50: 0,
       probedActionsP50: 0,
@@ -1390,6 +1404,8 @@ function renderMarkdown(report: RoundtableRuntimeSurface): string {
     `- Harness URL: \`${report.benchmark.harnessUrl}\``,
     `- Scenario count: \`${report.benchmark.scenarioCount}\``,
     `- Failed assertions: \`${report.benchmark.failedAssertions}\``,
+    `- Seed accepted scenarios: \`${report.benchmark.seedAcceptedCount}/${report.benchmark.scenarioCount}\``,
+    `- Mediation accepted scenarios: \`${report.benchmark.mediationAcceptedCount}/${report.benchmark.scenarioCount}\``,
     `- Repo coverage P50: \`${report.benchmark.repoCoverageP50}\``,
     `- Materialized actions P50: \`${report.benchmark.materializedActionsP50}\``,
     `- Probed actions P50: \`${report.benchmark.probedActionsP50}\``,
@@ -1419,6 +1435,8 @@ function renderMarkdown(report: RoundtableRuntimeSurface): string {
         `### ${scenario.label}`,
         "",
         `- Status: \`${scenario.status}\``,
+        `- Seed status: \`${scenario.seedStatus}\` / accepted \`${scenario.seedAccepted}\``,
+        `- Mediation status: \`${scenario.mediationStatus}\` / accepted \`${scenario.mediationAccepted}\``,
         `- Route suggestion: \`${scenario.routeSuggestion ?? "unknown"}\``,
         `- Guard verdict: \`${scenario.guardVerdict ?? "unknown"}\``,
         `- Repo coverage: \`${scenario.repoCoverageCount}\``,
