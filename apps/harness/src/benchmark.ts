@@ -2384,7 +2384,7 @@ export async function runPublishedBenchmark(
     workerLabel: "Benchmark Remote Expired",
     hostLabel: "worker-host-remote-expired",
     executionProfile: "remote",
-    executionEndpoint: "http://127.0.0.1:11435",
+    executionEndpoint: DEFAULT_Q_RUNTIME_ENDPOINT,
     registeredAt: workerRegistryNow,
     heartbeatAt: workerRegistryNow,
     leaseDurationMs: 45_000,

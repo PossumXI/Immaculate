@@ -112,6 +112,14 @@ const Q_STRUCTURED_MAX_TOKENS = Math.max(
 const Q_STRUCTURED_TEMPERATURE = Number(
   process.env.IMMACULATE_OLLAMA_Q_EXECUTION_TEMPERATURE ?? 0.05
 );
+const Q_GENERATE_FAST_NUM_CTX = Math.max(
+  512,
+  Number(process.env.IMMACULATE_OLLAMA_Q_GENERATE_NUM_CTX ?? 768) || 768
+);
+const Q_GENERATE_FAST_NUM_BATCH = Math.max(
+  32,
+  Number(process.env.IMMACULATE_OLLAMA_Q_GENERATE_NUM_BATCH ?? 64) || 64
+);
 const HTTP_KEEP_ALIVE_AGENT = new http.Agent({
   keepAlive: true,
   keepAliveMsecs: 15_000,
@@ -841,6 +849,26 @@ known-weaknesses=${qKnownWeaknesses.map((entry) => truncate(entry, 96)).join(" |
 failure-hints=${qFailureClassHints.join(" | ") || "none"}`;
 }
 
+function buildQStructuredGeneratePrompt(options: {
+  system: string;
+  prompt: string;
+  role: IntelligenceLayerRole;
+}): string {
+  const lines = [
+    options.system.trim(),
+    "Return JSON only.",
+    'Use keys "route", "reason", "commit".',
+    'route must be one of "reflex", "cognitive", "guarded", or "suppressed".',
+    "reason must be one short operator-grade sentence grounded in the decisive health or fault signal.",
+    "commit must be one short operator-grade sentence naming the next truthful control action."
+  ];
+  if (options.role === "guard") {
+    lines.push('Include key "verdict" with value "approved", "blocked", or "unknown".');
+  }
+  lines.push("", "TASK:", options.prompt.trim());
+  return lines.join("\n").trim();
+}
+
 function parseGuardVerdict(value: string | undefined, role: IntelligenceLayerRole): GuardVerdict | undefined {
   if (!value) {
     return role === "guard" ? "unknown" : undefined;
@@ -1273,24 +1301,80 @@ You convert state into route/reason/commit outputs for a durable orchestration s
       ? " You must include VERDICT: approved or blocked."
       : ""
   } ${resolvedQContext?.identityInstruction ?? getQIdentityInstruction()} Keep the reason grounded in the decisive concrete fault or health signal and keep the commit as the next truthful control action.`;
-  const completion = await runOllamaChatCompletion({
-    endpoint: options.layer.endpoint,
-    model: options.layer.model,
-    messages: [
-      {
-        role: "system",
-        content: system
-      },
-      {
-        role: "user",
-        content: prompt
-      }
-    ],
-    temperature: executionProfile.temperature,
-    maxTokens: executionProfile.maxTokens,
-    timeoutMs: DEFAULT_CONTROL_TIMEOUT_MS,
-    think: false
+  const qGeneratePrompt = buildQStructuredGeneratePrompt({
+    system,
+    prompt,
+    role: options.layer.role
   });
+  const executeStructuredAttempt = async (
+    attempt: "initial" | "retry"
+  ): Promise<OllamaChatCompletionResult> => {
+    if (!isQExecutionModel(options.layer.model)) {
+      return runOllamaChatCompletion({
+        endpoint: options.layer.endpoint,
+        model: options.layer.model,
+        messages: [
+          {
+            role: "system",
+            content: system
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        temperature: executionProfile.temperature,
+        maxTokens: executionProfile.maxTokens,
+        timeoutMs: DEFAULT_CONTROL_TIMEOUT_MS,
+        think: false
+      });
+    }
+
+    const generated = await runOllamaGenerateCompletion({
+      endpoint: options.layer.endpoint,
+      model: options.layer.model,
+      prompt: qGeneratePrompt,
+      temperature: executionProfile.temperature,
+      maxTokens: executionProfile.maxTokens,
+      timeoutMs:
+        attempt === "initial"
+          ? DEFAULT_CONTROL_TIMEOUT_MS
+          : Math.max(DEFAULT_CONTROL_TIMEOUT_MS, 240_000),
+      format: "json",
+      ollamaOptions: {
+        num_ctx: Q_GENERATE_FAST_NUM_CTX,
+        num_batch: Q_GENERATE_FAST_NUM_BATCH
+      }
+    });
+    if (generated.failureClass) {
+      return generated;
+    }
+    const parsed = parseStructuredJsonResponse(generated.response, options.layer.role);
+    if (!parsed) {
+      return {
+        ...generated,
+        failureClass: "contract_invalid",
+        responsePreview:
+          generated.responsePreview || "Structured contract invalid: missing route, reason, or commit."
+      };
+    }
+    return {
+      ...generated,
+      response: parsed.normalizedResponse,
+      responsePreview: parsed.normalizedResponse
+    };
+  };
+
+  let completion = await executeStructuredAttempt("initial");
+  if (
+    isQExecutionModel(options.layer.model) &&
+    completion.failureClass &&
+    ["transport_timeout", "http_error", "empty_response", "contract_invalid"].includes(
+      completion.failureClass
+    )
+  ) {
+    completion = await executeStructuredAttempt("retry");
+  }
   const parsed = parseStructuredResponse(completion.response, options.layer.role);
   const refinedParsed =
     isQExecutionModel(options.layer.model) && !completion.failureClass

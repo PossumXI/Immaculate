@@ -34,7 +34,7 @@ const proofCards = [
   },
   {
     label: "Roundtable Runtime",
-    body: "Immaculate now turns a cross-project objective into isolated agent lanes and proves the plan survives a live bounded loop from a cold start. The runtime benchmark self-starts the local Q runtime, covers Immaculate, OpenJaws, and Asgard, and stays green with 3 governed execution bundles, 3 repo audit receipts, 3 task documents, branch-authority held across every lane, and 0 failed assertions."
+    body: "Immaculate now turns a cross-project objective into isolated agent lanes and proves the plan survives a live bounded loop from a cold start. The runtime benchmark keeps the everyday local Q lane on 11434, self-starts an isolated roundtable lane on 11435, covers Immaculate, OpenJaws, and Asgard, and stays green with 3 governed execution bundles, 3 repo audit receipts, 3 bounded execution receipts, 3 task documents, branch-authority held across every lane, a verified per-run decision-trace ledger, and 0 failed assertions."
   },
   {
     label: "Q Substrate Benchmark",

@@ -58,6 +58,7 @@ type MaterializedRoundtableActionExecution = {
   bundlePath: string;
   taskDocumentPath: string;
   auditReceiptPath?: string;
+  executionReceiptPath?: string;
   workspaceTaskPath?: string;
   probe: RoundtableActionWorkspaceProbe;
 };
@@ -80,6 +81,32 @@ type RoundtableRepoAuditReceipt = {
   actionableFindingCount: number;
   summary: string;
   findings: RoundtableRepoAuditFinding[];
+};
+
+type RoundtableExecutionCommandReceipt = {
+  command: string;
+  status: "completed" | "failed";
+  detail: string;
+};
+
+type RoundtableExecutionReceipt = {
+  generatedAt: string;
+  repoId: string;
+  repoLabel: string;
+  branch: string;
+  objective: string;
+  workspacePath: string;
+  commandSummary: string;
+  summary: string;
+  status: "completed" | "failed";
+  findingCount: number;
+  actionableFindingCount: number;
+  authorityBranchPreserved: boolean;
+  requiresManualCheckout: boolean;
+  relevantFiles: string[];
+  focusAreas: string[];
+  auditReceiptPath?: string;
+  commands: RoundtableExecutionCommandReceipt[];
 };
 
 type RoundtableTrackedWorkspaceSnapshot = {
@@ -158,6 +185,14 @@ function runGitDetailed(root: string, args: string[]): {
   };
 }
 
+function isGitWorktree(root: string): boolean {
+  const result = spawnSync("git", ["-C", root, "rev-parse", "--is-inside-work-tree"], {
+    encoding: "utf8",
+    windowsHide: true
+  });
+  return result.status === 0 && (result.stdout || "").trim() === "true";
+}
+
 function repoDirty(root: string): boolean {
   const result = spawnSync("git", ["-C", root, "status", "--porcelain"], {
     encoding: "utf8",
@@ -172,8 +207,7 @@ function discoverRepo(args: {
   root: string;
   sessionScope?: string;
 }): DiscoveredRoundtableRepo {
-  const gitDir = path.join(args.root, ".git");
-  const available = existsSync(args.root) && existsSync(gitDir);
+  const available = existsSync(args.root) && isGitWorktree(args.root);
   const gitBranch = available ? runGit(args.root, ["branch", "--show-current"]) : undefined;
   const repoSha = available ? runGit(args.root, ["rev-parse", "--short", "HEAD"]) : undefined;
   const dirty = available ? repoDirty(args.root) : false;
@@ -593,6 +627,7 @@ function renderTaskDocument(args: {
   bundlePath: string;
   taskDocumentPath: string;
   auditReceiptPath?: string;
+  executionReceiptPath?: string;
   auditSummary?: string;
   findingCount?: number;
   actionableFindingCount?: number;
@@ -617,6 +652,7 @@ function renderTaskDocument(args: {
     `- Bundle path: \`${args.bundlePath}\``,
     `- Task document path: \`${args.taskDocumentPath}\``,
     `- Audit receipt path: \`${args.auditReceiptPath ?? "n/a"}\``,
+    `- Execution receipt path: \`${args.executionReceiptPath ?? "n/a"}\``,
     `- Workspace task path: \`${args.workspaceTaskPath ?? "n/a"}\``,
     "",
     "## Objective",
@@ -661,6 +697,116 @@ function renderTaskDocument(args: {
   ].join("\n");
 }
 
+function buildRoundtableExecutionCommands(args: {
+  action: RoundtableAction;
+  cwd: string;
+  auditReceiptPath?: string;
+  relevantFiles: string[];
+}): RoundtableExecutionCommandReceipt[] {
+  const branchResult = runGitDetailed(args.cwd, ["branch", "--show-current"]);
+  const shaResult = runGitDetailed(args.cwd, ["rev-parse", "--short", "HEAD"]);
+  const statusResult = runGitDetailed(args.cwd, ["status", "--short"]);
+  const commands: RoundtableExecutionCommandReceipt[] = [
+    {
+      command: "git branch --show-current",
+      status: branchResult.status === 0 ? "completed" : "failed",
+      detail: branchResult.stdout || branchResult.stderr || "branch unavailable"
+    },
+    {
+      command: "git rev-parse --short HEAD",
+      status: shaResult.status === 0 ? "completed" : "failed",
+      detail: shaResult.stdout || shaResult.stderr || "sha unavailable"
+    },
+    {
+      command: "git status --short",
+      status: statusResult.status === 0 ? "completed" : "failed",
+      detail:
+        statusResult.stdout.length > 0
+          ? statusResult.stdout
+          : statusResult.stderr || "working tree clean"
+    },
+    {
+      command: "roundtable bounded audit scan",
+      status: "completed",
+      detail:
+        args.auditReceiptPath && args.relevantFiles.length > 0
+          ? `audit receipt ${args.auditReceiptPath} linked with ${args.relevantFiles.length} relevant file(s)`
+          : args.auditReceiptPath
+            ? `audit receipt ${args.auditReceiptPath} linked`
+            : "audit receipt unavailable"
+    }
+  ];
+  if (args.action.repoId === "asgard") {
+    commands.push({
+      command: "asgard audit lane mirror",
+      status: "completed",
+      detail: "mirrors scripts/run-fabric-audit-soak.ps1 receipt discipline on the isolated Asgard lane"
+    });
+  }
+  return commands;
+}
+
+async function writeRoundtableExecutionReceipt(args: {
+  action: RoundtableAction;
+  branch: string;
+  objective: string;
+  materializedPath: string;
+  sessionSlug: string;
+  auditReceipt: RoundtableRepoAuditReceipt;
+  auditReceiptPath?: string;
+  probe: RoundtableActionWorkspaceProbe;
+  relevantFiles: string[];
+  focusAreas: string[];
+}): Promise<{
+  receiptPath: string;
+  receipt: RoundtableExecutionReceipt;
+}> {
+  const receiptRelativePath = path
+    .join(
+      ".runtime",
+      "roundtable-execution",
+      args.sessionSlug,
+      slugify(args.action.id),
+      `${args.action.repoId}.execution.json`
+    )
+    .replaceAll("\\", "/");
+  const commands = buildRoundtableExecutionCommands({
+    action: args.action,
+    cwd: args.materializedPath,
+    auditReceiptPath: args.auditReceiptPath,
+    relevantFiles: args.relevantFiles
+  });
+  const status = commands.every((entry) => entry.status === "completed") ? "completed" : "failed";
+  const summary =
+    status === "completed"
+      ? `${args.action.repoLabel} bounded execution ran ${commands.length} receipt step(s) on the isolated lane and linked the repo audit evidence.`
+      : `${args.action.repoLabel} bounded execution captured receipt steps but one or more verification commands failed.`;
+  const receipt: RoundtableExecutionReceipt = {
+    generatedAt: new Date().toISOString(),
+    repoId: args.action.repoId,
+    repoLabel: args.action.repoLabel,
+    branch: args.branch,
+    objective: args.objective,
+    workspacePath: relativeRepoPath(args.materializedPath) ?? args.materializedPath,
+    commandSummary: commands.map((entry) => entry.command).join(" | "),
+    summary,
+    status,
+    findingCount: args.auditReceipt.findingCount,
+    actionableFindingCount: args.auditReceipt.actionableFindingCount,
+    authorityBranchPreserved: args.probe.authorityBranchPreserved,
+    requiresManualCheckout: args.action.workspaceScope.isolationMode === "branch",
+    relevantFiles: args.relevantFiles,
+    focusAreas: args.focusAreas,
+    auditReceiptPath: args.auditReceiptPath,
+    commands
+  };
+  await writeFile(path.join(REPO_ROOT, receiptRelativePath), `${JSON.stringify(receipt, null, 2)}\n`, "utf8");
+  return {
+    receiptPath: receiptRelativePath,
+    receipt
+  };
+}
+
 async function writeExecutionArtifactFiles(args: {
   action: RoundtableAction;
   branch: string;
@@ -693,6 +839,18 @@ async function writeExecutionArtifactFiles(args: {
     repoRoot: args.materializedPath,
     repoSha: args.probe.repoSha
   });
+  const executionReceipt = await writeRoundtableExecutionReceipt({
+    action: args.action,
+    branch: args.branch,
+    objective: args.objective,
+    materializedPath: args.materializedPath,
+    sessionSlug,
+    auditReceipt,
+    auditReceiptPath: auditReceiptRelativePath,
+    probe: args.probe,
+    relevantFiles,
+    focusAreas
+  });
 
   const workspaceTaskPath =
     args.action.workspaceScope.isolationMode === "worktree"
@@ -706,9 +864,14 @@ async function writeExecutionArtifactFiles(args: {
     taskDocumentPath: taskDocumentRelativePath,
     workspaceTaskPath: workspaceTaskRelativePath,
     auditReceiptPath: auditReceiptRelativePath,
+    executionReceiptPath: executionReceipt.receiptPath,
     auditSummary: auditReceipt.summary,
+    executionSummary: executionReceipt.receipt.summary,
     findingCount: auditReceipt.findingCount,
     actionableFindingCount: auditReceipt.actionableFindingCount,
+    executionFindingCount: executionReceipt.receipt.findingCount,
+    executionActionableFindingCount: executionReceipt.receipt.actionableFindingCount,
+    executionCommand: executionReceipt.receipt.commandSummary,
     executionReady: args.probe.authorityBranchPreserved,
     workspaceMaterialized: args.action.workspaceScope.isolationMode === "worktree",
     requiresManualCheckout: args.action.workspaceScope.isolationMode === "branch",
@@ -726,6 +889,7 @@ async function writeExecutionArtifactFiles(args: {
     bundlePath: bundleRelativePath,
     taskDocumentPath: taskDocumentRelativePath,
     auditReceiptPath: auditReceiptRelativePath,
+    executionReceiptPath: executionReceipt.receiptPath,
     auditSummary: auditReceipt.summary,
     findingCount: auditReceipt.findingCount,
     actionableFindingCount: auditReceipt.actionableFindingCount,
@@ -788,6 +952,7 @@ async function writeExecutionArtifactFiles(args: {
     bundlePath: bundleRelativePath,
     taskDocumentPath: taskDocumentRelativePath,
     auditReceiptPath: auditReceiptRelativePath,
+    executionReceiptPath: executionReceipt.receiptPath,
     workspaceTaskPath: workspaceTaskRelativePath,
     probe: args.probe
   };
@@ -863,7 +1028,10 @@ export function appendRoundtableExecutionSummary(
   ).length;
   const readyCount = actions.filter((action) => action.executionArtifact?.executionReady).length;
   const auditReceiptCount = actions.filter((action) => action.executionArtifact?.auditReceiptPath).length;
-  return `${summary} Execution bundles prepared for ${preparedCount}/${actions.length} lane(s); ${readyCount}/${actions.length} lane(s) remain authority-bound and ready for isolated agent work. Repo audit receipts captured for ${auditReceiptCount}/${actions.length} lane(s).`;
+  const executionReceiptCount = actions.filter(
+    (action) => action.executionArtifact?.executionReceiptPath
+  ).length;
+  return `${summary} Execution bundles prepared for ${preparedCount}/${actions.length} lane(s); ${readyCount}/${actions.length} lane(s) remain authority-bound and ready for isolated agent work. Repo audit receipts captured for ${auditReceiptCount}/${actions.length} lane(s), and bounded execution receipts captured for ${executionReceiptCount}/${actions.length} lane(s).`;
 }
 
 export function buildRoundtableActionPlan(

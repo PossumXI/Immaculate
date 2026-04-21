@@ -7,7 +7,14 @@ import { appendFile, mkdir, writeFile } from "node:fs/promises";
 import { performance } from "node:perf_hooks";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
-import { appendDecisionTraceRecord, createDecisionTraceSeed, type DecisionTraceRecord } from "./decision-trace.js";
+import {
+  appendDecisionTraceRecord,
+  appendDecisionTraceMirrorRecord,
+  createDecisionTraceSeed,
+  inspectDecisionTraceFile,
+  type DecisionTraceIntegrityReport,
+  type DecisionTraceRecord
+} from "./decision-trace.js";
 import {
   type MultiAgentConversation,
   type ExecutionSchedule
@@ -69,6 +76,7 @@ type RoundtableRuntimeScenarioResult = {
   executionReadyCount: number;
   taskDocumentCount: number;
   auditReceiptCount: number;
+  executionReceiptCount: number;
   findingCount: number;
   actionableFindingCount: number;
   isolatedBranchCount: number;
@@ -102,6 +110,7 @@ type RoundtableRuntimeSurface = {
     executionReadyP50: number;
     taskDocumentsP50: number;
     auditReceiptsP50: number;
+    executionReceiptsP50: number;
     workspaceScopedTurnsP50: number;
     recordedActionsP50: number;
     trackedFilesP50: number;
@@ -109,6 +118,11 @@ type RoundtableRuntimeSurface = {
     seedLatencyP95Ms: number;
     mediationLatencyP95Ms: number;
     hardware: string;
+    executionIntegrityDigest: string;
+    decisionTraceStatus: string;
+    decisionTraceEventCount: number;
+    decisionTraceHeadHash?: string;
+    decisionTraceFindingCount: number;
   };
   scenarios: Array<{
     id: string;
@@ -124,6 +138,7 @@ type RoundtableRuntimeSurface = {
     executionReadyCount: number;
     taskDocumentCount: number;
     auditReceiptCount: number;
+    executionReceiptCount: number;
     recordedActionCount: number;
     workspaceScopedTurnCount: number;
     scheduleRoundtableActionCount: number;
@@ -183,6 +198,7 @@ type HarnessProcessHandle = {
   child: ChildProcess;
   stdoutPath: string;
   stderrPath: string;
+  startupTracePath: string;
 };
 
 type OllamaProcessHandle = {
@@ -192,6 +208,10 @@ type OllamaProcessHandle = {
 };
 
 const DEFAULT_OLLAMA_URL = resolveQLocalOllamaUrl();
+const DEFAULT_ROUNDTABLE_OLLAMA_URL =
+  process.env.IMMACULATE_ROUNDTABLE_OLLAMA_URL?.trim() ||
+  process.env.IMMACULATE_ROUNDTABLE_Q_OLLAMA_URL?.trim() ||
+  "http://127.0.0.1:11435";
 const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const HARNESS_ROOT = path.resolve(MODULE_ROOT, "..");
 const REPO_ROOT = path.resolve(HARNESS_ROOT, "../..");
@@ -356,9 +376,32 @@ async function allocateTcpPort(): Promise<number> {
   });
 }
 
-async function checkHttp(url: string, init?: RequestInit): Promise<HttpCheck> {
+async function checkHttp(url: string, init?: RequestInit, timeoutMs = 180_000): Promise<HttpCheck> {
   const started = performance.now();
-  const response = await fetch(url, init);
+  const timeoutController = new AbortController();
+  const timeout = setTimeout(() => timeoutController.abort(), timeoutMs);
+  const mergedHeaders = new Headers(init?.headers);
+  if (!mergedHeaders.has("connection")) {
+    mergedHeaders.set("connection", "close");
+  }
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      ...init,
+      headers: mergedHeaders,
+      signal: timeoutController.signal
+    });
+  } catch (error) {
+    const detail =
+      error instanceof Error
+        ? error.cause instanceof Error
+          ? `${error.message}: ${error.cause.message}`
+          : error.message
+        : "unknown error";
+    throw new Error(`HTTP ${(init?.method ?? "GET").toUpperCase()} ${url} failed: ${detail}`);
+  } finally {
+    clearTimeout(timeout);
+  }
   const text = await response.text();
   let body: unknown = text;
   try {
@@ -500,15 +543,21 @@ async function waitForHarness(
   harnessUrl: string,
   harness?: HarnessProcessHandle
 ): Promise<HttpCheck> {
+  const startupTimeoutMs = Math.max(
+    30_000,
+    Number(process.env.IMMACULATE_HARNESS_BOOT_TIMEOUT_MS ?? 240_000) || 240_000
+  );
+  const attemptDelayMs = 500;
+  const maxAttempts = Math.ceil(startupTimeoutMs / attemptDelayMs);
   let lastError: unknown;
-  for (let attempt = 0; attempt < 80; attempt += 1) {
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     if (harness && harness.child.exitCode !== null) {
       const exitLabel =
         harness.child.signalCode !== null && harness.child.signalCode !== undefined
           ? `signal=${harness.child.signalCode}`
           : `code=${harness.child.exitCode}`;
       throw new Error(
-        `Harness exited before becoming healthy (${exitLabel}). stdout=${harness.stdoutPath} stderr=${harness.stderrPath}`
+        `Harness exited before becoming healthy (${exitLabel}). stdout=${harness.stdoutPath} stderr=${harness.stderrPath} startupTrace=${harness.startupTracePath}`
       );
     }
     try {
@@ -525,9 +574,15 @@ async function waitForHarness(
     } catch (error) {
       lastError = error;
     }
-    await delay(250);
+    await delay(attemptDelayMs);
   }
-  throw lastError instanceof Error ? lastError : new Error("Harness did not become healthy in time.");
+  const timeoutMessage = `Harness did not become healthy within ${startupTimeoutMs}ms${
+    harness ? ` (stdout=${harness.stdoutPath} stderr=${harness.stderrPath} startupTrace=${harness.startupTracePath})` : ""
+  }.`;
+  if (lastError instanceof Error) {
+    throw new Error(`${timeoutMessage} Last error: ${lastError.message}`);
+  }
+  throw new Error(timeoutMessage);
 }
 
 async function waitForOllama(
@@ -658,11 +713,13 @@ function startHarnessProcess(options: {
   runtimeDir: string;
   keysPath: string;
   port: number;
+  ollamaEndpoint: string;
 }): HarnessProcessHandle {
   const harness = resolveHarnessCommand();
   mkdirSync(options.runtimeDir, { recursive: true });
   const stdoutPath = path.join(options.runtimeDir, "roundtable-harness.stdout.log");
   const stderrPath = path.join(options.runtimeDir, "roundtable-harness.stderr.log");
+  const startupTracePath = path.join(options.runtimeDir, "startup-trace.ndjson");
   const stdoutStream = createWriteStream(stdoutPath, { flags: "a" });
   const stderrStream = createWriteStream(stderrPath, { flags: "a" });
   const child = spawn(harness.command, harness.args, {
@@ -672,8 +729,11 @@ function startHarnessProcess(options: {
       IMMACULATE_RUNTIME_DIR: options.runtimeDir,
       IMMACULATE_Q_API_ENABLED: "true",
       IMMACULATE_Q_API_KEYS_PATH: options.keysPath,
+      IMMACULATE_SKIP_STARTUP_Q_DISCOVERY: "true",
       IMMACULATE_HARNESS_HOST: "127.0.0.1",
-      IMMACULATE_HARNESS_PORT: String(options.port)
+      IMMACULATE_HARNESS_PORT: String(options.port),
+      IMMACULATE_OLLAMA_URL: options.ollamaEndpoint,
+      IMMACULATE_Q_OLLAMA_URL: options.ollamaEndpoint
     },
     stdio: ["ignore", "pipe", "pipe"],
     windowsHide: true
@@ -687,7 +747,8 @@ function startHarnessProcess(options: {
   return {
     child,
     stdoutPath,
-    stderrPath
+    stderrPath,
+    startupTracePath
   };
 }
 
@@ -810,38 +871,47 @@ async function runScenario(options: {
   const started = performance.now();
 
   try {
-    const seed = await checkHttp(`${options.harnessUrl}/api/intelligence/run`, {
-      method: "POST",
-      headers: buildHeaders(consentScope, "cognitive-execution"),
-      body: JSON.stringify({
-        sessionId,
-        objective: options.scenario.seedObjective,
-        requestedExecutionDecision: "allow_local"
-      })
-    });
+    const seed = await checkHttp(
+      `${options.harnessUrl}/api/intelligence/run`,
+      {
+        method: "POST",
+        headers: buildHeaders(consentScope, "cognitive-execution"),
+        body: JSON.stringify({
+          sessionId,
+          objective: options.scenario.seedObjective,
+          requestedExecutionDecision: "allow_local"
+        })
+      },
+      180_000
+    );
+    const seedExecutionId =
+      (seed.body as { execution?: { id?: string } } | null)?.execution?.id;
     const mediation = await checkHttp(`${options.harnessUrl}/api/orchestration/mediate`, {
       method: "POST",
       headers: buildHeaders(consentScope, "actuation-dispatch,cognitive-execution"),
       body: JSON.stringify({
         sessionId,
+        sourceExecutionId: seedExecutionId,
         objective: options.scenario.mediationObjective,
         requestedExecutionDecision: "allow_local",
         dispatchOnApproval: false,
         suppressed: true
       })
-    });
-    const conversations = await checkHttp(`${options.harnessUrl}/api/intelligence/conversations`, {
-      headers: buildHeaders("system:benchmark", "cognitive-trace-read")
-    });
-    const schedules = await checkHttp(`${options.harnessUrl}/api/intelligence/schedules`, {
-      headers: buildHeaders("system:benchmark", "cognitive-trace-read")
-    });
-    const conversation =
-      (mediation.body as { conversation?: MultiAgentConversation })?.conversation ??
-      pickLatestConversation(conversations.body, sessionId);
-    const schedule =
-      (mediation.body as { scheduleDecision?: ExecutionSchedule })?.scheduleDecision ??
-      pickLatestSchedule(schedules.body, consentScope);
+    }, 180_000);
+    let conversation = (mediation.body as { conversation?: MultiAgentConversation })?.conversation;
+    let schedule = (mediation.body as { scheduleDecision?: ExecutionSchedule })?.scheduleDecision;
+    if (!conversation) {
+      const conversations = await checkHttp(`${options.harnessUrl}/api/intelligence/conversations`, {
+        headers: buildHeaders("system:benchmark", "cognitive-trace-read")
+      });
+      conversation = pickLatestConversation(conversations.body, sessionId);
+    }
+    if (!schedule) {
+      const schedules = await checkHttp(`${options.harnessUrl}/api/intelligence/schedules`, {
+        headers: buildHeaders("system:benchmark", "cognitive-trace-read")
+      });
+      schedule = pickLatestSchedule(schedules.body, consentScope);
+    }
     const seedAccepted = seed.status === 200 && responseAccepted(seed.body);
     const mediationAccepted = mediation.status === 200 && responseAccepted(mediation.body);
     const workspaceScopedTurnCount = Array.isArray(conversation?.turns)
@@ -861,6 +931,9 @@ async function runScenario(options: {
     const executionReadyCount = executionArtifacts.filter((artifact) => artifact.executionReady).length;
     const taskDocumentCount = executionArtifacts.filter((artifact) => artifact.taskDocumentPath).length;
     const auditReceiptCount = executionArtifacts.filter((artifact) => artifact.auditReceiptPath).length;
+    const executionReceiptCount = executionArtifacts.filter(
+      (artifact) => artifact.executionReceiptPath
+    ).length;
     const findingCount = executionArtifacts.reduce(
       (total, artifact) => total + (artifact.findingCount ?? 0),
       0
@@ -878,6 +951,7 @@ async function runScenario(options: {
     const auditCapturesPlan =
       recordedActionCount >= readyActions.length &&
       executionBundleCount >= readyActions.length &&
+      executionReceiptCount >= readyActions.length &&
       executionReadyCount >= readyActions.length &&
       recordedRepoCount >= plan.repoCount &&
       conversation?.sessionScope === consentScope &&
@@ -902,6 +976,7 @@ async function runScenario(options: {
       executionReadyCount,
       taskDocumentCount,
       auditReceiptCount,
+      executionReceiptCount,
       findingCount,
       actionableFindingCount,
       isolatedBranchCount: materialized.filter((entry) => entry.branch.startsWith("agents/")).length,
@@ -1021,11 +1096,28 @@ function buildRoundtableRuntimeSurface(options: {
         "Every ready repo lane should leave behind a bounded audit receipt so the next agent pass starts from findings instead of planner prose only."
     },
     {
+      id: "roundtable-runtime-execution-receipts",
+      status: options.scenarioResults.every(
+        (entry) => entry.executionReceiptCount >= entry.readyActionCount
+      )
+        ? "pass"
+        : "fail",
+      target: "all ready actions emitted bounded execution receipts",
+      actual: options.scenarioResults
+        .map(
+          (entry) => `${entry.id}:receipts=${entry.executionReceiptCount}/${entry.readyActionCount}`
+        )
+        .join(" | "),
+      detail:
+        "Every ready repo lane should leave behind a bounded execution receipt so the live mediated path proves it actually ran its isolated audit task."
+    },
+    {
       id: "roundtable-runtime-audit-captured",
       status: options.scenarioResults.every(
         (entry) =>
           entry.recordedActionCount >= entry.readyActionCount &&
           entry.executionBundleCount >= entry.readyActionCount &&
+          entry.executionReceiptCount >= entry.readyActionCount &&
           entry.sessionScopePreserved
       )
         ? "pass"
@@ -1057,13 +1149,37 @@ function buildRoundtableRuntimeSurface(options: {
       executionReadyP50: median(options.scenarioResults.map((entry) => entry.executionReadyCount)),
       taskDocumentsP50: median(options.scenarioResults.map((entry) => entry.taskDocumentCount)),
       auditReceiptsP50: median(options.scenarioResults.map((entry) => entry.auditReceiptCount)),
+      executionReceiptsP50: median(options.scenarioResults.map((entry) => entry.executionReceiptCount)),
       workspaceScopedTurnsP50: median(options.scenarioResults.map((entry) => entry.workspaceScopedTurnCount)),
       recordedActionsP50: median(options.scenarioResults.map((entry) => entry.recordedActionCount)),
       trackedFilesP50: median(options.scenarioResults.map((entry) => entry.trackedFileCountP50)),
       runnerPathP95Ms: percentile(options.scenarioResults.map((entry) => entry.totalLatencyMs), 95),
       seedLatencyP95Ms: percentile(options.scenarioResults.map((entry) => entry.seedLatencyMs), 95),
       mediationLatencyP95Ms: percentile(options.scenarioResults.map((entry) => entry.mediationLatencyMs), 95),
-      hardware: summarizeHardware()
+      hardware: summarizeHardware(),
+      executionIntegrityDigest: sha256Json({
+        scenarios: options.scenarioResults.map((entry) => ({
+          id: entry.id,
+          status: entry.status,
+          readyActionCount: entry.readyActionCount,
+          materializedActionCount: entry.materializedActionCount,
+          probedActionCount: entry.probedActionCount,
+          authorityBoundActionCount: entry.authorityBoundActionCount,
+          executionBundleCount: entry.executionBundleCount,
+          executionReadyCount: entry.executionReadyCount,
+          taskDocumentCount: entry.taskDocumentCount,
+          auditReceiptCount: entry.auditReceiptCount,
+          executionReceiptCount: entry.executionReceiptCount,
+          recordedActionCount: entry.recordedActionCount,
+          scheduleRoundtableActionCount: entry.scheduleRoundtableActionCount,
+          scheduleRoundtableRepoCount: entry.scheduleRoundtableRepoCount,
+          sessionScopePreserved: entry.sessionScopePreserved
+        })),
+        assertions
+      }),
+      decisionTraceStatus: "pending",
+      decisionTraceEventCount: 0,
+      decisionTraceFindingCount: 0
     },
     scenarios: options.scenarioResults.map((entry) => ({
       id: entry.id,
@@ -1079,6 +1195,7 @@ function buildRoundtableRuntimeSurface(options: {
       executionReadyCount: entry.executionReadyCount,
       taskDocumentCount: entry.taskDocumentCount,
       auditReceiptCount: entry.auditReceiptCount,
+      executionReceiptCount: entry.executionReceiptCount,
       recordedActionCount: entry.recordedActionCount,
       workspaceScopedTurnCount: entry.workspaceScopedTurnCount,
       scheduleRoundtableActionCount: entry.scheduleRoundtableActionCount,
@@ -1092,6 +1209,22 @@ function buildRoundtableRuntimeSurface(options: {
     output: {
       jsonPath: "docs/wiki/Roundtable-Runtime.json",
       markdownPath: "docs/wiki/Roundtable-Runtime.md"
+    }
+  };
+}
+
+function applyDecisionTraceIntegrity(
+  report: RoundtableRuntimeSurface,
+  integrity: DecisionTraceIntegrityReport
+): RoundtableRuntimeSurface {
+  return {
+    ...report,
+    benchmark: {
+      ...report.benchmark,
+      decisionTraceStatus: integrity.status,
+      decisionTraceEventCount: integrity.eventCount,
+      decisionTraceHeadHash: integrity.headEventHash,
+      decisionTraceFindingCount: integrity.findingCount
     }
   };
 }
@@ -1208,13 +1341,21 @@ function buildFailedRoundtableRuntimeSurface(options: {
       executionReadyP50: 0,
       taskDocumentsP50: 0,
       auditReceiptsP50: 0,
+      executionReceiptsP50: 0,
       workspaceScopedTurnsP50: 0,
       recordedActionsP50: 0,
       trackedFilesP50: 0,
       runnerPathP95Ms: 0,
       seedLatencyP95Ms: 0,
       mediationLatencyP95Ms: 0,
-      hardware: summarizeHardware()
+      hardware: summarizeHardware(),
+      executionIntegrityDigest: sha256Json({
+        harnessUrl: options.harnessUrl,
+        failed: options.message
+      }),
+      decisionTraceStatus: "pending",
+      decisionTraceEventCount: 0,
+      decisionTraceFindingCount: 0
     },
     scenarios: [],
     assertions: [
@@ -1257,6 +1398,7 @@ function renderMarkdown(report: RoundtableRuntimeSurface): string {
     `- Execution-ready lanes P50: \`${report.benchmark.executionReadyP50}\``,
     `- Task documents P50: \`${report.benchmark.taskDocumentsP50}\``,
     `- Audit receipts P50: \`${report.benchmark.auditReceiptsP50}\``,
+    `- Execution receipts P50: \`${report.benchmark.executionReceiptsP50}\``,
     `- Recorded roundtable actions P50: \`${report.benchmark.recordedActionsP50}\``,
     `- Workspace-scoped turns P50: \`${report.benchmark.workspaceScopedTurnsP50}\``,
     `- Tracked files P50: \`${report.benchmark.trackedFilesP50}\``,
@@ -1264,6 +1406,11 @@ function renderMarkdown(report: RoundtableRuntimeSurface): string {
     `- Mediation latency P95: \`${report.benchmark.mediationLatencyP95Ms}\` ms`,
     `- Runner path latency P95: \`${report.benchmark.runnerPathP95Ms}\` ms`,
     `- Hardware: ${report.benchmark.hardware}`,
+    `- Execution integrity digest: \`${report.benchmark.executionIntegrityDigest.slice(0, 16)}\``,
+    `- Decision trace ledger: \`${report.benchmark.decisionTraceStatus}\``,
+    `- Decision trace events: \`${report.benchmark.decisionTraceEventCount}\``,
+    `- Decision trace findings: \`${report.benchmark.decisionTraceFindingCount}\``,
+    `- Decision trace head hash: \`${report.benchmark.decisionTraceHeadHash?.slice(0, 16) ?? "none"}\``,
     "",
     "## Scenarios",
     "",
@@ -1282,6 +1429,7 @@ function renderMarkdown(report: RoundtableRuntimeSurface): string {
         `- Execution-ready lanes: \`${scenario.executionReadyCount}\``,
         `- Task documents: \`${scenario.taskDocumentCount}\``,
         `- Audit receipts: \`${scenario.auditReceiptCount}\``,
+        `- Execution receipts: \`${scenario.executionReceiptCount}\``,
         `- Recorded roundtable actions: \`${scenario.recordedActionCount}\``,
         `- Workspace-scoped turns: \`${scenario.workspaceScopedTurnCount}\``,
         `- Tracked files P50: \`${scenario.trackedFileCountP50}\``,
@@ -1305,8 +1453,8 @@ function renderMarkdown(report: RoundtableRuntimeSurface): string {
 async function main(): Promise<void> {
   const cli = parseArgs(process.argv.slice(2));
   const runId = buildRunId(cli);
-  const harnessRuntimeDir = path.join(ROUNDTABLE_RUNTIME_ROOT, "harness");
   const runRoot = path.join(ROUNDTABLE_RUNTIME_RUNS_ROOT, runId);
+  const harnessRuntimeDir = path.join(runRoot, "harness");
   const iterationsRoot = path.join(runRoot, "iterations");
   const decisionTracePath = path.join(runRoot, "decision-trace.ndjson");
   const latestRunPath = path.join(ROUNDTABLE_RUNTIME_ROOT, "latest-run.json");
@@ -1321,24 +1469,31 @@ async function main(): Promise<void> {
   await mkdir(iterationsRoot, { recursive: true });
   await mkdir(WIKI_ROOT, { recursive: true });
   const ollamaProcess = await ensureOllamaEndpoint({
-    endpoint: DEFAULT_OLLAMA_URL,
+    endpoint: DEFAULT_ROUNDTABLE_OLLAMA_URL,
     runtimeDir: ollamaRuntimeDir
   });
-  const prewarm = await prewarmOllamaModel({
-    endpoint: DEFAULT_OLLAMA_URL,
-    model: getQModelTarget()
-  });
-  if (prewarm.failureClass) {
-    throw new Error(
-      `Unable to prewarm the local Q runtime at ${DEFAULT_OLLAMA_URL}: ${prewarm.failureClass}${prewarm.errorMessage ? ` / ${prewarm.errorMessage}` : ""}`
-    );
-  }
 
   const harnessProcess = startHarnessProcess({
     repoRoot: REPO_ROOT,
     runtimeDir: harnessRuntimeDir,
     keysPath,
-    port
+    port,
+    ollamaEndpoint: DEFAULT_ROUNDTABLE_OLLAMA_URL
+  });
+  await writeJsonArtifact(path.join(runRoot, "bootstrap.json"), {
+    runId,
+    createdAt: new Date().toISOString(),
+    harnessUrl,
+    harness: {
+      stdoutPath: path.relative(REPO_ROOT, harnessProcess.stdoutPath).replaceAll("\\", "/"),
+      stderrPath: path.relative(REPO_ROOT, harnessProcess.stderrPath).replaceAll("\\", "/"),
+      startupTracePath: path.relative(REPO_ROOT, harnessProcess.startupTracePath).replaceAll("\\", "/")
+    },
+    ollama: {
+      endpoint: DEFAULT_ROUNDTABLE_OLLAMA_URL,
+      runtimeDir: path.relative(REPO_ROOT, ollamaRuntimeDir).replaceAll("\\", "/"),
+      spawned: Boolean(ollamaProcess)
+    }
   });
 
   const iterationArtifacts: RoundtableRuntimeIterationArtifact[] = [];
@@ -1348,6 +1503,24 @@ async function main(): Promise<void> {
   try {
     await waitForHarness(harnessUrl, harnessProcess);
     await ensureHarnessQRuntimeLayer(harnessUrl, `session:${runId}`);
+    if (process.env.IMMACULATE_ROUNDTABLE_PREWARM === "true") {
+      try {
+        const prewarm = await prewarmOllamaModel({
+          endpoint: DEFAULT_ROUNDTABLE_OLLAMA_URL,
+          model: getQModelTarget(),
+          timeoutMs: 15_000
+        });
+        if (prewarm.failureClass) {
+          process.stderr.write(
+            `roundtable-runtime prewarm warning: ${prewarm.failureClass}${prewarm.errorMessage ? ` / ${prewarm.errorMessage}` : ""}\n`
+          );
+        }
+      } catch (error) {
+        process.stderr.write(
+          `roundtable-runtime prewarm warning: ${error instanceof Error ? error.message : "unknown prewarm failure"}\n`
+        );
+      }
+    }
 
     for (let iterationIndex = 0; iterationIndex < cli.iterations; iterationIndex += 1) {
       const iterationStartedAt = new Date().toISOString();
@@ -1405,6 +1578,12 @@ async function main(): Promise<void> {
           report,
           release
         });
+        await appendDecisionTraceMirrorRecord({
+          filePath: decisionTracePath,
+          record: decisionTrace
+        });
+        const decisionTraceIntegrity = await inspectDecisionTraceFile(decisionTracePath);
+        const integrityReport = applyDecisionTraceIntegrity(report, decisionTraceIntegrity);
 
         const completedAt = new Date().toISOString();
         const artifact: RoundtableRuntimeIterationArtifact = {
@@ -1412,31 +1591,30 @@ async function main(): Promise<void> {
           startedAt: iterationStartedAt,
           completedAt,
           durationMs: Number((performance.now() - iterationStarted).toFixed(2)),
-          status: report.benchmark.failedAssertions === 0 ? "completed" : "failed",
+          status: integrityReport.benchmark.failedAssertions === 0 ? "completed" : "failed",
           reportPath: relativeIterationReportFile,
           tracePath: relativeDecisionTraceFile,
           decisionTraceId: decisionTrace.decisionTraceId,
-          failedAssertions: report.benchmark.failedAssertions
+          failedAssertions: integrityReport.benchmark.failedAssertions
         };
 
         await writeJsonArtifact(iterationReportFile, {
           runId,
           iteration: artifact,
-          report,
+          report: integrityReport,
           decisionTrace,
           arobiLedger: {
             public: publicLedger,
             private: privateLedger
-          }
+          },
+          decisionTraceIntegrity
         });
-        await appendJsonLine(decisionTracePath, decisionTrace);
-
         iterationArtifacts.push(artifact);
-        latestReport = report;
-        if (report.benchmark.failedAssertions > 0) {
+        latestReport = integrityReport;
+        if (integrityReport.benchmark.failedAssertions > 0) {
           latestFailureMessage =
             latestFailureMessage ??
-            `Roundtable runtime iteration ${iterationLabel} failed ${report.benchmark.failedAssertions} assertion(s).`;
+            `Roundtable runtime iteration ${iterationLabel} failed ${integrityReport.benchmark.failedAssertions} assertion(s).`;
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unknown roundtable runtime iteration error.";
@@ -1454,6 +1632,12 @@ async function main(): Promise<void> {
           report: failedReport,
           release
         });
+        await appendDecisionTraceMirrorRecord({
+          filePath: decisionTracePath,
+          record: decisionTrace
+        });
+        const decisionTraceIntegrity = await inspectDecisionTraceFile(decisionTracePath);
+        const integrityReport = applyDecisionTraceIntegrity(failedReport, decisionTraceIntegrity);
         const completedAt = new Date().toISOString();
         const artifact: RoundtableRuntimeIterationArtifact = {
           index: iterationIndex + 1,
@@ -1464,21 +1648,20 @@ async function main(): Promise<void> {
           reportPath: relativeIterationReportFile,
           tracePath: relativeDecisionTraceFile,
           decisionTraceId: decisionTrace.decisionTraceId,
-          failedAssertions: failedReport.benchmark.failedAssertions,
+          failedAssertions: integrityReport.benchmark.failedAssertions,
           error: message
         };
 
         await writeJsonArtifact(iterationReportFile, {
           runId,
           iteration: artifact,
-          report: failedReport,
+          report: integrityReport,
           decisionTrace,
-          error: message
+          error: message,
+          decisionTraceIntegrity
         });
-        await appendJsonLine(decisionTracePath, decisionTrace);
-
         iterationArtifacts.push(artifact);
-        latestReport = failedReport;
+        latestReport = integrityReport;
         latestFailureMessage = latestFailureMessage ?? message;
       }
 

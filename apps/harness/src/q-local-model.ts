@@ -17,7 +17,7 @@ const DEFAULT_Q_LINEAGE_SOURCE =
 const DEFAULT_Q_OLLAMA_URL =
   process.env.IMMACULATE_Q_OLLAMA_URL ??
   process.env.IMMACULATE_OLLAMA_URL ??
-  "http://127.0.0.1:11435";
+  "http://127.0.0.1:11434";
 
 function normalizeModelName(value: string): string {
   const trimmed = value.trim();
@@ -37,7 +37,7 @@ export function resolveQLocalModelSpecification(): QLocalModelSpecification {
 
 export function resolveQLocalOllamaUrl(): string {
   const trimmed = DEFAULT_Q_OLLAMA_URL.trim();
-  return trimmed.length > 0 ? trimmed : "http://127.0.0.1:11435";
+  return trimmed.length > 0 ? trimmed : "http://127.0.0.1:11434";
 }
 
 export function buildQLocalModelfile(

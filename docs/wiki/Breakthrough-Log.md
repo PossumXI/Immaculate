@@ -25,18 +25,21 @@ For each breakthrough, record:
 
 What changed:
 - the live roundtable runtime benchmark now self-starts the local `Q` runtime on demand instead of only passing when a human prestarted the local Ollama process
-- the same governed runtime path stayed green on `3` scenarios with `0` failed assertions while still materializing `3` execution bundles, `3` repo audit receipts, and `3` task documents across Immaculate, OpenJaws, and Asgard
+- the local runtime topology is now explicit: the normal `Q` lane follows the rebuilt Ollama service on `11434`, while the roundtable benchmark keeps an isolated lane on `11435`
+- the same governed runtime path stayed green on `3` scenarios with `0` failed assertions while still materializing `3` execution bundles, `3` repo audit receipts, `3` bounded execution receipts, and `3` task documents across Immaculate, OpenJaws, and Asgard
 - tracked workspace probing is now cached, so repeated repo scans do not waste extra git I/O inside the same runtime pass
 
 Why it matters:
 - the missed pattern was that a benchmark which only works after manual local prep is still half a demo; a truthful orchestration receipt has to survive a cold start
+- making the port split explicit matters because the normal operator lane and the benchmark lane now have different jobs: one follows the everyday local service, and the other preserves a reproducible isolated runtime
 - getting the cold-start path green matters because operators can now rerun the governed roundtable proof without handholding the local `Q` lane first
 - caching repo probes matters because the roundtable is repeatedly reading the same roots during one bounded pass, so the right optimization is to stop rediscovering identical tracked-file state
 
 Evidence:
 - `apps/harness/src/roundtable-runtime.ts` now bootstraps the local `Q` runtime before starting the harness and registers the live `Q` layer before the runtime scenarios execute
+- `docs/wiki/Local-Q-Runtime-Topology.md` now documents the general `11434` lane, the isolated roundtable `11435` lane, and the matching OpenJaws dedicated local-Q override
 - `apps/harness/src/roundtable.ts` now caches tracked-workspace probes and bounded repo audit findings per repo/SHA instead of rescanning the same repo state for every action
-- `docs/wiki/Roundtable-Runtime.md` now records a green cold-start run with `3` scenarios, `0` failed assertions, `3` execution bundles, `3` repo audit receipts, and `3` task documents
+- `docs/wiki/Roundtable-Runtime.md` now records a green cold-start run with `3` scenarios, `0` failed assertions, `3` execution bundles, `3` repo audit receipts, `3` bounded execution receipts, `3` task documents, and a verified per-run decision-trace ledger
 
 What this unlocks next:
 - the roundtable runtime can now be treated as a real release gate instead of a manually primed lab drill

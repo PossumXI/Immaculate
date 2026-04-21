@@ -146,13 +146,47 @@ import {
 } from "./visibility.js";
 import { inspectWandbStatus, publishBenchmarkToWandb } from "./wandb.js";
 
+const STARTUP_TRACE_PATH = path.join(
+  process.env.IMMACULATE_RUNTIME_DIR ?? process.cwd(),
+  "startup-trace.ndjson"
+);
+
+async function appendStartupTrace(
+  phase: string,
+  detail?: Record<string, unknown>
+): Promise<void> {
+  try {
+    await mkdir(path.dirname(STARTUP_TRACE_PATH), { recursive: true });
+    await appendFile(
+      STARTUP_TRACE_PATH,
+      `${JSON.stringify({
+        timestamp: new Date().toISOString(),
+        phase,
+        ...detail
+      })}\n`,
+      "utf8"
+    );
+  } catch {
+    // Startup tracing is best-effort and must never block harness startup.
+  }
+}
+
 const app = Fastify({ logger: true });
 const persistence = createPersistence(process.env.IMMACULATE_RUNTIME_DIR);
+await appendStartupTrace("startup:resolve-release:start");
 const releaseMetadata = await resolveReleaseMetadata();
+await appendStartupTrace("startup:resolve-release:complete", {
+  buildId: releaseMetadata.buildId,
+  gitShortSha: releaseMetadata.gitShortSha
+});
 const datasetRegistry = createDatasetRegistry(persistence.getStatus().rootDir);
 const neuroRegistry = createNeuroRegistry(persistence.getStatus().rootDir);
 const governance = createGovernanceRegistry();
+await appendStartupTrace("startup:actuation-manager:start", {
+  runtimeRoot: persistence.getStatus().rootDir
+});
 const actuationManager = await createActuationManager(persistence.getStatus().rootDir);
+await appendStartupTrace("startup:actuation-manager:complete");
 const intelligenceWorkerRegistry = createIntelligenceWorkerRegistry(persistence.getStatus().rootDir);
 const federationPeerRegistry = createFederationPeerRegistry(persistence.getStatus().rootDir);
 const nodeRegistry = createNodeRegistry(persistence.getStatus().rootDir, {
@@ -176,8 +210,16 @@ const nodeRegistry = createNodeRegistry(persistence.getStatus().rootDir, {
       "cpu"
     ]
 });
+await appendStartupTrace("startup:local-node:start");
 await nodeRegistry.ensureLocalNode();
+await appendStartupTrace("startup:local-node:complete");
+await appendStartupTrace("startup:persistence-load:start");
 const durableState = await persistence.load();
+await appendStartupTrace("startup:persistence-load:complete", {
+  recovered: persistence.getStatus().recovered,
+  persistedEventCount: persistence.getStatus().persistedEventCount,
+  integrityStatus: persistence.getStatus().integrityStatus
+});
 const engine = createEngine(
   durableState
     ? {
@@ -406,10 +448,14 @@ const FEDERATION_ENVELOPE_MAX_CLOCK_SKEW_MS = Math.max(
   2_000,
   Number(process.env.IMMACULATE_FEDERATION_ENVELOPE_MAX_CLOCK_SKEW_MS ?? 5_000) || 5_000
 );
+await appendStartupTrace("startup:q-api-key-registry:start");
 const qApiKeyRegistry = await createQApiKeyRegistry({
   rootDir: persistence.getStatus().rootDir,
   storePath: process.env.IMMACULATE_Q_API_KEYS_PATH,
   defaultRateLimit: DEFAULT_Q_API_RATE_LIMIT
+});
+await appendStartupTrace("startup:q-api-key-registry:complete", {
+  storePath: qApiKeyRegistry.getStorePath()
 });
 const qApiRateLimiter = createQRateLimiter();
 const qApiRequestContexts = new WeakMap<object, QApiRequestContext>();
@@ -4105,8 +4151,16 @@ async function dispatchWithRoute(options: {
   };
 }
 
+await appendStartupTrace("startup:local-workers:start");
 await ensureLocalExecutionWorkers();
-await ensurePreferredIntelligenceLayer();
+await appendStartupTrace("startup:local-workers:complete");
+if (process.env.IMMACULATE_SKIP_STARTUP_Q_DISCOVERY !== "true") {
+  await appendStartupTrace("startup:q-discovery:start");
+  await ensurePreferredIntelligenceLayer();
+  await appendStartupTrace("startup:q-discovery:complete");
+} else {
+  await appendStartupTrace("startup:q-discovery:skipped");
+}
 
 const recoveredLiveSources = phaseSnapshotSchema
   .parse(engine.getSnapshot())
@@ -4124,7 +4178,9 @@ if (recoveredLiveSources.length > 0) {
     });
   }
 }
+await appendStartupTrace("startup:persistence-persist:start");
 await persistence.persist(engine.getDurableState());
+await appendStartupTrace("startup:persistence-persist:complete");
 
 app.get("/api/health", async () => ({
   status: "ok",
@@ -7540,9 +7596,17 @@ process.on("SIGTERM", () => {
   void close();
 });
 
+await appendStartupTrace("startup:app-listen:start", {
+  host: HARNESS_HOST,
+  port: HARNESS_PORT
+});
 await app.listen({
   port: HARNESS_PORT,
   host: HARNESS_HOST
+});
+await appendStartupTrace("startup:app-listen:complete", {
+  host: HARNESS_HOST,
+  port: HARNESS_PORT
 });
 
 emitHarnessStartupBanner({
