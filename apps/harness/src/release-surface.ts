@@ -79,6 +79,10 @@ const SURFACE_FILES: SurfaceTimestamp[] = [
     path: path.join("docs", "wiki", "Live-Mission-Readiness.json")
   },
   {
+    label: "Supervised mission showcase",
+    path: path.join("docs", "wiki", "Supervised-Mission-Showcase.json")
+  },
+  {
     label: "Roundtable actionability",
     path: path.join("docs", "wiki", "Roundtable-Actionability.json")
   },

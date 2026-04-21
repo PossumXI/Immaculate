@@ -21,6 +21,10 @@ const proofCards = [
     body: "The receipt now keeps both truths at once. The last verified supervised public rerun moved the ledger from 396 to 397 on Apr 20, and the same page also shows when the current public aura-genesis telemetry edge is synthesized/offline instead of pretending the old green state is still live."
   },
   {
+    label: "Supervised Mission Showcase",
+    body: "The public showcase is now fail-closed by default. The publishable package stays limited to safe snippets from the roundtable runtime, the official public Terminal-Bench task, the supervised local Harbor tasks, and a sanitized public-edge ledger summary so auditors can inspect the loop without exposing the private mission lane."
+  },
+  {
     label: "Terminal-Bench Public Task",
     body: "The latest real Harbor run on the official public task is green on the default Q-only path: 5 trials, mean reward 1.0, zero errors, and pass@2, pass@4, and pass@5 all at 1.0."
   },
@@ -113,6 +117,7 @@ export function LandingPage() {
             <span>Arobi receipt current</span>
             <span>Last public rerun Apr 20</span>
             <span>Public edge truth surfaced</span>
+            <span>Supervised showcase fail-closed</span>
             <span>Roundtable runtime 3 scenarios</span>
             <span>Roundtable cold-start green</span>
             <span>Roundtable probes 3 repo lanes</span>
