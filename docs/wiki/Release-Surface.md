@@ -2,9 +2,9 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-04-21T16:17:17.828Z
-- Immaculate release: `0.1.0+9117c8f`
-- Repo commit: `9117c8feb0438f0fc6a7ada0707046cc77823a54`
+- Generated: 2026-04-21T22:14:55.134Z
+- Immaculate release: `0.1.0+c721072`
+- Repo commit: `c721072751059d12509893830ae26d81747b7aaf`
 - Branch: `publish-q-win`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+9117c8f` is the current repo build stamp.
+- Immaculate build `0.1.0+c721072` is the current repo build stamp.
 - Arobi Network is the ledger-backed private and public operator network and audit substrate. Immaculate is the governed harness and orchestrator inside it. Q is the reasoning brain inside that governed stack.
 - Q is the only public model name used across the repo, and it is built on `Gemma 4`.
 - The latest tracked Q training bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`, tied to dataset `.training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
@@ -33,9 +33,10 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Q gateway substrate: `2026-04-19T22:06:38.757Z` via `docs/wiki/Q-Gateway-Substrate.json`
 - Q mediation drift: `2026-04-19T22:06:40.025Z` via `docs/wiki/Q-Mediation-Drift.json`
 - Arobi audit integrity: `2026-04-19T23:41:05.513Z` via `docs/wiki/Arobi-Audit-Integrity.json`
-- Arobi live ledger receipt: `2026-04-20T17:22:38.533Z` via `docs/wiki/Arobi-Live-Ledger-Receipt.json`
+- Arobi live ledger receipt: `2026-04-21T22:12:29.169Z` via `docs/wiki/Arobi-Live-Ledger-Receipt.json`
+- Live mission readiness: `2026-04-21T22:14:54.100Z` via `docs/wiki/Live-Mission-Readiness.json`
 - Roundtable actionability: `2026-04-21T16:11:05.129Z` via `docs/wiki/Roundtable-Actionability.json`
-- Roundtable runtime: `2026-04-21T16:16:53.567Z` via `docs/wiki/Roundtable-Runtime.json`
+- Roundtable runtime: `2026-04-21T22:14:49.880Z` via `docs/wiki/Roundtable-Runtime.json`
 - Q API audit: `2026-04-19T22:47:48Z` via `docs/wiki/Q-API-Audit.json`
 - Arobi decision review: `2026-04-19T22:47:51.678Z` via `docs/wiki/Arobi-Decision-Review.json`
 - Q hybrid training: `2026-04-19T07:46:17Z` via `docs/wiki/Q-Hybrid-Training.json`

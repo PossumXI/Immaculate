@@ -2,9 +2,9 @@
 
 This page is generated from the live public Arobi status and ledger endpoints plus the latest supervised fabric audit rerun on the controller. It exists to answer a simple question: did a fresh governed audit record actually land on the public Arobi Network node and surface on aura-genesis?
 
-- Generated: `2026-04-21T21:55:04.399Z`
-- Release: `0.1.0+0562abf`
-- Repo commit: `0562abf522192c01795c452628fd958a779bb943`
+- Generated: `2026-04-21T22:12:29.169Z`
+- Release: `0.1.0+c721072`
+- Repo commit: `c721072751059d12509893830ae26d81747b7aaf`
 - Live status page: https://aura-genesis.org/status
 - Live ledger page: https://aura-genesis.org/ledger
 - Public API base: `https://arobi.aura-genesis.org`
