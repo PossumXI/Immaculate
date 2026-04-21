@@ -225,10 +225,7 @@ function discoverRepo(args: {
 }
 
 export function discoverRoundtableProjects(sessionScope?: string): DiscoveredRoundtableRepo[] {
-  const openjawsRoot =
-    process.env.OPENJAWS_ROOT?.trim() ||
-    process.env.ASGARD_OPENJAWS_ROOT?.trim() ||
-    DEFAULT_OPENJAWS_ROOT;
+  const openjawsRoot = process.env.OPENJAWS_ROOT?.trim() || DEFAULT_OPENJAWS_ROOT;
   const asgardRoot = process.env.ASGARD_ROOT?.trim() || DEFAULT_ASGARD_ROOT;
   return [
     discoverRepo({

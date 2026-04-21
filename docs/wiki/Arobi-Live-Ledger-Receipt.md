@@ -2,34 +2,34 @@
 
 This page is generated from the live public Arobi status and ledger endpoints plus the latest supervised fabric audit rerun on the controller. It exists to answer a simple question: did a fresh governed audit record actually land on the public Arobi Network node and surface on aura-genesis?
 
-- Generated: `2026-04-20T17:22:38.533Z`
-- Release: `0.1.0+ad30f3a`
-- Repo commit: `ad30f3a71f6ac344c50fe67d1899f8736bdc687e`
+- Generated: `2026-04-21T21:39:55.284Z`
+- Release: `0.1.0+3b14b92`
+- Repo commit: `3b14b928a57a2a0dd3c457994bb0ce8ddebce19b`
 - Live status page: https://aura-genesis.org/status
 - Live ledger page: https://aura-genesis.org/ledger
 - Public API base: `https://arobi.aura-genesis.org`
 
 ## Current Result
 
-- Public node version: `unknown`
-- Public network: `unknown`
-- Public height: `unknown`
-- Public peer count: `unknown`
-- Public ledger entries: `unknown`
-- Public chain valid: `false`
+- Public node version: `3.3.1`
+- Public network: `AROBI1`
+- Public height: `34818`
+- Public peer count: `2`
+- Public ledger entries: `394`
+- Public chain valid: `true`
 - Fabric source: `synthesized`
 - Orchestration available: `false`
 - Brain ready: `false`
 
 ## Latest Visible Public Record
 
-- Latest visible entry: `missing`
-- Entry source: `unknown`
-- Model id: `unknown`
-- Model version: `unknown`
-- Input summary: `unknown`
-- Decision: `unknown`
-- Network context: `unknown`
+- Latest visible entry: `2026-03-24T01:21:29.750775400Z` at block `394`
+- Entry source: `Cortex`
+- Model id: `ethics-kernel-001`
+- Model version: `2.0.0`
+- Input summary: `DECISION scenario event`
+- Decision: `scenario_end`
+- Network context: `00`
 
 ## Latest Supervised Rerun
 
@@ -52,6 +52,6 @@ This page is generated from the live public Arobi status and ledger endpoints pl
 
 - This page is a live-node receipt, not a benchmark score.
 - It is generated from the public aura-genesis status and ledger endpoints plus the latest local supervised fabric-audit rerun receipt.
-- The public visible record currently comes from the governed control_fabric private-trace path surfaced on the public ledger feed.
+- The public visible record currently comes from the latest governed audit record surfaced on the public ledger feed.
 - At generation time, the public aura-genesis telemetry edge was synthesized/offline, so this receipt falls back to the last verified supervised rerun instead of claiming a live public-node match.
 - This page does not expose secrets, raw private payloads, or raw chain-of-thought.

@@ -204,6 +204,51 @@ async function fetchJsonOptional<T>(url: string): Promise<T | undefined> {
   }
 }
 
+function normalizeVisibleSourceLabel(value: string | undefined): string | undefined {
+  const trimmed = value?.trim().toLowerCase();
+  return trimmed && trimmed.length > 0 ? trimmed : undefined;
+}
+
+function versionLooksCompatible(
+  entryVersion: string | undefined,
+  networkVersion: string | undefined
+): boolean {
+  const normalizedEntry = entryVersion?.trim();
+  const normalizedNetwork = networkVersion?.trim();
+  if (!normalizedEntry) {
+    return false;
+  }
+  if (!normalizedNetwork) {
+    return true;
+  }
+  return (
+    normalizedEntry === normalizedNetwork ||
+    normalizedEntry.startsWith(normalizedNetwork) ||
+    normalizedNetwork.startsWith(normalizedEntry)
+  );
+}
+
+function isVisibleGovernedAuditEntry(
+  entry: DecisionEntry | undefined,
+  networkVersion: string | undefined
+): boolean {
+  const sourceLabel = normalizeVisibleSourceLabel(entry?.sourceLabel);
+  if (!entry?.entry_id || !entry.timestamp || !sourceLabel) {
+    return false;
+  }
+  if (
+    ![
+      "control_fabric",
+      "roundtable_runtime",
+      "roundtable-runtime",
+      "governed_roundtable"
+    ].includes(sourceLabel)
+  ) {
+    return false;
+  }
+  return versionLooksCompatible(entry.model_version, networkVersion);
+}
+
 async function readOptionalText(filePath: string): Promise<string | undefined> {
   try {
     return await readFile(filePath, "utf8");
@@ -302,7 +347,7 @@ function renderMarkdown(report: ArobiLiveLedgerReceiptReport): string {
       ? "- The public aura-genesis telemetry edge is currently synthesized/offline, so the public site is not proving a live Arobi node right now."
       : `- The public aura-genesis status and ledger surfaces are reading the live ${report.liveNode.version ?? "unknown"} Arobi node, not a stale local-only file.`,
     report.proof.liveRecordVisible
-      ? `- A fresh governed control_fabric audit record is visible publicly at \`${report.latestVisibleEntry?.timestamp ?? "unknown"}\`, which proves the audit trail is landing on the live public node.`
+      ? `- A fresh governed audit record is visible publicly at \`${report.latestVisibleEntry?.timestamp ?? "unknown"}\`, which proves the audit trail is landing on the live public node.`
       : report.latestLocalRerun
         ? `- The latest supervised rerun \`${report.latestLocalRerun.runId ?? "unknown"}\` still shows a public delta of \`${report.proof.publicEntryDelta ?? "n/a"}\` and a private delta of \`${report.proof.privateEntryDelta ?? "n/a"}\`, but no fresh governed record is visible through the current public edge.`
         : "- No fresh live governed record was detected on the public node from the latest rerun.",
@@ -330,6 +375,8 @@ async function main(): Promise<void> {
   const latestLocalCycle = latestArtifact.cycle;
   const latestLocalSummary = latestArtifact.summary;
   const latestLocalEntryId = latestLocalCycle?.private_write?.entry?.entry_id;
+  const liveNodeVersion =
+    info?.version ?? telemetry.network?.info?.version ?? telemetry.fabric?.publicLane?.version;
 
   const report: ArobiLiveLedgerReceiptReport = {
     generatedAt: new Date().toISOString(),
@@ -381,7 +428,7 @@ async function main(): Promise<void> {
         }
       : undefined,
     proof: {
-      liveRecordVisible: Boolean(latestEntry?.sourceLabel === "control_fabric" && latestEntry?.model_version === "3.3.1"),
+      liveRecordVisible: isVisibleGovernedAuditEntry(latestEntry, liveNodeVersion),
       entryMatchesLatestRerun: Boolean(latestEntry?.entry_id && latestLocalEntryId && latestEntry.entry_id === latestLocalEntryId),
       publicEntryDelta:
         typeof latestLocalCycle?.public_entries_before === "number" && typeof latestLocalCycle?.public_entries_after === "number"
@@ -395,7 +442,7 @@ async function main(): Promise<void> {
     truthBoundary: [
       "This page is a live-node receipt, not a benchmark score.",
       "It is generated from the public aura-genesis status and ledger endpoints plus the latest local supervised fabric-audit rerun receipt.",
-      "The public visible record currently comes from the governed control_fabric private-trace path surfaced on the public ledger feed.",
+      "The public visible record currently comes from the latest governed audit record surfaced on the public ledger feed.",
       telemetry.fabric?.source === "synthesized"
         ? "At generation time, the public aura-genesis telemetry edge was synthesized/offline, so this receipt falls back to the last verified supervised rerun instead of claiming a live public-node match."
         : "At generation time, the public aura-genesis telemetry edge was reachable enough to compare the latest visible public record against the latest supervised rerun.",

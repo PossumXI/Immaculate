@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-21T16:16:53.567Z",
+  "generatedAt": "2026-04-21T21:45:49.377Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "9117c8feb0438f0fc6a7ada0707046cc77823a54",
-    "gitShortSha": "9117c8f",
+    "gitSha": "3b14b928a57a2a0dd3c457994bb0ce8ddebce19b",
+    "gitShortSha": "3b14b92",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+9117c8f",
+    "buildId": "0.1.0+3b14b92",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -49,7 +49,7 @@
     }
   },
   "benchmark": {
-    "harnessUrl": "http://127.0.0.1:56687",
+    "harnessUrl": "http://127.0.0.1:56925",
     "scenarioCount": 3,
     "failedAssertions": 0,
     "seedAcceptedCount": 3,
@@ -66,15 +66,15 @@
     "workspaceScopedTurnsP50": 0,
     "recordedActionsP50": 3,
     "trackedFilesP50": 369,
-    "runnerPathP95Ms": 30253.13,
-    "seedLatencyP95Ms": 27749.01,
-    "mediationLatencyP95Ms": 2503.79,
+    "runnerPathP95Ms": 32617.26,
+    "seedLatencyP95Ms": 29946.35,
+    "mediationLatencyP95Ms": 2904.21,
     "hardware": "knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics / 16 cores / Q foundation Gemma 4",
-    "executionIntegrityDigest": "23604462212dd3037e3fc16fb991c15e3df4815162e5c6d451a782c7e08d1c09",
+    "executionIntegrityDigest": "42a4e1b28b04f756191acd771ecce39fce25a0bab05f16b9f81cb830c4d66d36",
     "decisionTraceStatus": "verified",
     "decisionTraceEventCount": 1,
     "decisionTraceFindingCount": 0,
-    "decisionTraceHeadHash": "97c5151bb98ad969f0a12fec42875c2feff46228ef7242a7c81d1283b075776c"
+    "decisionTraceHeadHash": "3f9c8b0d0b541b9317198b03b6568b8cc4199c969c8c98a1e1c9616d36f0dee9"
   },
   "scenarios": [
     {
@@ -241,10 +241,11 @@
   "readiness": {
     "ledger": {
       "public": {
-        "status": "not_configured",
-        "configured": false,
+        "status": "blocked",
+        "configured": true,
         "ready": false,
-        "detail": "public ledger endpoint not configured for this pass"
+        "endpoint": "https://arobi.aura-genesis.org",
+        "detail": "public ledger did not advance after status 403 (delta 0)"
       },
       "private": {
         "status": "not_configured",
@@ -263,6 +264,6 @@
       }
     },
     "missionSurfaceReady": false,
-    "summary": "shared readiness blocked: unconfigured: public ledger endpoint not configured for this pass | unconfigured: private ledger endpoint not configured for this pass"
+    "summary": "shared readiness blocked: https://arobi.aura-genesis.org: public ledger did not advance after status 403 (delta 0) | unconfigured: private ledger endpoint not configured for this pass"
   }
 }

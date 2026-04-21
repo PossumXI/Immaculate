@@ -227,6 +227,8 @@ const DEFAULT_ROUNDTABLE_OLLAMA_URL =
   process.env.IMMACULATE_ROUNDTABLE_OLLAMA_URL?.trim() ||
   process.env.IMMACULATE_ROUNDTABLE_Q_OLLAMA_URL?.trim() ||
   "http://127.0.0.1:11435";
+const ROUNDTABLE_ALLOW_SHARED_Q_FALLBACK =
+  process.env.IMMACULATE_ROUNDTABLE_ALLOW_SHARED_Q_FALLBACK === "true";
 const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const HARNESS_ROOT = path.resolve(MODULE_ROOT, "..");
 const REPO_ROOT = path.resolve(HARNESS_ROOT, "../..");
@@ -823,6 +825,7 @@ async function bootstrapRoundtableOllama(options: {
   prewarmWarning?: string;
 }> {
   let endpoint = DEFAULT_ROUNDTABLE_OLLAMA_URL;
+  const dedicatedLaneRequested = endpoint !== DEFAULT_OLLAMA_URL;
   let processHandle = await ensureOllamaEndpoint({
     endpoint,
     runtimeDir: options.runtimeDir
@@ -846,7 +849,11 @@ async function bootstrapRoundtableOllama(options: {
     };
   }
 
-  if (endpoint !== DEFAULT_OLLAMA_URL && (await isOllamaEndpointHealthy(DEFAULT_OLLAMA_URL))) {
+  if (
+    dedicatedLaneRequested &&
+    ROUNDTABLE_ALLOW_SHARED_Q_FALLBACK &&
+    (await isOllamaEndpointHealthy(DEFAULT_OLLAMA_URL))
+  ) {
     if (processHandle) {
       await stopOllamaProcess(processHandle);
     }
@@ -869,7 +876,11 @@ async function bootstrapRoundtableOllama(options: {
   return {
     endpoint,
     process: processHandle,
-    prewarmWarning: `${prewarm.failureClass}${prewarm.errorMessage ? ` / ${prewarm.errorMessage}` : ""}`
+    prewarmWarning: `${prewarm.failureClass}${prewarm.errorMessage ? ` / ${prewarm.errorMessage}` : ""}${
+      dedicatedLaneRequested && !ROUNDTABLE_ALLOW_SHARED_Q_FALLBACK
+        ? "; dedicated roundtable Q lane retained because shared fallback is disabled"
+        : ""
+    }`
   };
 }
 
@@ -1055,22 +1066,50 @@ async function runScenario(options: {
   );
   const started = performance.now();
 
+  const runSeedExecution = async (): Promise<{
+    check: HttpCheck;
+    executionId?: string;
+    totalLatencyMs: number;
+  }> => {
+    let lastCheck: HttpCheck | undefined;
+    let lastExecutionId: string | undefined;
+    let totalLatencyMs = 0;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const seed = await checkHttp(
+        `${options.harnessUrl}/api/intelligence/run`,
+        {
+          method: "POST",
+          headers: buildHeaders(consentScope, "cognitive-execution"),
+          body: JSON.stringify({
+            sessionId,
+            objective: options.scenario.seedObjective,
+            requestedExecutionDecision: "allow_local"
+          })
+        },
+        ROUNDTABLE_COGNITIVE_REQUEST_TIMEOUT_MS
+      );
+      totalLatencyMs += seed.wallLatencyMs;
+      lastCheck = seed;
+      lastExecutionId =
+        (seed.body as { execution?: { id?: string } } | null)?.execution?.id;
+      if (seed.status === 200 && responseAccepted(seed.body)) {
+        break;
+      }
+      if (attempt === 0) {
+        await delay(2_000);
+      }
+    }
+    return {
+      check: lastCheck!,
+      executionId: lastExecutionId,
+      totalLatencyMs: Number(totalLatencyMs.toFixed(2))
+    };
+  };
+
   try {
-    const seed = await checkHttp(
-      `${options.harnessUrl}/api/intelligence/run`,
-      {
-        method: "POST",
-        headers: buildHeaders(consentScope, "cognitive-execution"),
-        body: JSON.stringify({
-          sessionId,
-          objective: options.scenario.seedObjective,
-          requestedExecutionDecision: "allow_local"
-        })
-      },
-      ROUNDTABLE_COGNITIVE_REQUEST_TIMEOUT_MS
-    );
-    const seedExecutionId =
-      (seed.body as { execution?: { id?: string } } | null)?.execution?.id;
+    const seedResult = await runSeedExecution();
+    const seed = seedResult.check;
+    const seedExecutionId = seedResult.executionId;
     const mediation = await checkHttp(`${options.harnessUrl}/api/orchestration/mediate`, {
       method: "POST",
       headers: buildHeaders(consentScope, "actuation-dispatch,cognitive-execution"),
@@ -1150,7 +1189,7 @@ async function runScenario(options: {
       mediationStatus: mediation.status,
       seedAccepted,
       mediationAccepted,
-      seedLatencyMs: seed.wallLatencyMs,
+      seedLatencyMs: seedResult.totalLatencyMs,
       mediationLatencyMs: mediation.wallLatencyMs,
       totalLatencyMs: Number((performance.now() - started).toFixed(2)),
       readyActionCount: readyActions.length,
@@ -1706,9 +1745,11 @@ async function main(): Promise<void> {
       startupTracePath: path.relative(REPO_ROOT, harnessProcess.startupTracePath).replaceAll("\\", "/")
     },
     ollama: {
+      requestedEndpoint: DEFAULT_ROUNDTABLE_OLLAMA_URL,
       endpoint: activeOllamaEndpoint,
       runtimeDir: path.relative(REPO_ROOT, ollamaRuntimeDir).replaceAll("\\", "/"),
       spawned: Boolean(ollamaProcess),
+      sharedFallbackAllowed: ROUNDTABLE_ALLOW_SHARED_Q_FALLBACK,
       fallbackFrom: ollamaBootstrap.fallbackFrom,
       prewarmWarning: ollamaBootstrap.prewarmWarning
     }
