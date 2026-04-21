@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-21T22:14:49.880Z",
+  "generatedAt": "2026-04-21T22:19:50.626Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "c721072751059d12509893830ae26d81747b7aaf",
-    "gitShortSha": "c721072",
+    "gitSha": "10e6816632ef94f923762f27421f77a6e2ffc52a",
+    "gitShortSha": "10e6816",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+c721072",
+    "buildId": "0.1.0+10e6816",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -49,7 +49,7 @@
     }
   },
   "benchmark": {
-    "harnessUrl": "http://127.0.0.1:57436",
+    "harnessUrl": "http://127.0.0.1:50168",
     "scenarioCount": 3,
     "failedAssertions": 0,
     "seedAcceptedCount": 3,
@@ -66,15 +66,15 @@
     "workspaceScopedTurnsP50": 0,
     "recordedActionsP50": 3,
     "trackedFilesP50": 369,
-    "runnerPathP95Ms": 32428.75,
-    "seedLatencyP95Ms": 29711.28,
-    "mediationLatencyP95Ms": 3217.09,
+    "runnerPathP95Ms": 30721.7,
+    "seedLatencyP95Ms": 28258.59,
+    "mediationLatencyP95Ms": 5686.59,
     "hardware": "knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics / 16 cores / Q foundation Gemma 4",
     "executionIntegrityDigest": "5d3e5f329873999a4221bf47f343bec7daa2a9df17c455231907b63fb14d3402",
     "decisionTraceStatus": "verified",
     "decisionTraceEventCount": 1,
     "decisionTraceFindingCount": 0,
-    "decisionTraceHeadHash": "080d19957056b6d1628f721e9bde382d0e877da1867d9a03f2f1495a4fb69ba7"
+    "decisionTraceHeadHash": "a1cd214334682e40cd7e0162a5fc6a0c5069d815651fc25b56089d75c4b521b2"
   },
   "scenarios": [
     {

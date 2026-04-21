@@ -2,14 +2,14 @@
 
 This page is generated from a live harness pass. It proves the roundtable planner is not just text: Immaculate runs a governed mediation route, records repo-scoped roundtable actions, and binds those actions to isolated agent worktrees across Immaculate, OpenJaws, and Asgard. The direct seed step is a best-effort warm-up signal; the governed mediation path is the authoritative route.
 
-- Generated: 2026-04-21T22:14:49.880Z
-- Release: `0.1.0+c721072`
-- Repo commit: `c721072`
+- Generated: 2026-04-21T22:19:50.626Z
+- Release: `0.1.0+10e6816`
+- Repo commit: `10e6816`
 - Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`
 
 ## Benchmark
 
-- Harness URL: `http://127.0.0.1:57436`
+- Harness URL: `http://127.0.0.1:50168`
 - Scenario count: `3`
 - Failed assertions: `0`
 - Seed accepted scenarios: `3/3`
@@ -26,15 +26,15 @@ This page is generated from a live harness pass. It proves the roundtable planne
 - Recorded roundtable actions P50: `3`
 - Workspace-scoped turns P50: `0`
 - Tracked files P50: `369`
-- Seed latency P95: `29711.28` ms
-- Mediation latency P95: `3217.09` ms
-- Runner path latency P95: `32428.75` ms
+- Seed latency P95: `28258.59` ms
+- Mediation latency P95: `5686.59` ms
+- Runner path latency P95: `30721.7` ms
 - Hardware: knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics / 16 cores / Q foundation Gemma 4
 - Execution integrity digest: `5d3e5f329873999a`
 - Decision trace ledger: `verified`
 - Decision trace events: `1`
 - Decision trace findings: `0`
-- Decision trace head hash: `080d19957056b6d1`
+- Decision trace head hash: `a1cd214334682e40`
 
 ## Shared Readiness
 

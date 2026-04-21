@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-21T22:14:55.134Z",
+  "generatedAt": "2026-04-21T22:19:56.233Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "c721072751059d12509893830ae26d81747b7aaf",
-    "gitShortSha": "c721072",
+    "gitSha": "10e6816632ef94f923762f27421f77a6e2ffc52a",
+    "gitShortSha": "10e6816",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+c721072",
+    "buildId": "0.1.0+10e6816",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -91,12 +91,12 @@
     {
       "label": "Arobi live ledger receipt",
       "path": "docs\\wiki\\Arobi-Live-Ledger-Receipt.json",
-      "generatedAt": "2026-04-21T22:12:29.169Z"
+      "generatedAt": "2026-04-21T22:18:04.712Z"
     },
     {
       "label": "Live mission readiness",
       "path": "docs\\wiki\\Live-Mission-Readiness.json",
-      "generatedAt": "2026-04-21T22:14:54.100Z"
+      "generatedAt": "2026-04-21T22:19:55.023Z"
     },
     {
       "label": "Roundtable actionability",
@@ -106,7 +106,7 @@
     {
       "label": "Roundtable runtime",
       "path": "docs\\wiki\\Roundtable-Runtime.json",
-      "generatedAt": "2026-04-21T22:14:49.880Z"
+      "generatedAt": "2026-04-21T22:19:50.626Z"
     },
     {
       "label": "Q API audit",
