@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-21T21:45:49.377Z",
+  "generatedAt": "2026-04-21T21:57:47.479Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "3b14b928a57a2a0dd3c457994bb0ce8ddebce19b",
-    "gitShortSha": "3b14b92",
+    "gitSha": "0562abf522192c01795c452628fd958a779bb943",
+    "gitShortSha": "0562abf",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+3b14b92",
+    "buildId": "0.1.0+0562abf",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -49,7 +49,7 @@
     }
   },
   "benchmark": {
-    "harnessUrl": "http://127.0.0.1:56925",
+    "harnessUrl": "http://127.0.0.1:57256",
     "scenarioCount": 3,
     "failedAssertions": 0,
     "seedAcceptedCount": 3,
@@ -66,15 +66,15 @@
     "workspaceScopedTurnsP50": 0,
     "recordedActionsP50": 3,
     "trackedFilesP50": 369,
-    "runnerPathP95Ms": 32617.26,
-    "seedLatencyP95Ms": 29946.35,
-    "mediationLatencyP95Ms": 2904.21,
+    "runnerPathP95Ms": 30446,
+    "seedLatencyP95Ms": 27130.66,
+    "mediationLatencyP95Ms": 3314.62,
     "hardware": "knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics / 16 cores / Q foundation Gemma 4",
-    "executionIntegrityDigest": "42a4e1b28b04f756191acd771ecce39fce25a0bab05f16b9f81cb830c4d66d36",
+    "executionIntegrityDigest": "448cfb115e2af194e1483373c68ca13d09e5ad183ae5b01361cc115906f2bbf9",
     "decisionTraceStatus": "verified",
     "decisionTraceEventCount": 1,
     "decisionTraceFindingCount": 0,
-    "decisionTraceHeadHash": "3f9c8b0d0b541b9317198b03b6568b8cc4199c969c8c98a1e1c9616d36f0dee9"
+    "decisionTraceHeadHash": "2272bd33ecce379e32ea6d79840d06d1021fcf32b9ea3c4024d763d4ee7c5104"
   },
   "scenarios": [
     {
@@ -245,7 +245,7 @@
         "configured": true,
         "ready": false,
         "endpoint": "https://arobi.aura-genesis.org",
-        "detail": "public ledger did not advance after status 403 (delta 0)"
+        "detail": "public ledger did not advance after status 530 (delta unknown)"
       },
       "private": {
         "status": "not_configured",
@@ -264,6 +264,6 @@
       }
     },
     "missionSurfaceReady": false,
-    "summary": "shared readiness blocked: https://arobi.aura-genesis.org: public ledger did not advance after status 403 (delta 0) | unconfigured: private ledger endpoint not configured for this pass"
+    "summary": "shared readiness blocked: https://arobi.aura-genesis.org: public ledger did not advance after status 530 (delta unknown) | unconfigured: private ledger endpoint not configured for this pass"
   }
 }

@@ -2,14 +2,14 @@
 
 This page is generated from a live harness pass. It proves the roundtable planner is not just text: Immaculate runs a governed mediation route, records repo-scoped roundtable actions, and binds those actions to isolated agent worktrees across Immaculate, OpenJaws, and Asgard. The direct seed step is a best-effort warm-up signal; the governed mediation path is the authoritative route.
 
-- Generated: 2026-04-21T21:45:49.377Z
-- Release: `0.1.0+3b14b92`
-- Repo commit: `3b14b92`
+- Generated: 2026-04-21T21:57:47.479Z
+- Release: `0.1.0+0562abf`
+- Repo commit: `0562abf`
 - Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`
 
 ## Benchmark
 
-- Harness URL: `http://127.0.0.1:56925`
+- Harness URL: `http://127.0.0.1:57256`
 - Scenario count: `3`
 - Failed assertions: `0`
 - Seed accepted scenarios: `3/3`
@@ -26,21 +26,21 @@ This page is generated from a live harness pass. It proves the roundtable planne
 - Recorded roundtable actions P50: `3`
 - Workspace-scoped turns P50: `0`
 - Tracked files P50: `369`
-- Seed latency P95: `29946.35` ms
-- Mediation latency P95: `2904.21` ms
-- Runner path latency P95: `32617.26` ms
+- Seed latency P95: `27130.66` ms
+- Mediation latency P95: `3314.62` ms
+- Runner path latency P95: `30446` ms
 - Hardware: knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics / 16 cores / Q foundation Gemma 4
-- Execution integrity digest: `42a4e1b28b04f756`
+- Execution integrity digest: `448cfb115e2af194`
 - Decision trace ledger: `verified`
 - Decision trace events: `1`
 - Decision trace findings: `0`
-- Decision trace head hash: `3f9c8b0d0b541b93`
+- Decision trace head hash: `2272bd33ecce379e`
 
 ## Shared Readiness
 
 - Mission-surface ready: `false`
-- Summary: shared readiness blocked: https://arobi.aura-genesis.org: public ledger did not advance after status 403 (delta 0) | unconfigured: private ledger endpoint not configured for this pass
-- ledger.public: `blocked` @ `https://arobi.aura-genesis.org` | public ledger did not advance after status 403 (delta 0)
+- Summary: shared readiness blocked: https://arobi.aura-genesis.org: public ledger did not advance after status 530 (delta unknown) | unconfigured: private ledger endpoint not configured for this pass
+- ledger.public: `blocked` @ `https://arobi.aura-genesis.org` | public ledger did not advance after status 530 (delta unknown)
 - ledger.private: `not_configured` | private ledger endpoint not configured for this pass
 - q.local: `ready` @ `http://127.0.0.1:11434` | local Q accepted 3/3 seed+mediation scenario pair(s)
 
