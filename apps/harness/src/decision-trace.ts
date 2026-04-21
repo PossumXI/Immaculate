@@ -1,5 +1,6 @@
 import path from "node:path";
-import { appendFile, mkdir, open, readFile } from "node:fs/promises";
+import { mkdir, open, readFile, unlink } from "node:fs/promises";
+import { setTimeout as delay } from "node:timers/promises";
 import type { GuardVerdict, GovernancePressureLevel } from "@immaculate/core";
 import { sha256Hash, sha256Json } from "./utils.js";
 
@@ -108,6 +109,9 @@ type PriorLedgerRecord = {
   };
 };
 
+const DECISION_TRACE_LOCK_RETRY_MS = 25;
+const DECISION_TRACE_LOCK_TIMEOUT_MS = 5_000;
+
 function compactId(seed: string): string {
   return `trace-${sha256Hash(seed).slice(0, 16)}`;
 }
@@ -142,6 +146,47 @@ async function readLastNonEmptyLine(filePath: string): Promise<string | null> {
     }
   } catch {
     return null;
+  }
+}
+
+async function withDecisionTraceFileLock<T>(
+  filePath: string,
+  writer: () => Promise<T>
+): Promise<T> {
+  await mkdir(path.dirname(filePath), { recursive: true });
+  const lockPath = `${filePath}.lock`;
+  const deadline = Date.now() + DECISION_TRACE_LOCK_TIMEOUT_MS;
+  while (true) {
+    let handle;
+    try {
+      handle = await open(lockPath, "wx");
+    } catch (error) {
+      if (Date.now() >= deadline) {
+        throw new Error(
+          `Timed out waiting for decision trace lock ${path.basename(lockPath)}: ${
+            error instanceof Error ? error.message : "unknown lock failure"
+          }`
+        );
+      }
+      await delay(DECISION_TRACE_LOCK_RETRY_MS);
+      continue;
+    }
+    try {
+      return await writer();
+    } finally {
+      await handle.close();
+      await unlink(lockPath).catch(() => undefined);
+    }
+  }
+}
+
+async function appendDecisionTraceLine(filePath: string, record: DecisionTraceRecord): Promise<void> {
+  const handle = await open(filePath, "a");
+  try {
+    await handle.writeFile(`${JSON.stringify(record)}\n`, "utf8");
+    await handle.sync();
+  } finally {
+    await handle.close();
   }
 }
 
@@ -303,87 +348,89 @@ export async function appendDecisionTraceRecord(options: {
   record: DecisionTraceInput;
 }): Promise<DecisionTraceRecord> {
   const ledgerPath = path.join(options.rootDir, "arobi-network", "decision-ledger.ndjson");
-  await mkdir(path.dirname(ledgerPath), { recursive: true });
-  const previousLine = await readLastNonEmptyLine(ledgerPath);
-  const previousRecord = previousLine ? (JSON.parse(previousLine) as PriorLedgerRecord) : undefined;
-  const eventSeq = (previousRecord?.ledger?.eventSeq ?? 0) + 1;
-  const parentEventHash = previousRecord?.ledger?.eventHash;
-  const decisionTraceId =
-    options.record.decisionTraceId ??
-    createDecisionTraceSeed({
+  return withDecisionTraceFileLock(ledgerPath, async () => {
+    const previousLine = await readLastNonEmptyLine(ledgerPath);
+    const previousRecord = previousLine ? (JSON.parse(previousLine) as PriorLedgerRecord) : undefined;
+    const eventSeq = (previousRecord?.ledger?.eventSeq ?? 0) + 1;
+    const parentEventHash = previousRecord?.ledger?.eventHash;
+    const decisionTraceId =
+      options.record.decisionTraceId ??
+      createDecisionTraceSeed({
+        source: options.record.source,
+        sessionId: options.record.sessionId,
+        executionId: options.record.executionId,
+        conversationId: options.record.conversationId,
+        objective: options.record.decisionSummary.responsePreview,
+        promptDigest: options.record.evidence.promptDigest
+      });
+    const generatedAt = new Date().toISOString();
+    const eventHash = computeDecisionTraceEventHash({
+      decisionTraceId,
+      generatedAt,
       source: options.record.source,
       sessionId: options.record.sessionId,
       executionId: options.record.executionId,
       conversationId: options.record.conversationId,
-      objective: options.record.decisionSummary.responsePreview,
-      promptDigest: options.record.evidence.promptDigest
-    });
-  const generatedAt = new Date().toISOString();
-  const eventHash = computeDecisionTraceEventHash({
-    decisionTraceId,
-    generatedAt,
-    source: options.record.source,
-    sessionId: options.record.sessionId,
-    executionId: options.record.executionId,
-    conversationId: options.record.conversationId,
-    release: options.record.release,
-    policy: options.record.policy,
-    evidence: options.record.evidence,
-    decisionSummary: options.record.decisionSummary,
-    selfEvaluation: options.record.selfEvaluation,
-    principal: options.record.principal,
-    eventSeq,
-    parentEventHash
-  });
-  const materialized: DecisionTraceRecord = {
-    ...options.record,
-    generatedAt,
-    decisionTraceId,
-    ledger: {
+      release: options.record.release,
+      policy: options.record.policy,
+      evidence: options.record.evidence,
+      decisionSummary: options.record.decisionSummary,
+      selfEvaluation: options.record.selfEvaluation,
+      principal: options.record.principal,
       eventSeq,
-      parentEventHash,
-      eventHash
-    }
-  };
-  await appendFile(ledgerPath, `${JSON.stringify(materialized)}\n`, "utf8");
-  return materialized;
+      parentEventHash
+    });
+    const materialized: DecisionTraceRecord = {
+      ...options.record,
+      generatedAt,
+      decisionTraceId,
+      ledger: {
+        eventSeq,
+        parentEventHash,
+        eventHash
+      }
+    };
+    await appendDecisionTraceLine(ledgerPath, materialized);
+    return materialized;
+  });
 }
 
 export async function appendDecisionTraceMirrorRecord(options: {
   filePath: string;
   record: DecisionTraceRecord;
 }): Promise<DecisionTraceRecord> {
-  await mkdir(path.dirname(options.filePath), { recursive: true });
-  const previousLine = await readLastNonEmptyLine(options.filePath);
-  const previousRecord = previousLine ? (JSON.parse(previousLine) as PriorLedgerRecord) : undefined;
-  const eventSeq = (previousRecord?.ledger?.eventSeq ?? 0) + 1;
-  const parentEventHash = previousRecord?.ledger?.eventHash;
-  const eventHash = computeDecisionTraceEventHash({
-    decisionTraceId: options.record.decisionTraceId,
-    generatedAt: options.record.generatedAt,
-    source: options.record.source,
-    sessionId: options.record.sessionId,
-    executionId: options.record.executionId,
-    conversationId: options.record.conversationId,
-    release: options.record.release,
-    policy: options.record.policy,
-    evidence: options.record.evidence,
-    decisionSummary: options.record.decisionSummary,
-    selfEvaluation: options.record.selfEvaluation,
-    principal: options.record.principal,
-    eventSeq,
-    parentEventHash
-  });
-  const mirrored: DecisionTraceRecord = {
-    ...options.record,
-    ledger: {
+  return withDecisionTraceFileLock(options.filePath, async () => {
+    const previousLine = await readLastNonEmptyLine(options.filePath);
+    const previousRecord = previousLine ? (JSON.parse(previousLine) as PriorLedgerRecord) : undefined;
+    const eventSeq = (previousRecord?.ledger?.eventSeq ?? 0) + 1;
+    const parentEventHash = previousRecord?.ledger?.eventHash;
+    const eventHash = computeDecisionTraceEventHash({
+      decisionTraceId: options.record.decisionTraceId,
+      generatedAt: options.record.generatedAt,
+      source: options.record.source,
+      sessionId: options.record.sessionId,
+      executionId: options.record.executionId,
+      conversationId: options.record.conversationId,
+      release: options.record.release,
+      policy: options.record.policy,
+      evidence: options.record.evidence,
+      decisionSummary: options.record.decisionSummary,
+      selfEvaluation: options.record.selfEvaluation,
+      principal: options.record.principal,
       eventSeq,
-      parentEventHash,
-      eventHash
-    }
-  };
-  await appendFile(options.filePath, `${JSON.stringify(mirrored)}\n`, "utf8");
-  return mirrored;
+      parentEventHash
+    });
+    const mirrored: DecisionTraceRecord = {
+      ...options.record,
+      ledger: {
+        eventSeq,
+        parentEventHash,
+        eventHash
+      }
+    };
+    await appendDecisionTraceLine(options.filePath, mirrored);
+    return mirrored;
+  });
 }
 
 export async function inspectDecisionTraceLedger(rootDir: string): Promise<DecisionTraceIntegrityReport> {

@@ -330,7 +330,8 @@ function relativeRepoPath(value: string | undefined): string | undefined {
   if (!value) {
     return undefined;
   }
-  return path.relative(REPO_ROOT, value).replaceAll("\\", "/");
+  const relativePath = path.relative(REPO_ROOT, value).replaceAll("\\", "/");
+  return relativePath.length > 0 ? relativePath : ".";
 }
 
 function uniqueStrings(values: Array<string | undefined>): string[] {
@@ -851,6 +852,8 @@ async function writeExecutionArtifactFiles(args: {
     relevantFiles,
     focusAreas
   });
+  const executionCompleted = executionReceipt.receipt.status === "completed";
+  const executionReady = executionCompleted && args.probe.authorityBranchPreserved;
 
   const workspaceTaskPath =
     args.action.workspaceScope.isolationMode === "worktree"
@@ -859,7 +862,7 @@ async function writeExecutionArtifactFiles(args: {
   const workspaceTaskRelativePath = relativeRepoPath(workspaceTaskPath);
 
   const artifact: RoundtableExecutionArtifact = {
-    status: "prepared",
+    status: executionCompleted ? "prepared" : "failed",
     bundlePath: bundleRelativePath,
     taskDocumentPath: taskDocumentRelativePath,
     workspaceTaskPath: workspaceTaskRelativePath,
@@ -872,7 +875,7 @@ async function writeExecutionArtifactFiles(args: {
     executionFindingCount: executionReceipt.receipt.findingCount,
     executionActionableFindingCount: executionReceipt.receipt.actionableFindingCount,
     executionCommand: executionReceipt.receipt.commandSummary,
-    executionReady: args.probe.authorityBranchPreserved,
+    executionReady,
     workspaceMaterialized: args.action.workspaceScope.isolationMode === "worktree",
     requiresManualCheckout: args.action.workspaceScope.isolationMode === "branch",
     authorityBound: args.probe.authorityBranchPreserved,

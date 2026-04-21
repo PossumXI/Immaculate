@@ -1,3 +1,5 @@
+import * as http from "node:http";
+import * as https from "node:https";
 import net from "node:net";
 import os from "node:os";
 import path from "node:path";
@@ -28,7 +30,12 @@ import {
   materializeRoundtableActionWorktree,
   probeRoundtableActionWorkspace
 } from "./roundtable.js";
-import { resolveReleaseMetadata, type ReleaseMetadata } from "./release-metadata.js";
+import {
+  resolveHarnessReadiness,
+  resolveReleaseMetadata,
+  type HarnessReadinessSummary,
+  type ReleaseMetadata
+} from "./release-metadata.js";
 import { hashValue, sha256Json } from "./utils.js";
 
 type HttpCheck = {
@@ -46,6 +53,7 @@ type ArobiRoundtableLedgerResult = {
   entriesAfter?: number;
   entryDelta?: number;
   writeStatus?: number;
+  ledgerAdvanced: boolean;
   writeAccepted: boolean;
   error?: string;
 };
@@ -165,6 +173,7 @@ type RoundtableRuntimeSurface = {
     jsonPath: string;
     markdownPath: string;
   };
+  readiness: HarnessReadinessSummary;
 };
 
 type RoundtableRuntimeIterationArtifact = {
@@ -225,6 +234,20 @@ const WIKI_ROOT = path.join(REPO_ROOT, "docs", "wiki");
 const CONSENT_PREFIX = "session:roundtable-runtime";
 const ROUNDTABLE_RUNTIME_ROOT = path.join(REPO_ROOT, ".runtime", "roundtable-runtime");
 const ROUNDTABLE_RUNTIME_RUNS_ROOT = path.join(ROUNDTABLE_RUNTIME_ROOT, "runs");
+const ROUNDTABLE_OLLAMA_PREWARM_TIMEOUT_MS = Math.max(
+  240_000,
+  parsePositiveInteger(
+    process.env.IMMACULATE_ROUNDTABLE_OLLAMA_PREWARM_TIMEOUT_MS,
+    480_000
+  )
+);
+const ROUNDTABLE_COGNITIVE_REQUEST_TIMEOUT_MS = Math.max(
+  180_000,
+  parsePositiveInteger(
+    process.env.IMMACULATE_ROUNDTABLE_COGNITIVE_TIMEOUT_MS,
+    480_000
+  )
+);
 
 const SCENARIOS: ScenarioDefinition[] = [
   {
@@ -384,47 +407,88 @@ async function allocateTcpPort(): Promise<number> {
 
 async function checkHttp(url: string, init?: RequestInit, timeoutMs = 180_000): Promise<HttpCheck> {
   const started = performance.now();
-  const timeoutController = new AbortController();
-  const timeout = setTimeout(() => timeoutController.abort(), timeoutMs);
   const mergedHeaders = new Headers(init?.headers);
   if (!mergedHeaders.has("connection")) {
     mergedHeaders.set("connection", "close");
   }
-  let response: Response;
-  try {
-    response = await fetch(url, {
-      ...init,
-      headers: mergedHeaders,
-      signal: timeoutController.signal
+  const requestBody =
+    typeof init?.body === "string" || init?.body === undefined || init?.body === null
+      ? init?.body ?? undefined
+      : String(init.body);
+  const requestHeaders = Object.fromEntries(mergedHeaders.entries());
+  const parsedUrl = new URL(url);
+  const transport = parsedUrl.protocol === "https:" ? https : http;
+
+  return await new Promise<HttpCheck>((resolve, reject) => {
+    const request = transport.request(
+      parsedUrl,
+      {
+        method: init?.method ?? "GET",
+        headers: requestHeaders
+      },
+      (response) => {
+        const chunks: Buffer[] = [];
+        response.on("data", (chunk: Buffer | string) => {
+          chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+        });
+        response.on("end", () => {
+          const text = Buffer.concat(chunks).toString("utf8");
+          let body: unknown = text;
+          try {
+            body = text.length > 0 ? JSON.parse(text) : null;
+          } catch {
+            body = text;
+          }
+          const headers: Record<string, string> = {};
+          for (const [key, value] of Object.entries(response.headers)) {
+            if (Array.isArray(value)) {
+              headers[key] = value.join(", ");
+            } else if (typeof value === "string") {
+              headers[key] = value;
+            }
+          }
+          resolve({
+            status: response.statusCode ?? 0,
+            body,
+            headers,
+            wallLatencyMs: Number((performance.now() - started).toFixed(2))
+          });
+        });
+        response.on("error", (error) => {
+          reject(
+            new Error(
+              `HTTP ${(init?.method ?? "GET").toUpperCase()} ${url} failed: ${
+                error instanceof Error ? error.message : "unknown response error"
+              }`
+            )
+          );
+        });
+      }
+    );
+
+    const timeout = setTimeout(() => {
+      request.destroy(new Error(`request timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+
+    request.on("error", (error) => {
+      clearTimeout(timeout);
+      reject(
+        new Error(
+          `HTTP ${(init?.method ?? "GET").toUpperCase()} ${url} failed: ${
+            error instanceof Error ? error.message : "unknown error"
+          }`
+        )
+      );
     });
-  } catch (error) {
-    const detail =
-      error instanceof Error
-        ? error.cause instanceof Error
-          ? `${error.message}: ${error.cause.message}`
-          : error.message
-        : "unknown error";
-    throw new Error(`HTTP ${(init?.method ?? "GET").toUpperCase()} ${url} failed: ${detail}`);
-  } finally {
-    clearTimeout(timeout);
-  }
-  const text = await response.text();
-  let body: unknown = text;
-  try {
-    body = text.length > 0 ? JSON.parse(text) : null;
-  } catch {
-    body = text;
-  }
-  const headers: Record<string, string> = {};
-  for (const [key, value] of response.headers.entries()) {
-    headers[key] = value;
-  }
-  return {
-    status: response.status,
-    body,
-    headers,
-    wallLatencyMs: Number((performance.now() - started).toFixed(2))
-  };
+    request.on("close", () => {
+      clearTimeout(timeout);
+    });
+
+    if (requestBody !== undefined) {
+      request.write(requestBody);
+    }
+    request.end();
+  });
 }
 
 function responseAccepted(body: unknown): boolean {
@@ -523,26 +587,73 @@ async function postArobiRoundtableRecord(options: {
     const after = await readArobiLedgerState(options.baseUrl);
     const entriesBefore = before.totalEntries;
     const entriesAfter = after.totalEntries;
+    const entryDelta =
+      typeof entriesBefore === "number" && typeof entriesAfter === "number"
+        ? entriesAfter - entriesBefore
+        : undefined;
+    const ledgerAdvanced = typeof entryDelta === "number" && entryDelta > 0;
     return {
       baseUrl: options.baseUrl,
       version: before.version ?? after.version,
       network: before.network ?? after.network,
       entriesBefore,
       entriesAfter,
-      entryDelta:
-        typeof entriesBefore === "number" && typeof entriesAfter === "number"
-          ? entriesAfter - entriesBefore
-          : undefined,
+      entryDelta,
       writeStatus: write.status,
-      writeAccepted: write.status >= 200 && write.status < 300
+      ledgerAdvanced,
+      writeAccepted: write.status >= 200 && write.status < 300 && ledgerAdvanced
     };
   } catch (error) {
     return {
       baseUrl: options.baseUrl,
+      ledgerAdvanced: false,
       writeAccepted: false,
       error: error instanceof Error ? error.message : "Unknown Arobi ledger write failure."
     };
   }
+}
+
+function describeLedgerAdvance(
+  visibility: "public" | "00",
+  result: ArobiRoundtableLedgerResult | undefined
+): string {
+  const label = visibility === "public" ? "public ledger" : "private ledger";
+  if (!result) {
+    return `${label} write not attempted in this pass`;
+  }
+  if (result.error) {
+    return `${label} write failed: ${result.error}`;
+  }
+  const status = result.writeStatus ?? "unknown";
+  const delta = typeof result.entryDelta === "number" ? result.entryDelta : "unknown";
+  return result.ledgerAdvanced
+    ? `${label} advanced by ${delta} entry after status ${status}`
+    : `${label} did not advance after status ${status} (delta ${delta})`;
+}
+
+function buildRuntimeReadiness(options: {
+  publicLedgerBaseUrl?: string;
+  privateLedgerBaseUrl?: string;
+  publicLedger?: ArobiRoundtableLedgerResult;
+  privateLedger?: ArobiRoundtableLedgerResult;
+  scenarioResults: RoundtableRuntimeScenarioResult[];
+  qLocalEndpoint: string;
+}): HarnessReadinessSummary {
+  const qAcceptedCount = options.scenarioResults.filter(
+    (entry) => entry.seedAccepted && entry.mediationAccepted
+  ).length;
+  return resolveHarnessReadiness({
+    publicLedgerBaseUrl: options.publicLedgerBaseUrl,
+    privateLedgerBaseUrl: options.privateLedgerBaseUrl,
+    publicLedgerAdvanced: options.publicLedger?.ledgerAdvanced,
+    privateLedgerAdvanced: options.privateLedger?.ledgerAdvanced,
+    publicLedgerDetail: describeLedgerAdvance("public", options.publicLedger),
+    privateLedgerDetail: describeLedgerAdvance("00", options.privateLedger),
+    qLocalEndpoint: options.qLocalEndpoint,
+    qLocalHealthy:
+      options.scenarioResults.length > 0 && qAcceptedCount === options.scenarioResults.length,
+    qLocalDetail: `local Q accepted ${qAcceptedCount}/${options.scenarioResults.length} seed+mediation scenario pair(s)`
+  });
 }
 
 async function waitForHarness(
@@ -692,6 +803,74 @@ async function ensureOllamaEndpoint(options: {
     );
   }
   return handle;
+}
+
+async function isOllamaEndpointHealthy(endpoint: string): Promise<boolean> {
+  try {
+    const tags = await checkHttp(`${endpoint.replace(/\/+$/, "")}/api/tags`);
+    return tags.status === 200;
+  } catch {
+    return false;
+  }
+}
+
+async function bootstrapRoundtableOllama(options: {
+  runtimeDir: string;
+}): Promise<{
+  endpoint: string;
+  process: OllamaProcessHandle | null;
+  fallbackFrom?: string;
+  prewarmWarning?: string;
+}> {
+  let endpoint = DEFAULT_ROUNDTABLE_OLLAMA_URL;
+  let processHandle = await ensureOllamaEndpoint({
+    endpoint,
+    runtimeDir: options.runtimeDir
+  });
+  if (process.env.IMMACULATE_ROUNDTABLE_PREWARM === "false") {
+    return {
+      endpoint,
+      process: processHandle
+    };
+  }
+
+  const prewarm = await prewarmOllamaModel({
+    endpoint,
+    model: getQModelTarget(),
+    timeoutMs: ROUNDTABLE_OLLAMA_PREWARM_TIMEOUT_MS
+  });
+  if (!prewarm.failureClass) {
+    return {
+      endpoint,
+      process: processHandle
+    };
+  }
+
+  if (endpoint !== DEFAULT_OLLAMA_URL && (await isOllamaEndpointHealthy(DEFAULT_OLLAMA_URL))) {
+    if (processHandle) {
+      await stopOllamaProcess(processHandle);
+    }
+    const fallbackEndpoint = DEFAULT_OLLAMA_URL;
+    const fallbackPrewarm = await prewarmOllamaModel({
+      endpoint: fallbackEndpoint,
+      model: getQModelTarget(),
+      timeoutMs: ROUNDTABLE_OLLAMA_PREWARM_TIMEOUT_MS
+    });
+    return {
+      endpoint: fallbackEndpoint,
+      process: null,
+      fallbackFrom: endpoint,
+      prewarmWarning: fallbackPrewarm.failureClass
+        ? `dedicated prewarm ${prewarm.failureClass}${prewarm.errorMessage ? ` / ${prewarm.errorMessage}` : ""}; shared fallback prewarm ${fallbackPrewarm.failureClass}${fallbackPrewarm.errorMessage ? ` / ${fallbackPrewarm.errorMessage}` : ""}`
+        : `dedicated prewarm ${prewarm.failureClass}${prewarm.errorMessage ? ` / ${prewarm.errorMessage}` : ""}; fell back to shared local Q lane`
+    };
+  }
+
+  return {
+    endpoint,
+    process: processHandle,
+    prewarmWarning: `${prewarm.failureClass}${prewarm.errorMessage ? ` / ${prewarm.errorMessage}` : ""}`
+  };
 }
 
 function resolveHarnessCommand(): { command: string; args: string[] } {
@@ -888,7 +1067,7 @@ async function runScenario(options: {
           requestedExecutionDecision: "allow_local"
         })
       },
-      180_000
+      ROUNDTABLE_COGNITIVE_REQUEST_TIMEOUT_MS
     );
     const seedExecutionId =
       (seed.body as { execution?: { id?: string } } | null)?.execution?.id;
@@ -903,7 +1082,7 @@ async function runScenario(options: {
         dispatchOnApproval: false,
         suppressed: true
       })
-    }, 180_000);
+    }, ROUNDTABLE_COGNITIVE_REQUEST_TIMEOUT_MS);
     let conversation = (mediation.body as { conversation?: MultiAgentConversation })?.conversation;
     let schedule = (mediation.body as { scheduleDecision?: ExecutionSchedule })?.scheduleDecision;
     if (!conversation) {
@@ -962,11 +1141,11 @@ async function runScenario(options: {
       recordedRepoCount >= plan.repoCount &&
       conversation?.sessionScope === consentScope &&
       schedule?.sessionScope === consentScope;
-    const mediationHealthy = mediation.status === 200;
+    const scenarioAccepted = seedAccepted && mediationAccepted;
     return {
       id: options.scenario.id,
       label: options.scenario.label,
-      status: mediationHealthy && scheduleCapturesPlan && auditCapturesPlan ? "completed" : "failed",
+      status: scenarioAccepted && scheduleCapturesPlan && auditCapturesPlan ? "completed" : "failed",
       seedStatus: seed.status,
       mediationStatus: mediation.status,
       seedAccepted,
@@ -1002,7 +1181,7 @@ async function runScenario(options: {
         conversation?.finalRouteSuggestion,
       roundtableSummary: conversation?.roundtableSummary ?? schedule?.roundtableSummary,
       failureClass:
-        seed.status === 200 && mediation.status === 200
+        seedAccepted && mediationAccepted
           ? undefined
           : `seed:${seed.status}/mediate:${mediation.status}`
     };
@@ -1023,6 +1202,7 @@ function buildRoundtableRuntimeSurface(options: {
   harnessUrl: string;
   scenarioResults: RoundtableRuntimeScenarioResult[];
   release: ReleaseMetadata;
+  readiness: HarnessReadinessSummary;
 }): RoundtableRuntimeSurface {
   const assertions = [
     {
@@ -1184,6 +1364,8 @@ function buildRoundtableRuntimeSurface(options: {
           sessionScopePreserved: entry.sessionScopePreserved
         })),
         assertions
+        ,
+        readiness: options.readiness
       }),
       decisionTraceStatus: "pending",
       decisionTraceEventCount: 0,
@@ -1221,7 +1403,8 @@ function buildRoundtableRuntimeSurface(options: {
     output: {
       jsonPath: "docs/wiki/Roundtable-Runtime.json",
       markdownPath: "docs/wiki/Roundtable-Runtime.md"
-    }
+    },
+    readiness: options.readiness
   };
 }
 
@@ -1337,6 +1520,7 @@ function buildFailedRoundtableRuntimeSurface(options: {
   harnessUrl: string;
   release: ReleaseMetadata;
   message: string;
+  readiness: HarnessReadinessSummary;
 }): RoundtableRuntimeSurface {
   return {
     generatedAt: new Date().toISOString(),
@@ -1384,7 +1568,8 @@ function buildFailedRoundtableRuntimeSurface(options: {
     output: {
       jsonPath: "docs/wiki/Roundtable-Runtime.json",
       markdownPath: "docs/wiki/Roundtable-Runtime.md"
-    }
+    },
+    readiness: options.readiness
   };
 }
 
@@ -1427,6 +1612,14 @@ function renderMarkdown(report: RoundtableRuntimeSurface): string {
     `- Decision trace events: \`${report.benchmark.decisionTraceEventCount}\``,
     `- Decision trace findings: \`${report.benchmark.decisionTraceFindingCount}\``,
     `- Decision trace head hash: \`${report.benchmark.decisionTraceHeadHash?.slice(0, 16) ?? "none"}\``,
+    "",
+    "## Shared Readiness",
+    "",
+    `- Mission-surface ready: \`${report.readiness.missionSurfaceReady}\``,
+    `- Summary: ${report.readiness.summary}`,
+    `- ledger.public: \`${report.readiness.ledger.public.status}\`${report.readiness.ledger.public.endpoint ? ` @ \`${report.readiness.ledger.public.endpoint}\`` : ""} | ${report.readiness.ledger.public.detail}`,
+    `- ledger.private: \`${report.readiness.ledger.private.status}\`${report.readiness.ledger.private.endpoint ? ` @ \`${report.readiness.ledger.private.endpoint}\`` : ""} | ${report.readiness.ledger.private.detail}`,
+    `- q.local: \`${report.readiness.q.local.status}\`${report.readiness.q.local.endpoint ? ` @ \`${report.readiness.q.local.endpoint}\`` : ""} | ${report.readiness.q.local.detail}`,
     "",
     "## Scenarios",
     "",
@@ -1483,20 +1676,25 @@ async function main(): Promise<void> {
   const harnessUrl = `http://127.0.0.1:${port}`;
   const release = await resolveReleaseMetadata();
   const ollamaRuntimeDir = path.join(ROUNDTABLE_RUNTIME_ROOT, "ollama");
+  const publicLedgerBaseUrl =
+    process.env.AROBI_PUBLIC_URL?.trim() || process.env.ASGARD_AROBI_PUBLIC_URL?.trim();
+  const privateLedgerBaseUrl =
+    process.env.AROBI_PRIVATE_URL?.trim() || process.env.ASGARD_AROBI_PRIVATE_URL?.trim();
   await mkdir(harnessRuntimeDir, { recursive: true });
   await mkdir(iterationsRoot, { recursive: true });
   await mkdir(WIKI_ROOT, { recursive: true });
-  const ollamaProcess = await ensureOllamaEndpoint({
-    endpoint: DEFAULT_ROUNDTABLE_OLLAMA_URL,
+  const ollamaBootstrap = await bootstrapRoundtableOllama({
     runtimeDir: ollamaRuntimeDir
   });
+  const activeOllamaEndpoint = ollamaBootstrap.endpoint;
+  const ollamaProcess = ollamaBootstrap.process;
 
   const harnessProcess = startHarnessProcess({
     repoRoot: REPO_ROOT,
     runtimeDir: harnessRuntimeDir,
     keysPath,
     port,
-    ollamaEndpoint: DEFAULT_ROUNDTABLE_OLLAMA_URL
+    ollamaEndpoint: activeOllamaEndpoint
   });
   await writeJsonArtifact(path.join(runRoot, "bootstrap.json"), {
     runId,
@@ -1508,9 +1706,11 @@ async function main(): Promise<void> {
       startupTracePath: path.relative(REPO_ROOT, harnessProcess.startupTracePath).replaceAll("\\", "/")
     },
     ollama: {
-      endpoint: DEFAULT_ROUNDTABLE_OLLAMA_URL,
+      endpoint: activeOllamaEndpoint,
       runtimeDir: path.relative(REPO_ROOT, ollamaRuntimeDir).replaceAll("\\", "/"),
-      spawned: Boolean(ollamaProcess)
+      spawned: Boolean(ollamaProcess),
+      fallbackFrom: ollamaBootstrap.fallbackFrom,
+      prewarmWarning: ollamaBootstrap.prewarmWarning
     }
   });
 
@@ -1521,23 +1721,8 @@ async function main(): Promise<void> {
   try {
     await waitForHarness(harnessUrl, harnessProcess);
     await ensureHarnessQRuntimeLayer(harnessUrl, `session:${runId}`);
-    if (process.env.IMMACULATE_ROUNDTABLE_PREWARM === "true") {
-      try {
-        const prewarm = await prewarmOllamaModel({
-          endpoint: DEFAULT_ROUNDTABLE_OLLAMA_URL,
-          model: getQModelTarget(),
-          timeoutMs: 15_000
-        });
-        if (prewarm.failureClass) {
-          process.stderr.write(
-            `roundtable-runtime prewarm warning: ${prewarm.failureClass}${prewarm.errorMessage ? ` / ${prewarm.errorMessage}` : ""}\n`
-          );
-        }
-      } catch (error) {
-        process.stderr.write(
-          `roundtable-runtime prewarm warning: ${error instanceof Error ? error.message : "unknown prewarm failure"}\n`
-        );
-      }
+    if (ollamaBootstrap.prewarmWarning) {
+      process.stderr.write(`roundtable-runtime prewarm warning: ${ollamaBootstrap.prewarmWarning}\n`);
     }
 
     for (let iterationIndex = 0; iterationIndex < cli.iterations; iterationIndex += 1) {
@@ -1559,23 +1744,26 @@ async function main(): Promise<void> {
           );
         }
 
-        const report = buildRoundtableRuntimeSurface({
+        const preliminaryReadiness = buildRuntimeReadiness({
+          publicLedgerBaseUrl,
+          privateLedgerBaseUrl,
+          scenarioResults,
+          qLocalEndpoint: activeOllamaEndpoint
+        });
+        const preliminaryReport = buildRoundtableRuntimeSurface({
           harnessUrl,
           scenarioResults,
-          release
+          release,
+          readiness: preliminaryReadiness
         });
-        const publicLedgerBaseUrl =
-          process.env.AROBI_PUBLIC_URL?.trim() || process.env.ASGARD_AROBI_PUBLIC_URL?.trim();
-        const privateLedgerBaseUrl =
-          process.env.AROBI_PRIVATE_URL?.trim() || process.env.ASGARD_AROBI_PRIVATE_URL?.trim();
         const publicLedger =
-          publicLedgerBaseUrl && report.benchmark.failedAssertions === 0
+          publicLedgerBaseUrl && preliminaryReport.benchmark.failedAssertions === 0
             ? await postArobiRoundtableRecord({
                 baseUrl: publicLedgerBaseUrl.replace(/\/+$/, ""),
                 visibility: "public",
                 runId,
                 iterationLabel,
-                report
+                report: preliminaryReport
               })
             : undefined;
         const privateLedger = privateLedgerBaseUrl
@@ -1584,9 +1772,43 @@ async function main(): Promise<void> {
               visibility: "00",
               runId,
               iterationLabel,
-              report
+              report: preliminaryReport
             })
           : undefined;
+        const readiness = buildRuntimeReadiness({
+          publicLedgerBaseUrl,
+          privateLedgerBaseUrl,
+          publicLedger,
+          privateLedger,
+          scenarioResults,
+          qLocalEndpoint: activeOllamaEndpoint
+        });
+        const report = buildRoundtableRuntimeSurface({
+          harnessUrl,
+          scenarioResults,
+          release,
+          readiness
+        });
+        const completedAt = new Date().toISOString();
+        const pendingArtifact: RoundtableRuntimeIterationArtifact = {
+          index: iterationIndex + 1,
+          startedAt: iterationStartedAt,
+          completedAt,
+          durationMs: Number((performance.now() - iterationStarted).toFixed(2)),
+          status: report.benchmark.failedAssertions === 0 ? "completed" : "failed",
+          reportPath: relativeIterationReportFile,
+          tracePath: relativeDecisionTraceFile,
+          failedAssertions: report.benchmark.failedAssertions
+        };
+        await writeJsonArtifact(iterationReportFile, {
+          runId,
+          iteration: pendingArtifact,
+          report,
+          arobiLedger: {
+            public: publicLedger,
+            private: privateLedger
+          }
+        });
         const decisionTrace = await appendRoundtableRuntimeTrace({
           runtimeRoot: ROUNDTABLE_RUNTIME_ROOT,
           runId,
@@ -1602,16 +1824,9 @@ async function main(): Promise<void> {
         });
         const decisionTraceIntegrity = await inspectDecisionTraceFile(decisionTracePath);
         const integrityReport = applyDecisionTraceIntegrity(report, decisionTraceIntegrity);
-
-        const completedAt = new Date().toISOString();
         const artifact: RoundtableRuntimeIterationArtifact = {
-          index: iterationIndex + 1,
-          startedAt: iterationStartedAt,
-          completedAt,
-          durationMs: Number((performance.now() - iterationStarted).toFixed(2)),
+          ...pendingArtifact,
           status: integrityReport.benchmark.failedAssertions === 0 ? "completed" : "failed",
-          reportPath: relativeIterationReportFile,
-          tracePath: relativeDecisionTraceFile,
           decisionTraceId: decisionTrace.decisionTraceId,
           failedAssertions: integrityReport.benchmark.failedAssertions
         };
@@ -1636,10 +1851,35 @@ async function main(): Promise<void> {
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unknown roundtable runtime iteration error.";
+        const readiness = buildRuntimeReadiness({
+          publicLedgerBaseUrl,
+          privateLedgerBaseUrl,
+          scenarioResults: [],
+          qLocalEndpoint: activeOllamaEndpoint
+        });
         const failedReport = buildFailedRoundtableRuntimeSurface({
           harnessUrl,
           release,
-          message
+          message,
+          readiness
+        });
+        const completedAt = new Date().toISOString();
+        const pendingArtifact: RoundtableRuntimeIterationArtifact = {
+          index: iterationIndex + 1,
+          startedAt: iterationStartedAt,
+          completedAt,
+          durationMs: Number((performance.now() - iterationStarted).toFixed(2)),
+          status: "failed",
+          reportPath: relativeIterationReportFile,
+          tracePath: relativeDecisionTraceFile,
+          failedAssertions: failedReport.benchmark.failedAssertions,
+          error: message
+        };
+        await writeJsonArtifact(iterationReportFile, {
+          runId,
+          iteration: pendingArtifact,
+          report: failedReport,
+          error: message
         });
         const decisionTrace = await appendRoundtableRuntimeTrace({
           runtimeRoot: ROUNDTABLE_RUNTIME_ROOT,
@@ -1656,15 +1896,9 @@ async function main(): Promise<void> {
         });
         const decisionTraceIntegrity = await inspectDecisionTraceFile(decisionTracePath);
         const integrityReport = applyDecisionTraceIntegrity(failedReport, decisionTraceIntegrity);
-        const completedAt = new Date().toISOString();
         const artifact: RoundtableRuntimeIterationArtifact = {
-          index: iterationIndex + 1,
-          startedAt: iterationStartedAt,
-          completedAt,
-          durationMs: Number((performance.now() - iterationStarted).toFixed(2)),
+          ...pendingArtifact,
           status: "failed",
-          reportPath: relativeIterationReportFile,
-          tracePath: relativeDecisionTraceFile,
           decisionTraceId: decisionTrace.decisionTraceId,
           failedAssertions: integrityReport.benchmark.failedAssertions,
           error: message

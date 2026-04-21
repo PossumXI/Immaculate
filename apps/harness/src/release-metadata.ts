@@ -52,6 +52,38 @@ export type ReleaseMetadata = {
   };
 };
 
+export type HarnessReadinessLane = {
+  status: "ready" | "blocked" | "not_configured";
+  configured: boolean;
+  ready: boolean;
+  endpoint?: string;
+  detail: string;
+};
+
+export type HarnessReadinessSummary = {
+  ledger: {
+    public: HarnessReadinessLane;
+    private: HarnessReadinessLane;
+  };
+  q: {
+    local: HarnessReadinessLane;
+  };
+  missionSurfaceReady: boolean;
+  summary: string;
+};
+
+export type ResolveHarnessReadinessOptions = {
+  publicLedgerBaseUrl?: string;
+  privateLedgerBaseUrl?: string;
+  publicLedgerAdvanced?: boolean;
+  privateLedgerAdvanced?: boolean;
+  publicLedgerDetail?: string;
+  privateLedgerDetail?: string;
+  qLocalEndpoint?: string;
+  qLocalHealthy?: boolean;
+  qLocalDetail?: string;
+};
+
 const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const HARNESS_ROOT = path.resolve(MODULE_ROOT, "..");
 const REPO_ROOT = path.resolve(HARNESS_ROOT, "../..");
@@ -154,6 +186,85 @@ type QHybridTrainingWikiFile = {
 type ImmaculateTrainingBundleFile = {
   bundleId?: string;
 };
+
+function normalizeOptionalValue(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed && trimmed.length > 0 ? trimmed : undefined;
+}
+
+function buildHarnessReadinessLane(options: {
+  endpoint?: string;
+  ready?: boolean;
+  successDetail: string;
+  blockedDetail: string;
+  notConfiguredDetail: string;
+}): HarnessReadinessLane {
+  const endpoint = normalizeOptionalValue(options.endpoint);
+  if (!endpoint) {
+    return {
+      status: "not_configured",
+      configured: false,
+      ready: false,
+      detail: options.notConfiguredDetail
+    };
+  }
+  const ready = options.ready === true;
+  return {
+    status: ready ? "ready" : "blocked",
+    configured: true,
+    ready,
+    endpoint,
+    detail: ready ? options.successDetail : options.blockedDetail
+  };
+}
+
+export function resolveHarnessReadiness(
+  options: ResolveHarnessReadinessOptions
+): HarnessReadinessSummary {
+  const publicLedger = buildHarnessReadinessLane({
+    endpoint: options.publicLedgerBaseUrl,
+    ready: options.publicLedgerAdvanced,
+    successDetail: options.publicLedgerDetail ?? "public ledger advanced during this bounded pass",
+    blockedDetail:
+      options.publicLedgerDetail ?? "public ledger did not prove a bounded entry advance during this pass",
+    notConfiguredDetail: "public ledger endpoint not configured for this pass"
+  });
+  const privateLedger = buildHarnessReadinessLane({
+    endpoint: options.privateLedgerBaseUrl,
+    ready: options.privateLedgerAdvanced,
+    successDetail: options.privateLedgerDetail ?? "private ledger advanced during this bounded pass",
+    blockedDetail:
+      options.privateLedgerDetail ?? "private ledger did not prove a bounded entry advance during this pass",
+    notConfiguredDetail: "private ledger endpoint not configured for this pass"
+  });
+  const qLocal = buildHarnessReadinessLane({
+    endpoint: options.qLocalEndpoint,
+    ready: options.qLocalHealthy,
+    successDetail: options.qLocalDetail ?? "local Q accepted the bounded runtime path for every scenario",
+    blockedDetail:
+      options.qLocalDetail ?? "local Q did not accept the bounded runtime path for every scenario",
+    notConfiguredDetail: "local Q endpoint not configured for this pass"
+  });
+  const missionLanes = [publicLedger, privateLedger, qLocal];
+  const missionSurfaceReady =
+    missionLanes.every((lane) => lane.configured) && missionLanes.every((lane) => lane.ready);
+  const blockedLanes = missionLanes
+    .filter((lane) => !lane.ready)
+    .map((lane) => `${lane.endpoint ?? "unconfigured"}: ${lane.detail}`);
+  return {
+    ledger: {
+      public: publicLedger,
+      private: privateLedger
+    },
+    q: {
+      local: qLocal
+    },
+    missionSurfaceReady,
+    summary: missionSurfaceReady
+      ? "shared ledger.public, ledger.private, and q.local readiness verified for this pass"
+      : `shared readiness blocked: ${blockedLanes.join(" | ")}`
+  };
+}
 
 async function readJsonFile<T>(filePath: string): Promise<T | undefined> {
   try {

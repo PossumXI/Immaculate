@@ -1252,6 +1252,20 @@ export async function prewarmOllamaModel(options: {
   model: string;
   timeoutMs?: number;
 }): Promise<OllamaChatCompletionResult> {
+  if (isQExecutionModel(options.model)) {
+    return runOllamaGenerateCompletion({
+      endpoint: options.endpoint,
+      model: options.model,
+      prompt: "Reply with the single lowercase word ready.",
+      temperature: 0,
+      maxTokens: 8,
+      timeoutMs: options.timeoutMs ?? Math.max(DEFAULT_CONTROL_TIMEOUT_MS, 240_000),
+      ollamaOptions: {
+        num_ctx: Q_GENERATE_FAST_NUM_CTX,
+        num_batch: Q_GENERATE_FAST_NUM_BATCH
+      }
+    });
+  }
   return runOllamaChatCompletion({
     endpoint: options.endpoint,
     model: options.model,
@@ -1267,7 +1281,7 @@ export async function prewarmOllamaModel(options: {
     ],
     temperature: 0,
     maxTokens: 8,
-    timeoutMs: options.timeoutMs ?? 360000,
+    timeoutMs: options.timeoutMs ?? Math.max(DEFAULT_CONTROL_TIMEOUT_MS, 240_000),
     think: false
   });
 }
