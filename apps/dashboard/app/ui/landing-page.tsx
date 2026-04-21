@@ -21,6 +21,10 @@ const proofCards = [
     body: "The receipt now keeps both truths at once. The last verified supervised public rerun moved the ledger from 396 to 397 on Apr 20, and the same page also shows when the current public aura-genesis telemetry edge is synthesized/offline instead of pretending the old green state is still live."
   },
   {
+    label: "Cross-Project Workflow Health",
+    body: "Immaculate now machine-stamps the current GitHub Actions truth across Immaculate, OpenJaws, and private Asgard_Arobi. Public repos verify through raw REST, private repos fall back to authenticated GitHub access, and private run links stay withheld instead of leaking private operational metadata onto the public site."
+  },
+  {
     label: "Supervised Mission Showcase",
     body: "The public showcase is now fail-closed by default. The publishable package stays limited to safe snippets from the roundtable runtime, the official public Terminal-Bench task, the supervised local Harbor tasks, and a sanitized public-edge ledger summary so auditors can inspect the loop without exposing the private mission lane."
   },
@@ -115,6 +119,7 @@ export function LandingPage() {
             <span>Arobi decision review live</span>
             <span>Arobi audit integrity 3 scenarios</span>
             <span>Arobi receipt current</span>
+            <span>Cross-project workflow truth</span>
             <span>Last public rerun Apr 20</span>
             <span>Public edge truth surfaced</span>
             <span>Supervised showcase fail-closed</span>

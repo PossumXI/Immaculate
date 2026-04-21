@@ -44,6 +44,7 @@
     "arobi:live:ledger": "tsx ./apps/harness/src/arobi-live-ledger-receipt.ts",
     "live:mission:readiness": "tsx ./apps/harness/src/live-mission-readiness.ts",
     "live:mission:showcase": "tsx ./apps/harness/src/live-mission-showcase.ts",
+    "github:workflow:health": "tsx ./apps/harness/src/cross-project-workflow-health.ts",
     "roundtable:actionability": "npm run roundtable:actionability -w @immaculate/harness",
     "roundtable:runtime": "npm run roundtable:runtime -w @immaculate/harness",
     "roundtable:runtime:loop": "npm run roundtable:runtime:loop -w @immaculate/harness",
