@@ -21,6 +21,10 @@ const proofCards = [
     body: "The receipt now keeps both truths at once. The last verified supervised public rerun moved the ledger from 396 to 397 on Apr 20, and the same page also shows when the current public aura-genesis telemetry edge is synthesized/offline instead of pretending the old green state is still live."
   },
   {
+    label: "Public Pressure Showcase",
+    body: "A temporary public observer line can summarize the governed loop under pressure without exposing sealed 00 records. The public edge can show ledger health, configured fleet counts, orchestration availability, and Q readiness as a supervised showcase, then close again when the showcase window ends."
+  },
+  {
     label: "Terminal-Bench Public Task",
     body: "The latest real Harbor run on the official public task is green on the default Q-only path: 5 trials, mean reward 1.0, zero errors, and pass@2, pass@4, and pass@5 all at 1.0."
   },
@@ -111,6 +115,8 @@ export function LandingPage() {
             <span>Arobi decision review live</span>
             <span>Arobi audit integrity 3 scenarios</span>
             <span>Arobi receipt current</span>
+            <span>Public showcase line ready</span>
+            <span>Sealed 00 stays private</span>
             <span>Last public rerun Apr 20</span>
             <span>Public edge truth surfaced</span>
             <span>Roundtable runtime 3 scenarios</span>
