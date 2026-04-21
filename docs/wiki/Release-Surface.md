@@ -2,9 +2,9 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-04-21T23:25:57.366Z
-- Immaculate release: `0.1.0+60d03c2`
-- Repo commit: `60d03c2f801cd6890228b9e91802432026339ab0`
+- Generated: 2026-04-21T23:55:06.298Z
+- Immaculate release: `0.1.0+86cd2f2`
+- Repo commit: `86cd2f2d9a73c48f2c8b59092753443dee2d0804`
 - Branch: `publish-q-win`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+60d03c2` is the current repo build stamp.
+- Immaculate build `0.1.0+86cd2f2` is the current repo build stamp.
 - Arobi Network is the ledger-backed private and public operator network and audit substrate. Immaculate is the governed harness and orchestrator inside it. Q is the reasoning brain inside that governed stack.
 - Q is the only public model name used across the repo, and it is built on `Gemma 4`.
 - The latest tracked Q training bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`, tied to dataset `.training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
@@ -35,6 +35,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Arobi audit integrity: `2026-04-19T23:41:05.513Z` via `docs/wiki/Arobi-Audit-Integrity.json`
 - Arobi live ledger receipt: `2026-04-21T22:18:04.712Z` via `docs/wiki/Arobi-Live-Ledger-Receipt.json`
 - Live mission readiness: `2026-04-21T23:25:54.067Z` via `docs/wiki/Live-Mission-Readiness.json`
+- Cross-project workflow health: `2026-04-21T23:53:43.930Z` via `docs/wiki/Cross-Project-Workflow-Health.json`
 - Supervised mission showcase: `2026-04-21T23:25:55.683Z` via `docs/wiki/Supervised-Mission-Showcase.json`
 - Roundtable actionability: `2026-04-21T16:11:05.129Z` via `docs/wiki/Roundtable-Actionability.json`
 - Roundtable runtime: `2026-04-21T22:19:50.626Z` via `docs/wiki/Roundtable-Runtime.json`

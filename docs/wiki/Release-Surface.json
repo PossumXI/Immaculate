@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-21T23:25:57.366Z",
+  "generatedAt": "2026-04-21T23:55:06.298Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "60d03c2f801cd6890228b9e91802432026339ab0",
-    "gitShortSha": "60d03c2",
+    "gitSha": "86cd2f2d9a73c48f2c8b59092753443dee2d0804",
+    "gitShortSha": "86cd2f2",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+60d03c2",
+    "buildId": "0.1.0+86cd2f2",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -97,6 +97,11 @@
       "label": "Live mission readiness",
       "path": "docs\\wiki\\Live-Mission-Readiness.json",
       "generatedAt": "2026-04-21T23:25:54.067Z"
+    },
+    {
+      "label": "Cross-project workflow health",
+      "path": "docs\\wiki\\Cross-Project-Workflow-Health.json",
+      "generatedAt": "2026-04-21T23:53:43.930Z"
     },
     {
       "label": "Supervised mission showcase",
