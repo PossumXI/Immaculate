@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-21T23:24:07.259Z",
+  "generatedAt": "2026-04-21T23:25:57.366Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "cf60c04c8c226e7484cbfb71811867c34d05a13d",
-    "gitShortSha": "cf60c04",
+    "gitSha": "60d03c2f801cd6890228b9e91802432026339ab0",
+    "gitShortSha": "60d03c2",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+cf60c04",
+    "buildId": "0.1.0+60d03c2",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -96,12 +96,12 @@
     {
       "label": "Live mission readiness",
       "path": "docs\\wiki\\Live-Mission-Readiness.json",
-      "generatedAt": "2026-04-21T23:24:05.216Z"
+      "generatedAt": "2026-04-21T23:25:54.067Z"
     },
     {
       "label": "Supervised mission showcase",
       "path": "docs\\wiki\\Supervised-Mission-Showcase.json",
-      "generatedAt": "2026-04-21T23:24:06.172Z"
+      "generatedAt": "2026-04-21T23:25:55.683Z"
     },
     {
       "label": "Roundtable actionability",
@@ -171,7 +171,7 @@
     {
       "label": "W&B benchmark export",
       "path": "docs\\wiki\\Benchmark-Wandb-Export.json",
-      "generatedAt": "2026-04-21T13:00:29.633361+00:00"
+      "generatedAt": "2026-04-21T16:19:44.883206+00:00"
     },
     {
       "label": "Harbor terminal bench",

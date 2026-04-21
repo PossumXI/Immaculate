@@ -2,9 +2,9 @@
 
 This page is the machine-stamped live mission gate for the current workstation. It compresses the current proof signals for the shared ledger, local Q, OCI-backed Q, and Discord transport into one operator-facing readiness contract.
 
-- Generated: `2026-04-21T23:24:05.216Z`
-- Release: `0.1.0+cf60c04`
-- Repo commit: `cf60c04c8c226e7484cbfb71811867c34d05a13d`
+- Generated: `2026-04-21T23:25:54.067Z`
+- Release: `0.1.0+60d03c2`
+- Repo commit: `60d03c2f801cd6890228b9e91802432026339ab0`
 
 ## Shared Readiness
 
@@ -13,8 +13,8 @@ This page is the machine-stamped live mission gate for the current workstation. 
 - ledger.public: `blocked` @ `https://arobi.aura-genesis.org` | public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true
 - ledger.private: `blocked` @ `D:\openjaws\OpenJaws\artifacts\fabric-audit-soak-20260420T022653Z` | verified private node is blocked by mission treasury signer mismatch despite rerun delta 1
 - q.local: `ready` @ `http://127.0.0.1:11434` | local Q accepted 3/3 seed+mediation scenario pair(s)
-- q.oci: `ready` @ `https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1` | Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 8s ago (budget 900s)
-- discord.transport: `ready` @ `http://127.0.0.1:8788/health` | status=ready; gateway=true; guilds=1; health 200; updated 8s ago (budget 900s)
+- q.oci: `ready` @ `https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1` | Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 34s ago (budget 900s)
+- discord.transport: `ready` @ `http://127.0.0.1:8788/health` | status=ready; gateway=true; guilds=1; health 200; updated 34s ago (budget 900s)
 
 ## Evidence Sources
 

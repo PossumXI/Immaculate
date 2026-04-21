@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-21T23:24:05.216Z",
+  "generatedAt": "2026-04-21T23:25:54.067Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "cf60c04c8c226e7484cbfb71811867c34d05a13d",
-    "gitShortSha": "cf60c04",
+    "gitSha": "60d03c2f801cd6890228b9e91802432026339ab0",
+    "gitShortSha": "60d03c2",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+cf60c04",
+    "buildId": "0.1.0+60d03c2",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -78,7 +78,7 @@
         "configured": true,
         "ready": true,
         "endpoint": "https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1",
-        "detail": "Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 8s ago (budget 900s)"
+        "detail": "Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 34s ago (budget 900s)"
       }
     },
     "discord": {
@@ -87,7 +87,7 @@
         "configured": true,
         "ready": true,
         "endpoint": "http://127.0.0.1:8788/health",
-        "detail": "status=ready; gateway=true; guilds=1; health 200; updated 8s ago (budget 900s)"
+        "detail": "status=ready; gateway=true; guilds=1; health 200; updated 34s ago (budget 900s)"
       }
     },
     "missionSurfaceReady": false,

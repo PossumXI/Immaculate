@@ -2,9 +2,9 @@
 
 This page is the public-safe showcase receipt for the current workstation. It keeps the showcase fail-closed by default, publishes only safe snippets/results, and keeps the private mission lane out of the public proof package.
 
-- Generated: `2026-04-21T23:24:06.172Z`
-- Release: `0.1.0+cf60c04`
-- Repo commit: `cf60c04c8c226e7484cbfb71811867c34d05a13d`
+- Generated: `2026-04-21T23:25:55.683Z`
+- Release: `0.1.0+60d03c2`
+- Repo commit: `60d03c2f801cd6890228b9e91802432026339ab0`
 
 ## Showcase Gate
 
@@ -21,8 +21,8 @@ This page is the public-safe showcase receipt for the current workstation. It ke
 - ledger.public: `blocked` @ `https://arobi.aura-genesis.org` | public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true
 - ledger.private: `blocked` @ `D:\openjaws\OpenJaws\artifacts\fabric-audit-soak-20260420T022653Z` | verified private node is blocked by mission treasury signer mismatch despite rerun delta 1
 - q.local: `ready` @ `http://127.0.0.1:11434` | local Q accepted 3/3 seed+mediation scenario pair(s)
-- q.oci: `ready` @ `https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1` | Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 8s ago (budget 900s)
-- discord.transport: `ready` @ `http://127.0.0.1:8788/health` | status=ready; gateway=true; guilds=1; health 200; updated 8s ago (budget 900s)
+- q.oci: `ready` @ `https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1` | Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 34s ago (budget 900s)
+- discord.transport: `ready` @ `http://127.0.0.1:8788/health` | status=ready; gateway=true; guilds=1; health 200; updated 34s ago (budget 900s)
 
 ## Publishable Snippets
 
