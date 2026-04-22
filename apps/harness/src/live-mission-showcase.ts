@@ -68,6 +68,34 @@ type ArobiLiveLedgerReceipt = {
   };
 };
 
+type LiveOperatorActivityReceipt = {
+  generatedAt?: string;
+  publication?: {
+    status?: "publishable" | "blocked";
+    summary?: string;
+  };
+  agents?: Array<{
+    label: string;
+    status: "ready" | "blocked";
+  }>;
+  qPatrol?: {
+    status?: "ready" | "blocked";
+    summary?: string;
+    recommendedLayerId?: string | null;
+  };
+  roundtable?: {
+    status?: "ready" | "blocked";
+    channelName?: string | null;
+    sessionStatus?: string;
+    actionReceiptCount?: number;
+    summary?: string;
+  };
+  operator?: {
+    status?: "ready" | "blocked";
+    summary?: string;
+  };
+};
+
 type ShowcaseSnippet = {
   label: string;
   status: "publishable" | "blocked";
@@ -244,6 +272,24 @@ function buildArobiSnippet(
   };
 }
 
+function buildOperatorActivitySnippet(
+  receipt: LiveOperatorActivityReceipt | undefined,
+  sourcePath: string
+): ShowcaseSnippet {
+  const totalAgents = receipt?.agents?.length ?? 0;
+  const readyAgents = receipt?.agents?.filter((agent) => agent.status === "ready").length ?? 0;
+  const gateStatus = receipt?.publication?.status ?? "blocked";
+  return {
+    label: "Discord and operator activity",
+    status: receipt ? "publishable" : "blocked",
+    summary: receipt
+      ? `${readyAgents}/${totalAgents} bot receipts are currently ready; Q patrol is \`${receipt.qPatrol?.status ?? "blocked"}\`${receipt.qPatrol?.recommendedLayerId ? ` on layer \`${receipt.qPatrol.recommendedLayerId}\`` : ""}; roundtable is \`${receipt.roundtable?.status ?? "blocked"}\`${receipt.roundtable?.channelName ? ` in \`#${receipt.roundtable.channelName}\`` : ""} with \`${receipt.roundtable?.actionReceiptCount ?? 0}\` bounded action receipts; operator state is \`${receipt.operator?.status ?? "blocked"}\`; activity publication gate is \`${gateStatus}\`: ${receipt.publication?.summary ?? "no publication summary recorded"}.`
+      : "live operator activity receipt missing for this pass",
+    sourcePath,
+    generatedAt: receipt?.generatedAt
+  };
+}
+
 function renderMarkdown(report: LiveMissionShowcaseReport): string {
   return [
     "# Supervised Mission Showcase",
@@ -300,14 +346,16 @@ async function main(): Promise<void> {
   );
   const harborTerminalBenchPath = path.join(REPO_ROOT, "docs", "wiki", "Harbor-Terminal-Bench.json");
   const arobiLiveLedgerPath = path.join(REPO_ROOT, "docs", "wiki", "Arobi-Live-Ledger-Receipt.json");
+  const liveOperatorActivityPath = path.join(REPO_ROOT, "docs", "wiki", "Live-Operator-Activity.json");
 
-  const [liveMissionReadiness, roundtableRuntime, terminalBenchPublicTask, harborTerminalBench, arobiLiveLedger] =
+  const [liveMissionReadiness, roundtableRuntime, terminalBenchPublicTask, harborTerminalBench, arobiLiveLedger, liveOperatorActivity] =
     await Promise.all([
       readJsonFile<LiveMissionReadinessReceipt>(liveMissionReadinessPath),
       readJsonFile<RoundtableRuntimeReceipt>(roundtableRuntimePath),
       readJsonFile<TerminalBenchPublicTaskReceipt>(terminalBenchPublicTaskPath),
       readJsonFile<HarborTerminalBenchReceipt>(harborTerminalBenchPath),
-      readJsonFile<ArobiLiveLedgerReceipt>(arobiLiveLedgerPath)
+      readJsonFile<ArobiLiveLedgerReceipt>(arobiLiveLedgerPath),
+      readJsonFile<LiveOperatorActivityReceipt>(liveOperatorActivityPath)
     ]);
 
   const readiness = liveMissionReadiness?.readiness ?? {
@@ -363,7 +411,11 @@ async function main(): Promise<void> {
         relativeWikiPath(terminalBenchPublicTaskPath)
       ),
       buildHarborSnippet(harborTerminalBench, relativeWikiPath(harborTerminalBenchPath)),
-      buildArobiSnippet(arobiLiveLedger, relativeWikiPath(arobiLiveLedgerPath))
+      buildArobiSnippet(arobiLiveLedger, relativeWikiPath(arobiLiveLedgerPath)),
+      buildOperatorActivitySnippet(
+        liveOperatorActivity,
+        relativeWikiPath(liveOperatorActivityPath)
+      )
     ],
     truthBoundary: [
       "This page is a supervised showcase receipt, not proof that a live Discord operator command or a live 16-subsystem mission was executed on this pass.",

@@ -93,6 +93,7 @@ const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(MODULE_ROOT, "../../..");
 const WIKI_ROOT = path.join(REPO_ROOT, "docs", "wiki");
 const DEFAULT_OPENJAWS_ROOT = "D:\\openjaws\\OpenJaws";
+const ACTIVE_OPENJAWS_ROOT = process.env.OPENJAWS_ROOT?.trim() || DEFAULT_OPENJAWS_ROOT;
 const DEFAULT_DISCORD_AGENT_HEALTH_URL =
   process.env.OPENJAWS_DISCORD_Q_AGENT_HEALTH_URL?.trim() || "http://127.0.0.1:8788/health";
 const DISCORD_RECEIPT_STALE_AFTER_MS = Math.max(
@@ -107,6 +108,36 @@ const DEFAULT_AROBI_VERIFIED_ROOT =
 function normalizeOptionalValue(value: string | undefined | null): string | undefined {
   const trimmed = value?.trim();
   return trimmed && trimmed.length > 0 ? trimmed : undefined;
+}
+
+function normalizePathKey(value: string): string {
+  return path.resolve(value).replaceAll("\\", "/").toLowerCase();
+}
+
+function formatEvidencePath(filePath: string | undefined): string | undefined {
+  const candidate = normalizeOptionalValue(filePath);
+  if (!candidate) {
+    return undefined;
+  }
+  const resolved = path.resolve(candidate);
+  const roots = [
+    { label: "immaculate", root: REPO_ROOT },
+    { label: "openjaws", root: ACTIVE_OPENJAWS_ROOT },
+    { label: "arobi", root: DEFAULT_AROBI_ROOT },
+    { label: "arobi-private", root: DEFAULT_AROBI_VERIFIED_ROOT }
+  ];
+  const normalizedResolved = normalizePathKey(resolved);
+  for (const entry of roots) {
+    const normalizedRoot = normalizePathKey(entry.root);
+    if (
+      normalizedResolved === normalizedRoot ||
+      normalizedResolved.startsWith(`${normalizedRoot}/`)
+    ) {
+      const relative = path.relative(entry.root, resolved).replaceAll("\\", "/");
+      return relative.length > 0 ? `${entry.label}/${relative}` : entry.label;
+    }
+  }
+  return candidate;
 }
 
 async function readJsonFile<T>(filePath: string): Promise<T | undefined> {
@@ -213,8 +244,8 @@ function describeLedgerPrivate(readiness: {
   signerBlocked: boolean;
 }): { endpoint?: string; ready?: boolean; detail: string } {
   const endpoint =
-    normalizeOptionalValue(readiness.receipt?.latestLocalRerun?.outputDir) ??
-    DEFAULT_AROBI_VERIFIED_ROOT;
+    formatEvidencePath(readiness.receipt?.latestLocalRerun?.outputDir) ??
+    formatEvidencePath(DEFAULT_AROBI_VERIFIED_ROOT);
   const privateDelta = readiness.receipt?.proof?.privateEntryDelta;
   return {
     endpoint,
@@ -336,7 +367,7 @@ function renderMarkdown(report: LiveMissionReadinessReport): string {
 
 async function main(): Promise<void> {
   const release = await resolveReleaseMetadata();
-  const openjawsRoot = process.env.OPENJAWS_ROOT?.trim() || DEFAULT_OPENJAWS_ROOT;
+  const openjawsRoot = ACTIVE_OPENJAWS_ROOT;
   const roundtableRuntimePath = path.join(REPO_ROOT, "docs", "wiki", "Roundtable-Runtime.json");
   const arobiLiveLedgerPath = path.join(REPO_ROOT, "docs", "wiki", "Arobi-Live-Ledger-Receipt.json");
   const discordAgentReceiptPath = path.join(openjawsRoot, "local-command-station", "discord-q-agent-receipt.json");
@@ -448,9 +479,10 @@ async function main(): Promise<void> {
     evidence: {
       roundtableRuntimePath: path.relative(REPO_ROOT, roundtableRuntimePath).replaceAll("\\", "/"),
       arobiLiveLedgerPath: path.relative(REPO_ROOT, arobiLiveLedgerPath).replaceAll("\\", "/"),
-      discordAgentReceiptPath,
+      discordAgentReceiptPath:
+        formatEvidencePath(discordAgentReceiptPath) ?? discordAgentReceiptPath,
       discordAgentHealthUrl: DEFAULT_DISCORD_AGENT_HEALTH_URL,
-      openjawsRoot,
+      openjawsRoot: formatEvidencePath(openjawsRoot) ?? openjawsRoot,
       roundtableRuntimeGeneratedAt: roundtableRuntime?.generatedAt,
       arobiLiveLedgerGeneratedAt: arobiLiveLedger?.generatedAt,
       discordAgentReceiptUpdatedAt: discordAgentReceipt?.updatedAt,
