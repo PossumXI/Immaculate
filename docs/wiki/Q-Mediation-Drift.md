@@ -2,14 +2,14 @@
 
 This page is generated from the dedicated `q-mediation-drift` benchmark pack. It measures whether Immaculate preserves Q's governed route through arbitration, scheduling, and routing under mixed pressure without drift.
 
-- Generated: 2026-04-19T22:06:40.025Z
-- Release: `0.1.0+6fc8e11`
-- Repo commit: `6fc8e11`
+- Generated: 2026-04-22T14:37:33.819Z
+- Release: `0.1.0+8d26389`
+- Repo commit: `8d26389`
 - Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`
 
 ## Benchmark
 
-- Suite: `immaculate-benchmark-2026-04-19T22-04-57-220Z`
+- Suite: `immaculate-benchmark-2026-04-22T14-28-16-782Z`
 - Pack: `Q Mediation Drift (q-mediation-drift)`
 - Scenario count: `4`
 - Failed assertions: `0`
@@ -18,11 +18,11 @@ This page is generated from the dedicated `q-mediation-drift` benchmark pack. It
 - Drift detected max: `0`
 - Local replicas P50: `0`
 - Verification quorum P50: `1`
-- Mediation latency P95: `26054.67 ms`
-- Runner path latency P95: `4.4 ms`
-- Arbitration latency P95: `1.61 ms`
-- Scheduling latency P95: `2.04 ms`
-- Routing latency P95: `0.75 ms`
+- Mediation latency P95: `60120.45 ms`
+- Runner path latency P95: `50.38 ms`
+- Arbitration latency P95: `34.61 ms`
+- Scheduling latency P95: `14.47 ms`
+- Routing latency P95: `1.3 ms`
 - Hardware: knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics
 
 ## Causal Diagnosis
@@ -36,7 +36,7 @@ This page is generated from the dedicated `q-mediation-drift` benchmark pack. It
 - Immaculate self-eval: Q should stay primary because the local governed lane is healthy while cloud Q is blocked. Immaculate preserved Q's governed route through arbitration, scheduling, and routing.
 - Context fingerprint: `q-mediation-context-mixed-pressure-local-cognition`
 - Evidence digest: `q-mediation-evidence-mixed-pressure-local-cognition`
-- Runner bottleneck stage: `scheduling`
+- Runner bottleneck stage: `arbitration`
 - Parallel formation: `hybrid-quorum` / local `2` / remote `0` / quorum `2`
 - Affinity and deadline: `quorum-local` / `bounded` / `700 ms` / `degrade`
 - Intent alignment: `0.50`
@@ -54,7 +54,7 @@ This page is generated from the dedicated `q-mediation-drift` benchmark pack. It
 - Immaculate self-eval: Q should stay primary because the local governed lane is healthy while cloud Q is blocked. Immaculate preserved Q's governed route through arbitration, scheduling, and routing.
 - Context fingerprint: `q-mediation-context-mixed-pressure-local-memory-cognition`
 - Evidence digest: `q-mediation-evidence-mixed-pressure-local-memory-cognition`
-- Runner bottleneck stage: `scheduling`
+- Runner bottleneck stage: `arbitration`
 - Parallel formation: `hybrid-quorum` / local `2` / remote `0` / quorum `2`
 - Affinity and deadline: `quorum-local` / `bounded` / `700 ms` / `degrade`
 - Intent alignment: `0.50`

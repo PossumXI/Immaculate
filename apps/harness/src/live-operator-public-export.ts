@@ -1,4 +1,5 @@
 import path from "node:path";
+import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import {
@@ -64,9 +65,38 @@ type PublicShowcaseActivityEntry = {
   kind: string | null;
   status: string | null;
   source: string | null;
+  operatorActions?: string[];
   subsystems: string[];
   artifacts: string[];
   tags: string[];
+};
+
+type SharedPublicShowcaseActivityFeed = {
+  updatedAt?: string | null;
+  entries?: Array<Partial<PublicShowcaseActivityEntry> | Record<string, unknown>>;
+};
+
+type SharedPublicShowcaseStatus = {
+  active?: boolean;
+  title?: string | null;
+  summary?: string | null;
+  operatorLine?: string | null;
+  expiresAt?: string | null;
+  windowLabel?: string | null;
+  publishTargets?: unknown;
+  resultsReady?: boolean;
+  fleetLabel?: string | null;
+  subsystemCount?: number | null;
+  onlineSubsystemCount?: number | null;
+  degradedSubsystemCount?: number | null;
+  offlineSubsystemCount?: number | null;
+  unconfiguredSubsystemCount?: number | null;
+  networkVersion?: string | null;
+  verifiedLedgerEntries?: number | null;
+  publicHeight?: number | null;
+  orchestrationProfile?: string | null;
+  qAuthMode?: string | null;
+  lastChecked?: string | null;
 };
 
 type PublicShowcaseStatus = {
@@ -117,6 +147,7 @@ type LiveOperatorPublicExportReport = {
 const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(MODULE_ROOT, "../../..");
 const WIKI_ROOT = path.join(REPO_ROOT, "docs", "wiki");
+const OPENJAWS_ROOT = process.env.OPENJAWS_ROOT?.trim() || "D:\\openjaws\\OpenJaws";
 const PUBLISH_TARGETS = [
   "aura-genesis.org/status (public-safe aggregate only)",
   "iorch.net (results only)",
@@ -133,6 +164,134 @@ async function readJsonFile<T>(filePath: string): Promise<T | undefined> {
   } catch {
     return undefined;
   }
+}
+
+function normalizeInlineText(value: unknown, maxLength = 320): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+  const normalized = value.replace(/\s+/g, " ").trim();
+  if (normalized.length === 0) {
+    return null;
+  }
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+  return `${normalized.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
+}
+
+function normalizeTimestamp(value: unknown): string | null {
+  const candidate = normalizeInlineText(value, 64);
+  if (!candidate) {
+    return null;
+  }
+  const parsed = Date.parse(candidate);
+  return Number.isFinite(parsed) ? new Date(parsed).toISOString() : null;
+}
+
+function normalizeStringArray(value: unknown, maxLength = 64): string[] {
+  return Array.isArray(value)
+    ? Array.from(
+        new Set(
+          value
+            .map((entry) => normalizeInlineText(entry, maxLength))
+            .filter((entry): entry is string => Boolean(entry)),
+        ),
+      )
+    : [];
+}
+
+function resolveSharedActivityFeedCandidates(): string[] {
+  const home = process.env.USERPROFILE?.trim() || process.env.HOME?.trim();
+  return [
+    process.env.OPENJAWS_PUBLIC_SHOWCASE_ACTIVITY_MIRROR_FILE?.trim(),
+    path.join(OPENJAWS_ROOT, "docs", "wiki", "Public-Showcase-Activity.json"),
+    process.env.OPENJAWS_PUBLIC_SHOWCASE_ACTIVITY_FILE?.trim(),
+    process.env.AROBI_PUBLIC_SHOWCASE_ACTIVITY_FILE?.trim(),
+    home ? path.join(home, ".arobi-public", "showcase-activity.json") : null,
+  ].filter((candidate): candidate is string => Boolean(candidate && candidate.length > 0));
+}
+
+function resolveSharedShowcaseStatusCandidates(): string[] {
+  const home = process.env.USERPROFILE?.trim() || process.env.HOME?.trim();
+  return [
+    process.env.AROBI_PUBLIC_SHOWCASE_FILE?.trim(),
+    home ? path.join(home, ".arobi-public", "showcase-status.json") : null,
+  ].filter((candidate): candidate is string => Boolean(candidate && candidate.length > 0));
+}
+
+function normalizeSharedActivityEntry(
+  value: Partial<PublicShowcaseActivityEntry> | Record<string, unknown>,
+  index: number,
+): PublicShowcaseActivityEntry | null {
+  const title = normalizeInlineText(value.title, 96);
+  const summary = normalizeInlineText(value.summary, 320);
+  if (!title && !summary) {
+    return null;
+  }
+
+  const timestamp = normalizeTimestamp(value.timestamp);
+  const kind = normalizeInlineText(value.kind, 40);
+  const source = normalizeInlineText(value.source, 64);
+  const fallbackId = `${kind ?? "activity"}-${timestamp ?? index}`;
+  return {
+    id: normalizeInlineText(value.id, 96) ?? fallbackId,
+    timestamp,
+    title: title ?? summary ?? "Public showcase activity",
+    summary,
+    kind,
+    status: normalizeInlineText(value.status, 24),
+    source,
+    operatorActions: normalizeStringArray(value.operatorActions, 48),
+    subsystems: normalizeStringArray(value.subsystems, 48),
+    artifacts: normalizeStringArray(value.artifacts, 72),
+    tags: normalizeStringArray(value.tags, 48),
+  };
+}
+
+async function readSharedOpenJawsActivityFeed(): Promise<PublicShowcaseActivityEntry[]> {
+  for (const candidate of resolveSharedActivityFeedCandidates()) {
+    if (!existsSync(candidate)) {
+      continue;
+    }
+    const parsed = await readJsonFile<SharedPublicShowcaseActivityFeed>(candidate);
+    if (!Array.isArray(parsed?.entries)) {
+      continue;
+    }
+    const entries = parsed.entries
+      .map((entry, index) => normalizeSharedActivityEntry(entry, index))
+      .filter((entry): entry is PublicShowcaseActivityEntry => Boolean(entry));
+    if (entries.length > 0) {
+      return entries;
+    }
+  }
+  return [];
+}
+
+async function readSharedPublicShowcaseStatus(): Promise<SharedPublicShowcaseStatus | undefined> {
+  for (const candidate of resolveSharedShowcaseStatusCandidates()) {
+    if (!existsSync(candidate)) {
+      continue;
+    }
+    const parsed = await readJsonFile<SharedPublicShowcaseStatus>(candidate);
+    if (parsed) {
+      return parsed;
+    }
+  }
+  return undefined;
+}
+
+function hasVerifiedSharedPublication(
+  status: SharedPublicShowcaseStatus | undefined,
+): boolean {
+  const combined = [
+    normalizeInlineText(status?.summary, 512),
+    normalizeInlineText(status?.operatorLine, 512),
+  ]
+    .filter((value): value is string => Boolean(value))
+    .join(" ")
+    .toLowerCase();
+  return combined.includes("public-safe aggregate publication verified");
 }
 
 function resolveDefaultReadiness(): HarnessReadinessSummary {
@@ -180,8 +339,16 @@ function resolveDefaultReadiness(): HarnessReadinessSummary {
 
 function buildPublicationSummary(
   activity: LiveOperatorActivityReceipt | undefined,
-  readiness: HarnessReadinessSummary
+  readiness: HarnessReadinessSummary,
+  sharedStatus?: SharedPublicShowcaseStatus,
 ): string {
+  if (hasVerifiedSharedPublication(sharedStatus)) {
+    return (
+      normalizeInlineText(sharedStatus?.summary, 512) ??
+      normalizeInlineText(sharedStatus?.operatorLine, 512) ??
+      "public-safe aggregate publication has been verified on the Arobi public lane"
+    );
+  }
   const blockedLanes = [
     {
       label: "ledger.public",
@@ -283,8 +450,16 @@ function deriveQAuthMode(
 function buildShowcaseSummary(
   activity: LiveOperatorActivityReceipt | undefined,
   readiness: HarnessReadinessSummary,
-  arobi: ArobiLiveLedgerReceipt | undefined
+  arobi: ArobiLiveLedgerReceipt | undefined,
+  sharedStatus?: SharedPublicShowcaseStatus,
 ): string {
+  if (hasVerifiedSharedPublication(sharedStatus)) {
+    return (
+      normalizeInlineText(sharedStatus?.summary, 512) ??
+      normalizeInlineText(sharedStatus?.operatorLine, 512) ??
+      "public-safe aggregate publication has been verified on the Arobi public lane"
+    );
+  }
   const botReadiness = summarizeBotReadiness(activity);
   const roundtableLabel = activity?.roundtable?.channelName
     ? `#${activity.roundtable.channelName}`
@@ -319,12 +494,14 @@ function createActivityEntry(
   };
 }
 
-function buildActivityFeed(
+function buildDerivedActivityFeed(
   activity: LiveOperatorActivityReceipt | undefined,
   readiness: HarnessReadinessSummary,
   arobi: ArobiLiveLedgerReceipt | undefined,
+  sharedStatus: SharedPublicShowcaseStatus | undefined,
   generatedAt: string,
-  publicationSummary: string
+  publicationSummary: string,
+  publicationVerified: boolean,
 ): PublicShowcaseActivityEntry[] {
   const botReadiness = summarizeBotReadiness(activity);
   const laneTones = {
@@ -343,10 +520,11 @@ function buildActivityFeed(
       id: "showcase-summary",
       timestamp: generatedAt,
       title: "Supervised operator activity export updated",
-      summary: buildShowcaseSummary(activity, readiness, arobi),
+      summary: buildShowcaseSummary(activity, readiness, arobi, sharedStatus),
       kind: "showcase",
-      status: readiness.ledger.public.ready ? "ok" : "warning",
+      status: publicationVerified ? "ok" : "warning",
       source: "fabric.showcase",
+      operatorActions: ["public_showcase_export"],
       subsystems: ["immaculate", "openjaws", "q"],
       artifacts: ["showcase:summary", "receipt:live-operator-public-export"],
       tags: ["showcase", "public", "operator"]
@@ -357,8 +535,9 @@ function buildActivityFeed(
       title: "Public publication gate",
       summary: publicationSummary,
       kind: "publication",
-      status: activity?.publication?.status === "publishable" ? "ok" : "warning",
+      status: publicationVerified ? "ok" : "warning",
       source: "immaculate.live_operator_activity",
+      operatorActions: ["publication_gate"],
       subsystems: ["arobi", "immaculate"],
       artifacts: ["gate:publication"],
       tags: ["public", "gate"]
@@ -375,6 +554,7 @@ function buildActivityFeed(
       kind: "agent",
       status: laneTones[activity?.qPatrol?.status ?? "blocked"],
       source: "immaculate.live_operator_activity",
+      operatorActions: ["q_patrol"],
       subsystems: ["q", "discord"],
       artifacts: [
         "receipt:q-patrol",
@@ -392,6 +572,7 @@ function buildActivityFeed(
       kind: "roundtable",
       status: laneTones[activity?.roundtable?.status ?? "blocked"],
       source: "immaculate.live_operator_activity",
+      operatorActions: ["roundtable_runtime"],
       subsystems: ["discord", "openjaws", "immaculate"],
       artifacts: [
         "receipt:roundtable",
@@ -421,6 +602,7 @@ function buildActivityFeed(
             ? "warning"
             : "warning",
       source: "immaculate.live_operator_activity",
+      operatorActions: ["discord_bot_receipts"],
       subsystems: ["discord", "openjaws", "q"],
       artifacts: ["receipt:discord-bots"],
       tags: ["discord", "receipts", "bots"]
@@ -433,6 +615,7 @@ function buildActivityFeed(
       kind: "operator",
       status: laneTones[activity?.operator?.status ?? "blocked"],
       source: "immaculate.live_operator_activity",
+      operatorActions: ["operator_state"],
       subsystems: ["openjaws", "immaculate"],
       artifacts: ["receipt:operator-state"],
       tags: ["operator", "human-in-the-loop"]
@@ -445,6 +628,7 @@ function buildActivityFeed(
       kind: "transport",
       status: readiness.discord.transport.ready ? "ok" : "warning",
       source: "immaculate.live_mission_readiness",
+      operatorActions: ["discord_transport_readiness"],
       subsystems: ["discord", "q"],
       artifacts: ["readiness:discord-transport"],
       tags: ["discord", "transport"]
@@ -474,6 +658,7 @@ function buildActivityFeed(
           ? "ok"
           : "warning",
       source: "immaculate.arobi_live_ledger",
+      operatorActions: ["public_ledger_visibility"],
       subsystems: ["arobi", "ledger"],
       artifacts: ["receipt:arobi-live-ledger"],
       tags: ["ledger", "public", "audit"]
@@ -481,11 +666,91 @@ function buildActivityFeed(
   ];
 }
 
+function buildActivityFeed(
+  sharedEntries: PublicShowcaseActivityEntry[],
+  derivedEntries: PublicShowcaseActivityEntry[],
+): PublicShowcaseActivityEntry[] {
+  if (sharedEntries.length === 0) {
+    return derivedEntries;
+  }
+
+  const supplementalIds = new Set([
+    "showcase-summary",
+    "publication-gate",
+    "operator-state",
+    "discord-transport",
+    "public-ledger",
+  ]);
+
+  const merged = [...derivedEntries.filter((entry) => supplementalIds.has(entry.id)), ...sharedEntries];
+  const deduped = Array.from(
+    merged.reduce<Map<string, PublicShowcaseActivityEntry>>((accumulator, entry) => {
+      if (!accumulator.has(entry.id)) {
+        accumulator.set(entry.id, entry);
+      }
+      return accumulator;
+    }, new Map()).values(),
+  );
+
+  const prioritized = deduped.sort((left, right) => {
+    const priority = (entry: PublicShowcaseActivityEntry): number => {
+      if (entry.id === "showcase-summary") {
+        return 0;
+      }
+      if (entry.id === "publication-gate") {
+        return 1;
+      }
+      if (entry.id.startsWith("runtime-audit-")) {
+        return 2;
+      }
+      if (entry.id.startsWith("roundtable-")) {
+        return 3;
+      }
+      if (entry.id.startsWith("discord-q-")) {
+        return 4;
+      }
+      if (entry.id.startsWith("discord-blackbeak-")) {
+        return 5;
+      }
+      if (entry.id.startsWith("discord-viola-")) {
+        return 6;
+      }
+      if (entry.id.startsWith("apex-operator-")) {
+        return 7;
+      }
+      if (entry.id === "public-ledger") {
+        return 8;
+      }
+      if (entry.id === "discord-transport") {
+        return 9;
+      }
+      if (entry.id === "operator-state") {
+        return 10;
+      }
+      return 20;
+    };
+    const leftPriority = priority(left);
+    const rightPriority = priority(right);
+    if (leftPriority !== rightPriority) {
+      return leftPriority - rightPriority;
+    }
+    const leftTime = left.timestamp ? Date.parse(left.timestamp) : 0;
+    const rightTime = right.timestamp ? Date.parse(right.timestamp) : 0;
+    if (rightTime !== leftTime) {
+      return rightTime - leftTime;
+    }
+    return left.title.localeCompare(right.title);
+  });
+
+  return prioritized.slice(0, 10);
+}
+
 function renderMarkdown(report: LiveOperatorPublicExportReport): string {
   return [
     "# Live Operator Public Export",
     "",
     "This page is the public-safe operator export for the current workstation. It mirrors the `fabric.showcase` contract already used by the aura-genesis status page, keeps the private mission lane closed, and only emits aggregate operator activity that is safe to publish on public surfaces.",
+    "When the repo-local OpenJaws public showcase mirror is present, this export consumes that shared sanitized activity feed instead of regenerating overlapping Discord/Q/roundtable entries locally.",
     "",
     `- Generated: \`${report.generatedAt}\``,
     `- Release: \`${report.release.buildId}\``,
@@ -550,15 +815,29 @@ async function main(): Promise<void> {
   ]);
 
   const readiness = liveMissionReadiness?.readiness ?? resolveDefaultReadiness();
-  const publicationSummary = buildPublicationSummary(liveOperatorActivity, readiness);
-  const laneCounts = countShowcaseLanes(readiness);
-  const generatedAt = new Date().toISOString();
-  const activityFeed = buildActivityFeed(
+  const sharedShowcaseStatus = await readSharedPublicShowcaseStatus();
+  const publicationVerified =
+    liveOperatorActivity?.publication?.status === "publishable" ||
+    hasVerifiedSharedPublication(sharedShowcaseStatus);
+  const publicationSummary = buildPublicationSummary(
     liveOperatorActivity,
     readiness,
-    arobiLiveLedger,
-    generatedAt,
-    publicationSummary
+    sharedShowcaseStatus,
+  );
+  const laneCounts = countShowcaseLanes(readiness);
+  const generatedAt = new Date().toISOString();
+  const sharedOpenJawsActivityFeed = await readSharedOpenJawsActivityFeed();
+  const activityFeed = buildActivityFeed(
+    sharedOpenJawsActivityFeed,
+    buildDerivedActivityFeed(
+      liveOperatorActivity,
+      readiness,
+      arobiLiveLedger,
+      sharedShowcaseStatus,
+      generatedAt,
+      publicationSummary,
+      publicationVerified,
+    ),
   );
 
   const report: LiveOperatorPublicExportReport = {
@@ -570,34 +849,81 @@ async function main(): Promise<void> {
       summary: "Public-safe export that mirrors the aura-genesis fabric.showcase contract."
     },
     publication: {
-      status: liveOperatorActivity?.publication?.status === "publishable" ? "publishable" : "blocked",
+      status: publicationVerified ? "publishable" : "blocked",
       summary: publicationSummary,
       target: "aura-genesis.org/status"
     },
     showcase: {
-      active: liveOperatorActivity?.publication?.status === "publishable",
+      active:
+        typeof sharedShowcaseStatus?.active === "boolean"
+          ? sharedShowcaseStatus.active
+          : publicationVerified,
       mode: "controlled",
-      title: "Supervised operator audit export.",
-      summary: buildShowcaseSummary(liveOperatorActivity, readiness, arobiLiveLedger),
-      expiresAt: null,
+      title:
+        normalizeInlineText(sharedShowcaseStatus?.title, 128) ??
+        "Supervised operator audit export.",
+      summary: buildShowcaseSummary(
+        liveOperatorActivity,
+        readiness,
+        arobiLiveLedger,
+        sharedShowcaseStatus,
+      ),
+      expiresAt: normalizeTimestamp(sharedShowcaseStatus?.expiresAt),
       windowLabel:
-        liveOperatorActivity?.publication?.status === "publishable"
+        normalizeInlineText(sharedShowcaseStatus?.windowLabel, 160) ??
+        (publicationVerified
           ? "Operator-supervised public verification window"
-          : "Showcase line closed until public ledger publication is proven",
-      publishTargets: PUBLISH_TARGETS,
-      resultsReady: activityFeed.length > 0,
-      fleetLabel: "Immaculate / OpenJaws / Q operator loop",
-      subsystemCount: laneCounts.total,
-      onlineSubsystemCount: laneCounts.online,
-      degradedSubsystemCount: laneCounts.degraded,
-      offlineSubsystemCount: laneCounts.offline,
-      unconfiguredSubsystemCount: laneCounts.unconfigured,
-      networkVersion: arobiLiveLedger?.liveNode?.version ?? null,
-      verifiedLedgerEntries: arobiLiveLedger?.liveNode?.totalEntries ?? null,
-      publicHeight: arobiLiveLedger?.liveNode?.height ?? null,
-      orchestrationProfile: "immaculate-supervised-operator-loop",
-      qAuthMode: deriveQAuthMode(liveOperatorActivity, readiness),
-      lastChecked: generatedAt,
+          : "Showcase line closed until public ledger publication is proven"),
+      publishTargets:
+        normalizeStringArray(sharedShowcaseStatus?.publishTargets, 160).length > 0
+          ? normalizeStringArray(sharedShowcaseStatus?.publishTargets, 160)
+          : PUBLISH_TARGETS,
+      resultsReady:
+        typeof sharedShowcaseStatus?.resultsReady === "boolean"
+          ? sharedShowcaseStatus.resultsReady
+          : activityFeed.length > 0,
+      fleetLabel:
+        normalizeInlineText(sharedShowcaseStatus?.fleetLabel, 128) ??
+        "Immaculate / OpenJaws / Q operator loop",
+      subsystemCount:
+        typeof sharedShowcaseStatus?.subsystemCount === "number"
+          ? sharedShowcaseStatus.subsystemCount
+          : laneCounts.total,
+      onlineSubsystemCount:
+        typeof sharedShowcaseStatus?.onlineSubsystemCount === "number"
+          ? sharedShowcaseStatus.onlineSubsystemCount
+          : laneCounts.online,
+      degradedSubsystemCount:
+        typeof sharedShowcaseStatus?.degradedSubsystemCount === "number"
+          ? sharedShowcaseStatus.degradedSubsystemCount
+          : laneCounts.degraded,
+      offlineSubsystemCount:
+        typeof sharedShowcaseStatus?.offlineSubsystemCount === "number"
+          ? sharedShowcaseStatus.offlineSubsystemCount
+          : laneCounts.offline,
+      unconfiguredSubsystemCount:
+        typeof sharedShowcaseStatus?.unconfiguredSubsystemCount === "number"
+          ? sharedShowcaseStatus.unconfiguredSubsystemCount
+          : laneCounts.unconfigured,
+      networkVersion:
+        normalizeInlineText(sharedShowcaseStatus?.networkVersion, 32) ??
+        arobiLiveLedger?.liveNode?.version ??
+        null,
+      verifiedLedgerEntries:
+        typeof sharedShowcaseStatus?.verifiedLedgerEntries === "number"
+          ? sharedShowcaseStatus.verifiedLedgerEntries
+          : arobiLiveLedger?.liveNode?.totalEntries ?? null,
+      publicHeight:
+        typeof sharedShowcaseStatus?.publicHeight === "number"
+          ? sharedShowcaseStatus.publicHeight
+          : arobiLiveLedger?.liveNode?.height ?? null,
+      orchestrationProfile:
+        normalizeInlineText(sharedShowcaseStatus?.orchestrationProfile, 96) ??
+        "immaculate-supervised-operator-loop",
+      qAuthMode:
+        normalizeInlineText(sharedShowcaseStatus?.qAuthMode, 32) ??
+        deriveQAuthMode(liveOperatorActivity, readiness),
+      lastChecked: normalizeTimestamp(sharedShowcaseStatus?.lastChecked) ?? generatedAt,
       activityFeed
     },
     truthBoundary: [
@@ -605,7 +931,9 @@ async function main(): Promise<void> {
       "This export is shaped to mirror the existing aura-genesis fabric.showcase contract; it does not mutate the public website or the public ledger by itself.",
       "The private mission lane remains closed here even when local Discord transport, OCI-backed Q, and roundtable receipts are ready.",
       "Private paths, worktree roots, secrets, Discord tokens, private ledger payloads, and raw chain-of-thought are intentionally excluded from this export.",
-      "ledger.public remains blocked until a fresh governed public Arobi write is proven on this machine."
+      publicationVerified
+        ? "Fresh public-safe Arobi public audit writes were accepted during the current controlled publish pass; this still does not open the private mission lane or prove live Discord mission execution."
+        : "ledger.public remains blocked until a fresh governed public Arobi write is proven on this machine."
     ],
     output: {
       jsonPath: path.join("docs", "wiki", "Live-Operator-Public-Export.json"),

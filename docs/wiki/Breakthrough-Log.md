@@ -19,6 +19,31 @@ For each breakthrough, record:
 
 ## Current Entries
 
+### 2026-04-22
+
+#### Q mediation drift is restamped on the active publish lane
+
+What changed:
+- the active `publish-q-win` worktree reran the bounded `q-mediation-drift` pack through the harness CLI, published it in offline W&B mode, regenerated `docs/wiki/Q-Mediation-Drift.md`, and restamped `docs/wiki/Release-Surface.md`
+- `docs/wiki/Benchmark-Status.json` now includes the fresh `q-mediation-drift` publication for `immaculate-benchmark-2026-04-22T14-28-16-782Z` instead of leaving the Q-specific public status surface on the older April export set
+- the live operator public export was refreshed immediately afterward, so the controlled showcase lane now reflects the same `publish-q-win` release/build identity that produced the new mediation receipt
+
+Why it matters:
+- the missed pattern was that the repo root benchmark wrappers are not the Q publication lane; the `publish-q-win` worktree is the place where the tracked Q release surfaces, W&B publication status, and public operator export actually converge
+- rerunning `q-mediation-drift` matters because it is the sharpest bounded proof that Q and Immaculate preserve governed `ROUTE / REASON / COMMIT` behavior under mixed pressure instead of silently drifting the operator path
+- restamping the release and export surfaces matters because the public story stays coherent only when the benchmark page, the release page, and the public-safe operator export all point at the same build and bundle lineage
+
+Evidence:
+- `docs/wiki/Q-Mediation-Drift.md` now records `4` scenarios, `0` failed assertions, route-alignment `P50 1`, drift-detected `max 0`, and runner-path `P95 50.38 ms` for the current `publish-q-win` lane
+- `docs/wiki/Benchmark-Status.json` now includes `q-mediation-drift` with `failedAssertions: 0`, `totalAssertions: 8`, `totalDurationMs: 245878.38`, and offline W&B publication metadata under the `PossumX/immaculate` project
+- `docs/wiki/Release-Surface.md` now points at the same `2026-04-22T14:37:33.819Z` `Q-Mediation-Drift` surface and the active `8d26389` build identity
+- `docs/wiki/Live-Operator-Public-Export.json` now reflects the same `publish-q-win` release/build metadata on the controlled public export lane
+
+What this unlocks next:
+- the next public benchmark pass can build from a current Q-specific mediation surface instead of only from generic substrate smoke results
+- Q benchmark corpus and promotion work can now consume a same-day governed mediation receipt again
+- the Asgard showcase and `aura-genesis.org/status` lane can keep pointing at the current Q publication line without mixing older April mediation docs into the public story
+
 ### 2026-04-20
 
 #### Roundtable runtime is now cold-start reproducible

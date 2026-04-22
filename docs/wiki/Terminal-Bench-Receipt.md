@@ -2,9 +2,9 @@
 
 This page tracks the real public leaderboard state for Q. The local public-task Harbor win is real, but the official Terminal-Bench leaderboard validator currently requires the full 89-task sweep, so there is no eligible current public receipt claimed from this checkout.
 
-- Generated: `2026-04-19T14:31:45.545Z`
-- Release: `0.1.0+801fe27`
-- Repo commit: `801fe27ab25461ac6bfdf54f3564dff9ea90392c`
+- Generated: `2026-04-22T13:45:33.016Z`
+- Release: `0.1.0+8d26389`
+- Repo commit: `8d26389523f3b4bcebde1b54e1841f462e1ba184`
 - Q serving label: `Q`
 - Leaderboard repo: `harborframework/terminal-bench-2-leaderboard`
 - Status: `waiting-for-full-sweep`

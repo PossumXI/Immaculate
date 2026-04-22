@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-04-19T07:51:12.922Z",
+  "generatedAt": "2026-04-22T13:49:35.931Z",
   "modelLaneSurface": "direct-q-structured-contract",
-  "qRuntimeBaseUrl": "http://127.0.0.1:11435",
+  "qRuntimeBaseUrl": "http://127.0.0.1:11434",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "5ed19b98682545e60ebbc826f19a6e793619ce06",
-    "gitShortSha": "5ed19b9",
-    "gitBranch": "harbor-q-push",
-    "buildId": "0.1.0+5ed19b9",
+    "gitSha": "8d26389523f3b4bcebde1b54e1841f462e1ba184",
+    "gitShortSha": "8d26389",
+    "gitBranch": "publish-q-win",
+    "buildId": "0.1.0+8d26389",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -71,70 +71,70 @@
       "taskCount": 4,
       "parseSuccessCount": 4,
       "parseSuccessRate": 1,
-      "averageLatencyMs": 20206.9,
-      "p95LatencyMs": 23994,
+      "averageLatencyMs": 27388.1,
+      "p95LatencyMs": 42892.09,
       "tasks": [
         {
           "scenarioId": "bridge-ack-fail-closed",
           "label": "Bridge ACK fail-closed",
-          "latencyMs": 23792.85,
-          "wallLatencyMs": 24044.65,
+          "latencyMs": 42892.09,
+          "wallLatencyMs": 43906.56,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
           "routeSuggestion": "guarded",
-          "reasonSummary": "Late ACK indicates a potential transport timeout requiring fail-closed behavior.",
-          "commitStatement": "Maintain fail-closed state and await further confirmation from the bridge.",
-          "responsePreview": "ROUTE: guarded REASON: Late ACK indicates a potential transport timeout requiring fail-closed behavior. COMMIT: Maintain fail-closed state and await further confirmation from the bridge."
+          "reasonSummary": "Late ACK indicates bridge path degradation requiring fail-closed behavior.",
+          "commitStatement": "Maintain fail-closed semantics and preserve the durable audit trail.",
+          "responsePreview": "ROUTE: guarded REASON: Late ACK indicates bridge path degradation requiring fail-closed behavior. COMMIT: Maintain fail-closed semantics and preserve the durable audit trail."
         },
         {
           "scenarioId": "nonce-forgery-response",
           "label": "ACK nonce forgery response",
-          "latencyMs": 16742.7,
-          "wallLatencyMs": 16752.77,
+          "latencyMs": 19867.04,
+          "wallLatencyMs": 19985.13,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
           "routeSuggestion": "suppressed",
-          "reasonSummary": "Forged bridge ACK without the correct nonce indicates the bridge is untrusted and must remain fail-closed.",
-          "commitStatement": "Maintain fail-closed state due to untrusted bridge acknowledgment replay.",
-          "responsePreview": "ROUTE: suppressed REASON: Forged bridge ACK without the correct nonce indicates the bridge is untrusted and must remain fail-closed. COMMIT: Maintain fail-closed state due to untrusted bridge acknowledgment replay."
+          "reasonSummary": "Bridge ACK replay without correct nonce indicates the bridge is untrusted.",
+          "commitStatement": "Stay fail-closed due to untrusted bridge state.",
+          "responsePreview": "ROUTE: suppressed REASON: Bridge ACK replay without correct nonce indicates the bridge is untrusted. COMMIT: Stay fail-closed due to untrusted bridge state."
         },
         {
           "scenarioId": "public-q-rate-limit",
           "label": "Public Q edge throttling",
-          "latencyMs": 23994,
-          "wallLatencyMs": 24007.45,
+          "latencyMs": 28271.74,
+          "wallLatencyMs": 28296.45,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
           "routeSuggestion": "cognitive",
-          "reasonSummary": "Public quota burst occurred while the private operator plane remained stable.",
-          "commitStatement": "Maintain the local governed Q lane to ensure operator plane stability.",
-          "responsePreview": "ROUTE: cognitive REASON: Public quota burst occurred while the private operator plane remained stable. COMMIT: Maintain the local governed Q lane to ensure operator plane stability."
+          "reasonSummary": "The local governed lane was healthy, allowing mediation on the governed local Q lane.",
+          "commitStatement": "Keep mediation on the governed local Q lane without drift.",
+          "responsePreview": "ROUTE: cognitive REASON: The local governed lane was healthy, allowing mediation on the governed local Q lane. COMMIT: Keep mediation on the governed local Q lane without drift."
         },
         {
           "scenarioId": "bridge-continuity-routing",
           "label": "Bridge continuity routing",
-          "latencyMs": 16298.06,
-          "wallLatencyMs": 16305.14,
+          "latencyMs": 18521.54,
+          "wallLatencyMs": 18585.12,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
           "routeSuggestion": "guarded",
           "reasonSummary": "HTTP/2 direct is healthy while the websocket bridge is degraded.",
-          "commitStatement": "Proceed using the healthy HTTP/2 direct path for transport.",
-          "responsePreview": "ROUTE: cognitive REASON: HTTP/2 direct is healthy while the websocket bridge is degraded. COMMIT: Proceed using the healthy HTTP/2 direct path for transport."
+          "commitStatement": "Route execution via the healthy direct path.",
+          "responsePreview": "ROUTE: cognitive REASON: HTTP/2 direct is healthy while the websocket bridge is degraded. COMMIT: Route execution via the healthy direct path."
         }
       ]
     }
   ],
   "bridgeRuntime": {
-    "suiteId": "immaculate-benchmark-2026-04-19T07-51-08-756Z",
+    "suiteId": "immaculate-benchmark-2026-04-22T13-49-17-122Z",
     "packId": "substrate-readiness",
     "failedAssertions": 0,
     "selectedAssertions": [
@@ -175,7 +175,7 @@
         "label": "Supervised serial transport registration exposes vendor/device identity and heartbeat policy",
         "status": "pass",
         "target": "registered serial-json transport with vendor/model and heartbeat policy",
-        "actual": "atx-fnv1a-df1a2865:http2-json:immaculate-labs:healthy, atx-fnv1a-1794ee96:serial-json:immaculate-labs:healthy, atx-fnv1a-319f9069:udp-osc:generic:healthy",
+        "actual": "atx-fnv1a-ca651cf4:http2-json:immaculate-labs:healthy, atx-fnv1a-f843c321:serial-json:immaculate-labs:healthy, atx-fnv1a-b49690b8:udp-osc:generic:healthy",
         "detail": "vendor/device lanes should be durable registry entries with explicit supervision policy, not anonymous direct writes"
       },
       {
@@ -215,7 +215,7 @@
         "label": "HTTP/2 direct transport registration exposes a supervised RPC-class device endpoint",
         "status": "pass",
         "target": "registered http2-json transport with vendor/model and heartbeat policy",
-        "actual": "atx-fnv1a-df1a2865:http2-json:immaculate-labs:haptic-rpc-s2:20/5000:healthy, atx-fnv1a-1794ee96:serial-json:immaculate-labs:haptic-bridge-s1:20/5000:healthy, atx-fnv1a-319f9069:udp-osc:generic:udp-osc:5000/15000:healthy",
+        "actual": "atx-fnv1a-ca651cf4:http2-json:immaculate-labs:haptic-rpc-s2:20/5000:healthy, atx-fnv1a-f843c321:serial-json:immaculate-labs:haptic-bridge-s1:20/5000:healthy, atx-fnv1a-b49690b8:udp-osc:generic:udp-osc:5000/15000:healthy",
         "detail": "the next direct device lane should be a typed RPC-class endpoint, not just another file or datagram bridge"
       },
       {

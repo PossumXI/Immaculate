@@ -2,16 +2,31 @@
 
 This page is the tracked public benchmark surface for Immaculate.
 
-- W&B project: https://wandb.ai/arobi-arobi-technology-alliance/immaculate
+- W&B project: https://wandb.ai/PossumX/immaculate
 - Owner: Gaetano Comparcola (PossumX)
 - Role: Program Originator, Systems Architect, and Engineering Lead
 - Website: https://PossumX.dev
-- Updated: 2026-04-22T00:00:17.764431+00:00
+- Updated: 2026-04-22T14:33:19.921118+00:00
 
 Raw benchmark ledgers remain generated runtime artifacts under `benchmarks/` and stay out of git.
 This page only carries the public summary and links for the latest published run per pack.
 
 ## Latest Public Runs By Pack
+
+### Q Mediation Drift
+
+- Suite: `immaculate-benchmark-2026-04-22T14-28-16-782Z`
+- Generated: `2026-04-22T14:28:16.782Z`
+- Published: `2026-04-22T14:33:19.921044+00:00`
+- Assertions: `8/8` passed
+- Run kind: `benchmark`
+- Integrity: `verified`
+- Recovery mode: `fresh`
+- Planned duration: `dynamic / unpaced`
+- Wall-clock duration: `245878.38` ms
+- Hardware: `{"host":"knightly","platform":"win32","arch":"x64","osVersion":"Windows 11 Pro","cpuModel":"AMD Ryzen 7 7735HS with Radeon Graphics","cpuCount":16,"memoryGiB":23.29,"diskKind":"SSD","nodeVersion":"v22.13.1"}`
+- W&B run: not available
+- W&B artifact: `immaculate-immaculate-benchmark-2026-04-22T14-28-16-782Z` (`benchmark-report`)
 
 ### Latency Smoke
 

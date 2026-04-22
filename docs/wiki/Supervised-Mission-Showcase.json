@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-22T01:20:45.053Z",
+  "generatedAt": "2026-04-22T14:00:16.065Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "ba51737efc2a5b6a7b5234ff2f6fb86fb6b28a04",
-    "gitShortSha": "ba51737",
+    "gitSha": "8d26389523f3b4bcebde1b54e1841f462e1ba184",
+    "gitShortSha": "8d26389",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+ba51737",
+    "buildId": "0.1.0+8d26389",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -132,9 +132,9 @@
     {
       "label": "Discord and operator activity",
       "status": "publishable",
-      "summary": "Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public ledger publication remains blocked: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true; activity items `8`; activity publication gate is `blocked`; targets aura-genesis.org/status (public-safe aggregate only) | iorch.net (results only) | qline.site (results only; not published from this repo); public publication is blocked by ledger.public: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true.",
+      "summary": "Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35656); activity items `10`; activity publication gate is `publishable`; targets https://aura-genesis.org/status | https://iorch.net | https://qline.site; Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35656).",
       "sourcePath": "docs/wiki/Live-Operator-Public-Export.json",
-      "generatedAt": "2026-04-22T01:20:44.169Z"
+      "generatedAt": "2026-04-22T13:59:43.002Z"
     }
   ],
   "truthBoundary": [

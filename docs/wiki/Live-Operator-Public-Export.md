@@ -1,114 +1,115 @@
 # Live Operator Public Export
 
 This page is the public-safe operator export for the current workstation. It mirrors the `fabric.showcase` contract already used by the aura-genesis status page, keeps the private mission lane closed, and only emits aggregate operator activity that is safe to publish on public surfaces.
+When the repo-local OpenJaws public showcase mirror is present, this export consumes that shared sanitized activity feed instead of regenerating overlapping Discord/Q/roundtable entries locally.
 
-- Generated: `2026-04-22T01:20:44.169Z`
-- Release: `0.1.0+ba51737`
-- Repo commit: `ba51737efc2a5b6a7b5234ff2f6fb86fb6b28a04`
+- Generated: `2026-04-22T14:39:38.286Z`
+- Release: `0.1.0+8d26389`
+- Repo commit: `8d26389523f3b4bcebde1b54e1841f462e1ba184`
 - Contract target: `fabric.showcase` v1
 
 ## Publication Gate
 
-- Status: `blocked`
+- Status: `publishable`
 - Target: aura-genesis.org/status
-- Summary: public publication is blocked by ledger.public: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true
+- Summary: Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35656); public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35796)
 
 ## Public Showcase Status
 
-- Active: `false`
+- Active: `true`
 - Mode: `controlled`
-- Title: Supervised operator audit export.
-- Summary: Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public ledger publication remains blocked: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true
-- Window label: Showcase line closed until public ledger publication is proven
+- Title: Controlled live showcase active.
+- Summary: Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35656); public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35796)
+- Window label: Controlled public verification window
 - Results ready: `true`
-- Fleet label: Immaculate / OpenJaws / Q operator loop
-- Publish targets: aura-genesis.org/status (public-safe aggregate only) | iorch.net (results only) | qline.site (results only; not published from this repo)
-- Subsystems: total `5` | online `3` | degraded `2` | offline `0` | unconfigured `0`
-- Network version: `3.3.1`
-- Verified ledger entries: `394`
-- Public height: `34832`
+- Fleet label: ASGARD Core 16
+- Publish targets: https://aura-genesis.org/status | https://iorch.net | https://qline.site
+- Subsystems: total `16` | online `4` | degraded `0` | offline `0` | unconfigured `0`
+- Network version: `v3.3.1`
+- Verified ledger entries: `395`
+- Public height: `35796`
 - Orchestration profile: `immaculate-supervised-operator-loop`
-- Q auth mode: `oci_iam`
-- Last checked: `2026-04-22T01:20:44.169Z`
+- Q auth mode: `iam`
+- Last checked: `2026-04-22T14:28:16.330Z`
 
 ## Activity Feed
 
 ### Supervised operator activity export updated
 
-- Status: `warning`
+- Status: `ok`
 - Kind: `showcase`
-- Timestamp: `2026-04-22T01:20:44.169Z`
+- Timestamp: `2026-04-22T14:39:38.286Z`
 - Source: `fabric.showcase`
-- Summary: Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public ledger publication remains blocked: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true
+- Summary: Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35656); public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35796)
 - Subsystems: immaculate, openjaws, q
 - Artifacts: showcase:summary, receipt:live-operator-public-export
 - Tags: showcase, public, operator
 
 ### Public publication gate
 
-- Status: `warning`
+- Status: `ok`
 - Kind: `publication`
-- Timestamp: `2026-04-22T01:20:44.169Z`
+- Timestamp: `2026-04-22T14:39:38.286Z`
 - Source: `immaculate.live_operator_activity`
-- Summary: public publication is blocked by ledger.public: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true
+- Summary: Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35656); public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35796)
 - Subsystems: arobi, immaculate
 - Artifacts: gate:publication
 - Tags: public, gate
 
-### Q patrol lane
-
-- Status: `ok`
-- Kind: `agent`
-- Timestamp: `2026-04-22T00:57:56.085Z`
-- Source: `immaculate.live_operator_activity`
-- Summary: state changed but routing cooldown held
-- Subsystems: q, discord
-- Artifacts: receipt:q-patrol, layer:Q
-- Tags: q, patrol, operator
-
-### Bounded roundtable lane
-
-- Status: `ok`
-- Kind: `roundtable`
-- Timestamp: `2026-04-22T00:57:56.085Z`
-- Source: `immaculate.live_operator_activity`
-- Summary: running | Q passed turn 10 | 10 turns | 2/21 recent actions passed verification
-- Subsystems: discord, openjaws, immaculate
-- Artifacts: receipt:roundtable, receipt:roundtable-actions-21
-- Tags: roundtable, accountable, operator
-
-### Discord bot receipts
+### Supervised runtime activity refreshed
 
 - Status: `warning`
-- Kind: `discord`
-- Timestamp: `2026-04-22T00:48:39.358Z`
-- Source: `immaculate.live_operator_activity`
-- Summary: 2/3 bot receipts are ready (Blackbeak, Viola).
-- Subsystems: discord, openjaws, q
-- Artifacts: receipt:discord-bots
-- Tags: discord, receipts, bots
+- Kind: `runtime_audit`
+- Timestamp: `2026-04-22T14:39:18.338Z`
+- Source: `OpenJaws public showcase sync`
+- Summary: Supervised OpenJaws audit surfaces are live but still show bounded warnings or incomplete runtime coverage.
+- Subsystems: openjaws, apex, nysus, q, roundtable, immaculate, discord
+- Artifacts: showcase:activity
+- Tags: public, audit, bounded
 
-### Operator state
-
-- Status: `ok`
-- Kind: `operator`
-- Timestamp: `2026-04-22T00:57:56.085Z`
-- Source: `immaculate.live_operator_activity`
-- Summary: PossumX | active process present
-- Subsystems: openjaws, immaculate
-- Artifacts: receipt:operator-state
-- Tags: operator, human-in-the-loop
-
-### Discord transport readiness
+### Roundtable runtime
 
 - Status: `ok`
-- Kind: `transport`
-- Timestamp: `2026-04-22T01:20:44.169Z`
-- Source: `immaculate.live_mission_readiness`
-- Summary: status=ready; gateway=true; guilds=1; health 200; updated 15s ago (budget 900s)
-- Subsystems: discord, q
-- Artifacts: readiness:discord-transport
-- Tags: discord, transport
+- Kind: `roundtable_runtime`
+- Timestamp: `2026-04-22T14:38:41.319Z`
+- Source: `OpenJaws roundtable lane`
+- Summary: Roundtable is completed in #dev_support. roundtable completed
+- Subsystems: openjaws, immaculate, discord
+- Artifacts: roundtable:session
+- Tags: roundtable, bounded, supervised
+
+### Supervised Q patrol update
+
+- Status: `ok`
+- Kind: `patrol`
+- Timestamp: `2026-04-22T14:35:49.371Z`
+- Source: `OpenJaws Discord lane`
+- Summary: state changed but routing cooldown held
+- Subsystems: openjaws, discord, q
+- Artifacts: discord:q-agent-receipt
+- Tags: q, discord, openjaws, bounded
+
+### Supervised Blackbeak patrol update
+
+- Status: `ok`
+- Kind: `patrol`
+- Timestamp: `2026-04-22T14:33:16.151Z`
+- Source: `OpenJaws Discord lane`
+- Summary: Blackbeak Discord runtime is online through the supervised bounded operator lane.
+- Subsystems: openjaws, discord, blackbeak
+- Artifacts: discord:blackbeak-agent-receipt
+- Tags: blackbeak, discord, openjaws, bounded
+
+### Supervised Viola patrol update
+
+- Status: `ok`
+- Kind: `patrol`
+- Timestamp: `2026-04-22T14:31:14.689Z`
+- Source: `OpenJaws Discord lane`
+- Summary: Viola Discord runtime is online through the supervised bounded operator lane.
+- Subsystems: openjaws, discord, viola
+- Artifacts: discord:viola-agent-receipt
+- Tags: viola, discord, openjaws, bounded
 
 ### Public ledger visibility
 
@@ -121,10 +122,32 @@ This page is the public-safe operator export for the current workstation. It mir
 - Artifacts: receipt:arobi-live-ledger
 - Tags: ledger, public, audit
 
+### Discord transport readiness
+
+- Status: `ok`
+- Kind: `transport`
+- Timestamp: `2026-04-22T14:39:38.286Z`
+- Source: `immaculate.live_mission_readiness`
+- Summary: status=ready; gateway=true; guilds=1; health 200; updated 15s ago (budget 900s)
+- Subsystems: discord, q
+- Artifacts: readiness:discord-transport
+- Tags: discord, transport
+
+### Operator state
+
+- Status: `ok`
+- Kind: `operator`
+- Timestamp: `2026-04-22T00:57:56.085Z`
+- Source: `immaculate.live_operator_activity`
+- Summary: PossumX | active process present
+- Subsystems: openjaws, immaculate
+- Artifacts: receipt:operator-state
+- Tags: operator, human-in-the-loop
+
 ## Truth Boundary
 
 - This export is public-safe aggregate operator activity only; it does not prove that a live Discord operator command or a live mission was executed on this pass.
 - This export is shaped to mirror the existing aura-genesis fabric.showcase contract; it does not mutate the public website or the public ledger by itself.
 - The private mission lane remains closed here even when local Discord transport, OCI-backed Q, and roundtable receipts are ready.
 - Private paths, worktree roots, secrets, Discord tokens, private ledger payloads, and raw chain-of-thought are intentionally excluded from this export.
-- ledger.public remains blocked until a fresh governed public Arobi write is proven on this machine.
+- Fresh public-safe Arobi public audit writes were accepted during the current controlled publish pass; this still does not open the private mission lane or prove live Discord mission execution.
