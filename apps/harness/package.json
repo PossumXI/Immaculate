@@ -34,6 +34,7 @@
     "agent:worktree": "tsx src/agent-worktree-cli.ts",
     "agent:worktree:bundle": "tsx src/agent-worktree-cli.ts bundle",
     "banner": "tsx src/banner.ts",
+    "live:operator:public-export": "tsx src/live-operator-public-export.ts",
     "q:gateway": "tsx src/q-gateway.ts",
     "q:gateway:validate": "tsx src/q-gateway-validate.ts",
     "q:release-gate": "tsx src/q-release-gate.ts",

@@ -96,6 +96,24 @@ type LiveOperatorActivityReceipt = {
   };
 };
 
+type LiveOperatorPublicExportReceipt = {
+  generatedAt?: string;
+  publication?: {
+    status?: "publishable" | "blocked";
+    summary?: string;
+    target?: string;
+  };
+  showcase?: {
+    title?: string | null;
+    summary?: string | null;
+    resultsReady?: boolean;
+    publishTargets?: string[];
+    activityFeed?: Array<{
+      id?: string;
+    }>;
+  };
+};
+
 type ShowcaseSnippet = {
   label: string;
   status: "publishable" | "blocked";
@@ -273,17 +291,18 @@ function buildArobiSnippet(
 }
 
 function buildOperatorActivitySnippet(
-  receipt: LiveOperatorActivityReceipt | undefined,
+  receipt: LiveOperatorPublicExportReceipt | undefined,
   sourcePath: string
 ): ShowcaseSnippet {
-  const totalAgents = receipt?.agents?.length ?? 0;
-  const readyAgents = receipt?.agents?.filter((agent) => agent.status === "ready").length ?? 0;
   const gateStatus = receipt?.publication?.status ?? "blocked";
+  const activityItemCount = receipt?.showcase?.activityFeed?.length ?? 0;
+  const publishTargets =
+    receipt?.showcase?.publishTargets?.filter((entry) => entry.trim().length > 0) ?? [];
   return {
     label: "Discord and operator activity",
     status: receipt ? "publishable" : "blocked",
     summary: receipt
-      ? `${readyAgents}/${totalAgents} bot receipts are currently ready; Q patrol is \`${receipt.qPatrol?.status ?? "blocked"}\`${receipt.qPatrol?.recommendedLayerId ? ` on layer \`${receipt.qPatrol.recommendedLayerId}\`` : ""}; roundtable is \`${receipt.roundtable?.status ?? "blocked"}\`${receipt.roundtable?.channelName ? ` in \`#${receipt.roundtable.channelName}\`` : ""} with \`${receipt.roundtable?.actionReceiptCount ?? 0}\` bounded action receipts; operator state is \`${receipt.operator?.status ?? "blocked"}\`; activity publication gate is \`${gateStatus}\`: ${receipt.publication?.summary ?? "no publication summary recorded"}.`
+      ? `${receipt.showcase?.summary ?? "public-safe operator export generated"}; activity items \`${activityItemCount}\`; activity publication gate is \`${gateStatus}\`; targets ${publishTargets.length > 0 ? publishTargets.join(" | ") : "not declared"}; ${receipt.publication?.summary ?? "no publication summary recorded"}.`
       : "live operator activity receipt missing for this pass",
     sourcePath,
     generatedAt: receipt?.generatedAt
@@ -346,7 +365,7 @@ async function main(): Promise<void> {
   );
   const harborTerminalBenchPath = path.join(REPO_ROOT, "docs", "wiki", "Harbor-Terminal-Bench.json");
   const arobiLiveLedgerPath = path.join(REPO_ROOT, "docs", "wiki", "Arobi-Live-Ledger-Receipt.json");
-  const liveOperatorActivityPath = path.join(REPO_ROOT, "docs", "wiki", "Live-Operator-Activity.json");
+  const liveOperatorActivityPath = path.join(REPO_ROOT, "docs", "wiki", "Live-Operator-Public-Export.json");
 
   const [liveMissionReadiness, roundtableRuntime, terminalBenchPublicTask, harborTerminalBench, arobiLiveLedger, liveOperatorActivity] =
     await Promise.all([
@@ -355,7 +374,7 @@ async function main(): Promise<void> {
       readJsonFile<TerminalBenchPublicTaskReceipt>(terminalBenchPublicTaskPath),
       readJsonFile<HarborTerminalBenchReceipt>(harborTerminalBenchPath),
       readJsonFile<ArobiLiveLedgerReceipt>(arobiLiveLedgerPath),
-      readJsonFile<LiveOperatorActivityReceipt>(liveOperatorActivityPath)
+      readJsonFile<LiveOperatorPublicExportReceipt>(liveOperatorActivityPath)
     ]);
 
   const readiness = liveMissionReadiness?.readiness ?? {

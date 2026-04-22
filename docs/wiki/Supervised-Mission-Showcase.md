@@ -2,9 +2,9 @@
 
 This page is the public-safe showcase receipt for the current workstation. It keeps the showcase fail-closed by default, publishes only safe snippets/results, and keeps the private mission lane out of the public proof package.
 
-- Generated: `2026-04-22T00:58:00.325Z`
-- Release: `0.1.0+9b31c9d`
-- Repo commit: `9b31c9d326f161131c480a5602a9c0c182e5a0d1`
+- Generated: `2026-04-22T01:19:47.102Z`
+- Release: `0.1.0+d58974a`
+- Repo commit: `d58974aa420a6cb92fc4085459156823dd29553e`
 
 ## Showcase Gate
 
@@ -53,8 +53,8 @@ This page is the public-safe showcase receipt for the current workstation. It ke
 ### Discord and operator activity
 
 - Status: `publishable`
-- Summary: 2/3 bot receipts are currently ready; Q patrol is `ready` on layer `Q`; roundtable is `ready` in `#dev_support` with `21` bounded action receipts; operator state is `ready`; activity publication gate is `blocked`: public publication is blocked until the public ledger, Discord transport, and OCI-backed Q all prove readiness on the current workstation.
-- Source: `docs/wiki/Live-Operator-Activity.json` @ `2026-04-22T00:57:56.085Z`
+- Summary: Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public ledger publication remains blocked: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true; activity items `8`; activity publication gate is `blocked`; targets aura-genesis.org/status (public-safe aggregate only) | iorch.net (results only) | qline.site (results only; not published from this repo); public publication is blocked by ledger.public: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true.
+- Source: `docs/wiki/Live-Operator-Public-Export.json` @ `2026-04-22T01:19:46.289Z`
 
 ## Truth Boundary
 

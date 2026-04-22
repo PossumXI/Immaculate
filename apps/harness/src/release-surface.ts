@@ -83,6 +83,10 @@ const SURFACE_FILES: SurfaceTimestamp[] = [
     path: path.join("docs", "wiki", "Live-Operator-Activity.json")
   },
   {
+    label: "Live operator public export",
+    path: path.join("docs", "wiki", "Live-Operator-Public-Export.json")
+  },
+  {
     label: "Cross-project workflow health",
     path: path.join("docs", "wiki", "Cross-Project-Workflow-Health.json")
   },

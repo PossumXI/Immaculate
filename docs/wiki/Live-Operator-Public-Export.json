@@ -1,0 +1,271 @@
+{
+  "generatedAt": "2026-04-22T01:19:46.289Z",
+  "release": {
+    "packageVersion": "0.1.0",
+    "harnessVersion": "0.1.0",
+    "coreVersion": "0.1.0",
+    "gitSha": "d58974aa420a6cb92fc4085459156823dd29553e",
+    "gitShortSha": "d58974a",
+    "gitBranch": "publish-q-win",
+    "buildId": "0.1.0+d58974a",
+    "q": {
+      "modelName": "Q",
+      "foundationModel": "Gemma 4",
+      "truthfulLabel": "Q",
+      "trainingLock": {
+        "generatedAt": "2026-04-19T07:46:04Z",
+        "lockVersion": 1,
+        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
+        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23",
+        "modelName": "Q",
+        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl",
+        "trainDatasetSha256": "286326ce786c0a9b9b4a636a38114cc221c1b978a083ca55d70cc6ca6172cb07",
+        "trainDatasetRowCount": 117,
+        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.manifest.json",
+        "mixManifestSha256": "4c7df8284cedaf8e43f1715c8eaf4c30826687e27a5d511ef8ccd4ca78df991e",
+        "mixSupplementalCount": 6,
+        "mixSupplementalPaths": [
+          "training/q/q_harness_identity_seed.json",
+          "training/q/q_immaculate_reasoning_seed.json",
+          "training/q/terminal_bench_semantic_seed.json",
+          "training/q/bridgebench_seed.json",
+          "training/q/coding_long_context_seed.json",
+          ".training-output/q/q-failure-corpus.jsonl"
+        ],
+        "curationRunId": null,
+        "lockPath": ".training-output/q/latest-training-lock.json"
+      },
+      "hybridSession": {
+        "generatedAt": "2026-04-19T07:46:17Z",
+        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v23",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v23/hybrid-session.json",
+        "localStatus": "ready",
+        "cloudStatus": "ready",
+        "cloudProvider": "hf_jobs",
+        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
+        "immaculateBundleId": "immaculate-orchestration-5ed19b9-cd094c28",
+        "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
+      }
+    }
+  },
+  "contract": {
+    "target": "fabric.showcase",
+    "version": 1,
+    "summary": "Public-safe export that mirrors the aura-genesis fabric.showcase contract."
+  },
+  "publication": {
+    "status": "blocked",
+    "summary": "public publication is blocked by ledger.public: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true",
+    "target": "aura-genesis.org/status"
+  },
+  "showcase": {
+    "active": false,
+    "mode": "controlled",
+    "title": "Supervised operator audit export.",
+    "summary": "Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public ledger publication remains blocked: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true",
+    "expiresAt": null,
+    "windowLabel": "Showcase line closed until public ledger publication is proven",
+    "publishTargets": [
+      "aura-genesis.org/status (public-safe aggregate only)",
+      "iorch.net (results only)",
+      "qline.site (results only; not published from this repo)"
+    ],
+    "resultsReady": true,
+    "fleetLabel": "Immaculate / OpenJaws / Q operator loop",
+    "subsystemCount": 5,
+    "onlineSubsystemCount": 3,
+    "degradedSubsystemCount": 2,
+    "offlineSubsystemCount": 0,
+    "unconfiguredSubsystemCount": 0,
+    "networkVersion": "3.3.1",
+    "verifiedLedgerEntries": 394,
+    "publicHeight": 34832,
+    "orchestrationProfile": "immaculate-supervised-operator-loop",
+    "qAuthMode": "oci_iam",
+    "lastChecked": "2026-04-22T01:19:46.289Z",
+    "activityFeed": [
+      {
+        "id": "showcase-summary",
+        "timestamp": "2026-04-22T01:19:46.289Z",
+        "title": "Supervised operator activity export updated",
+        "summary": "Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public ledger publication remains blocked: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true",
+        "kind": "showcase",
+        "status": "warning",
+        "source": "fabric.showcase",
+        "subsystems": [
+          "immaculate",
+          "openjaws",
+          "q"
+        ],
+        "artifacts": [
+          "showcase:summary",
+          "receipt:live-operator-public-export"
+        ],
+        "tags": [
+          "showcase",
+          "public",
+          "operator"
+        ]
+      },
+      {
+        "id": "publication-gate",
+        "timestamp": "2026-04-22T01:19:46.289Z",
+        "title": "Public publication gate",
+        "summary": "public publication is blocked by ledger.public: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true",
+        "kind": "publication",
+        "status": "warning",
+        "source": "immaculate.live_operator_activity",
+        "subsystems": [
+          "arobi",
+          "immaculate"
+        ],
+        "artifacts": [
+          "gate:publication"
+        ],
+        "tags": [
+          "public",
+          "gate"
+        ]
+      },
+      {
+        "id": "q-patrol",
+        "timestamp": "2026-04-22T00:57:56.085Z",
+        "title": "Q patrol lane",
+        "summary": "state changed but routing cooldown held",
+        "kind": "agent",
+        "status": "ok",
+        "source": "immaculate.live_operator_activity",
+        "subsystems": [
+          "q",
+          "discord"
+        ],
+        "artifacts": [
+          "receipt:q-patrol",
+          "layer:Q"
+        ],
+        "tags": [
+          "q",
+          "patrol",
+          "operator"
+        ]
+      },
+      {
+        "id": "roundtable",
+        "timestamp": "2026-04-22T00:57:56.085Z",
+        "title": "Bounded roundtable lane",
+        "summary": "running | Q passed turn 10 | 10 turns | 2/21 recent actions passed verification",
+        "kind": "roundtable",
+        "status": "ok",
+        "source": "immaculate.live_operator_activity",
+        "subsystems": [
+          "discord",
+          "openjaws",
+          "immaculate"
+        ],
+        "artifacts": [
+          "receipt:roundtable",
+          "receipt:roundtable-actions-21"
+        ],
+        "tags": [
+          "roundtable",
+          "accountable",
+          "operator"
+        ]
+      },
+      {
+        "id": "bot-receipts",
+        "timestamp": "2026-04-22T00:48:39.358Z",
+        "title": "Discord bot receipts",
+        "summary": "2/3 bot receipts are ready (Blackbeak, Viola).",
+        "kind": "discord",
+        "status": "warning",
+        "source": "immaculate.live_operator_activity",
+        "subsystems": [
+          "discord",
+          "openjaws",
+          "q"
+        ],
+        "artifacts": [
+          "receipt:discord-bots"
+        ],
+        "tags": [
+          "discord",
+          "receipts",
+          "bots"
+        ]
+      },
+      {
+        "id": "operator-state",
+        "timestamp": "2026-04-22T00:57:56.085Z",
+        "title": "Operator state",
+        "summary": "PossumX | active process present",
+        "kind": "operator",
+        "status": "ok",
+        "source": "immaculate.live_operator_activity",
+        "subsystems": [
+          "openjaws",
+          "immaculate"
+        ],
+        "artifacts": [
+          "receipt:operator-state"
+        ],
+        "tags": [
+          "operator",
+          "human-in-the-loop"
+        ]
+      },
+      {
+        "id": "discord-transport",
+        "timestamp": "2026-04-22T01:19:46.289Z",
+        "title": "Discord transport readiness",
+        "summary": "status=ready; gateway=true; guilds=1; health 200; updated 15s ago (budget 900s)",
+        "kind": "transport",
+        "status": "ok",
+        "source": "immaculate.live_mission_readiness",
+        "subsystems": [
+          "discord",
+          "q"
+        ],
+        "artifacts": [
+          "readiness:discord-transport"
+        ],
+        "tags": [
+          "discord",
+          "transport"
+        ]
+      },
+      {
+        "id": "public-ledger",
+        "timestamp": "2026-04-21T22:18:04.712Z",
+        "title": "Public ledger visibility",
+        "summary": "public ledger version 3.3.1 on block 34,832 with 394 visible aggregate entries; fabric source synthesized",
+        "kind": "ledger",
+        "status": "warning",
+        "source": "immaculate.arobi_live_ledger",
+        "subsystems": [
+          "arobi",
+          "ledger"
+        ],
+        "artifacts": [
+          "receipt:arobi-live-ledger"
+        ],
+        "tags": [
+          "ledger",
+          "public",
+          "audit"
+        ]
+      }
+    ]
+  },
+  "truthBoundary": [
+    "This export is public-safe aggregate operator activity only; it does not prove that a live Discord operator command or a live mission was executed on this pass.",
+    "This export is shaped to mirror the existing aura-genesis fabric.showcase contract; it does not mutate the public website or the public ledger by itself.",
+    "The private mission lane remains closed here even when local Discord transport, OCI-backed Q, and roundtable receipts are ready.",
+    "Private paths, worktree roots, secrets, Discord tokens, private ledger payloads, and raw chain-of-thought are intentionally excluded from this export.",
+    "ledger.public remains blocked until a fresh governed public Arobi write is proven on this machine."
+  ],
+  "output": {
+    "jsonPath": "docs\\wiki\\Live-Operator-Public-Export.json",
+    "markdownPath": "docs\\wiki\\Live-Operator-Public-Export.md"
+  }
+}
