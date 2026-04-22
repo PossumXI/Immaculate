@@ -3,16 +3,16 @@
 This page is the machine-stamped GitHub Actions truth surface for the three coordinated repos in the current workstation orbit.
 It exists so operational claims do not rely on one green repo while another repo is red, inaccessible, or only visible through private GitHub auth.
 
-- Generated: `2026-04-22T14:43:23.479Z`
-- Immaculate release: `0.1.0+8d26389`
-- Repo commit: `8d26389523f3b4bcebde1b54e1841f462e1ba184`
+- Generated: `2026-04-22T16:33:24.850Z`
+- Immaculate release: `0.1.0+cdd113a`
+- Repo commit: `cdd113a649a2d196afd60e878761393e8c498bc5`
 
 ## Summary
 
 - Repo count: `3`
-- Fully healthy repos: `1`
+- Fully healthy repos: `2`
 - All observed workflow runs successful: `false`
-- Detail: Immaculate (public repo, github-rest-public): some observed runs not green; observed 6/8 active workflows, 2 not recently observed | OpenJaws (public repo, github-rest-public): some observed runs not green; observed 4/5 active workflows, 1 not recently observed | Asgard_Arobi (private repo, gh-auth): latest observed runs green; observed 7/7 active workflows
+- Detail: Immaculate (public repo, github-rest-public): some observed runs not green; observed 6/8 active workflows, 2 not recently observed | OpenJaws (public repo, github-rest-public): latest observed runs green; observed 4/5 active workflows, 1 not recently observed | Asgard_Arobi (private repo, gh-auth): latest observed runs green; observed 7/7 active workflows
 
 ## Immaculate
 
@@ -60,14 +60,14 @@ It exists so operational claims do not rely on one green repo while another repo
 - Active workflows: `5`
 - Latest observed workflow runs: `4`
 - Not recently observed in the sampled branch window: `1`
-- All observed workflow runs successful: `false`
+- All observed workflow runs successful: `true`
 - Latest observed run updated: `2026-04-22T14:19:04Z`
 
 ### Latest Observed Workflow Runs
 
 - CI #84: `success` (https://github.com/PossumXI/OpenJaws/actions/runs/24783373739)
 - Q Benchmark Soak #7: `success` (https://github.com/PossumXI/OpenJaws/actions/runs/24767355185)
-- Security #84: `in_progress` (https://github.com/PossumXI/OpenJaws/actions/runs/24783373695)
+- Security #84: `success` (https://github.com/PossumXI/OpenJaws/actions/runs/24783373695)
 - System Check #84: `success` (https://github.com/PossumXI/OpenJaws/actions/runs/24783373784)
 
 ### Active Workflow Definitions
@@ -97,12 +97,12 @@ It exists so operational claims do not rely on one green repo while another repo
 ### Latest Observed Workflow Runs
 
 - apexos-production-smoke #26: `success` (private run URL withheld)
-- ARIA Heartbeat #853: `success` (private run URL withheld)
+- ARIA Heartbeat #855: `success` (private run URL withheld)
 - asgard-ci #160: `success` (private run URL withheld)
 - npm_and_yarn in /, /Giru/Giru(jarvis), /GovClient, /Notifications, /Owl/web, /ignite/apex-os-project/web-ui, /test/e2e for electron, next, picomatch, protobufjs, electron, electron, picomatch, picomatch, vite, brace-expansion, axios, follow-redirects, lodash, electron, picomatch, vite, brace-expansion, axios, follow-redirects, lodash, picomatch, vite, brace-expansion, protocol-buffers-schema, vite, follow-redirects - Update #1330564222 #282: `success` (private run URL withheld)
 - Configured Graph Update: go_modules in /. #1328549740 #14: `success` (private run URL withheld)
 - GitGuardian Secret Detection #95: `success` (private run URL withheld)
-- SENTINEL Heartbeat #1650: `success` (private run URL withheld)
+- SENTINEL Heartbeat #1653: `success` (private run URL withheld)
 
 ### Active Workflow Definitions
 

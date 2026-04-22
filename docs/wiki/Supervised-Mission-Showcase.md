@@ -2,9 +2,9 @@
 
 This page is the public-safe showcase receipt for the current workstation. It keeps the showcase fail-closed by default, publishes only safe snippets/results, and keeps the private mission lane out of the public proof package.
 
-- Generated: `2026-04-22T14:00:16.065Z`
-- Release: `0.1.0+8d26389`
-- Repo commit: `8d26389523f3b4bcebde1b54e1841f462e1ba184`
+- Generated: `2026-04-22T16:37:27.025Z`
+- Release: `0.1.0+cdd113a`
+- Repo commit: `cdd113a649a2d196afd60e878761393e8c498bc5`
 
 ## Showcase Gate
 
@@ -53,8 +53,8 @@ This page is the public-safe showcase receipt for the current workstation. It ke
 ### Discord and operator activity
 
 - Status: `publishable`
-- Summary: Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35656); activity items `10`; activity publication gate is `publishable`; targets https://aura-genesis.org/status | https://iorch.net | https://qline.site; Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35656).
-- Source: `docs/wiki/Live-Operator-Public-Export.json` @ `2026-04-22T13:59:43.002Z`
+- Summary: Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35656); public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35796); public-safe aggregate publication verified on the Arobi public lane (2 audit records ac…; activity items `10`; activity publication gate is `publishable`; targets https://aura-genesis.org/status | https://iorch.net | https://qline.site; Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35656); public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35796); public-safe aggregate publication verified on the Arobi public lane (2 audit records ac….
+- Source: `docs/wiki/Live-Operator-Public-Export.json` @ `2026-04-22T16:37:18.169Z`
 
 ## Truth Boundary
 

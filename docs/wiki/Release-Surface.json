@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-22T14:39:19.439Z",
+  "generatedAt": "2026-04-22T16:37:37.095Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "8d26389523f3b4bcebde1b54e1841f462e1ba184",
-    "gitShortSha": "8d26389",
+    "gitSha": "cdd113a649a2d196afd60e878761393e8c498bc5",
+    "gitShortSha": "cdd113a",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+8d26389",
+    "buildId": "0.1.0+cdd113a",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -51,7 +51,7 @@
     {
       "label": "BridgeBench",
       "path": "docs\\wiki\\BridgeBench.json",
-      "generatedAt": "2026-04-22T13:49:35.931Z"
+      "generatedAt": "2026-04-22T16:32:34.278Z"
     },
     {
       "label": "BridgeBench soak",
@@ -106,17 +106,17 @@
     {
       "label": "Live operator public export",
       "path": "docs\\wiki\\Live-Operator-Public-Export.json",
-      "generatedAt": "2026-04-22T13:59:43.002Z"
+      "generatedAt": "2026-04-22T16:37:18.169Z"
     },
     {
       "label": "Cross-project workflow health",
       "path": "docs\\wiki\\Cross-Project-Workflow-Health.json",
-      "generatedAt": "2026-04-22T14:01:05.979Z"
+      "generatedAt": "2026-04-22T16:33:24.850Z"
     },
     {
       "label": "Supervised mission showcase",
       "path": "docs\\wiki\\Supervised-Mission-Showcase.json",
-      "generatedAt": "2026-04-22T14:00:16.065Z"
+      "generatedAt": "2026-04-22T16:37:27.025Z"
     },
     {
       "label": "Roundtable actionability",
@@ -176,7 +176,7 @@
     {
       "label": "Q benchmark corpus",
       "path": "docs\\wiki\\Q-Benchmark-Corpus.json",
-      "generatedAt": "2026-04-22T13:45:30Z"
+      "generatedAt": "2026-04-22T16:24:38Z"
     },
     {
       "label": "Q benchmark promotion",
@@ -201,7 +201,7 @@
     {
       "label": "Terminal-Bench leaderboard status",
       "path": "docs\\wiki\\Terminal-Bench-Receipt.json",
-      "generatedAt": "2026-04-22T13:45:33.016Z"
+      "generatedAt": "2026-04-22T16:24:47.183Z"
     },
     {
       "label": "Terminal-Bench rerun (diagnostic-only)",

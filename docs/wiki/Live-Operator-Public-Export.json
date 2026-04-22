@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-22T14:39:38.286Z",
+  "generatedAt": "2026-04-22T16:37:18.169Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "8d26389523f3b4bcebde1b54e1841f462e1ba184",
-    "gitShortSha": "8d26389",
+    "gitSha": "cdd113a649a2d196afd60e878761393e8c498bc5",
+    "gitShortSha": "cdd113a",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+8d26389",
+    "buildId": "0.1.0+cdd113a",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -55,14 +55,14 @@
   },
   "publication": {
     "status": "publishable",
-    "summary": "Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35656); public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35796)",
+    "summary": "Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35656); public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35796); public-safe aggregate publication verified on the Arobi public lane (2 audit records ac…",
     "target": "aura-genesis.org/status"
   },
   "showcase": {
     "active": true,
     "mode": "controlled",
     "title": "Controlled live showcase active.",
-    "summary": "Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35656); public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35796)",
+    "summary": "Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35656); public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35796); public-safe aggregate publication verified on the Arobi public lane (2 audit records ac…",
     "expiresAt": "2026-04-22T23:59:59.000Z",
     "windowLabel": "Controlled public verification window",
     "publishTargets": [
@@ -79,16 +79,16 @@
     "unconfiguredSubsystemCount": 0,
     "networkVersion": "v3.3.1",
     "verifiedLedgerEntries": 395,
-    "publicHeight": 35796,
+    "publicHeight": 35821,
     "orchestrationProfile": "immaculate-supervised-operator-loop",
     "qAuthMode": "iam",
-    "lastChecked": "2026-04-22T14:28:16.330Z",
+    "lastChecked": "2026-04-22T14:54:29.066Z",
     "activityFeed": [
       {
         "id": "showcase-summary",
-        "timestamp": "2026-04-22T14:39:38.286Z",
+        "timestamp": "2026-04-22T16:37:18.169Z",
         "title": "Supervised operator activity export updated",
-        "summary": "Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35656); public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35796)",
+        "summary": "Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35656); public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35796); public-safe aggregate publication verified on the Arobi public lane (2 audit records ac…",
         "kind": "showcase",
         "status": "ok",
         "source": "fabric.showcase",
@@ -112,9 +112,9 @@
       },
       {
         "id": "publication-gate",
-        "timestamp": "2026-04-22T14:39:38.286Z",
+        "timestamp": "2026-04-22T16:37:18.169Z",
         "title": "Public publication gate",
-        "summary": "Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35656); public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35796)",
+        "summary": "Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35656); public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35796); public-safe aggregate publication verified on the Arobi public lane (2 audit records ac…",
         "kind": "publication",
         "status": "ok",
         "source": "immaculate.live_operator_activity",
@@ -134,8 +134,8 @@
         ]
       },
       {
-        "id": "runtime-audit-2026-04-22T14:39:18.338Z",
-        "timestamp": "2026-04-22T14:39:18.338Z",
+        "id": "runtime-audit-2026-04-22T14:59:21.015Z",
+        "timestamp": "2026-04-22T14:59:21.015Z",
         "title": "Supervised runtime activity refreshed",
         "summary": "Supervised OpenJaws audit surfaces are live but still show bounded warnings or incomplete runtime coverage.",
         "kind": "runtime_audit",
@@ -164,12 +164,12 @@
         ]
       },
       {
-        "id": "roundtable-completed-2026-04-22T14:38:41.319Z",
-        "timestamp": "2026-04-22T14:38:41.319Z",
+        "id": "roundtable-running-2026-04-22T14:59:04.859Z",
+        "timestamp": "2026-04-22T14:59:04.859Z",
         "title": "Roundtable runtime",
-        "summary": "Roundtable is completed in #dev_support. roundtable completed",
+        "summary": "Roundtable is running in #dev_support. roundtable live in #dev_support (1426904647313916014), ends 2026-04-22T18:59:03.776Z",
         "kind": "roundtable_runtime",
-        "status": "ok",
+        "status": "warning",
         "source": "OpenJaws roundtable lane",
         "operatorActions": [
           "roundtable_runtime",
@@ -190,8 +190,8 @@
         ]
       },
       {
-        "id": "discord-q-2026-04-22T14:35:49.371Z",
-        "timestamp": "2026-04-22T14:35:49.371Z",
+        "id": "discord-q-2026-04-22T14:56:23.670Z",
+        "timestamp": "2026-04-22T14:56:23.670Z",
         "title": "Supervised Q patrol update",
         "summary": "state changed but routing cooldown held",
         "kind": "patrol",
@@ -216,8 +216,8 @@
         ]
       },
       {
-        "id": "discord-blackbeak-2026-04-22T14:33:16.151Z",
-        "timestamp": "2026-04-22T14:33:16.151Z",
+        "id": "discord-blackbeak-2026-04-22T14:53:35.307Z",
+        "timestamp": "2026-04-22T14:53:35.307Z",
         "title": "Supervised Blackbeak patrol update",
         "summary": "Blackbeak Discord runtime is online through the supervised bounded operator lane.",
         "kind": "patrol",
@@ -293,7 +293,7 @@
       },
       {
         "id": "discord-transport",
-        "timestamp": "2026-04-22T14:39:38.286Z",
+        "timestamp": "2026-04-22T16:37:18.169Z",
         "title": "Discord transport readiness",
         "summary": "status=ready; gateway=true; guilds=1; health 200; updated 15s ago (budget 900s)",
         "kind": "transport",

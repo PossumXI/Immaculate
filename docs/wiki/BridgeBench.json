@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-04-22T13:49:35.931Z",
+  "generatedAt": "2026-04-22T16:32:34.278Z",
   "modelLaneSurface": "direct-q-structured-contract",
   "qRuntimeBaseUrl": "http://127.0.0.1:11434",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "8d26389523f3b4bcebde1b54e1841f462e1ba184",
-    "gitShortSha": "8d26389",
+    "gitSha": "cdd113a649a2d196afd60e878761393e8c498bc5",
+    "gitShortSha": "cdd113a",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+8d26389",
+    "buildId": "0.1.0+cdd113a",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -71,14 +71,14 @@
       "taskCount": 4,
       "parseSuccessCount": 4,
       "parseSuccessRate": 1,
-      "averageLatencyMs": 27388.1,
-      "p95LatencyMs": 42892.09,
+      "averageLatencyMs": 28523.66,
+      "p95LatencyMs": 39446.91,
       "tasks": [
         {
           "scenarioId": "bridge-ack-fail-closed",
           "label": "Bridge ACK fail-closed",
-          "latencyMs": 42892.09,
-          "wallLatencyMs": 43906.56,
+          "latencyMs": 39446.91,
+          "wallLatencyMs": 40432.09,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
@@ -91,8 +91,8 @@
         {
           "scenarioId": "nonce-forgery-response",
           "label": "ACK nonce forgery response",
-          "latencyMs": 19867.04,
-          "wallLatencyMs": 19985.13,
+          "latencyMs": 21226.22,
+          "wallLatencyMs": 21279,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
@@ -105,8 +105,8 @@
         {
           "scenarioId": "public-q-rate-limit",
           "label": "Public Q edge throttling",
-          "latencyMs": 28271.74,
-          "wallLatencyMs": 28296.45,
+          "latencyMs": 32591.2,
+          "wallLatencyMs": 32626.46,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
@@ -119,22 +119,22 @@
         {
           "scenarioId": "bridge-continuity-routing",
           "label": "Bridge continuity routing",
-          "latencyMs": 18521.54,
-          "wallLatencyMs": 18585.12,
+          "latencyMs": 20830.3,
+          "wallLatencyMs": 20937.35,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
           "routeSuggestion": "guarded",
           "reasonSummary": "HTTP/2 direct is healthy while the websocket bridge is degraded.",
-          "commitStatement": "Route execution via the healthy direct path.",
-          "responsePreview": "ROUTE: cognitive REASON: HTTP/2 direct is healthy while the websocket bridge is degraded. COMMIT: Route execution via the healthy direct path."
+          "commitStatement": "Use the healthy direct path for transport.",
+          "responsePreview": "ROUTE: cognitive REASON: HTTP/2 direct is healthy while the websocket bridge is degraded. COMMIT: Use the healthy direct path for transport."
         }
       ]
     }
   ],
   "bridgeRuntime": {
-    "suiteId": "immaculate-benchmark-2026-04-22T13-49-17-122Z",
+    "suiteId": "immaculate-benchmark-2026-04-22T16-31-52-710Z",
     "packId": "substrate-readiness",
     "failedAssertions": 0,
     "selectedAssertions": [
@@ -175,7 +175,7 @@
         "label": "Supervised serial transport registration exposes vendor/device identity and heartbeat policy",
         "status": "pass",
         "target": "registered serial-json transport with vendor/model and heartbeat policy",
-        "actual": "atx-fnv1a-ca651cf4:http2-json:immaculate-labs:healthy, atx-fnv1a-f843c321:serial-json:immaculate-labs:healthy, atx-fnv1a-b49690b8:udp-osc:generic:healthy",
+        "actual": "atx-fnv1a-c70ea149:http2-json:immaculate-labs:healthy, atx-fnv1a-4f5d524b:serial-json:immaculate-labs:healthy, atx-fnv1a-65d84728:udp-osc:generic:healthy",
         "detail": "vendor/device lanes should be durable registry entries with explicit supervision policy, not anonymous direct writes"
       },
       {
@@ -215,7 +215,7 @@
         "label": "HTTP/2 direct transport registration exposes a supervised RPC-class device endpoint",
         "status": "pass",
         "target": "registered http2-json transport with vendor/model and heartbeat policy",
-        "actual": "atx-fnv1a-ca651cf4:http2-json:immaculate-labs:haptic-rpc-s2:20/5000:healthy, atx-fnv1a-f843c321:serial-json:immaculate-labs:haptic-bridge-s1:20/5000:healthy, atx-fnv1a-b49690b8:udp-osc:generic:udp-osc:5000/15000:healthy",
+        "actual": "atx-fnv1a-c70ea149:http2-json:immaculate-labs:haptic-rpc-s2:20/5000:healthy, atx-fnv1a-4f5d524b:serial-json:immaculate-labs:haptic-bridge-s1:20/5000:healthy, atx-fnv1a-65d84728:udp-osc:generic:udp-osc:5000/15000:healthy",
         "detail": "the next direct device lane should be a typed RPC-class endpoint, not just another file or datagram bridge"
       },
       {

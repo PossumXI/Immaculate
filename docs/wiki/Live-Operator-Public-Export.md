@@ -3,23 +3,23 @@
 This page is the public-safe operator export for the current workstation. It mirrors the `fabric.showcase` contract already used by the aura-genesis status page, keeps the private mission lane closed, and only emits aggregate operator activity that is safe to publish on public surfaces.
 When the repo-local OpenJaws public showcase mirror is present, this export consumes that shared sanitized activity feed instead of regenerating overlapping Discord/Q/roundtable entries locally.
 
-- Generated: `2026-04-22T14:39:38.286Z`
-- Release: `0.1.0+8d26389`
-- Repo commit: `8d26389523f3b4bcebde1b54e1841f462e1ba184`
+- Generated: `2026-04-22T16:37:18.169Z`
+- Release: `0.1.0+cdd113a`
+- Repo commit: `cdd113a649a2d196afd60e878761393e8c498bc5`
 - Contract target: `fabric.showcase` v1
 
 ## Publication Gate
 
 - Status: `publishable`
 - Target: aura-genesis.org/status
-- Summary: Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35656); public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35796)
+- Summary: Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35656); public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35796); public-safe aggregate publication verified on the Arobi public lane (2 audit records ac…
 
 ## Public Showcase Status
 
 - Active: `true`
 - Mode: `controlled`
 - Title: Controlled live showcase active.
-- Summary: Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35656); public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35796)
+- Summary: Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35656); public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35796); public-safe aggregate publication verified on the Arobi public lane (2 audit records ac…
 - Window label: Controlled public verification window
 - Results ready: `true`
 - Fleet label: ASGARD Core 16
@@ -27,10 +27,10 @@ When the repo-local OpenJaws public showcase mirror is present, this export cons
 - Subsystems: total `16` | online `4` | degraded `0` | offline `0` | unconfigured `0`
 - Network version: `v3.3.1`
 - Verified ledger entries: `395`
-- Public height: `35796`
+- Public height: `35821`
 - Orchestration profile: `immaculate-supervised-operator-loop`
 - Q auth mode: `iam`
-- Last checked: `2026-04-22T14:28:16.330Z`
+- Last checked: `2026-04-22T14:54:29.066Z`
 
 ## Activity Feed
 
@@ -38,9 +38,9 @@ When the repo-local OpenJaws public showcase mirror is present, this export cons
 
 - Status: `ok`
 - Kind: `showcase`
-- Timestamp: `2026-04-22T14:39:38.286Z`
+- Timestamp: `2026-04-22T16:37:18.169Z`
 - Source: `fabric.showcase`
-- Summary: Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35656); public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35796)
+- Summary: Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35656); public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35796); public-safe aggregate publication verified on the Arobi public lane (2 audit records ac…
 - Subsystems: immaculate, openjaws, q
 - Artifacts: showcase:summary, receipt:live-operator-public-export
 - Tags: showcase, public, operator
@@ -49,9 +49,9 @@ When the repo-local OpenJaws public showcase mirror is present, this export cons
 
 - Status: `ok`
 - Kind: `publication`
-- Timestamp: `2026-04-22T14:39:38.286Z`
+- Timestamp: `2026-04-22T16:37:18.169Z`
 - Source: `immaculate.live_operator_activity`
-- Summary: Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35656); public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35796)
+- Summary: Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35656); public-safe aggregate publication verified on the Arobi public lane (2 audit records accepted at height 35796); public-safe aggregate publication verified on the Arobi public lane (2 audit records ac…
 - Subsystems: arobi, immaculate
 - Artifacts: gate:publication
 - Tags: public, gate
@@ -60,7 +60,7 @@ When the repo-local OpenJaws public showcase mirror is present, this export cons
 
 - Status: `warning`
 - Kind: `runtime_audit`
-- Timestamp: `2026-04-22T14:39:18.338Z`
+- Timestamp: `2026-04-22T14:59:21.015Z`
 - Source: `OpenJaws public showcase sync`
 - Summary: Supervised OpenJaws audit surfaces are live but still show bounded warnings or incomplete runtime coverage.
 - Subsystems: openjaws, apex, nysus, q, roundtable, immaculate, discord
@@ -69,11 +69,11 @@ When the repo-local OpenJaws public showcase mirror is present, this export cons
 
 ### Roundtable runtime
 
-- Status: `ok`
+- Status: `warning`
 - Kind: `roundtable_runtime`
-- Timestamp: `2026-04-22T14:38:41.319Z`
+- Timestamp: `2026-04-22T14:59:04.859Z`
 - Source: `OpenJaws roundtable lane`
-- Summary: Roundtable is completed in #dev_support. roundtable completed
+- Summary: Roundtable is running in #dev_support. roundtable live in #dev_support (1426904647313916014), ends 2026-04-22T18:59:03.776Z
 - Subsystems: openjaws, immaculate, discord
 - Artifacts: roundtable:session
 - Tags: roundtable, bounded, supervised
@@ -82,7 +82,7 @@ When the repo-local OpenJaws public showcase mirror is present, this export cons
 
 - Status: `ok`
 - Kind: `patrol`
-- Timestamp: `2026-04-22T14:35:49.371Z`
+- Timestamp: `2026-04-22T14:56:23.670Z`
 - Source: `OpenJaws Discord lane`
 - Summary: state changed but routing cooldown held
 - Subsystems: openjaws, discord, q
@@ -93,7 +93,7 @@ When the repo-local OpenJaws public showcase mirror is present, this export cons
 
 - Status: `ok`
 - Kind: `patrol`
-- Timestamp: `2026-04-22T14:33:16.151Z`
+- Timestamp: `2026-04-22T14:53:35.307Z`
 - Source: `OpenJaws Discord lane`
 - Summary: Blackbeak Discord runtime is online through the supervised bounded operator lane.
 - Subsystems: openjaws, discord, blackbeak
@@ -126,7 +126,7 @@ When the repo-local OpenJaws public showcase mirror is present, this export cons
 
 - Status: `ok`
 - Kind: `transport`
-- Timestamp: `2026-04-22T14:39:38.286Z`
+- Timestamp: `2026-04-22T16:37:18.169Z`
 - Source: `immaculate.live_mission_readiness`
 - Summary: status=ready; gateway=true; guilds=1; health 200; updated 15s ago (budget 900s)
 - Subsystems: discord, q
