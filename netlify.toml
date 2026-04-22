@@ -1,6 +1,5 @@
 [build]
-  command = "npm run build -w @immaculate/dashboard"
-  publish = "apps/dashboard/out"
+  command = "npm run build -w @immaculate/core && npm run build -w @immaculate/dashboard"
 
   [build.environment]
     NODE_VERSION = "22"
