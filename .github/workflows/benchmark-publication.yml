@@ -2,6 +2,19 @@ name: Benchmark Publication
 
 on:
   push:
+    paths:
+      - ".github/workflows/benchmark-publication.yml"
+      - ".github/workflows/benchmark-gate.yml"
+      - ".github/workflows/benchmark-credibility.yml"
+      - ".github/workflows/benchmark-longrun.yml"
+      - "benchmarks/**"
+      - "apps/harness/**"
+      - "packages/core/**"
+      - "training/**"
+      - "package.json"
+      - "package-lock.json"
+      - "apps/harness/package.json"
+      - "packages/core/package.json"
   workflow_dispatch:
   schedule:
     - cron: "0 13 * * 1"
@@ -60,7 +73,7 @@ jobs:
         run: npm run benchmark:export:wandb
 
       - name: Commit benchmark status to repo wiki
-        if: ${{ env.WANDB_API_KEY != '' && github.ref == 'refs/heads/main' && github.actor != 'github-actions[bot]' }}
+        if: ${{ env.WANDB_API_KEY != '' && github.ref == 'refs/heads/main' && github.actor != 'github-actions[bot]' && github.event_name != 'push' }}
         shell: bash
         run: |
           if git diff --quiet -- docs/wiki/Benchmark-Status.md docs/wiki/Benchmark-Status.json docs/wiki/Benchmark-Wandb-Export.md docs/wiki/Benchmark-Wandb-Export.json; then
