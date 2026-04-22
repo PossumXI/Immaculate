@@ -2,9 +2,9 @@
 
 This page is the public-safe operator export for the current workstation. It mirrors the `fabric.showcase` contract already used by the aura-genesis status page, keeps the private mission lane closed, and only emits aggregate operator activity that is safe to publish on public surfaces.
 
-- Generated: `2026-04-22T01:19:46.289Z`
-- Release: `0.1.0+d58974a`
-- Repo commit: `d58974aa420a6cb92fc4085459156823dd29553e`
+- Generated: `2026-04-22T01:20:44.169Z`
+- Release: `0.1.0+ba51737`
+- Repo commit: `ba51737efc2a5b6a7b5234ff2f6fb86fb6b28a04`
 - Contract target: `fabric.showcase` v1
 
 ## Publication Gate
@@ -29,7 +29,7 @@ This page is the public-safe operator export for the current workstation. It mir
 - Public height: `34832`
 - Orchestration profile: `immaculate-supervised-operator-loop`
 - Q auth mode: `oci_iam`
-- Last checked: `2026-04-22T01:19:46.289Z`
+- Last checked: `2026-04-22T01:20:44.169Z`
 
 ## Activity Feed
 
@@ -37,7 +37,7 @@ This page is the public-safe operator export for the current workstation. It mir
 
 - Status: `warning`
 - Kind: `showcase`
-- Timestamp: `2026-04-22T01:19:46.289Z`
+- Timestamp: `2026-04-22T01:20:44.169Z`
 - Source: `fabric.showcase`
 - Summary: Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public ledger publication remains blocked: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true
 - Subsystems: immaculate, openjaws, q
@@ -48,7 +48,7 @@ This page is the public-safe operator export for the current workstation. It mir
 
 - Status: `warning`
 - Kind: `publication`
-- Timestamp: `2026-04-22T01:19:46.289Z`
+- Timestamp: `2026-04-22T01:20:44.169Z`
 - Source: `immaculate.live_operator_activity`
 - Summary: public publication is blocked by ledger.public: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true
 - Subsystems: arobi, immaculate
@@ -103,7 +103,7 @@ This page is the public-safe operator export for the current workstation. It mir
 
 - Status: `ok`
 - Kind: `transport`
-- Timestamp: `2026-04-22T01:19:46.289Z`
+- Timestamp: `2026-04-22T01:20:44.169Z`
 - Source: `immaculate.live_mission_readiness`
 - Summary: status=ready; gateway=true; guilds=1; health 200; updated 15s ago (budget 900s)
 - Subsystems: discord, q

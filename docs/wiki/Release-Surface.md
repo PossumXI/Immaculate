@@ -2,9 +2,9 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-04-22T01:19:47.905Z
-- Immaculate release: `0.1.0+d58974a`
-- Repo commit: `d58974aa420a6cb92fc4085459156823dd29553e`
+- Generated: 2026-04-22T01:20:45.925Z
+- Immaculate release: `0.1.0+ba51737`
+- Repo commit: `ba51737efc2a5b6a7b5234ff2f6fb86fb6b28a04`
 - Branch: `publish-q-win`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+d58974a` is the current repo build stamp.
+- Immaculate build `0.1.0+ba51737` is the current repo build stamp.
 - Arobi Network is the ledger-backed private and public operator network and audit substrate. Immaculate is the governed harness and orchestrator inside it. Q is the reasoning brain inside that governed stack.
 - Q is the only public model name used across the repo, and it is built on `Gemma 4`.
 - The latest tracked Q training bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`, tied to dataset `.training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
@@ -36,9 +36,9 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Arobi live ledger receipt: `2026-04-21T22:18:04.712Z` via `docs/wiki/Arobi-Live-Ledger-Receipt.json`
 - Live mission readiness: `2026-04-22T00:57:50.993Z` via `docs/wiki/Live-Mission-Readiness.json`
 - Live operator activity: `2026-04-22T00:57:56.085Z` via `docs/wiki/Live-Operator-Activity.json`
-- Live operator public export: `2026-04-22T01:19:46.289Z` via `docs/wiki/Live-Operator-Public-Export.json`
+- Live operator public export: `2026-04-22T01:20:44.169Z` via `docs/wiki/Live-Operator-Public-Export.json`
 - Cross-project workflow health: `2026-04-21T23:58:39.554Z` via `docs/wiki/Cross-Project-Workflow-Health.json`
-- Supervised mission showcase: `2026-04-22T01:19:47.102Z` via `docs/wiki/Supervised-Mission-Showcase.json`
+- Supervised mission showcase: `2026-04-22T01:20:45.053Z` via `docs/wiki/Supervised-Mission-Showcase.json`
 - Roundtable actionability: `2026-04-21T16:11:05.129Z` via `docs/wiki/Roundtable-Actionability.json`
 - Roundtable runtime: `2026-04-21T22:19:50.626Z` via `docs/wiki/Roundtable-Runtime.json`
 - Q API audit: `2026-04-19T22:47:48Z` via `docs/wiki/Q-API-Audit.json`

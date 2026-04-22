@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-22T01:19:47.102Z",
+  "generatedAt": "2026-04-22T01:20:45.053Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "d58974aa420a6cb92fc4085459156823dd29553e",
-    "gitShortSha": "d58974a",
+    "gitSha": "ba51737efc2a5b6a7b5234ff2f6fb86fb6b28a04",
+    "gitShortSha": "ba51737",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+d58974a",
+    "buildId": "0.1.0+ba51737",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -134,7 +134,7 @@
       "status": "publishable",
       "summary": "Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public ledger publication remains blocked: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true; activity items `8`; activity publication gate is `blocked`; targets aura-genesis.org/status (public-safe aggregate only) | iorch.net (results only) | qline.site (results only; not published from this repo); public publication is blocked by ledger.public: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true.",
       "sourcePath": "docs/wiki/Live-Operator-Public-Export.json",
-      "generatedAt": "2026-04-22T01:19:46.289Z"
+      "generatedAt": "2026-04-22T01:20:44.169Z"
     }
   ],
   "truthBoundary": [

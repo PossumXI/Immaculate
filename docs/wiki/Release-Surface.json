@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-22T01:19:47.905Z",
+  "generatedAt": "2026-04-22T01:20:45.925Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "d58974aa420a6cb92fc4085459156823dd29553e",
-    "gitShortSha": "d58974a",
+    "gitSha": "ba51737efc2a5b6a7b5234ff2f6fb86fb6b28a04",
+    "gitShortSha": "ba51737",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+d58974a",
+    "buildId": "0.1.0+ba51737",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -106,7 +106,7 @@
     {
       "label": "Live operator public export",
       "path": "docs\\wiki\\Live-Operator-Public-Export.json",
-      "generatedAt": "2026-04-22T01:19:46.289Z"
+      "generatedAt": "2026-04-22T01:20:44.169Z"
     },
     {
       "label": "Cross-project workflow health",
@@ -116,7 +116,7 @@
     {
       "label": "Supervised mission showcase",
       "path": "docs\\wiki\\Supervised-Mission-Showcase.json",
-      "generatedAt": "2026-04-22T01:19:47.102Z"
+      "generatedAt": "2026-04-22T01:20:45.053Z"
     },
     {
       "label": "Roundtable actionability",

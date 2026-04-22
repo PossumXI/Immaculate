@@ -2,9 +2,9 @@
 
 This page is the public-safe showcase receipt for the current workstation. It keeps the showcase fail-closed by default, publishes only safe snippets/results, and keeps the private mission lane out of the public proof package.
 
-- Generated: `2026-04-22T01:19:47.102Z`
-- Release: `0.1.0+d58974a`
-- Repo commit: `d58974aa420a6cb92fc4085459156823dd29553e`
+- Generated: `2026-04-22T01:20:45.053Z`
+- Release: `0.1.0+ba51737`
+- Repo commit: `ba51737efc2a5b6a7b5234ff2f6fb86fb6b28a04`
 
 ## Showcase Gate
 
@@ -54,7 +54,7 @@ This page is the public-safe showcase receipt for the current workstation. It ke
 
 - Status: `publishable`
 - Summary: Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public ledger publication remains blocked: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true; activity items `8`; activity publication gate is `blocked`; targets aura-genesis.org/status (public-safe aggregate only) | iorch.net (results only) | qline.site (results only; not published from this repo); public publication is blocked by ledger.public: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true.
-- Source: `docs/wiki/Live-Operator-Public-Export.json` @ `2026-04-22T01:19:46.289Z`
+- Source: `docs/wiki/Live-Operator-Public-Export.json` @ `2026-04-22T01:20:44.169Z`
 
 ## Truth Boundary
 
