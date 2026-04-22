@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-21T23:25:55.683Z",
+  "generatedAt": "2026-04-22T00:58:00.325Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "60d03c2f801cd6890228b9e91802432026339ab0",
-    "gitShortSha": "60d03c2",
+    "gitSha": "9b31c9d326f161131c480a5602a9c0c182e5a0d1",
+    "gitShortSha": "9b31c9d",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+60d03c2",
+    "buildId": "0.1.0+9b31c9d",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -53,7 +53,7 @@
     "publicWindowRequested": false,
     "publicWindowOpen": false,
     "privateMissionLanePublished": false,
-    "summary": "supervised public showcase remains closed because shared readiness blocked: https://arobi.aura-genesis.org: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true | D:\\openjaws\\OpenJaws\\artifacts\\fabric-audit-soak-20260420T022653Z: verified private node is blocked by mission treasury signer mismatch despite rerun delta 1"
+    "summary": "supervised public showcase remains closed because shared readiness blocked: https://arobi.aura-genesis.org: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true | openjaws/artifacts/fabric-audit-soak-20260420T022653Z: verified private node is blocked by mission treasury signer mismatch despite rerun delta 1"
   },
   "readiness": {
     "ledger": {
@@ -68,7 +68,7 @@
         "status": "blocked",
         "configured": true,
         "ready": false,
-        "endpoint": "D:\\openjaws\\OpenJaws\\artifacts\\fabric-audit-soak-20260420T022653Z",
+        "endpoint": "openjaws/artifacts/fabric-audit-soak-20260420T022653Z",
         "detail": "verified private node is blocked by mission treasury signer mismatch despite rerun delta 1"
       }
     },
@@ -85,7 +85,7 @@
         "configured": true,
         "ready": true,
         "endpoint": "https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1",
-        "detail": "Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 34s ago (budget 900s)"
+        "detail": "Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 15s ago (budget 900s)"
       }
     },
     "discord": {
@@ -94,11 +94,11 @@
         "configured": true,
         "ready": true,
         "endpoint": "http://127.0.0.1:8788/health",
-        "detail": "status=ready; gateway=true; guilds=1; health 200; updated 34s ago (budget 900s)"
+        "detail": "status=ready; gateway=true; guilds=1; health 200; updated 15s ago (budget 900s)"
       }
     },
     "missionSurfaceReady": false,
-    "summary": "shared readiness blocked: https://arobi.aura-genesis.org: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true | D:\\openjaws\\OpenJaws\\artifacts\\fabric-audit-soak-20260420T022653Z: verified private node is blocked by mission treasury signer mismatch despite rerun delta 1"
+    "summary": "shared readiness blocked: https://arobi.aura-genesis.org: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true | openjaws/artifacts/fabric-audit-soak-20260420T022653Z: verified private node is blocked by mission treasury signer mismatch despite rerun delta 1"
   },
   "publishableSnippets": [
     {
@@ -128,6 +128,13 @@
       "summary": "public node 3.3.1 on height 34832, peers 2, chain valid true, fabric source synthesized, live record visible false, latest supervised public delta 1. This is a safe public-edge summary only; it does not expose private mission-lane payloads.",
       "sourcePath": "docs/wiki/Arobi-Live-Ledger-Receipt.json",
       "generatedAt": "2026-04-21T22:18:04.712Z"
+    },
+    {
+      "label": "Discord and operator activity",
+      "status": "publishable",
+      "summary": "2/3 bot receipts are currently ready; Q patrol is `ready` on layer `Q`; roundtable is `ready` in `#dev_support` with `21` bounded action receipts; operator state is `ready`; activity publication gate is `blocked`: public publication is blocked until the public ledger, Discord transport, and OCI-backed Q all prove readiness on the current workstation.",
+      "sourcePath": "docs/wiki/Live-Operator-Activity.json",
+      "generatedAt": "2026-04-22T00:57:56.085Z"
     }
   ],
   "truthBoundary": [

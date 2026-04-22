@@ -2,9 +2,9 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-04-21T23:58:50.086Z
-- Immaculate release: `0.1.0+3432833`
-- Repo commit: `34328335397451c30b6ee12c3edf832fd22a95e6`
+- Generated: 2026-04-22T00:58:04.575Z
+- Immaculate release: `0.1.0+9b31c9d`
+- Repo commit: `9b31c9d326f161131c480a5602a9c0c182e5a0d1`
 - Branch: `publish-q-win`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+3432833` is the current repo build stamp.
+- Immaculate build `0.1.0+9b31c9d` is the current repo build stamp.
 - Arobi Network is the ledger-backed private and public operator network and audit substrate. Immaculate is the governed harness and orchestrator inside it. Q is the reasoning brain inside that governed stack.
 - Q is the only public model name used across the repo, and it is built on `Gemma 4`.
 - The latest tracked Q training bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`, tied to dataset `.training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
@@ -34,9 +34,10 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Q mediation drift: `2026-04-19T22:06:40.025Z` via `docs/wiki/Q-Mediation-Drift.json`
 - Arobi audit integrity: `2026-04-19T23:41:05.513Z` via `docs/wiki/Arobi-Audit-Integrity.json`
 - Arobi live ledger receipt: `2026-04-21T22:18:04.712Z` via `docs/wiki/Arobi-Live-Ledger-Receipt.json`
-- Live mission readiness: `2026-04-21T23:25:54.067Z` via `docs/wiki/Live-Mission-Readiness.json`
+- Live mission readiness: `2026-04-22T00:57:50.993Z` via `docs/wiki/Live-Mission-Readiness.json`
+- Live operator activity: `2026-04-22T00:57:56.085Z` via `docs/wiki/Live-Operator-Activity.json`
 - Cross-project workflow health: `2026-04-21T23:58:39.554Z` via `docs/wiki/Cross-Project-Workflow-Health.json`
-- Supervised mission showcase: `2026-04-21T23:25:55.683Z` via `docs/wiki/Supervised-Mission-Showcase.json`
+- Supervised mission showcase: `2026-04-22T00:58:00.325Z` via `docs/wiki/Supervised-Mission-Showcase.json`
 - Roundtable actionability: `2026-04-21T16:11:05.129Z` via `docs/wiki/Roundtable-Actionability.json`
 - Roundtable runtime: `2026-04-21T22:19:50.626Z` via `docs/wiki/Roundtable-Runtime.json`
 - Q API audit: `2026-04-19T22:47:48Z` via `docs/wiki/Q-API-Audit.json`
@@ -50,7 +51,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - OCI region capacity: `2026-04-17T02:02:24Z` via `docs/wiki/OCI-Region-Capacity.json`
 - Q benchmark corpus: `2026-04-21T16:17:07Z` via `docs/wiki/Q-Benchmark-Corpus.json`
 - Q benchmark promotion: `2026-04-19T07:46:03Z` via `docs/wiki/Q-Benchmark-Promotion.json`
-- W&B benchmark export: `2026-04-21T23:27:42.972166+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
+- W&B benchmark export: `2026-04-22T00:00:28.939949+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
 - Harbor terminal bench: `2026-04-19T07:43:17.831Z` via `docs/wiki/Harbor-Terminal-Bench.json`
 - Terminal-Bench public task: `2026-04-19T14:31:45.217Z` via `docs/wiki/Terminal-Bench-Public-Task.json`
 - Terminal-Bench leaderboard status: `2026-04-19T14:31:45.545Z` via `docs/wiki/Terminal-Bench-Receipt.json`

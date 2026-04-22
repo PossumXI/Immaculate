@@ -2,9 +2,9 @@
 
 This page is the public-safe showcase receipt for the current workstation. It keeps the showcase fail-closed by default, publishes only safe snippets/results, and keeps the private mission lane out of the public proof package.
 
-- Generated: `2026-04-21T23:25:55.683Z`
-- Release: `0.1.0+60d03c2`
-- Repo commit: `60d03c2f801cd6890228b9e91802432026339ab0`
+- Generated: `2026-04-22T00:58:00.325Z`
+- Release: `0.1.0+9b31c9d`
+- Repo commit: `9b31c9d326f161131c480a5602a9c0c182e5a0d1`
 
 ## Showcase Gate
 
@@ -12,17 +12,17 @@ This page is the public-safe showcase receipt for the current workstation. It ke
 - Public window requested: `false`
 - Public window open: `false`
 - Private mission lane published: `false`
-- Summary: supervised public showcase remains closed because shared readiness blocked: https://arobi.aura-genesis.org: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true | D:\openjaws\OpenJaws\artifacts\fabric-audit-soak-20260420T022653Z: verified private node is blocked by mission treasury signer mismatch despite rerun delta 1
+- Summary: supervised public showcase remains closed because shared readiness blocked: https://arobi.aura-genesis.org: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true | openjaws/artifacts/fabric-audit-soak-20260420T022653Z: verified private node is blocked by mission treasury signer mismatch despite rerun delta 1
 
 ## Shared Readiness
 
 - Mission-surface ready: `false`
-- Summary: shared readiness blocked: https://arobi.aura-genesis.org: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true | D:\openjaws\OpenJaws\artifacts\fabric-audit-soak-20260420T022653Z: verified private node is blocked by mission treasury signer mismatch despite rerun delta 1
+- Summary: shared readiness blocked: https://arobi.aura-genesis.org: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true | openjaws/artifacts/fabric-audit-soak-20260420T022653Z: verified private node is blocked by mission treasury signer mismatch despite rerun delta 1
 - ledger.public: `blocked` @ `https://arobi.aura-genesis.org` | public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true
-- ledger.private: `blocked` @ `D:\openjaws\OpenJaws\artifacts\fabric-audit-soak-20260420T022653Z` | verified private node is blocked by mission treasury signer mismatch despite rerun delta 1
+- ledger.private: `blocked` @ `openjaws/artifacts/fabric-audit-soak-20260420T022653Z` | verified private node is blocked by mission treasury signer mismatch despite rerun delta 1
 - q.local: `ready` @ `http://127.0.0.1:11434` | local Q accepted 3/3 seed+mediation scenario pair(s)
-- q.oci: `ready` @ `https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1` | Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 34s ago (budget 900s)
-- discord.transport: `ready` @ `http://127.0.0.1:8788/health` | status=ready; gateway=true; guilds=1; health 200; updated 34s ago (budget 900s)
+- q.oci: `ready` @ `https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1` | Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 15s ago (budget 900s)
+- discord.transport: `ready` @ `http://127.0.0.1:8788/health` | status=ready; gateway=true; guilds=1; health 200; updated 15s ago (budget 900s)
 
 ## Publishable Snippets
 
@@ -49,6 +49,12 @@ This page is the public-safe showcase receipt for the current workstation. It ke
 - Status: `publishable`
 - Summary: public node 3.3.1 on height 34832, peers 2, chain valid true, fabric source synthesized, live record visible false, latest supervised public delta 1. This is a safe public-edge summary only; it does not expose private mission-lane payloads.
 - Source: `docs/wiki/Arobi-Live-Ledger-Receipt.json` @ `2026-04-21T22:18:04.712Z`
+
+### Discord and operator activity
+
+- Status: `publishable`
+- Summary: 2/3 bot receipts are currently ready; Q patrol is `ready` on layer `Q`; roundtable is `ready` in `#dev_support` with `21` bounded action receipts; operator state is `ready`; activity publication gate is `blocked`: public publication is blocked until the public ledger, Discord transport, and OCI-backed Q all prove readiness on the current workstation.
+- Source: `docs/wiki/Live-Operator-Activity.json` @ `2026-04-22T00:57:56.085Z`
 
 ## Truth Boundary
 

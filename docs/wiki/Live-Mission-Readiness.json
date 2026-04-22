@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-21T23:25:54.067Z",
+  "generatedAt": "2026-04-22T00:57:50.993Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "60d03c2f801cd6890228b9e91802432026339ab0",
-    "gitShortSha": "60d03c2",
+    "gitSha": "9b31c9d326f161131c480a5602a9c0c182e5a0d1",
+    "gitShortSha": "9b31c9d",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+60d03c2",
+    "buildId": "0.1.0+9b31c9d",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -61,7 +61,7 @@
         "status": "blocked",
         "configured": true,
         "ready": false,
-        "endpoint": "D:\\openjaws\\OpenJaws\\artifacts\\fabric-audit-soak-20260420T022653Z",
+        "endpoint": "openjaws/artifacts/fabric-audit-soak-20260420T022653Z",
         "detail": "verified private node is blocked by mission treasury signer mismatch despite rerun delta 1"
       }
     },
@@ -78,7 +78,7 @@
         "configured": true,
         "ready": true,
         "endpoint": "https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1",
-        "detail": "Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 34s ago (budget 900s)"
+        "detail": "Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 15s ago (budget 900s)"
       }
     },
     "discord": {
@@ -87,21 +87,21 @@
         "configured": true,
         "ready": true,
         "endpoint": "http://127.0.0.1:8788/health",
-        "detail": "status=ready; gateway=true; guilds=1; health 200; updated 34s ago (budget 900s)"
+        "detail": "status=ready; gateway=true; guilds=1; health 200; updated 15s ago (budget 900s)"
       }
     },
     "missionSurfaceReady": false,
-    "summary": "shared readiness blocked: https://arobi.aura-genesis.org: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true | D:\\openjaws\\OpenJaws\\artifacts\\fabric-audit-soak-20260420T022653Z: verified private node is blocked by mission treasury signer mismatch despite rerun delta 1"
+    "summary": "shared readiness blocked: https://arobi.aura-genesis.org: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true | openjaws/artifacts/fabric-audit-soak-20260420T022653Z: verified private node is blocked by mission treasury signer mismatch despite rerun delta 1"
   },
   "evidence": {
     "roundtableRuntimePath": "docs/wiki/Roundtable-Runtime.json",
     "arobiLiveLedgerPath": "docs/wiki/Arobi-Live-Ledger-Receipt.json",
-    "discordAgentReceiptPath": "D:\\openjaws\\OpenJaws\\local-command-station\\discord-q-agent-receipt.json",
+    "discordAgentReceiptPath": "openjaws/local-command-station/discord-q-agent-receipt.json",
     "discordAgentHealthUrl": "http://127.0.0.1:8788/health",
-    "openjawsRoot": "D:\\openjaws\\OpenJaws",
+    "openjawsRoot": "openjaws",
     "roundtableRuntimeGeneratedAt": "2026-04-21T22:19:50.626Z",
     "arobiLiveLedgerGeneratedAt": "2026-04-21T22:18:04.712Z",
-    "discordAgentReceiptUpdatedAt": "2026-04-21T23:21:04.672Z",
+    "discordAgentReceiptUpdatedAt": "2026-04-22T00:52:25.658Z",
     "qOciBackend": "Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1)",
     "discordHealth": {
       "status": 200,

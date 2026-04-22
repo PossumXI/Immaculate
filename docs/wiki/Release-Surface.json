@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-21T23:58:50.086Z",
+  "generatedAt": "2026-04-22T00:58:04.575Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "34328335397451c30b6ee12c3edf832fd22a95e6",
-    "gitShortSha": "3432833",
+    "gitSha": "9b31c9d326f161131c480a5602a9c0c182e5a0d1",
+    "gitShortSha": "9b31c9d",
     "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+3432833",
+    "buildId": "0.1.0+9b31c9d",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -96,7 +96,12 @@
     {
       "label": "Live mission readiness",
       "path": "docs\\wiki\\Live-Mission-Readiness.json",
-      "generatedAt": "2026-04-21T23:25:54.067Z"
+      "generatedAt": "2026-04-22T00:57:50.993Z"
+    },
+    {
+      "label": "Live operator activity",
+      "path": "docs\\wiki\\Live-Operator-Activity.json",
+      "generatedAt": "2026-04-22T00:57:56.085Z"
     },
     {
       "label": "Cross-project workflow health",
@@ -106,7 +111,7 @@
     {
       "label": "Supervised mission showcase",
       "path": "docs\\wiki\\Supervised-Mission-Showcase.json",
-      "generatedAt": "2026-04-21T23:25:55.683Z"
+      "generatedAt": "2026-04-22T00:58:00.325Z"
     },
     {
       "label": "Roundtable actionability",
@@ -176,7 +181,7 @@
     {
       "label": "W&B benchmark export",
       "path": "docs\\wiki\\Benchmark-Wandb-Export.json",
-      "generatedAt": "2026-04-21T23:27:42.972166+00:00"
+      "generatedAt": "2026-04-22T00:00:28.939949+00:00"
     },
     {
       "label": "Harbor terminal bench",

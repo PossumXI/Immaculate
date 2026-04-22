@@ -1,0 +1,288 @@
+{
+  "generatedAt": "2026-04-22T00:57:56.085Z",
+  "release": {
+    "packageVersion": "0.1.0",
+    "harnessVersion": "0.1.0",
+    "coreVersion": "0.1.0",
+    "gitSha": "9b31c9d326f161131c480a5602a9c0c182e5a0d1",
+    "gitShortSha": "9b31c9d",
+    "gitBranch": "publish-q-win",
+    "buildId": "0.1.0+9b31c9d",
+    "q": {
+      "modelName": "Q",
+      "foundationModel": "Gemma 4",
+      "truthfulLabel": "Q",
+      "trainingLock": {
+        "generatedAt": "2026-04-19T07:46:04Z",
+        "lockVersion": 1,
+        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
+        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23",
+        "modelName": "Q",
+        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl",
+        "trainDatasetSha256": "286326ce786c0a9b9b4a636a38114cc221c1b978a083ca55d70cc6ca6172cb07",
+        "trainDatasetRowCount": 117,
+        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.manifest.json",
+        "mixManifestSha256": "4c7df8284cedaf8e43f1715c8eaf4c30826687e27a5d511ef8ccd4ca78df991e",
+        "mixSupplementalCount": 6,
+        "mixSupplementalPaths": [
+          "training/q/q_harness_identity_seed.json",
+          "training/q/q_immaculate_reasoning_seed.json",
+          "training/q/terminal_bench_semantic_seed.json",
+          "training/q/bridgebench_seed.json",
+          "training/q/coding_long_context_seed.json",
+          ".training-output/q/q-failure-corpus.jsonl"
+        ],
+        "curationRunId": null,
+        "lockPath": ".training-output/q/latest-training-lock.json"
+      },
+      "hybridSession": {
+        "generatedAt": "2026-04-19T07:46:17Z",
+        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v23",
+        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v23/hybrid-session.json",
+        "localStatus": "ready",
+        "cloudStatus": "ready",
+        "cloudProvider": "hf_jobs",
+        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
+        "immaculateBundleId": "immaculate-orchestration-5ed19b9-cd094c28",
+        "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
+      }
+    }
+  },
+  "publication": {
+    "status": "blocked",
+    "publicLedgerReady": false,
+    "summary": "public publication is blocked until the public ledger, Discord transport, and OCI-backed Q all prove readiness on the current workstation"
+  },
+  "qPatrol": {
+    "status": "ready",
+    "summary": "state changed but routing cooldown held",
+    "sourcePath": "openjaws/local-command-station/discord-q-agent-receipt.json",
+    "lastDecision": "state changed but routing cooldown held",
+    "lastPostedChannelName": "openjaws-updates",
+    "lastSummary": "state changed but routing cooldown held",
+    "queueLength": 39,
+    "recommendedLayerId": "Q"
+  },
+  "roundtable": {
+    "status": "ready",
+    "summary": "running | Q passed turn 10 | 10 turns | 2/21 recent actions passed verification",
+    "sourcePath": "openjaws/local-command-station/roundtable-runtime/discord-roundtable.state.json",
+    "sessionSourcePath": "openjaws/local-command-station/roundtable-runtime/discord-roundtable.session.json",
+    "channelName": "dev_support",
+    "sessionStatus": "running",
+    "turnCount": 10,
+    "nextPersona": "viola",
+    "lastSpeaker": "q",
+    "lastSummary": "Q passed turn 10",
+    "actionReceiptCount": 21,
+    "actions": [
+      {
+        "persona": "Viola",
+        "title": "Viola audit-and-tighten pass",
+        "targetRoot": "Immaculate",
+        "startedAt": "2026-04-20T20:25:56.0298281-04:00",
+        "completedAt": "2026-04-20T20:27:08.0109176-04:00",
+        "changedFileCount": 2,
+        "verificationPassed": true,
+        "mergeable": true,
+        "verificationSummary": "No repo-specific verification command was detected for this workspace.",
+        "sourcePath": "openjaws/local-command-station/roundtable-runtime/actions/discord-roundtable-viola-apps-viola-mo7vuquk-mo7vursy/receipt.json"
+      },
+      {
+        "persona": "Viola",
+        "title": "Viola audit-and-tighten pass",
+        "targetRoot": "Asgard",
+        "startedAt": "2026-04-20T20:11:02.9948119-04:00",
+        "completedAt": "2026-04-20T20:14:11.3763035-04:00",
+        "changedFileCount": 4,
+        "verificationPassed": false,
+        "mergeable": false,
+        "verificationSummary": "Verification failed: npm run build",
+        "sourcePath": "openjaws/local-command-station/roundtable-runtime/actions/discord-roundtable-viola-scripts-viola-mo7vbi4c-mo7vbo7t/receipt.json"
+      },
+      {
+        "persona": "Q",
+        "title": "Q audit-and-tighten pass",
+        "targetRoot": "OpenJaws",
+        "startedAt": "2026-04-20T19:59:24.0966970-04:00",
+        "completedAt": "2026-04-20T20:07:03.5429230-04:00",
+        "changedFileCount": 1,
+        "verificationPassed": true,
+        "mergeable": true,
+        "verificationSummary": "No repo-specific verification command was detected for this workspace.",
+        "sourcePath": "openjaws/local-command-station/roundtable-runtime/actions/discord-roundtable-q-src-q-mo7uwnkb-mo7uwpbw/receipt.json"
+      }
+    ]
+  },
+  "agents": [
+    {
+      "label": "Q agent",
+      "sourcePath": "openjaws/local-command-station/bots/q/discord-agent-receipt.json",
+      "updatedAt": "2026-04-20T19:49:59.478Z",
+      "status": "blocked",
+      "backend": "Q backend: oci:Q via OCI IAM",
+      "connected": false,
+      "guildCount": 0,
+      "summary": "starting | gateway offline (0 guild) | Q backend: oci:Q via OCI IAM | knowledge 2500 files | voice staged",
+      "recentEvents": []
+    },
+    {
+      "label": "Blackbeak",
+      "sourcePath": "openjaws/local-command-station/bots/blackbeak/discord-agent-receipt.json",
+      "updatedAt": "2026-04-22T00:32:09.727Z",
+      "status": "ready",
+      "backend": "Q backend: oci:Q via OCI IAM",
+      "connected": true,
+      "guildCount": 1,
+      "summary": "ready | gateway online (1 guild) | Q backend: oci:Q via OCI IAM | gateway_ready · connected to 1 guild | knowledge 2500 files | voice off",
+      "recentEvents": [
+        {
+          "at": "2026-04-22T00:32:09.727Z",
+          "status": "gateway_ready",
+          "summary": "connected to 1 guild"
+        }
+      ]
+    },
+    {
+      "label": "Viola",
+      "sourcePath": "openjaws/local-command-station/bots/viola/discord-agent-receipt.json",
+      "updatedAt": "2026-04-22T00:48:39.358Z",
+      "status": "ready",
+      "backend": "Q backend: oci:Q via OCI IAM",
+      "connected": true,
+      "guildCount": 1,
+      "summary": "ready | gateway online (1 guild) | Q backend: oci:Q via OCI IAM | voice_joined · joined #viola-lounge · #viola-lounge | knowledge 2500 files | voice connected @ viola-lounge",
+      "recentEvents": [
+        {
+          "at": "2026-04-22T00:48:39.358Z",
+          "status": "voice_joined",
+          "summary": "joined #viola-lounge",
+          "channelName": "viola-lounge"
+        },
+        {
+          "at": "2026-04-22T00:48:39.072Z",
+          "status": "gateway_ready",
+          "summary": "connected to 1 guild"
+        },
+        {
+          "at": "2026-04-22T00:48:35.676Z",
+          "status": "gateway_reconnecting",
+          "summary": "code 1000 Discord WebSocket requesting client reconnect."
+        },
+        {
+          "at": "2026-04-22T00:48:35.675Z",
+          "status": "gateway_closed",
+          "summary": "code 1000 Discord WebSocket requesting client reconnect."
+        },
+        {
+          "at": "2026-04-22T00:32:10.083Z",
+          "status": "voice_joined",
+          "summary": "joined #viola-lounge",
+          "channelName": "viola-lounge"
+        }
+      ]
+    }
+  ],
+  "operator": {
+    "status": "ready",
+    "summary": "PossumX | active process present",
+    "sourcePath": "openjaws/local-command-station/openjaws-operator-state.json",
+    "operatorLabel": "PossumX",
+    "lastAction": null,
+    "lastSummary": null,
+    "lastCompletedAt": null,
+    "activeProcessPresent": true
+  },
+  "readiness": {
+    "ledger": {
+      "public": {
+        "status": "blocked",
+        "configured": true,
+        "ready": false,
+        "endpoint": "https://arobi.aura-genesis.org",
+        "detail": "public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true"
+      },
+      "private": {
+        "status": "blocked",
+        "configured": true,
+        "ready": false,
+        "endpoint": "openjaws/artifacts/fabric-audit-soak-20260420T022653Z",
+        "detail": "verified private node is blocked by mission treasury signer mismatch despite rerun delta 1"
+      }
+    },
+    "q": {
+      "local": {
+        "status": "ready",
+        "configured": true,
+        "ready": true,
+        "endpoint": "http://127.0.0.1:11434",
+        "detail": "local Q accepted 3/3 seed+mediation scenario pair(s)"
+      },
+      "oci": {
+        "status": "ready",
+        "configured": true,
+        "ready": true,
+        "endpoint": "https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1",
+        "detail": "Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 15s ago (budget 900s)"
+      }
+    },
+    "discord": {
+      "transport": {
+        "status": "ready",
+        "configured": true,
+        "ready": true,
+        "endpoint": "http://127.0.0.1:8788/health",
+        "detail": "status=ready; gateway=true; guilds=1; health 200; updated 15s ago (budget 900s)"
+      }
+    },
+    "missionSurfaceReady": false,
+    "summary": "shared readiness blocked: https://arobi.aura-genesis.org: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true | openjaws/artifacts/fabric-audit-soak-20260420T022653Z: verified private node is blocked by mission treasury signer mismatch despite rerun delta 1"
+  },
+  "evidence": {
+    "openjawsRoot": "openjaws",
+    "readinessPath": "immaculate/docs/wiki/Live-Mission-Readiness.json",
+    "aggregateReceiptPath": "openjaws/local-command-station/discord-q-agent-receipt.json",
+    "roundtableStatePath": "openjaws/local-command-station/roundtable-runtime/discord-roundtable.state.json",
+    "roundtableSessionPath": "openjaws/local-command-station/roundtable-runtime/discord-roundtable.session.json",
+    "roundtableActionReceiptPaths": [
+      "openjaws/local-command-station/roundtable-runtime/actions/discord-roundtable-viola-apps-viola-mo7vuquk-mo7vursy/receipt.json",
+      "openjaws/local-command-station/roundtable-runtime/actions/discord-roundtable-viola-scripts-viola-mo7vbi4c-mo7vbo7t/receipt.json",
+      "openjaws/local-command-station/roundtable-runtime/actions/discord-roundtable-q-src-q-mo7uwnkb-mo7uwpbw/receipt.json",
+      "openjaws/local-command-station/roundtable-runtime/actions/roundtable-q-q-audit-and-tighten-pass-mo7j4zxf-mo7j50pm/receipt.json",
+      "openjaws/local-command-station/roundtable-runtime/actions/roundtable-q-q-audit-and-tighten-pass-mo7ilnnq-mo7ilwrc/receipt.json",
+      "openjaws/local-command-station/roundtable-runtime/actions/discord-roundtable-blackbeak-asgard-viola-mo7p4ai9-mo7pdro0/receipt.json",
+      "openjaws/local-command-station/roundtable-runtime/actions/discord-roundtable-viola-immaculate-q-mo7oy2t7-mo7p4aro/receipt.json",
+      "openjaws/local-command-station/roundtable-runtime/actions/discord-roundtable-q-openjaws-blackbeak-mo7oobkx-mo7oy43k/receipt.json",
+      "openjaws/local-command-station/roundtable-runtime/actions/discord-roundtable-blackbeak-asgard-viola-mo7oi371-mo7ooeci/receipt.json",
+      "openjaws/local-command-station/roundtable-runtime/actions/discord-roundtable-viola-openjaws-q-mo7nm4su-mo7oi48a/receipt.json",
+      "openjaws/local-command-station/roundtable-runtime/actions/discord-roundtable-blackbeak-immaculate-blackbeak-mo7n9y3p-mo7n9ye6/receipt.json",
+      "openjaws/local-command-station/roundtable-runtime/actions/discord-roundtable-viola-immaculate-viola-mo7n3w9u-mo7n3whx/receipt.json",
+      "openjaws/local-command-station/roundtable-runtime/actions/discord-roundtable-q-immaculate-q-mo7mxy8m-mo7mxygq/receipt.json",
+      "openjaws/local-command-station/roundtable-runtime/actions/discord-roundtable-blackbeak-immaculate-blackbeak-mo7mrqfz-mo7mrqrc/receipt.json",
+      "openjaws/local-command-station/roundtable-runtime/actions/discord-roundtable-viola-immaculate-viola-mo7mktzh-mo7mku90/receipt.json",
+      "openjaws/local-command-station/roundtable-runtime/actions/discord-roundtable-q-immaculate-q-mo7md2hk-mo7md2rd/receipt.json",
+      "openjaws/local-command-station/roundtable-runtime/actions/roundtable-viola-viola-audit-and-tighten-pass-mo6j1g22-mo6j3jcd/receipt.json",
+      "openjaws/local-command-station/roundtable-runtime/actions/roundtable-q-q-audit-and-tighten-pass-mo6inwxz-mo6ionuf/receipt.json",
+      "openjaws/local-command-station/roundtable-runtime/actions/roundtable-q-q-audit-and-tighten-pass-mo6gwvre-mo6gx532/receipt.json",
+      "openjaws/local-command-station/roundtable-runtime/actions/roundtable-blackbeak-blackbeak-audit-and-tighten-pass-mo6gkoy7-mo6gkyh8/receipt.json",
+      "openjaws/local-command-station/roundtable-runtime/actions/roundtable-q-q-audit-and-tighten-pass-mo6geej1-mo6gek4v/receipt.json"
+    ],
+    "botReceiptPaths": [
+      "openjaws/local-command-station/bots/q/discord-agent-receipt.json",
+      "openjaws/local-command-station/bots/blackbeak/discord-agent-receipt.json",
+      "openjaws/local-command-station/bots/viola/discord-agent-receipt.json"
+    ],
+    "operatorStatePath": "openjaws/local-command-station/openjaws-operator-state.json"
+  },
+  "truthBoundary": [
+    "This page reflects local OpenJaws receipt files and operator state, not a fresh public-ledger publication proof by itself.",
+    "Discord transport presence does not imply a live Discord operator command was executed during this pass.",
+    "The aggregate Q receipt is authoritative for the patrol/routing loop; per-bot receipts are supporting transport evidence.",
+    "Roundtable state and action receipts summarize bounded job outcomes only; they do not expose worktree paths, prompts, private channel IDs, or raw workspace diffs.",
+    "Public publication stays blocked until the live mission readiness gate proves ledger.public, q.oci, and discord.transport together."
+  ],
+  "output": {
+    "jsonPath": "docs/wiki/Live-Operator-Activity.json",
+    "markdownPath": "docs/wiki/Live-Operator-Activity.md"
+  }
+}
