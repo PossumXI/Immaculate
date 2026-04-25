@@ -89,6 +89,9 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "wandb:bootstrap": "node ./scripts/bootstrap-wandb.mjs"
   },
+  "overrides": {
+    "protobufjs": "7.5.5"
+  },
   "devDependencies": {
     "@types/node": "^25.6.0",
     "tsx": "^4.21.0",
