@@ -5,6 +5,15 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    ignore:
+      # postcss 8.5.10 is the current fixed target for GHSA-qx2v-qp2m-jg93,
+      # but Next 16.2.4 pins postcss exactly to 8.4.31. Keep Next updates enabled.
+      - dependency-name: "postcss"
+        versions: ["8.5.10"]
+      # uuid 14.0.0 is the current fixed target for GHSA-w5hq-g745-h8pq,
+      # but Temporal currently depends on uuid ^11.1.0. Keep Temporal updates enabled.
+      - dependency-name: "uuid"
+        versions: ["14.0.0"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
