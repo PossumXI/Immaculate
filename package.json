@@ -88,7 +88,8 @@
     "operator:readiness": "powershell -ExecutionPolicy Bypass -File ./scripts/check-q-operator-readiness.ps1",
     "operator:readiness:publish": "powershell -ExecutionPolicy Bypass -File ./scripts/publish-q-operator-readiness.ps1",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "wandb:bootstrap": "node ./scripts/bootstrap-wandb.mjs"
+    "wandb:bootstrap": "node ./scripts/bootstrap-wandb.mjs",
+    "audit:inventory": "node ./scripts/generate-full-stack-audit.mjs"
   },
   "overrides": {
     "protobufjs": "7.5.5"
