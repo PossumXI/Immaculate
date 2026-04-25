@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import { parseBenchmarkCliFlags } from "./benchmark-cli-flags.js";
 
 test("benchmark CLI accepts direct pack and W&B flags", () => {
@@ -25,4 +28,26 @@ test("benchmark CLI prefers explicit argv over environment pack", () => {
   });
 
   assert.equal(flags.packId, "neurodata-external");
+});
+
+test("benchmark CLI tolerates npm separator argv", () => {
+  const flags = parseBenchmarkCliFlags(["--", "--pack=q-gateway-substrate"], {});
+
+  assert.equal(flags.packId, "q-gateway-substrate");
+});
+
+test("root benchmark aliases use npm config forwarding for packs", () => {
+  const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
+  const packageJson = JSON.parse(readFileSync(path.join(repoRoot, "package.json"), "utf8")) as {
+    scripts?: Record<string, string>;
+  };
+  const benchmarkAliases = Object.entries(packageJson.scripts ?? {}).filter(
+    ([name, command]) => name.startsWith("benchmark:") && command.includes("npm run benchmark -w @immaculate/harness")
+  );
+  const legacySeparatorPattern = ["npm run benchmark -w @immaculate/harness --", " --pack="].join("");
+
+  assert.ok(benchmarkAliases.length > 0);
+  for (const [name, command] of benchmarkAliases) {
+    assert.equal(command.includes(legacySeparatorPattern), false, name);
+  }
 });

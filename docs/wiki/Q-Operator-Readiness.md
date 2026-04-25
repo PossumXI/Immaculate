@@ -2,7 +2,7 @@
 
 Public-safe operator readiness summary for Immaculate, Q, OpenJaws, and the Arobi public safety lane.
 
-- Generated: 2026-04-25T14:33:46.2876303Z
+- Generated: 2026-04-25T16:45:01.8234558Z
 - Current UTC date: 2026-04-25
 - Q knowledge horizon: 2024-06
 - Public safety ready: True
@@ -24,7 +24,6 @@ Public-safe operator readiness summary for Immaculate, Q, OpenJaws, and the Arob
 - BridgeBench receipt present: True
 - TerminalBench leaderboard: waiting-for-full-sweep
 - Q benchmark corpus records: 58
-- W&B credential present locally: False
 
 ## OpenJaws Runtime
 
