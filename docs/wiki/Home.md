@@ -86,6 +86,7 @@ Right now the honest story is:
 - [[Benchmark-Status]] points to the live public W&B project plus the latest published benchmark runs by pack
 - [[Benchmark-Wandb-Export]] is the committed pull-back from W&B itself, so benchmark results live in git wiki even when the W&B project stays private
 - [[Q-Operator-Readiness]] publishes public-safe production gates for Arobi public safety, private runtime, voice readiness, and benchmark publication readiness
+- [[Dependency-Security-Handoff]] records temporary upstream-pinned dependency security blockers and the exact removal checks for Dependabot suppressions
 - the latest tracked W&B export is currently stamped on `2026-04-20`; the latest local mediation, substrate, gateway, public-task, audit-integrity, and roundtable reruns are also stamped on `2026-04-20`, so if you see `2026-04-12`, you are looking at the historical hour-class soak lane rather than the newest published W&B result
 - [[Harbor-Terminal-Bench]] records the repo-local Harbor task pack, the executed Q gateway scores, and the latest Harbor truth boundary
 - [[Terminal-Bench-Public-Task]] records the latest real local Harbor run on the official public task using the default Q-only path
