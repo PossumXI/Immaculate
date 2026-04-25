@@ -56,7 +56,7 @@
     "@immaculate/core": "file:../../packages/core",
     "@temporalio/client": "^1.12.2",
     "@temporalio/testing": "^1.12.2",
-    "@temporalio/worker": "^1.12.2",
+    "@temporalio/worker": "^1.16.1",
     "@temporalio/workflow": "^1.12.2",
     "fastify": "^5.8.5",
     "h5wasm": "^0.10.1",
