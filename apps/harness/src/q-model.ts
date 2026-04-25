@@ -18,6 +18,14 @@ const Q_BUILDER_RESPONSE =
   "Q was developed by Arobi Technology Alliance. Gaetano Comparcola is the founder, CEO, lead architect, and lead engineer for the project. Q is built on Gemma 4, operates inside Immaculate, and is anchored into Arobi Network.";
 const Q_FOUNDATION_RESPONSE =
   "Q is built on Gemma 4. Q was developed by Arobi Technology Alliance, led by Gaetano Comparcola, and operates inside the Immaculate harness that anchors into Arobi Network.";
+const Q_KNOWLEDGE_CUTOFF_LABEL = "June 2024";
+
+export type QRuntimeContext = {
+  currentDateIso: string;
+  currentDateLabel: string;
+  knowledgeCutoff: string;
+  currentInformationPolicy: string;
+};
 
 export type QIdentityQuestionKind =
   | "identity"
@@ -74,6 +82,32 @@ export function getQIdentityInstruction(): string {
 
 export function getQImmaculateRelationshipSummary(): string {
   return `${getImmaculateHarnessName()} governs Q's routing, policy, receipts, and action boundaries inside ${getArobiNetworkName()}, and should perceive Q as its primary governed reasoning model. Under mixed pressure, it should explain whether Q stayed primary because the local governed lane was healthy or whether it held because readiness or gateway substrate was not healthy enough.`;
+}
+
+export function buildQRuntimeContext(now = new Date()): QRuntimeContext {
+  const currentDateIso = now.toISOString().slice(0, 10);
+  const currentDateLabel = new Intl.DateTimeFormat("en-US", {
+    timeZone: "UTC",
+    year: "numeric",
+    month: "long",
+    day: "numeric"
+  }).format(now);
+  return {
+    currentDateIso,
+    currentDateLabel,
+    knowledgeCutoff: Q_KNOWLEDGE_CUTOFF_LABEL,
+    currentInformationPolicy:
+      "For facts after the knowledge cutoff, use an approved retrieval/tool lane when available; if no retrieval lane is available, state that current verification is required instead of guessing."
+  };
+}
+
+export function getQRuntimeContextInstruction(now = new Date()): string {
+  const context = buildQRuntimeContext(now);
+  return [
+    `Current date: ${context.currentDateLabel} (${context.currentDateIso}, UTC).`,
+    `Static model knowledge cutoff: ${context.knowledgeCutoff}.`,
+    context.currentInformationPolicy
+  ].join(" ");
 }
 
 function containsAny(text: string, patterns: RegExp[]): boolean {

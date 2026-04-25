@@ -110,6 +110,7 @@ import {
   getQLeadName,
   getQModelName,
   getQModelTarget,
+  getQRuntimeContextInstruction,
   matchesModelReference,
   truthfulModelLabel
 } from "./q-model.js";
@@ -4733,6 +4734,7 @@ app.post("/api/q/run", async (request, reply) => {
 
   const prompt = body.prompt?.trim() ?? "";
   const context = body.context?.trim();
+  const executionContext = [getQRuntimeContextInstruction(), context].filter(Boolean).join("\n\n");
   const role = body.role === "mid" || body.role === "reasoner" ? body.role : "reasoner";
   const sessionId = body.sessionId?.trim() || `q-api-${Date.now().toString(36)}`;
   const authContext = getQApiRequestContext(request);
@@ -4834,7 +4836,7 @@ app.post("/api/q/run", async (request, reply) => {
     const result = await executeCognitivePassWithRetry({
       layer,
       objective: prompt,
-      context,
+      context: executionContext,
       consentScope,
       sessionId,
       assignment,

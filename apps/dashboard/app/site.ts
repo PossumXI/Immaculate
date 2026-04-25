@@ -2,7 +2,7 @@ const fallbackSiteUrl = "https://iorch.net";
 
 export const siteName = "Immaculate";
 export const siteDescription =
-  "Arobi Network is the audit substrate, Immaculate is the harness, and Q is the brain for controlled intelligence in defense and healthcare.";
+  "Immaculate helps teams run AI operators with controls, audit trails, benchmarks, and human approval built in.";
 export const arobiUrl = "https://aura-genesis.org";
 
 function normalizeSiteUrl(value: string): URL {

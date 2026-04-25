@@ -30,6 +30,7 @@ import {
   getQLeadName,
   getQModelName,
   getQModelTarget,
+  getQRuntimeContextInstruction,
   getImmaculateHarnessName,
   matchesModelReference,
 } from "./q-model.js";
@@ -158,10 +159,6 @@ let cachedModelReadiness:
       installedModelNames: string[];
     }
   | undefined;
-const GATEWAY_IDENTITY_MESSAGE: OllamaChatMessage = {
-  role: "system",
-  content: `${getQIdentityInstruction()} Keep answers grounded, truthful, and consistent with your actual deployment state. If the user asks who you are, who developed you, who led the project, how you relate to Immaculate, or what public model name they should see, answer canonically with Q, Arobi Technology Alliance, Gaetano Comparcola, Gemma 4, and Immaculate.`
-};
 const BENCHMARK_SKIP_Q_IDENTITY_HEADER = "x-immaculate-benchmark-skip-q-identity";
 const REQUEST_TIMEOUT_OVERRIDE_HEADER = "x-immaculate-request-timeout-ms";
 
@@ -434,6 +431,7 @@ function buildStructuredGeneratePrompt(options: {
   const task = compactStructuredPromptSource(options.messages);
   const lines = [
     "You are Q inside Immaculate.",
+    getQRuntimeContextInstruction(),
     "Return JSON only with keys route, reason, commit.",
     "route must be one of reflex, cognitive, guarded, suppressed.",
     "reason must be one short sentence naming the decisive fault or health signal.",
@@ -456,7 +454,13 @@ function buildGatewayMessages(
   if (!includeIdentityInstruction) {
     return messages;
   }
-  return [GATEWAY_IDENTITY_MESSAGE, ...messages];
+  return [
+    {
+      role: "system",
+      content: `${getQIdentityInstruction()} ${getQRuntimeContextInstruction()} Keep answers grounded, truthful, and consistent with your actual deployment state. If the user asks who you are, who developed you, who led the project, how you relate to Immaculate, or what public model name they should see, answer canonically with Q, Arobi Technology Alliance, Gaetano Comparcola, Gemma 4, and Immaculate.`
+    },
+    ...messages
+  ];
 }
 
 function getPrincipal(request: FastifyRequest): GatewayPrincipal | undefined {
