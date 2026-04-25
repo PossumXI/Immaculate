@@ -46,6 +46,9 @@ jobs:
       - name: Bootstrap local W&B environment
         run: npm run wandb:bootstrap
 
+      - name: Test
+        run: npm run test
+
       - name: Build core workspace
         run: npm run build -w @immaculate/core
 

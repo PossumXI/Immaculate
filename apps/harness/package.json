@@ -45,6 +45,7 @@
     "training-data:list": "tsx src/training-data-cli.ts list",
     "training-data:show": "tsx src/training-data-cli.ts show",
     "training-data:smoke": "tsx src/training-data-smoke.ts",
+    "test": "node --import tsx --test src/**/*.test.ts",
     "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",

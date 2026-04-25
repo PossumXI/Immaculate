@@ -93,6 +93,22 @@ type PublicShowcaseStatus = {
   activityFeed: PublicShowcaseActivityEntry[];
 };
 
+type PublicExportSourceFreshnessEntry = {
+  label: string;
+  path: string;
+  generatedAt?: string;
+  ageMs?: number;
+  status: "fresh" | "stale" | "missing" | "invalid";
+  detail: string;
+};
+
+type PublicExportSourceFreshness = {
+  maxAgeMs: number;
+  allFresh: boolean;
+  summary: string;
+  sources: PublicExportSourceFreshnessEntry[];
+};
+
 type LiveOperatorPublicExportReport = {
   generatedAt: string;
   release: ReleaseMetadata;
@@ -106,6 +122,7 @@ type LiveOperatorPublicExportReport = {
     summary: string;
     target: string;
   };
+  sourceFreshness: PublicExportSourceFreshness;
   showcase: PublicShowcaseStatus;
   truthBoundary: string[];
   output: {
@@ -117,11 +134,20 @@ type LiveOperatorPublicExportReport = {
 const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(MODULE_ROOT, "../../..");
 const WIKI_ROOT = path.join(REPO_ROOT, "docs", "wiki");
+const DEFAULT_SOURCE_FRESHNESS_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const PUBLISH_TARGETS = [
   "aura-genesis.org/status (public-safe aggregate only)",
   "iorch.net (results only)",
   "qline.site (results only; not published from this repo)"
 ];
+
+function resolveSourceFreshnessMaxAgeMs(): number {
+  const configured = Number(process.env.IMMACULATE_PUBLIC_EXPORT_SOURCE_MAX_AGE_MS);
+  if (Number.isFinite(configured) && configured >= 5 * 60 * 1000) {
+    return configured;
+  }
+  return DEFAULT_SOURCE_FRESHNESS_MAX_AGE_MS;
+}
 
 function relativeWikiPath(filePath: string): string {
   return path.relative(REPO_ROOT, filePath).replaceAll("\\", "/");
@@ -178,11 +204,91 @@ function resolveDefaultReadiness(): HarnessReadinessSummary {
   };
 }
 
-function buildPublicationSummary(
-  activity: LiveOperatorActivityReceipt | undefined,
-  readiness: HarnessReadinessSummary
-): string {
-  const blockedLanes = [
+function parseIsoMs(value: string | undefined): number | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function formatDurationMs(value: number): string {
+  const minutes = Math.round(value / 60_000);
+  if (minutes < 90) {
+    return `${minutes}m`;
+  }
+  const hours = Math.round(value / 3_600_000);
+  if (hours < 48) {
+    return `${hours}h`;
+  }
+  return `${Math.round(value / 86_400_000)}d`;
+}
+
+export function evaluatePublicExportSourceFreshness(
+  sources: Array<{
+    label: string;
+    path: string;
+    generatedAt?: string;
+  }>,
+  options?: {
+    nowMs?: number;
+    maxAgeMs?: number;
+  }
+): PublicExportSourceFreshness {
+  const nowMs = options?.nowMs ?? Date.now();
+  const maxAgeMs = options?.maxAgeMs ?? DEFAULT_SOURCE_FRESHNESS_MAX_AGE_MS;
+  const entries = sources.map((source): PublicExportSourceFreshnessEntry => {
+    const parsed = parseIsoMs(source.generatedAt);
+    if (!source.generatedAt) {
+      return {
+        label: source.label,
+        path: source.path,
+        status: "missing",
+        detail: "source timestamp missing"
+      };
+    }
+    if (parsed === undefined) {
+      return {
+        label: source.label,
+        path: source.path,
+        generatedAt: source.generatedAt,
+        status: "invalid",
+        detail: "source timestamp is not valid ISO time"
+      };
+    }
+    const ageMs = Math.max(0, nowMs - parsed);
+    const status = ageMs <= maxAgeMs ? "fresh" : "stale";
+    return {
+      label: source.label,
+      path: source.path,
+      generatedAt: source.generatedAt,
+      ageMs,
+      status,
+      detail:
+        status === "fresh"
+          ? `fresh (${formatDurationMs(ageMs)} old, budget ${formatDurationMs(maxAgeMs)})`
+          : `stale (${formatDurationMs(ageMs)} old, budget ${formatDurationMs(maxAgeMs)})`
+    };
+  });
+  const staleOrMissing = entries.filter((entry) => entry.status !== "fresh");
+  return {
+    maxAgeMs,
+    allFresh: staleOrMissing.length === 0,
+    summary:
+      staleOrMissing.length === 0
+        ? `all ${entries.length} public-export source receipt(s) are fresh`
+        : `${staleOrMissing.length}/${entries.length} public-export source receipt(s) are stale, missing, or invalid: ${staleOrMissing
+            .map((entry) => `${entry.label} ${entry.detail}`)
+            .join("; ")}`,
+    sources: entries
+  };
+}
+
+function publicationLaneBlockers(readiness: HarnessReadinessSummary): Array<{
+  label: string;
+  detail: string;
+}> {
+  return [
     {
       label: "ledger.public",
       ready: readiness.ledger.public.ready,
@@ -198,17 +304,54 @@ function buildPublicationSummary(
       ready: readiness.discord.transport.ready,
       detail: readiness.discord.transport.detail
     }
-  ].filter((lane) => !lane.ready);
+  ]
+    .filter((lane) => !lane.ready)
+    .map(({ label, detail }) => ({ label, detail }));
+}
 
-  if (blockedLanes.length === 0) {
-    return "public-safe operator export is publishable on the current workstation";
+export function resolvePublicExportPublication(
+  activity: LiveOperatorActivityReceipt | undefined,
+  readiness: HarnessReadinessSummary,
+  sourceFreshness: PublicExportSourceFreshness
+): { status: "publishable" | "blocked"; summary: string } {
+  const blockers = [
+    ...(activity?.publication?.status === "publishable"
+      ? []
+      : [
+          {
+            label: "operator.activity",
+            detail: activity?.publication?.summary ?? "live operator activity receipt is not publishable"
+          }
+        ]),
+    ...(sourceFreshness.allFresh
+      ? []
+      : [
+          {
+            label: "source.freshness",
+            detail: sourceFreshness.summary
+          }
+        ]),
+    ...publicationLaneBlockers(readiness)
+  ];
+
+  if (blockers.length === 0) {
+    return {
+      status: "publishable",
+      summary: "public-safe operator export is publishable on the current workstation"
+    };
   }
-  if (blockedLanes.length === 1) {
-    return `public publication is blocked by ${blockedLanes[0].label}: ${blockedLanes[0].detail}`;
+  if (blockers.length === 1) {
+    return {
+      status: "blocked",
+      summary: `public publication is blocked by ${blockers[0].label}: ${blockers[0].detail}`
+    };
   }
-  return `public publication is blocked by ${blockedLanes
-    .map((lane) => lane.label)
-    .join(", ")}.`;
+  return {
+    status: "blocked",
+    summary: `public publication is blocked by ${blockers
+      .map((blocker) => `${blocker.label}: ${blocker.detail}`)
+      .join(" | ")}`
+  };
 }
 
 function countShowcaseLanes(readiness: HarnessReadinessSummary): {
@@ -497,6 +640,15 @@ function renderMarkdown(report: LiveOperatorPublicExportReport): string {
     `- Status: \`${report.publication.status}\``,
     `- Target: ${report.publication.target}`,
     `- Summary: ${report.publication.summary}`,
+    `- Source freshness: \`${report.sourceFreshness.allFresh ? "fresh" : "blocked"}\` (${report.sourceFreshness.summary})`,
+    `- Freshness budget: \`${formatDurationMs(report.sourceFreshness.maxAgeMs)}\``,
+    "",
+    "## Source Freshness",
+    "",
+    ...report.sourceFreshness.sources.map(
+      (source) =>
+        `- ${source.label}: \`${source.status}\` via \`${source.path}\`${source.generatedAt ? ` at \`${source.generatedAt}\`` : ""} - ${source.detail}`
+    ),
     "",
     "## Public Showcase Status",
     "",
@@ -550,15 +702,38 @@ async function main(): Promise<void> {
   ]);
 
   const readiness = liveMissionReadiness?.readiness ?? resolveDefaultReadiness();
-  const publicationSummary = buildPublicationSummary(liveOperatorActivity, readiness);
-  const laneCounts = countShowcaseLanes(readiness);
   const generatedAt = new Date().toISOString();
+  const sourceFreshness = evaluatePublicExportSourceFreshness(
+    [
+      {
+        label: "Live mission readiness",
+        path: relativeWikiPath(liveMissionReadinessPath),
+        generatedAt: liveMissionReadiness?.generatedAt
+      },
+      {
+        label: "Live operator activity",
+        path: relativeWikiPath(liveOperatorActivityPath),
+        generatedAt: liveOperatorActivity?.generatedAt
+      },
+      {
+        label: "Arobi live ledger receipt",
+        path: relativeWikiPath(arobiLiveLedgerPath),
+        generatedAt: arobiLiveLedger?.generatedAt
+      }
+    ],
+    {
+      nowMs: Date.parse(generatedAt),
+      maxAgeMs: resolveSourceFreshnessMaxAgeMs()
+    }
+  );
+  const publication = resolvePublicExportPublication(liveOperatorActivity, readiness, sourceFreshness);
+  const laneCounts = countShowcaseLanes(readiness);
   const activityFeed = buildActivityFeed(
     liveOperatorActivity,
     readiness,
     arobiLiveLedger,
     generatedAt,
-    publicationSummary
+    publication.summary
   );
 
   const report: LiveOperatorPublicExportReport = {
@@ -570,22 +745,23 @@ async function main(): Promise<void> {
       summary: "Public-safe export that mirrors the aura-genesis fabric.showcase contract."
     },
     publication: {
-      status: liveOperatorActivity?.publication?.status === "publishable" ? "publishable" : "blocked",
-      summary: publicationSummary,
+      status: publication.status,
+      summary: publication.summary,
       target: "aura-genesis.org/status"
     },
+    sourceFreshness,
     showcase: {
-      active: liveOperatorActivity?.publication?.status === "publishable",
+      active: publication.status === "publishable",
       mode: "controlled",
       title: "Supervised operator audit export.",
       summary: buildShowcaseSummary(liveOperatorActivity, readiness, arobiLiveLedger),
       expiresAt: null,
       windowLabel:
-        liveOperatorActivity?.publication?.status === "publishable"
+        publication.status === "publishable"
           ? "Operator-supervised public verification window"
           : "Showcase line closed until public ledger publication is proven",
       publishTargets: PUBLISH_TARGETS,
-      resultsReady: activityFeed.length > 0,
+      resultsReady: publication.status === "publishable" && activityFeed.length > 0,
       fleetLabel: "Immaculate / OpenJaws / Q operator loop",
       subsystemCount: laneCounts.total,
       onlineSubsystemCount: laneCounts.online,
@@ -605,7 +781,8 @@ async function main(): Promise<void> {
       "This export is shaped to mirror the existing aura-genesis fabric.showcase contract; it does not mutate the public website or the public ledger by itself.",
       "The private mission lane remains closed here even when local Discord transport, OCI-backed Q, and roundtable receipts are ready.",
       "Private paths, worktree roots, secrets, Discord tokens, private ledger payloads, and raw chain-of-thought are intentionally excluded from this export.",
-      "ledger.public remains blocked until a fresh governed public Arobi write is proven on this machine."
+      "ledger.public remains blocked until a fresh governed public Arobi write is proven on this machine.",
+      "The public publication gate also fails closed when any source receipt used to produce this aggregate export is stale, missing, or invalid."
     ],
     output: {
       jsonPath: path.join("docs", "wiki", "Live-Operator-Public-Export.json"),
@@ -619,7 +796,9 @@ async function main(): Promise<void> {
   process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
 }
 
-void main().catch((error) => {
-  process.stderr.write(error instanceof Error ? error.message : "Live operator public export generation failed.");
-  process.exitCode = 1;
-});
+if (path.resolve(process.argv[1] ?? "") === fileURLToPath(import.meta.url)) {
+  void main().catch((error) => {
+    process.stderr.write(error instanceof Error ? error.message : "Live operator public export generation failed.");
+    process.exitCode = 1;
+  });
+}
