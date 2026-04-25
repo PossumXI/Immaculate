@@ -1,0 +1,89 @@
+﻿{
+    "schemaVersion":  1,
+    "generatedAt":  "2026-04-25T13:12:40.4222035Z",
+    "currentUtcDate":  "2026-04-25",
+    "currentDate":  "2026-04-25",
+    "qKnowledgeHorizon":  "2024-06",
+    "qFreshnessRule":  "Q must treat post-horizon and time-sensitive facts as stale until verified by live tools or approved retrieval.",
+    "productionGates":  {
+                            "publicSafetyReady":  true,
+                            "privateRuntimeReady":  true,
+                            "voiceReady":  false,
+                            "benchmarkPublicationReady":  false,
+                            "criticalCount":  0,
+                            "warningCount":  4
+                        },
+    "publicSafety":  {
+                         "publicInfoHttpStatus":  200,
+                         "privateAuditPublicHttpStatus":  403,
+                         "publicProjectionGuard":  "passed"
+                     },
+    "benchmarks":  {
+                       "immaculateLatestPresent":  true,
+                       "bridgeBenchPresent":  true,
+                       "terminalBenchLeaderboardStatus":  "waiting-for-full-sweep",
+                       "qBenchmarkCorpusRecords":  60,
+                       "wandbCredentialPresent":  false
+                   },
+    "openJawsRuntime":  {
+                            "status":  "warning",
+                            "summary":  "Runtime coherence warning: 14 ok, 1 warning, 0 failed.",
+                            "okCount":  14,
+                            "warningCount":  1,
+                            "failedCount":  0,
+                            "warnings":  [
+                                             {
+                                                 "id":  "probe-Viola",
+                                                 "summary":  "Viola reachable but reporting degraded health at [local-path]",
+                                                 "detail":  "Discord bot token was rejected by /users/@me (HTTP 401). Rotate DISCORD_BOT_TOKEN before restarting this agent. - gateway close 4004 - fresh receipt 2026-04-25T13:09:47.2473204+00:00"
+                                             }
+                                         ]
+                        },
+    "findings":  [
+                     {
+                         "id":  "wandb-credential-missing",
+                         "severity":  "warning",
+                         "area":  "benchmarks",
+                         "summary":  "W\u0026B export cannot publish because WANDB_API_KEY or IMMACULATE_WANDB_API_KEY is missing.",
+                         "nextAction":  "Set WANDB_API_KEY or IMMACULATE_WANDB_API_KEY, then run npm run benchmark:export:wandb.",
+                         "blocksPublicProduction":  false,
+                         "blocksPrivateProduction":  false,
+                         "blocksVoiceProduction":  false,
+                         "blocksBenchmarkPublication":  true
+                     },
+                     {
+                         "id":  "terminalbench-full-sweep-pending",
+                         "severity":  "warning",
+                         "area":  "benchmarks",
+                         "summary":  "TerminalBench leaderboard status is waiting-for-full-sweep.",
+                         "nextAction":  "Run the full official TerminalBench sweep before claiming leaderboard results.",
+                         "blocksPublicProduction":  false,
+                         "blocksPrivateProduction":  false,
+                         "blocksVoiceProduction":  false,
+                         "blocksBenchmarkPublication":  true
+                     },
+                     {
+                         "id":  "benchmark-credibility-not-green",
+                         "severity":  "warning",
+                         "area":  "github-actions",
+                         "summary":  "Latest Benchmark Credibility run is cancelled from 2026-04-25T09:32:57Z.",
+                         "nextAction":  "Push the local workflow hardening or rerun Benchmark Credibility after the workflow update is on the target branch.",
+                         "blocksPublicProduction":  false,
+                         "blocksPrivateProduction":  false,
+                         "blocksVoiceProduction":  false,
+                         "blocksBenchmarkPublication":  true
+                     },
+                     {
+                         "id":  "openjaws-probe-Viola",
+                         "severity":  "warning",
+                         "area":  "openjaws-runtime",
+                         "summary":  "Viola reachable but reporting degraded health at [local-path] Discord bot token was rejected by /users/@me (HTTP 401). Rotate DISCORD_BOT_TOKEN before restarting this agent. - gateway close 4004 - fresh receipt 2026-04-25T13:09:47.2473204+00:00",
+                         "nextAction":  "Rotate or update Viola\u0027s DISCORD_BOT_TOKEN, then restart the Viola agent.",
+                         "blocksPublicProduction":  false,
+                         "blocksPrivateProduction":  false,
+                         "blocksVoiceProduction":  true,
+                         "blocksBenchmarkPublication":  false
+                     }
+                 ],
+    "publicationBoundary":  "Public-safe summary only. Raw runtime receipts, local paths, private ledgers, tokens, and private routing details are not included."
+}
