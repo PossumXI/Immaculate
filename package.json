@@ -84,6 +84,8 @@
     "dev:harness": "npm run dev -w @immaculate/harness",
     "dev:tui": "npm run dev -w @immaculate/tui",
     "lint": "npm run lint --workspaces --if-present",
+    "operator:readiness": "powershell -ExecutionPolicy Bypass -File ./scripts/check-q-operator-readiness.ps1",
+    "operator:readiness:publish": "powershell -ExecutionPolicy Bypass -File ./scripts/publish-q-operator-readiness.ps1",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "wandb:bootstrap": "node ./scripts/bootstrap-wandb.mjs"
   },

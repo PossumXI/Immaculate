@@ -6,10 +6,10 @@ on:
       pack_id:
         description: "Credibility benchmark pack to execute"
         required: true
-        default: "durability-torture"
+        default: "durability-recovery"
         type: choice
         options:
-          - durability-torture
+          - durability-recovery
           - neurodata-external
           - temporal-baseline
   schedule:
@@ -18,7 +18,7 @@ on:
 jobs:
   credibility-benchmark:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 60
     env:
       WANDB_API_KEY: ${{ secrets.WANDB_API_KEY || secrets.IMMACULATE_WANDB_API_KEY }}
       WANDB_ENTITY: ${{ vars.WANDB_ENTITY || 'arobi-arobi-technology-alliance' }}
@@ -36,7 +36,7 @@ jobs:
         shell: bash
         run: |
           if [ "${{ github.event_name }}" = "schedule" ]; then
-            echo "pack_id=durability-torture" >> "$GITHUB_OUTPUT"
+            echo "pack_id=durability-recovery" >> "$GITHUB_OUTPUT"
           else
             echo "pack_id=${{ inputs.pack_id }}" >> "$GITHUB_OUTPUT"
           fi
@@ -57,14 +57,22 @@ jobs:
         run: npm run build -w @immaculate/core
 
       - name: Run credibility benchmark
+        timeout-minutes: 45
         env:
           WANDB_PROJECT: immaculate
         shell: bash
         run: |
+          case "${{ steps.pack.outputs.pack_id }}" in
+            durability-recovery|neurodata-external|temporal-baseline) ;;
+            *)
+              echo "::error::${{ steps.pack.outputs.pack_id }} is not CI eligible for Benchmark Credibility. Use the long-run workflow for torture lanes."
+              exit 2
+              ;;
+          esac
           if [ -n "${WANDB_API_KEY}" ]; then
-            npm run benchmark -w @immaculate/harness -- --pack="${{ steps.pack.outputs.pack_id }}" --publish-wandb
+            npm run benchmark -w @immaculate/harness --pack="${{ steps.pack.outputs.pack_id }}" --publish-wandb
           else
-            npm run benchmark -w @immaculate/harness -- --pack="${{ steps.pack.outputs.pack_id }}"
+            npm run benchmark -w @immaculate/harness --pack="${{ steps.pack.outputs.pack_id }}"
           fi
 
       - name: Export benchmark status from W&B

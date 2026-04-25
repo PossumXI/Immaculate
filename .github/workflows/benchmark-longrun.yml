@@ -9,13 +9,17 @@ on:
         default: "latency-benchmark-60s"
         type: choice
         options:
+          - durability-torture
           - latency-benchmark-60s
           - latency-soak-60m
 
 jobs:
   long-run-benchmark:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 240
+    concurrency:
+      group: benchmark-longrun-${{ github.ref }}-${{ inputs.pack_id }}
+      cancel-in-progress: false
     env:
       WANDB_API_KEY: ${{ secrets.WANDB_API_KEY || secrets.IMMACULATE_WANDB_API_KEY }}
       WANDB_ENTITY: ${{ vars.WANDB_ENTITY || 'arobi-arobi-technology-alliance' }}
@@ -44,14 +48,22 @@ jobs:
         run: npm run build -w @immaculate/core
 
       - name: Run long-run benchmark
+        timeout-minutes: 210
         env:
           WANDB_PROJECT: immaculate
         shell: bash
         run: |
+          case "${{ inputs.pack_id }}" in
+            durability-torture|latency-benchmark-60s|latency-soak-60m) ;;
+            *)
+              echo "::error::${{ inputs.pack_id }} is not owned by Benchmark Long Run."
+              exit 2
+              ;;
+          esac
           if [ -n "${WANDB_API_KEY}" ]; then
-            npm run benchmark -w @immaculate/harness -- --pack="${{ inputs.pack_id }}" --publish-wandb
+            npm run benchmark -w @immaculate/harness --pack="${{ inputs.pack_id }}" --publish-wandb
           else
-            npm run benchmark -w @immaculate/harness -- --pack="${{ inputs.pack_id }}"
+            npm run benchmark -w @immaculate/harness --pack="${{ inputs.pack_id }}"
           fi
 
       - name: Export benchmark status from W&B
@@ -77,6 +89,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: immaculate-long-run-benchmark
+          name: immaculate-long-run-${{ inputs.pack_id }}
           path: benchmarks/
           if-no-files-found: warn
