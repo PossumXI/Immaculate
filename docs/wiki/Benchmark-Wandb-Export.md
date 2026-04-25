@@ -2,13 +2,35 @@
 
 This page is exported from live W&B benchmark runs and committed into the repo wiki.
 
-- Exported at: 2026-04-22T00:00:28.939949+00:00
+- Exported at: 2026-04-25T14:25:27.032825+00:00
 - W&B project: https://wandb.ai/arobi-arobi-technology-alliance/immaculate
 - Owner: Gaetano Comparcola (PossumX)
 - Role: Program Originator, Systems Architect, and Engineering Lead
 - Website: https://PossumX.dev
 
 ## Exported Runs
+
+### Durability Recovery
+
+- Suite: `immaculate-benchmark-2026-04-25T14-25-15-877Z`
+- Run ID: `17mhkg03`
+- Run name: `immaculate-benchmark-2026-04-25T14-25-15-877Z`
+- Run URL: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/17mhkg03
+- State: `finished`
+- Generated: `2026-04-25T14:25:15.877Z`
+- Published: `2026-04-25T14:25:19.496945+00:00`
+- Failed assertions: `0`
+- Run kind: `smoke`
+- Integrity: `verified`
+- Stage: `smoke benchmark on linux-x64 (4 cores)`
+- Planned duration: `20800` ms
+- Wall-clock duration: `747.5` ms
+- Hardware: `{"host":"runnervmeorf1","platform":"linux","arch":"x64","osVersion":"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026","cpuModel":"AMD EPYC 7763 64-Core Processor","cpuCount":4,"memoryGiB":15.61,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
+- Owner: `Gaetano Comparcola (PossumX)`
+- Role: `Program Originator, Systems Architect, and Engineering Lead`
+- Website: `https://PossumX.dev`
+- Benchmark artifact: `immaculate-immaculate-benchmark-2026-04-25T14-25-15-877Z:v0`
+- Artifact channels: `latest`
 
 ### Latency Smoke
 
@@ -30,28 +52,6 @@ This page is exported from live W&B benchmark runs and committed into the repo w
 - Role: `Program Originator, Systems Architect, and Engineering Lead`
 - Website: `https://PossumX.dev`
 - Benchmark artifact: `immaculate-immaculate-benchmark-2026-04-21T23-59-52-030Z:v0`
-- Artifact channels: `latest`
-
-### Durability Recovery
-
-- Suite: `immaculate-benchmark-2026-04-21T23-59-51-478Z`
-- Run ID: `fc01bjj4`
-- Run name: `immaculate-benchmark-2026-04-21T23-59-51-478Z`
-- Run URL: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/fc01bjj4
-- State: `finished`
-- Generated: `2026-04-21T23:59:51.478Z`
-- Published: `2026-04-22T00:00:07.937050+00:00`
-- Failed assertions: `0`
-- Run kind: `smoke`
-- Integrity: `verified`
-- Stage: `smoke benchmark on linux-x64 (4 cores)`
-- Planned duration: `20800` ms
-- Wall-clock duration: `538.88` ms
-- Hardware: `{"host":"runnervm04xxt","platform":"linux","arch":"x64","osVersion":"#11~24.04.2-Ubuntu SMP Wed Mar 25 22:46:36 UTC 2026","cpuModel":"Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz","cpuCount":4,"memoryGiB":15.61,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
-- Owner: `Gaetano Comparcola (PossumX)`
-- Role: `Program Originator, Systems Architect, and Engineering Lead`
-- Website: `https://PossumX.dev`
-- Benchmark artifact: `immaculate-immaculate-benchmark-2026-04-21T23-59-51-478Z:v0`
 - Artifact channels: `latest`
 
 ### Substrate Readiness

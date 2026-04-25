@@ -6,12 +6,27 @@ This page is the tracked public benchmark surface for Immaculate.
 - Owner: Gaetano Comparcola (PossumX)
 - Role: Program Originator, Systems Architect, and Engineering Lead
 - Website: https://PossumX.dev
-- Updated: 2026-04-22T00:00:17.764431+00:00
+- Updated: 2026-04-25T14:25:19.496962+00:00
 
 Raw benchmark ledgers remain generated runtime artifacts under `benchmarks/` and stay out of git.
 This page only carries the public summary and links for the latest published run per pack.
 
 ## Latest Public Runs By Pack
+
+### Durability Recovery
+
+- Suite: `immaculate-benchmark-2026-04-25T14-25-15-877Z`
+- Generated: `2026-04-25T14:25:15.877Z`
+- Published: `2026-04-25T14:25:19.496945+00:00`
+- Assertions: `122/122` passed
+- Run kind: `smoke`
+- Integrity: `verified`
+- Recovery mode: `checkpoint`
+- Planned duration: `20800` ms
+- Wall-clock duration: `747.5` ms
+- Hardware: `{"host":"runnervmeorf1","platform":"linux","arch":"x64","osVersion":"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026","cpuModel":"AMD EPYC 7763 64-Core Processor","cpuCount":4,"memoryGiB":15.61,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
+- W&B run: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/17mhkg03
+- W&B artifact: `immaculate-immaculate-benchmark-2026-04-25T14-25-15-877Z` (`benchmark-report`)
 
 ### Latency Smoke
 
@@ -27,21 +42,6 @@ This page only carries the public summary and links for the latest published run
 - Hardware: `{"host":"runnervm04xxt","platform":"linux","arch":"x64","osVersion":"#11~24.04.2-Ubuntu SMP Wed Mar 25 22:46:36 UTC 2026","cpuModel":"Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz","cpuCount":4,"memoryGiB":15.61,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
 - W&B run: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/6s7sd56w
 - W&B artifact: `immaculate-immaculate-benchmark-2026-04-21T23-59-52-030Z` (`benchmark-report`)
-
-### Durability Recovery
-
-- Suite: `immaculate-benchmark-2026-04-21T23-59-51-478Z`
-- Generated: `2026-04-21T23:59:51.478Z`
-- Published: `2026-04-22T00:00:07.937050+00:00`
-- Assertions: `122/122` passed
-- Run kind: `smoke`
-- Integrity: `verified`
-- Recovery mode: `checkpoint`
-- Planned duration: `20800` ms
-- Wall-clock duration: `538.88` ms
-- Hardware: `{"host":"runnervm04xxt","platform":"linux","arch":"x64","osVersion":"#11~24.04.2-Ubuntu SMP Wed Mar 25 22:46:36 UTC 2026","cpuModel":"Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz","cpuCount":4,"memoryGiB":15.61,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
-- W&B run: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/fc01bjj4
-- W&B artifact: `immaculate-immaculate-benchmark-2026-04-21T23-59-51-478Z` (`benchmark-report`)
 
 ### Substrate Readiness
 
