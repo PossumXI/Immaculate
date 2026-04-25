@@ -1,6 +1,6 @@
 ﻿{
     "schemaVersion":  1,
-    "generatedAt":  "2026-04-25T13:12:40.4222035Z",
+    "generatedAt":  "2026-04-25T14:33:46.2876303Z",
     "currentUtcDate":  "2026-04-25",
     "currentDate":  "2026-04-25",
     "qKnowledgeHorizon":  "2024-06",
@@ -11,7 +11,7 @@
                             "voiceReady":  false,
                             "benchmarkPublicationReady":  false,
                             "criticalCount":  0,
-                            "warningCount":  4
+                            "warningCount":  3
                         },
     "publicSafety":  {
                          "publicInfoHttpStatus":  200,
@@ -22,7 +22,7 @@
                        "immaculateLatestPresent":  true,
                        "bridgeBenchPresent":  true,
                        "terminalBenchLeaderboardStatus":  "waiting-for-full-sweep",
-                       "qBenchmarkCorpusRecords":  60,
+                       "qBenchmarkCorpusRecords":  58,
                        "wandbCredentialPresent":  false
                    },
     "openJawsRuntime":  {
@@ -34,8 +34,8 @@
                             "warnings":  [
                                              {
                                                  "id":  "probe-Viola",
-                                                 "summary":  "Viola reachable but reporting degraded health at [local-path]",
-                                                 "detail":  "Discord bot token was rejected by /users/@me (HTTP 401). Rotate DISCORD_BOT_TOKEN before restarting this agent. - gateway close 4004 - fresh receipt 2026-04-25T13:09:47.2473204+00:00"
+                                                 "summary":  "Viola unreachable at [local-loopback]",
+                                                 "detail":  "Unable to connect. Is the computer able to access the url?"
                                              }
                                          ]
                         },
@@ -63,21 +63,10 @@
                          "blocksBenchmarkPublication":  true
                      },
                      {
-                         "id":  "benchmark-credibility-not-green",
-                         "severity":  "warning",
-                         "area":  "github-actions",
-                         "summary":  "Latest Benchmark Credibility run is cancelled from 2026-04-25T09:32:57Z.",
-                         "nextAction":  "Push the local workflow hardening or rerun Benchmark Credibility after the workflow update is on the target branch.",
-                         "blocksPublicProduction":  false,
-                         "blocksPrivateProduction":  false,
-                         "blocksVoiceProduction":  false,
-                         "blocksBenchmarkPublication":  true
-                     },
-                     {
                          "id":  "openjaws-probe-Viola",
                          "severity":  "warning",
                          "area":  "openjaws-runtime",
-                         "summary":  "Viola reachable but reporting degraded health at [local-path] Discord bot token was rejected by /users/@me (HTTP 401). Rotate DISCORD_BOT_TOKEN before restarting this agent. - gateway close 4004 - fresh receipt 2026-04-25T13:09:47.2473204+00:00",
+                         "summary":  "Viola unreachable at [local-loopback] Unable to connect. Is the computer able to access the url?",
                          "nextAction":  "Rotate or update Viola\u0027s DISCORD_BOT_TOKEN, then restart the Viola agent.",
                          "blocksPublicProduction":  false,
                          "blocksPrivateProduction":  false,

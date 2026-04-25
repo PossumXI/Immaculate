@@ -87,6 +87,16 @@ function Read-JsonFileIfPresent {
   }
 }
 
+function Read-FirstJsonFileIfPresent {
+  param([string[]]$Paths)
+  foreach ($candidatePath in @($Paths)) {
+    if ($candidatePath -and (Test-Path $candidatePath)) {
+      return Read-JsonFileIfPresent $candidatePath
+    }
+  }
+  return $null
+}
+
 function Resolve-AsgardRoot {
   param([string]$ConfiguredRoot)
   $candidates = @(
@@ -202,7 +212,7 @@ function Get-GitHubRuns {
     }
   }
 
-  $raw = & gh run list -R PossumXI/Immaculate --limit 8 --json databaseId,name,status,conclusion,headBranch,createdAt,updatedAt 2>$null
+  $raw = & gh run list -R PossumXI/Immaculate --limit 30 --json databaseId,name,status,conclusion,headBranch,createdAt,updatedAt 2>$null
   if ($LASTEXITCODE -ne 0 -or -not $raw) {
     return @{
       status = "unavailable"
@@ -283,12 +293,14 @@ function Get-ReadinessFindings {
       -BlocksBenchmarkPublication $true))
   }
 
-  if ($Receipt.benchmarkReceipts.terminalBenchLeaderboardStatus -ne "ready" -and $Receipt.benchmarkReceipts.terminalBenchLeaderboardStatus -ne "submitted") {
+  $terminalBenchStatus = $Receipt.benchmarkReceipts.terminalBenchLeaderboardStatus
+  if ($terminalBenchStatus -ne "ready" -and $terminalBenchStatus -ne "submitted") {
+    $terminalBenchStatusLabel = if ($terminalBenchStatus) { $terminalBenchStatus } else { "unavailable" }
     [void]$findings.Add((New-ReadinessFinding `
       -Id "terminalbench-full-sweep-pending" `
       -Severity "warning" `
       -Area "benchmarks" `
-      -Summary "TerminalBench leaderboard status is $($Receipt.benchmarkReceipts.terminalBenchLeaderboardStatus)." `
+      -Summary "TerminalBench leaderboard status is $terminalBenchStatusLabel." `
       -NextAction "Run the full official TerminalBench sweep before claiming leaderboard results." `
       -BlocksBenchmarkPublication $true))
   }
@@ -360,15 +372,19 @@ New-Item -ItemType Directory -Force -Path $outputPath | Out-Null
 $contextPath = Join-Path $root "apps\harness\src\q-operating-context.ts"
 $governancePath = Join-Path $root "apps\harness\src\governance.ts"
 $benchmarkLatestPath = Join-Path $root "benchmarks\latest.json"
+$benchmarkStatusPath = Join-Path $root "docs\wiki\Benchmark-Status.json"
 $bridgeBenchPath = Join-Path $PushHarborRoot "docs\wiki\BridgeBench.json"
+$bridgeBenchRepoPath = Join-Path $root "docs\wiki\BridgeBench.json"
 $terminalBenchReceiptPath = Join-Path $PushHarborRoot "docs\wiki\Terminal-Bench-Receipt.json"
+$terminalBenchReceiptRepoPath = Join-Path $root "docs\wiki\Terminal-Bench-Receipt.json"
 $qCorpusReceiptPath = Join-Path $PushHarborRoot "docs\wiki\Q-Benchmark-Corpus.json"
+$qCorpusReceiptRepoPath = Join-Path $root "docs\wiki\Q-Benchmark-Corpus.json"
 $projectionGuardPath = Join-Path $resolvedAsgardRoot "ignite\arobi-network\scripts\check-public-projection.ps1"
 
-$benchmarkLatest = Read-JsonFileIfPresent $benchmarkLatestPath
-$bridgeBench = Read-JsonFileIfPresent $bridgeBenchPath
-$terminalBenchReceipt = Read-JsonFileIfPresent $terminalBenchReceiptPath
-$qCorpusReceipt = Read-JsonFileIfPresent $qCorpusReceiptPath
+$benchmarkLatest = Read-FirstJsonFileIfPresent @($benchmarkLatestPath, $benchmarkStatusPath)
+$bridgeBench = Read-FirstJsonFileIfPresent @($bridgeBenchPath, $bridgeBenchRepoPath)
+$terminalBenchReceipt = Read-FirstJsonFileIfPresent @($terminalBenchReceiptPath, $terminalBenchReceiptRepoPath)
+$qCorpusReceipt = Read-FirstJsonFileIfPresent @($qCorpusReceiptPath, $qCorpusReceiptRepoPath)
 
 $receipt = [ordered]@{
   generatedAt = (Get-Date).ToUniversalTime().ToString("o")
