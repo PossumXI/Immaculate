@@ -72,7 +72,6 @@ $publicSummary = [ordered]@{
     bridgeBenchPresent = [bool]$receipt.benchmarkReceipts.bridgeBenchPresent
     terminalBenchLeaderboardStatus = $receipt.benchmarkReceipts.terminalBenchLeaderboardStatus
     qBenchmarkCorpusRecords = $receipt.benchmarkReceipts.qBenchmarkCorpusRecords
-    wandbCredentialPresent = [bool]$receipt.wandb.credentialPresent
   }
   openJawsRuntime = [ordered]@{
     status = $receipt.openJawsRuntime.status
@@ -121,7 +120,6 @@ $markdownLines = @(
   "- BridgeBench receipt present: $($publicSummary.benchmarks.bridgeBenchPresent)",
   "- TerminalBench leaderboard: $($publicSummary.benchmarks.terminalBenchLeaderboardStatus)",
   "- Q benchmark corpus records: $($publicSummary.benchmarks.qBenchmarkCorpusRecords)",
-  "- W&B credential present locally: $($publicSummary.benchmarks.wandbCredentialPresent)",
   "",
   "## OpenJaws Runtime",
   "",

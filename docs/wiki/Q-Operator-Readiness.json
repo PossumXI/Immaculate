@@ -1,6 +1,6 @@
 ﻿{
     "schemaVersion":  1,
-    "generatedAt":  "2026-04-25T14:33:46.2876303Z",
+    "generatedAt":  "2026-04-25T16:45:01.8234558Z",
     "currentUtcDate":  "2026-04-25",
     "currentDate":  "2026-04-25",
     "qKnowledgeHorizon":  "2024-06",
@@ -22,8 +22,7 @@
                        "immaculateLatestPresent":  true,
                        "bridgeBenchPresent":  true,
                        "terminalBenchLeaderboardStatus":  "waiting-for-full-sweep",
-                       "qBenchmarkCorpusRecords":  58,
-                       "wandbCredentialPresent":  false
+                       "qBenchmarkCorpusRecords":  58
                    },
     "openJawsRuntime":  {
                             "status":  "warning",

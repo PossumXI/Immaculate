@@ -369,7 +369,7 @@ $resolvedOpenJawsRoot = Resolve-OpenJawsRoot $OpenJawsRoot
 $outputPath = Join-Path $root $OutputRoot
 New-Item -ItemType Directory -Force -Path $outputPath | Out-Null
 
-$contextPath = Join-Path $root "apps\harness\src\q-operating-context.ts"
+$contextPath = Join-Path $root "apps\harness\src\q-orchestration-context.ts"
 $governancePath = Join-Path $root "apps\harness\src\governance.ts"
 $benchmarkLatestPath = Join-Path $root "benchmarks\latest.json"
 $benchmarkStatusPath = Join-Path $root "docs\wiki\Benchmark-Status.json"
