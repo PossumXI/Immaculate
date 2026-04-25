@@ -166,9 +166,17 @@ type QHybridTrainingWikiFile = {
   manifestPath?: string;
   q?: {
     trainingBundleId?: string;
+    trainingLockPath?: string;
+    modelId?: string;
+    trainDatasetPath?: string;
+    trainDatasetRowCount?: number;
+    mixManifestPath?: string;
+    curationRunPath?: string | null;
+    curationRunId?: string | null;
   };
   immaculate?: {
     bundleId?: string;
+    bundlePath?: string;
   };
   doctor?: {
     local?: {
@@ -190,6 +198,23 @@ type QHybridTrainingWikiFile = {
       provider?: string;
       mode?: string;
     };
+  };
+};
+
+type QBenchmarkPromotionWikiFile = {
+  generatedAt?: string;
+  active?: {
+    bundleId?: string;
+    runName?: string;
+    trainDatasetRowCount?: number;
+    mixManifestPath?: string;
+  };
+  promotion?: {
+    bundleId?: string;
+    runName?: string;
+    trainDatasetRowCount?: number;
+    mixManifestPath?: string;
+    lockPath?: string;
   };
 };
 
@@ -361,7 +386,7 @@ async function resolveLatestTrainingLockPath(): Promise<string | undefined> {
 async function readTrainingLockSummary(): Promise<QTrainingLockSummary | undefined> {
   const lockPath = await resolveLatestTrainingLockPath();
   if (!lockPath) {
-    return undefined;
+    return await readTrainingLockSummaryFromTrackedWiki();
   }
   const payload = await readJsonFile<QTrainingLockFile>(lockPath);
   if (!payload?.bundleId) {
@@ -385,6 +410,34 @@ async function readTrainingLockSummary(): Promise<QTrainingLockSummary | undefin
     curationRunPath: normalizeReportedPath(payload.curation?.runPath),
     curationRunId: payload.curation?.runId,
     lockPath: path.relative(REPO_ROOT, lockPath).replaceAll("\\", "/")
+  };
+}
+
+async function readTrainingLockSummaryFromTrackedWiki(): Promise<QTrainingLockSummary | undefined> {
+  const hybridPath = path.join(REPO_ROOT, "docs", "wiki", "Q-Hybrid-Training.json");
+  const promotionPath = path.join(REPO_ROOT, "docs", "wiki", "Q-Benchmark-Promotion.json");
+  const [hybrid, promotion] = await Promise.all([
+    existsSync(hybridPath) ? readJsonFile<QHybridTrainingWikiFile>(hybridPath) : undefined,
+    existsSync(promotionPath) ? readJsonFile<QBenchmarkPromotionWikiFile>(promotionPath) : undefined
+  ]);
+  const promoted = promotion?.promotion ?? promotion?.active;
+  const bundleId = promoted?.bundleId?.trim() || hybrid?.q?.trainingBundleId?.trim();
+  if (!bundleId) {
+    return undefined;
+  }
+  return {
+    generatedAt: promotion?.generatedAt ?? hybrid?.generatedAt,
+    bundleId,
+    runName: promoted?.runName,
+    modelName: hybrid?.q?.modelId,
+    trainDatasetPath: normalizeReportedPath(hybrid?.q?.trainDatasetPath),
+    trainDatasetRowCount: hybrid?.q?.trainDatasetRowCount ?? promoted?.trainDatasetRowCount,
+    mixManifestPath: normalizeReportedPath(promoted?.mixManifestPath ?? hybrid?.q?.mixManifestPath),
+    curationRunPath: normalizeReportedPath(hybrid?.q?.curationRunPath ?? undefined),
+    curationRunId: hybrid?.q?.curationRunId ?? undefined,
+    lockPath:
+      normalizeReportedPath(promotion?.promotion?.lockPath ?? hybrid?.q?.trainingLockPath) ??
+      "docs/wiki/Q-Hybrid-Training.json"
   };
 }
 
@@ -427,7 +480,10 @@ async function readHybridSessionSummary(): Promise<QHybridTrainingSessionSummary
       cloudProvider: wikiPayload.lanes?.cloud?.provider || wikiPayload.doctor?.cloud?.provider,
       trainingBundleId: wikiPayload.q?.trainingBundleId,
       immaculateBundleId: latestImmaculateBundle.bundleId ?? wikiPayload.immaculate?.bundleId,
-      immaculateBundlePath: latestImmaculateBundle.bundlePath ?? normalizeReportedPath(wikiPayload.manifestPath)
+      immaculateBundlePath:
+        latestImmaculateBundle.bundlePath ??
+        normalizeReportedPath(wikiPayload.immaculate?.bundlePath) ??
+        normalizeReportedPath(wikiPayload.manifestPath)
     };
   }
 
