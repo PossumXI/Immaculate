@@ -6,57 +6,57 @@ This page is the tracked public benchmark surface for Immaculate.
 - Owner: Gaetano Comparcola (PossumX)
 - Role: Program Originator, Systems Architect, and Engineering Lead
 - Website: https://PossumX.dev
-- Updated: 2026-04-27T10:00:04.608762+00:00
+- Updated: 2026-04-27T13:33:42.510855+00:00
 
 Raw benchmark ledgers remain generated runtime artifacts under `benchmarks/` and stay out of git.
 This page only carries the public summary and links for the latest published run per pack.
 
 ## Latest Public Runs By Pack
 
+### Latency Smoke
+
+- Suite: `immaculate-benchmark-2026-04-27T13-33-23-858Z`
+- Generated: `2026-04-27T13:33:23.858Z`
+- Published: `2026-04-27T13:33:29.443246+00:00`
+- Assertions: `122/122` passed
+- Run kind: `smoke`
+- Integrity: `verified`
+- Recovery mode: `checkpoint`
+- Planned duration: `12800` ms
+- Wall-clock duration: `498.13` ms
+- Hardware: `{"host":"runnervmeorf1","platform":"linux","arch":"x64","osVersion":"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026","cpuModel":"AMD EPYC 7763 64-Core Processor","cpuCount":4,"memoryGiB":15.61,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
+- W&B run: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/bk5p3t8r
+- W&B artifact: `immaculate-immaculate-benchmark-2026-04-27T13-33-23-858Z` (`benchmark-report`)
+
 ### Durability Recovery
 
-- Suite: `immaculate-benchmark-2026-04-27T10-00-00-532Z`
-- Generated: `2026-04-27T10:00:00.532Z`
-- Published: `2026-04-27T10:00:04.608742+00:00`
+- Suite: `immaculate-benchmark-2026-04-27T13-33-23-295Z`
+- Generated: `2026-04-27T13:33:23.295Z`
+- Published: `2026-04-27T13:33:35.926117+00:00`
 - Assertions: `122/122` passed
 - Run kind: `smoke`
 - Integrity: `verified`
 - Recovery mode: `checkpoint`
 - Planned duration: `20800` ms
-- Wall-clock duration: `776.34` ms
-- Hardware: `{"host":"runnervmeorf1","platform":"linux","arch":"x64","osVersion":"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026","cpuModel":"AMD EPYC 9V74 80-Core Processor","cpuCount":4,"memoryGiB":15.61,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
-- W&B run: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/seonuhax
-- W&B artifact: `immaculate-immaculate-benchmark-2026-04-27T10-00-00-532Z` (`benchmark-report`)
-
-### Latency Smoke
-
-- Suite: `immaculate-benchmark-2026-04-21T23-59-52-030Z`
-- Generated: `2026-04-21T23:59:52.030Z`
-- Published: `2026-04-21T23:59:59.323609+00:00`
-- Assertions: `122/122` passed
-- Run kind: `smoke`
-- Integrity: `verified`
-- Recovery mode: `checkpoint`
-- Planned duration: `12800` ms
-- Wall-clock duration: `1903.89` ms
-- Hardware: `{"host":"runnervm04xxt","platform":"linux","arch":"x64","osVersion":"#11~24.04.2-Ubuntu SMP Wed Mar 25 22:46:36 UTC 2026","cpuModel":"Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz","cpuCount":4,"memoryGiB":15.61,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
-- W&B run: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/6s7sd56w
-- W&B artifact: `immaculate-immaculate-benchmark-2026-04-21T23-59-52-030Z` (`benchmark-report`)
+- Wall-clock duration: `551.56` ms
+- Hardware: `{"host":"runnervmeorf1","platform":"linux","arch":"x64","osVersion":"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026","cpuModel":"AMD EPYC 7763 64-Core Processor","cpuCount":4,"memoryGiB":15.61,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
+- W&B run: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/j6u9hkmy
+- W&B artifact: `immaculate-immaculate-benchmark-2026-04-27T13-33-23-295Z` (`benchmark-report`)
 
 ### Substrate Readiness
 
-- Suite: `immaculate-benchmark-2026-04-21T23-59-50-710Z`
-- Generated: `2026-04-21T23:59:50.710Z`
-- Published: `2026-04-22T00:00:17.764411+00:00`
+- Suite: `immaculate-benchmark-2026-04-27T13-33-22-498Z`
+- Generated: `2026-04-27T13:33:22.498Z`
+- Published: `2026-04-27T13:33:42.510837+00:00`
 - Assertions: `122/122` passed
 - Run kind: `smoke`
 - Integrity: `verified`
 - Recovery mode: `checkpoint`
 - Planned duration: `12800` ms
-- Wall-clock duration: `747.47` ms
-- Hardware: `{"host":"runnervm04xxt","platform":"linux","arch":"x64","osVersion":"#11~24.04.2-Ubuntu SMP Wed Mar 25 22:46:36 UTC 2026","cpuModel":"Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz","cpuCount":4,"memoryGiB":15.61,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
-- W&B run: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/d7w59bsb
-- W&B artifact: `immaculate-immaculate-benchmark-2026-04-21T23-59-50-710Z` (`benchmark-report`)
+- Wall-clock duration: `777.22` ms
+- Hardware: `{"host":"runnervmeorf1","platform":"linux","arch":"x64","osVersion":"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026","cpuModel":"AMD EPYC 7763 64-Core Processor","cpuCount":4,"memoryGiB":15.61,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
+- W&B run: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/zafy0r0n
+- W&B artifact: `immaculate-immaculate-benchmark-2026-04-27T13-33-22-498Z` (`benchmark-report`)
 
 ### Latency Soak (30m)
 
