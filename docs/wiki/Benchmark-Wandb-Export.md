@@ -2,7 +2,7 @@
 
 This page is exported from live W&B benchmark runs and committed into the repo wiki.
 
-- Exported at: 2026-04-26T09:34:43.224264+00:00
+- Exported at: 2026-04-27T10:00:12.686909+00:00
 - W&B project: https://wandb.ai/arobi-arobi-technology-alliance/immaculate
 - Owner: Gaetano Comparcola (PossumX)
 - Role: Program Originator, Systems Architect, and Engineering Lead
@@ -12,24 +12,24 @@ This page is exported from live W&B benchmark runs and committed into the repo w
 
 ### Durability Recovery
 
-- Suite: `immaculate-benchmark-2026-04-26T09-34-34-359Z`
-- Run ID: `bpmxb615`
-- Run name: `immaculate-benchmark-2026-04-26T09-34-34-359Z`
-- Run URL: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/bpmxb615
+- Suite: `immaculate-benchmark-2026-04-27T10-00-00-532Z`
+- Run ID: `seonuhax`
+- Run name: `immaculate-benchmark-2026-04-27T10-00-00-532Z`
+- Run URL: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/seonuhax
 - State: `finished`
-- Generated: `2026-04-26T09:34:34.359Z`
-- Published: `2026-04-26T09:34:37.646938+00:00`
+- Generated: `2026-04-27T10:00:00.532Z`
+- Published: `2026-04-27T10:00:04.608742+00:00`
 - Failed assertions: `0`
 - Run kind: `smoke`
 - Integrity: `verified`
 - Stage: `smoke benchmark on linux-x64 (4 cores)`
 - Planned duration: `20800` ms
-- Wall-clock duration: `738.6` ms
-- Hardware: `{"host":"runnervmeorf1","platform":"linux","arch":"x64","osVersion":"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026","cpuModel":"Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz","cpuCount":4,"memoryGiB":15.61,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
+- Wall-clock duration: `776.34` ms
+- Hardware: `{"host":"runnervmeorf1","platform":"linux","arch":"x64","osVersion":"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026","cpuModel":"AMD EPYC 9V74 80-Core Processor","cpuCount":4,"memoryGiB":15.61,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
 - Owner: `Gaetano Comparcola (PossumX)`
 - Role: `Program Originator, Systems Architect, and Engineering Lead`
 - Website: `https://PossumX.dev`
-- Benchmark artifact: `immaculate-immaculate-benchmark-2026-04-26T09-34-34-359Z:v0`
+- Benchmark artifact: `immaculate-immaculate-benchmark-2026-04-27T10-00-00-532Z:v0`
 - Artifact channels: `latest`
 
 ### Latency Smoke
