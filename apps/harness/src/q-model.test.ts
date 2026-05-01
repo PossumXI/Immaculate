@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  getGovernedGoalPolicySummary,
   getGovernedToolPolicySummary,
   buildQRuntimeContext,
   getQRuntimeContextInstruction
@@ -16,6 +17,7 @@ test("Q runtime context exposes current date and knowledge cutoff", () => {
   assert.match(context.currentInformationPolicy, /approved retrieval\/tool lane/);
   assert.match(context.governedToolPolicy, /registered action classes/);
   assert.match(context.governedToolPolicy, /Tier 4\+ actions require human or operator approval/);
+  assert.match(context.governedGoalPolicy, /governed-goal\.v1/);
 });
 
 test("Q runtime context instruction tells Q not to guess current facts", () => {
@@ -25,6 +27,7 @@ test("Q runtime context instruction tells Q not to guess current facts", () => {
   assert.match(instruction, /Static model knowledge cutoff: June 2024/);
   assert.match(instruction, /current verification is required/);
   assert.match(instruction, /Governed tool policy:/);
+  assert.match(instruction, /Governed goal policy:/);
 });
 
 test("Q governed tool policy summary is compact and action-bound", () => {
@@ -33,4 +36,12 @@ test("Q governed tool policy summary is compact and action-bound", () => {
   assert.match(summary, /risk-tiered from Tier 0/);
   assert.match(summary, /Tier 3\+ actions require an approval reference/);
   assert.match(summary, /do not improvise a tool path/);
+});
+
+test("Q governed goal policy summary points execution at mission objects", () => {
+  const summary = getGovernedGoalPolicySummary();
+
+  assert.match(summary, /objective, owner, constraints/);
+  assert.match(summary, /allowedTools must map to the risk-tier registry/);
+  assert.match(summary, /terminal goal states cannot be rewritten/);
 });

@@ -1,4 +1,5 @@
 import { resolveQFoundationSpecification } from "./q-foundation.js";
+import { governedGoalStateContract } from "./goal-state.js";
 import { listGovernedToolActions } from "./tool-governance.js";
 
 const Q_MODEL_NAME = "Q";
@@ -27,6 +28,7 @@ export type QRuntimeContext = {
   knowledgeCutoff: string;
   currentInformationPolicy: string;
   governedToolPolicy: string;
+  governedGoalPolicy: string;
 };
 
 export type QIdentityQuestionKind =
@@ -93,6 +95,10 @@ export function getGovernedToolPolicySummary(): string {
   return `Governed tool policy: ${actions.length} registered action classes are risk-tiered from Tier 0 read-only observation through Tier 5 irreversible or regulated action. Tier 2+ actions require consent, Tier 3+ actions require an approval reference, and Tier 4+ actions require human or operator approval. ${approvalCount} action classes require approval and ${highRiskCount} require human approval. Use the lowest-risk approved lane; if the needed action is not registered, do not improvise a tool path.`;
 }
 
+export function getGovernedGoalPolicySummary(): string {
+  return `Governed goal policy: every mission should be expressed as a ${governedGoalStateContract.schemaVersion} object with objective, owner, constraints, authority scope, success criteria, deadline, allowed tools, rollback plan, and audit requirements before execution. Goal allowedTools must map to the risk-tier registry, and terminal goal states cannot be rewritten in place.`;
+}
+
 export function buildQRuntimeContext(now = new Date()): QRuntimeContext {
   const currentDateIso = now.toISOString().slice(0, 10);
   const currentDateLabel = new Intl.DateTimeFormat("en-US", {
@@ -107,7 +113,8 @@ export function buildQRuntimeContext(now = new Date()): QRuntimeContext {
     knowledgeCutoff: Q_KNOWLEDGE_CUTOFF_LABEL,
     currentInformationPolicy:
       "For facts after the knowledge cutoff, use an approved retrieval/tool lane when available; if no retrieval lane is available, state that current verification is required instead of guessing.",
-    governedToolPolicy: getGovernedToolPolicySummary()
+    governedToolPolicy: getGovernedToolPolicySummary(),
+    governedGoalPolicy: getGovernedGoalPolicySummary()
   };
 }
 
@@ -117,7 +124,8 @@ export function getQRuntimeContextInstruction(now = new Date()): string {
     `Current date: ${context.currentDateLabel} (${context.currentDateIso}, UTC).`,
     `Static model knowledge cutoff: ${context.knowledgeCutoff}.`,
     context.currentInformationPolicy,
-    context.governedToolPolicy
+    context.governedToolPolicy,
+    context.governedGoalPolicy
   ].join(" ");
 }
 
