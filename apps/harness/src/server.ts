@@ -1204,22 +1204,28 @@ function getRealWorldEngagementEvidence(
   binding: GovernanceBinding
 ): RealWorldEngagementEvidence {
   const searchParams = getSearchParams(request.raw.url);
+  const dashboardTicket = verifyDashboardSocketTicketFromUrl(
+    request.raw.url,
+    DASHBOARD_SOCKET_SECRET
+  );
 
   return {
     consentScope: binding.consentScope,
     purpose: binding.purpose,
-    receiptTarget: getEngagementField(
-      request,
-      searchParams,
-      ["x-immaculate-receipt-target", "x-immaculate-engagement-receipt"],
-      ["receiptTarget", "engagementReceipt", "x-immaculate-receipt-target"]
-    ),
-    operatorSummary: getEngagementField(
-      request,
-      searchParams,
-      ["x-immaculate-operator-summary", "x-immaculate-engagement-summary"],
-      ["operatorSummary", "engagementSummary", "x-immaculate-operator-summary"]
-    ),
+    receiptTarget:
+      getEngagementField(
+        request,
+        searchParams,
+        ["x-immaculate-receipt-target", "x-immaculate-engagement-receipt"],
+        ["receiptTarget", "engagementReceipt", "x-immaculate-receipt-target"]
+      ) ?? dashboardTicket?.receiptTarget,
+    operatorSummary:
+      getEngagementField(
+        request,
+        searchParams,
+        ["x-immaculate-operator-summary", "x-immaculate-engagement-summary"],
+        ["operatorSummary", "engagementSummary", "x-immaculate-operator-summary"]
+      ) ?? dashboardTicket?.operatorSummary,
     operatorConfirmed: parseEngagementConfirmation(
       getEngagementField(
         request,
@@ -1227,27 +1233,30 @@ function getRealWorldEngagementEvidence(
         ["x-immaculate-operator-confirmed", "x-immaculate-engagement-confirmed"],
         ["operatorConfirmed", "engagementConfirmed", "x-immaculate-operator-confirmed"]
       )
-    ),
-    rollbackPlan: getEngagementField(
-      request,
-      searchParams,
-      ["x-immaculate-rollback-plan", "x-immaculate-engagement-rollback"],
-      ["rollbackPlan", "engagementRollback", "x-immaculate-rollback-plan"]
-    ),
-    sanitizationProof: getEngagementField(
-      request,
-      searchParams,
-      ["x-immaculate-sanitization-proof", "x-immaculate-engagement-sanitization"],
-      ["sanitizationProof", "engagementSanitization", "x-immaculate-sanitization-proof"]
-    ),
-    budgetCents: parseEngagementBudgetCents(
+    ) ?? dashboardTicket?.operatorConfirmed,
+    rollbackPlan:
       getEngagementField(
         request,
         searchParams,
-        ["x-immaculate-budget-cents", "x-immaculate-engagement-budget-cents"],
-        ["budgetCents", "engagementBudgetCents", "x-immaculate-budget-cents"]
-      )
-    )
+        ["x-immaculate-rollback-plan", "x-immaculate-engagement-rollback"],
+        ["rollbackPlan", "engagementRollback", "x-immaculate-rollback-plan"]
+      ) ?? dashboardTicket?.rollbackPlan,
+    sanitizationProof:
+      getEngagementField(
+        request,
+        searchParams,
+        ["x-immaculate-sanitization-proof", "x-immaculate-engagement-sanitization"],
+        ["sanitizationProof", "engagementSanitization", "x-immaculate-sanitization-proof"]
+      ) ?? dashboardTicket?.sanitizationProof,
+    budgetCents:
+      parseEngagementBudgetCents(
+        getEngagementField(
+          request,
+          searchParams,
+          ["x-immaculate-budget-cents", "x-immaculate-engagement-budget-cents"],
+          ["budgetCents", "engagementBudgetCents", "x-immaculate-budget-cents"]
+        )
+      ) ?? dashboardTicket?.budgetCents
   };
 }
 
@@ -2446,11 +2455,43 @@ function authorizeQPublicInference(
 function evaluateGovernedSocketAction(
   action: GovernanceAction,
   route: string,
-  request: FastifyRequest
+  request: FastifyRequest,
+  options?: {
+    realWorldEngagement?: "required";
+  }
 ) {
   const binding = getGovernanceBinding(action, route, request);
   const preview = evaluateGovernance(binding);
-  return governance.record(binding, preview.allowed, preview.reason);
+  if (!preview.allowed) {
+    return governance.record(binding, false, preview.reason);
+  }
+
+  let projectedEngagement:
+    | ReturnType<typeof projectRealWorldEngagementDecision>
+    | undefined;
+  if (options?.realWorldEngagement === "required") {
+    const engagement = evaluateRealWorldEngagement(
+      action,
+      getRealWorldEngagementEvidence(request, binding)
+    );
+    projectedEngagement = projectRealWorldEngagementDecision(engagement);
+    if (!engagement.allowed) {
+      const deniedDecision = governance.record(binding, false, engagement.reason);
+      return {
+        ...deniedDecision,
+        engagement: projectedEngagement
+      };
+    }
+  }
+
+  const decision = governance.record(binding, true, preview.reason);
+  if (projectedEngagement) {
+    return {
+      ...decision,
+      engagement: projectedEngagement
+    };
+  }
+  return decision;
 }
 
 function isLoopbackAddress(value?: string): boolean {
@@ -7995,13 +8036,17 @@ app.get("/stream", { websocket: true }, (socket, request) => {
       const decision = evaluateGovernedSocketAction(
         "operator-control",
         "/stream",
-        request
+        request,
+        { realWorldEngagement: "required" }
       );
       if (!decision.allowed) {
+        const engagement = "engagement" in decision ? decision.engagement : undefined;
         socket.send(
           JSON.stringify({
             type: "error",
-            message: `Governance denied: ${decision.reason}`,
+            message: engagement
+              ? `Real-world engagement denied: ${decision.reason}`
+              : `Governance denied: ${decision.reason}`,
             decision
           })
         );
