@@ -43,6 +43,13 @@ import {
   isParallelScheduleMode
 } from "./scheduling.js";
 import {
+  appendCausalTraceGraphRecord,
+  buildCausalTraceGraphAdmission,
+  causalTraceGraphContract,
+  inspectCausalTraceGraphLedger,
+  readCausalTraceGraphRecords
+} from "./causal-trace-graph.js";
+import {
   buildCognitiveRolePlanAdmission,
   cognitiveRolePlanContract
 } from "./cognitive-role-plan.js";
@@ -4686,6 +4693,100 @@ app.post("/api/cognitive-runtime/role-plan/admission", {
     }
   }
 }, async (request) => buildCognitiveRolePlanAdmission(request.body ?? {}));
+
+app.get("/api/cognitive-runtime/trace-graph/schema", {
+  preHandler: app.rateLimit({
+    max: HARNESS_READ_RATE_LIMIT_MAX,
+    timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: HARNESS_READ_RATE_LIMIT_MAX,
+      timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async () => ({
+  traceGraph: causalTraceGraphContract
+}));
+
+app.post("/api/cognitive-runtime/trace-graph/admission", {
+  preHandler: app.rateLimit({
+    max: HARNESS_READ_RATE_LIMIT_MAX,
+    timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: HARNESS_READ_RATE_LIMIT_MAX,
+      timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async (request) => buildCausalTraceGraphAdmission(request.body ?? {}));
+
+app.post("/api/cognitive-runtime/trace-graph/records", {
+  preHandler: app.rateLimit({
+    max: ORCHESTRATION_MEDIATE_RATE_LIMIT_MAX,
+    timeWindow: ORCHESTRATION_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: ORCHESTRATION_MEDIATE_RATE_LIMIT_MAX,
+      timeWindow: ORCHESTRATION_RATE_LIMIT_WINDOW
+    }
+  }
+}, async (request, reply) => {
+  const result = buildCausalTraceGraphAdmission(request.body ?? {});
+  if (!result.graph) {
+    void reply.code(400);
+    return result;
+  }
+  return {
+    ...result,
+    record: await appendCausalTraceGraphRecord({
+      rootDir: persistence.getStatus().rootDir,
+      graph: result.graph
+    })
+  };
+});
+
+app.get("/api/cognitive-runtime/trace-graph/records", {
+  preHandler: app.rateLimit({
+    max: HARNESS_READ_RATE_LIMIT_MAX,
+    timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: HARNESS_READ_RATE_LIMIT_MAX,
+      timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async (request) => {
+  const query = (request.query as { goalId?: string; limit?: string } | undefined) ?? {};
+  return {
+    records: await readCausalTraceGraphRecords({
+      rootDir: persistence.getStatus().rootDir,
+      goalId: query.goalId?.trim() || undefined,
+      limit:
+        typeof query.limit === "string" && query.limit.trim()
+          ? Number(query.limit)
+          : undefined
+    })
+  };
+});
+
+app.get("/api/cognitive-runtime/trace-graph/integrity", {
+  preHandler: app.rateLimit({
+    max: HARNESS_READ_RATE_LIMIT_MAX,
+    timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: HARNESS_READ_RATE_LIMIT_MAX,
+      timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async () => ({
+  traceGraph: await inspectCausalTraceGraphLedger(persistence.getStatus().rootDir)
+}));
 
 app.get("/api/governance/decisions", {
   preHandler: app.rateLimit({

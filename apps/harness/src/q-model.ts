@@ -1,4 +1,5 @@
 import { resolveQFoundationSpecification } from "./q-foundation.js";
+import { causalTraceGraphContract } from "./causal-trace-graph.js";
 import { cognitiveRolePlanContract } from "./cognitive-role-plan.js";
 import { governedGoalStateContract } from "./goal-state.js";
 import { listGovernedToolActions } from "./tool-governance.js";
@@ -31,6 +32,7 @@ export type QRuntimeContext = {
   governedToolPolicy: string;
   governedGoalPolicy: string;
   cognitiveRolePolicy: string;
+  causalTracePolicy: string;
 };
 
 export type QIdentityQuestionKind =
@@ -105,6 +107,10 @@ export function getCognitiveRolePolicySummary(): string {
   return `Cognitive role policy: every executable goal should pass a ${cognitiveRolePlanContract.schemaVersion} admission check before action. Planner, executor, critic, and policy governor roles must be assigned to distinct actors; ledger recorder, verifier, and memory curator roles preserve audit proof and retained lessons.`;
 }
 
+export function getCausalTracePolicySummary(): string {
+  return `Causal trace policy: every admitted runtime plan should persist a ${causalTraceGraphContract.schemaVersion} graph connecting goal, governance, plan, steps, tools, assessment, memory, and ledger proof so future routing can learn from inspectable causes instead of log summaries.`;
+}
+
 export function buildQRuntimeContext(now = new Date()): QRuntimeContext {
   const currentDateIso = now.toISOString().slice(0, 10);
   const currentDateLabel = new Intl.DateTimeFormat("en-US", {
@@ -121,7 +127,8 @@ export function buildQRuntimeContext(now = new Date()): QRuntimeContext {
       "For facts after the knowledge cutoff, use an approved retrieval/tool lane when available; if no retrieval lane is available, state that current verification is required instead of guessing.",
     governedToolPolicy: getGovernedToolPolicySummary(),
     governedGoalPolicy: getGovernedGoalPolicySummary(),
-    cognitiveRolePolicy: getCognitiveRolePolicySummary()
+    cognitiveRolePolicy: getCognitiveRolePolicySummary(),
+    causalTracePolicy: getCausalTracePolicySummary()
   };
 }
 
@@ -133,7 +140,8 @@ export function getQRuntimeContextInstruction(now = new Date()): string {
     context.currentInformationPolicy,
     context.governedToolPolicy,
     context.governedGoalPolicy,
-    context.cognitiveRolePolicy
+    context.cognitiveRolePolicy,
+    context.causalTracePolicy
   ].join(" ");
 }
 
