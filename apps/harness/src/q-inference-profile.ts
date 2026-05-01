@@ -1,9 +1,15 @@
-export type QInferenceProvider = "ollama";
+export type QInferenceProvider = "ollama" | "openai-compatible";
+export type QInferenceAuthMode = "none" | "bearer";
 
 export type QInferenceProfile = {
   provider: QInferenceProvider;
   routeLabel: string;
   runtimeUrl: string;
+  runtimePath: string;
+  auth: {
+    mode: QInferenceAuthMode;
+    bearerToken?: string;
+  };
   requestBounds: {
     maxMessages: number;
     maxInputChars: number;
@@ -29,10 +35,16 @@ export type QInferenceProfile = {
   };
 };
 
-export type PublicQInferenceProfile = Omit<QInferenceProfile, "runtimeUrl"> & {
+export type PublicQInferenceProfile = Omit<QInferenceProfile, "runtimeUrl" | "auth"> & {
   runtime: {
     configured: boolean;
     endpointVisible: false;
+    path: string;
+  };
+  auth: {
+    mode: QInferenceAuthMode;
+    configured: boolean;
+    secretVisible: false;
   };
 };
 
@@ -69,17 +81,63 @@ export function resolveQInferenceProvider(env: NodeJS.ProcessEnv = process.env):
   if (!provider || provider === "ollama") {
     return "ollama";
   }
+  if (
+    provider === "openai" ||
+    provider === "openai-compatible" ||
+    provider === "responses" ||
+    provider === "oci" ||
+    provider === "oci-openai"
+  ) {
+    return "openai-compatible";
+  }
   throw new Error(`Unsupported Q inference provider: ${provider}`);
+}
+
+function resolveQInferenceAuthMode(env: NodeJS.ProcessEnv): QInferenceAuthMode | undefined {
+  const mode = envValue(env, "IMMACULATE_Q_INFERENCE_AUTH_MODE")?.toLowerCase();
+  if (!mode) {
+    return undefined;
+  }
+  if (mode === "none" || mode === "bearer") {
+    return mode;
+  }
+  throw new Error(`Unsupported Q inference auth mode: ${mode}`);
+}
+
+function normalizeRuntimePath(value: string | undefined, fallback: string): string {
+  const trimmed = value?.trim() || fallback;
+  return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+}
+
+function normalizeRuntimeUrl(value: string): string {
+  return value.replace(/\/+$/, "");
 }
 
 export function resolveQInferenceProfile(
   env: NodeJS.ProcessEnv = process.env
 ): QInferenceProfile {
   const provider = resolveQInferenceProvider(env);
+  const routeLabel =
+    envValue(env, "IMMACULATE_Q_INFERENCE_ROUTE_LABEL") ??
+    (provider === "ollama" ? "q-primary-ollama" : "q-primary-responses");
   const runtimeUrl =
-    envValue(env, "IMMACULATE_Q_OLLAMA_URL") ??
-    envValue(env, "IMMACULATE_OLLAMA_URL") ??
-    "http://127.0.0.1:11434";
+    provider === "ollama"
+      ? envValue(env, "IMMACULATE_Q_OLLAMA_URL") ??
+        envValue(env, "IMMACULATE_OLLAMA_URL") ??
+        "http://127.0.0.1:11434"
+      : envValue(env, "IMMACULATE_Q_RESPONSES_BASE_URL") ??
+        envValue(env, "IMMACULATE_Q_OPENAI_BASE_URL") ??
+        envValue(env, "IMMACULATE_Q_OCI_BASE_URL");
+  if (!runtimeUrl) {
+    throw new Error("OpenAI-compatible Q inference requires IMMACULATE_Q_RESPONSES_BASE_URL, IMMACULATE_Q_OPENAI_BASE_URL, or IMMACULATE_Q_OCI_BASE_URL.");
+  }
+  const bearerToken =
+    envValue(env, "IMMACULATE_Q_RESPONSES_API_KEY") ??
+    envValue(env, "IMMACULATE_Q_OPENAI_API_KEY") ??
+    envValue(env, "IMMACULATE_Q_OCI_BEARER_TOKEN");
+  const requestedAuthMode = resolveQInferenceAuthMode(env);
+  const authMode =
+    requestedAuthMode ?? (provider === "openai-compatible" ? "bearer" : "none");
   const defaultTimeoutMs = positiveInteger(
     env,
     "IMMACULATE_Q_GATEWAY_TIMEOUT_MS",
@@ -89,8 +147,16 @@ export function resolveQInferenceProfile(
 
   return {
     provider,
-    routeLabel: envValue(env, "IMMACULATE_Q_INFERENCE_ROUTE_LABEL") ?? "q-primary-ollama",
-    runtimeUrl,
+    routeLabel,
+    runtimeUrl: normalizeRuntimeUrl(runtimeUrl),
+    runtimePath:
+      provider === "ollama"
+        ? "/api/chat"
+        : normalizeRuntimePath(envValue(env, "IMMACULATE_Q_RESPONSES_PATH"), "/responses"),
+    auth: {
+      mode: authMode,
+      bearerToken: authMode === "bearer" ? bearerToken : undefined
+    },
     requestBounds: {
       maxMessages: positiveInteger(env, "IMMACULATE_Q_GATEWAY_MAX_MESSAGES", 24, 1),
       maxInputChars: positiveInteger(env, "IMMACULATE_Q_GATEWAY_MAX_INPUT_CHARS", 16_000, 512)
@@ -167,12 +233,18 @@ export function resolveQInferenceProfile(
 export function redactQInferenceProfile(
   profile: QInferenceProfile
 ): PublicQInferenceProfile {
-  const { runtimeUrl: _runtimeUrl, ...publicProfile } = profile;
+  const { runtimeUrl: _runtimeUrl, auth, ...publicProfile } = profile;
   return {
     ...publicProfile,
     runtime: {
       configured: Boolean(_runtimeUrl.trim()),
-      endpointVisible: false
+      endpointVisible: false,
+      path: profile.runtimePath
+    },
+    auth: {
+      mode: auth.mode,
+      configured: auth.mode === "none" || Boolean(auth.bearerToken?.trim()),
+      secretVisible: false
     }
   };
 }

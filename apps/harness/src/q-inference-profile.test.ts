@@ -12,6 +12,8 @@ test("Q inference profile keeps the local Ollama defaults explicit", () => {
   assert.equal(profile.provider, "ollama");
   assert.equal(profile.routeLabel, "q-primary-ollama");
   assert.equal(profile.runtimeUrl, "http://127.0.0.1:11434");
+  assert.equal(profile.runtimePath, "/api/chat");
+  assert.equal(profile.auth.mode, "none");
   assert.deepEqual(profile.requestBounds, {
     maxMessages: 24,
     maxInputChars: 16_000
@@ -47,10 +49,56 @@ test("Q inference profile accepts bounded operator tuning", () => {
   assert.equal(profile.circuit.primaryFailureThreshold, 4);
 });
 
+test("Q inference profile accepts OCI/OpenAI-compatible responses routing", () => {
+  const profile = resolveQInferenceProfile({
+    IMMACULATE_Q_INFERENCE_PROVIDER: "oci",
+    IMMACULATE_Q_INFERENCE_ROUTE_LABEL: "oci-q-responses",
+    IMMACULATE_Q_OCI_BASE_URL:
+      "https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1/",
+    IMMACULATE_Q_RESPONSES_PATH: "responses",
+    IMMACULATE_Q_OCI_BEARER_TOKEN: "secret-token"
+  });
+
+  assert.equal(profile.provider, "openai-compatible");
+  assert.equal(profile.routeLabel, "oci-q-responses");
+  assert.equal(
+    profile.runtimeUrl,
+    "https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1"
+  );
+  assert.equal(profile.runtimePath, "/responses");
+  assert.equal(profile.auth.mode, "bearer");
+  assert.equal(profile.auth.bearerToken, "secret-token");
+});
+
+test("Q inference profile requires explicit no-auth mode for private responses proxies", () => {
+  const profile = resolveQInferenceProfile({
+    IMMACULATE_Q_INFERENCE_PROVIDER: "responses",
+    IMMACULATE_Q_RESPONSES_BASE_URL: "http://127.0.0.1:8788/openai/v1"
+  });
+  const noAuthProxyProfile = resolveQInferenceProfile({
+    IMMACULATE_Q_INFERENCE_PROVIDER: "responses",
+    IMMACULATE_Q_RESPONSES_BASE_URL: "http://127.0.0.1:8788/openai/v1",
+    IMMACULATE_Q_INFERENCE_AUTH_MODE: "none"
+  });
+
+  assert.equal(profile.auth.mode, "bearer");
+  assert.equal(profile.auth.bearerToken, undefined);
+  assert.equal(redactQInferenceProfile(profile).auth.configured, false);
+  assert.equal(noAuthProxyProfile.auth.mode, "none");
+  assert.equal(redactQInferenceProfile(noAuthProxyProfile).auth.configured, true);
+});
+
 test("Q inference profile fails closed on unsupported providers", () => {
   assert.throws(
-    () => resolveQInferenceProvider({ IMMACULATE_Q_INFERENCE_PROVIDER: "responses" }),
+    () => resolveQInferenceProvider({ IMMACULATE_Q_INFERENCE_PROVIDER: "unknown" }),
     /Unsupported Q inference provider/
+  );
+});
+
+test("Q inference profile fails closed when responses provider lacks an endpoint", () => {
+  assert.throws(
+    () => resolveQInferenceProfile({ IMMACULATE_Q_INFERENCE_PROVIDER: "responses" }),
+    /requires IMMACULATE_Q_RESPONSES_BASE_URL/
   );
 });
 
@@ -62,5 +110,9 @@ test("redacted Q inference profile does not expose private runtime URLs", () => 
 
   assert.equal(redacted.runtime.configured, true);
   assert.equal(redacted.runtime.endpointVisible, false);
+  assert.equal(redacted.runtime.path, "/api/chat");
+  assert.equal(redacted.auth.configured, true);
+  assert.equal(redacted.auth.secretVisible, false);
   assert.equal("runtimeUrl" in redacted, false);
+  assert.equal("bearerToken" in redacted.auth, false);
 });

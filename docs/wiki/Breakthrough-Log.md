@@ -69,6 +69,31 @@ What this unlocks next:
 - benchmark reports can record the active inference profile as evidence instead of reverse-engineering it from environment variables
 - rollout to private OCI routes can be audited from health/info payloads without exposing internal endpoints
 
+#### The Q gateway gained a governed Responses transport
+
+What changed:
+- the dedicated Q gateway can now route its existing `/v1/chat/completions` surface through either the local Ollama-compatible runtime or a configured OCI/OpenAI-compatible `/responses` runtime
+- `IMMACULATE_Q_INFERENCE_PROVIDER=oci`, `responses`, or `openai-compatible` resolves to the Responses transport, with `IMMACULATE_Q_OCI_BASE_URL` or `IMMACULATE_Q_RESPONSES_BASE_URL` owning the private upstream base URL
+- hosted Responses routes default to bearer auth and report `auth.configured=false` in the redacted inference profile when the token is absent; no-auth mode must be explicit for private IAM-signing proxies
+- structured Q contract calls use Responses JSON mode and still pass through the existing `ROUTE/REASON/COMMIT` parser, repair path, circuit breaker, API-key gate, and per-key concurrency limiter
+
+Why it matters:
+- the missed integration bug was that the public gateway profile could name future OCI routes, but the serving path still hard-coded Ollama `/api/chat` and `/api/generate`
+- this keeps Q's public API stable while letting the private runtime move to OCI `/responses` without exposing OCI URLs, bearer tokens, or a broader harness control plane
+- the route fails closed before model execution when bearer auth is required but no secret is configured
+
+Evidence:
+- `apps/harness/src/openai-compatible.ts` implements the Responses request mapper, output extractor, timeout handling, auth header handling, and shared Q completion result contract
+- `apps/harness/src/q-gateway.ts` dispatches chat and structured contract attempts by provider while preserving the existing gateway route contract
+- `apps/harness/src/q-inference-profile.ts` resolves OCI/Responses aliases, runtime path, redacted auth state, and explicit no-auth proxy mode
+- `apps/harness/src/openai-compatible.test.ts` covers Responses payload mapping, response extraction, and a loopback bearer-auth request
+- `apps/harness/src/q-inference-profile.test.ts` covers OCI profile resolution, missing endpoint fail-closed behavior, and explicit private-proxy no-auth mode
+
+What this unlocks next:
+- the live Discord Q backend and the dedicated gateway can converge on one OCI `/responses` contract instead of maintaining separate route assumptions
+- private OCI IAM signing can sit behind a local/private proxy while the public gateway remains key-gated and auditable
+- future benchmarks can compare local Ollama and OCI Responses lanes through the same gateway, PoI, and Arobi evidence path
+
 #### Benchmark worker launch stopped using a Windows shell string
 
 What changed:
