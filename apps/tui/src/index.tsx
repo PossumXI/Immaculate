@@ -188,8 +188,44 @@ function withOperatorWsUrl(urlValue: string, governance?: GovernanceRequest): st
     if (governance.actor) {
       nextUrl.searchParams.set("actor", governance.actor);
     }
+    if (governance.receiptTarget) {
+      nextUrl.searchParams.set("receiptTarget", governance.receiptTarget);
+    }
+    if (governance.operatorSummary) {
+      nextUrl.searchParams.set("operatorSummary", governance.operatorSummary);
+    }
+    if (governance.operatorConfirmed !== undefined) {
+      nextUrl.searchParams.set("operatorConfirmed", String(governance.operatorConfirmed));
+    }
+    if (governance.rollbackPlan) {
+      nextUrl.searchParams.set("rollbackPlan", governance.rollbackPlan);
+    }
+    if (governance.sanitizationProof) {
+      nextUrl.searchParams.set("sanitizationProof", governance.sanitizationProof);
+    }
+    if (governance.budgetCents !== undefined) {
+      nextUrl.searchParams.set("budgetCents", String(governance.budgetCents));
+    }
   }
   return nextUrl.toString();
+}
+
+function buildLiveNeuroGovernance(
+  consentScope: string,
+  receiptTarget: string,
+  operatorSummary: string,
+  rollbackPlan: string
+): GovernanceRequest {
+  return {
+    purpose: ["neuro-streaming"],
+    policyId: "neuro-stream-default",
+    consentScope,
+    actor: "tui",
+    receiptTarget,
+    operatorSummary,
+    operatorConfirmed: true,
+    rollbackPlan
+  };
 }
 
 function summarizeRoutingDecision(
@@ -537,12 +573,12 @@ async function stopLatestLiveSource(sourceId?: string): Promise<void> {
       },
       body: JSON.stringify({})
     },
-    {
-      purpose: ["neuro-streaming"],
-      policyId: "neuro-stream-default",
-      consentScope: `live-source:${sourceId}`,
-      actor: "tui"
-    }
+    buildLiveNeuroGovernance(
+      `live-source:${sourceId}`,
+      `harness:neuro-live-stop:tui:${sourceId}`,
+      "TUI live neuro source stop request.",
+      "Confirm the source is no longer listed as running and preserve the stop receipt."
+    )
   );
   await ensureSuccessfulResponse(response, "Failed to stop live source.");
 }
@@ -550,12 +586,15 @@ async function stopLatestLiveSource(sourceId?: string): Promise<void> {
 async function injectLiveFrame(sessionId?: string): Promise<void> {
   await new Promise<void>((resolve, reject) => {
     const socket = new WebSocket(
-      withOperatorWsUrl(liveNeuroWsUrlBase, {
-        purpose: ["neuro-streaming"],
-        policyId: "neuro-stream-default",
-        consentScope: sessionId ? `session:${sessionId}` : "live-source:tui-live-socket",
-        actor: "tui"
-      })
+      withOperatorWsUrl(
+        liveNeuroWsUrlBase,
+        buildLiveNeuroGovernance(
+          sessionId ? `session:${sessionId}` : "live-source:tui-live-socket",
+          "harness:neuro-live-socket:tui",
+          "TUI live neuro socket ingest request.",
+          "Close the live socket and stop any source ids acknowledged by the harness."
+        )
+      )
     );
     let settled = false;
     const timer = setTimeout(() => {
