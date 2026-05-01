@@ -69,6 +69,26 @@ What this unlocks next:
 - benchmark reports can record the active inference profile as evidence instead of reverse-engineering it from environment variables
 - rollout to private OCI routes can be audited from health/info payloads without exposing internal endpoints
 
+#### Benchmark worker launch stopped using a Windows shell string
+
+What changed:
+- the harness benchmark worker launch now builds a shell-free spawn plan for both TypeScript and built JavaScript runtimes
+- TypeScript runtime now uses `node --import tsx <worker> ...args` instead of `cmd.exe /c "npx tsx ..."`
+- worker arguments remain individual argv entries, so benchmark pack IDs and flags cannot be reinterpreted as shell syntax
+
+Why it matters:
+- CodeQL correctly identified the old Windows dev path as command-injection prone because it joined arguments into a shell command string
+- benchmark execution is an operator-facing control path, so it needs the same argument-boundary discipline as the rest of the harness
+
+Evidence:
+- `apps/harness/src/benchmark-worker-spawn.ts` owns the spawn-plan construction
+- `apps/harness/src/benchmark-worker-spawn.test.ts` verifies shell metacharacters stay literal and `/c` is not used
+- `apps/harness/src/server.ts` now consumes the spawn plan before starting the benchmark child process
+
+What this unlocks next:
+- CodeQL can track the benchmark worker as a normal argument-vector spawn instead of a shell command
+- future worker launch options can be tested in one pure module before they touch the live server
+
 ### 2026-04-20
 
 #### Roundtable runtime is now cold-start reproducible
