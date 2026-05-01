@@ -19,6 +19,26 @@ export type DashboardSocketRoute = "/stream" | "/stream/neuro/live";
 const DASHBOARD_SESSION_COOKIE = "immaculate_dashboard_session";
 const DASHBOARD_SESSION_DURATION_MS = 12 * 60 * 60 * 1000;
 const DASHBOARD_SOCKET_TICKET_DURATION_MS = 60 * 1000;
+const DASHBOARD_PROXY_HEADER_KEYS = [
+  "content-type",
+  "accept",
+  "x-immaculate-purpose",
+  "x-immaculate-policy-id",
+  "x-immaculate-consent-scope",
+  "x-immaculate-actor",
+  "x-immaculate-receipt-target",
+  "x-immaculate-engagement-receipt",
+  "x-immaculate-operator-summary",
+  "x-immaculate-engagement-summary",
+  "x-immaculate-operator-confirmed",
+  "x-immaculate-engagement-confirmed",
+  "x-immaculate-rollback-plan",
+  "x-immaculate-engagement-rollback",
+  "x-immaculate-sanitization-proof",
+  "x-immaculate-engagement-sanitization",
+  "x-immaculate-budget-cents",
+  "x-immaculate-engagement-budget-cents"
+] as const;
 
 type DashboardSessionPayload = {
   exp: number;
@@ -316,14 +336,7 @@ export function getDashboardProxyHeaders(request: Request): Headers {
     headers.set("authorization", `Bearer ${harnessApiKey}`);
   }
 
-  for (const key of [
-    "content-type",
-    "accept",
-    "x-immaculate-purpose",
-    "x-immaculate-policy-id",
-    "x-immaculate-consent-scope",
-    "x-immaculate-actor"
-  ]) {
+  for (const key of DASHBOARD_PROXY_HEADER_KEYS) {
     const value = request.headers.get(key);
     if (value) {
       headers.set(key, value);
