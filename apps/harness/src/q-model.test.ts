@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  getCausalTracePolicySummary,
   getCognitiveRolePolicySummary,
   getGovernedGoalPolicySummary,
   getGovernedToolPolicySummary,
@@ -20,6 +21,7 @@ test("Q runtime context exposes current date and knowledge cutoff", () => {
   assert.match(context.governedToolPolicy, /Tier 4\+ actions require human or operator approval/);
   assert.match(context.governedGoalPolicy, /governed-goal\.v1/);
   assert.match(context.cognitiveRolePolicy, /cognitive-role-plan\.v1/);
+  assert.match(context.causalTracePolicy, /causal-trace-graph\.v1/);
 });
 
 test("Q runtime context instruction tells Q not to guess current facts", () => {
@@ -31,6 +33,7 @@ test("Q runtime context instruction tells Q not to guess current facts", () => {
   assert.match(instruction, /Governed tool policy:/);
   assert.match(instruction, /Governed goal policy:/);
   assert.match(instruction, /Cognitive role policy:/);
+  assert.match(instruction, /Causal trace policy:/);
 });
 
 test("Q governed tool policy summary is compact and action-bound", () => {
@@ -55,4 +58,12 @@ test("Q cognitive role policy summary rejects self-approving execution", () => {
   assert.match(summary, /Planner, executor, critic, and policy governor/);
   assert.match(summary, /distinct actors/);
   assert.match(summary, /memory curator/);
+});
+
+test("Q causal trace policy summary requires inspectable causes", () => {
+  const summary = getCausalTracePolicySummary();
+
+  assert.match(summary, /goal, governance, plan, steps, tools/);
+  assert.match(summary, /memory, and ledger proof/);
+  assert.match(summary, /inspectable causes/);
 });
