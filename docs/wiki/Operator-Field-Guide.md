@@ -32,6 +32,12 @@ npm run bridgebench
 - transport health, heartbeat, and isolation state
 - actuation output redaction versus scoped reads
 
+## Public Intelligence Status
+
+- Use `GET /api/intelligence/status` for Discord, Aura, and website status checks that only need redacted routing readiness. It is intentionally public and returns counts for layers, workers, nodes, executions, governor queue depth, governance totals, persistence integrity, and PoI summary.
+- Use the governed `GET /api/intelligence/workers` endpoint only for operator consoles that have authorization and need worker identities, endpoints, labels, lease state, or assignment details.
+- Treat `status=degraded` with `workerPlane.readiness=no_workers` or `no_healthy_workers` as a routing-plane issue, not proof that the harness is down. Treat `status=blocked` as an integrity or no-ready-layer incident until the listed `reasons` clear.
+
 ## Q Edge
 
 Create a Q API key:
