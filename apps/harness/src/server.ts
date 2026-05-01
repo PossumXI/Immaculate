@@ -4,6 +4,7 @@ import { appendFile, mkdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import Fastify, { type FastifyReply, type FastifyRequest } from "fastify";
 import cors from "@fastify/cors";
+import rateLimit from "@fastify/rate-limit";
 import websocket from "@fastify/websocket";
 import {
   agentIntelligenceAssessmentSchema,
@@ -291,6 +292,16 @@ const BENCHMARK_WORKER_PATH = path.join(
 );
 const benchmarkJobs = new Map<string, BenchmarkJob>();
 const MAX_BENCHMARK_JOBS = 12;
+const POI_ASSESSMENT_READ_RATE_LIMIT_MAX = Math.max(
+  1,
+  Number(process.env.IMMACULATE_POI_ASSESSMENT_READ_RATE_LIMIT_MAX ?? 120) || 120
+);
+const POI_ASSESSMENT_RUN_RATE_LIMIT_MAX = Math.max(
+  1,
+  Number(process.env.IMMACULATE_POI_ASSESSMENT_RUN_RATE_LIMIT_MAX ?? 20) || 20
+);
+const POI_ASSESSMENT_RATE_LIMIT_WINDOW =
+  process.env.IMMACULATE_POI_ASSESSMENT_RATE_LIMIT_WINDOW ?? "1 minute";
 const workGovernor = createWorkGovernor({
   maxActiveWeight: Math.max(1, Number(process.env.IMMACULATE_WORK_GOVERNOR_MAX_WEIGHT ?? 6) || 6),
   maxQueueDepth: Math.max(1, Number(process.env.IMMACULATE_WORK_GOVERNOR_MAX_QUEUE_DEPTH ?? 12) || 12),
@@ -635,6 +646,10 @@ await app.register(cors, {
       callback(null, false);
     }
   }
+});
+
+await app.register(rateLimit, {
+  global: false
 });
 
 await app.register(websocket);
@@ -4847,87 +4862,112 @@ app.get("/api/intelligence", async () => {
   };
 });
 
-app.get("/api/intelligence/assessments", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
+app.get(
+  "/api/intelligence/assessments",
+  {
+    config: {
+      rateLimit: {
+        max: POI_ASSESSMENT_READ_RATE_LIMIT_MAX,
+        timeWindow: POI_ASSESSMENT_RATE_LIMIT_WINDOW
+      }
+    }
+  },
+  async (request, reply) => {
+    if (
+      !authorizeGovernedAction(
+        "cognitive-trace-read",
+        "/api/intelligence/assessments",
+        request,
+        reply
+      )
+    ) {
+      return;
+    }
+
+    const consentScope = getGovernanceBinding(
       "cognitive-trace-read",
       "/api/intelligence/assessments",
-      request,
-      reply
-    )
-  ) {
-    return;
+      request
+    ).consentScope;
+    const snapshot = phaseSnapshotSchema.parse(
+      projectPhaseSnapshot(engine.getSnapshot(), consentScope)
+    );
+    return {
+      assessments: snapshot.agentIntelligenceAssessments.map((assessment) =>
+        agentIntelligenceAssessmentSchema.parse(assessment)
+      ),
+      poi: summarizeAgentIntelligenceAssessments(snapshot.agentIntelligenceAssessments),
+      visibility: deriveVisibilityScope(consentScope)
+    };
   }
+);
 
-  const consentScope = getGovernanceBinding(
-    "cognitive-trace-read",
-    "/api/intelligence/assessments",
-    request
-  ).consentScope;
-  const snapshot = phaseSnapshotSchema.parse(
-    projectPhaseSnapshot(engine.getSnapshot(), consentScope)
-  );
-  return {
-    assessments: snapshot.agentIntelligenceAssessments.map((assessment) =>
-      agentIntelligenceAssessmentSchema.parse(assessment)
-    ),
-    poi: summarizeAgentIntelligenceAssessments(snapshot.agentIntelligenceAssessments),
-    visibility: deriveVisibilityScope(consentScope)
-  };
-});
+app.post(
+  "/api/intelligence/assessments/run",
+  {
+    config: {
+      rateLimit: {
+        max: POI_ASSESSMENT_RUN_RATE_LIMIT_MAX,
+        timeWindow: POI_ASSESSMENT_RATE_LIMIT_WINDOW
+      }
+    }
+  },
+  async (request, reply) => {
+    if (
+      !authorizeGovernedAction(
+        "cognitive-execution",
+        "/api/intelligence/assessments/run",
+        request,
+        reply
+      )
+    ) {
+      return;
+    }
 
-app.post("/api/intelligence/assessments/run", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
+    const body =
+      (request.body as {
+        layerId?: string;
+        trigger?: string;
+      } | undefined) ?? {};
+    const consentScope = getGovernanceBinding(
       "cognitive-execution",
       "/api/intelligence/assessments/run",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
+      request
+    ).consentScope;
+    const trigger = parseAssessmentTrigger(body.trigger);
+    const layerId = body.layerId?.trim();
+    if (
+      layerId &&
+      !engine.getSnapshot().intelligenceLayers.some((layer) => layer.id === layerId)
+    ) {
+      reply.code(404);
+      return {
+        error: "intelligence_layer_not_found",
+        layerId
+      };
+    }
 
-  const body =
-    (request.body as {
-      layerId?: string;
-      trigger?: string;
-    } | undefined) ?? {};
-  const consentScope = getGovernanceBinding(
-    "cognitive-execution",
-    "/api/intelligence/assessments/run",
-    request
-  ).consentScope;
-  const trigger = parseAssessmentTrigger(body.trigger);
-  const layerId = body.layerId?.trim();
-  if (layerId && !engine.getSnapshot().intelligenceLayers.some((layer) => layer.id === layerId)) {
-    reply.code(404);
-    return {
-      error: "intelligence_layer_not_found",
-      layerId
-    };
+    try {
+      const result = await recordAgentIntelligenceAssessment({
+        trigger,
+        targetLayerId: layerId || undefined,
+        consentScope
+      });
+      return {
+        accepted: true,
+        assessment: agentIntelligenceAssessmentSchema.parse(result.assessment),
+        poi: poiMonitorStatus(),
+        snapshot: result.snapshot
+      };
+    } catch (error) {
+      reply.code(503);
+      return {
+        error: "poi_assessment_failed",
+        message: error instanceof Error ? error.message : "Unable to record PoI assessment."
+      };
+    }
   }
-
-  try {
-    const result = await recordAgentIntelligenceAssessment({
-      trigger,
-      targetLayerId: layerId || undefined,
-      consentScope
-    });
-    return {
-      accepted: true,
-      assessment: agentIntelligenceAssessmentSchema.parse(result.assessment),
-      poi: poiMonitorStatus(),
-      snapshot: result.snapshot
-    };
-  } catch (error) {
-    reply.code(503);
-    return {
-      error: "poi_assessment_failed",
-      message: error instanceof Error ? error.message : "Unable to record PoI assessment."
-    };
-  }
-});
+);
 
 app.get("/api/q/info", async () => {
   if (!Q_API_ENABLED) {
