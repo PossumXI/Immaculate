@@ -142,6 +142,7 @@ async function main() {
 
     const routes = [
       { routePath: "/", relativeDir: "" },
+      { routePath: "/downloads/jaws", relativeDir: "downloads/jaws" },
       { routePath: "/legal", relativeDir: "legal" },
       { routePath: "/terms", relativeDir: "terms" },
     ];
