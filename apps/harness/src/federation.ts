@@ -1,4 +1,4 @@
-import { createHash, createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 
 export const federationSignatureAlgorithms = ["hmac-sha256"] as const;
 export type FederationSignatureAlgorithm = (typeof federationSignatureAlgorithms)[number];
@@ -91,7 +91,10 @@ function computeEnvelopeSignature<T>(
 }
 
 export function buildFederationKeyId(secret: string): string {
-  return createHash("sha256").update(secret).digest("hex").slice(0, 12);
+  return createHmac("sha256", secret)
+    .update("immaculate:federation:key-id:v1")
+    .digest("hex")
+    .slice(0, 12);
 }
 
 export function resolveFederationSecret(environment: NodeJS.ProcessEnv = process.env): string | undefined {
