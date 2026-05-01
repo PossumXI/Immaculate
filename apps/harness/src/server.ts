@@ -129,6 +129,12 @@ import {
 import { createQRateLimiter } from "./q-rate-limit.js";
 import { evaluateToolRiskAdmission } from "./tool-governance.js";
 import {
+  classifyRealWorldEngagement,
+  evaluateRealWorldEngagement,
+  type RealWorldEngagementDecision,
+  type RealWorldEngagementEvidence
+} from "./real-world-engagement.js";
+import {
   foundationModelLabel,
   getImmaculateHarnessName,
   getQDeveloperName,
@@ -1145,6 +1151,115 @@ function getGovernanceBinding(
       searchParams.get("consentScope") ??
       searchParams.get("x-immaculate-consent-scope") ??
       undefined
+  };
+}
+
+function getEngagementField(
+  request: FastifyRequest,
+  searchParams: URLSearchParams,
+  headerNames: string[],
+  queryNames: string[]
+): string | undefined {
+  for (const headerName of headerNames) {
+    const value = getHeaderValue(request.headers[headerName]);
+    if (value) {
+      return value;
+    }
+  }
+
+  for (const queryName of queryNames) {
+    const value = searchParams.get(queryName)?.trim();
+    if (value) {
+      return value;
+    }
+  }
+
+  return undefined;
+}
+
+function parseEngagementConfirmation(value: string | undefined): boolean | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const normalized = value.trim().toLowerCase();
+  if (["1", "true", "yes", "confirmed", "approved"].includes(normalized)) {
+    return true;
+  }
+  if (["0", "false", "no", "denied"].includes(normalized)) {
+    return false;
+  }
+  return undefined;
+}
+
+function parseEngagementBudgetCents(value: string | undefined): number | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.round(parsed) : undefined;
+}
+
+function getRealWorldEngagementEvidence(
+  request: FastifyRequest,
+  binding: GovernanceBinding
+): RealWorldEngagementEvidence {
+  const searchParams = getSearchParams(request.raw.url);
+
+  return {
+    consentScope: binding.consentScope,
+    purpose: binding.purpose,
+    receiptTarget: getEngagementField(
+      request,
+      searchParams,
+      ["x-immaculate-receipt-target", "x-immaculate-engagement-receipt"],
+      ["receiptTarget", "engagementReceipt", "x-immaculate-receipt-target"]
+    ),
+    operatorSummary: getEngagementField(
+      request,
+      searchParams,
+      ["x-immaculate-operator-summary", "x-immaculate-engagement-summary"],
+      ["operatorSummary", "engagementSummary", "x-immaculate-operator-summary"]
+    ),
+    operatorConfirmed: parseEngagementConfirmation(
+      getEngagementField(
+        request,
+        searchParams,
+        ["x-immaculate-operator-confirmed", "x-immaculate-engagement-confirmed"],
+        ["operatorConfirmed", "engagementConfirmed", "x-immaculate-operator-confirmed"]
+      )
+    ),
+    rollbackPlan: getEngagementField(
+      request,
+      searchParams,
+      ["x-immaculate-rollback-plan", "x-immaculate-engagement-rollback"],
+      ["rollbackPlan", "engagementRollback", "x-immaculate-rollback-plan"]
+    ),
+    sanitizationProof: getEngagementField(
+      request,
+      searchParams,
+      ["x-immaculate-sanitization-proof", "x-immaculate-engagement-sanitization"],
+      ["sanitizationProof", "engagementSanitization", "x-immaculate-sanitization-proof"]
+    ),
+    budgetCents: parseEngagementBudgetCents(
+      getEngagementField(
+        request,
+        searchParams,
+        ["x-immaculate-budget-cents", "x-immaculate-engagement-budget-cents"],
+        ["budgetCents", "engagementBudgetCents", "x-immaculate-budget-cents"]
+      )
+    )
+  };
+}
+
+function projectRealWorldEngagementDecision(decision: RealWorldEngagementDecision) {
+  return {
+    allowed: decision.allowed,
+    action: decision.action,
+    mode: decision.mode,
+    riskTier: decision.riskTier,
+    missingEvidence: decision.missingEvidence,
+    stopConditions: decision.stopConditions,
+    reason: decision.reason
   };
 }
 
@@ -2193,21 +2308,40 @@ function authorizeGovernedAction(
   reply: FastifyReply,
   options?: {
     policyIdOverride?: string;
+    realWorldEngagement?: "required";
   }
 ): boolean {
   const binding = getGovernanceBinding(action, route, request, options);
   const preview = evaluateGovernance(binding);
-  const decision = governance.record(binding, preview.allowed, preview.reason);
-  if (decision.allowed) {
-    return true;
+  if (!preview.allowed) {
+    const decision = governance.record(binding, false, preview.reason);
+    reply.code(403).send({
+      error: "governance_denied",
+      message: `Governance denied: ${decision.reason}`,
+      decision
+    });
+    return false;
   }
 
-  reply.code(403).send({
-    error: "governance_denied",
-    message: `Governance denied: ${decision.reason}`,
-    decision
-  });
-  return false;
+  if (options?.realWorldEngagement === "required") {
+    const engagement = evaluateRealWorldEngagement(
+      action,
+      getRealWorldEngagementEvidence(request, binding)
+    );
+    if (!engagement.allowed) {
+      const decision = governance.record(binding, false, engagement.reason);
+      reply.code(403).send({
+        error: "real_world_engagement_denied",
+        message: `Real-world engagement denied: ${engagement.missingEvidence.join(", ")}`,
+        decision,
+        engagement: projectRealWorldEngagementDecision(engagement)
+      });
+      return false;
+    }
+  }
+
+  governance.record(binding, true, preview.reason);
+  return true;
 }
 
 function requireGovernedActionPreHandler(
@@ -2215,6 +2349,7 @@ function requireGovernedActionPreHandler(
   route: string,
   options?: {
     policyIdOverride?: string;
+    realWorldEngagement?: "required";
   }
 ) {
   return async (request: FastifyRequest, reply: FastifyReply) => {
@@ -4613,6 +4748,23 @@ app.get("/api/governance/tool-actions", {
   actions: governance.listGovernedActions()
 }));
 
+app.get("/api/governance/real-world-engagement", {
+  preHandler: app.rateLimit({
+    max: HARNESS_READ_RATE_LIMIT_MAX,
+    timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: HARNESS_READ_RATE_LIMIT_MAX,
+      timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async () => ({
+  profiles: governance
+    .listGovernedActions()
+    .map((action) => classifyRealWorldEngagement(action.action))
+}));
+
 app.post("/api/governance/tool-actions/admission", {
   preHandler: app.rateLimit({
     max: HARNESS_READ_RATE_LIMIT_MAX,
@@ -6780,7 +6932,8 @@ app.delete("/api/nodes/:nodeId", {
 app.post("/api/actuation/dispatch", {
   preHandler: requireGovernedActionPreHandler(
     "actuation-dispatch",
-    "/api/actuation/dispatch"
+    "/api/actuation/dispatch",
+    { realWorldEngagement: "required" }
   )
 }, async (request, reply) => {
   const binding = getGovernanceBinding("actuation-dispatch", "/api/actuation/dispatch", request);
@@ -6828,7 +6981,8 @@ app.post("/api/actuation/dispatch", {
 app.post("/api/actuation/transports/udp/register", {
   preHandler: requireGovernedActionPreHandler(
     "actuation-device-link",
-    "/api/actuation/transports/udp/register"
+    "/api/actuation/transports/udp/register",
+    { realWorldEngagement: "required" }
   )
 }, async (request, reply) => {
   const body =
@@ -6873,7 +7027,8 @@ app.post("/api/actuation/transports/udp/register", {
 app.post("/api/actuation/transports/serial/register", {
   preHandler: requireGovernedActionPreHandler(
     "actuation-device-link",
-    "/api/actuation/transports/serial/register"
+    "/api/actuation/transports/serial/register",
+    { realWorldEngagement: "required" }
   )
 }, async (request, reply) => {
   const body =
@@ -6933,7 +7088,8 @@ app.post("/api/actuation/transports/serial/register", {
 app.post("/api/actuation/transports/http2/register", {
   preHandler: requireGovernedActionPreHandler(
     "actuation-device-link",
-    "/api/actuation/transports/http2/register"
+    "/api/actuation/transports/http2/register",
+    { realWorldEngagement: "required" }
   )
 }, async (request, reply) => {
   const body =
@@ -7037,7 +7193,8 @@ app.post("/api/actuation/transports/:transportId/heartbeat", {
 app.post("/api/actuation/transports/:transportId/reset", {
   preHandler: requireGovernedActionPreHandler(
     "actuation-device-link",
-    "/api/actuation/transports/:transportId/reset"
+    "/api/actuation/transports/:transportId/reset",
+    { realWorldEngagement: "required" }
   )
 }, async (request, reply) => {
   const params = request.params as { transportId?: string };
@@ -7190,7 +7347,8 @@ app.post("/api/orchestration/mediate", {
   preHandler: [
     requireGovernedActionPreHandler(
       "actuation-dispatch",
-      "/api/orchestration/mediate"
+      "/api/orchestration/mediate",
+      { realWorldEngagement: "required" }
     ),
     requireGovernedActionPreHandler(
       "cognitive-execution",
@@ -7743,7 +7901,8 @@ app.post("/api/benchmarks/run", {
 app.post("/api/benchmarks/publish/wandb", {
   preHandler: requireGovernedActionPreHandler(
     "benchmark-publication",
-    "/api/benchmarks/publish/wandb"
+    "/api/benchmarks/publish/wandb",
+    { realWorldEngagement: "required" }
   )
 }, async (request, reply) => {
   const body = (request.body as { suiteId?: string } | undefined) ?? {};
@@ -7802,7 +7961,8 @@ app.get("/api/topology", async () => {
 app.post("/api/control", {
   preHandler: requireGovernedActionPreHandler(
     "operator-control",
-    "/api/control"
+    "/api/control",
+    { realWorldEngagement: "required" }
   )
 }, async (request, reply) => {
   const parsed = controlEnvelopeSchema.safeParse(request.body);

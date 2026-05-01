@@ -25,6 +25,12 @@ type GovernanceRequest = {
   policyId: string;
   consentScope: string;
   actor?: string;
+  receiptTarget?: string;
+  operatorSummary?: string;
+  operatorConfirmed?: boolean;
+  rollbackPlan?: string;
+  sanitizationProof?: string;
+  budgetCents?: number;
 };
 
 type DashboardSocketRoute = "/stream" | "/stream/neuro/live";
@@ -51,6 +57,24 @@ function withOperatorHeaders(init?: RequestInit, governance?: GovernanceRequest)
     headers.set("x-immaculate-consent-scope", governance.consentScope);
     if (governance.actor) {
       headers.set("x-immaculate-actor", governance.actor);
+    }
+    if (governance.receiptTarget) {
+      headers.set("x-immaculate-receipt-target", governance.receiptTarget);
+    }
+    if (governance.operatorSummary) {
+      headers.set("x-immaculate-operator-summary", governance.operatorSummary);
+    }
+    if (governance.operatorConfirmed !== undefined) {
+      headers.set("x-immaculate-operator-confirmed", String(governance.operatorConfirmed));
+    }
+    if (governance.rollbackPlan) {
+      headers.set("x-immaculate-rollback-plan", governance.rollbackPlan);
+    }
+    if (governance.sanitizationProof) {
+      headers.set("x-immaculate-sanitization-proof", governance.sanitizationProof);
+    }
+    if (governance.budgetCents !== undefined) {
+      headers.set("x-immaculate-budget-cents", String(governance.budgetCents));
     }
   }
 
@@ -1097,7 +1121,13 @@ export function DashboardClient() {
           purpose: ["benchmark-publication"],
           policyId: "benchmark-publication-default",
           consentScope: "system:benchmark",
-          actor: "dashboard"
+          actor: "dashboard",
+          receiptTarget: "harness:benchmark-publication:dashboard",
+          operatorSummary: "Publish the current benchmark report to W&B from the dashboard.",
+          operatorConfirmed: true,
+          rollbackPlan: "Remove or supersede the external W&B run with a corrected report.",
+          sanitizationProof:
+            "Dashboard publication uses the harness-generated benchmark report without private runtime payloads."
         },
         {
         method: "POST",
@@ -1417,7 +1447,11 @@ export function DashboardClient() {
             snapshot?.neuroSessions[0]?.id
               ? `session:${snapshot.neuroSessions[0].id}`
               : "system:actuation",
-          actor: "dashboard"
+          actor: "dashboard",
+          receiptTarget: "harness:actuation-dispatch:dashboard",
+          operatorSummary: "Dashboard actuation dispatch request.",
+          operatorConfirmed: true,
+          rollbackPlan: "Stop or reset the selected actuation transport and preserve the delivery receipt."
         },
         {
           method: "POST",
