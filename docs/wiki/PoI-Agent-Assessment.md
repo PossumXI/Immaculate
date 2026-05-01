@@ -17,8 +17,8 @@ PoI assessment is not a model claim. It is a harness measurement. Each governed 
 - `GET /api/health` now includes a `poi` summary with latest grade, verdict counts, average score, and degraded agent IDs.
 - `GET /api/topology` now includes `poiAssessmentSummary` beside worker and cluster posture.
 - `GET /api/intelligence` now includes `assessments` and a summarized `poi` block.
-- `GET /api/intelligence/assessments` reads the governed assessment ledger under `cognitive-trace-read` consent and a route-local read throttle.
-- `POST /api/intelligence/assessments/run` manually records a governed PoI assessment under `cognitive-execution` consent and a stricter route-local run throttle.
+- `GET /api/intelligence/assessments` reads the governed assessment ledger under `cognitive-trace-read` consent, the global harness throttle, and a route-local read throttle.
+- `POST /api/intelligence/assessments/run` manually records a governed PoI assessment under `cognitive-execution` consent, the global harness throttle, and a stricter route-local run throttle.
 
 ## Durability
 
@@ -66,6 +66,6 @@ This pass makes the inference lane measurable in the harness itself. Q and futur
 
 - Automatic assessments are recorded after cognitive executions and multi-agent conversations.
 - Manual assessments can be run when an operator wants a fresh point-in-time grade for a layer.
-- Assessment endpoints are governed and rate-limited separately from the public Q API so operator reads cannot become an unbounded ledger-scrape path and manual runs cannot become an unbounded inference-pressure path.
+- The harness now has a global Fastify throttle, and the assessment endpoints keep their own stricter route throttles so operator reads cannot become an unbounded ledger-scrape path and manual runs cannot become an unbounded inference-pressure path.
 - Assessment failures are logged and fail open for the original cognitive execution, because PoI monitoring must not break the user-facing inference response path.
 - Raw private prompts and responses stay governed by the existing projection/redaction layer.
