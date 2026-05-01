@@ -80,6 +80,7 @@ import {
   type LiveNeuroPayload
 } from "./live-neuro.js";
 import { createLslAdapterManager } from "./lsl-adapter.js";
+import { buildPublicIntelligenceStatus } from "./intelligence-status.js";
 import {
   normalizeFederationControlPlaneUrl,
   resolveFederationSecret,
@@ -2462,7 +2463,12 @@ function getQApiRequestContext(request: FastifyRequest): QApiRequestContext | un
 }
 
 app.addHook("onRequest", async (request, reply) => {
-  if (request.method === "OPTIONS" || requestPath(request.raw.url) === "/api/health") {
+  const path = requestPath(request.raw.url);
+  if (
+    request.method === "OPTIONS" ||
+    path === "/api/health" ||
+    path === "/api/intelligence/status"
+  ) {
     return;
   }
 
@@ -5269,6 +5275,39 @@ app.get("/api/intelligence", async () => {
     recommendedLayerId: getPreferredLayer()?.id,
     visibility: "redacted"
   };
+});
+
+app.get("/api/intelligence/status", async () => {
+  const snapshot = phaseSnapshotSchema.parse(projectPhaseSnapshot(engine.getSnapshot()));
+  const { nodeState, workers } = await listIntelligenceWorkerViewsWithOutcomes();
+  const healthyWorkerCount = workers.filter((worker) => worker.healthStatus === "healthy").length;
+  const staleWorkerCount = workers.filter((worker) => worker.healthStatus === "stale").length;
+  const faultedWorkerCount = workers.filter((worker) => worker.healthStatus === "faulted").length;
+  const eligibleWorkerCount = workers.filter((worker) => worker.assignmentEligible).length;
+  const persistenceStatus = persistence.getStatus();
+  return buildPublicIntelligenceStatus({
+    snapshot,
+    workers,
+    workerSummary: {
+      workerCount: workers.length,
+      healthyWorkerCount,
+      staleWorkerCount,
+      faultedWorkerCount,
+      eligibleWorkerCount,
+      blockedWorkerCount: workers.length - eligibleWorkerCount
+    },
+    nodeSummary: nodeState.summary,
+    recommendedLayerId: getPreferredLayer()?.id,
+    governance: governance.getStatus(),
+    persistence: {
+      recoveryMode: persistenceStatus.recoveryMode,
+      persistedEventCount: persistenceStatus.persistedEventCount,
+      integrityStatus: persistenceStatus.integrityStatus,
+      integrityFindingCount: persistenceStatus.integrityFindingCount
+    },
+    poi: poiMonitorStatus(),
+    workGovernor: workGovernor.snapshot()
+  });
 });
 
 app.get(
