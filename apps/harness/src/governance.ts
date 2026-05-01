@@ -1,4 +1,12 @@
 import { hashValue } from "./utils.js";
+import {
+  getGovernedToolAction,
+  listGovernedToolActions,
+  type GovernedToolAction,
+  type ToolRiskClass,
+  type ToolRiskRateLimit,
+  type ToolRiskTier
+} from "./tool-governance.js";
 
 export const governanceActions = [
   "operator-control",
@@ -22,7 +30,7 @@ export const governanceActions = [
 
 export type GovernanceAction = (typeof governanceActions)[number];
 
-export type GovernancePolicy = {
+type GovernancePolicyDefinition = {
   id: string;
   label: string;
   action: GovernanceAction;
@@ -31,12 +39,28 @@ export type GovernancePolicy = {
   description: string;
 };
 
+export type GovernancePolicy = GovernancePolicyDefinition & {
+  riskTier: ToolRiskTier;
+  riskClass: ToolRiskClass;
+  consentRequired: boolean;
+  approvalRequired: boolean;
+  humanApprovalRequired: boolean;
+  minimumConfidence: number;
+  failureHoldThreshold: number;
+  rateLimit: ToolRiskRateLimit;
+};
+
 export type GovernanceDecision = {
   id: string;
   timestamp: string;
   allowed: boolean;
   mode: "enforced";
   action: GovernanceAction;
+  riskTier?: ToolRiskTier;
+  riskClass?: ToolRiskClass;
+  consentRequired?: boolean;
+  approvalRequired?: boolean;
+  humanApprovalRequired?: boolean;
   route: string;
   policyId: string;
   purpose: string[];
@@ -48,6 +72,7 @@ export type GovernanceDecision = {
 export type GovernanceStatus = {
   mode: "enforced";
   policyCount: number;
+  governedActionCount?: number;
   decisionCount: number;
   deniedCount: number;
   lastDecisionAt?: string;
@@ -65,7 +90,7 @@ export type GovernanceBinding = {
 
 const GOVERNANCE_HISTORY_LIMIT = 128;
 
-const policies: GovernancePolicy[] = [
+const policies: GovernancePolicyDefinition[] = [
   {
     id: "operator-control-default",
     label: "Operator Control",
@@ -223,7 +248,24 @@ function normalizePurpose(purpose?: string[]): string[] {
   );
 }
 
-function getPolicy(action: GovernanceAction, policyId?: string): GovernancePolicy | null {
+function enrichPolicy(policy: GovernancePolicyDefinition): GovernancePolicy {
+  const toolAction = getGovernedToolAction(policy.action);
+  return {
+    ...policy,
+    allowedPurposes: [...policy.allowedPurposes],
+    requiredConsentPrefixes: [...policy.requiredConsentPrefixes],
+    riskTier: toolAction.riskTier,
+    riskClass: toolAction.riskClass,
+    consentRequired: toolAction.consentRequired,
+    approvalRequired: toolAction.approvalRequired,
+    humanApprovalRequired: toolAction.humanApprovalRequired,
+    minimumConfidence: toolAction.minimumConfidence,
+    failureHoldThreshold: toolAction.failureHoldThreshold,
+    rateLimit: { ...toolAction.rateLimit }
+  };
+}
+
+function getPolicy(action: GovernanceAction, policyId?: string): GovernancePolicyDefinition | null {
   if (policyId) {
     return (
       policies.find((policy) => policy.id === policyId && policy.action === action) ?? null
@@ -233,7 +275,7 @@ function getPolicy(action: GovernanceAction, policyId?: string): GovernancePolic
   return policies.find((policy) => policy.action === action) ?? null;
 }
 
-function consentAllowed(policy: GovernancePolicy, consentScope?: string): boolean {
+function consentAllowed(policy: GovernancePolicyDefinition, consentScope?: string): boolean {
   if (!consentScope) {
     return false;
   }
@@ -241,23 +283,29 @@ function consentAllowed(policy: GovernancePolicy, consentScope?: string): boolea
   return policy.requiredConsentPrefixes.some((prefix) => consentScope.startsWith(prefix));
 }
 
-function purposeAllowed(policy: GovernancePolicy, purpose: string[]): boolean {
+function purposeAllowed(policy: GovernancePolicyDefinition, purpose: string[]): boolean {
   return purpose.some((entry) => policy.allowedPurposes.includes(entry));
 }
 
 function buildDecision(
   allowed: boolean,
   binding: GovernanceBinding,
-  policy: GovernancePolicy | null,
+  policy: GovernancePolicyDefinition | null,
   reason: string
 ): GovernanceDecision {
   const timestamp = new Date().toISOString();
+  const toolAction = getGovernedToolAction(binding.action);
   return {
     id: `gov-${hashValue(`${binding.route}:${binding.actor}:${timestamp}:${reason}`)}`,
     timestamp,
     allowed,
     mode: "enforced",
     action: binding.action,
+    riskTier: toolAction.riskTier,
+    riskClass: toolAction.riskClass,
+    consentRequired: toolAction.consentRequired,
+    approvalRequired: toolAction.approvalRequired,
+    humanApprovalRequired: toolAction.humanApprovalRequired,
     route: binding.route,
     policyId: policy?.id ?? binding.policyId ?? "unresolved",
     purpose: normalizePurpose(binding.purpose),
@@ -314,7 +362,10 @@ export function createGovernanceRegistry() {
       return record(buildDecision(allowed, binding, getPolicy(binding.action, binding.policyId), reason));
     },
     listPolicies(): GovernancePolicy[] {
-      return policies.map((policy) => ({ ...policy, allowedPurposes: [...policy.allowedPurposes], requiredConsentPrefixes: [...policy.requiredConsentPrefixes] }));
+      return policies.map((policy) => enrichPolicy(policy));
+    },
+    listGovernedActions(): GovernedToolAction[] {
+      return listGovernedToolActions();
     },
     listDecisions(): GovernanceDecision[] {
       return decisions.map((decision) => ({ ...decision, purpose: [...decision.purpose] }));
@@ -323,6 +374,7 @@ export function createGovernanceRegistry() {
       return {
         mode: "enforced",
         policyCount: policies.length,
+        governedActionCount: governanceActions.length,
         decisionCount: decisions.length,
         deniedCount: decisions.filter((decision) => !decision.allowed).length,
         lastDecisionAt: decisions[0]?.timestamp,

@@ -111,6 +111,7 @@ import {
   type QApiRateLimitPolicy
 } from "./q-api-auth.js";
 import { createQRateLimiter } from "./q-rate-limit.js";
+import { evaluateToolRiskAdmission } from "./tool-governance.js";
 import {
   foundationModelLabel,
   getImmaculateHarnessName,
@@ -4575,6 +4576,52 @@ app.get("/api/governance/policies", {
 }, async () => ({
   policies: governance.listPolicies()
 }));
+
+app.get("/api/governance/tool-actions", {
+  preHandler: app.rateLimit({
+    max: HARNESS_READ_RATE_LIMIT_MAX,
+    timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: HARNESS_READ_RATE_LIMIT_MAX,
+      timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async () => ({
+  actions: governance.listGovernedActions()
+}));
+
+app.post("/api/governance/tool-actions/admission", {
+  preHandler: app.rateLimit({
+    max: HARNESS_READ_RATE_LIMIT_MAX,
+    timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: HARNESS_READ_RATE_LIMIT_MAX,
+      timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async (request) => {
+  const body =
+    (request.body as {
+      action?: string;
+      consentScope?: string;
+      approvalRef?: string;
+      confidence?: number;
+      recentFailureCount?: number;
+    } | undefined) ?? {};
+  return {
+    admission: evaluateToolRiskAdmission({
+      action: body.action?.trim() ?? "",
+      consentScope: body.consentScope,
+      approvalRef: body.approvalRef,
+      confidence: body.confidence,
+      recentFailureCount: body.recentFailureCount
+    })
+  };
+});
 
 app.get("/api/governance/decisions", {
   preHandler: app.rateLimit({
