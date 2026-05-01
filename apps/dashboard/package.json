@@ -7,6 +7,7 @@
     "dev": "next dev",
     "build": "next build && node ./scripts/materialize-static-out.mjs",
     "start": "next start",
+    "test": "node --import tsx --test app/**/*.test.ts",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
