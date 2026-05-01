@@ -43,6 +43,10 @@ import {
   isParallelScheduleMode
 } from "./scheduling.js";
 import {
+  buildCognitiveRolePlanAdmission,
+  cognitiveRolePlanContract
+} from "./cognitive-role-plan.js";
+import {
   buildAgentTurn,
   buildConversationObjective,
   buildConversationRecord,
@@ -4654,6 +4658,34 @@ app.post("/api/goals/admission", {
     }
   }
 }, async (request) => buildGovernedGoalAdmission(request.body));
+
+app.get("/api/cognitive-runtime/role-plan/schema", {
+  preHandler: app.rateLimit({
+    max: HARNESS_READ_RATE_LIMIT_MAX,
+    timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: HARNESS_READ_RATE_LIMIT_MAX,
+      timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async () => ({
+  rolePlan: cognitiveRolePlanContract
+}));
+
+app.post("/api/cognitive-runtime/role-plan/admission", {
+  preHandler: app.rateLimit({
+    max: HARNESS_READ_RATE_LIMIT_MAX,
+    timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: HARNESS_READ_RATE_LIMIT_MAX,
+      timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async (request) => buildCognitiveRolePlanAdmission(request.body ?? {}));
 
 app.get("/api/governance/decisions", {
   preHandler: app.rateLimit({
