@@ -19,6 +19,34 @@ For each breakthrough, record:
 
 ## Current Entries
 
+### 2026-05-01
+
+#### PoI became a durable agent intelligence monitor
+
+What changed:
+- Immaculate now stores `agentIntelligenceAssessments` in the core `PhaseSnapshot`
+- the core event spine emits `immaculate.agent-intelligence-assessment.recorded` and replay can rebuild those records
+- the harness now scores Q and future agents on the `poi-v1` baseline after cognitive executions and multi-agent conversations
+- the harness exposes governed PoI reads and manual runs through `/api/intelligence/assessments` and `/api/intelligence/assessments/run`
+- health and topology now surface a compact `poi` posture, so operators can see agent grades, verdict counts, average score, and degraded agent IDs without reading raw traces
+
+Why it matters:
+- the missed pattern was that Immaculate already had the raw material for agent intelligence monitoring, but it was spread across execution traces, schedules, guard verdicts, worker records, benchmark pages, and neuro state
+- turning those signals into one durable scorecard makes Q and every later agent comparable on the same baseline instead of relying on scattered logs or subjective claims
+- PoI now measures the live inference path itself, including contract coverage, governance posture, runtime health, routing admission, benchmark signal, and connectome signal quality
+
+Evidence:
+- `packages/core/src/index.ts` adds the assessment contract, schema, event replay handling, and a visible `poi-assessor` node in the connectome graph
+- `apps/harness/src/agent-intelligence-assessment.ts` implements the pure `poi-v1` scorecard and summary logic
+- `apps/harness/src/server.ts` writes linked Arobi decision-trace records with source `agent-intelligence-assessment` and records assessments after executions and conversations
+- `apps/harness/src/agent-intelligence-assessment.test.ts` covers healthy inference grading, failed contract drift flags, and summary posture
+- `docs/wiki/PoI-Agent-Assessment.md` documents the scoring baseline, governed routes, durability model, and operator behavior
+
+What this unlocks next:
+- Q can now be continuously graded during normal inference rather than only in scheduled benchmark passes
+- external agents and framework integrations can enter the same Immaculate/Arobi network baseline before they receive wider authority
+- future W&B, BridgeBench, Terminal-Bench, and Arobi ledger reports can ingest the same assessment records instead of each inventing a separate score format
+
 ### 2026-04-20
 
 #### Roundtable runtime is now cold-start reproducible

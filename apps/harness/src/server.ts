@@ -6,6 +6,10 @@ import Fastify, { type FastifyReply, type FastifyRequest } from "fastify";
 import cors from "@fastify/cors";
 import websocket from "@fastify/websocket";
 import {
+  agentIntelligenceAssessmentSchema,
+  agentIntelligenceAssessmentTriggers,
+  type AgentIntelligenceAssessment,
+  type AgentIntelligenceAssessmentTrigger,
   type ActuationOutput,
   controlEnvelopeSchema,
   createEngine,
@@ -21,6 +25,10 @@ import {
   type IntelligenceLayer,
   type RoutingDecision
 } from "@immaculate/core";
+import {
+  assessAgentIntelligence,
+  summarizeAgentIntelligenceAssessments
+} from "./agent-intelligence-assessment.js";
 import { verifyDashboardSocketTicketFromUrl } from "./dashboard-socket-ticket.js";
 import { createActuationManager } from "./actuation.js";
 import {
@@ -3188,6 +3196,148 @@ function recentGovernanceDeniedCount(): number {
     .filter((decision) => !decision.allowed && Date.parse(decision.timestamp) >= windowStart).length;
 }
 
+function parseAssessmentTrigger(value: unknown): AgentIntelligenceAssessmentTrigger {
+  if (
+    typeof value === "string" &&
+    agentIntelligenceAssessmentTriggers.includes(value as AgentIntelligenceAssessmentTrigger)
+  ) {
+    return value as AgentIntelligenceAssessmentTrigger;
+  }
+  return "manual";
+}
+
+function poiMonitorStatus() {
+  return summarizeAgentIntelligenceAssessments(engine.getSnapshot().agentIntelligenceAssessments);
+}
+
+async function recordAgentIntelligenceAssessment(options: {
+  trigger: AgentIntelligenceAssessmentTrigger;
+  targetLayerId?: string;
+  consentScope?: string;
+}): Promise<{
+  assessment: AgentIntelligenceAssessment;
+  snapshot: ReturnType<typeof engine.getSnapshot>;
+}> {
+  const snapshot = phaseSnapshotSchema.parse(engine.getSnapshot());
+  const provisionalAssessment = assessAgentIntelligence({
+    snapshot,
+    events: engine.getEvents(),
+    trigger: options.trigger,
+    targetLayerId: options.targetLayerId
+  });
+  const governancePressure = deriveGovernancePressure(
+    options.consentScope ?? "system:intelligence:poi",
+    governance.getStatus(),
+    governance.listDecisions()
+  );
+  const materialized = await appendDecisionTraceRecord({
+    rootDir: persistence.getStatus().rootDir,
+    record: {
+      decisionTraceId: createDecisionTraceSeed({
+        source: "agent-intelligence-assessment",
+        sessionId: provisionalAssessment.subjectAgentId,
+        executionId: provisionalAssessment.id,
+        objective: provisionalAssessment.summary,
+        promptDigest: provisionalAssessment.evidenceDigest
+      }),
+      source: "agent-intelligence-assessment",
+      executionId: provisionalAssessment.id,
+      release: {
+        buildId: releaseMetadata.buildId,
+        gitShortSha: releaseMetadata.gitShortSha,
+        modelName: getQModelName(),
+        foundationModel: getQFoundationModelName(),
+        trainingBundleId: releaseMetadata.q.trainingLock?.bundleId
+      },
+      policy: {
+        consentScope: options.consentScope ?? "system:intelligence:poi",
+        governancePressure,
+        selectedLayerId: provisionalAssessment.subjectLayerId,
+        failureClass:
+          provisionalAssessment.verdict === "fail"
+            ? provisionalAssessment.driftFlags[0] ?? "poi_assessment_failed"
+            : undefined
+      },
+      evidence: {
+        sourceIds: provisionalAssessment.evidenceIds,
+        evidenceDigest: provisionalAssessment.evidenceDigest
+      },
+      decisionSummary: {
+        routeSuggestion: provisionalAssessment.trigger,
+        reasonSummary: provisionalAssessment.summary,
+        commitStatement: `Maintain ${provisionalAssessment.baselineVersion} baseline for ${provisionalAssessment.subjectAgentId}.`,
+        responsePreview: provisionalAssessment.summary
+      },
+      selfEvaluation: {
+        status: provisionalAssessment.verdict,
+        driftDetected: provisionalAssessment.driftFlags.length > 0,
+        driftReasonCodes: provisionalAssessment.driftFlags
+      }
+    }
+  });
+  const assessment: AgentIntelligenceAssessment = {
+    ...provisionalAssessment,
+    ledgerEventHash: materialized.ledger.eventHash
+  };
+  const nextSnapshot = phaseSnapshotSchema.parse(
+    projectPhaseSnapshot(
+      engine.recordAgentIntelligenceAssessment(
+        agentIntelligenceAssessmentSchema.parse(assessment) as AgentIntelligenceAssessment
+      ),
+      options.consentScope ?? "system:intelligence:poi"
+    )
+  );
+  await persistence.persist(engine.getDurableState());
+  emitSnapshot();
+  return {
+    assessment,
+    snapshot: nextSnapshot
+  };
+}
+
+async function recordAgentIntelligenceAssessmentAfterExecution(
+  execution: ReturnType<typeof engine.getSnapshot>["cognitiveExecutions"][number],
+  consentScope?: string
+): Promise<void> {
+  try {
+    await recordAgentIntelligenceAssessment({
+      trigger: "cognitive-execution",
+      targetLayerId: execution.layerId,
+      consentScope
+    });
+  } catch (error) {
+    app.log.warn(
+      {
+        layerId: execution.layerId,
+        executionId: execution.id,
+        error: error instanceof Error ? error.message : "unknown"
+      },
+      "Unable to record PoI assessment for cognitive execution."
+    );
+  }
+}
+
+async function recordAgentIntelligenceAssessmentAfterConversation(
+  conversation: ReturnType<typeof engine.getSnapshot>["conversations"][number],
+  consentScope?: string
+): Promise<void> {
+  try {
+    await recordAgentIntelligenceAssessment({
+      trigger: "conversation",
+      targetLayerId: conversation.turns.at(-1)?.layerId,
+      consentScope
+    });
+  } catch (error) {
+    app.log.warn(
+      {
+        conversationId: conversation.id,
+        error: error instanceof Error ? error.message : "unknown"
+      },
+      "Unable to record PoI assessment for multi-agent conversation."
+    );
+  }
+}
+
 function clampActuationIntensity(value: number | undefined, fallback: number): number {
   const candidate = Number.isFinite(value) ? Number(value) : fallback;
   return Math.min(1, Math.max(0, candidate));
@@ -3284,7 +3434,7 @@ async function executeCognitivePass(options: {
     };
 
     engine.registerIntelligenceLayer(settledLayer);
-    const snapshot = phaseSnapshotSchema.parse(
+    let snapshot = phaseSnapshotSchema.parse(
       projectPhaseSnapshot(engine.commitCognitiveExecution(tracedExecution))
     );
     await persistence.persist(engine.getDurableState());
@@ -3292,6 +3442,10 @@ async function executeCognitivePass(options: {
     await recordFederatedExecutionOutcome({
       execution: tracedExecution
     });
+    await recordAgentIntelligenceAssessmentAfterExecution(tracedExecution, options.consentScope);
+    snapshot = phaseSnapshotSchema.parse(
+      projectPhaseSnapshot(engine.getSnapshot(), options.consentScope)
+    );
 
     return {
       layer: settledLayer,
@@ -3363,7 +3517,7 @@ async function executeCognitivePass(options: {
       status: "degraded"
     };
     engine.registerIntelligenceLayer(failedLayer);
-    const snapshot = phaseSnapshotSchema.parse(
+    let snapshot = phaseSnapshotSchema.parse(
       projectPhaseSnapshot(engine.commitCognitiveExecution(tracedExecution))
     );
     await persistence.persist(engine.getDurableState());
@@ -3371,6 +3525,10 @@ async function executeCognitivePass(options: {
     await recordFederatedExecutionOutcome({
       execution: tracedExecution
     });
+    await recordAgentIntelligenceAssessmentAfterExecution(tracedExecution, options.consentScope);
+    snapshot = phaseSnapshotSchema.parse(
+      projectPhaseSnapshot(engine.getSnapshot(), options.consentScope)
+    );
     return {
       layer: failedLayer,
       execution: tracedExecution,
@@ -3466,7 +3624,7 @@ async function executeScheduledCognitivePass(options: {
     };
 
     engine.registerIntelligenceLayer(settledLayer);
-    const snapshot = phaseSnapshotSchema.parse(
+    let snapshot = phaseSnapshotSchema.parse(
       projectPhaseSnapshot(engine.commitCognitiveExecution(tracedExecution))
     );
     await persistence.persist(engine.getDurableState());
@@ -3474,6 +3632,10 @@ async function executeScheduledCognitivePass(options: {
     await recordFederatedExecutionOutcome({
       execution: tracedExecution
     });
+    await recordAgentIntelligenceAssessmentAfterExecution(tracedExecution, options.consentScope);
+    snapshot = phaseSnapshotSchema.parse(
+      projectPhaseSnapshot(engine.getSnapshot(), options.consentScope)
+    );
 
     return {
       layer: settledLayer,
@@ -3538,7 +3700,7 @@ async function executeScheduledCognitivePass(options: {
     };
 
     engine.registerIntelligenceLayer(settledLayer);
-    const snapshot = phaseSnapshotSchema.parse(
+    let snapshot = phaseSnapshotSchema.parse(
       projectPhaseSnapshot(engine.commitCognitiveExecution(tracedExecution))
     );
     await persistence.persist(engine.getDurableState());
@@ -3546,6 +3708,10 @@ async function executeScheduledCognitivePass(options: {
     await recordFederatedExecutionOutcome({
       execution: tracedExecution
     });
+    await recordAgentIntelligenceAssessmentAfterExecution(tracedExecution, options.consentScope);
+    snapshot = phaseSnapshotSchema.parse(
+      projectPhaseSnapshot(engine.getSnapshot(), options.consentScope)
+    );
 
     return {
       layer: settledLayer,
@@ -4016,6 +4182,13 @@ async function executeCognitiveSchedule(options: {
       );
       await persistence.persist(engine.getDurableState());
       emitSnapshot();
+      await recordAgentIntelligenceAssessmentAfterConversation(
+        conversation,
+        options.consentScope
+      );
+      latestSnapshot = phaseSnapshotSchema.parse(
+        projectPhaseSnapshot(engine.getSnapshot(), options.consentScope)
+      );
     }
   } finally {
     governorGrant?.release();
@@ -4199,6 +4372,7 @@ app.get("/api/health", async () => ({
   integrityFindingCount: persistence.getStatus().integrityFindingCount,
   governanceMode: governance.getStatus().mode,
   governanceDeniedCount: governance.getStatus().deniedCount,
+  poi: poiMonitorStatus(),
   workGovernor: workGovernor.snapshot()
 }));
 
@@ -4664,11 +4838,95 @@ app.get("/api/intelligence", async () => {
   return {
     layers: snapshot.intelligenceLayers,
     executions: snapshot.cognitiveExecutions,
+    assessments: snapshot.agentIntelligenceAssessments,
+    poi: summarizeAgentIntelligenceAssessments(snapshot.agentIntelligenceAssessments),
     conversations: snapshot.conversations,
     schedules: snapshot.executionSchedules,
     recommendedLayerId: getPreferredLayer()?.id,
     visibility: "redacted"
   };
+});
+
+app.get("/api/intelligence/assessments", async (request, reply) => {
+  if (
+    !authorizeGovernedAction(
+      "cognitive-trace-read",
+      "/api/intelligence/assessments",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  const consentScope = getGovernanceBinding(
+    "cognitive-trace-read",
+    "/api/intelligence/assessments",
+    request
+  ).consentScope;
+  const snapshot = phaseSnapshotSchema.parse(
+    projectPhaseSnapshot(engine.getSnapshot(), consentScope)
+  );
+  return {
+    assessments: snapshot.agentIntelligenceAssessments.map((assessment) =>
+      agentIntelligenceAssessmentSchema.parse(assessment)
+    ),
+    poi: summarizeAgentIntelligenceAssessments(snapshot.agentIntelligenceAssessments),
+    visibility: deriveVisibilityScope(consentScope)
+  };
+});
+
+app.post("/api/intelligence/assessments/run", async (request, reply) => {
+  if (
+    !authorizeGovernedAction(
+      "cognitive-execution",
+      "/api/intelligence/assessments/run",
+      request,
+      reply
+    )
+  ) {
+    return;
+  }
+
+  const body =
+    (request.body as {
+      layerId?: string;
+      trigger?: string;
+    } | undefined) ?? {};
+  const consentScope = getGovernanceBinding(
+    "cognitive-execution",
+    "/api/intelligence/assessments/run",
+    request
+  ).consentScope;
+  const trigger = parseAssessmentTrigger(body.trigger);
+  const layerId = body.layerId?.trim();
+  if (layerId && !engine.getSnapshot().intelligenceLayers.some((layer) => layer.id === layerId)) {
+    reply.code(404);
+    return {
+      error: "intelligence_layer_not_found",
+      layerId
+    };
+  }
+
+  try {
+    const result = await recordAgentIntelligenceAssessment({
+      trigger,
+      targetLayerId: layerId || undefined,
+      consentScope
+    });
+    return {
+      accepted: true,
+      assessment: agentIntelligenceAssessmentSchema.parse(result.assessment),
+      poi: poiMonitorStatus(),
+      snapshot: result.snapshot
+    };
+  } catch (error) {
+    reply.code(503);
+    return {
+      error: "poi_assessment_failed",
+      message: error instanceof Error ? error.message : "Unable to record PoI assessment."
+    };
+  }
 });
 
 app.get("/api/q/info", async () => {
@@ -6837,6 +7095,13 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
     );
     await persistence.persist(engine.getDurableState());
     emitSnapshot();
+    await recordAgentIntelligenceAssessmentAfterConversation(
+      mediationConversation,
+      consentScope
+    );
+    cognitionSnapshot = phaseSnapshotSchema.parse(
+      projectPhaseSnapshot(engine.getSnapshot(), consentScope)
+    );
   }
 
   if (tracedScheduleDecision.shouldRunCognition) {
@@ -7305,6 +7570,9 @@ app.get("/api/topology", async () => {
     lastEventId: snapshot.lastEventId,
     clusterNodes: nodeState.summary.nodeCount,
     clusterSummary: nodeState.summary,
+    poiAssessmentSummary: summarizeAgentIntelligenceAssessments(
+      snapshot.agentIntelligenceAssessments
+    ),
     workerPlane: {
       workerCount: workers.length,
       healthyWorkerCount: workers.filter((worker) => worker.healthStatus === "healthy").length,

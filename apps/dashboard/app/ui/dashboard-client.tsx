@@ -2,6 +2,7 @@
 
 import { startTransition, useDeferredValue, useEffect, useEffectEvent, useState } from "react";
 import {
+  type AgentIntelligenceAssessment,
   type ActuationOutput,
   type CognitiveExecution,
   type NeuroFrameWindow,
@@ -353,6 +354,19 @@ type TopologyState = {
   planes: string[];
   cycle: number;
   lastEventId?: string;
+  poiAssessmentSummary?: PoIAssessmentSummary;
+};
+
+type PoIAssessmentSummary = {
+  baselineVersion: "poi-v1";
+  assessmentCount: number;
+  latest?: AgentIntelligenceAssessment;
+  averageScore: number;
+  passCount: number;
+  watchCount: number;
+  failCount: number;
+  degradedAgentIds: string[];
+  updatedAt?: string;
 };
 
 type IntegrityState = {
@@ -710,7 +724,7 @@ export function DashboardClient() {
           harnessFetch(`${harnessBaseUrl}/api/intelligence/ollama/models`, { cache: "no-store" })
         ]);
 
-        const topologyPayload = (await topologyResponse.json()) as { profile: string; objective: string; nodes: number; edges: number; planes: string[]; cycle: number; lastEventId?: string };
+        const topologyPayload = (await topologyResponse.json()) as TopologyState;
         const integrityPayload = (await integrityResponse.json()) as { integrity: IntegrityState };
         const checkpointsPayload = (await checkpointsResponse.json()) as { checkpoints: CheckpointState[] };
         const governancePayload = (await governanceResponse.json()) as { governance: GovernanceStatus };
@@ -1367,6 +1381,29 @@ export function DashboardClient() {
       : ((snapshot?.cognitiveExecutions ?? []) as CognitiveExecutionTrace[]);
   const visibleActuationOutputs =
     actuationDetails.length > 0 ? actuationDetails : (snapshot?.actuationOutputs ?? []);
+  const visiblePoIAssessments = snapshot?.agentIntelligenceAssessments ?? [];
+  const latestPoIAssessment =
+    topology?.poiAssessmentSummary?.latest ?? visiblePoIAssessments[0] ?? null;
+  const poiSummary =
+    topology?.poiAssessmentSummary ??
+    (visiblePoIAssessments.length > 0
+      ? {
+          baselineVersion: "poi-v1" as const,
+          assessmentCount: visiblePoIAssessments.length,
+          latest: visiblePoIAssessments[0],
+          averageScore:
+            visiblePoIAssessments.reduce((sum, assessment) => sum + assessment.overallScore, 0) /
+            visiblePoIAssessments.length,
+          passCount: visiblePoIAssessments.filter((assessment) => assessment.verdict === "pass").length,
+          watchCount: visiblePoIAssessments.filter((assessment) => assessment.verdict === "watch").length,
+          failCount: visiblePoIAssessments.filter((assessment) => assessment.verdict === "fail").length,
+          degradedAgentIds: visiblePoIAssessments
+            .filter((assessment) => assessment.verdict !== "pass")
+            .map((assessment) => assessment.subjectAgentId)
+            .filter((value, index, all) => all.indexOf(value) === index),
+          updatedAt: visiblePoIAssessments[0]?.assessedAt
+        }
+      : null);
   const latestConversation = (deferredSnapshot as SnapshotWithConversations | null)?.conversations?.[0];
 
   const dispatchActuation = useEffectEvent(async () => {
@@ -1463,6 +1500,15 @@ export function DashboardClient() {
           label="Intelligence layers"
           value={snapshot ? String(snapshot.intelligenceLayers.length) : "--"}
           accent="#c7a6ff"
+        />
+        <MetricCard
+          label="PoI grade"
+          value={
+            latestPoIAssessment
+              ? `${latestPoIAssessment.grade} / ${latestPoIAssessment.verdict} / ${formatPercent(latestPoIAssessment.overallScore)}`
+              : "--"
+          }
+          accent="#50e3a4"
         />
         <MetricCard
           label="Last cognition"
@@ -2015,6 +2061,42 @@ export function DashboardClient() {
                   <span>{execution.responsePreview}</span>
                 </div>
               )) ?? <div className="log-line">No cognitive executions committed yet.</div>}
+            </div>
+          </div>
+
+          <div className="panel benchmark-subpanel">
+            <div className="panel-header">
+              <div>
+                <p className="eyebrow">Proof of Intelligence</p>
+                <h2>Agent assessment baseline</h2>
+              </div>
+              <span>
+                {poiSummary
+                  ? `${poiSummary.assessmentCount} assessments / ${poiSummary.failCount} fail`
+                  : "waiting"}
+              </span>
+            </div>
+            <div className="data-table">
+              <div className="data-row head">
+                <span>Agent</span>
+                <span>Grade</span>
+                <span>Verdict</span>
+                <span>Score</span>
+                <span>Drift</span>
+              </div>
+              {visiblePoIAssessments.length > 0 ? (
+                visiblePoIAssessments.slice(0, 6).map((assessment) => (
+                  <div className="data-row" key={assessment.id}>
+                    <span>{assessment.subjectAgentId}</span>
+                    <span>{assessment.grade}</span>
+                    <span>{assessment.verdict}</span>
+                    <span>{formatPercent(assessment.overallScore)}</span>
+                    <span>{assessment.driftFlags.join(", ") || "none"}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="log-line">No PoI assessments recorded yet.</div>
+              )}
             </div>
           </div>
         </div>

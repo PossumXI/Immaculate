@@ -32,6 +32,7 @@ This repository is prepared for public collaboration under the Apache 2.0 licens
 - exposes a realtime harness, a terminal UI, and a dashboard
 - ingests BIDS and NWB neurodata and replays it through the orchestration spine
 - serves `Q` through a bounded API gateway with API keys, rate limits, and concurrency limits
+- grades `Q` and future agents through a durable PoI assessment loop after governed inference and conversation runs
 - publishes measured benchmark outputs to W&B and commits exported result summaries back into git
 
 ## Current Build And Evidence
@@ -67,6 +68,7 @@ This repository is prepared for public collaboration under the Apache 2.0 licens
 - Q gateway substrate seam benchmark: [docs/wiki/Q-Gateway-Substrate.md](docs/wiki/Q-Gateway-Substrate.md)
 - Q mediation drift benchmark: [docs/wiki/Q-Mediation-Drift.md](docs/wiki/Q-Mediation-Drift.md)
 - Q API audit feedback loop: [docs/wiki/Q-API-Audit.md](docs/wiki/Q-API-Audit.md)
+- durable PoI agent assessment loop: [docs/wiki/PoI-Agent-Assessment.md](docs/wiki/PoI-Agent-Assessment.md)
 - Arobi decision review: [docs/wiki/Arobi-Decision-Review.md](docs/wiki/Arobi-Decision-Review.md)
 - roundtable actionability planner: [docs/wiki/Roundtable-Actionability.md](docs/wiki/Roundtable-Actionability.md)
 - roundtable runtime benchmark: [docs/wiki/Roundtable-Runtime.md](docs/wiki/Roundtable-Runtime.md)
@@ -87,6 +89,7 @@ Latest plain-English readout:
 - the same loop now also has a public-safe aggregate handoff page: [docs/wiki/Live-Operator-Public-Export.md](docs/wiki/Live-Operator-Public-Export.md) mirrors the aura-genesis `fabric.showcase` contract so public surfaces can reuse one sanctioned operator export while the publication gate still fails closed on `ledger.public`
 - the roundtable planner is now both actionable and cold-start runtime-proven instead of cosmetic: [docs/wiki/Roundtable-Actionability.md](docs/wiki/Roundtable-Actionability.md) records `3` repo-scoped isolated actions across Immaculate, OpenJaws, and Asgard with explicit agent-branch-only authority plus a real bundle command, and the live [docs/wiki/Roundtable-Runtime.md](docs/wiki/Roundtable-Runtime.md) benchmark now self-starts a dedicated local `Q` lane on `11435` while the normal local `Q` lane stays on `11434`, stays green on `3` real scenarios with `0` failed assertions, and proves `3` repo probes, `3` authority-bound lanes, `3` governed execution bundles, `3` repo audit receipts, `3` bounded execution receipts, and a verified per-run decision-trace ledger across the same repo lanes
 - the OpenJaws sidecar runtime check stayed green after a real coherence hardening pass on the agent branch: the live `runtime:coherence` report now refuses to treat the Discord/Q runtime as fully healthy when the voice plane is enabled but not actually ready
+- PoI is now a first-class Immaculate monitor: [docs/wiki/PoI-Agent-Assessment.md](docs/wiki/PoI-Agent-Assessment.md) documents the `poi-v1` scorecard, durable event schema, governed routes, and automatic grading after Q/inference executions and conversations
 - the architecture split is now explicit in one stable public explainer: [docs/wiki/Arobi-Network-Architecture.md](docs/wiki/Arobi-Network-Architecture.md) states the product model as `Arobi Network = ledger/audit substrate`, `Immaculate = harness/orchestrator`, and `Q = brain`
 - the latest tracked W&B export is current on `2026-04-20` through [docs/wiki/Benchmark-Status.md](docs/wiki/Benchmark-Status.md) and [docs/wiki/Benchmark-Wandb-Export.md](docs/wiki/Benchmark-Wandb-Export.md); the separate [docs/wiki/Q-Benchmark-Sweep-60m.md](docs/wiki/Q-Benchmark-Sweep-60m.md) page remains the historical hour-class soak lane
 - the current Q bundle, hybrid session, benchmark corpus, and paired Immaculate orchestration bundle are machine-stamped on [docs/wiki/Release-Surface.md](docs/wiki/Release-Surface.md); the active tracked Q bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`
@@ -483,6 +486,7 @@ Benchmark packs currently include:
 - session-bound actuation dispatch and mediated orchestration now fail closed on ambiguous or cross-session source resolution instead of silently falling back to the newest global frame or execution
 - benchmark publication now includes Tier 1 cognitive-loop closure coverage for parsed model structure, governance-aware cognition, routing soft priors, and multi-role conversation verdicts
 - benchmark history can now be queried through a real `/api/benchmarks/trend` surface that analyzes published run order, flags drift, and stays explicit about what metric it is trending
+- PoI agent assessment now joins execution traces, contract coverage, governance pressure, routing admission, runtime health, benchmark signal, and neuro/connectome quality into one replayable grade
 - dashboard and TUI now expose the latest routing decision so operators can see why the system chose a lane instead of inferring it from side effects
 - dashboard and TUI websocket reconnection with backoff
 - operator-facing dashboard surfaces for the previously hidden backend control plane
@@ -539,6 +543,7 @@ The harness now exposes a deliberate operator/automation surface. These routes a
 - `POST /api/devices/lsl/connect`
 - `POST /api/devices/lsl/:sourceId/stop`
 - `GET /api/intelligence`
+- `GET /api/intelligence/assessments`
 - `GET /api/intelligence/executions`
 - `GET /api/intelligence/workers`
 - `GET /api/intelligence/arbitrations`
@@ -563,6 +568,7 @@ The harness now exposes a deliberate operator/automation surface. These routes a
 - `POST /api/federation/peers/:peerId/refresh`
 - `POST /api/federation/peers/:peerId/lease-renew`
 - `POST /api/intelligence/q/register`
+- `POST /api/intelligence/assessments/run`
 - `POST /api/intelligence/workers/register`
 - `POST /api/intelligence/workers/:workerId/heartbeat`
 - `POST /api/intelligence/workers/:workerId/unregister`
@@ -586,6 +592,7 @@ Sensitive read surfaces now split into two modes:
 - default operator feeds such as `/api/snapshot`, `/stream`, `/api/datasets`, and `/api/neuro/sessions` return redacted filesystem/source details
 - governed detail reads such as `/api/datasets/:datasetId`, `/api/neuro/sessions/:sessionId`, `/api/events`, and `/api/replay` require explicit read-purpose metadata
 - governed derived reads such as `/api/neuro/frames`, `/api/intelligence/executions`, `/api/actuation/outputs`, and `/api/actuation/deliveries` apply field-level consent: benchmark scope gets bounded projections, while session/intelligence/actuation scope restores full derived detail
+- `GET /api/intelligence/assessments` exposes the durable PoI assessment ledger under `cognitive-trace-read`; `POST /api/intelligence/assessments/run` records a manual PoI grade under `cognitive-execution`
 - mediated orchestration at `POST /api/orchestration/mediate` is the first pass that explicitly chooses whether the system should act reflex-locally, escalate into cognition, hold under guard review, or suppress the outward action entirely
 - `POST /api/orchestration/mediate` now supports `dispatchOnApproval` so review-only passes can stop at the plan while approval-gated passes can close the loop into a single dispatch call
 - review-only mediated passes now emit a durable routing decision as well as a transient route plan, so held actions still leave replayable route lineage
