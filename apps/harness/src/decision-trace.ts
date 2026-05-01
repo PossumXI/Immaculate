@@ -9,6 +9,7 @@ type DecisionTraceSource =
   | "cognitive-execution"
   | "conversation"
   | "benchmark"
+  | "agent-intelligence-assessment"
   | "orchestration-arbitration"
   | "orchestration-schedule"
   | "roundtable-runtime";

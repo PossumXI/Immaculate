@@ -92,10 +92,12 @@
     "audit:inventory": "node ./scripts/generate-full-stack-audit.mjs"
   },
   "overrides": {
+    "postcss": "$postcss",
     "protobufjs": "7.5.5"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
+    "postcss": "^8.5.13",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3"
   }

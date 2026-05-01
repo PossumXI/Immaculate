@@ -730,6 +730,54 @@ export type CognitiveExecution = {
   parallelPosition?: number;
 };
 
+export const agentIntelligenceAssessmentTriggers = [
+  "manual",
+  "cognitive-execution",
+  "conversation",
+  "routing",
+  "benchmark",
+  "neuro-window"
+] as const;
+export type AgentIntelligenceAssessmentTrigger =
+  (typeof agentIntelligenceAssessmentTriggers)[number];
+
+export const agentIntelligenceAssessmentVerdicts = ["pass", "watch", "fail"] as const;
+export type AgentIntelligenceAssessmentVerdict =
+  (typeof agentIntelligenceAssessmentVerdicts)[number];
+
+export const agentIntelligenceAssessmentGrades = ["S", "A", "B", "C", "D"] as const;
+export type AgentIntelligenceAssessmentGrade =
+  (typeof agentIntelligenceAssessmentGrades)[number];
+
+export type AgentIntelligenceScorecard = {
+  reasoning: number;
+  contract: number;
+  governance: number;
+  routing: number;
+  runtime: number;
+  benchmark: number;
+  neuro: number;
+};
+
+export type AgentIntelligenceAssessment = {
+  id: string;
+  subjectAgentId: string;
+  subjectLayerId?: string;
+  subjectModel?: string;
+  trigger: AgentIntelligenceAssessmentTrigger;
+  verdict: AgentIntelligenceAssessmentVerdict;
+  grade: AgentIntelligenceAssessmentGrade;
+  overallScore: number;
+  scorecard: AgentIntelligenceScorecard;
+  evidenceIds: string[];
+  evidenceDigest: string;
+  driftFlags: string[];
+  baselineVersion: "poi-v1";
+  ledgerEventHash?: string;
+  summary: string;
+  assessedAt: string;
+};
+
 export const agentWorkspaceIsolationModes = ["repo", "branch", "worktree"] as const;
 export type AgentWorkspaceIsolationMode =
   (typeof agentWorkspaceIsolationModes)[number];
@@ -1089,6 +1137,7 @@ export type PhaseSnapshot = {
   neuralCoupling: NeuralCouplingState;
   intelligenceLayers: IntelligenceLayer[];
   cognitiveExecutions: CognitiveExecution[];
+  agentIntelligenceAssessments: AgentIntelligenceAssessment[];
   conversations: MultiAgentConversation[];
   executionArbitrations: ExecutionArbitration[];
   executionSchedules: ExecutionSchedule[];
@@ -1849,6 +1898,35 @@ export const cognitiveExecutionSchema = z.object({
   parallelPosition: z.number().int().positive().optional()
 });
 
+export const agentIntelligenceScorecardSchema = z.object({
+  reasoning: z.number().nonnegative().max(1),
+  contract: z.number().nonnegative().max(1),
+  governance: z.number().nonnegative().max(1),
+  routing: z.number().nonnegative().max(1),
+  runtime: z.number().nonnegative().max(1),
+  benchmark: z.number().nonnegative().max(1),
+  neuro: z.number().nonnegative().max(1)
+});
+
+export const agentIntelligenceAssessmentSchema = z.object({
+  id: z.string(),
+  subjectAgentId: z.string(),
+  subjectLayerId: z.string().optional(),
+  subjectModel: z.string().optional(),
+  trigger: z.enum(agentIntelligenceAssessmentTriggers),
+  verdict: z.enum(agentIntelligenceAssessmentVerdicts),
+  grade: z.enum(agentIntelligenceAssessmentGrades),
+  overallScore: z.number().nonnegative().max(1),
+  scorecard: agentIntelligenceScorecardSchema,
+  evidenceIds: z.array(z.string()),
+  evidenceDigest: z.string(),
+  driftFlags: z.array(z.string()),
+  baselineVersion: z.literal("poi-v1"),
+  ledgerEventHash: z.string().optional(),
+  summary: z.string(),
+  assessedAt: z.string()
+});
+
 export const agentTurnSchema = z.object({
   id: z.string(),
   layerId: z.string(),
@@ -2127,6 +2205,7 @@ export const phaseSnapshotSchema = z.object({
   neuralCoupling: neuralCouplingStateSchema.default(defaultNeuralCouplingState()),
   intelligenceLayers: z.array(intelligenceLayerSchema).default([]),
   cognitiveExecutions: z.array(cognitiveExecutionSchema).default([]),
+  agentIntelligenceAssessments: z.array(agentIntelligenceAssessmentSchema).default([]),
   conversations: z.array(multiAgentConversationSchema).default([]),
   executionArbitrations: z.array(executionArbitrationSchema).default([]),
   executionSchedules: z.array(executionScheduleSchema).default([]),
@@ -2304,6 +2383,20 @@ const initialNodes: ConnectomeNode[] = [
     tags: ["integrity", "verification", "checkpoint-gate"]
   },
   {
+    id: "poi-assessor",
+    label: "PoI Assessor",
+    kind: "agent",
+    plane: "cognitive",
+    position: { x: 6.2, y: -1.3, z: 1.7 },
+    throughput: 0.81,
+    saturation: 0.24,
+    trust: 0.95,
+    drift: 0.02,
+    load: 0.36,
+    activation: 0.49,
+    tags: ["proof-of-intelligence", "benchmark", "agent-grade"]
+  },
+  {
     id: "policy-vault",
     label: "Policy Vault",
     kind: "policy",
@@ -2355,12 +2448,15 @@ const edgeTemplate: Array<Omit<ConnectomeEdge, "propagation">> = [
   { id: "e-5", from: "router-core", to: "memory-lattice", weight: 0.9, latencyMs: 22, bandwidth: 0.82, trust: 0.95 },
   { id: "e-6", from: "memory-lattice", to: "integrity-gate", weight: 0.88, latencyMs: 18, bandwidth: 0.8, trust: 0.97 },
   { id: "e-7", from: "router-core", to: "integrity-gate", weight: 0.86, latencyMs: 16, bandwidth: 0.78, trust: 0.94 },
-  { id: "e-8", from: "integrity-gate", to: "actuator-grid", weight: 0.83, latencyMs: 14, bandwidth: 0.77, trust: 0.91 },
-  { id: "e-9", from: "integrity-gate", to: "policy-vault", weight: 0.8, latencyMs: 27, bandwidth: 0.71, trust: 0.98 },
-  { id: "e-10", from: "planner-swarm", to: "policy-vault", weight: 0.73, latencyMs: 58, bandwidth: 0.64, trust: 0.96 },
-  { id: "e-11", from: "memory-lattice", to: "sim-lab", weight: 0.71, latencyMs: 63, bandwidth: 0.67, trust: 0.81 },
-  { id: "e-12", from: "policy-vault", to: "router-core", weight: 0.79, latencyMs: 29, bandwidth: 0.72, trust: 0.98 },
-  { id: "e-13", from: "sim-lab", to: "planner-swarm", weight: 0.68, latencyMs: 71, bandwidth: 0.69, trust: 0.77 }
+  { id: "e-8", from: "planner-swarm", to: "poi-assessor", weight: 0.86, latencyMs: 21, bandwidth: 0.8, trust: 0.92 },
+  { id: "e-9", from: "memory-lattice", to: "poi-assessor", weight: 0.84, latencyMs: 18, bandwidth: 0.82, trust: 0.95 },
+  { id: "e-10", from: "poi-assessor", to: "integrity-gate", weight: 0.88, latencyMs: 15, bandwidth: 0.79, trust: 0.96 },
+  { id: "e-11", from: "integrity-gate", to: "actuator-grid", weight: 0.83, latencyMs: 14, bandwidth: 0.77, trust: 0.91 },
+  { id: "e-12", from: "integrity-gate", to: "policy-vault", weight: 0.8, latencyMs: 27, bandwidth: 0.71, trust: 0.98 },
+  { id: "e-13", from: "planner-swarm", to: "policy-vault", weight: 0.73, latencyMs: 58, bandwidth: 0.64, trust: 0.96 },
+  { id: "e-14", from: "memory-lattice", to: "sim-lab", weight: 0.71, latencyMs: 63, bandwidth: 0.67, trust: 0.81 },
+  { id: "e-15", from: "policy-vault", to: "router-core", weight: 0.79, latencyMs: 29, bandwidth: 0.72, trust: 0.98 },
+  { id: "e-16", from: "sim-lab", to: "planner-swarm", weight: 0.68, latencyMs: 71, bandwidth: 0.69, trust: 0.77 }
 ];
 
 const phaseToPlane: Record<PhaseId, OrchestrationPlane> = {
@@ -2895,6 +2991,7 @@ function createInitialSnapshot(): PhaseSnapshot {
     neuralCoupling: defaultNeuralCouplingState(),
     intelligenceLayers: [],
     cognitiveExecutions: [],
+    agentIntelligenceAssessments: [],
     conversations: [],
     executionArbitrations: [],
     executionSchedules: [],
@@ -3550,6 +3647,95 @@ function mergeCognitiveExecutionIntoSnapshot(
     cognitiveExecutions: nextExecutions,
     highlightedNodeId: nodes.some((node) => node.id === nodeId) ? nodeId : snapshot.highlightedNodeId,
     objective: `Cognitive execution ${execution.id} ${execution.status} on ${execution.model} in ${execution.latencyMs.toFixed(1)} ms.`
+  };
+}
+
+function mergeAgentIntelligenceAssessmentIntoSnapshot(
+  snapshot: PhaseSnapshot,
+  assessment: AgentIntelligenceAssessment
+): PhaseSnapshot {
+  const nextAssessments = [
+    assessment,
+    ...snapshot.agentIntelligenceAssessments.filter((candidate) => candidate.id !== assessment.id)
+  ].slice(0, 64);
+  const scoreFactor = assessment.overallScore;
+  const watchLoad =
+    assessment.verdict === "fail"
+      ? 0.28
+      : assessment.verdict === "watch"
+        ? 0.16
+        : 0.06;
+  const targetNodeId = assessment.subjectLayerId
+    ? intelligenceNodeId(assessment.subjectLayerId)
+    : assessment.subjectAgentId;
+  const nodes = snapshot.nodes.map((node) => {
+    if (node.id === "poi-assessor") {
+      return {
+        ...node,
+        activation: clamp(node.activation * 0.58 + scoreFactor * 0.28 + 0.08),
+        load: clamp(node.load * 0.66 + watchLoad),
+        throughput: clamp(node.throughput * 0.72 + scoreFactor * 0.2),
+        trust: clamp(node.trust * 0.86 + scoreFactor * 0.12, 0.4, 0.99),
+        drift: clamp(node.drift * 0.7 + assessment.driftFlags.length * 0.01, 0.01, 0.2),
+        tags: [
+          ...node.tags.filter(
+            (tag) =>
+              !tag.startsWith("poi-grade:") &&
+              !tag.startsWith("poi-verdict:") &&
+              !tag.startsWith("poi-trigger:")
+          ),
+          `poi-grade:${assessment.grade}`,
+          `poi-verdict:${assessment.verdict}`,
+          `poi-trigger:${assessment.trigger}`
+        ]
+      };
+    }
+
+    if (node.id === targetNodeId) {
+      return {
+        ...node,
+        activation: clamp(node.activation * 0.6 + scoreFactor * 0.22 + 0.08),
+        trust: clamp(node.trust * 0.82 + scoreFactor * 0.16, 0.28, 0.99),
+        drift: clamp(node.drift * 0.72 + assessment.driftFlags.length * 0.012, 0.01, 0.24),
+        tags: [
+          ...node.tags.filter(
+            (tag) => !tag.startsWith("poi-grade:") && !tag.startsWith("poi-verdict:")
+          ),
+          `poi-grade:${assessment.grade}`,
+          `poi-verdict:${assessment.verdict}`
+        ]
+      };
+    }
+
+    if (node.id === "integrity-gate") {
+      return {
+        ...node,
+        activation: clamp(node.activation * 0.7 + watchLoad * 0.28 + 0.04),
+        load: clamp(node.load * 0.8 + watchLoad * 0.16)
+      };
+    }
+
+    return node;
+  });
+
+  const edges = snapshot.edges.map((edge) => {
+    if (edge.from === "poi-assessor" || edge.to === "poi-assessor") {
+      return {
+        ...edge,
+        propagation: clamp(edge.propagation * 0.62 + scoreFactor * 0.2 + 0.08),
+        trust: clamp(edge.trust * 0.86 + scoreFactor * 0.12, 0.38, 0.99)
+      };
+    }
+    return edge;
+  });
+
+  return {
+    ...snapshot,
+    nodes,
+    edges,
+    agentIntelligenceAssessments: nextAssessments,
+    highlightedNodeId: "poi-assessor",
+    objective: `PoI assessment ${assessment.id} graded ${assessment.subjectAgentId} ${assessment.grade} with ${assessment.verdict} verdict.`
   };
 }
 
@@ -4906,6 +5092,9 @@ function resetState(
   const retainedNeuroFrames = clearEvents ? [] : state.snapshot.neuroFrames;
   const retainedIntelligenceLayers = clearEvents ? [] : state.snapshot.intelligenceLayers;
   const retainedCognitiveExecutions = clearEvents ? [] : state.snapshot.cognitiveExecutions;
+  const retainedAgentIntelligenceAssessments = clearEvents
+    ? []
+    : state.snapshot.agentIntelligenceAssessments;
   const retainedConversations = clearEvents ? [] : state.snapshot.conversations;
   const retainedExecutionArbitrations = clearEvents ? [] : state.snapshot.executionArbitrations;
   const retainedExecutionSchedules = clearEvents ? [] : state.snapshot.executionSchedules;
@@ -4930,6 +5119,9 @@ function resetState(
   }
   for (const execution of retainedCognitiveExecutions) {
     state.snapshot = mergeCognitiveExecutionIntoSnapshot(state.snapshot, execution);
+  }
+  for (const assessment of retainedAgentIntelligenceAssessments) {
+    state.snapshot = mergeAgentIntelligenceAssessmentIntoSnapshot(state.snapshot, assessment);
   }
   for (const conversation of retainedConversations) {
     state.snapshot = mergeConversationIntoSnapshot(state.snapshot, conversation);
@@ -4996,6 +5188,7 @@ export function createEngine(options?: {
   ingestNeuroFrame: (frame: NeuroFrameWindow) => PhaseSnapshot;
   registerIntelligenceLayer: (layer: IntelligenceLayer) => PhaseSnapshot;
   commitCognitiveExecution: (execution: CognitiveExecution) => PhaseSnapshot;
+  recordAgentIntelligenceAssessment: (assessment: AgentIntelligenceAssessment) => PhaseSnapshot;
   recordConversation: (conversation: MultiAgentConversation) => PhaseSnapshot;
   recordExecutionArbitration: (arbitration: ExecutionArbitration) => PhaseSnapshot;
   recordExecutionSchedule: (schedule: ExecutionSchedule) => PhaseSnapshot;
@@ -5314,6 +5507,39 @@ export function createEngine(options?: {
     return state.snapshot;
   }
 
+  function recordAgentIntelligenceAssessment(
+    assessment: AgentIntelligenceAssessment
+  ): PhaseSnapshot {
+    const parsed = agentIntelligenceAssessmentSchema.parse(
+      assessment
+    ) as AgentIntelligenceAssessment;
+    state.snapshot = mergeAgentIntelligenceAssessmentIntoSnapshot(state.snapshot, parsed);
+    state.snapshot = {
+      ...state.snapshot,
+      metrics: computeMetrics(
+        state.snapshot.nodes,
+        state.snapshot.edges,
+        state.snapshot.passes,
+        state.snapshot.neuralCoupling,
+        { expectedLatency: { ...state.expectedLatency } }
+      )
+    };
+
+    pushEvent(state, {
+      schemaName: "immaculate.agent-intelligence-assessment.recorded",
+      subject: { type: "agent", id: parsed.subjectAgentId },
+      purpose: ["proof-of-intelligence", "assessment", parsed.verdict, parsed.grade],
+      payload: {
+        assessment: parsed
+      },
+      summary: `PoI assessment ${parsed.id} graded ${parsed.subjectAgentId} ${parsed.grade} (${(parsed.overallScore * 100).toFixed(1)}%)`
+    });
+
+    refreshLogTail(state);
+    materializeHistory(state);
+    return state.snapshot;
+  }
+
   function recordConversation(conversation: MultiAgentConversation): PhaseSnapshot {
     const parsed = multiAgentConversationSchema.parse(conversation) as MultiAgentConversation;
     state.snapshot = mergeConversationIntoSnapshot(state.snapshot, parsed);
@@ -5482,6 +5708,7 @@ export function createEngine(options?: {
     ingestNeuroFrame,
     registerIntelligenceLayer,
     commitCognitiveExecution,
+    recordAgentIntelligenceAssessment,
     recordConversation,
     recordExecutionArbitration,
     recordExecutionSchedule,
@@ -5564,6 +5791,14 @@ export function rebuildDurableStateFromEvents(
       const parsed = cognitiveExecutionSchema.safeParse(event.payload.execution);
       if (parsed.success) {
         engine.commitCognitiveExecution(parsed.data);
+      }
+      continue;
+    }
+
+    if (event.schema.name === "immaculate.agent-intelligence-assessment.recorded") {
+      const parsed = agentIntelligenceAssessmentSchema.safeParse(event.payload.assessment);
+      if (parsed.success) {
+        engine.recordAgentIntelligenceAssessment(parsed.data);
       }
       continue;
     }

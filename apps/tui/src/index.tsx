@@ -709,6 +709,7 @@ function App() {
   const selectedPass = snapshot?.passes[passIndex] ?? null;
   const selectedLog = snapshot?.logTail[logIndex] ?? null;
   const latestCognitiveExecution = intelligenceExecutionDetails[0] ?? null;
+  const latestPoIAssessment = snapshot?.agentIntelligenceAssessments?.[0] ?? null;
   const latestConversation = (snapshot as SnapshotWithConversations | null)?.conversations?.[0] ?? null;
 
   const phaseLane = phaseIds
@@ -969,6 +970,12 @@ function App() {
               {snapshot.cognitiveExecutions[0]
                 ? `${snapshot.cognitiveExecutions[0].model} ${snapshot.cognitiveExecutions[0].latencyMs.toFixed(1)}ms`
                 : "none"}
+            </Text>
+          ) : null}
+          {latestPoIAssessment ? (
+            <Text>
+              PoI {latestPoIAssessment.subjectAgentId} / {latestPoIAssessment.grade} /{" "}
+              {latestPoIAssessment.verdict} / {formatPercent(latestPoIAssessment.overallScore)}
             </Text>
           ) : null}
           {latestCognitiveExecution ? (

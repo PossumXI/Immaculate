@@ -19,6 +19,56 @@ For each breakthrough, record:
 
 ## Current Entries
 
+### 2026-05-01
+
+#### PoI became a durable agent intelligence monitor
+
+What changed:
+- Immaculate now stores `agentIntelligenceAssessments` in the core `PhaseSnapshot`
+- the core event spine emits `immaculate.agent-intelligence-assessment.recorded` and replay can rebuild those records
+- the harness now scores Q and future agents on the `poi-v1` baseline after cognitive executions and multi-agent conversations
+- the harness exposes governed PoI reads and manual runs through `/api/intelligence/assessments` and `/api/intelligence/assessments/run`
+- health and topology now surface a compact `poi` posture, so operators can see agent grades, verdict counts, average score, and degraded agent IDs without reading raw traces
+
+Why it matters:
+- the missed pattern was that Immaculate already had the raw material for agent intelligence monitoring, but it was spread across execution traces, schedules, guard verdicts, worker records, benchmark pages, and neuro state
+- turning those signals into one durable scorecard makes Q and every later agent comparable on the same baseline instead of relying on scattered logs or subjective claims
+- PoI now measures the live inference path itself, including contract coverage, governance posture, runtime health, routing admission, benchmark signal, and connectome signal quality
+
+Evidence:
+- `packages/core/src/index.ts` adds the assessment contract, schema, event replay handling, and a visible `poi-assessor` node in the connectome graph
+- `apps/harness/src/agent-intelligence-assessment.ts` implements the pure `poi-v1` scorecard and summary logic
+- `apps/harness/src/server.ts` writes linked Arobi decision-trace records with source `agent-intelligence-assessment` and records assessments after executions and conversations
+- `apps/harness/src/agent-intelligence-assessment.test.ts` covers healthy inference grading, failed contract drift flags, and summary posture
+- `docs/wiki/PoI-Agent-Assessment.md` documents the scoring baseline, governed routes, durability model, and operator behavior
+
+What this unlocks next:
+- Q can now be continuously graded during normal inference rather than only in scheduled benchmark passes
+- external agents and framework integrations can enter the same Immaculate/Arobi network baseline before they receive wider authority
+- future W&B, BridgeBench, Terminal-Bench, and Arobi ledger reports can ingest the same assessment records instead of each inventing a separate score format
+
+#### Q inference tuning moved into one typed profile
+
+What changed:
+- the Q gateway now resolves one `QInferenceProfile` for provider, request bounds, structured-generation knobs, health cache timing, benchmark tuning, and primary circuit policy
+- `/health` and `/api/q/info` expose a redacted inference profile so operators can verify the active route without leaking private runtime URLs
+- unsupported provider names fail closed during startup instead of silently falling back to a different inference lane
+
+Why it matters:
+- the gateway previously had its inference controls scattered across top-level constants, which made it too easy for operators to tune one part of the route while missing another
+- a single profile gives Q, Immaculate, and future OCI or OpenAI-compatible adapters one stable configuration contract
+- redacting runtime URLs preserves the private-host boundary while still proving which knobs are active
+
+Evidence:
+- `apps/harness/src/q-inference-profile.ts` owns the typed profile and redacted public view
+- `apps/harness/src/q-gateway.ts` now consumes that profile for the existing private Ollama-backed route without changing serving semantics
+- `apps/harness/src/q-inference-profile.test.ts` covers defaults, operator overrides, unsupported-provider fail-closed behavior, and URL redaction
+
+What this unlocks next:
+- a provider adapter can be added behind the same profile without changing the gateway's public OpenAI-compatible API
+- benchmark reports can record the active inference profile as evidence instead of reverse-engineering it from environment variables
+- rollout to private OCI routes can be audited from health/info payloads without exposing internal endpoints
+
 ### 2026-04-20
 
 #### Roundtable runtime is now cold-start reproducible

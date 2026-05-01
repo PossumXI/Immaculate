@@ -28,6 +28,8 @@ Release/build identity for the current repo state lives in:
 - a narrow OpenAI-compatible surface for `Q`
 - direct private execution against the configured Q runtime backend
 - a bounded primary-model circuit breaker with explicit fail-closed behavior
+- a single typed inference profile for request bounds, structured-generation
+  knobs, timeouts, health cache, benchmark settings, and primary circuit policy
 - private OCI deployment glue for that narrow process
 
 ## What Stays Private In Immaculate
@@ -54,6 +56,8 @@ The dedicated gateway is safer than exposing the harness directly because:
 - it enforces per-key rate and concurrency limits before model execution
 - it can stop hammering a failing primary model by opening the primary circuit
   and failing closed instead of silently swapping models
+- it exposes only a redacted inference profile in health/info responses; private
+  runtime URLs stay out of user-visible payloads
 - it is designed for private OCI deployment with no public ingress by default
 
 ## OCI Shape
@@ -93,6 +97,9 @@ Safe claims:
 - the gateway is private-OCI-first and narrower than the harness
 - the gateway now has a live primary-failure circuit with explicit headers and
   response metadata when the Q lane is degraded
+- inference customization has a typed configuration surface instead of scattered
+  constants; the current provider is still the private Ollama-compatible Q
+  runtime until a separate provider adapter lands
 
 Claims this page does not make:
 
