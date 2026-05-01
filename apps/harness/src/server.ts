@@ -292,6 +292,12 @@ const BENCHMARK_WORKER_PATH = path.join(
 );
 const benchmarkJobs = new Map<string, BenchmarkJob>();
 const MAX_BENCHMARK_JOBS = 12;
+const HARNESS_RATE_LIMIT_MAX = Math.max(
+  1,
+  Number(process.env.IMMACULATE_HARNESS_RATE_LIMIT_MAX ?? 600) || 600
+);
+const HARNESS_RATE_LIMIT_WINDOW =
+  process.env.IMMACULATE_HARNESS_RATE_LIMIT_WINDOW ?? "1 minute";
 const POI_ASSESSMENT_READ_RATE_LIMIT_MAX = Math.max(
   1,
   Number(process.env.IMMACULATE_POI_ASSESSMENT_READ_RATE_LIMIT_MAX ?? 120) || 120
@@ -649,7 +655,9 @@ await app.register(cors, {
 });
 
 await app.register(rateLimit, {
-  global: false
+  global: true,
+  max: HARNESS_RATE_LIMIT_MAX,
+  timeWindow: HARNESS_RATE_LIMIT_WINDOW
 });
 
 await app.register(websocket);
@@ -2154,6 +2162,15 @@ function authorizeGovernedAction(
     decision
   });
   return false;
+}
+
+function requireGovernedActionPreHandler(action: GovernanceAction, route: string) {
+  return async (request: FastifyRequest, reply: FastifyReply) => {
+    if (!authorizeGovernedAction(action, route, request, reply)) {
+      return reply;
+    }
+    return undefined;
+  };
 }
 
 function authorizeGovernedResourceRead(
@@ -4865,6 +4882,10 @@ app.get("/api/intelligence", async () => {
 app.get(
   "/api/intelligence/assessments",
   {
+    preHandler: requireGovernedActionPreHandler(
+      "cognitive-trace-read",
+      "/api/intelligence/assessments"
+    ),
     config: {
       rateLimit: {
         max: POI_ASSESSMENT_READ_RATE_LIMIT_MAX,
@@ -4873,17 +4894,6 @@ app.get(
     }
   },
   async (request, reply) => {
-    if (
-      !authorizeGovernedAction(
-        "cognitive-trace-read",
-        "/api/intelligence/assessments",
-        request,
-        reply
-      )
-    ) {
-      return;
-    }
-
     const consentScope = getGovernanceBinding(
       "cognitive-trace-read",
       "/api/intelligence/assessments",
@@ -4905,6 +4915,10 @@ app.get(
 app.post(
   "/api/intelligence/assessments/run",
   {
+    preHandler: requireGovernedActionPreHandler(
+      "cognitive-execution",
+      "/api/intelligence/assessments/run"
+    ),
     config: {
       rateLimit: {
         max: POI_ASSESSMENT_RUN_RATE_LIMIT_MAX,
@@ -4913,17 +4927,6 @@ app.post(
     }
   },
   async (request, reply) => {
-    if (
-      !authorizeGovernedAction(
-        "cognitive-execution",
-        "/api/intelligence/assessments/run",
-        request,
-        reply
-      )
-    ) {
-      return;
-    }
-
     const body =
       (request.body as {
         layerId?: string;
