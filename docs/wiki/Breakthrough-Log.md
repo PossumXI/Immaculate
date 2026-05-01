@@ -113,16 +113,23 @@ What this unlocks next:
 What changed:
 - governed REST routes now use Fastify pre-handlers for authorization instead of repeating `authorizeGovernedAction` inside each handler body
 - federation routes use a dedicated pre-handler that preserves the existing query-token rejection check before governance admission
-- mediated cognition keeps its second-stage governance check in a small helper, so the mediate handler no longer carries raw inline authorization boilerplate
+- mediated orchestration now requires both actuation and cognition governance before entering the handler, because the route can escalate from planning into cognitive execution
+- LSL discovery/control, benchmark/reporting reads, dataset/neuro registry reads, governance reads, Q info, and mediate routes declare route-local rate limits in addition to the global harness throttle
+- read-only file and registry routes use explicit `app.rateLimit(...)` pre-handlers where scanner coverage requires a concrete route-local throttling handler
+- the harness imports the rate-limit plugin through the `fastify-rate-limit` npm alias, which points at `@fastify/rate-limit` at install time and matches CodeQL's current Fastify rate-limit model
+- the standalone Q gateway now uses Fastify route pre-handlers and route-local throttles while preserving the existing per-key Q limiter and concurrency releases
 
 Why it matters:
 - the harness already had real global rate limiting, but CodeQL was still correct to flag the old route shape because expensive handlers mixed admission checks with handler work
 - putting admission in pre-handlers makes the execution order explicit: global throttle, auth, governance admission, then handler work
 - removing repeated inline authorization reduces route drift and makes future route additions easier to audit
+- a request cannot now enter the mediate handler under actuation governance alone and later cross into cognition without having passed the cognition policy at admission time
+- scanner-visible route caps now line up with the production controls operators actually depend on, instead of requiring reviewers to infer protection from global hooks or custom limiters
 
 Evidence:
 - `apps/harness/src/server.ts` now centralizes governed admission through `requireGovernedActionPreHandler` and `requireFederationGovernedPreHandler`
-- event, replay, LSL, neuro, cognition, federation, worker, node, actuation, ingest, benchmark, and control routes use those pre-handlers
+- event, replay, LSL, neuro, cognition, federation, worker, node, actuation, ingest, benchmark, mediate, and control routes use those pre-handlers
+- `apps/harness/src/q-gateway.ts` moved API-key admission out of the global hook and onto protected route pre-handlers with Fastify rate-limit metadata
 
 What this unlocks next:
 - the remaining route-security work can focus on narrower issues instead of dozens of repeated handler-local authorization patterns

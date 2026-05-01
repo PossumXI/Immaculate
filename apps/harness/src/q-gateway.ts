@@ -1,5 +1,6 @@
 import Fastify, { type FastifyReply, type FastifyRequest } from "fastify";
 import cors from "@fastify/cors";
+import rateLimit from "fastify-rate-limit";
 import { createPersistence } from "./persistence.js";
 import {
   createQApiKeyRegistry,
@@ -110,6 +111,13 @@ const DEFAULT_RATE_LIMIT = normalizeQApiRateLimitPolicy(
     maxConcurrentRequests: 2
   }
 );
+const Q_GATEWAY_ROUTE_RATE_LIMIT_MAX = Math.max(
+  1,
+  Number(process.env.IMMACULATE_Q_GATEWAY_ROUTE_RATE_LIMIT_MAX ?? DEFAULT_RATE_LIMIT.burst) ||
+    DEFAULT_RATE_LIMIT.burst
+);
+const Q_GATEWAY_ROUTE_RATE_LIMIT_WINDOW =
+  process.env.IMMACULATE_Q_GATEWAY_ROUTE_RATE_LIMIT_WINDOW ?? "1 minute";
 const qApiKeyRegistry = await createQApiKeyRegistry({
   rootDir: persistence.getStatus().rootDir,
   storePath: process.env.IMMACULATE_Q_API_KEYS_PATH,
@@ -437,6 +445,63 @@ function getPrincipal(request: FastifyRequest): GatewayPrincipal | undefined {
   return principals.get(request.raw);
 }
 
+async function requireGatewayPrincipal(request: FastifyRequest, reply: FastifyReply) {
+  const token = extractAuthorizationToken(request.headers);
+  if (!token) {
+    reply.code(401).send({
+      error: "unauthorized",
+      message: "Q gateway requires Authorization: Bearer or X-API-Key."
+    });
+    return reply;
+  }
+
+  const authenticated = await qApiKeyRegistry.authenticate(token, {
+    requiredScope: "invoke",
+    ip: request.ip
+  });
+  if (!authenticated) {
+    reply.code(401).send({
+      error: "unauthorized",
+      message: "Invalid Q API key."
+    });
+    return reply;
+  }
+
+  const principal: GatewayPrincipal = {
+    subject: `qkey:${authenticated.key.keyId}`,
+    key: authenticated.key,
+    rateLimit: authenticated.key.rateLimit
+  };
+  const grant = qRateLimiter.acquire(principal.subject, principal.rateLimit);
+  attachRateLimitHeaders(reply, grant);
+  if (!grant.allowed) {
+    reply.code(429).send({
+      error: grant.reason,
+      message:
+        grant.reason === "concurrency_limited"
+          ? "Q gateway concurrency limit exceeded."
+          : "Q gateway rate limit exceeded.",
+      retryAfterMs: grant.retryAfterMs
+    });
+    return reply;
+  }
+
+  const releaseOnce = (() => {
+    let released = false;
+    return () => {
+      if (released) {
+        return;
+      }
+      released = true;
+      grant.release();
+    };
+  })();
+  reply.raw.once("finish", releaseOnce);
+  reply.raw.once("close", releaseOnce);
+  principals.set(request.raw, principal);
+  return undefined;
+}
+
 async function runGatewayChatAttempt(options: {
   model: string;
   messages: OllamaChatMessage[];
@@ -544,64 +609,9 @@ await app.register(cors, {
   }
 });
 
-app.addHook("onRequest", async (request, reply) => {
-  if (request.method === "OPTIONS" || request.url === "/health") {
-    return;
-  }
-
-  const token = extractAuthorizationToken(request.headers);
-  if (!token) {
-    reply.code(401).send({
-      error: "unauthorized",
-      message: "Q gateway requires Authorization: Bearer or X-API-Key."
-    });
-    return;
-  }
-
-  const authenticated = await qApiKeyRegistry.authenticate(token, {
-    requiredScope: "invoke",
-    ip: request.ip
-  });
-  if (!authenticated) {
-    reply.code(401).send({
-      error: "unauthorized",
-      message: "Invalid Q API key."
-    });
-    return;
-  }
-
-  const principal: GatewayPrincipal = {
-    subject: `qkey:${authenticated.key.keyId}`,
-    key: authenticated.key,
-    rateLimit: authenticated.key.rateLimit
-  };
-  const grant = qRateLimiter.acquire(principal.subject, principal.rateLimit);
-  attachRateLimitHeaders(reply, grant);
-  if (!grant.allowed) {
-    reply.code(429).send({
-      error: grant.reason,
-      message:
-        grant.reason === "concurrency_limited"
-          ? "Q gateway concurrency limit exceeded."
-          : "Q gateway rate limit exceeded.",
-      retryAfterMs: grant.retryAfterMs
-    });
-    return;
-  }
-
-  const releaseOnce = (() => {
-    let released = false;
-    return () => {
-      if (released) {
-        return;
-      }
-      released = true;
-      grant.release();
-    };
-  })();
-  reply.raw.once("finish", releaseOnce);
-  reply.raw.once("close", releaseOnce);
-  principals.set(request.raw, principal);
+await app.register(rateLimit, {
+  max: Q_GATEWAY_ROUTE_RATE_LIMIT_MAX,
+  timeWindow: Q_GATEWAY_ROUTE_RATE_LIMIT_WINDOW
 });
 
 app.get("/health", async () => {
@@ -630,7 +640,15 @@ app.get("/health", async () => {
   };
 });
 
-app.get("/api/q/info", async (request, reply) => {
+app.get("/api/q/info", {
+  preHandler: requireGatewayPrincipal,
+  config: {
+    rateLimit: {
+      max: Q_GATEWAY_ROUTE_RATE_LIMIT_MAX,
+      timeWindow: Q_GATEWAY_ROUTE_RATE_LIMIT_WINDOW
+    }
+  }
+}, async (request, reply) => {
   const principal = getPrincipal(request);
   if (!principal) {
     reply.code(401);
@@ -662,7 +680,15 @@ app.get("/api/q/info", async (request, reply) => {
   };
 });
 
-app.get("/v1/models", async () => ({
+app.get("/v1/models", {
+  preHandler: requireGatewayPrincipal,
+  config: {
+    rateLimit: {
+      max: Q_GATEWAY_ROUTE_RATE_LIMIT_MAX,
+      timeWindow: Q_GATEWAY_ROUTE_RATE_LIMIT_WINDOW
+    }
+  }
+}, async () => ({
   object: "list",
   data: [
     {
@@ -676,7 +702,15 @@ app.get("/v1/models", async () => ({
   ]
 }));
 
-app.post("/v1/chat/completions", async (request, reply) => {
+app.post("/v1/chat/completions", {
+  preHandler: requireGatewayPrincipal,
+  config: {
+    rateLimit: {
+      max: Q_GATEWAY_ROUTE_RATE_LIMIT_MAX,
+      timeWindow: Q_GATEWAY_ROUTE_RATE_LIMIT_WINDOW
+    }
+  }
+}, async (request, reply) => {
   const body = (request.body as ChatCompletionRequestBody | undefined) ?? {};
   if (body.stream) {
     reply.code(400);

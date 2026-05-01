@@ -4,7 +4,7 @@ import { appendFile, mkdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import Fastify, { type FastifyReply, type FastifyRequest } from "fastify";
 import cors from "@fastify/cors";
-import rateLimit from "@fastify/rate-limit";
+import rateLimit from "fastify-rate-limit";
 import websocket from "@fastify/websocket";
 import {
   agentIntelligenceAssessmentSchema,
@@ -309,6 +309,34 @@ const POI_ASSESSMENT_RUN_RATE_LIMIT_MAX = Math.max(
 );
 const POI_ASSESSMENT_RATE_LIMIT_WINDOW =
   process.env.IMMACULATE_POI_ASSESSMENT_RATE_LIMIT_WINDOW ?? "1 minute";
+const DEVICE_DISCOVERY_RATE_LIMIT_MAX = Math.max(
+  1,
+  Number(process.env.IMMACULATE_DEVICE_DISCOVERY_RATE_LIMIT_MAX ?? 30) || 30
+);
+const DEVICE_CONTROL_RATE_LIMIT_MAX = Math.max(
+  1,
+  Number(process.env.IMMACULATE_DEVICE_CONTROL_RATE_LIMIT_MAX ?? 60) || 60
+);
+const DEVICE_RATE_LIMIT_WINDOW =
+  process.env.IMMACULATE_DEVICE_RATE_LIMIT_WINDOW ?? "1 minute";
+const ORCHESTRATION_MEDIATE_RATE_LIMIT_MAX = Math.max(
+  1,
+  Number(process.env.IMMACULATE_ORCHESTRATION_MEDIATE_RATE_LIMIT_MAX ?? 60) || 60
+);
+const ORCHESTRATION_RATE_LIMIT_WINDOW =
+  process.env.IMMACULATE_ORCHESTRATION_RATE_LIMIT_WINDOW ?? "1 minute";
+const HARNESS_READ_RATE_LIMIT_MAX = Math.max(
+  1,
+  Number(process.env.IMMACULATE_HARNESS_READ_RATE_LIMIT_MAX ?? 180) || 180
+);
+const HARNESS_READ_RATE_LIMIT_WINDOW =
+  process.env.IMMACULATE_HARNESS_READ_RATE_LIMIT_WINDOW ?? "1 minute";
+const BENCHMARK_READ_RATE_LIMIT_MAX = Math.max(
+  1,
+  Number(process.env.IMMACULATE_BENCHMARK_READ_RATE_LIMIT_MAX ?? 120) || 120
+);
+const BENCHMARK_READ_RATE_LIMIT_WINDOW =
+  process.env.IMMACULATE_BENCHMARK_READ_RATE_LIMIT_WINDOW ?? "1 minute";
 const workGovernor = createWorkGovernor({
   maxActiveWeight: Math.max(1, Number(process.env.IMMACULATE_WORK_GOVERNOR_MAX_WEIGHT ?? 6) || 6),
   maxQueueDepth: Math.max(1, Number(process.env.IMMACULATE_WORK_GOVERNOR_MAX_QUEUE_DEPTH ?? 12) || 12),
@@ -2165,9 +2193,15 @@ function authorizeGovernedAction(
   return false;
 }
 
-function requireGovernedActionPreHandler(action: GovernanceAction, route: string) {
+function requireGovernedActionPreHandler(
+  action: GovernanceAction,
+  route: string,
+  options?: {
+    policyIdOverride?: string;
+  }
+) {
   return async (request: FastifyRequest, reply: FastifyReply) => {
-    if (!authorizeGovernedAction(action, route, request, reply)) {
+    if (!authorizeGovernedAction(action, route, request, reply, options)) {
       return reply;
     }
     return undefined;
@@ -2184,21 +2218,6 @@ function requireFederationGovernedPreHandler(action: GovernanceAction, route: st
     }
     return undefined;
   };
-}
-
-function requireMediatedCognitionGovernance(
-  request: FastifyRequest,
-  reply: FastifyReply
-): boolean {
-  return authorizeGovernedAction(
-    "cognitive-execution",
-    "/api/orchestration/mediate:cognition",
-    request,
-    reply,
-    {
-      policyIdOverride: "cognitive-run-default"
-    }
-  );
 }
 
 function authorizeGovernedResourceRead(
@@ -4482,39 +4501,138 @@ app.get("/api/replay", {
   };
 });
 
-app.get("/api/persistence", async () => ({
+app.get("/api/persistence", {
+  preHandler: app.rateLimit({
+    max: HARNESS_READ_RATE_LIMIT_MAX,
+    timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: HARNESS_READ_RATE_LIMIT_MAX,
+      timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async () => ({
   persistence: persistence.getStatus()
 }));
 
-app.get("/api/integrity", async () => ({
+app.get("/api/integrity", {
+  preHandler: app.rateLimit({
+    max: HARNESS_READ_RATE_LIMIT_MAX,
+    timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: HARNESS_READ_RATE_LIMIT_MAX,
+      timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async () => ({
   integrity: inspectDurableState(engine.getDurableState())
 }));
 
-app.get("/api/checkpoints", async () => ({
+app.get("/api/checkpoints", {
+  preHandler: app.rateLimit({
+    max: HARNESS_READ_RATE_LIMIT_MAX,
+    timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: HARNESS_READ_RATE_LIMIT_MAX,
+      timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async () => ({
   checkpoints: persistence.listCheckpoints()
 }));
 
-app.get("/api/governance/status", async () => ({
+app.get("/api/governance/status", {
+  preHandler: app.rateLimit({
+    max: HARNESS_READ_RATE_LIMIT_MAX,
+    timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: HARNESS_READ_RATE_LIMIT_MAX,
+      timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async () => ({
   governance: governance.getStatus()
 }));
 
-app.get("/api/governance/policies", async () => ({
+app.get("/api/governance/policies", {
+  preHandler: app.rateLimit({
+    max: HARNESS_READ_RATE_LIMIT_MAX,
+    timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: HARNESS_READ_RATE_LIMIT_MAX,
+      timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async () => ({
   policies: governance.listPolicies()
 }));
 
-app.get("/api/governance/decisions", async () => ({
+app.get("/api/governance/decisions", {
+  preHandler: app.rateLimit({
+    max: HARNESS_READ_RATE_LIMIT_MAX,
+    timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: HARNESS_READ_RATE_LIMIT_MAX,
+      timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async () => ({
   decisions: governance.listDecisions()
 }));
 
-app.get("/api/benchmarks/latest", async () => ({
+app.get("/api/benchmarks/latest", {
+  preHandler: app.rateLimit({
+    max: BENCHMARK_READ_RATE_LIMIT_MAX,
+    timeWindow: BENCHMARK_READ_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: BENCHMARK_READ_RATE_LIMIT_MAX,
+      timeWindow: BENCHMARK_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async () => ({
   benchmark: await loadPublishedBenchmarkReport()
 }));
 
-app.get("/api/benchmarks/history", async () => ({
+app.get("/api/benchmarks/history", {
+  preHandler: app.rateLimit({
+    max: BENCHMARK_READ_RATE_LIMIT_MAX,
+    timeWindow: BENCHMARK_READ_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: BENCHMARK_READ_RATE_LIMIT_MAX,
+      timeWindow: BENCHMARK_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async () => ({
   history: await loadPublishedBenchmarkIndex()
 }));
 
-app.get("/api/benchmarks/trend", async (request, reply) => {
+app.get("/api/benchmarks/trend", {
+  preHandler: app.rateLimit({
+    max: BENCHMARK_READ_RATE_LIMIT_MAX,
+    timeWindow: BENCHMARK_READ_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: BENCHMARK_READ_RATE_LIMIT_MAX,
+      timeWindow: BENCHMARK_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async (request, reply) => {
   const query = (request.query as { packId?: BenchmarkPackId; window?: string } | undefined) ?? {};
   const window = query.window ? Number(query.window) : undefined;
   const resolvedWindow =
@@ -4542,7 +4660,18 @@ app.get("/api/benchmarks/trend", async (request, reply) => {
   };
 });
 
-app.get("/api/benchmarks/jobs/:jobId", async (request, reply) => {
+app.get("/api/benchmarks/jobs/:jobId", {
+  preHandler: app.rateLimit({
+    max: BENCHMARK_READ_RATE_LIMIT_MAX,
+    timeWindow: BENCHMARK_READ_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: BENCHMARK_READ_RATE_LIMIT_MAX,
+      timeWindow: BENCHMARK_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async (request, reply) => {
   const params = request.params as { jobId?: string };
   if (!params.jobId) {
     reply.code(400);
@@ -4565,20 +4694,64 @@ app.get("/api/benchmarks/jobs/:jobId", async (request, reply) => {
   };
 });
 
-app.get("/api/benchmarks/packs", async () => ({
+app.get("/api/benchmarks/packs", {
+  preHandler: app.rateLimit({
+    max: BENCHMARK_READ_RATE_LIMIT_MAX,
+    timeWindow: BENCHMARK_READ_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: BENCHMARK_READ_RATE_LIMIT_MAX,
+      timeWindow: BENCHMARK_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async () => ({
   packs: listBenchmarkPacks()
 }));
 
-app.get("/api/wandb/status", async () => ({
+app.get("/api/wandb/status", {
+  preHandler: app.rateLimit({
+    max: BENCHMARK_READ_RATE_LIMIT_MAX,
+    timeWindow: BENCHMARK_READ_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: BENCHMARK_READ_RATE_LIMIT_MAX,
+      timeWindow: BENCHMARK_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async () => ({
   wandb: await inspectWandbStatus()
 }));
 
-app.get("/api/datasets", async () => ({
+app.get("/api/datasets", {
+  preHandler: app.rateLimit({
+    max: HARNESS_READ_RATE_LIMIT_MAX,
+    timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: HARNESS_READ_RATE_LIMIT_MAX,
+      timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async () => ({
   datasets: (await datasetRegistry.list()).map(redactDatasetSummary),
   redacted: true
 }));
 
-app.get("/api/datasets/:datasetId", async (request, reply) => {
+app.get("/api/datasets/:datasetId", {
+  preHandler: app.rateLimit({
+    max: HARNESS_READ_RATE_LIMIT_MAX,
+    timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: HARNESS_READ_RATE_LIMIT_MAX,
+      timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async (request, reply) => {
   const params = request.params as { datasetId?: string };
   const datasetId = params.datasetId;
 
@@ -4624,12 +4797,34 @@ app.get("/api/datasets/:datasetId", async (request, reply) => {
   };
 });
 
-app.get("/api/neuro/sessions", async () => ({
+app.get("/api/neuro/sessions", {
+  preHandler: app.rateLimit({
+    max: HARNESS_READ_RATE_LIMIT_MAX,
+    timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: HARNESS_READ_RATE_LIMIT_MAX,
+      timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async () => ({
   sessions: (await neuroRegistry.list()).map(redactNeuroSessionSummary),
   redacted: true
 }));
 
-app.get("/api/neuro/sessions/:sessionId", async (request, reply) => {
+app.get("/api/neuro/sessions/:sessionId", {
+  preHandler: app.rateLimit({
+    max: HARNESS_READ_RATE_LIMIT_MAX,
+    timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: HARNESS_READ_RATE_LIMIT_MAX,
+      timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async (request, reply) => {
   const params = request.params as { sessionId?: string };
   const sessionId = params.sessionId;
 
@@ -4689,7 +4884,13 @@ app.get("/api/devices/lsl/streams", {
   preHandler: requireGovernedActionPreHandler(
     "neuro-streaming",
     "/api/devices/lsl/streams"
-  )
+  ),
+  config: {
+    rateLimit: {
+      max: DEVICE_DISCOVERY_RATE_LIMIT_MAX,
+      timeWindow: DEVICE_RATE_LIMIT_WINDOW
+    }
+  }
 }, async () => {
   const discovery = await lslAdapterManager.discover();
   return {
@@ -4703,7 +4904,13 @@ app.get("/api/devices/lsl/connections", {
   preHandler: requireGovernedActionPreHandler(
     "neuro-streaming",
     "/api/devices/lsl/connections"
-  )
+  ),
+  config: {
+    rateLimit: {
+      max: DEVICE_CONTROL_RATE_LIMIT_MAX,
+      timeWindow: DEVICE_RATE_LIMIT_WINDOW
+    }
+  }
 }, async () => {
   return {
     accepted: true,
@@ -4716,7 +4923,13 @@ app.post("/api/devices/lsl/connect", {
   preHandler: requireGovernedActionPreHandler(
     "neuro-streaming",
     "/api/devices/lsl/connect"
-  )
+  ),
+  config: {
+    rateLimit: {
+      max: DEVICE_CONTROL_RATE_LIMIT_MAX,
+      timeWindow: DEVICE_RATE_LIMIT_WINDOW
+    }
+  }
 }, async (request, reply) => {
   const body =
     ((request.body as {
@@ -4939,7 +5152,14 @@ app.post(
   }
 );
 
-app.get("/api/q/info", async () => {
+app.get("/api/q/info", {
+  config: {
+    rateLimit: {
+      max: HARNESS_READ_RATE_LIMIT_MAX,
+      timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async () => {
   if (!Q_API_ENABLED) {
     return {
       enabled: false,
@@ -6716,10 +6936,25 @@ app.post("/api/intelligence/run", {
 });
 
 app.post("/api/orchestration/mediate", {
-  preHandler: requireGovernedActionPreHandler(
-    "actuation-dispatch",
-    "/api/orchestration/mediate"
-  )
+  preHandler: [
+    requireGovernedActionPreHandler(
+      "actuation-dispatch",
+      "/api/orchestration/mediate"
+    ),
+    requireGovernedActionPreHandler(
+      "cognitive-execution",
+      "/api/orchestration/mediate:cognition",
+      {
+        policyIdOverride: "cognitive-run-default"
+      }
+    )
+  ],
+  config: {
+    rateLimit: {
+      max: ORCHESTRATION_MEDIATE_RATE_LIMIT_MAX,
+      timeWindow: ORCHESTRATION_RATE_LIMIT_WINDOW
+    }
+  }
 }, async (request, reply) => {
   const body =
     ((request.body as DispatchBody & {
@@ -6789,10 +7024,6 @@ app.post("/api/orchestration/mediate", {
   emitSnapshot();
 
   if (arbitrationPlan.shouldRunCognition) {
-    if (!requireMediatedCognitionGovernance(request, reply)) {
-      return;
-    }
-
     const rolesToEnsure = preferredScheduleRoles(tracedArbitrationDecision);
     if (rolesToEnsure.length > 0) {
       await ensurePreferredIntelligenceLayers(rolesToEnsure);
