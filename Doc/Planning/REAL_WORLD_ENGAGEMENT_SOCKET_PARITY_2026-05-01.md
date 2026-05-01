@@ -40,3 +40,9 @@ budget to the harness.
   uses generic governance unless a later pass decides it should require real-world engagement.
 - The socket ticket remains short-lived and route-bound. Do not move engagement evidence into
   unsigned websocket query parameters unless the route is explicitly local-only.
+- Branch lifecycle: `codex/socket-realworld-engagement-20260501` was the PR #38 feature branch for
+  signed socket engagement evidence. PR #38 merged into `main` as `2fdd433` on 2026-05-01.
+  A post-merge review found that dashboard HTTP proxy calls still stripped the same evidence
+  headers, so the follow-up fix shipped through PR #39 as `24209de`. The stale remote branch was
+  deleted after both changes were present on `main` to avoid operators treating the obsolete branch
+  tip as newer than the merged production history.
