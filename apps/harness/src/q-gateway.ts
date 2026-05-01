@@ -34,7 +34,10 @@ import {
   getImmaculateHarnessName,
   matchesModelReference,
 } from "./q-model.js";
-import { resolveQLocalOllamaUrl } from "./q-local-model.js";
+import {
+  redactQInferenceProfile,
+  resolveQInferenceProfile
+} from "./q-inference-profile.js";
 import { createFailureCircuitBreaker } from "./q-resilience.js";
 
 type GatewayPrincipal = {
@@ -69,57 +72,23 @@ const app = Fastify({
 const persistence = createPersistence(process.env.IMMACULATE_RUNTIME_DIR);
 const GATEWAY_HOST = process.env.IMMACULATE_Q_GATEWAY_HOST ?? "127.0.0.1";
 const GATEWAY_PORT = Number(process.env.IMMACULATE_Q_GATEWAY_PORT ?? 8897);
-const OLLAMA_URL = resolveQLocalOllamaUrl();
-const MAX_MESSAGE_COUNT = Math.max(1, Number(process.env.IMMACULATE_Q_GATEWAY_MAX_MESSAGES ?? 24) || 24);
-const MAX_INPUT_CHARS = Math.max(512, Number(process.env.IMMACULATE_Q_GATEWAY_MAX_INPUT_CHARS ?? 16_000) || 16_000);
-const DEFAULT_TIMEOUT_MS = Math.max(
-  1_000,
-  Number(process.env.IMMACULATE_Q_GATEWAY_TIMEOUT_MS ?? process.env.IMMACULATE_OLLAMA_CONTROL_TIMEOUT_MS ?? 120_000) ||
-    120_000
-);
-const STRUCTURED_REQUEST_MAX_TOKENS = Math.max(
-  48,
-  Number(process.env.IMMACULATE_Q_GATEWAY_STRUCTURED_MAX_TOKENS ?? 96) || 96
-);
-const STRUCTURED_REQUEST_TIMEOUT_MS = Math.max(
-  5_000,
-  Number(
-    process.env.IMMACULATE_Q_GATEWAY_STRUCTURED_TIMEOUT_MS ?? Math.min(DEFAULT_TIMEOUT_MS, 45_000)
-  ) || Math.min(DEFAULT_TIMEOUT_MS, 45_000)
-);
-const STRUCTURED_REPAIR_TIMEOUT_MS = Math.max(
-  3_000,
-  Number(process.env.IMMACULATE_Q_GATEWAY_STRUCTURED_REPAIR_TIMEOUT_MS ?? 12_000) || 12_000
-);
-const STRUCTURED_FAST_NUM_CTX = Math.max(
-  256,
-  Number(process.env.IMMACULATE_Q_GATEWAY_STRUCTURED_FAST_NUM_CTX ?? 768) || 768
-);
-const STRUCTURED_FAST_NUM_BATCH = Math.max(
-  1,
-  Number(process.env.IMMACULATE_Q_GATEWAY_STRUCTURED_FAST_NUM_BATCH ?? 64) || 64
-);
-const BENCHMARK_NUM_CTX = Math.max(
-  512,
-  Number(process.env.IMMACULATE_Q_GATEWAY_BENCHMARK_NUM_CTX ?? 2048) || 2048
-);
-const BENCHMARK_NUM_BATCH = Math.max(
-  1,
-  Number(process.env.IMMACULATE_Q_GATEWAY_BENCHMARK_NUM_BATCH ?? 32) || 32
-);
+const INFERENCE_PROFILE = resolveQInferenceProfile();
+const PUBLIC_INFERENCE_PROFILE = redactQInferenceProfile(INFERENCE_PROFILE);
+const OLLAMA_URL = INFERENCE_PROFILE.runtimeUrl;
+const MAX_MESSAGE_COUNT = INFERENCE_PROFILE.requestBounds.maxMessages;
+const MAX_INPUT_CHARS = INFERENCE_PROFILE.requestBounds.maxInputChars;
+const DEFAULT_TIMEOUT_MS = INFERENCE_PROFILE.timeouts.defaultMs;
+const STRUCTURED_REQUEST_MAX_TOKENS = INFERENCE_PROFILE.structured.maxTokens;
+const STRUCTURED_REQUEST_TIMEOUT_MS = INFERENCE_PROFILE.timeouts.structuredMs;
+const STRUCTURED_REPAIR_TIMEOUT_MS = INFERENCE_PROFILE.timeouts.structuredRepairMs;
+const STRUCTURED_FAST_NUM_CTX = INFERENCE_PROFILE.structured.fastNumCtx;
+const STRUCTURED_FAST_NUM_BATCH = INFERENCE_PROFILE.structured.fastNumBatch;
+const BENCHMARK_NUM_CTX = INFERENCE_PROFILE.benchmark.numCtx;
+const BENCHMARK_NUM_BATCH = INFERENCE_PROFILE.benchmark.numBatch;
 const Q_MODEL_TARGET = getQModelTarget();
-const PRIMARY_FAILURE_THRESHOLD = Math.max(
-  1,
-  Number(process.env.IMMACULATE_Q_GATEWAY_PRIMARY_FAILURE_THRESHOLD ?? 2) || 2
-);
-const PRIMARY_COOLDOWN_MS = Math.max(
-  5_000,
-  Number(process.env.IMMACULATE_Q_GATEWAY_PRIMARY_COOLDOWN_MS ?? 120_000) || 120_000
-);
-const HEALTH_MODEL_CACHE_TTL_MS = Math.max(
-  1_000,
-  Number(process.env.IMMACULATE_Q_GATEWAY_HEALTH_CACHE_TTL_MS ?? 15_000) || 15_000
-);
+const PRIMARY_FAILURE_THRESHOLD = INFERENCE_PROFILE.circuit.primaryFailureThreshold;
+const PRIMARY_COOLDOWN_MS = INFERENCE_PROFILE.circuit.primaryCooldownMs;
+const HEALTH_MODEL_CACHE_TTL_MS = INFERENCE_PROFILE.timeouts.healthCacheTtlMs;
 const DEFAULT_RATE_LIMIT = normalizeQApiRateLimitPolicy(
   {
     requestsPerMinute:
@@ -166,7 +135,8 @@ app.log.info(
   {
     runtimeDir: persistence.getStatus().rootDir,
     qApiKeyStorePath: qApiKeyRegistry.getStorePath(),
-    release: releaseMetadata.buildId
+    release: releaseMetadata.buildId,
+    inference: PUBLIC_INFERENCE_PROFILE
   },
   "Q gateway configured"
 );
@@ -653,6 +623,7 @@ app.get("/health", async () => {
     identitySummary: getQIdentitySummary(),
     modelReady: installedModelNames.some((installedModelName) => matchesModelReference(installedModelName, Q_MODEL_TARGET)),
     circuit,
+    inference: PUBLIC_INFERENCE_PROFILE,
     authMode: "api-key",
     host: GATEWAY_HOST,
     port: GATEWAY_PORT
@@ -683,6 +654,7 @@ app.get("/api/q/info", async (request, reply) => {
       qTrainingBundleId: releaseMetadata.q.trainingLock?.bundleId
     },
     circuit: qPrimaryCircuit.snapshot(),
+    inference: PUBLIC_INFERENCE_PROFILE,
     authMode: "api-key",
     keyId: principal.key.keyId,
     rateLimit: principal.rateLimit,

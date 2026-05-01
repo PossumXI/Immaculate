@@ -47,6 +47,28 @@ What this unlocks next:
 - external agents and framework integrations can enter the same Immaculate/Arobi network baseline before they receive wider authority
 - future W&B, BridgeBench, Terminal-Bench, and Arobi ledger reports can ingest the same assessment records instead of each inventing a separate score format
 
+#### Q inference tuning moved into one typed profile
+
+What changed:
+- the Q gateway now resolves one `QInferenceProfile` for provider, request bounds, structured-generation knobs, health cache timing, benchmark tuning, and primary circuit policy
+- `/health` and `/api/q/info` expose a redacted inference profile so operators can verify the active route without leaking private runtime URLs
+- unsupported provider names fail closed during startup instead of silently falling back to a different inference lane
+
+Why it matters:
+- the gateway previously had its inference controls scattered across top-level constants, which made it too easy for operators to tune one part of the route while missing another
+- a single profile gives Q, Immaculate, and future OCI or OpenAI-compatible adapters one stable configuration contract
+- redacting runtime URLs preserves the private-host boundary while still proving which knobs are active
+
+Evidence:
+- `apps/harness/src/q-inference-profile.ts` owns the typed profile and redacted public view
+- `apps/harness/src/q-gateway.ts` now consumes that profile for the existing private Ollama-backed route without changing serving semantics
+- `apps/harness/src/q-inference-profile.test.ts` covers defaults, operator overrides, unsupported-provider fail-closed behavior, and URL redaction
+
+What this unlocks next:
+- a provider adapter can be added behind the same profile without changing the gateway's public OpenAI-compatible API
+- benchmark reports can record the active inference profile as evidence instead of reverse-engineering it from environment variables
+- rollout to private OCI routes can be audited from health/info payloads without exposing internal endpoints
+
 ### 2026-04-20
 
 #### Roundtable runtime is now cold-start reproducible
