@@ -56,6 +56,51 @@ test("dashboard socket tickets preserve real-world engagement evidence", () => {
   });
 });
 
+test("dashboard socket tickets preserve live neuro engagement evidence", () => {
+  const secret = "socket-secret";
+  const now = Date.now();
+  const ticket = signTicket(
+    {
+      route: "/stream/neuro/live",
+      actor: "dashboard",
+      policyId: "neuro-stream-default",
+      consentScope: "live-source:dashboard-live-socket",
+      purpose: ["neuro-streaming"],
+      receiptTarget: "harness:neuro-live-socket:dashboard",
+      operatorSummary: "Dashboard live neuro socket ingest request.",
+      operatorConfirmed: true,
+      rollbackPlan: "Close the live socket and stop any source ids acknowledged by the harness.",
+      exp: now + 60_000,
+      iat: now,
+      nonce: "nonce"
+    },
+    secret
+  );
+
+  const claims = verifyDashboardSocketTicketFromUrl(
+    `/stream/neuro/live?dashboardTicket=${ticket}`,
+    secret,
+    now
+  );
+
+  assert.deepEqual(claims, {
+    route: "/stream/neuro/live",
+    actor: "dashboard",
+    policyId: "neuro-stream-default",
+    consentScope: "live-source:dashboard-live-socket",
+    purpose: ["neuro-streaming"],
+    receiptTarget: "harness:neuro-live-socket:dashboard",
+    operatorSummary: "Dashboard live neuro socket ingest request.",
+    operatorConfirmed: true,
+    rollbackPlan: "Close the live socket and stop any source ids acknowledged by the harness.",
+    sanitizationProof: undefined,
+    budgetCents: undefined,
+    exp: now + 60_000,
+    iat: now,
+    nonce: "nonce"
+  });
+});
+
 test("dashboard socket tickets reject route reuse", () => {
   const secret = "socket-secret";
   const now = Date.now();

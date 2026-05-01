@@ -5333,7 +5333,8 @@ app.get("/api/devices/lsl/connections", {
 app.post("/api/devices/lsl/connect", {
   preHandler: requireGovernedActionPreHandler(
     "neuro-streaming",
-    "/api/devices/lsl/connect"
+    "/api/devices/lsl/connect",
+    { realWorldEngagement: "required" }
   ),
   config: {
     rateLimit: {
@@ -5392,7 +5393,8 @@ app.post("/api/devices/lsl/connect", {
 app.post("/api/devices/lsl/:sourceId/stop", {
   preHandler: requireGovernedActionPreHandler(
     "neuro-streaming",
-    "/api/devices/lsl/:sourceId/stop"
+    "/api/devices/lsl/:sourceId/stop",
+    { realWorldEngagement: "required" }
   )
 }, async (request, reply) => {
   const params = request.params as { sourceId?: string };
@@ -7852,7 +7854,8 @@ app.post("/api/neuro/replays/:replayId/stop", {
 app.post("/api/neuro/live/frame", {
   preHandler: requireGovernedActionPreHandler(
     "neuro-streaming",
-    "/api/neuro/live/frame"
+    "/api/neuro/live/frame",
+    { realWorldEngagement: "required" }
   )
 }, async (request, reply) => {
   try {
@@ -7877,7 +7880,8 @@ app.post("/api/neuro/live/frame", {
 app.post("/api/neuro/live/:sourceId/stop", {
   preHandler: requireGovernedActionPreHandler(
     "neuro-streaming",
-    "/api/neuro/live/:sourceId/stop"
+    "/api/neuro/live/:sourceId/stop",
+    { realWorldEngagement: "required" }
   )
 }, async (request, reply) => {
   const params = request.params as { sourceId?: string };
@@ -8075,14 +8079,18 @@ app.get("/stream/neuro/live", { websocket: true }, (socket, request) => {
   const decision = evaluateGovernedSocketAction(
     "neuro-streaming",
     "/stream/neuro/live",
-    request
+    request,
+    { realWorldEngagement: "required" }
   );
 
   if (!decision.allowed) {
+    const engagement = "engagement" in decision ? decision.engagement : undefined;
     socket.send(
       JSON.stringify({
         type: "error",
-        message: `Governance denied: ${decision.reason}`,
+        message: engagement
+          ? `Real-world engagement denied: ${decision.reason}`
+          : `Governance denied: ${decision.reason}`,
         decision
       })
     );

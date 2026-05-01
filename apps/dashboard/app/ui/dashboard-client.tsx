@@ -49,6 +49,24 @@ const benchmarkReadGovernance: GovernanceRequest = {
   actor: "dashboard"
 };
 
+function buildLiveNeuroGovernance(
+  consentScope: string,
+  receiptTarget: string,
+  operatorSummary: string,
+  rollbackPlan: string
+): GovernanceRequest {
+  return {
+    purpose: ["neuro-streaming"],
+    policyId: "neuro-stream-default",
+    consentScope,
+    actor: "dashboard",
+    receiptTarget,
+    operatorSummary,
+    operatorConfirmed: true,
+    rollbackPlan
+  };
+}
+
 function withOperatorHeaders(init?: RequestInit, governance?: GovernanceRequest): RequestInit {
   const headers = new Headers(init?.headers);
   if (governance) {
@@ -1257,12 +1275,15 @@ export function DashboardClient() {
     try {
       setLiveIngressRunning(true);
       const sessionId = snapshot?.neuroSessions[0]?.id;
-      const socket = await openGovernedHarnessSocket("/stream/neuro/live", {
-        purpose: ["neuro-streaming"],
-        policyId: "neuro-stream-default",
-        consentScope: sessionId ? `session:${sessionId}` : "live-source:dashboard-live-socket",
-        actor: "dashboard"
-      });
+      const socket = await openGovernedHarnessSocket(
+        "/stream/neuro/live",
+        buildLiveNeuroGovernance(
+          sessionId ? `session:${sessionId}` : "live-source:dashboard-live-socket",
+          "harness:neuro-live-socket:dashboard",
+          "Dashboard live neuro socket ingest request.",
+          "Close the live socket and stop any source ids acknowledged by the harness."
+        )
+      );
       await new Promise<void>((resolve, reject) => {
         let settled = false;
         const timeout = window.setTimeout(() => {
@@ -1343,12 +1364,12 @@ export function DashboardClient() {
       setLiveIngressStopping(true);
       const response = await governedHarnessFetch(
         `${harnessBaseUrl}/api/neuro/live/${source.id}/stop`,
-        {
-          purpose: ["neuro-streaming"],
-          policyId: "neuro-stream-default",
-          consentScope: `live-source:${source.id}`,
-          actor: "dashboard"
-        },
+        buildLiveNeuroGovernance(
+          `live-source:${source.id}`,
+          `harness:neuro-live-stop:dashboard:${source.id}`,
+          "Dashboard live neuro source stop request.",
+          "Confirm the source is no longer listed as running and preserve the stop receipt."
+        ),
         {
           method: "POST",
           cache: "no-store",

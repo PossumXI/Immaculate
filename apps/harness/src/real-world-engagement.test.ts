@@ -7,9 +7,34 @@ import {
 
 test("real-world engagement classifies physical and public behavior separately from basic risk", () => {
   assert.equal(classifyRealWorldEngagement("event-read").mode, "observe-only");
+  assert.equal(classifyRealWorldEngagement("neuro-streaming").mode, "internal-write");
+  assert.equal(classifyRealWorldEngagement("neuro-streaming").riskTier, 3);
   assert.equal(classifyRealWorldEngagement("benchmark-publication").mode, "public-publication");
   assert.equal(classifyRealWorldEngagement("operator-control").mode, "privileged-control");
   assert.equal(classifyRealWorldEngagement("actuation-dispatch").mode, "physical-actuation");
+});
+
+test("live neuro streaming is blocked until receipts, confirmation, and rollback evidence exist", () => {
+  const blocked = evaluateRealWorldEngagement("neuro-streaming", {
+    consentScope: "live-source:dashboard-live-socket",
+    purpose: ["neuro-streaming"],
+    receiptTarget: "runtime/receipts/neuro-live.ndjson",
+    operatorSummary: "Ingest a bounded live neuro frame."
+  });
+
+  assert.equal(blocked.allowed, false);
+  assert.deepEqual(blocked.missingEvidence, ["operator_confirmation", "rollback_plan"]);
+
+  const ready = evaluateRealWorldEngagement("neuro-streaming", {
+    consentScope: "live-source:dashboard-live-socket",
+    purpose: ["neuro-streaming"],
+    receiptTarget: "runtime/receipts/neuro-live.ndjson",
+    operatorSummary: "Ingest a bounded live neuro frame.",
+    operatorConfirmed: true,
+    rollbackPlan: "Stop the live source and preserve the ingress receipt."
+  });
+
+  assert.equal(ready.allowed, true);
 });
 
 test("physical actuation is blocked until receipts, confirmation, and rollback evidence exist", () => {
