@@ -49,6 +49,7 @@ import {
   buildSessionConversationMemory
 } from "./conversation.js";
 import { appendDecisionTraceRecord, createDecisionTraceSeed } from "./decision-trace.js";
+import { buildBenchmarkWorkerSpawnPlan } from "./benchmark-worker-spawn.js";
 import {
   loadPublishedBenchmarkIndex,
   loadPublishedBenchmarkReport,
@@ -2473,26 +2474,13 @@ function startBenchmarkJob(options: {
         workerArgs.push("--publishWandb");
       }
 
-      const isTsRuntime = import.meta.url.endsWith(".ts");
-      const command =
-        isTsRuntime && process.platform === "win32"
-          ? "cmd.exe"
-          : isTsRuntime
-            ? "npx"
-            : process.execPath;
-      const args =
-        isTsRuntime && process.platform === "win32"
-          ? [
-              "/d",
-              "/s",
-              "/c",
-              `npx tsx ${BENCHMARK_WORKER_PATH} ${workerArgs.join(" ")}`
-            ]
-          : isTsRuntime
-            ? ["tsx", BENCHMARK_WORKER_PATH, ...workerArgs]
-            : [BENCHMARK_WORKER_PATH, ...workerArgs];
+      const spawnPlan = buildBenchmarkWorkerSpawnPlan({
+        isTsRuntime: import.meta.url.endsWith(".ts"),
+        workerPath: BENCHMARK_WORKER_PATH,
+        workerArgs
+      });
 
-      const child = spawn(command, args, {
+      const child = spawn(spawnPlan.command, spawnPlan.args, {
         cwd: path.resolve(MODULE_ROOT, ".."),
         env: process.env
       });
