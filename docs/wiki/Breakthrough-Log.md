@@ -135,6 +135,25 @@ What this unlocks next:
 - the remaining route-security work can focus on narrower issues instead of dozens of repeated handler-local authorization patterns
 - future CodeQL findings can point at true exceptions rather than the common route shape
 
+#### Remaining high CodeQL findings were reduced to bounded primitives
+
+What changed:
+- federation key IDs are now HMAC-derived identifiers instead of direct SHA-256 prefixes of shared secrets
+- neuro replay options now normalize window size, replay length, and timer pace through explicit min/max bounds before creating intervals
+
+Why it matters:
+- federation peers still get stable key IDs, but the ID is no longer a raw password hash that can be compared directly against leaked or guessed secrets
+- replay timers now have bounded user-controlled duration and bounded frame construction inputs, reducing denial-of-service risk from oversized replay requests
+
+Evidence:
+- `apps/harness/src/federation.ts` derives key IDs with `createHmac("sha256", secret)` over a fixed domain string
+- `apps/harness/src/neuro-replay-options.ts` exposes `normalizeNeuroReplayOptions`, and `neuro-replay.ts` uses it before `setInterval`
+- `apps/harness/src/federation.test.ts` and `apps/harness/src/neuro-replay.test.ts` cover the new security invariants
+
+What this unlocks next:
+- the remaining code-scanning backlog can move from route/rate-limit primitives to deeper trust-boundary review
+- replay controls can be surfaced to operators with clear documented bounds instead of hidden ad hoc clamping
+
 ### 2026-04-20
 
 #### Roundtable runtime is now cold-start reproducible

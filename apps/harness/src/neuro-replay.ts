@@ -6,6 +6,10 @@ import {
   type NeuroSessionSummary
 } from "@immaculate/core";
 import { buildNwbReplayFrames } from "./nwb.js";
+import {
+  normalizeNeuroReplayOptions,
+  type StartReplayOptions
+} from "./neuro-replay-options.js";
 import { hashValue } from "./utils.js";
 
 type ReplayRecord = {
@@ -20,12 +24,6 @@ type ReplayRecord = {
 type ReplayCallbacks = {
   onReplayUpdate: (replay: NeuroReplayState) => Promise<void> | void;
   onFrame: (frame: NeuroFrameWindow) => Promise<void> | void;
-};
-
-type StartReplayOptions = {
-  windowSize?: number;
-  paceMs?: number;
-  maxWindows?: number;
 };
 
 function cloneReplayState(replay: NeuroReplayState): NeuroReplayState {
@@ -112,12 +110,11 @@ export function createNeuroReplayManager(callbacks: ReplayCallbacks) {
     ): Promise<NeuroReplayState> {
       const startedAt = new Date().toISOString();
       const replayId = `replay-${hashValue(`${session.id}:${startedAt}`)}`;
-      const windowSize = Math.max(1, options.windowSize ?? 2);
-      const paceMs = Math.max(20, options.paceMs ?? 120);
+      const replayOptions = normalizeNeuroReplayOptions(options);
       const frames = await buildNwbReplayFrames(session.filePath, {
         replayId,
-        windowSize,
-        maxWindows: options.maxWindows
+        windowSize: replayOptions.windowSize,
+        maxWindows: replayOptions.maxWindows
       });
 
       const replay = neuroReplayStateSchema.parse({
@@ -126,8 +123,8 @@ export function createNeuroReplayManager(callbacks: ReplayCallbacks) {
         name: session.name,
         source: "nwb-replay",
         status: "running",
-        windowSize,
-        paceMs,
+        windowSize: replayOptions.windowSize,
+        paceMs: replayOptions.paceMs,
         totalWindows: frames.length,
         completedWindows: 0,
         decodeReadyRatio: 0,
@@ -145,9 +142,14 @@ export function createNeuroReplayManager(callbacks: ReplayCallbacks) {
         }) as NeuroReplayState;
       }
 
+      const intervalPaceMs = replayOptions.paceMs;
+      if (!Number.isSafeInteger(intervalPaceMs) || intervalPaceMs < 20 || intervalPaceMs > 10_000) {
+        throw new Error(`Normalized replay pace ${intervalPaceMs}ms is outside the governed timer bounds.`);
+      }
+
       const timer = setInterval(() => {
         void tickReplay(replayId);
-      }, paceMs);
+      }, intervalPaceMs);
       active.set(replayId, {
         state: replay,
         frames,
