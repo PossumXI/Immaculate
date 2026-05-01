@@ -929,7 +929,12 @@ export function DashboardClient() {
             purpose: ["operator-control"],
             policyId: "operator-control-default",
             consentScope: "operator:dashboard",
-            actor: "dashboard"
+            actor: "dashboard",
+            receiptTarget: "harness:control:dashboard-socket",
+            operatorSummary: "Dashboard operator control websocket update.",
+            operatorConfirmed: true,
+            rollbackPlan: "Apply the inverse control command or restore the last persisted snapshot.",
+            budgetCents: 0
           });
           if (cancelled) {
             nextSocket.close();

@@ -6,6 +6,12 @@ export type DashboardSocketTicketClaims = {
   policyId: string;
   consentScope: string;
   purpose: string[];
+  receiptTarget?: string;
+  operatorSummary?: string;
+  operatorConfirmed?: boolean;
+  rollbackPlan?: string;
+  sanitizationProof?: string;
+  budgetCents?: number;
   exp: number;
   iat: number;
   nonce: string;
@@ -49,6 +55,25 @@ function verifySignedToken<T>(token: string | null | undefined, secret: string):
 
 function isSupportedRoute(route: string): route is DashboardSocketTicketClaims["route"] {
   return route === "/stream" || route === "/stream/neuro/live";
+}
+
+function normalizeOptionalText(value: unknown): string | undefined {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+  const normalized = value.trim();
+  return normalized ? normalized.slice(0, 2000) : undefined;
+}
+
+function normalizeOptionalBoolean(value: unknown): boolean | undefined {
+  return typeof value === "boolean" ? value : undefined;
+}
+
+function normalizeOptionalBudgetCents(value: unknown): number | undefined {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+    return undefined;
+  }
+  return Math.round(value);
 }
 
 export function verifyDashboardSocketTicketFromUrl(
@@ -98,6 +123,12 @@ export function verifyDashboardSocketTicketFromUrl(
     actor: payload.actor.trim(),
     policyId: payload.policyId.trim(),
     consentScope: payload.consentScope.trim(),
-    purpose: payload.purpose.map((entry) => entry.trim())
+    purpose: payload.purpose.map((entry) => entry.trim()),
+    receiptTarget: normalizeOptionalText(payload.receiptTarget),
+    operatorSummary: normalizeOptionalText(payload.operatorSummary),
+    operatorConfirmed: normalizeOptionalBoolean(payload.operatorConfirmed),
+    rollbackPlan: normalizeOptionalText(payload.rollbackPlan),
+    sanitizationProof: normalizeOptionalText(payload.sanitizationProof),
+    budgetCents: normalizeOptionalBudgetCents(payload.budgetCents)
   };
 }

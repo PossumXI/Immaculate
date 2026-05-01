@@ -6,6 +6,12 @@ export type GovernanceRequest = {
   policyId: string;
   consentScope: string;
   actor?: string;
+  receiptTarget?: string;
+  operatorSummary?: string;
+  operatorConfirmed?: boolean;
+  rollbackPlan?: string;
+  sanitizationProof?: string;
+  budgetCents?: number;
 };
 
 export type DashboardSocketRoute = "/stream" | "/stream/neuro/live";
@@ -26,6 +32,12 @@ type DashboardSocketTicketPayload = {
   policyId: string;
   consentScope: string;
   purpose: string[];
+  receiptTarget?: string;
+  operatorSummary?: string;
+  operatorConfirmed?: boolean;
+  rollbackPlan?: string;
+  sanitizationProof?: string;
+  budgetCents?: number;
   exp: number;
   iat: number;
   nonce: string;
@@ -92,6 +104,18 @@ function verifySignedToken<T>(token: string | null | undefined, secret: string):
   return decodeTokenPayload<T>(encodedPayload);
 }
 
+function normalizeOptionalText(value: string | undefined): string | undefined {
+  const normalized = value?.trim();
+  return normalized ? normalized.slice(0, 2000) : undefined;
+}
+
+function normalizeOptionalBudgetCents(value: number | undefined): number | undefined {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+    return undefined;
+  }
+  return Math.round(value);
+}
+
 function normalizeGovernanceRequest(governance: GovernanceRequest): GovernanceRequest {
   return {
     purpose: Array.from(
@@ -104,7 +128,14 @@ function normalizeGovernanceRequest(governance: GovernanceRequest): GovernanceRe
     ),
     policyId: governance.policyId.trim(),
     consentScope: governance.consentScope.trim(),
-    actor: governance.actor?.trim() || undefined
+    actor: normalizeOptionalText(governance.actor),
+    receiptTarget: normalizeOptionalText(governance.receiptTarget),
+    operatorSummary: normalizeOptionalText(governance.operatorSummary),
+    operatorConfirmed:
+      typeof governance.operatorConfirmed === "boolean" ? governance.operatorConfirmed : undefined,
+    rollbackPlan: normalizeOptionalText(governance.rollbackPlan),
+    sanitizationProof: normalizeOptionalText(governance.sanitizationProof),
+    budgetCents: normalizeOptionalBudgetCents(governance.budgetCents)
   };
 }
 
@@ -122,7 +153,23 @@ function isValidGovernanceRequest(value: unknown): value is GovernanceRequest {
     typeof candidate.consentScope === "string" &&
     candidate.consentScope.trim().length > 0 &&
     (candidate.actor === undefined ||
-      (typeof candidate.actor === "string" && candidate.actor.trim().length > 0))
+      (typeof candidate.actor === "string" && candidate.actor.trim().length > 0)) &&
+    (candidate.receiptTarget === undefined ||
+      (typeof candidate.receiptTarget === "string" && candidate.receiptTarget.trim().length > 0)) &&
+    (candidate.operatorSummary === undefined ||
+      (typeof candidate.operatorSummary === "string" &&
+        candidate.operatorSummary.trim().length > 0)) &&
+    (candidate.operatorConfirmed === undefined ||
+      typeof candidate.operatorConfirmed === "boolean") &&
+    (candidate.rollbackPlan === undefined ||
+      (typeof candidate.rollbackPlan === "string" && candidate.rollbackPlan.trim().length > 0)) &&
+    (candidate.sanitizationProof === undefined ||
+      (typeof candidate.sanitizationProof === "string" &&
+        candidate.sanitizationProof.trim().length > 0)) &&
+    (candidate.budgetCents === undefined ||
+      (typeof candidate.budgetCents === "number" &&
+        Number.isFinite(candidate.budgetCents) &&
+        candidate.budgetCents >= 0))
   );
 }
 
@@ -214,6 +261,12 @@ export function createDashboardSocketTicket(options: {
       policyId: governance.policyId,
       consentScope: governance.consentScope,
       purpose: governance.purpose,
+      receiptTarget: governance.receiptTarget,
+      operatorSummary: governance.operatorSummary,
+      operatorConfirmed: governance.operatorConfirmed,
+      rollbackPlan: governance.rollbackPlan,
+      sanitizationProof: governance.sanitizationProof,
+      budgetCents: governance.budgetCents,
       exp: now + DASHBOARD_SOCKET_TICKET_DURATION_MS,
       iat: now,
       nonce: randomBytes(8).toString("hex")
