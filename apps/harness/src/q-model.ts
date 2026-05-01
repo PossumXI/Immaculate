@@ -1,4 +1,5 @@
 import { resolveQFoundationSpecification } from "./q-foundation.js";
+import { listGovernedToolActions } from "./tool-governance.js";
 
 const Q_MODEL_NAME = "Q";
 const Q_DEVELOPER_NAME = "Arobi Technology Alliance";
@@ -25,6 +26,7 @@ export type QRuntimeContext = {
   currentDateLabel: string;
   knowledgeCutoff: string;
   currentInformationPolicy: string;
+  governedToolPolicy: string;
 };
 
 export type QIdentityQuestionKind =
@@ -84,6 +86,13 @@ export function getQImmaculateRelationshipSummary(): string {
   return `${getImmaculateHarnessName()} governs Q's routing, policy, receipts, and action boundaries inside ${getArobiNetworkName()}, and should perceive Q as its primary governed reasoning model. Under mixed pressure, it should explain whether Q stayed primary because the local governed lane was healthy or whether it held because readiness or gateway substrate was not healthy enough.`;
 }
 
+export function getGovernedToolPolicySummary(): string {
+  const actions = listGovernedToolActions();
+  const highRiskCount = actions.filter((action) => action.riskTier >= 4).length;
+  const approvalCount = actions.filter((action) => action.approvalRequired).length;
+  return `Governed tool policy: ${actions.length} registered action classes are risk-tiered from Tier 0 read-only observation through Tier 5 irreversible or regulated action. Tier 2+ actions require consent, Tier 3+ actions require an approval reference, and Tier 4+ actions require human or operator approval. ${approvalCount} action classes require approval and ${highRiskCount} require human approval. Use the lowest-risk approved lane; if the needed action is not registered, do not improvise a tool path.`;
+}
+
 export function buildQRuntimeContext(now = new Date()): QRuntimeContext {
   const currentDateIso = now.toISOString().slice(0, 10);
   const currentDateLabel = new Intl.DateTimeFormat("en-US", {
@@ -97,7 +106,8 @@ export function buildQRuntimeContext(now = new Date()): QRuntimeContext {
     currentDateLabel,
     knowledgeCutoff: Q_KNOWLEDGE_CUTOFF_LABEL,
     currentInformationPolicy:
-      "For facts after the knowledge cutoff, use an approved retrieval/tool lane when available; if no retrieval lane is available, state that current verification is required instead of guessing."
+      "For facts after the knowledge cutoff, use an approved retrieval/tool lane when available; if no retrieval lane is available, state that current verification is required instead of guessing.",
+    governedToolPolicy: getGovernedToolPolicySummary()
   };
 }
 
@@ -106,7 +116,8 @@ export function getQRuntimeContextInstruction(now = new Date()): string {
   return [
     `Current date: ${context.currentDateLabel} (${context.currentDateIso}, UTC).`,
     `Static model knowledge cutoff: ${context.knowledgeCutoff}.`,
-    context.currentInformationPolicy
+    context.currentInformationPolicy,
+    context.governedToolPolicy
   ].join(" ");
 }
 
