@@ -36,6 +36,12 @@ type GovernanceRequest = {
   policyId: string;
   consentScope: string;
   actor?: string;
+  receiptTarget?: string;
+  operatorSummary?: string;
+  operatorConfirmed?: boolean;
+  rollbackPlan?: string;
+  sanitizationProof?: string;
+  budgetCents?: number;
 };
 
 type FocusPane = "nodes" | "passes" | "logs";
@@ -344,6 +350,24 @@ async function harnessFetch(
     if (governance.actor) {
       headers.set("x-immaculate-actor", governance.actor);
     }
+    if (governance.receiptTarget) {
+      headers.set("x-immaculate-receipt-target", governance.receiptTarget);
+    }
+    if (governance.operatorSummary) {
+      headers.set("x-immaculate-operator-summary", governance.operatorSummary);
+    }
+    if (governance.operatorConfirmed !== undefined) {
+      headers.set("x-immaculate-operator-confirmed", String(governance.operatorConfirmed));
+    }
+    if (governance.rollbackPlan) {
+      headers.set("x-immaculate-rollback-plan", governance.rollbackPlan);
+    }
+    if (governance.sanitizationProof) {
+      headers.set("x-immaculate-sanitization-proof", governance.sanitizationProof);
+    }
+    if (governance.budgetCents !== undefined) {
+      headers.set("x-immaculate-budget-cents", String(governance.budgetCents));
+    }
   }
 
   return fetch(harnessUrl(pathname), {
@@ -382,7 +406,12 @@ async function sendControl(envelope: ControlEnvelope): Promise<void> {
     purpose: ["operator-control"],
     policyId: "operator-control-default",
     consentScope: "operator:tui",
-    actor: "tui"
+    actor: "tui",
+    receiptTarget: "harness:control:tui",
+    operatorSummary: "TUI operator control update.",
+    operatorConfirmed: true,
+    rollbackPlan: "Apply the inverse control command or restore the last persisted snapshot.",
+    budgetCents: 0
   });
   await ensureSuccessfulResponse(response, "Failed to send control.");
 }
@@ -416,7 +445,11 @@ async function dispatchActuation(sessionId?: string): Promise<void> {
     purpose: ["actuation-dispatch"],
     policyId: "actuation-dispatch-default",
     consentScope: sessionId ? `session:${sessionId}` : "system:actuation",
-    actor: "tui"
+    actor: "tui",
+    receiptTarget: "harness:actuation-dispatch:tui",
+    operatorSummary: "TUI actuation dispatch request.",
+    operatorConfirmed: true,
+    rollbackPlan: "Stop or reset the selected actuation transport and preserve the delivery receipt."
   });
   await ensureSuccessfulResponse(response, "Failed to dispatch actuation.");
 }
@@ -432,7 +465,12 @@ async function publishBenchmarkToWandb(): Promise<void> {
     purpose: ["benchmark-publication"],
     policyId: "benchmark-publication-default",
     consentScope: "system:benchmark",
-    actor: "tui"
+    actor: "tui",
+    receiptTarget: "harness:benchmark-publication:tui",
+    operatorSummary: "Publish the current benchmark report to W&B.",
+    operatorConfirmed: true,
+    rollbackPlan: "Remove or supersede the external W&B run with a corrected report.",
+    sanitizationProof: "Benchmark publication uses the harness-generated report without private runtime payloads."
   });
   await ensureSuccessfulResponse(response, "Failed to publish benchmark to W&B.");
 }
