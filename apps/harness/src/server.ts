@@ -98,6 +98,10 @@ import {
   type GovernanceAction,
   type GovernanceBinding
 } from "./governance.js";
+import {
+  buildGovernedGoalAdmission,
+  governedGoalStateContract
+} from "./goal-state.js";
 import { createPersistence } from "./persistence.js";
 import {
   buildRoutingDecision,
@@ -4622,6 +4626,34 @@ app.post("/api/governance/tool-actions/admission", {
     })
   };
 });
+
+app.get("/api/goals/schema", {
+  preHandler: app.rateLimit({
+    max: HARNESS_READ_RATE_LIMIT_MAX,
+    timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: HARNESS_READ_RATE_LIMIT_MAX,
+      timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async () => ({
+  goalState: governedGoalStateContract
+}));
+
+app.post("/api/goals/admission", {
+  preHandler: app.rateLimit({
+    max: HARNESS_READ_RATE_LIMIT_MAX,
+    timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+  }),
+  config: {
+    rateLimit: {
+      max: HARNESS_READ_RATE_LIMIT_MAX,
+      timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async (request) => buildGovernedGoalAdmission(request.body));
 
 app.get("/api/governance/decisions", {
   preHandler: app.rateLimit({
