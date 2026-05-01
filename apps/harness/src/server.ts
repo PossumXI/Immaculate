@@ -2174,6 +2174,33 @@ function requireGovernedActionPreHandler(action: GovernanceAction, route: string
   };
 }
 
+function requireFederationGovernedPreHandler(action: GovernanceAction, route: string) {
+  return async (request: FastifyRequest, reply: FastifyReply) => {
+    if (rejectFederationQueryToken(request, reply)) {
+      return reply;
+    }
+    if (!authorizeGovernedAction(action, route, request, reply)) {
+      return reply;
+    }
+    return undefined;
+  };
+}
+
+function requireMediatedCognitionGovernance(
+  request: FastifyRequest,
+  reply: FastifyReply
+): boolean {
+  return authorizeGovernedAction(
+    "cognitive-execution",
+    "/api/orchestration/mediate:cognition",
+    request,
+    reply,
+    {
+      policyIdOverride: "cognitive-run-default"
+    }
+  );
+}
+
 function authorizeGovernedResourceRead(
   action: GovernanceAction,
   route: string,
@@ -4409,18 +4436,9 @@ app.get("/api/history", async () => ({
   history: engine.getHistory().map((point) => snapshotHistoryPointSchema.parse(point))
 }));
 
-app.get("/api/events", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "event-read",
-      "/api/events",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.get("/api/events", {
+  preHandler: requireGovernedActionPreHandler("event-read", "/api/events")
+}, async (request, reply) => {
   return {
     events: engine
       .getEvents()
@@ -4438,18 +4456,9 @@ app.get("/api/events", async (request, reply) => {
   };
 });
 
-app.get("/api/replay", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "event-read",
-      "/api/replay",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.get("/api/replay", {
+  preHandler: requireGovernedActionPreHandler("event-read", "/api/replay")
+}, async (request) => {
   const query = request.query as {
     after?: string;
     limit?: string;
@@ -4676,18 +4685,12 @@ app.get("/api/neuro/live/sources", async () => ({
   sources: liveNeuroManager.list()
 }));
 
-app.get("/api/devices/lsl/streams", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "neuro-streaming",
-      "/api/devices/lsl/streams",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.get("/api/devices/lsl/streams", {
+  preHandler: requireGovernedActionPreHandler(
+    "neuro-streaming",
+    "/api/devices/lsl/streams"
+  )
+}, async () => {
   const discovery = await lslAdapterManager.discover();
   return {
     accepted: true,
@@ -4696,18 +4699,12 @@ app.get("/api/devices/lsl/streams", async (request, reply) => {
   };
 });
 
-app.get("/api/devices/lsl/connections", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "neuro-streaming",
-      "/api/devices/lsl/connections",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.get("/api/devices/lsl/connections", {
+  preHandler: requireGovernedActionPreHandler(
+    "neuro-streaming",
+    "/api/devices/lsl/connections"
+  )
+}, async () => {
   return {
     accepted: true,
     connections: lslAdapterManager.listConnections(),
@@ -4715,18 +4712,12 @@ app.get("/api/devices/lsl/connections", async (request, reply) => {
   };
 });
 
-app.post("/api/devices/lsl/connect", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "neuro-streaming",
-      "/api/devices/lsl/connect",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/devices/lsl/connect", {
+  preHandler: requireGovernedActionPreHandler(
+    "neuro-streaming",
+    "/api/devices/lsl/connect"
+  )
+}, async (request, reply) => {
   const body =
     ((request.body as {
       sourceId?: string;
@@ -4774,18 +4765,12 @@ app.post("/api/devices/lsl/connect", async (request, reply) => {
   }
 });
 
-app.post("/api/devices/lsl/:sourceId/stop", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "neuro-streaming",
-      "/api/devices/lsl/:sourceId/stop",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/devices/lsl/:sourceId/stop", {
+  preHandler: requireGovernedActionPreHandler(
+    "neuro-streaming",
+    "/api/devices/lsl/:sourceId/stop"
+  )
+}, async (request, reply) => {
   const params = request.params as { sourceId?: string };
   if (!params.sourceId) {
     reply.code(400);
@@ -4813,18 +4798,12 @@ app.post("/api/devices/lsl/:sourceId/stop", async (request, reply) => {
   };
 });
 
-app.get("/api/neuro/frames", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "neuro-feature-read",
-      "/api/neuro/frames",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.get("/api/neuro/frames", {
+  preHandler: requireGovernedActionPreHandler(
+    "neuro-feature-read",
+    "/api/neuro/frames"
+  )
+}, async (request, reply) => {
   const binding = getGovernanceBinding("neuro-feature-read", "/api/neuro/frames", request);
   const query = (request.query as { sessionId?: string } | undefined) ?? {};
   const consentScope = binding.consentScope;
@@ -5266,18 +5245,12 @@ app.post("/api/q/run", async (request, reply) => {
   }
 });
 
-app.get("/api/intelligence/executions", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "cognitive-trace-read",
-      "/api/intelligence/executions",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.get("/api/intelligence/executions", {
+  preHandler: requireGovernedActionPreHandler(
+    "cognitive-trace-read",
+    "/api/intelligence/executions"
+  )
+}, async (request) => {
   const binding = getGovernanceBinding(
     "cognitive-trace-read",
     "/api/intelligence/executions",
@@ -5296,18 +5269,12 @@ app.get("/api/intelligence/executions", async (request, reply) => {
   };
 });
 
-app.get("/api/nodes", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "cognitive-trace-read",
-      "/api/nodes",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.get("/api/nodes", {
+  preHandler: requireGovernedActionPreHandler(
+    "cognitive-trace-read",
+    "/api/nodes"
+  )
+}, async (request) => {
   const consentScope = getGovernanceBinding("cognitive-trace-read", "/api/nodes", request).consentScope;
   const nodeState = await nodeRegistry.listNodes();
   return {
@@ -5319,21 +5286,12 @@ app.get("/api/nodes", async (request, reply) => {
   };
 });
 
-app.get("/api/federation/membership", async (request, reply) => {
-  if (rejectFederationQueryToken(request, reply)) {
-    return;
-  }
-  if (
-    !authorizeGovernedAction(
-      "cognitive-trace-read",
-      "/api/federation/membership",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.get("/api/federation/membership", {
+  preHandler: requireFederationGovernedPreHandler(
+    "cognitive-trace-read",
+    "/api/federation/membership"
+  )
+}, async (_request, reply) => {
   try {
     const membership = await buildFederationMembershipExport();
     return {
@@ -5349,21 +5307,12 @@ app.get("/api/federation/membership", async (request, reply) => {
   }
 });
 
-app.get("/api/federation/leases", async (request, reply) => {
-  if (rejectFederationQueryToken(request, reply)) {
-    return;
-  }
-  if (
-    !authorizeGovernedAction(
-      "cognitive-trace-read",
-      "/api/federation/leases",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.get("/api/federation/leases", {
+  preHandler: requireFederationGovernedPreHandler(
+    "cognitive-trace-read",
+    "/api/federation/leases"
+  )
+}, async (_request, reply) => {
   try {
     const leases = await buildFederationLeaseExport();
     return {
@@ -5379,39 +5328,24 @@ app.get("/api/federation/leases", async (request, reply) => {
   }
 });
 
-app.get("/api/federation/peers", async (request, reply) => {
-  if (rejectFederationQueryToken(request, reply)) {
-    return;
-  }
-  if (
-    !authorizeGovernedAction(
-      "cognitive-trace-read",
-      "/api/federation/peers",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.get("/api/federation/peers", {
+  preHandler: requireFederationGovernedPreHandler(
+    "cognitive-trace-read",
+    "/api/federation/peers"
+  )
+}, async () => {
   return {
     accepted: true,
     peers: await federationPeerRegistry.listPeers()
   };
 });
 
-app.get("/api/intelligence/workers", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "cognitive-trace-read",
-      "/api/intelligence/workers",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.get("/api/intelligence/workers", {
+  preHandler: requireGovernedActionPreHandler(
+    "cognitive-trace-read",
+    "/api/intelligence/workers"
+  )
+}, async (request) => {
   const consentScope = getGovernanceBinding(
     "cognitive-trace-read",
     "/api/intelligence/workers",
@@ -5437,18 +5371,12 @@ app.get("/api/intelligence/workers", async (request, reply) => {
   };
 });
 
-app.get("/api/intelligence/arbitrations", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "cognitive-trace-read",
-      "/api/intelligence/arbitrations",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.get("/api/intelligence/arbitrations", {
+  preHandler: requireGovernedActionPreHandler(
+    "cognitive-trace-read",
+    "/api/intelligence/arbitrations"
+  )
+}, async (request) => {
   const consentScope = getGovernanceBinding(
     "cognitive-trace-read",
     "/api/intelligence/arbitrations",
@@ -5460,18 +5388,12 @@ app.get("/api/intelligence/arbitrations", async (request, reply) => {
   };
 });
 
-app.get("/api/intelligence/schedules", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "cognitive-trace-read",
-      "/api/intelligence/schedules",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.get("/api/intelligence/schedules", {
+  preHandler: requireGovernedActionPreHandler(
+    "cognitive-trace-read",
+    "/api/intelligence/schedules"
+  )
+}, async (request) => {
   const consentScope = getGovernanceBinding(
     "cognitive-trace-read",
     "/api/intelligence/schedules",
@@ -5485,18 +5407,12 @@ app.get("/api/intelligence/schedules", async (request, reply) => {
   };
 });
 
-app.get("/api/intelligence/conversations", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "cognitive-trace-read",
-      "/api/intelligence/conversations",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.get("/api/intelligence/conversations", {
+  preHandler: requireGovernedActionPreHandler(
+    "cognitive-trace-read",
+    "/api/intelligence/conversations"
+  )
+}, async (request) => {
   const consentScope = getGovernanceBinding(
     "cognitive-trace-read",
     "/api/intelligence/conversations",
@@ -5510,18 +5426,12 @@ app.get("/api/intelligence/conversations", async (request, reply) => {
   };
 });
 
-app.get("/api/actuation/outputs", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "actuation-read",
-      "/api/actuation/outputs",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.get("/api/actuation/outputs", {
+  preHandler: requireGovernedActionPreHandler(
+    "actuation-read",
+    "/api/actuation/outputs"
+  )
+}, async (request, reply) => {
   const binding = getGovernanceBinding("actuation-read", "/api/actuation/outputs", request);
   const query = (request.query as { sessionId?: string } | undefined) ?? {};
   const consentScope = binding.consentScope;
@@ -5558,18 +5468,12 @@ app.get("/api/actuation/protocols", async () => ({
   protocols: actuationManager.listProtocols()
 }));
 
-app.get("/api/actuation/transports", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "actuation-read",
-      "/api/actuation/transports",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.get("/api/actuation/transports", {
+  preHandler: requireGovernedActionPreHandler(
+    "actuation-read",
+    "/api/actuation/transports"
+  )
+}, async (request) => {
   return {
     transports: actuationManager.listTransports(),
     visibility: deriveVisibilityScope(
@@ -5578,18 +5482,12 @@ app.get("/api/actuation/transports", async (request, reply) => {
   };
 });
 
-app.get("/api/actuation/deliveries", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "actuation-read",
-      "/api/actuation/deliveries",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.get("/api/actuation/deliveries", {
+  preHandler: requireGovernedActionPreHandler(
+    "actuation-read",
+    "/api/actuation/deliveries"
+  )
+}, async (request, reply) => {
   const query = (request.query as { limit?: string; sessionId?: string } | undefined) ?? {};
   const limit = query.limit ? Number(query.limit) : undefined;
   const consentScope =
@@ -5645,17 +5543,6 @@ app.get("/api/intelligence/q/models", listQRuntimeModels);
 app.get("/api/intelligence/ollama/models", listQRuntimeModels);
 
 async function registerQRuntimeLayer(request: FastifyRequest, reply: FastifyReply) {
-  if (
-    !authorizeGovernedAction(
-      "cognitive-registration",
-      "/api/intelligence/q/register",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
   const body =
     (request.body as { role?: IntelligenceLayer["role"]; model?: string } | undefined) ?? {};
 
@@ -5702,21 +5589,25 @@ async function registerQRuntimeLayer(request: FastifyRequest, reply: FastifyRepl
   }
 }
 
-app.post("/api/intelligence/q/register", registerQRuntimeLayer);
-app.post("/api/intelligence/ollama/register", registerQRuntimeLayer);
+app.post("/api/intelligence/q/register", {
+  preHandler: requireGovernedActionPreHandler(
+    "cognitive-registration",
+    "/api/intelligence/q/register"
+  )
+}, registerQRuntimeLayer);
+app.post("/api/intelligence/ollama/register", {
+  preHandler: requireGovernedActionPreHandler(
+    "cognitive-registration",
+    "/api/intelligence/q/register"
+  )
+}, registerQRuntimeLayer);
 
-app.post("/api/intelligence/workers/register", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "cognitive-registration",
-      "/api/intelligence/workers/register",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/intelligence/workers/register", {
+  preHandler: requireGovernedActionPreHandler(
+    "cognitive-registration",
+    "/api/intelligence/workers/register"
+  )
+}, async (request, reply) => {
   const body =
     (request.body as {
       workerId?: string;
@@ -5819,18 +5710,12 @@ app.post("/api/intelligence/workers/register", async (request, reply) => {
   }
 });
 
-app.post("/api/intelligence/workers/:workerId/heartbeat", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "cognitive-registration",
-      "/api/intelligence/workers/:workerId/heartbeat",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/intelligence/workers/:workerId/heartbeat", {
+  preHandler: requireGovernedActionPreHandler(
+    "cognitive-registration",
+    "/api/intelligence/workers/:workerId/heartbeat"
+  )
+}, async (request, reply) => {
   const params = request.params as { workerId?: string };
   const body =
     (request.body as {
@@ -5934,18 +5819,12 @@ app.post("/api/intelligence/workers/:workerId/heartbeat", async (request, reply)
   }
 });
 
-app.post("/api/intelligence/workers/:workerId/unregister", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "cognitive-registration",
-      "/api/intelligence/workers/:workerId/unregister",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/intelligence/workers/:workerId/unregister", {
+  preHandler: requireGovernedActionPreHandler(
+    "cognitive-registration",
+    "/api/intelligence/workers/:workerId/unregister"
+  )
+}, async (request, reply) => {
   const params = request.params as { workerId?: string };
   if (!params.workerId?.trim()) {
     reply.code(400);
@@ -5970,18 +5849,12 @@ app.post("/api/intelligence/workers/:workerId/unregister", async (request, reply
   };
 });
 
-app.post("/api/intelligence/workers/assign", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "cognitive-execution",
-      "/api/intelligence/workers/assign",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/intelligence/workers/assign", {
+  preHandler: requireGovernedActionPreHandler(
+    "cognitive-execution",
+    "/api/intelligence/workers/assign"
+  )
+}, async (request, reply) => {
   const body =
     (request.body as {
       requestedExecutionDecision?: "allow_local" | "remote_required" | "preflight_blocked";
@@ -6042,18 +5915,12 @@ app.post("/api/intelligence/workers/assign", async (request, reply) => {
   };
 });
 
-app.post("/api/nodes/register", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "cognitive-registration",
-      "/api/nodes/register",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/nodes/register", {
+  preHandler: requireGovernedActionPreHandler(
+    "cognitive-registration",
+    "/api/nodes/register"
+  )
+}, async (request, reply) => {
   const body =
     (request.body as {
       nodeId?: string;
@@ -6119,21 +5986,12 @@ app.post("/api/nodes/register", async (request, reply) => {
   }
 });
 
-app.post("/api/federation/peers/register", async (request, reply) => {
-  if (rejectFederationQueryToken(request, reply)) {
-    return;
-  }
-  if (
-    !authorizeGovernedAction(
-      "cognitive-registration",
-      "/api/federation/peers/register",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/federation/peers/register", {
+  preHandler: requireFederationGovernedPreHandler(
+    "cognitive-registration",
+    "/api/federation/peers/register"
+  )
+}, async (request, reply) => {
   const body =
     (request.body as {
       controlPlaneUrl?: string;
@@ -6195,21 +6053,12 @@ app.post("/api/federation/peers/register", async (request, reply) => {
   }
 });
 
-app.post("/api/federation/peers/sync", async (request, reply) => {
-  if (rejectFederationQueryToken(request, reply)) {
-    return;
-  }
-  if (
-    !authorizeGovernedAction(
-      "cognitive-registration",
-      "/api/federation/peers/sync",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/federation/peers/sync", {
+  preHandler: requireFederationGovernedPreHandler(
+    "cognitive-registration",
+    "/api/federation/peers/sync"
+  )
+}, async (request, reply) => {
   const body =
     (request.body as {
       peerId?: string;
@@ -6268,21 +6117,12 @@ app.post("/api/federation/peers/sync", async (request, reply) => {
   }
 });
 
-app.post("/api/federation/peers/:peerId/refresh", async (request, reply) => {
-  if (rejectFederationQueryToken(request, reply)) {
-    return;
-  }
-  if (
-    !authorizeGovernedAction(
-      "cognitive-registration",
-      "/api/federation/peers/:peerId/refresh",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/federation/peers/:peerId/refresh", {
+  preHandler: requireFederationGovernedPreHandler(
+    "cognitive-registration",
+    "/api/federation/peers/:peerId/refresh"
+  )
+}, async (request, reply) => {
   const params = request.params as { peerId?: string };
   if (!params.peerId?.trim()) {
     reply.code(400);
@@ -6311,21 +6151,12 @@ app.post("/api/federation/peers/:peerId/refresh", async (request, reply) => {
   }
 });
 
-app.post("/api/federation/peers/:peerId/lease-renew", async (request, reply) => {
-  if (rejectFederationQueryToken(request, reply)) {
-    return;
-  }
-  if (
-    !authorizeGovernedAction(
-      "cognitive-registration",
-      "/api/federation/peers/:peerId/lease-renew",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/federation/peers/:peerId/lease-renew", {
+  preHandler: requireFederationGovernedPreHandler(
+    "cognitive-registration",
+    "/api/federation/peers/:peerId/lease-renew"
+  )
+}, async (request, reply) => {
   const params = request.params as { peerId?: string };
   if (!params.peerId?.trim()) {
     reply.code(400);
@@ -6355,21 +6186,12 @@ app.post("/api/federation/peers/:peerId/lease-renew", async (request, reply) => 
   }
 });
 
-app.delete("/api/federation/peers/:peerId", async (request, reply) => {
-  if (rejectFederationQueryToken(request, reply)) {
-    return;
-  }
-  if (
-    !authorizeGovernedAction(
-      "cognitive-registration",
-      "/api/federation/peers/:peerId",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.delete("/api/federation/peers/:peerId", {
+  preHandler: requireFederationGovernedPreHandler(
+    "cognitive-registration",
+    "/api/federation/peers/:peerId"
+  )
+}, async (request, reply) => {
   const params = request.params as { peerId?: string };
   if (!params.peerId?.trim()) {
     reply.code(400);
@@ -6390,18 +6212,12 @@ app.delete("/api/federation/peers/:peerId", async (request, reply) => {
   };
 });
 
-app.post("/api/nodes/:nodeId/heartbeat", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "cognitive-registration",
-      "/api/nodes/:nodeId/heartbeat",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/nodes/:nodeId/heartbeat", {
+  preHandler: requireGovernedActionPreHandler(
+    "cognitive-registration",
+    "/api/nodes/:nodeId/heartbeat"
+  )
+}, async (request, reply) => {
   const params = request.params as { nodeId?: string };
   const body =
     (request.body as {
@@ -6467,18 +6283,12 @@ app.post("/api/nodes/:nodeId/heartbeat", async (request, reply) => {
   }
 });
 
-app.delete("/api/nodes/:nodeId", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "cognitive-registration",
-      "/api/nodes/:nodeId",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.delete("/api/nodes/:nodeId", {
+  preHandler: requireGovernedActionPreHandler(
+    "cognitive-registration",
+    "/api/nodes/:nodeId"
+  )
+}, async (request, reply) => {
   const params = request.params as { nodeId?: string };
   if (!params.nodeId?.trim()) {
     reply.code(400);
@@ -6496,18 +6306,12 @@ app.delete("/api/nodes/:nodeId", async (request, reply) => {
   };
 });
 
-app.post("/api/actuation/dispatch", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "actuation-dispatch",
-      "/api/actuation/dispatch",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/actuation/dispatch", {
+  preHandler: requireGovernedActionPreHandler(
+    "actuation-dispatch",
+    "/api/actuation/dispatch"
+  )
+}, async (request, reply) => {
   const binding = getGovernanceBinding("actuation-dispatch", "/api/actuation/dispatch", request);
   const consentScope = binding.consentScope;
   const body = (request.body as DispatchBody | undefined) ?? {};
@@ -6550,18 +6354,12 @@ app.post("/api/actuation/dispatch", async (request, reply) => {
   }
 });
 
-app.post("/api/actuation/transports/udp/register", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "actuation-device-link",
-      "/api/actuation/transports/udp/register",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/actuation/transports/udp/register", {
+  preHandler: requireGovernedActionPreHandler(
+    "actuation-device-link",
+    "/api/actuation/transports/udp/register"
+  )
+}, async (request, reply) => {
   const body =
     (request.body as {
       adapterId?: string;
@@ -6601,18 +6399,12 @@ app.post("/api/actuation/transports/udp/register", async (request, reply) => {
   }
 });
 
-app.post("/api/actuation/transports/serial/register", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "actuation-device-link",
-      "/api/actuation/transports/serial/register",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/actuation/transports/serial/register", {
+  preHandler: requireGovernedActionPreHandler(
+    "actuation-device-link",
+    "/api/actuation/transports/serial/register"
+  )
+}, async (request, reply) => {
   const body =
     (request.body as {
       adapterId?: string;
@@ -6667,18 +6459,12 @@ app.post("/api/actuation/transports/serial/register", async (request, reply) => 
   }
 });
 
-app.post("/api/actuation/transports/http2/register", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "actuation-device-link",
-      "/api/actuation/transports/http2/register",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/actuation/transports/http2/register", {
+  preHandler: requireGovernedActionPreHandler(
+    "actuation-device-link",
+    "/api/actuation/transports/http2/register"
+  )
+}, async (request, reply) => {
   const body =
     (request.body as {
       adapterId?: string;
@@ -6730,18 +6516,12 @@ app.post("/api/actuation/transports/http2/register", async (request, reply) => {
   }
 });
 
-app.post("/api/actuation/transports/:transportId/heartbeat", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "actuation-device-link",
-      "/api/actuation/transports/:transportId/heartbeat",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/actuation/transports/:transportId/heartbeat", {
+  preHandler: requireGovernedActionPreHandler(
+    "actuation-device-link",
+    "/api/actuation/transports/:transportId/heartbeat"
+  )
+}, async (request, reply) => {
   const params = request.params as { transportId?: string };
   if (!params.transportId?.trim()) {
     reply.code(400);
@@ -6783,18 +6563,12 @@ app.post("/api/actuation/transports/:transportId/heartbeat", async (request, rep
   }
 });
 
-app.post("/api/actuation/transports/:transportId/reset", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "actuation-device-link",
-      "/api/actuation/transports/:transportId/reset",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/actuation/transports/:transportId/reset", {
+  preHandler: requireGovernedActionPreHandler(
+    "actuation-device-link",
+    "/api/actuation/transports/:transportId/reset"
+  )
+}, async (request, reply) => {
   const params = request.params as { transportId?: string };
   if (!params.transportId?.trim()) {
     reply.code(400);
@@ -6819,18 +6593,12 @@ app.post("/api/actuation/transports/:transportId/reset", async (request, reply) 
   }
 });
 
-app.post("/api/ingest/bids/scan", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "dataset-ingestion",
-      "/api/ingest/bids/scan",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/ingest/bids/scan", {
+  preHandler: requireGovernedActionPreHandler(
+    "dataset-ingestion",
+    "/api/ingest/bids/scan"
+  )
+}, async (request, reply) => {
   const body = (request.body as { rootPath?: string } | undefined) ?? {};
   if (!body.rootPath || body.rootPath.trim().length === 0) {
     reply.code(400);
@@ -6860,18 +6628,12 @@ app.post("/api/ingest/bids/scan", async (request, reply) => {
   }
 });
 
-app.post("/api/intelligence/run", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "cognitive-execution",
-      "/api/intelligence/run",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/intelligence/run", {
+  preHandler: requireGovernedActionPreHandler(
+    "cognitive-execution",
+    "/api/intelligence/run"
+  )
+}, async (request, reply) => {
   const body =
     (request.body as {
       layerId?: string;
@@ -6953,18 +6715,12 @@ app.post("/api/intelligence/run", async (request, reply) => {
   }
 });
 
-app.post("/api/orchestration/mediate", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "actuation-dispatch",
-      "/api/orchestration/mediate",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/orchestration/mediate", {
+  preHandler: requireGovernedActionPreHandler(
+    "actuation-dispatch",
+    "/api/orchestration/mediate"
+  )
+}, async (request, reply) => {
   const body =
     ((request.body as DispatchBody & {
       layerId?: string;
@@ -7033,17 +6789,7 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
   emitSnapshot();
 
   if (arbitrationPlan.shouldRunCognition) {
-    if (
-      !authorizeGovernedAction(
-        "cognitive-execution",
-        "/api/orchestration/mediate:cognition",
-        request,
-        reply,
-        {
-          policyIdOverride: "cognitive-run-default"
-        }
-      )
-    ) {
+    if (!requireMediatedCognitionGovernance(request, reply)) {
       return;
     }
 
@@ -7296,18 +7042,12 @@ app.post("/api/orchestration/mediate", async (request, reply) => {
   }
 });
 
-app.post("/api/ingest/nwb/scan", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "neuro-session-ingestion",
-      "/api/ingest/nwb/scan",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/ingest/nwb/scan", {
+  preHandler: requireGovernedActionPreHandler(
+    "neuro-session-ingestion",
+    "/api/ingest/nwb/scan"
+  )
+}, async (request, reply) => {
   const body = (request.body as { filePath?: string } | undefined) ?? {};
   if (!body.filePath || body.filePath.trim().length === 0) {
     reply.code(400);
@@ -7337,18 +7077,12 @@ app.post("/api/ingest/nwb/scan", async (request, reply) => {
   }
 });
 
-app.post("/api/neuro/replays/start", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "neuro-replay",
-      "/api/neuro/replays/start",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/neuro/replays/start", {
+  preHandler: requireGovernedActionPreHandler(
+    "neuro-replay",
+    "/api/neuro/replays/start"
+  )
+}, async (request, reply) => {
   const body =
     (request.body as {
       sessionId?: string;
@@ -7404,18 +7138,12 @@ app.post("/api/neuro/replays/start", async (request, reply) => {
   }
 });
 
-app.post("/api/neuro/replays/:replayId/stop", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "neuro-replay",
-      "/api/neuro/replays/:replayId/stop",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/neuro/replays/:replayId/stop", {
+  preHandler: requireGovernedActionPreHandler(
+    "neuro-replay",
+    "/api/neuro/replays/:replayId/stop"
+  )
+}, async (request, reply) => {
   const params = request.params as { replayId?: string };
   if (!params.replayId) {
     reply.code(400);
@@ -7440,18 +7168,12 @@ app.post("/api/neuro/replays/:replayId/stop", async (request, reply) => {
   };
 });
 
-app.post("/api/neuro/live/frame", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "neuro-streaming",
-      "/api/neuro/live/frame",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/neuro/live/frame", {
+  preHandler: requireGovernedActionPreHandler(
+    "neuro-streaming",
+    "/api/neuro/live/frame"
+  )
+}, async (request, reply) => {
   try {
     const payload = (request.body as LiveNeuroPayload | undefined) ?? ({} as LiveNeuroPayload);
     const result = await liveNeuroManager.ingest(payload);
@@ -7471,18 +7193,12 @@ app.post("/api/neuro/live/frame", async (request, reply) => {
   }
 });
 
-app.post("/api/neuro/live/:sourceId/stop", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "neuro-streaming",
-      "/api/neuro/live/:sourceId/stop",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/neuro/live/:sourceId/stop", {
+  preHandler: requireGovernedActionPreHandler(
+    "neuro-streaming",
+    "/api/neuro/live/:sourceId/stop"
+  )
+}, async (request, reply) => {
   const params = request.params as { sourceId?: string };
   if (!params.sourceId) {
     reply.code(400);
@@ -7507,18 +7223,12 @@ app.post("/api/neuro/live/:sourceId/stop", async (request, reply) => {
   };
 });
 
-app.post("/api/benchmarks/run", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "benchmark-execution",
-      "/api/benchmarks/run",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/benchmarks/run", {
+  preHandler: requireGovernedActionPreHandler(
+    "benchmark-execution",
+    "/api/benchmarks/run"
+  )
+}, async (request, reply) => {
   const body = (request.body as { packId?: string; publishWandb?: boolean } | undefined) ?? {};
   if (body.packId && !listBenchmarkPacks().some((pack) => pack.id === body.packId)) {
     reply.code(400);
@@ -7548,18 +7258,12 @@ app.post("/api/benchmarks/run", async (request, reply) => {
   };
 });
 
-app.post("/api/benchmarks/publish/wandb", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "benchmark-publication",
-      "/api/benchmarks/publish/wandb",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/benchmarks/publish/wandb", {
+  preHandler: requireGovernedActionPreHandler(
+    "benchmark-publication",
+    "/api/benchmarks/publish/wandb"
+  )
+}, async (request, reply) => {
   const body = (request.body as { suiteId?: string } | undefined) ?? {};
   const report = body.suiteId
     ? await loadPublishedBenchmarkReportBySuiteId(body.suiteId)
@@ -7613,18 +7317,12 @@ app.get("/api/topology", async () => {
   };
 });
 
-app.post("/api/control", async (request, reply) => {
-  if (
-    !authorizeGovernedAction(
-      "operator-control",
-      "/api/control",
-      request,
-      reply
-    )
-  ) {
-    return;
-  }
-
+app.post("/api/control", {
+  preHandler: requireGovernedActionPreHandler(
+    "operator-control",
+    "/api/control"
+  )
+}, async (request, reply) => {
   const parsed = controlEnvelopeSchema.safeParse(request.body);
 
   if (!parsed.success) {

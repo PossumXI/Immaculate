@@ -108,6 +108,26 @@ What this unlocks next:
 - private OCI or Cloudflare-routed harness origins can be added as exact allowed origins without widening the default TUI trust boundary
 - the same trusted-origin helper can be split into a reusable TUI module if more local operator tools need it
 
+#### Governed route admission moved out of handler bodies
+
+What changed:
+- governed REST routes now use Fastify pre-handlers for authorization instead of repeating `authorizeGovernedAction` inside each handler body
+- federation routes use a dedicated pre-handler that preserves the existing query-token rejection check before governance admission
+- mediated cognition keeps its second-stage governance check in a small helper, so the mediate handler no longer carries raw inline authorization boilerplate
+
+Why it matters:
+- the harness already had real global rate limiting, but CodeQL was still correct to flag the old route shape because expensive handlers mixed admission checks with handler work
+- putting admission in pre-handlers makes the execution order explicit: global throttle, auth, governance admission, then handler work
+- removing repeated inline authorization reduces route drift and makes future route additions easier to audit
+
+Evidence:
+- `apps/harness/src/server.ts` now centralizes governed admission through `requireGovernedActionPreHandler` and `requireFederationGovernedPreHandler`
+- event, replay, LSL, neuro, cognition, federation, worker, node, actuation, ingest, benchmark, and control routes use those pre-handlers
+
+What this unlocks next:
+- the remaining route-security work can focus on narrower issues instead of dozens of repeated handler-local authorization patterns
+- future CodeQL findings can point at true exceptions rather than the common route shape
+
 ### 2026-04-20
 
 #### Roundtable runtime is now cold-start reproducible
