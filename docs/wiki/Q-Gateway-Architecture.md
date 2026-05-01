@@ -30,7 +30,28 @@ Release/build identity for the current repo state lives in:
 - a bounded primary-model circuit breaker with explicit fail-closed behavior
 - a single typed inference profile for request bounds, structured-generation
   knobs, timeouts, health cache, benchmark settings, and primary circuit policy
+- an OCI/OpenAI-compatible `/responses` transport behind the same public
+  `/v1/chat/completions` gateway contract
 - private OCI deployment glue for that narrow process
+
+## Provider Configuration
+
+The default private workstation route stays Ollama-compatible:
+
+- `IMMACULATE_Q_INFERENCE_PROVIDER=ollama`
+- `IMMACULATE_Q_OLLAMA_URL=http://127.0.0.1:11434`
+
+The private OCI or OpenAI-compatible route uses the Responses API shape:
+
+- `IMMACULATE_Q_INFERENCE_PROVIDER=oci` or `responses`
+- `IMMACULATE_Q_OCI_BASE_URL=https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1`
+- `IMMACULATE_Q_RESPONSES_PATH=/responses`
+- `IMMACULATE_Q_OCI_BEARER_TOKEN=<secret>` or `IMMACULATE_Q_RESPONSES_API_KEY=<secret>`
+
+If the gateway points at a private local proxy that already performs OCI IAM
+signing, set `IMMACULATE_Q_INFERENCE_AUTH_MODE=none` explicitly. Hosted
+Responses routes default to bearer auth and report `auth.configured=false` in the
+redacted health/info profile when the secret is absent.
 
 ## What Stays Private In Immaculate
 
@@ -74,6 +95,8 @@ Example split:
 
 - Q gateway: `10.0.3.10:8788`
 - private Q runtime: `10.0.2.20:11434`
+- private OCI/OpenAI-compatible Q runtime:
+  `https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1/responses`
 
 ## Bundle Contents
 
@@ -98,8 +121,10 @@ Safe claims:
 - the gateway now has a live primary-failure circuit with explicit headers and
   response metadata when the Q lane is degraded
 - inference customization has a typed configuration surface instead of scattered
-  constants; the current provider is still the private Ollama-compatible Q
-  runtime until a separate provider adapter lands
+  constants
+- the gateway can now route through either the private Ollama-compatible runtime
+  or a configured OCI/OpenAI-compatible Responses runtime while keeping endpoint
+  URLs and bearer tokens out of public health/info payloads
 
 Claims this page does not make:
 

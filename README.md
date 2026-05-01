@@ -263,6 +263,8 @@ For the dedicated Q gateway:
 - validate it with `npm run q:gateway:validate -- --gateway-url=http://127.0.0.1:8897`
 - it serves `GET /health`, `GET /api/q/info`, `GET /v1/models`, and `POST /v1/chat/completions`
 - it accepts only Q API keys, not the harness admin key
+- default local inference uses `IMMACULATE_Q_INFERENCE_PROVIDER=ollama` with `IMMACULATE_Q_OLLAMA_URL`
+- private OCI/OpenAI-compatible inference uses `IMMACULATE_Q_INFERENCE_PROVIDER=oci`, `IMMACULATE_Q_OCI_BASE_URL`, `IMMACULATE_Q_RESPONSES_PATH=/responses`, and a bearer secret such as `IMMACULATE_Q_OCI_BEARER_TOKEN`; only set `IMMACULATE_Q_INFERENCE_AUTH_MODE=none` for a private proxy that already signs the upstream request
 - the latest loopback validation is green on auth, model listing, served completion, and `429` concurrency rejection
 - it fail-closes on repeated primary-model failures instead of masking a broken upstream
 - it is designed for private OCI deployment, not public internet exposure by default

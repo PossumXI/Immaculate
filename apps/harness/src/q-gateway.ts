@@ -19,6 +19,7 @@ import {
   type OllamaChatCompletionResult,
   type OllamaChatMessage
 } from "./ollama.js";
+import { runOpenAICompatibleResponsesCompletion } from "./openai-compatible.js";
 import { resolveReleaseMetadata } from "./release-metadata.js";
 import {
   buildCanonicalQIdentityAnswer,
@@ -150,6 +151,9 @@ app.log.info(
 );
 
 async function getInstalledModelNames(forceRefresh = false): Promise<string[]> {
+  if (INFERENCE_PROFILE.provider === "openai-compatible") {
+    return PUBLIC_INFERENCE_PROFILE.auth.configured ? [Q_MODEL_TARGET] : [];
+  }
   if (!forceRefresh && cachedModelReadiness && cachedModelReadiness.expiresAtMs > Date.now()) {
     return cachedModelReadiness.installedModelNames;
   }
@@ -511,6 +515,16 @@ async function runGatewayChatAttempt(options: {
   includeIdentityInstruction?: boolean;
   ollamaOptions?: Record<string, unknown>;
 }): Promise<OllamaChatCompletionResult> {
+  if (INFERENCE_PROFILE.provider === "openai-compatible") {
+    return runOpenAICompatibleResponsesCompletion({
+      profile: INFERENCE_PROFILE,
+      model: options.model,
+      messages: buildGatewayMessages(options.messages, options.includeIdentityInstruction ?? true),
+      temperature: options.temperature,
+      maxTokens: options.maxTokens,
+      timeoutMs: options.timeoutMs
+    });
+  }
   return runOllamaChatCompletion({
     endpoint: OLLAMA_URL,
     model: options.model,
@@ -538,20 +552,39 @@ async function runGatewayStructuredAttempt(options: {
     previousResponse: options.previousResponse,
     repair: options.repair
   });
-  const generated = await runOllamaGenerateCompletion({
-    endpoint: OLLAMA_URL,
-    model: options.model,
-    prompt,
-    temperature: 0,
-    maxTokens: Math.min(options.maxTokens, STRUCTURED_REQUEST_MAX_TOKENS),
-    timeoutMs: options.timeoutMs,
-    format: "json",
-    ollamaOptions: {
-      num_ctx: STRUCTURED_FAST_NUM_CTX,
-      num_batch: STRUCTURED_FAST_NUM_BATCH,
-      ...(options.ollamaOptions ?? {})
-    }
-  });
+  const generated =
+    INFERENCE_PROFILE.provider === "openai-compatible"
+      ? await runOpenAICompatibleResponsesCompletion({
+          profile: INFERENCE_PROFILE,
+          model: options.model,
+          messages: buildGatewayMessages(
+            [
+              {
+                role: "user",
+                content: prompt
+              }
+            ],
+            options.includeIdentityInstruction ?? true
+          ),
+          temperature: 0,
+          maxTokens: Math.min(options.maxTokens, STRUCTURED_REQUEST_MAX_TOKENS),
+          timeoutMs: options.timeoutMs,
+          format: "json"
+        })
+      : await runOllamaGenerateCompletion({
+          endpoint: OLLAMA_URL,
+          model: options.model,
+          prompt,
+          temperature: 0,
+          maxTokens: Math.min(options.maxTokens, STRUCTURED_REQUEST_MAX_TOKENS),
+          timeoutMs: options.timeoutMs,
+          format: "json",
+          ollamaOptions: {
+            num_ctx: STRUCTURED_FAST_NUM_CTX,
+            num_batch: STRUCTURED_FAST_NUM_BATCH,
+            ...(options.ollamaOptions ?? {})
+          }
+        });
   if (generated.failureClass) {
     return generated;
   }
