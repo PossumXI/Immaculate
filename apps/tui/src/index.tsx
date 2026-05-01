@@ -18,11 +18,18 @@ import {
   type PhaseSnapshot
 } from "@immaculate/core";
 
-const harnessBaseUrl = process.env.IMMACULATE_HARNESS_URL ?? "http://127.0.0.1:8787";
+const DEFAULT_HARNESS_BASE_URL = "http://127.0.0.1:8787";
+const DEFAULT_HARNESS_WS_URL = "ws://127.0.0.1:8787/stream";
+const DEFAULT_LIVE_NEURO_WS_URL = "ws://127.0.0.1:8787/stream/neuro/live";
+const LOOPBACK_HARNESS_HOSTS = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
+const harnessBaseUrl = resolveTrustedHarnessHttpOrigin(process.env.IMMACULATE_HARNESS_URL);
 const harnessApiKey = process.env.IMMACULATE_API_KEY;
-const harnessWsUrlBase = process.env.IMMACULATE_HARNESS_WS_URL ?? "ws://127.0.0.1:8787/stream";
+const harnessWsUrlBase = resolveTrustedHarnessWsUrl(
+  process.env.IMMACULATE_HARNESS_WS_URL,
+  DEFAULT_HARNESS_WS_URL
+);
 const liveNeuroWsUrlBase =
-  process.env.IMMACULATE_NEURO_WS_URL ?? "ws://127.0.0.1:8787/stream/neuro/live";
+  resolveTrustedHarnessWsUrl(process.env.IMMACULATE_NEURO_WS_URL, DEFAULT_LIVE_NEURO_WS_URL);
 
 type GovernanceRequest = {
   purpose: string[];
@@ -86,6 +93,67 @@ type CognitiveExecutionTrace = {
 type SnapshotWithConversations = PhaseSnapshot & {
   conversations?: MultiAgentConversation[];
 };
+
+function parseAllowedHarnessOrigins(): Set<string> {
+  const values = (process.env.IMMACULATE_TUI_ALLOWED_HARNESS_ORIGINS ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  return new Set(values);
+}
+
+function isTrustedHarnessUrl(url: URL): boolean {
+  if (!["http:", "https:", "ws:", "wss:"].includes(url.protocol)) {
+    return false;
+  }
+  if (url.username || url.password) {
+    return false;
+  }
+  if (LOOPBACK_HARNESS_HOSTS.has(url.hostname)) {
+    return true;
+  }
+  return parseAllowedHarnessOrigins().has(url.origin);
+}
+
+function resolveTrustedHarnessHttpOrigin(rawUrl: string | undefined): string {
+  const parsed = new URL(rawUrl?.trim() || DEFAULT_HARNESS_BASE_URL);
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error("IMMACULATE_HARNESS_URL must use http or https.");
+  }
+  if (!isTrustedHarnessUrl(parsed)) {
+    throw new Error(
+      "IMMACULATE_HARNESS_URL must target loopback or an origin listed in IMMACULATE_TUI_ALLOWED_HARNESS_ORIGINS."
+    );
+  }
+  parsed.pathname = "/";
+  parsed.search = "";
+  parsed.hash = "";
+  return parsed.origin;
+}
+
+function resolveTrustedHarnessWsUrl(rawUrl: string | undefined, fallback: string): string {
+  const parsed = new URL(rawUrl?.trim() || fallback);
+  if (parsed.protocol !== "ws:" && parsed.protocol !== "wss:") {
+    throw new Error("Harness websocket URLs must use ws or wss.");
+  }
+  if (!isTrustedHarnessUrl(parsed)) {
+    throw new Error(
+      "Harness websocket URLs must target loopback or an origin listed in IMMACULATE_TUI_ALLOWED_HARNESS_ORIGINS."
+    );
+  }
+  return parsed.toString();
+}
+
+function harnessUrl(pathname: string): string {
+  if (!pathname.startsWith("/api/") || pathname.includes("..")) {
+    throw new Error(`Unsupported harness API path: ${pathname}`);
+  }
+  return new URL(pathname, harnessBaseUrl).toString();
+}
+
+function encodePathSegment(value: string): string {
+  return encodeURIComponent(value);
+}
 
 function useAltScreen() {
   useEffect(() => {
@@ -261,7 +329,7 @@ function summarizeConversation(conversation?: MultiAgentConversation): string {
 }
 
 async function harnessFetch(
-  input: string,
+  pathname: string,
   init?: RequestInit,
   governance?: GovernanceRequest
 ): Promise<Response> {
@@ -278,7 +346,7 @@ async function harnessFetch(
     }
   }
 
-  return fetch(input, {
+  return fetch(harnessUrl(pathname), {
     ...init,
     headers
   });
@@ -304,7 +372,7 @@ async function ensureSuccessfulResponse(
 }
 
 async function sendControl(envelope: ControlEnvelope): Promise<void> {
-  const response = await harnessFetch(`${harnessBaseUrl}/api/control`, {
+  const response = await harnessFetch("/api/control", {
     method: "POST",
     headers: {
       "content-type": "application/json"
@@ -320,7 +388,7 @@ async function sendControl(envelope: ControlEnvelope): Promise<void> {
 }
 
 async function runCognition(): Promise<void> {
-  const response = await harnessFetch(`${harnessBaseUrl}/api/intelligence/run`, {
+  const response = await harnessFetch("/api/intelligence/run", {
     method: "POST",
     headers: {
       "content-type": "application/json"
@@ -336,7 +404,7 @@ async function runCognition(): Promise<void> {
 }
 
 async function dispatchActuation(sessionId?: string): Promise<void> {
-  const response = await harnessFetch(`${harnessBaseUrl}/api/actuation/dispatch`, {
+  const response = await harnessFetch("/api/actuation/dispatch", {
     method: "POST",
     headers: {
       "content-type": "application/json"
@@ -354,7 +422,7 @@ async function dispatchActuation(sessionId?: string): Promise<void> {
 }
 
 async function publishBenchmarkToWandb(): Promise<void> {
-  const response = await harnessFetch(`${harnessBaseUrl}/api/benchmarks/publish/wandb`, {
+  const response = await harnessFetch("/api/benchmarks/publish/wandb", {
     method: "POST",
     headers: {
       "content-type": "application/json"
@@ -374,7 +442,7 @@ async function startLatestReplay(sessionId?: string): Promise<void> {
     return;
   }
 
-  const response = await harnessFetch(`${harnessBaseUrl}/api/neuro/replays/start`, {
+  const response = await harnessFetch("/api/neuro/replays/start", {
     method: "POST",
     headers: {
       "content-type": "application/json"
@@ -398,18 +466,22 @@ async function stopLatestReplay(replayId?: string, sessionId?: string): Promise<
     return;
   }
 
-  const response = await harnessFetch(`${harnessBaseUrl}/api/neuro/replays/${replayId}/stop`, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json"
+  const response = await harnessFetch(
+    `/api/neuro/replays/${encodePathSegment(replayId)}/stop`,
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({})
     },
-    body: JSON.stringify({})
-  }, {
-    purpose: ["neuro-replay"],
-    policyId: "neuro-replay-default",
-    consentScope: `session:${sessionId}`,
-    actor: "tui"
-  });
+    {
+      purpose: ["neuro-replay"],
+      policyId: "neuro-replay-default",
+      consentScope: `session:${sessionId}`,
+      actor: "tui"
+    }
+  );
   await ensureSuccessfulResponse(response, "Failed to stop replay.");
 }
 
@@ -418,18 +490,22 @@ async function stopLatestLiveSource(sourceId?: string): Promise<void> {
     return;
   }
 
-  const response = await harnessFetch(`${harnessBaseUrl}/api/neuro/live/${sourceId}/stop`, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json"
+  const response = await harnessFetch(
+    `/api/neuro/live/${encodePathSegment(sourceId)}/stop`,
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({})
     },
-    body: JSON.stringify({})
-  }, {
-    purpose: ["neuro-streaming"],
-    policyId: "neuro-stream-default",
-    consentScope: `live-source:${sourceId}`,
-    actor: "tui"
-  });
+    {
+      purpose: ["neuro-streaming"],
+      policyId: "neuro-stream-default",
+      consentScope: `live-source:${sourceId}`,
+      actor: "tui"
+    }
+  );
   await ensureSuccessfulResponse(response, "Failed to stop live source.");
 }
 
@@ -554,7 +630,7 @@ function App() {
     let retryMs = 500;
     const loadPersistence = async () => {
       try {
-        const response = await harnessFetch(`${harnessBaseUrl}/api/persistence`);
+        const response = await harnessFetch("/api/persistence");
         const payload = (await response.json()) as { persistence: PersistenceState };
         if (!disposed) {
           setPersistence(payload.persistence);
@@ -568,7 +644,7 @@ function App() {
 
     const loadWandb = async () => {
       try {
-        const response = await harnessFetch(`${harnessBaseUrl}/api/wandb/status`);
+        const response = await harnessFetch("/api/wandb/status");
         const payload = (await response.json()) as { wandb: WandbState };
         if (!disposed) {
           setWandb(payload.wandb);
@@ -582,7 +658,7 @@ function App() {
 
     const loadGovernance = async () => {
       try {
-        const response = await harnessFetch(`${harnessBaseUrl}/api/governance/status`);
+        const response = await harnessFetch("/api/governance/status");
         const payload = (await response.json()) as { governance: GovernanceState };
         if (!disposed) {
           setGovernance(payload.governance);
@@ -596,7 +672,7 @@ function App() {
 
     const loadIntelligence = async () => {
       try {
-        const response = await harnessFetch(`${harnessBaseUrl}/api/intelligence/executions`, {
+        const response = await harnessFetch("/api/intelligence/executions", {
           headers: {
             "content-type": "application/json"
           }
@@ -630,7 +706,7 @@ function App() {
 
     const loadSnapshot = async () => {
       try {
-        const response = await harnessFetch(`${harnessBaseUrl}/api/snapshot`);
+        const response = await harnessFetch("/api/snapshot");
         const payload = (await response.json()) as { snapshot: PhaseSnapshot };
         if (!disposed) {
           setSnapshot(payload.snapshot);

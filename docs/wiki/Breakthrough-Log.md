@@ -89,6 +89,25 @@ What this unlocks next:
 - CodeQL can track the benchmark worker as a normal argument-vector spawn instead of a shell command
 - future worker launch options can be tested in one pure module before they touch the live server
 
+#### TUI harness networking moved behind a trusted-origin builder
+
+What changed:
+- the TUI no longer builds fetch URLs with raw `IMMACULATE_HARNESS_URL` template strings at every call site
+- the harness HTTP origin is normalized once, must use `http` or `https`, cannot include credentials, and must target loopback unless the exact origin is explicitly listed in `IMMACULATE_TUI_ALLOWED_HARNESS_ORIGINS`
+- replay and live-source identifiers are encoded as path segments before they enter harness API paths
+
+Why it matters:
+- the operator TUI is allowed to talk to a harness, but it should not become a generic URL fetcher when environment or runtime state is malformed
+- this keeps private/local operator routing available while making the trust boundary explicit enough for audit and CodeQL review
+
+Evidence:
+- `apps/tui/src/index.tsx` now resolves trusted HTTP and websocket harness URLs up front
+- all TUI REST calls pass fixed `/api/...` paths into `harnessFetch`, which constructs the final URL internally
+
+What this unlocks next:
+- private OCI or Cloudflare-routed harness origins can be added as exact allowed origins without widening the default TUI trust boundary
+- the same trusted-origin helper can be split into a reusable TUI module if more local operator tools need it
+
 ### 2026-04-20
 
 #### Roundtable runtime is now cold-start reproducible
