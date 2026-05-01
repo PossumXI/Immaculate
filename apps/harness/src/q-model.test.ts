@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  getCognitiveRolePolicySummary,
   getGovernedGoalPolicySummary,
   getGovernedToolPolicySummary,
   buildQRuntimeContext,
@@ -18,6 +19,7 @@ test("Q runtime context exposes current date and knowledge cutoff", () => {
   assert.match(context.governedToolPolicy, /registered action classes/);
   assert.match(context.governedToolPolicy, /Tier 4\+ actions require human or operator approval/);
   assert.match(context.governedGoalPolicy, /governed-goal\.v1/);
+  assert.match(context.cognitiveRolePolicy, /cognitive-role-plan\.v1/);
 });
 
 test("Q runtime context instruction tells Q not to guess current facts", () => {
@@ -28,6 +30,7 @@ test("Q runtime context instruction tells Q not to guess current facts", () => {
   assert.match(instruction, /current verification is required/);
   assert.match(instruction, /Governed tool policy:/);
   assert.match(instruction, /Governed goal policy:/);
+  assert.match(instruction, /Cognitive role policy:/);
 });
 
 test("Q governed tool policy summary is compact and action-bound", () => {
@@ -44,4 +47,12 @@ test("Q governed goal policy summary points execution at mission objects", () =>
   assert.match(summary, /objective, owner, constraints/);
   assert.match(summary, /allowedTools must map to the risk-tier registry/);
   assert.match(summary, /terminal goal states cannot be rewritten/);
+});
+
+test("Q cognitive role policy summary rejects self-approving execution", () => {
+  const summary = getCognitiveRolePolicySummary();
+
+  assert.match(summary, /Planner, executor, critic, and policy governor/);
+  assert.match(summary, /distinct actors/);
+  assert.match(summary, /memory curator/);
 });
