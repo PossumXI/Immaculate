@@ -81,6 +81,8 @@
     "training-data:smoke": "tsx ./apps/harness/src/training-data-smoke.ts",
     "test": "npm run test --workspaces --if-present",
     "build": "npm run build -w @immaculate/core && npm run build -w @immaculate/harness && npm run build -w @immaculate/tui && npm run build -w @immaculate/dashboard",
+    "deploy:check": "node ./scripts/deploy-iorch-site.mjs --check",
+    "deploy:safe": "node ./scripts/deploy-iorch-site.mjs --prod",
     "dev:dashboard": "npm run dev -w @immaculate/dashboard",
     "dev:harness": "npm run dev -w @immaculate/harness",
     "dev:tui": "npm run dev -w @immaculate/tui",

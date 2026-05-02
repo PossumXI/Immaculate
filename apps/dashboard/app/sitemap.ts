@@ -10,6 +10,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 1
+    },
+    {
+      url: new URL("/downloads/jaws", siteUrl).toString(),
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8
     }
   ];
 }
