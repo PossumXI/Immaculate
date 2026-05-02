@@ -2,11 +2,16 @@
 
 ## Scope
 
-This pass made the `iorch.net` JAWS 0.1.6 mirror deployable and verifiable from the Immaculate repo.
+This pass made the `iorch.net` JAWS mirror deployable and verifiable from the Immaculate repo.
 
 Follow-up pass: the desktop updater API is now deployed from the same iorch Netlify surface, so the
 JAWS Tauri updater endpoint in OpenJaws can use `https://iorch.net/api/jaws/<target>/<arch>/<version>`
 as a real mirror instead of falling through to a static-site 404.
+
+Second follow-up pass: OpenJaws published `jaws-v0.1.8` at 2026-05-02 04:44:27 UTC. The iorch
+surface now treats `jaws-release.json` as the single release source of truth for the dashboard page,
+the guarded deploy script, and the function tests. `netlify.toml` still needs static redirects for
+Netlify, so `npm run jaws:release:check` verifies those redirects against `jaws-release.json`.
 
 ## Changes
 
@@ -23,10 +28,18 @@ as a real mirror instead of falling through to a static-site 404.
 - Added the `/api/jaws/*` rewrite to `netlify.toml`.
 - Added `tests/netlify-functions/jaws.test.mjs` for older-version update, current-version no-op,
   and malformed request behavior.
+- Added `jaws-release.json`, `scripts/jaws-release-config.mjs`, and
+  `scripts/check-iorch-jaws-release.mjs` so the release page, tests, and deploy guard use one
+  audited JAWS release contract.
+- Updated iorch redirects and the download page to `jaws-v0.1.8`.
+- Hardened the deploy script to inspect the Netlify deploy metadata and fail unless the `jaws`
+  function is present in the deploy bundle. This directly guards against the functionless production
+  deploy that caused `/api/jaws/...` to return a Next 404.
 
 ## Live Deploy
 
-- Current production deploy ID: `69f554882f2f19f0f0507e1f`
+- Current production deploy ID observed before this follow-up: `69f57da0a3463753a9f20a13`
+- Latest function-bearing deploy preview observed before this follow-up: `69f57f888dd57d539fb53b58`
 - Previous hardened deploy ID: `69f54af885e009de8dcca6f1`
 - Production domain: `https://iorch.net`
 - Site ID: `4a9b7d84-9d87-4e10-9951-fb121f9626bd`
@@ -44,6 +57,7 @@ as a real mirror instead of falling through to a static-site 404.
 - `npm run deploy:check`
 - `npm run deploy:safe`
 - `node --test tests/netlify-functions/jaws.test.mjs`
+- `npm run jaws:release:check`
 - OpenJaws clean route health: `bun scripts/service-route-health.ts --json` reported 22 passed,
   0 failed, and 4 not-configured external provisioning items.
 - OpenJaws clean `origin/main`: `bun run jaws:mirror:check --json`

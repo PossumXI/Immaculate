@@ -1,0 +1,52 @@
+{
+  "version": "0.1.8",
+  "tag": "jaws-v0.1.8",
+  "previousPatchVersion": "0.1.7",
+  "publishedAt": "2026-05-02T04:44:27Z",
+  "publishedAtLabel": "May 2, 2026",
+  "githubRepo": "PossumXI/OpenJaws",
+  "downloads": [
+    {
+      "path": "/downloads/jaws/windows",
+      "label": "Windows installer",
+      "file": "JAWS_0.1.8_x64-setup.exe",
+      "size": "34.62 MB",
+      "digest": "37a2e776a29ea4197bcf9b9e782180c43e784d7cfaeb3d870646fbadefff66de"
+    },
+    {
+      "path": "/downloads/jaws/windows-msi",
+      "label": "Windows MSI",
+      "file": "JAWS_0.1.8_x64_en-US.msi",
+      "size": "51.44 MB",
+      "digest": "9733c23ac6808209870bcbb2211ab8f607b7d70c0a9899784b44b1b57ec5b1dd"
+    },
+    {
+      "path": "/downloads/jaws/macos",
+      "label": "macOS Intel",
+      "file": "JAWS_0.1.8_x64.dmg",
+      "size": "35.92 MB",
+      "digest": "5c73e2531f5aad68cda37b9f3a0f59fbfb772e8c35772959561344f24268ca21"
+    },
+    {
+      "path": "/downloads/jaws/linux-deb",
+      "label": "Linux DEB",
+      "file": "JAWS_0.1.8_amd64.deb",
+      "size": "51.40 MB",
+      "digest": "917c32d580e10e2e8041818ea9fc93d3f872e15cc92338ae934e18db50b3774c"
+    },
+    {
+      "path": "/downloads/jaws/linux-rpm",
+      "label": "Linux RPM",
+      "file": "JAWS-0.1.8-1.x86_64.rpm",
+      "size": "51.39 MB",
+      "digest": "81dc487d832d4463c8a69f65e513941a9ca7bacb2d1032805fd3f0f80f142206"
+    },
+    {
+      "path": "/downloads/jaws/latest.json",
+      "label": "Updater manifest",
+      "file": "latest.json",
+      "size": "1.25 KB",
+      "digest": "f0eb368a627e83d7f8ee3c92dc9c4dfb54bf94add4e1557ea8075b61ad778c07"
+    }
+  ]
+}
