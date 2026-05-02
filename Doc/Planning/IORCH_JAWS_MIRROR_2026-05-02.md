@@ -38,12 +38,17 @@ Netlify, so `npm run jaws:release:check` verifies those redirects against `jaws-
 
 ## Live Deploy
 
+- Current production deploy ID after the `jaws-v0.1.8` guarded promotion: `69f584b088365f629176dc47`
 - Current production deploy ID observed before this follow-up: `69f57da0a3463753a9f20a13`
 - Latest function-bearing deploy preview observed before this follow-up: `69f57f888dd57d539fb53b58`
 - Previous hardened deploy ID: `69f54af885e009de8dcca6f1`
 - Production domain: `https://iorch.net`
 - Site ID: `4a9b7d84-9d87-4e10-9951-fb121f9626bd`
 - Site name: `immaculate-iorch-20260415022035`
+- Guarded production smoke after promotion:
+  - `/api/jaws/windows/x86_64/0.1.7` returned `200`
+  - `/api/jaws/windows/x86_64/0.1.8` returned `204`
+  - deploy metadata included the `jaws` Netlify function
 
 ## Validation
 
