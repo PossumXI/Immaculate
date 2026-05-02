@@ -1,10 +1,11 @@
 import { existsSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
 const EXPECTED_SITE_ID = "4a9b7d84-9d87-4e10-9951-fb121f9626bd";
 const EXPECTED_SITE_NAME = "immaculate-iorch-20260415022035";
 const EXPECTED_DOMAIN = "iorch.net";
+const NETLIFY_WORKSPACE_FILTER = "@immaculate/dashboard";
 const JAWS_RELEASE_TAG = "jaws-v0.1.6";
 const JAWS_DOWNLOADS = {
   "/downloads/jaws/windows": "JAWS_0.1.6_x64-setup.exe",
@@ -37,7 +38,7 @@ function run(command, commandArgs, options = {}) {
   const result = spawnSync(command, commandArgs, {
     cwd: repoRoot,
     encoding: "utf8",
-    shell: process.platform === "win32",
+    shell: options.shell ?? (process.platform === "win32"),
     stdio: options.capture ? ["ignore", "pipe", "pipe"] : "inherit",
     env: process.env,
   });
@@ -52,6 +53,39 @@ function run(command, commandArgs, options = {}) {
   }
 
   return `${result.stdout ?? ""}${result.stderr ?? ""}`;
+}
+
+function resolveWindowsNetlifyCli() {
+  const result = spawnSync("where.exe", ["netlify"], {
+    cwd: repoRoot,
+    encoding: "utf8",
+    shell: false,
+    stdio: ["ignore", "pipe", "pipe"],
+    env: process.env,
+  });
+  if (result.status !== 0) {
+    throw new Error(`Unable to find Netlify CLI on PATH: ${(result.stderr || result.stdout || "where.exe failed").trim()}`);
+  }
+
+  for (const candidate of result.stdout.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)) {
+    const cliPath = resolve(dirname(candidate), "node_modules", "netlify-cli", "bin", "run.js");
+    if (existsSync(cliPath)) {
+      return cliPath;
+    }
+  }
+
+  throw new Error("Unable to resolve the Netlify CLI Node entrypoint from PATH.");
+}
+
+function runNetlify(commandArgs, options = {}) {
+  if (process.platform !== "win32") {
+    return run("netlify", commandArgs, { ...options, shell: false });
+  }
+
+  return run(process.execPath, [resolveWindowsNetlifyCli(), ...commandArgs], {
+    ...options,
+    shell: false,
+  });
 }
 
 function readJson(path) {
@@ -72,11 +106,13 @@ function assertCorrectWorkspace() {
 }
 
 function assertExpectedSite() {
-  const output = run("netlify", ["sites:list", "--json"], { capture: true });
-  const sites = JSON.parse(output);
-  const site = sites.find((entry) => entry.id === EXPECTED_SITE_ID || entry.site_id === EXPECTED_SITE_ID);
+  const output = runNetlify(
+    ["api", "getSite", "--data", JSON.stringify({ site_id: EXPECTED_SITE_ID })],
+    { capture: true }
+  );
+  const site = JSON.parse(output);
 
-  if (!site) {
+  if (site.id !== EXPECTED_SITE_ID && site.site_id !== EXPECTED_SITE_ID) {
     throw new Error(`Netlify site ${EXPECTED_SITE_ID} was not found for this account.`);
   }
   if (site.name !== EXPECTED_SITE_NAME) {
@@ -169,6 +205,8 @@ async function main() {
     "deploy",
     "--json",
     "--no-build",
+    "--filter",
+    NETLIFY_WORKSPACE_FILTER,
     "--site",
     EXPECTED_SITE_ID,
     "--dir",
@@ -180,7 +218,7 @@ async function main() {
     deployArgs.splice(1, 0, "--prod");
   }
 
-  const deploy = parseDeployOutput(run("netlify", deployArgs, { capture: true }));
+  const deploy = parseDeployOutput(runNetlify(deployArgs, { capture: true }));
   const deployedUrl = deploy.deploy_ssl_url ?? deploy.deploy_url ?? deploy.ssl_url ?? deploy.url;
   if (!deployedUrl) {
     throw new Error(`Netlify deploy output did not include a deploy URL:\n${JSON.stringify(deploy, null, 2)}`);
