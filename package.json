@@ -95,7 +95,8 @@
   },
   "overrides": {
     "postcss": "$postcss",
-    "protobufjs": "7.5.5"
+    "protobufjs": "7.5.5",
+    "uuid": "14.0.0"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
