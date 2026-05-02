@@ -17,6 +17,12 @@
     X-Robots-Tag = "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
 
 [[redirects]]
+  from = "/api/jaws/*"
+  to = "/.netlify/functions/jaws/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/downloads/jaws/windows"
   to = "https://github.com/PossumXI/OpenJaws/releases/download/jaws-v0.1.6/JAWS_0.1.6_x64-setup.exe"
   status = 302

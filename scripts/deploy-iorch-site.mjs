@@ -7,6 +7,8 @@ const EXPECTED_SITE_NAME = "immaculate-iorch-20260415022035";
 const EXPECTED_DOMAIN = "iorch.net";
 const NETLIFY_WORKSPACE_FILTER = "@immaculate/dashboard";
 const JAWS_RELEASE_TAG = "jaws-v0.1.6";
+const JAWS_RELEASE_VERSION = "0.1.6";
+const JAWS_PREVIOUS_PATCH_VERSION = "0.1.5";
 const JAWS_DOWNLOADS = {
   "/downloads/jaws/windows": "JAWS_0.1.6_x64-setup.exe",
   "/downloads/jaws/windows-msi": "JAWS_0.1.6_x64_en-US.msi",
@@ -33,6 +35,7 @@ if (prod && args.has("--check")) {
 
 const repoRoot = process.cwd();
 const outDir = resolve(repoRoot, "apps", "dashboard", "out");
+const functionsDir = resolve(repoRoot, "netlify", "functions");
 
 function run(command, commandArgs, options = {}) {
   const result = spawnSync(command, commandArgs, {
@@ -184,6 +187,45 @@ async function checkJawsDownloads(baseUrl) {
   return statuses;
 }
 
+async function checkJawsUpdaterApi(baseUrl) {
+  const previousPath = `/api/jaws/windows/x86_64/${JAWS_PREVIOUS_PATCH_VERSION}`;
+  const currentPath = `/api/jaws/windows/x86_64/${JAWS_RELEASE_VERSION}`;
+  const previousResponse = await fetch(`${baseUrl}${previousPath}`, {
+    headers: { Accept: "application/json" }
+  });
+  const previousBody = await previousResponse.text();
+  if (previousResponse.status !== 200) {
+    throw new Error(`${baseUrl}${previousPath} returned ${previousResponse.status}; expected a 200 update payload.`);
+  }
+  let previousJson;
+  try {
+    previousJson = JSON.parse(previousBody);
+  } catch {
+    throw new Error(`${baseUrl}${previousPath} returned invalid JSON: ${previousBody.slice(0, 400)}`);
+  }
+  if (
+    previousJson.version !== JAWS_RELEASE_VERSION ||
+    typeof previousJson.url !== "string" ||
+    !previousJson.url.includes(`/${JAWS_RELEASE_TAG}/`) ||
+    typeof previousJson.signature !== "string" ||
+    previousJson.signature.length === 0
+  ) {
+    throw new Error(`${baseUrl}${previousPath} returned an invalid JAWS update payload.`);
+  }
+
+  const currentResponse = await fetch(`${baseUrl}${currentPath}`, {
+    headers: { Accept: "application/json" }
+  });
+  if (currentResponse.status !== 204) {
+    throw new Error(`${baseUrl}${currentPath} returned ${currentResponse.status}; expected 204 for current installs.`);
+  }
+
+  return {
+    [previousPath]: previousResponse.status,
+    [currentPath]: currentResponse.status
+  };
+}
+
 async function smoke(baseUrl) {
   const pages = ["/", "/downloads/jaws", "/legal", "/terms", "/robots.txt", "/sitemap.xml"];
   const statuses = {};
@@ -200,7 +242,9 @@ async function smoke(baseUrl) {
     }
   }
   const jawsDownloads = await checkJawsDownloads(baseUrl);
+  const jawsUpdaterApi = await checkJawsUpdaterApi(baseUrl);
   Object.assign(statuses, jawsDownloads);
+  Object.assign(statuses, jawsUpdaterApi);
   return statuses;
 }
 
@@ -215,6 +259,9 @@ async function main() {
   if (!existsSync(outDir)) {
     throw new Error(`Dashboard export directory is missing: ${outDir}.`);
   }
+  if (!existsSync(functionsDir)) {
+    throw new Error(`Netlify functions directory is missing: ${functionsDir}.`);
+  }
 
   const deployArgs = [
     "deploy",
@@ -226,6 +273,9 @@ async function main() {
     NETLIFY_WORKSPACE_FILTER,
     "--dir",
     outDir,
+    "--functions",
+    functionsDir,
+    "--skip-functions-cache",
     "--message",
     prod ? "IORCH guarded production deploy" : "IORCH guarded draft deploy check",
   ];
