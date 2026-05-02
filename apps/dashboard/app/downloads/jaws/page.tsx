@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { openJawsGithubUrl, siteUrl } from "../../site";
+import { siteUrl } from "../../site";
+
+const openJawsGithubUrl = "https://github.com/PossumXI/OpenJaws";
 
 const release = {
   version: "0.1.6",
