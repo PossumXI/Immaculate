@@ -1,52 +1,25 @@
 import type { Metadata } from "next";
 import { siteUrl } from "../../site";
+import jawsRelease from "../../../../../jaws-release.json";
 
 const openJawsGithubUrl = "https://github.com/PossumXI/OpenJaws";
 
 const release = {
-  version: "0.1.6",
-  tag: "jaws-v0.1.6",
-  publishedAt: "May 1, 2026",
-  releaseUrl: "https://github.com/PossumXI/OpenJaws/releases/tag/jaws-v0.1.6"
+  version: jawsRelease.version,
+  tag: jawsRelease.tag,
+  publishedAt: jawsRelease.publishedAtLabel,
+  releaseUrl: `https://github.com/${jawsRelease.githubRepo}/releases/tag/${jawsRelease.tag}`
 };
 
-const packages = [
-  {
-    label: "Windows installer",
-    file: "JAWS_0.1.6_x64-setup.exe",
-    size: "34.59 MB",
-    href: "/downloads/jaws/windows",
-    digest: "f2dfe1e3aebd981c7e07c2a8aa7dbc78ac590eed61c0ab1076e469ed115c3fbd"
-  },
-  {
-    label: "Windows MSI",
-    file: "JAWS_0.1.6_x64_en-US.msi",
-    size: "51.40 MB",
-    href: "/downloads/jaws/windows-msi",
-    digest: "bab5ce0e28e86ea9c510a534acf530d979233eb6b038ecd0df9a49c67056513f"
-  },
-  {
-    label: "macOS Intel",
-    file: "JAWS_0.1.6_x64.dmg",
-    size: "35.87 MB",
-    href: "/downloads/jaws/macos",
-    digest: "f2f65cb2283d3c567e7fb145c9cb76544f331887c744dc57de8c4f8dba545b6d"
-  },
-  {
-    label: "Linux DEB",
-    file: "JAWS_0.1.6_amd64.deb",
-    size: "51.36 MB",
-    href: "/downloads/jaws/linux-deb",
-    digest: "ced9f5c088185eadf68f6328bc39b969dc2c85ce9ae21547ef301a7ec9a69ae6"
-  },
-  {
-    label: "Linux RPM",
-    file: "JAWS-0.1.6-1.x86_64.rpm",
-    size: "51.37 MB",
-    href: "/downloads/jaws/linux-rpm",
-    digest: "3e94256946b12364f976886fe3d103184764a08fad5afc196f59dbb8cbcd813b"
-  }
-];
+const packages = jawsRelease.downloads
+  .filter((download) => download.file !== "latest.json")
+  .map((download) => ({
+    label: download.label,
+    file: download.file,
+    size: download.size,
+    href: download.path,
+    digest: download.digest
+  }));
 
 export const metadata: Metadata = {
   title: `JAWS ${release.version} downloads | Immaculate`,

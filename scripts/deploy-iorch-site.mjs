@@ -1,22 +1,12 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
+import { githubAssetUrl, readJawsReleaseConfig } from "./jaws-release-config.mjs";
 
 const EXPECTED_SITE_ID = "4a9b7d84-9d87-4e10-9951-fb121f9626bd";
 const EXPECTED_SITE_NAME = "immaculate-iorch-20260415022035";
 const EXPECTED_DOMAIN = "iorch.net";
 const NETLIFY_WORKSPACE_FILTER = "@immaculate/dashboard";
-const JAWS_RELEASE_TAG = "jaws-v0.1.6";
-const JAWS_RELEASE_VERSION = "0.1.6";
-const JAWS_PREVIOUS_PATCH_VERSION = "0.1.5";
-const JAWS_DOWNLOADS = {
-  "/downloads/jaws/windows": "JAWS_0.1.6_x64-setup.exe",
-  "/downloads/jaws/windows-msi": "JAWS_0.1.6_x64_en-US.msi",
-  "/downloads/jaws/macos": "JAWS_0.1.6_x64.dmg",
-  "/downloads/jaws/linux-deb": "JAWS_0.1.6_amd64.deb",
-  "/downloads/jaws/linux-rpm": "JAWS-0.1.6-1.x86_64.rpm",
-  "/downloads/jaws/latest.json": "latest.json"
-};
 const BAD_PUBLIC_COPY_TERMS = [
   /\bthis is the true\b/i,
   /\bsynthesized\/offline\b/i,
@@ -34,6 +24,13 @@ if (prod && args.has("--check")) {
 }
 
 const repoRoot = process.cwd();
+const jawsRelease = readJawsReleaseConfig(repoRoot);
+const JAWS_RELEASE_TAG = jawsRelease.tag;
+const JAWS_RELEASE_VERSION = jawsRelease.version;
+const JAWS_PREVIOUS_PATCH_VERSION = jawsRelease.previousPatchVersion;
+const JAWS_DOWNLOADS = Object.fromEntries(
+  jawsRelease.downloads.map((download) => [download.path, download.file])
+);
 const outDir = resolve(repoRoot, "apps", "dashboard", "out");
 const functionsDir = resolve(repoRoot, "netlify", "functions");
 
@@ -142,6 +139,23 @@ async function assertExpectedSite(token) {
   return site;
 }
 
+async function assertDeployIncludesJawsFunction(token, deployId) {
+  if (!deployId) {
+    throw new Error("Netlify deploy output did not include a deploy id; cannot verify function bundle.");
+  }
+
+  const deploy = await netlifyApi(token, `/sites/${EXPECTED_SITE_ID}/deploys/${deployId}`);
+  const functionNames = Array.isArray(deploy.available_functions)
+    ? deploy.available_functions.map((fn) => fn?.n).filter(Boolean)
+    : [];
+  if (!functionNames.includes("jaws")) {
+    throw new Error(
+      `Netlify deploy ${deployId} does not include the jaws function; refusing to treat this as a valid iorch release deploy.`
+    );
+  }
+  return functionNames;
+}
+
 function parseDeployOutput(output) {
   const trimmed = output.trim();
   try {
@@ -180,8 +194,9 @@ async function checkJawsDownloads(baseUrl) {
     if (![301, 302, 303, 307, 308].includes(response.status)) {
       throw new Error(`${baseUrl}${path} returned ${response.status}; expected a redirect.`);
     }
-    if (!location.includes(`/${JAWS_RELEASE_TAG}/`) || !location.endsWith(`/${fileName}`)) {
-      throw new Error(`${baseUrl}${path} points to ${location || "no location"}; expected ${JAWS_RELEASE_TAG}/${fileName}.`);
+    const expectedLocation = githubAssetUrl(jawsRelease, fileName);
+    if (location !== expectedLocation) {
+      throw new Error(`${baseUrl}${path} points to ${location || "no location"}; expected ${expectedLocation}.`);
     }
   }
   return statuses;
@@ -285,10 +300,12 @@ async function main() {
 
   const deploy = parseDeployOutput(run("netlify", deployArgs, { capture: true, env: { NETLIFY_AUTH_TOKEN: token } }));
   const deployedUrl = deploy.deploy_ssl_url ?? deploy.deploy_url ?? deploy.ssl_url ?? deploy.url;
+  const deployId = deploy.deploy_id ?? deploy.id ?? null;
   if (!deployedUrl) {
     throw new Error(`Netlify deploy output did not include a deploy URL:\n${JSON.stringify(deploy, null, 2)}`);
   }
 
+  const deployedFunctions = await assertDeployIncludesJawsFunction(token, deployId);
   const draftSmoke = await smoke(deployedUrl);
   const productionSmoke = prod ? await smoke(`https://${EXPECTED_DOMAIN}`) : null;
 
@@ -298,7 +315,13 @@ async function main() {
     siteId: site.id,
     siteName: site.name,
     customDomain: site.custom_domain,
-    deployId: deploy.deploy_id ?? deploy.id ?? null,
+    deployId,
+    deployedFunctions,
+    jawsRelease: {
+      version: JAWS_RELEASE_VERSION,
+      tag: JAWS_RELEASE_TAG,
+      previousPatchVersion: JAWS_PREVIOUS_PATCH_VERSION,
+    },
     deployedUrl,
     draftSmoke,
     productionSmoke,
