@@ -1,0 +1,40 @@
+# IORCH JAWS Mirror Handoff (2026-05-02)
+
+## Scope
+
+This pass made the `iorch.net` JAWS 0.1.6 mirror deployable and verifiable from the Immaculate repo.
+
+## Changes
+
+- Hardened `scripts/deploy-iorch-site.mjs` so it:
+  - reads Netlify auth from `NETLIFY_AUTH_TOKEN` or the local Netlify CLI config,
+  - verifies the exact Netlify site through the Netlify API instead of interactive `sites:list`,
+  - sets `CI=true` for child commands,
+  - passes `--filter @immaculate/dashboard` so Netlify does not stop on monorepo project selection,
+  - deploys only after the expected `iorch.net` site identity is confirmed.
+
+## Live Deploy
+
+- Production deploy ID: `69f54af885e009de8dcca6f1`
+- Production domain: `https://iorch.net`
+- Site ID: `4a9b7d84-9d87-4e10-9951-fb121f9626bd`
+- Site name: `immaculate-iorch-20260415022035`
+
+## Validation
+
+- `npm ci`
+- `npm run typecheck`
+- `npm run build`
+- `npm run wandb:bootstrap`
+- `npm run training-data:smoke`
+- `npm run benchmark:gate:all`
+- `npm audit --audit-level=critical`
+- `npm run deploy:check`
+- `npm run deploy:safe`
+- OpenJaws clean `origin/main`: `bun run jaws:mirror:check --json`
+- `git diff --check`
+
+## Notes
+
+- Running the OpenJaws mirror check from an older dirty local branch may still expect `jaws-v0.1.5`. Use current `origin/main` for the authoritative 0.1.6 mirror validator.
+- Current `origin/main` already carries the public homepage copy cleanup, the protobufjs critical-audit fix, and the JAWS 0.1.6 route publish. This PR keeps those mainline fixes and only adds the deploy hardening plus operator handoff.

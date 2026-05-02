@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
 const EXPECTED_SITE_ID = "4a9b7d84-9d87-4e10-9951-fb121f9626bd";
@@ -40,7 +40,7 @@ function run(command, commandArgs, options = {}) {
     encoding: "utf8",
     shell: options.shell ?? (process.platform === "win32"),
     stdio: options.capture ? ["ignore", "pipe", "pipe"] : "inherit",
-    env: process.env,
+    env: { ...process.env, CI: "true", ...(options.env ?? {}) },
   });
 
   if (result.error) {
@@ -55,37 +55,59 @@ function run(command, commandArgs, options = {}) {
   return `${result.stdout ?? ""}${result.stderr ?? ""}`;
 }
 
-function resolveWindowsNetlifyCli() {
-  const result = spawnSync("where.exe", ["netlify"], {
-    cwd: repoRoot,
-    encoding: "utf8",
-    shell: false,
-    stdio: ["ignore", "pipe", "pipe"],
-    env: process.env,
-  });
-  if (result.status !== 0) {
-    throw new Error(`Unable to find Netlify CLI on PATH: ${(result.stderr || result.stdout || "where.exe failed").trim()}`);
+function readNetlifyAuthToken() {
+  const directToken = process.env.NETLIFY_AUTH_TOKEN?.trim();
+  if (directToken) {
+    return directToken;
   }
 
-  for (const candidate of result.stdout.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)) {
-    const cliPath = resolve(dirname(candidate), "node_modules", "netlify-cli", "bin", "run.js");
-    if (existsSync(cliPath)) {
-      return cliPath;
+  const candidatePaths = [
+    resolve(repoRoot, ".netlify-cli-config", "config.json"),
+    resolve(repoRoot, "apps", "dashboard", ".netlify-cli-config", "config.json"),
+    process.env.APPDATA ? resolve(process.env.APPDATA, "netlify", "Config", "config.json") : null,
+    process.env.APPDATA ? resolve(process.env.APPDATA, "Netlify", "Config", "config.json") : null,
+  ].filter((value) => typeof value === "string");
+
+  for (const configPath of candidatePaths) {
+    if (!existsSync(configPath)) {
+      continue;
+    }
+
+    const config = readJson(configPath);
+    const firstUser = config.users ? Object.values(config.users)[0] : null;
+    const token = firstUser?.auth?.token?.trim();
+    if (token) {
+      return token;
     }
   }
 
-  throw new Error("Unable to resolve the Netlify CLI Node entrypoint from PATH.");
+  throw new Error(
+    "No Netlify auth token found. Set NETLIFY_AUTH_TOKEN or log in with the Netlify CLI before deploying iorch.net."
+  );
 }
 
-function runNetlify(commandArgs, options = {}) {
-  if (process.platform !== "win32") {
-    return run("netlify", commandArgs, { ...options, shell: false });
+async function netlifyApi(token, path) {
+  let lastStatus = 0;
+  let lastStatusText = "Unknown";
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const response = await fetch(`https://api.netlify.com/api/v1${path}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "User-Agent": "immaculate-iorch-deployer/1.0",
+        Accept: "application/json"
+      }
+    });
+    if (response.ok) {
+      return response.json();
+    }
+    lastStatus = response.status;
+    lastStatusText = response.statusText;
+    if (response.status !== 429 || attempt === 5) {
+      break;
+    }
+    await new Promise((resolveRetry) => setTimeout(resolveRetry, 2000 * (attempt + 1)));
   }
-
-  return run(process.execPath, [resolveWindowsNetlifyCli(), ...commandArgs], {
-    ...options,
-    shell: false,
-  });
+  throw new Error(`Netlify API ${path} failed: ${lastStatus} ${lastStatusText}`);
 }
 
 function readJson(path) {
@@ -96,7 +118,7 @@ function assertCorrectWorkspace() {
   const packagePath = resolve(repoRoot, "package.json");
   const netlifyPath = resolve(repoRoot, "netlify.toml");
   if (!existsSync(packagePath) || !existsSync(netlifyPath)) {
-    throw new Error("Run this command from C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-public-publish.");
+    throw new Error("Run this command from the Immaculate repository root where package.json and netlify.toml both exist.");
   }
 
   const packageJson = readJson(packagePath);
@@ -105,16 +127,8 @@ function assertCorrectWorkspace() {
   }
 }
 
-function assertExpectedSite() {
-  const output = runNetlify(
-    ["api", "getSite", "--data", JSON.stringify({ site_id: EXPECTED_SITE_ID })],
-    { capture: true }
-  );
-  const site = JSON.parse(output);
-
-  if (site.id !== EXPECTED_SITE_ID && site.site_id !== EXPECTED_SITE_ID) {
-    throw new Error(`Netlify site ${EXPECTED_SITE_ID} was not found for this account.`);
-  }
+async function assertExpectedSite(token) {
+  const site = await netlifyApi(token, `/sites/${EXPECTED_SITE_ID}`);
   if (site.name !== EXPECTED_SITE_NAME) {
     throw new Error(`Wrong Netlify site name: expected ${EXPECTED_SITE_NAME}, got ${site.name ?? "unknown"}.`);
   }
@@ -192,7 +206,8 @@ async function smoke(baseUrl) {
 
 async function main() {
   assertCorrectWorkspace();
-  const site = assertExpectedSite();
+  const token = readNetlifyAuthToken();
+  const site = await assertExpectedSite(token);
 
   run("npm", ["run", "build", "-w", "@immaculate/core"]);
   run("npm", ["run", "build", "-w", "@immaculate/dashboard"]);
@@ -205,10 +220,10 @@ async function main() {
     "deploy",
     "--json",
     "--no-build",
-    "--filter",
-    NETLIFY_WORKSPACE_FILTER,
     "--site",
     EXPECTED_SITE_ID,
+    "--filter",
+    NETLIFY_WORKSPACE_FILTER,
     "--dir",
     outDir,
     "--message",
@@ -218,7 +233,7 @@ async function main() {
     deployArgs.splice(1, 0, "--prod");
   }
 
-  const deploy = parseDeployOutput(runNetlify(deployArgs, { capture: true }));
+  const deploy = parseDeployOutput(run("netlify", deployArgs, { capture: true, env: { NETLIFY_AUTH_TOKEN: token } }));
   const deployedUrl = deploy.deploy_ssl_url ?? deploy.deploy_url ?? deploy.ssl_url ?? deploy.url;
   if (!deployedUrl) {
     throw new Error(`Netlify deploy output did not include a deploy URL:\n${JSON.stringify(deploy, null, 2)}`);
