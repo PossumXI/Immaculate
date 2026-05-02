@@ -13,6 +13,10 @@ surface now treats `jaws-release.json` as the single release source of truth for
 the guarded deploy script, and the function tests. `netlify.toml` still needs static redirects for
 Netlify, so `npm run jaws:release:check` verifies those redirects against `jaws-release.json`.
 
+Third follow-up pass: OpenJaws published `jaws-v0.1.9` at 2026-05-02 05:51:32 UTC. The iorch
+mirror was advanced by changing only `jaws-release.json`; the release guard derives the static
+download redirects, updater expectations, and dashboard copy from that single audited contract.
+
 ## Changes
 
 - Hardened `scripts/deploy-iorch-site.mjs` so it:
@@ -32,6 +36,8 @@ Netlify, so `npm run jaws:release:check` verifies those redirects against `jaws-
   `scripts/check-iorch-jaws-release.mjs` so the release page, tests, and deploy guard use one
   audited JAWS release contract.
 - Updated iorch redirects and the download page to `jaws-v0.1.8`.
+- Advanced the iorch JAWS mirror contract to `jaws-v0.1.9` with the published desktop artifact
+  names, sizes, and SHA-256 digests.
 - Hardened the deploy script to inspect the Netlify deploy metadata and fail unless the `jaws`
   function is present in the deploy bundle. This directly guards against the functionless production
   deploy that caused `/api/jaws/...` to return a Next 404.

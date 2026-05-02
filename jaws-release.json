@@ -1,52 +1,52 @@
 {
-  "version": "0.1.8",
-  "tag": "jaws-v0.1.8",
-  "previousPatchVersion": "0.1.7",
-  "publishedAt": "2026-05-02T04:44:27Z",
+  "version": "0.1.9",
+  "tag": "jaws-v0.1.9",
+  "previousPatchVersion": "0.1.8",
+  "publishedAt": "2026-05-02T05:51:32Z",
   "publishedAtLabel": "May 2, 2026",
   "githubRepo": "PossumXI/OpenJaws",
   "downloads": [
     {
       "path": "/downloads/jaws/windows",
       "label": "Windows installer",
-      "file": "JAWS_0.1.8_x64-setup.exe",
+      "file": "JAWS_0.1.9_x64-setup.exe",
       "size": "34.62 MB",
-      "digest": "37a2e776a29ea4197bcf9b9e782180c43e784d7cfaeb3d870646fbadefff66de"
+      "digest": "a7d4bc6fa0178d5488300034a313ef800d988b9d3301686fba2ea958599d2cfe"
     },
     {
       "path": "/downloads/jaws/windows-msi",
       "label": "Windows MSI",
-      "file": "JAWS_0.1.8_x64_en-US.msi",
-      "size": "51.44 MB",
-      "digest": "9733c23ac6808209870bcbb2211ab8f607b7d70c0a9899784b44b1b57ec5b1dd"
+      "file": "JAWS_0.1.9_x64_en-US.msi",
+      "size": "51.46 MB",
+      "digest": "45b55a6b5ec2499d828377c1e5109ddb7321276aa03799d084433cf968666b83"
     },
     {
       "path": "/downloads/jaws/macos",
       "label": "macOS Intel",
-      "file": "JAWS_0.1.8_x64.dmg",
-      "size": "35.92 MB",
-      "digest": "5c73e2531f5aad68cda37b9f3a0f59fbfb772e8c35772959561344f24268ca21"
+      "file": "JAWS_0.1.9_x64.dmg",
+      "size": "41.84 MB",
+      "digest": "31af253d405ed603cc9db37f96feac89c217159b52c1d3d65ac4292b123095ca"
     },
     {
       "path": "/downloads/jaws/linux-deb",
       "label": "Linux DEB",
-      "file": "JAWS_0.1.8_amd64.deb",
-      "size": "51.40 MB",
-      "digest": "917c32d580e10e2e8041818ea9fc93d3f872e15cc92338ae934e18db50b3774c"
+      "file": "JAWS_0.1.9_amd64.deb",
+      "size": "51.41 MB",
+      "digest": "98f44ae0e4dfe2d12eafbec070152510efad1d820c137bc1490e0bb35dbc2eef"
     },
     {
       "path": "/downloads/jaws/linux-rpm",
       "label": "Linux RPM",
-      "file": "JAWS-0.1.8-1.x86_64.rpm",
-      "size": "51.39 MB",
-      "digest": "81dc487d832d4463c8a69f65e513941a9ca7bacb2d1032805fd3f0f80f142206"
+      "file": "JAWS-0.1.9-1.x86_64.rpm",
+      "size": "51.42 MB",
+      "digest": "8addb420744c86629be2c48836625741863354beac8a83b34be8cf7340e38fb0"
     },
     {
       "path": "/downloads/jaws/latest.json",
       "label": "Updater manifest",
       "file": "latest.json",
       "size": "1.25 KB",
-      "digest": "f0eb368a627e83d7f8ee3c92dc9c4dfb54bf94add4e1557ea8075b61ad778c07"
+      "digest": "fdb30ccc47cfdb3d6bf26866d4196ce829253b58eb6128d5a17a4885589e7089"
     }
   ]
 }
