@@ -26,6 +26,6 @@ jobs:
 
       - name: GitGuardian scan
         if: ${{ env.GITGUARDIAN_API_KEY != '' }}
-        uses: GitGuardian/ggshield-action@v1.49.0
+        uses: GitGuardian/ggshield-action@v1.50.0
         env:
           GITGUARDIAN_API_KEY: ${{ env.GITGUARDIAN_API_KEY }}
