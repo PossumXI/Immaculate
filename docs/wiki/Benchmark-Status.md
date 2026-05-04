@@ -6,7 +6,7 @@ This page is the tracked public benchmark surface for Immaculate.
 - Owner: Gaetano Comparcola (PossumX)
 - Role: Program Originator, Systems Architect, and Engineering Lead
 - Website: https://PossumX.dev
-- Updated: 2026-05-03T09:42:00.242955+00:00
+- Updated: 2026-05-04T10:01:08.189796+00:00
 
 Raw benchmark ledgers remain generated runtime artifacts under `benchmarks/` and stay out of git.
 This page only carries the public summary and links for the latest published run per pack.
@@ -15,18 +15,18 @@ This page only carries the public summary and links for the latest published run
 
 ### Durability Recovery
 
-- Suite: `immaculate-benchmark-2026-05-03T09-41-56-933Z`
-- Generated: `2026-05-03T09:41:56.933Z`
-- Published: `2026-05-03T09:42:00.242942+00:00`
+- Suite: `immaculate-benchmark-2026-05-04T10-01-04-549Z`
+- Generated: `2026-05-04T10:01:04.549Z`
+- Published: `2026-05-04T10:01:08.189777+00:00`
 - Assertions: `122/122` passed
 - Run kind: `smoke`
 - Integrity: `verified`
 - Recovery mode: `checkpoint`
 - Planned duration: `20800` ms
-- Wall-clock duration: `755.21` ms
-- Hardware: `{"host":"runnervmeorf1","platform":"linux","arch":"x64","osVersion":"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026","cpuModel":"AMD EPYC 7763 64-Core Processor","cpuCount":4,"memoryGiB":15.61,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
-- W&B run: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/b55cxe3g
-- W&B artifact: `immaculate-immaculate-benchmark-2026-05-03T09-41-56-933Z` (`benchmark-report`)
+- Wall-clock duration: `759.36` ms
+- Hardware: `{"host":"runnervmeorf1","platform":"linux","arch":"x64","osVersion":"#10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026","cpuModel":"AMD EPYC 9V74 80-Core Processor","cpuCount":4,"memoryGiB":15.61,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
+- W&B run: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/m1n7je7m
+- W&B artifact: `immaculate-immaculate-benchmark-2026-05-04T10-01-04-549Z` (`benchmark-report`)
 
 ### Latency Smoke
 
