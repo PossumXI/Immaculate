@@ -41,6 +41,8 @@ download redirects, updater expectations, and dashboard copy from that single au
 - Hardened the deploy script to inspect the Netlify deploy metadata and fail unless the `jaws`
   function is present in the deploy bundle. This directly guards against the functionless production
   deploy that caused `/api/jaws/...` to return a Next 404.
+- Added an explicit source guard: `iorch.net` production deploys must run through the Immaculate
+  dashboard lane and must not use the legacy OpenJaws `sites/iorch-jaws-release` static mirror.
 
 ## Live Deploy
 

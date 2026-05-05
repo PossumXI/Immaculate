@@ -115,6 +115,16 @@ function readJson(path) {
 }
 
 function assertCorrectWorkspace() {
+  const normalizedRoot = repoRoot.replaceAll("\\", "/");
+  if (
+    /\/OpenJaws\/sites\/iorch-jaws-release$/i.test(normalizedRoot) ||
+    normalizedRoot.includes("/OpenJaws/sites/iorch-jaws-release/")
+  ) {
+    throw new Error(
+      "Refusing to deploy legacy iorch.net static mirror from OpenJaws. Redeploy iorch.net only from the Immaculate dashboard deploy lane."
+    );
+  }
+
   const packagePath = resolve(repoRoot, "package.json");
   const netlifyPath = resolve(repoRoot, "netlify.toml");
   if (!existsSync(packagePath) || !existsSync(netlifyPath)) {
@@ -124,6 +134,11 @@ function assertCorrectWorkspace() {
   const packageJson = readJson(packagePath);
   if (packageJson.name !== "immaculate") {
     throw new Error(`Wrong package: expected immaculate, got ${packageJson.name ?? "unknown"}.`);
+  }
+
+  const netlifyToml = readFileSync(netlifyPath, "utf8");
+  if (!netlifyToml.includes('command = "npm run build -w @immaculate/core && npm run build -w @immaculate/dashboard"')) {
+    throw new Error("Wrong iorch.net deploy lane: expected the Immaculate dashboard build command in netlify.toml.");
   }
 }
 
