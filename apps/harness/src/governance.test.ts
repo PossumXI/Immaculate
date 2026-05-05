@@ -50,3 +50,25 @@ test("governance decisions still fail closed on policy mismatches", () => {
   assert.equal(decision.riskTier, 3);
   assert.equal(decision.approvalRequired, true);
 });
+
+test("protection posture reads require founder, operator, audit, or intelligence scope", () => {
+  const allowed = evaluateGovernance({
+    action: "protection-signal-read",
+    route: "/api/protection/posture",
+    actor: "founder:test",
+    purpose: ["protection-signal-read"],
+    consentScope: "founder:gaetano"
+  });
+  const denied = evaluateGovernance({
+    action: "protection-signal-read",
+    route: "/api/protection/posture",
+    actor: "remote:test",
+    purpose: ["protection-signal-read"],
+    consentScope: "session:demo"
+  });
+
+  assert.equal(allowed.allowed, true);
+  assert.equal(allowed.riskTier, 0);
+  assert.equal(denied.allowed, false);
+  assert.equal(denied.reason, "consent_scope_not_allowed");
+});

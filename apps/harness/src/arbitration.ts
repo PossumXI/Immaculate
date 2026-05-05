@@ -17,6 +17,10 @@ import type { GovernanceDecision, GovernanceStatus } from "./governance.js";
 import type { QOrchestrationContext } from "./q-orchestration-context.js";
 import type { SessionConversationMemory } from "./conversation.js";
 import { deriveGovernancePressure } from "./routing.js";
+import {
+  mergeProtectionPressure,
+  type ProtectionPressure
+} from "./protection-intelligence.js";
 import { getQModelName, truthfulModelLabel } from "./q-model.js";
 import { hashValue } from "./utils.js";
 
@@ -26,6 +30,7 @@ type ExecutionArbitrationPlanInput = {
   execution?: CognitiveExecution;
   governanceStatus: GovernanceStatus;
   governanceDecisions: GovernanceDecision[];
+  protectionPressure?: ProtectionPressure;
   consentScope?: string;
   objective?: string;
   requestedLayerId?: string;
@@ -183,10 +188,14 @@ export function planExecutionArbitration(
 ): ExecutionArbitrationPlan {
   const frame = input.frame ?? input.snapshot.neuroFrames[0];
   const execution = input.execution ?? input.snapshot.cognitiveExecutions[0];
-  let governancePressure = deriveGovernancePressure(
-    input.consentScope,
-    input.governanceStatus,
-    input.governanceDecisions
+  const protectionPressure = input.protectionPressure ?? "clear";
+  let governancePressure = mergeProtectionPressure(
+    deriveGovernancePressure(
+      input.consentScope,
+      input.governanceStatus,
+      input.governanceDecisions
+    ),
+    protectionPressure
   );
   const sessionConversationMemory = input.sessionConversationMemory;
   const sessionBlockedVerdicts = sessionConversationMemory?.blockedVerdictCount ?? 0;
@@ -359,6 +368,7 @@ export function planExecutionArbitration(
     `band=${spectralSignal.dominantBand}`,
     `artifact=${spectralSignal.artifactRatio.toFixed(2)}`,
     `governance=${governancePressure}`,
+    `protection=${protectionPressure}`,
     `federation=${federatedPressure?.pressure ?? "none"}`,
     `federationLatency=${typeof federatedPressure?.crossNodeLatencyMs === "number" ? federatedPressure.crossNodeLatencyMs.toFixed(2) : "none"}`,
     `federationSuccess=${typeof federatedPressure?.remoteSuccessRatio === "number" ? federatedPressure.remoteSuccessRatio.toFixed(2) : "none"}`,

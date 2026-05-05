@@ -121,6 +121,10 @@ import {
   planAdaptiveRoute
 } from "./routing.js";
 import {
+  deriveProtectionPosture,
+  projectProtectionPostureForQ
+} from "./protection-intelligence.js";
+import {
   createQApiKeyRegistry,
   normalizeQApiRateLimitPolicy,
   type QApiKeyMetadata,
@@ -3460,6 +3464,17 @@ function recentGovernanceDeniedCount(): number {
     .filter((decision) => !decision.allowed && Date.parse(decision.timestamp) >= windowStart).length;
 }
 
+function buildProtectionPostureSummary(snapshot = engine.getSnapshot()) {
+  return projectProtectionPostureForQ(
+    deriveProtectionPosture({
+      governanceDecisions: governance.listDecisions(),
+      conversations: snapshot.conversations,
+      executions: snapshot.cognitiveExecutions,
+      routingDecisions: snapshot.routingDecisions
+    })
+  );
+}
+
 function parseAssessmentTrigger(value: unknown): AgentIntelligenceAssessmentTrigger {
   if (
     typeof value === "string" &&
@@ -3648,7 +3663,8 @@ async function executeCognitivePass(options: {
       snapshot: activeSnapshot,
       objective: options.objective,
       context: options.context,
-      release: releaseMetadata
+      release: releaseMetadata,
+      protectionPosture: buildProtectionPostureSummary(activeSnapshot)
     });
     app.log.info(
       {
@@ -3850,7 +3866,8 @@ async function executeScheduledCognitivePass(options: {
       snapshot: activeSnapshot,
       objective: options.objective,
       context: options.context,
-      release: releaseMetadata
+      release: releaseMetadata,
+      protectionPosture: buildProtectionPostureSummary(activeSnapshot)
     });
     const result = await runOllamaExecution({
       snapshot: activeSnapshot,
@@ -4477,13 +4494,15 @@ async function dispatchWithRoute(options: {
 }) {
   const status: ActuationOutput["status"] = options.body.suppressed ? "suppressed" : "dispatched";
   const currentSnapshot = engine.getSnapshot();
+  const routeProtectionPosture = buildProtectionPostureSummary(currentSnapshot);
   const qRouteContext =
     options.execution && truthfulModelLabel(options.execution.model) === getQModelName()
       ? await resolveQOrchestrationContext({
           snapshot: currentSnapshot,
           objective: options.execution.objective,
           context: options.execution.reasonSummary ?? options.execution.responsePreview,
-          release: releaseMetadata
+          release: releaseMetadata,
+          protectionPosture: routeProtectionPosture
         })
       : undefined;
   const federatedPressureState = await computeFederatedExecutionPressure({
@@ -4505,6 +4524,7 @@ async function dispatchWithRoute(options: {
     transports: actuationManager.listTransports(),
     governanceStatus: governance.getStatus(),
     governanceDecisions: governance.listDecisions(),
+    protectionPressure: routeProtectionPosture.pressure,
     consentScope: options.consentScope,
     requestedAdapterId: options.body.adapterId?.trim() || undefined,
     requestedChannel: options.body.channel,
@@ -5000,6 +5020,26 @@ app.get("/api/governance/decisions", {
   }
 }, async () => ({
   decisions: governance.listDecisions()
+}));
+
+app.get("/api/protection/posture", {
+  preHandler: requireGovernedActionPreHandler(
+    "protection-signal-read",
+    "/api/protection/posture"
+  ),
+  config: {
+    rateLimit: {
+      max: HARNESS_READ_RATE_LIMIT_MAX,
+      timeWindow: HARNESS_READ_RATE_LIMIT_WINDOW
+    }
+  }
+}, async () => ({
+  posture: buildProtectionPostureSummary(),
+  policy: {
+    defensiveOnly: true,
+    allowedScopes: ["founder:", "operator:", "system:audit", "system:intelligence"],
+    offensiveOrCovertActions: false
+  }
 }));
 
 app.get("/api/benchmarks/latest", {
@@ -7435,10 +7475,12 @@ app.post("/api/orchestration/mediate", {
     target: "planner-swarm",
     preferredDeviceAffinityTags: ["swarm"]
   });
+  const mediationProtectionPosture = buildProtectionPostureSummary(snapshot);
   const mediationQContext = await resolveQOrchestrationContext({
     snapshot,
     objective: body.objective,
-    release: releaseMetadata
+    release: releaseMetadata,
+    protectionPosture: mediationProtectionPosture
   });
 
   const arbitrationPlan = planExecutionArbitration({
@@ -7447,6 +7489,7 @@ app.post("/api/orchestration/mediate", {
     execution,
     governanceStatus: governance.getStatus(),
     governanceDecisions: governance.listDecisions(),
+    protectionPressure: mediationProtectionPosture.pressure,
     consentScope,
     objective: body.objective,
     requestedLayerId: body.layerId?.trim() || undefined,
@@ -7614,17 +7657,20 @@ app.post("/api/orchestration/mediate", {
   const guardAllowsDispatch =
     mediationConversation?.guardVerdict === undefined ||
     mediationConversation.guardVerdict === "approved";
+  const routePreviewSnapshot = engine.getSnapshot();
+  const routePreviewProtectionPosture = buildProtectionPostureSummary(routePreviewSnapshot);
   const routePreviewQContext =
     mediationExecution && truthfulModelLabel(mediationExecution.model) === getQModelName()
       ? await resolveQOrchestrationContext({
-          snapshot: engine.getSnapshot(),
+          snapshot: routePreviewSnapshot,
           objective: mediationExecution.objective,
           context: mediationExecution.reasonSummary ?? mediationExecution.responsePreview,
-          release: releaseMetadata
+          release: releaseMetadata,
+          protectionPosture: routePreviewProtectionPosture
         })
       : undefined;
   const routePreview = planAdaptiveRoute({
-    snapshot: engine.getSnapshot(),
+    snapshot: routePreviewSnapshot,
     frame,
     execution: mediationExecution,
     cognitiveRouteSuggestion: mediationExecution?.routeSuggestion,
@@ -7633,6 +7679,7 @@ app.post("/api/orchestration/mediate", {
     transports: actuationManager.listTransports(),
     governanceStatus: governance.getStatus(),
     governanceDecisions: governance.listDecisions(),
+    protectionPressure: routePreviewProtectionPosture.pressure,
     consentScope,
     requestedAdapterId: body.adapterId?.trim() || undefined,
     requestedChannel: body.channel,

@@ -20,6 +20,7 @@ export const governanceActions = [
   "cognitive-registration",
   "cognitive-execution",
   "cognitive-trace-read",
+  "protection-signal-read",
   "actuation-dispatch",
   "actuation-device-link",
   "actuation-read",
@@ -186,6 +187,14 @@ const policies: GovernancePolicyDefinition[] = [
     allowedPurposes: ["cognitive-trace-read", "cognitive-analysis"],
     requiredConsentPrefixes: ["system:intelligence", "system:benchmark"],
     description: "Allows cognitive trace reads under explicit intelligence or benchmark scope."
+  },
+  {
+    id: "protection-signal-read-default",
+    label: "Protection Signal Read",
+    action: "protection-signal-read",
+    allowedPurposes: ["protection-signal-read", "security-review", "audit-read"],
+    requiredConsentPrefixes: ["founder:", "operator:", "system:audit", "system:intelligence"],
+    description: "Allows defensive protection posture reads under founder, operator, audit, or intelligence scope."
   },
   {
     id: "actuation-dispatch-default",

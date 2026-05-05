@@ -192,6 +192,15 @@ const governedToolActionDefinitions = {
     failureHoldThreshold: 8,
     allowedScopes: ["cognitive-trace-read", "cognitive-analysis"]
   },
+  "protection-signal-read": {
+    action: "protection-signal-read",
+    label: "Protection Signal Read",
+    description: "Reads defensive protection posture and bounded self-defense signals.",
+    riskTier: 0,
+    minimumConfidence: 0,
+    failureHoldThreshold: 8,
+    allowedScopes: ["protection-signal-read", "security-review", "audit-read"]
+  },
   "actuation-dispatch": {
     action: "actuation-dispatch",
     label: "Actuation Dispatch",

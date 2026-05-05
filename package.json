@@ -79,7 +79,7 @@
     "training-data:list": "tsx ./apps/harness/src/training-data-cli.ts list",
     "training-data:show": "tsx ./apps/harness/src/training-data-cli.ts show",
     "training-data:smoke": "tsx ./apps/harness/src/training-data-smoke.ts",
-    "test": "npm run test --workspaces --if-present",
+    "test": "npm run build -w @immaculate/core && npm run test --workspaces --if-present",
     "build": "npm run build -w @immaculate/core && npm run build -w @immaculate/harness && npm run build -w @immaculate/tui && npm run build -w @immaculate/dashboard",
     "jaws:release:check": "node ./scripts/check-iorch-jaws-release.mjs",
     "deploy:check": "node ./scripts/deploy-iorch-site.mjs --check",

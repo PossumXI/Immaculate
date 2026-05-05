@@ -35,6 +35,9 @@ for (const staleVersion of ["0.1.6", "jaws-v0.1.6"]) {
 if (!deployScript.includes("assertDeployIncludesJawsFunction")) {
   errors.push("deploy guard must assert the jaws function is present in the Netlify deploy");
 }
+if (!deployScript.includes("Refusing to deploy legacy iorch.net static mirror from OpenJaws")) {
+  errors.push("deploy guard must explicitly refuse the legacy OpenJaws iorch.net static mirror");
+}
 if (!downloadsPage.includes("jaws-release.json")) {
   errors.push("downloads page must read jaws-release.json instead of duplicating release metadata");
 }

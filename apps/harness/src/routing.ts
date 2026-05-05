@@ -17,6 +17,10 @@ import type {
 } from "./actuation.js";
 import type { FederatedExecutionPressure } from "./federation-pressure.js";
 import type { GovernanceDecision, GovernanceStatus } from "./governance.js";
+import {
+  mergeProtectionPressure,
+  type ProtectionPressure
+} from "./protection-intelligence.js";
 import type { QOrchestrationContext } from "./q-orchestration-context.js";
 import { hashValue } from "./utils.js";
 
@@ -32,6 +36,7 @@ type AdaptiveRoutePlanInput = {
   transports: ActuationTransportState[];
   governanceStatus: GovernanceStatus;
   governanceDecisions: GovernanceDecision[];
+  protectionPressure?: ProtectionPressure;
   consentScope?: string;
   requestedAdapterId?: string;
   requestedChannel?: ActuationChannel;
@@ -323,10 +328,14 @@ export function planAdaptiveRoute(input: AdaptiveRoutePlanInput): AdaptiveRouteP
     spectralConfidence >= 0.78 &&
     spectralSignal.artifactRatio <= 0.18 &&
     (dominantBand === "beta" || dominantBand === "gamma");
-  const governancePressure = deriveGovernancePressure(
-    input.consentScope,
-    input.governanceStatus,
-    input.governanceDecisions
+  const protectionPressure = input.protectionPressure ?? "clear";
+  const governancePressure = mergeProtectionPressure(
+    deriveGovernancePressure(
+      input.consentScope,
+      input.governanceStatus,
+      input.governanceDecisions
+    ),
+    protectionPressure
   );
 
   const hapticTransport = preferredTransport(
@@ -468,6 +477,7 @@ export function planAdaptiveRoute(input: AdaptiveRoutePlanInput): AdaptiveRouteP
     `signal=${hasSpectralCoupling ? spectralConfidence.toFixed(2) : "none"}`,
     `artifact=${hasSpectralCoupling ? spectralSignal.artifactRatio.toFixed(2) : "none"}`,
     `governance=${governancePressure}`,
+    `protection=${protectionPressure}`,
     `federation=${federatedPressure?.pressure ?? "none"}`,
     `federationLatency=${typeof federatedPressure?.crossNodeLatencyMs === "number" ? federatedPressure.crossNodeLatencyMs.toFixed(2) : "none"}`,
     `federationSuccess=${typeof federatedPressure?.remoteSuccessRatio === "number" ? federatedPressure.remoteSuccessRatio.toFixed(2) : "none"}`,
