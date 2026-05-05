@@ -14,6 +14,7 @@ import {
   getQLeadName,
   getQModelName
 } from "./q-model.js";
+import type { ProtectionPostureSummary } from "./protection-intelligence.js";
 import { resolveReleaseMetadata, type ReleaseMetadata } from "./release-metadata.js";
 import { sha256Json } from "./utils.js";
 
@@ -96,6 +97,7 @@ export type QOrchestrationContext = {
   reasoningDirective: string;
   mediationDiagnosticSummary: string;
   mediationDiagnosticSignals: string[];
+  protectionPosture?: ProtectionPostureSummary;
   knownWeaknesses: string[];
   failureClassHints: string[];
   evidenceIds: string[];
@@ -121,6 +123,7 @@ type ResolveQOrchestrationContextOptions = {
   objective?: string;
   context?: string;
   release?: ReleaseMetadata;
+  protectionPosture?: ProtectionPostureSummary;
 };
 
 const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
@@ -152,6 +155,7 @@ function collectContextGroundingFacts(options: {
   snapshot?: PhaseSnapshot;
   objective?: string;
   context?: string;
+  protectionPosture?: ProtectionPostureSummary;
 }): string[] {
   const facts: string[] = [];
   const add = (fact: string | undefined, condition = true) => {
@@ -204,6 +208,10 @@ function collectContextGroundingFacts(options: {
     `context ${truncate(options.context ?? "", 72)}`,
     Boolean(options.context?.trim())
   );
+  add(
+    `protection posture ${options.protectionPosture?.summaryLine ?? ""}`,
+    Boolean(options.protectionPosture)
+  );
 
   return facts.slice(0, 8);
 }
@@ -233,7 +241,8 @@ export async function resolveQOrchestrationContext(
     `readiness=${readinessReady ? "ready" : "not-ready"}`,
     `substrate=${gatewaySubstrateHealthy ? "healthy" : "degraded"}`,
     `cloud=${cloud?.summary?.ready ? "ready" : "blocked"}`,
-    `directive=${qRoutingDirective}`
+    `directive=${qRoutingDirective}`,
+    ...(options.protectionPosture ? [`protection=${options.protectionPosture.pressure}`] : [])
   ];
   const mediationDiagnosticSummary =
     qRoutingDirective === "primary-governed-local"
@@ -271,7 +280,12 @@ export async function resolveQOrchestrationContext(
       : []),
     ...(Number(failureClassCounts.prompt_too_large ?? 0) > 0
       ? ["When context is large, keep route, reason, and commit compact and decisive."]
-      : [])
+      : []),
+    ...(options.protectionPosture?.pressure === "critical"
+      ? ["Protection pressure is critical; Q must keep outward action suppressed until the founder-governed review path clears it."]
+      : options.protectionPosture?.pressure === "elevated"
+        ? ["Protection pressure is elevated; Q must prefer guarded review and bounded evidence over direct execution."]
+        : [])
   ].slice(0, 4);
   const failureClassHints = Object.entries(failureClassCounts)
     .filter(([, count]) => Number(count) > 0)
@@ -296,7 +310,8 @@ export async function resolveQOrchestrationContext(
     cloud,
     snapshot: options.snapshot,
     objective: options.objective,
-    context: options.context
+    context: options.context,
+    protectionPosture: options.protectionPosture
   });
   const evidenceIds = [
     readiness?.generatedAt ? "surface:q-readiness-gate" : undefined,
@@ -314,13 +329,15 @@ export async function resolveQOrchestrationContext(
     cloudLaneReady: Boolean(cloud?.summary?.ready),
     qRoutingDirective,
     groundedFacts,
-    failureClassHints
+    failureClassHints,
+    protectionPosture: options.protectionPosture
   });
   const evidenceDigest = sha256Json({
     evidenceIds,
     groundedFacts,
     failureClassHints,
-    knownWeaknesses
+    knownWeaknesses,
+    protectionPosture: options.protectionPosture
   });
 
   return {
@@ -344,6 +361,7 @@ export async function resolveQOrchestrationContext(
     reasoningDirective,
     mediationDiagnosticSummary,
     mediationDiagnosticSignals,
+    protectionPosture: options.protectionPosture,
     knownWeaknesses,
     failureClassHints,
     evidenceIds,
@@ -361,6 +379,6 @@ export async function resolveQOrchestrationContext(
     qRoutingDirective,
     preferredExecutionLane: "local-q",
     groundedFacts,
-    summaryLine: `${getArobiNetworkName()} is the reviewable ledger and operator network, ${getImmaculateHarnessName()} is the governed harness, and ${getQModelName()} is the only public model identity and reasoning brain. Keep reasoning on the healthy local Q lane, obey the ${qRoutingDirective} directive, stay bound to ${release.q.trainingLock?.bundleId ?? "the current tracked bundle"}, treat cloud Q as ${cloud?.summary?.ready ? "ready" : "not ready"}, and preserve operator-grade grounding on the Harbor and failure-corpus seams.`
+    summaryLine: `${getArobiNetworkName()} is the reviewable ledger and operator network, ${getImmaculateHarnessName()} is the governed harness, and ${getQModelName()} is the only public model identity and reasoning brain. Keep reasoning on the healthy local Q lane, obey the ${qRoutingDirective} directive, stay bound to ${release.q.trainingLock?.bundleId ?? "the current tracked bundle"}, treat cloud Q as ${cloud?.summary?.ready ? "ready" : "not ready"}, honor protection posture ${options.protectionPosture?.summaryLine ?? "protection=clear"}, and preserve operator-grade grounding on the Harbor and failure-corpus seams.`
   };
 }
