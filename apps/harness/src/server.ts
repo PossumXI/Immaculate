@@ -4,7 +4,7 @@ import { appendFile, mkdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import Fastify, { type FastifyReply, type FastifyRequest } from "fastify";
 import cors from "@fastify/cors";
-import rateLimit from "fastify-rate-limit";
+import rateLimit from "@fastify/rate-limit";
 import websocket from "@fastify/websocket";
 import {
   agentIntelligenceAssessmentSchema,

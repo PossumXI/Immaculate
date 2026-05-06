@@ -1,6 +1,6 @@
 import Fastify, { type FastifyReply, type FastifyRequest } from "fastify";
 import cors from "@fastify/cors";
-import rateLimit from "fastify-rate-limit";
+import rateLimit from "@fastify/rate-limit";
 import { createPersistence } from "./persistence.js";
 import {
   createQApiKeyRegistry,
