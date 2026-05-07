@@ -20,8 +20,8 @@ test("release metadata preserves tracked Q training evidence in clean checkouts"
       bundlePath?: string;
     };
   };
-  const releaseSurface = JSON.parse(
-    readFileSync(path.join(repoRoot, "docs", "wiki", "Release-Surface.json"), "utf8")
+  const trackedProof = JSON.parse(
+    readFileSync(path.join(repoRoot, "docs", "wiki", "Arobi-Audit-Integrity.json"), "utf8")
   ) as {
     release?: {
       q?: {
@@ -40,21 +40,25 @@ test("release metadata preserves tracked Q training evidence in clean checkouts"
   assert.equal(metadata.q.trainingLock?.bundleId, hybrid.q?.trainingBundleId);
   assert.equal(metadata.q.trainingLock?.trainDatasetPath, hybrid.q?.trainDatasetPath);
   assert.equal(metadata.q.trainingLock?.trainDatasetRowCount, hybrid.q?.trainDatasetRowCount);
+  assert.ok(metadata.q.trainingLock?.trainDatasetSha256);
+  assert.ok(metadata.q.trainingLock?.mixManifestSha256);
+  assert.ok((metadata.q.trainingLock?.mixSupplementalCount ?? 0) > 0);
+  assert.ok((metadata.q.trainingLock?.mixSupplementalPaths?.length ?? 0) > 0);
   assert.equal(
     metadata.q.trainingLock?.trainDatasetSha256,
-    releaseSurface.release?.q?.trainingLock?.trainDatasetSha256
+    trackedProof.release?.q?.trainingLock?.trainDatasetSha256
   );
   assert.equal(
     metadata.q.trainingLock?.mixManifestSha256,
-    releaseSurface.release?.q?.trainingLock?.mixManifestSha256
+    trackedProof.release?.q?.trainingLock?.mixManifestSha256
   );
   assert.equal(
     metadata.q.trainingLock?.mixSupplementalCount,
-    releaseSurface.release?.q?.trainingLock?.mixSupplementalCount
+    trackedProof.release?.q?.trainingLock?.mixSupplementalCount
   );
   assert.deepEqual(
     metadata.q.trainingLock?.mixSupplementalPaths,
-    releaseSurface.release?.q?.trainingLock?.mixSupplementalPaths
+    trackedProof.release?.q?.trainingLock?.mixSupplementalPaths
   );
   assert.equal(metadata.q.hybridSession?.trainingBundleId, hybrid.q?.trainingBundleId);
   assert.equal(metadata.q.hybridSession?.immaculateBundleId, hybrid.immaculate?.bundleId);
