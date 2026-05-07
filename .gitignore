@@ -13,6 +13,7 @@ __pycache__/
 .runtime/
 .runtime*/
 apps/**/.runtime/
+apps/**/artifacts/
 startup-trace.ndjson
 apps/**/startup-trace.ndjson
 .training-output/
