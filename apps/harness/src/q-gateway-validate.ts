@@ -388,6 +388,11 @@ export function isRetryableDirectQFoundationSmoke(result: OllamaChatCompletionRe
   );
 }
 
+export function shouldRunDirectQFoundationSmokeAfterGateway(check: HttpCheck): boolean {
+  const upstreamHeader = check.headers["x-upstream-latency-ms"];
+  return check.status === 200 && Number.isFinite(Number(upstreamHeader));
+}
+
 async function runDirectQFoundationSmoke(timeoutMs: number): Promise<{
   result: OllamaChatCompletionResult;
   wallLatencyMs: number;
@@ -910,20 +915,46 @@ async function main(): Promise<void> {
       `gateway_concurrency_done status=${concurrentRejection.status}`
     );
 
-    await writeValidationProgress(runtimeDir, "direct_q_smoke_start");
-    const directSmoke = await runDirectQFoundationSmoke(flags.localQTimeoutMs);
-    const direct = directSmoke.result;
-    const directWallLatencyMs = directSmoke.wallLatencyMs;
-    await writeValidationProgress(
-      runtimeDir,
-      `direct_q_smoke_done failure=${direct.failureClass ?? "none"} latency_ms=${directWallLatencyMs}`
-    );
-
     const upstreamHeader = authorizedChat.headers["x-upstream-latency-ms"];
     const gatewayUpstreamLatencyMs =
       typeof upstreamHeader === "string" && upstreamHeader.trim().length > 0
         ? Number(upstreamHeader)
         : undefined;
+    const runDirectSmoke = shouldRunDirectQFoundationSmokeAfterGateway(authorizedChat);
+    let directSmoke:
+      | {
+          result: OllamaChatCompletionResult;
+          wallLatencyMs: number;
+        }
+      | undefined;
+    if (runDirectSmoke) {
+      await writeValidationProgress(runtimeDir, "direct_q_smoke_start");
+      directSmoke = await runDirectQFoundationSmoke(flags.localQTimeoutMs);
+      await writeValidationProgress(
+        runtimeDir,
+        `direct_q_smoke_done failure=${directSmoke.result.failureClass ?? "none"} latency_ms=${directSmoke.wallLatencyMs}`
+      );
+    } else {
+      await writeValidationProgress(
+        runtimeDir,
+        `direct_q_smoke_skipped authorized=${authorizedChat.status} upstream_latency=${upstreamHeader ?? "missing"}`
+      );
+    }
+    const direct =
+      directSmoke?.result ??
+      ({
+        response: "",
+        model: getQModelTarget(),
+        startedAt: new Date().toISOString(),
+        completedAt: new Date().toISOString(),
+        latencyMs: 0,
+        done: false,
+        thinkingDetected: false,
+        responsePreview: "Skipped direct Q smoke because gateway upstream proof was not available.",
+        failureClass: "contract_invalid",
+        errorMessage: "Gateway upstream proof was not available."
+      } satisfies OllamaChatCompletionResult);
+    const directWallLatencyMs = directSmoke?.wallLatencyMs ?? 0;
     const release = await resolveReleaseMetadata();
     const publicRelease: PublicReleaseMetadata = {
       ...release,
