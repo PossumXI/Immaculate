@@ -15,6 +15,12 @@ type CircuitBreakerOptions = {
   cooldownMs?: number;
 };
 
+export function shouldRecordQGatewayCircuitFailure(
+  failureClass: string | undefined
+): failureClass is string {
+  return failureClass !== undefined && failureClass !== "contract_invalid";
+}
+
 export function createFailureCircuitBreaker(options?: CircuitBreakerOptions) {
   const failureThreshold = Math.max(1, options?.failureThreshold ?? 3);
   const cooldownMs = Math.max(1_000, options?.cooldownMs ?? 120_000);
