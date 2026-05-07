@@ -1,40 +1,27 @@
 {
-  "generatedAt": "2026-04-19T07:51:12.922Z",
+  "generatedAt": "2026-05-07T04:12:53.126Z",
   "modelLaneSurface": "direct-q-structured-contract",
-  "qRuntimeBaseUrl": "http://127.0.0.1:11435",
+  "qRuntimeBaseUrl": "http://127.0.0.1:11434",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "5ed19b98682545e60ebbc826f19a6e793619ce06",
-    "gitShortSha": "5ed19b9",
-    "gitBranch": "harbor-q-push",
-    "buildId": "0.1.0+5ed19b9",
+    "gitSha": "b64869463e4313eadc5f4ddb2d14443b3cac0171",
+    "gitShortSha": "b648694",
+    "gitBranch": "codex/security-node24-warning-cleanup-20260507",
+    "buildId": "0.1.0+b648694",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
       "truthfulLabel": "Q",
       "trainingLock": {
-        "generatedAt": "2026-04-19T07:46:04Z",
-        "lockVersion": 1,
+        "generatedAt": "2026-04-19T07:46:03Z",
         "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
         "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23",
         "modelName": "Q",
         "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl",
-        "trainDatasetSha256": "286326ce786c0a9b9b4a636a38114cc221c1b978a083ca55d70cc6ca6172cb07",
         "trainDatasetRowCount": 117,
         "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.manifest.json",
-        "mixManifestSha256": "4c7df8284cedaf8e43f1715c8eaf4c30826687e27a5d511ef8ccd4ca78df991e",
-        "mixSupplementalCount": 6,
-        "mixSupplementalPaths": [
-          "training/q/q_harness_identity_seed.json",
-          "training/q/q_immaculate_reasoning_seed.json",
-          "training/q/terminal_bench_semantic_seed.json",
-          "training/q/bridgebench_seed.json",
-          "training/q/coding_long_context_seed.json",
-          ".training-output/q/q-failure-corpus.jsonl"
-        ],
-        "curationRunId": null,
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
@@ -46,7 +33,7 @@
         "cloudProvider": "hf_jobs",
         "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
         "immaculateBundleId": "immaculate-orchestration-5ed19b9-cd094c28",
-        "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
+        "immaculateBundlePath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-harbor-opt-2384cf5-bench-v23.json"
       }
     }
   },
@@ -58,7 +45,7 @@
     "osVersion": "Windows 11 Pro",
     "cpuModel": "AMD Ryzen 7 7735HS with Radeon Graphics",
     "cpuCount": 16,
-    "memoryGiB": 23.29,
+    "memoryGiB": 23.28,
     "nodeVersion": "v22.13.1"
   },
   "models": [
@@ -71,70 +58,70 @@
       "taskCount": 4,
       "parseSuccessCount": 4,
       "parseSuccessRate": 1,
-      "averageLatencyMs": 20206.9,
-      "p95LatencyMs": 23994,
+      "averageLatencyMs": 41585.2,
+      "p95LatencyMs": 51081.94,
       "tasks": [
         {
           "scenarioId": "bridge-ack-fail-closed",
           "label": "Bridge ACK fail-closed",
-          "latencyMs": 23792.85,
-          "wallLatencyMs": 24044.65,
+          "latencyMs": 51081.94,
+          "wallLatencyMs": 52053.39,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
           "routeSuggestion": "guarded",
-          "reasonSummary": "Late ACK indicates a potential transport timeout requiring fail-closed behavior.",
-          "commitStatement": "Maintain fail-closed state and await further confirmation from the bridge.",
-          "responsePreview": "ROUTE: guarded REASON: Late ACK indicates a potential transport timeout requiring fail-closed behavior. COMMIT: Maintain fail-closed state and await further confirmation from the bridge."
+          "reasonSummary": "Late ACK indicates bridge path degradation requiring fail-closed behavior.",
+          "commitStatement": "Maintain fail-closed semantics and preserve the durable audit trail.",
+          "responsePreview": "ROUTE: guarded REASON: Late ACK indicates bridge path degradation requiring fail-closed behavior. COMMIT: Maintain fail-closed semantics and preserve the durable audit trail."
         },
         {
           "scenarioId": "nonce-forgery-response",
           "label": "ACK nonce forgery response",
-          "latencyMs": 16742.7,
-          "wallLatencyMs": 16752.77,
+          "latencyMs": 33954.59,
+          "wallLatencyMs": 34012.89,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
           "routeSuggestion": "suppressed",
-          "reasonSummary": "Forged bridge ACK without the correct nonce indicates the bridge is untrusted and must remain fail-closed.",
-          "commitStatement": "Maintain fail-closed state due to untrusted bridge acknowledgment replay.",
-          "responsePreview": "ROUTE: suppressed REASON: Forged bridge ACK without the correct nonce indicates the bridge is untrusted and must remain fail-closed. COMMIT: Maintain fail-closed state due to untrusted bridge acknowledgment replay."
+          "reasonSummary": "Bridge ACK replay without correct nonce indicates the bridge is untrusted.",
+          "commitStatement": "Stay fail-closed due to untrusted bridge state.",
+          "responsePreview": "ROUTE: suppressed REASON: Bridge ACK replay without correct nonce indicates the bridge is untrusted. COMMIT: Stay fail-closed due to untrusted bridge state."
         },
         {
           "scenarioId": "public-q-rate-limit",
           "label": "Public Q edge throttling",
-          "latencyMs": 23994,
-          "wallLatencyMs": 24007.45,
+          "latencyMs": 50136.39,
+          "wallLatencyMs": 50182.62,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
           "routeSuggestion": "cognitive",
-          "reasonSummary": "Public quota burst occurred while the private operator plane remained stable.",
-          "commitStatement": "Maintain the local governed Q lane to ensure operator plane stability.",
-          "responsePreview": "ROUTE: cognitive REASON: Public quota burst occurred while the private operator plane remained stable. COMMIT: Maintain the local governed Q lane to ensure operator plane stability."
+          "reasonSummary": "The local governed lane was healthy, allowing mediation on the governed local Q lane.",
+          "commitStatement": "Keep mediation on the governed local Q lane without drift.",
+          "responsePreview": "ROUTE: cognitive REASON: The local governed lane was healthy, allowing mediation on the governed local Q lane. COMMIT: Keep mediation on the governed local Q lane without drift."
         },
         {
           "scenarioId": "bridge-continuity-routing",
           "label": "Bridge continuity routing",
-          "latencyMs": 16298.06,
-          "wallLatencyMs": 16305.14,
+          "latencyMs": 31167.87,
+          "wallLatencyMs": 31244.66,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
           "routeSuggestion": "guarded",
           "reasonSummary": "HTTP/2 direct is healthy while the websocket bridge is degraded.",
-          "commitStatement": "Proceed using the healthy HTTP/2 direct path for transport.",
-          "responsePreview": "ROUTE: cognitive REASON: HTTP/2 direct is healthy while the websocket bridge is degraded. COMMIT: Proceed using the healthy HTTP/2 direct path for transport."
+          "commitStatement": "Use the healthy direct path for transport.",
+          "responsePreview": "ROUTE: cognitive REASON: HTTP/2 direct is healthy while the websocket bridge is degraded. COMMIT: Use the healthy direct path for transport."
         }
       ]
     }
   ],
   "bridgeRuntime": {
-    "suiteId": "immaculate-benchmark-2026-04-19T07-51-08-756Z",
+    "suiteId": "immaculate-benchmark-2026-05-07T04-12-14-478Z",
     "packId": "substrate-readiness",
     "failedAssertions": 0,
     "selectedAssertions": [
@@ -175,7 +162,7 @@
         "label": "Supervised serial transport registration exposes vendor/device identity and heartbeat policy",
         "status": "pass",
         "target": "registered serial-json transport with vendor/model and heartbeat policy",
-        "actual": "atx-fnv1a-df1a2865:http2-json:immaculate-labs:healthy, atx-fnv1a-1794ee96:serial-json:immaculate-labs:healthy, atx-fnv1a-319f9069:udp-osc:generic:healthy",
+        "actual": "atx-fnv1a-999acd23:http2-json:immaculate-labs:healthy, atx-fnv1a-be2f78b2:serial-json:immaculate-labs:healthy, atx-fnv1a-9fce324b:udp-osc:generic:healthy",
         "detail": "vendor/device lanes should be durable registry entries with explicit supervision policy, not anonymous direct writes"
       },
       {
@@ -215,7 +202,7 @@
         "label": "HTTP/2 direct transport registration exposes a supervised RPC-class device endpoint",
         "status": "pass",
         "target": "registered http2-json transport with vendor/model and heartbeat policy",
-        "actual": "atx-fnv1a-df1a2865:http2-json:immaculate-labs:haptic-rpc-s2:20/5000:healthy, atx-fnv1a-1794ee96:serial-json:immaculate-labs:haptic-bridge-s1:20/5000:healthy, atx-fnv1a-319f9069:udp-osc:generic:udp-osc:5000/15000:healthy",
+        "actual": "atx-fnv1a-999acd23:http2-json:immaculate-labs:haptic-rpc-s2:20/5000:healthy, atx-fnv1a-be2f78b2:serial-json:immaculate-labs:haptic-bridge-s1:20/5000:healthy, atx-fnv1a-9fce324b:udp-osc:generic:udp-osc:5000/15000:healthy",
         "detail": "the next direct device lane should be a typed RPC-class endpoint, not just another file or datagram bridge"
       },
       {
@@ -235,6 +222,11 @@
         "detail": "direct transport routing should use health and latency as a real preference signal instead of registry insertion order"
       }
     ]
+  },
+  "temporalBaseline": {
+    "suiteId": "immaculate-benchmark-2026-04-29T01-57-42-865Z",
+    "failedAssertions": 0,
+    "immaculateWorkflowWallClockP95Ms": 28.57
   },
   "output": {
     "jsonPath": "docs\\wiki\\BridgeBench.json",
