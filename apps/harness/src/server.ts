@@ -81,6 +81,7 @@ import {
 } from "./live-neuro.js";
 import { createLslAdapterManager } from "./lsl-adapter.js";
 import { buildPublicIntelligenceStatus } from "./intelligence-status.js";
+import { resolveLocalWorkerHeartbeatIntervalMs } from "./local-worker-heartbeat.js";
 import {
   normalizeFederationControlPlaneUrl,
   resolveFederationSecret,
@@ -183,11 +184,11 @@ import {
   redactNeuroSessionSummary
 } from "./visibility.js";
 import { inspectWandbStatus, publishBenchmarkToWandb } from "./wandb.js";
+import { resolveStartupTracePath } from "./startup-trace.js";
 
-const STARTUP_TRACE_PATH = path.join(
-  process.env.IMMACULATE_RUNTIME_DIR ?? process.cwd(),
-  "startup-trace.ndjson"
-);
+const STARTUP_TRACE_PATH = resolveStartupTracePath({
+  runtimeDir: process.env.IMMACULATE_RUNTIME_DIR
+});
 
 async function appendStartupTrace(
   phase: string,
@@ -502,6 +503,15 @@ const LOCAL_WORKER_DEVICE_AFFINITY_TAGS =
     "llm",
     "cpu"
   ];
+const DEFAULT_INTELLIGENCE_WORKER_LEASE_MS = 45_000;
+const LOCAL_WORKER_LEASE_MS = Math.max(
+  DEFAULT_INTELLIGENCE_WORKER_LEASE_MS,
+  tickIntervalMs * 8
+);
+const LOCAL_WORKER_HEARTBEAT_INTERVAL_MS = resolveLocalWorkerHeartbeatIntervalMs({
+  envValue: process.env.IMMACULATE_LOCAL_WORKER_HEARTBEAT_INTERVAL_MS,
+  leaseDurationMs: LOCAL_WORKER_LEASE_MS
+});
 const NODE_HEARTBEAT_INTERVAL_MS = Math.max(
   5_000,
   Number(process.env.IMMACULATE_NODE_HEARTBEAT_INTERVAL_MS ?? 15_000) || 15_000
@@ -552,6 +562,17 @@ setInterval(() => {
     );
   });
 }, NODE_HEARTBEAT_INTERVAL_MS).unref();
+
+setInterval(() => {
+  void ensureLocalExecutionWorkers().catch((error) => {
+    app.log.warn(
+      {
+        message: error instanceof Error ? error.message : "unknown local worker heartbeat error"
+      },
+      "Unable to refresh local intelligence worker heartbeat"
+    );
+  });
+}, LOCAL_WORKER_HEARTBEAT_INTERVAL_MS).unref();
 
 setInterval(() => {
   void refreshDueFederationPeers().catch((error) => {
@@ -2871,7 +2892,7 @@ async function ensureLocalExecutionWorkers(minCount = 1): Promise<void> {
       executionEndpoint: LOCAL_OLLAMA_ENDPOINT,
       registeredAt: now,
       heartbeatAt: now,
-      leaseDurationMs: Math.max(DEFAULT_INTELLIGENCE_WORKER_LEASE_MS, tickIntervalMs * 8),
+      leaseDurationMs: LOCAL_WORKER_LEASE_MS,
       watch: true,
       allowHostRisk: false,
       supportedBaseModels: ["*"],
@@ -2885,8 +2906,6 @@ async function ensureLocalExecutionWorkers(minCount = 1): Promise<void> {
     });
   }
 }
-
-const DEFAULT_INTELLIGENCE_WORKER_LEASE_MS = 45_000;
 
 type ExecutionWorkerSelectionContext = {
   localNode: Awaited<ReturnType<typeof nodeRegistry.ensureLocalNode>>;

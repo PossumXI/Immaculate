@@ -19,6 +19,30 @@ For each breakthrough, record:
 
 ## Current Entries
 
+### 2026-05-07
+
+#### The local worker plane stopped aging out after startup
+
+What changed:
+- the harness now refreshes local execution-worker registrations on a recurring, lease-safe heartbeat
+- `IMMACULATE_LOCAL_WORKER_HEARTBEAT_INTERVAL_MS` gives operators a bounded tuning knob for the local worker heartbeat
+- startup traces now default into ignored runtime state instead of producing source-tree dirt under `apps/harness`
+
+Why it matters:
+- the harness could stay healthy while `/api/intelligence/status` degraded to `no_workers` after the initial local-worker lease expired
+- recurring local worker renewal keeps the intelligence plane truthful for live operator checks without disabling stale-worker eviction
+- keeping startup trace output under `.runtime` prevents normal supervised startup from creating dirty release trees
+
+Evidence:
+- `apps/harness/src/local-worker-heartbeat.ts` owns the heartbeat interval clamp
+- `apps/harness/src/server.ts` reuses the shared lease value for registration and schedules the renewal loop
+- `apps/harness/src/startup-trace.ts` resolves generated startup traces into runtime state
+- `apps/harness/src/local-worker-heartbeat.test.ts` and `apps/harness/src/startup-trace.test.ts` cover the new bounds
+
+What this unlocks next:
+- OpenJaws runtime coherence can treat an online Immaculate harness and a live worker plane as separate, testable facts
+- release checks can fail on real worker-plane degradation instead of transient lease expiry from normal startup
+
 ### 2026-05-01
 
 #### PoI became a durable agent intelligence monitor
