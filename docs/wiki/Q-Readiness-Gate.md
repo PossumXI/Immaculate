@@ -1,16 +1,16 @@
 # Q Readiness Gate
 
-This page is generated from the tracked direct-Q report surfaces. It does not grade the gateway transport; it grades whether the underlying Q model is ready for structured route/reason/commit work on this machine.
+This page is generated from the tracked direct-Q and gateway report surfaces. It fails closed when the model benchmarks pass but the live gateway contract cannot complete authenticated chat.
 
-- Generated: 2026-04-21T16:17:13.434Z
-- Release: `0.1.0+9117c8f`
-- Repo commit: `9117c8f`
+- Generated: 2026-05-07T06:20:39.545Z
+- Release: `0.1.0+af0899f`
+- Repo commit: `af0899f`
 - Ready: `true`
 - Threshold: `0.75`
 - Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`
-- Model comparison source: `2026-04-19T07:48:09.656Z`
-- BridgeBench source: `2026-04-19T07:51:12.922Z`
-- Q gateway validation source: `2026-04-19T07:47:33.854Z`
+- Model comparison source: `2026-05-07T06:03:07.620Z`
+- BridgeBench source: `2026-05-07T04:12:53.126Z`
+- Q gateway validation source: `2026-05-07T06:20:01.229Z`
 
 ## Q Direct Results
 
@@ -20,6 +20,10 @@ This page is generated from the tracked direct-Q report surfaces. It does not gr
 - BridgeBench parse success: `1`
 - BridgeBench dominant failure: `none`
 - Q gateway identity canonical: `true`
+- Q gateway contract ready: `true`
+- Q gateway authenticated chat status: `200`
+- Q gateway authenticated chat failure: `none`
+- Direct local Q failure: `none`
 
 ## Reasons
 

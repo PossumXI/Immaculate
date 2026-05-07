@@ -4,6 +4,7 @@ import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { performance } from "node:perf_hooks";
 import { spawn, type ChildProcess } from "node:child_process";
+import { createServer } from "node:net";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 import { createPersistence } from "./persistence.js";
@@ -18,7 +19,14 @@ import {
   getQModelTarget
 } from "./q-model.js";
 import { resolveReleaseMetadata, type ReleaseMetadata } from "./release-metadata.js";
-import { runOllamaChatCompletion, type OllamaChatMessage } from "./ollama.js";
+import {
+  runOllamaChatCompletion,
+  type OllamaChatCompletionResult,
+  type OllamaChatMessage
+} from "./ollama.js";
+import { runOpenAICompatibleResponsesCompletion } from "./openai-compatible.js";
+import { runOciIamBridgeResponsesCompletion } from "./oci-iam-bridge.js";
+import { resolveQInferenceProfile } from "./q-inference-profile.js";
 
 type ValidationFlags = {
   gatewayUrl: string;
@@ -101,6 +109,14 @@ export const DEFAULT_Q_GATEWAY_HTTP_TIMEOUT_MS = 30_000;
 export const DEFAULT_Q_GATEWAY_LOCAL_Q_TIMEOUT_MS = 120_000;
 const MIN_Q_GATEWAY_VALIDATION_TIMEOUT_MS = 250;
 const MAX_Q_GATEWAY_VALIDATION_TIMEOUT_MS = 600_000;
+const REQUEST_TIMEOUT_OVERRIDE_HEADER = "x-immaculate-request-timeout-ms";
+const FAST_SMOKE_HEADER = "x-immaculate-q-fast-smoke";
+const FAST_SMOKE_HOLD_HEADER = "x-immaculate-q-fast-smoke-hold-ms";
+const LOOPBACK_HOST = "127.0.0.1";
+const FAST_SMOKE_OLLAMA_OPTIONS = {
+  num_ctx: 768,
+  num_batch: 64
+};
 
 export function resolveQGatewayValidationTimeoutMs(
   value: string | number | undefined,
@@ -123,7 +139,7 @@ export function resolveQGatewayValidationTimeoutMs(
 
 function parseFlags(argv: string[]): ValidationFlags {
   const flags: ValidationFlags = {
-    gatewayUrl: "http://127.0.0.1:8897",
+    gatewayUrl: process.env.IMMACULATE_Q_GATEWAY_VALIDATE_URL?.trim() ?? "",
     httpTimeoutMs: resolveQGatewayValidationTimeoutMs(
       process.env.IMMACULATE_Q_GATEWAY_VALIDATE_HTTP_TIMEOUT_MS ??
         process.env.npm_config_http_timeout_ms,
@@ -197,6 +213,30 @@ function parseFlags(argv: string[]): ValidationFlags {
   }
 
   return flags;
+}
+
+async function allocateLoopbackGatewayUrl(): Promise<string> {
+  const port = await new Promise<number>((resolve, reject) => {
+    const server = createServer();
+    server.once("error", reject);
+    server.listen(0, LOOPBACK_HOST, () => {
+      const address = server.address();
+      if (!address || typeof address === "string") {
+        server.close();
+        reject(new Error("Could not allocate an ephemeral loopback port for Q gateway validation."));
+        return;
+      }
+      const allocatedPort = address.port;
+      server.close((error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(allocatedPort);
+      });
+    });
+  });
+  return `http://${LOOPBACK_HOST}:${port}`;
 }
 
 function captureHardwareContext(): HardwareContext {
@@ -297,6 +337,123 @@ export async function captureHttpCheck(
   }
 }
 
+function isRetryableGatewaySmokeCheck(check: HttpCheck): boolean {
+  if (check.status === 429) {
+    return true;
+  }
+  if (check.status !== 503 || !check.body || typeof check.body !== "object") {
+    return false;
+  }
+  return (
+    (check.body as { failureClass?: string }).failureClass === "transport_timeout"
+  );
+}
+
+async function captureGatewaySmokeCheck(
+  url: string,
+  init: RequestInit,
+  timeoutMs: number
+): Promise<HttpCheck> {
+  const retryDelayMs = Math.min(15_000, Math.max(2_000, Math.floor(timeoutMs / 2)));
+  let latest = await captureHttpCheck(url, init, timeoutMs);
+  for (let attempt = 1; attempt < 3 && isRetryableGatewaySmokeCheck(latest); attempt += 1) {
+    await delay(retryDelayMs);
+    latest = await captureHttpCheck(url, init, timeoutMs);
+  }
+  return latest;
+}
+
+function isRetryableDirectQFoundationSmoke(result: OllamaChatCompletionResult): boolean {
+  if (!result.failureClass) {
+    return false;
+  }
+  const preview = result.responsePreview.toLowerCase();
+  return (
+    result.failureClass === "transport_timeout" ||
+    (result.failureClass === "http_error" &&
+      (preview.includes("loading model") || preview.includes("timed out")))
+  );
+}
+
+async function runDirectQFoundationSmoke(timeoutMs: number): Promise<{
+  result: OllamaChatCompletionResult;
+  wallLatencyMs: number;
+}> {
+  const started = performance.now();
+  const runAttempt = async (): Promise<OllamaChatCompletionResult> => {
+    const profile = resolveQInferenceProfile();
+    const messages: OllamaChatMessage[] = [
+      {
+        role: "system",
+        content: "Answer only with final visible text. Do not think. Do not explain."
+      },
+      {
+        role: "user",
+        content: "Reply with exactly three words: Gateway is fine."
+      }
+    ];
+    if (profile.provider === "openai-compatible") {
+      return runOpenAICompatibleResponsesCompletion({
+        profile,
+        model: getQModelTarget(),
+        messages,
+        maxTokens: 128,
+        temperature: 0,
+        timeoutMs
+      });
+    }
+    if (profile.provider === "oci-iam-bridge") {
+      return runOciIamBridgeResponsesCompletion({
+        profile,
+        model: getQModelTarget(),
+        messages,
+        maxTokens: 128,
+        temperature: 0,
+        timeoutMs
+      });
+    }
+    return runOllamaChatCompletion({
+      endpoint: resolveQLocalOllamaUrl(),
+      model: getQModelTarget(),
+      messages,
+      maxTokens: 128,
+      temperature: 0,
+      think: false,
+      timeoutMs,
+      ollamaOptions: FAST_SMOKE_OLLAMA_OPTIONS
+    });
+  };
+  let latest = await runAttempt();
+  for (let attempt = 1; attempt < 3 && isRetryableDirectQFoundationSmoke(latest); attempt += 1) {
+    await delay(Math.min(15_000, Math.max(2_000, Math.floor(timeoutMs / 4))));
+    latest = await runAttempt();
+  }
+  return {
+    result: latest,
+    wallLatencyMs: Number((performance.now() - started).toFixed(2))
+  };
+}
+
+export function buildQGatewayValidationHeaders(
+  apiKey: string,
+  options: {
+    requestTimeoutMs: number;
+    fastSmoke?: boolean;
+  }
+): Record<string, string> {
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${apiKey}`,
+    "content-type": "application/json",
+    [REQUEST_TIMEOUT_OVERRIDE_HEADER]: String(
+      resolveQGatewayValidationTimeoutMs(options.requestTimeoutMs, DEFAULT_Q_GATEWAY_HTTP_TIMEOUT_MS)
+    )
+  };
+  if (options.fastSmoke) {
+    headers[FAST_SMOKE_HEADER] = "true";
+  }
+  return headers;
+}
+
 function parseGatewayPort(gatewayUrl: string): number {
   return Number(new URL(gatewayUrl).port || 80);
 }
@@ -326,6 +483,7 @@ function startGatewayProcess(options: {
   runtimeDir: string;
   keysPath: string;
   port: number;
+  gatewayTimeoutMs: number;
 }): ChildProcess {
   const gateway = resolveGatewayCommand();
   return spawn(gateway.command, gateway.args, {
@@ -334,8 +492,9 @@ function startGatewayProcess(options: {
       ...process.env,
       IMMACULATE_RUNTIME_DIR: options.runtimeDir,
       IMMACULATE_Q_API_KEYS_PATH: options.keysPath,
-      IMMACULATE_Q_GATEWAY_HOST: "127.0.0.1",
+      IMMACULATE_Q_GATEWAY_HOST: LOOPBACK_HOST,
       IMMACULATE_Q_GATEWAY_PORT: String(options.port),
+      IMMACULATE_Q_GATEWAY_TIMEOUT_MS: String(options.gatewayTimeoutMs),
       IMMACULATE_Q_API_DEFAULT_MAX_CONCURRENT: "1"
     },
     stdio: "ignore",
@@ -361,12 +520,27 @@ async function ensureGatewayAvailable(options: {
   runtimeDir: string;
   keysPath: string;
   httpTimeoutMs: number;
-}): Promise<ChildProcess | undefined> {
+  validationHeaders: Record<string, string>;
+}): Promise<{
+  child?: ChildProcess;
+  gatewayUrl: string;
+}> {
   const healthTimeoutMs = Math.min(options.httpTimeoutMs, 5_000);
+  let gatewayUrl = options.gatewayUrl;
   try {
-    const health = await checkHttp(`${options.gatewayUrl}/health`, undefined, healthTimeoutMs);
+    const health = await checkHttp(`${gatewayUrl}/health`, undefined, healthTimeoutMs);
     if (health.status === 200) {
-      return undefined;
+      const authCheck = await checkHttp(
+        `${gatewayUrl}/api/q/info`,
+        { headers: options.validationHeaders },
+        healthTimeoutMs
+      );
+      if (authCheck.status === 200) {
+        return {
+          gatewayUrl
+        };
+      }
+      gatewayUrl = await allocateLoopbackGatewayUrl();
     }
   } catch {
     // Start a local ephemeral gateway below.
@@ -375,17 +549,30 @@ async function ensureGatewayAvailable(options: {
   const child = startGatewayProcess({
     runtimeDir: options.runtimeDir,
     keysPath: options.keysPath,
-    port: parseGatewayPort(options.gatewayUrl)
+    port: parseGatewayPort(gatewayUrl),
+    gatewayTimeoutMs: options.httpTimeoutMs
   });
 
   let lastError: unknown;
   for (let attempt = 0; attempt < 80; attempt += 1) {
     try {
-      const health = await checkHttp(`${options.gatewayUrl}/health`, undefined, healthTimeoutMs);
+      const health = await checkHttp(`${gatewayUrl}/health`, undefined, healthTimeoutMs);
       if (health.status === 200) {
-        return child;
+        const authCheck = await checkHttp(
+          `${gatewayUrl}/api/q/info`,
+          { headers: options.validationHeaders },
+          healthTimeoutMs
+        );
+        if (authCheck.status === 200) {
+          return {
+            child,
+            gatewayUrl
+          };
+        }
+        lastError = new Error(`Gateway authenticated info returned ${authCheck.status}.`);
+      } else {
+        lastError = new Error(`Gateway health returned ${health.status}.`);
       }
-      lastError = new Error(`Gateway health returned ${health.status}.`);
     } catch (error) {
       lastError = error;
     }
@@ -400,7 +587,7 @@ function renderMarkdown(report: QGatewayValidationReport): string {
   return [
     "# Q Gateway Validation",
     "",
-    "This page is generated from a real live loopback validation pass against the dedicated Q gateway process, plus a direct local Q foundation-model call against the same Q stack.",
+    "This page is generated from a real live loopback validation pass against the dedicated Q gateway process, plus a direct configured Q inference call against the same Q stack.",
     "",
     `- Generated: ${report.generatedAt}`,
     `- Release: ${report.release.buildId}`,
@@ -430,9 +617,9 @@ function renderMarkdown(report: QGatewayValidationReport): string {
     `- gateway end-to-end latency: \`${report.comparison.gatewayEndToEndLatencyMs}\` ms`,
     `- gateway upstream latency header: \`${report.comparison.gatewayUpstreamLatencyMs ?? "n/a"}\` ms`,
     `- gateway added latency: \`${report.comparison.gatewayAddedLatencyMs ?? "n/a"}\` ms`,
-    `- direct local Q foundation-model latency: \`${report.comparison.localQFoundationLatencyMs}\` ms`,
+    `- direct configured Q inference latency: \`${report.comparison.localQFoundationLatencyMs}\` ms`,
     "",
-    "## Direct Local Q Foundation Result",
+    "## Direct Q Inference Result",
     "",
     `- failure class: \`${report.localQFoundationRun.failureClass ?? "none"}\``,
     `- latency: \`${report.localQFoundationRun.latencyMs}\` ms`,
@@ -547,17 +734,29 @@ async function main(): Promise<void> {
   let spawnedGateway: ChildProcess | undefined;
 
   try {
-    const gatewayUrl = flags.gatewayUrl.replace(/\/+$/, "");
-    spawnedGateway = await ensureGatewayAvailable({
+    let gatewayUrl = (flags.gatewayUrl.trim() || (await allocateLoopbackGatewayUrl())).replace(
+      /\/+$/,
+      ""
+    );
+    const directSmoke = await runDirectQFoundationSmoke(flags.localQTimeoutMs);
+    const direct = directSmoke.result;
+    const directWallLatencyMs = directSmoke.wallLatencyMs;
+    const gatewayHeaders = buildQGatewayValidationHeaders(created.plainTextKey, {
+      requestTimeoutMs: flags.httpTimeoutMs
+    });
+    const fastGatewayHeaders = buildQGatewayValidationHeaders(created.plainTextKey, {
+      requestTimeoutMs: flags.httpTimeoutMs,
+      fastSmoke: true
+    });
+    const gatewayAvailability = await ensureGatewayAvailable({
       gatewayUrl,
       runtimeDir,
       keysPath,
-      httpTimeoutMs: flags.httpTimeoutMs
+      httpTimeoutMs: flags.httpTimeoutMs,
+      validationHeaders: gatewayHeaders
     });
-    const gatewayHeaders = {
-      Authorization: `Bearer ${created.plainTextKey}`,
-      "content-type": "application/json"
-    };
+    gatewayUrl = gatewayAvailability.gatewayUrl;
+    spawnedGateway = gatewayAvailability.child;
     const chatMessages: OllamaChatMessage[] = [
       {
         role: "system",
@@ -602,15 +801,6 @@ async function main(): Promise<void> {
       },
       flags.httpTimeoutMs
     );
-    const authorizedChat = await captureHttpCheck(
-      `${gatewayUrl}/v1/chat/completions`,
-      {
-        method: "POST",
-        headers: gatewayHeaders,
-        body: JSON.stringify(chatBody)
-      },
-      flags.httpTimeoutMs
-    );
     const identityBody = {
       model: getQModelName(),
       messages: [
@@ -624,11 +814,20 @@ async function main(): Promise<void> {
       temperature: 0.05,
       stream: false
     };
-    const identityChat = await captureHttpCheck(
+    const authorizedChat = await captureGatewaySmokeCheck(
       `${gatewayUrl}/v1/chat/completions`,
       {
         method: "POST",
-        headers: gatewayHeaders,
+        headers: fastGatewayHeaders,
+        body: JSON.stringify(chatBody)
+      },
+      flags.httpTimeoutMs
+    );
+    const identityChat = await captureGatewaySmokeCheck(
+      `${gatewayUrl}/v1/chat/completions`,
+      {
+        method: "POST",
+        headers: fastGatewayHeaders,
         body: JSON.stringify(identityBody)
       },
       flags.httpTimeoutMs
@@ -640,7 +839,10 @@ async function main(): Promise<void> {
       `${gatewayUrl}/v1/chat/completions`,
       {
         method: "POST",
-        headers: gatewayHeaders,
+        headers: {
+          ...fastGatewayHeaders,
+          [FAST_SMOKE_HOLD_HEADER]: "1000"
+        },
         body: JSON.stringify(chatBody)
       },
       flags.httpTimeoutMs
@@ -650,24 +852,12 @@ async function main(): Promise<void> {
       `${gatewayUrl}/v1/chat/completions`,
       {
         method: "POST",
-        headers: gatewayHeaders,
+        headers: fastGatewayHeaders,
         body: JSON.stringify(chatBody)
       },
       flags.httpTimeoutMs
     );
     await concurrentPrimary.catch(() => undefined);
-
-    const directStarted = performance.now();
-    const direct = await runOllamaChatCompletion({
-      endpoint: resolveQLocalOllamaUrl(),
-      model: getQModelTarget(),
-      messages: chatMessages,
-      maxTokens: 64,
-      temperature: 0.1,
-      think: false,
-      timeoutMs: flags.localQTimeoutMs
-    });
-    const directWallLatencyMs = Number((performance.now() - directStarted).toFixed(2));
 
     const upstreamHeader = authorizedChat.headers["x-upstream-latency-ms"];
     const gatewayUpstreamLatencyMs =
@@ -767,7 +957,11 @@ const isDirectExecution =
 
 if (isDirectExecution) {
   void main().catch((error) => {
-    process.stderr.write(`${error instanceof Error ? error.message : "Q gateway validation failed."}\n`);
+    const message =
+      error instanceof Error
+        ? error.stack || error.message || error.name || "Q gateway validation failed."
+        : "Q gateway validation failed.";
+    process.stderr.write(`${message}\n`);
     process.exit(1);
   });
 }

@@ -1,5 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import {
   redactQInferenceProfile,
   resolveQInferenceProfile,
@@ -68,6 +71,42 @@ test("Q inference profile accepts OCI/OpenAI-compatible responses routing", () =
   assert.equal(profile.runtimePath, "/responses");
   assert.equal(profile.auth.mode, "bearer");
   assert.equal(profile.auth.bearerToken, "secret-token");
+});
+
+test("Q inference profile accepts OpenJaws OCI IAM bridge routing without exposing secrets", () => {
+  const root = mkdtempSync(path.join(tmpdir(), "q-oci-bridge-profile-"));
+  try {
+    const scriptPath = path.join(root, "oci-q-response.py");
+    const configPath = path.join(root, "config");
+    writeFileSync(scriptPath, "print('ok')\n", "utf8");
+    writeFileSync(configPath, "[DEFAULT]\nregion=us-ashburn-1\n", "utf8");
+    const profile = resolveQInferenceProfile({
+      IMMACULATE_Q_INFERENCE_PROVIDER: "oci-iam-bridge",
+      IMMACULATE_Q_OCI_BASE_URL:
+        "https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1/",
+      IMMACULATE_Q_OCI_BRIDGE_SCRIPT: scriptPath,
+      IMMACULATE_Q_OCI_CONFIG_FILE: configPath,
+      IMMACULATE_Q_OCI_PROFILE: "DEFAULT",
+      IMMACULATE_Q_OCI_COMPARTMENT_ID: "ocid1.tenancy.oc1..example",
+      IMMACULATE_Q_OCI_PROJECT_ID: "ocid1.generativeaiproject.oc1.iad.example",
+      IMMACULATE_Q_OCI_MODEL: "openai.gpt-oss-120b",
+      IMMACULATE_Q_OCI_PYTHON: process.execPath
+    });
+
+    assert.equal(profile.provider, "oci-iam-bridge");
+    assert.equal(profile.routeLabel, "q-primary-oci-iam-bridge");
+    assert.equal(profile.auth.mode, "oci-iam");
+    assert.equal(profile.runtimePath, "/responses");
+    assert.equal(profile.ociBridge?.scriptPath, scriptPath);
+    assert.equal(profile.ociBridge?.configFile, configPath);
+    assert.equal(profile.ociBridge?.model, "openai.gpt-oss-120b");
+    const redacted = redactQInferenceProfile(profile);
+    assert.equal(redacted.auth.configured, true);
+    assert.equal(redacted.auth.secretVisible, false);
+    assert.equal("ociBridge" in redacted, false);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });
 
 test("Q inference profile requires explicit no-auth mode for private responses proxies", () => {
