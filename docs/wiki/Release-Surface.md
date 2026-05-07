@@ -2,10 +2,10 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-05-07T06:52:09.390Z
-- Immaculate release: `0.1.0+c082790`
-- Repo commit: `c082790f62f3b63438c5366b7f38a0d65009f781`
-- Branch: `main`
+- Generated: 2026-05-07T07:00:42.484Z
+- Immaculate release: `0.1.0+eb4cbe1`
+- Repo commit: `eb4cbe1f8c76e51861c434c6f8eedd51d88f649b`
+- Branch: `codex/release-metadata-training-proof-final-20260507`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
 - Core package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+c082790` is the current repo build stamp.
+- Immaculate build `0.1.0+eb4cbe1` is the current repo build stamp.
 - Arobi Network is the ledger-backed private and public operator network and audit substrate. Immaculate is the governed harness and orchestrator inside it. Q is the reasoning brain inside that governed stack.
 - Q is the only public model name used across the repo, and it is built on `Gemma 4`.
 - The latest tracked Q training bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`, tied to dataset `.training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
@@ -28,7 +28,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - BridgeBench: `2026-05-07T04:12:53.126Z` via `docs/wiki/BridgeBench.json`
 - BridgeBench soak: `2026-04-15T06:15:54.188Z` via `docs/wiki/BridgeBench-Soak.json`
 - Q structured contract benchmark: `2026-05-07T06:03:07.620Z` via `docs/wiki/Model-Benchmark-Comparison.json`
-- Q readiness gate: `2026-05-07T06:52:06.826Z` via `docs/wiki/Q-Readiness-Gate.json`
+- Q readiness gate: `2026-05-07T07:00:39.562Z` via `docs/wiki/Q-Readiness-Gate.json`
 - Q gateway validation: `2026-05-07T06:51:04.223Z` via `docs/wiki/Q-Gateway-Validation.json`
 - Q gateway substrate: `2026-04-19T22:06:38.757Z` via `docs/wiki/Q-Gateway-Substrate.json`
 - Q mediation drift: `2026-04-19T22:06:40.025Z` via `docs/wiki/Q-Mediation-Drift.json`
