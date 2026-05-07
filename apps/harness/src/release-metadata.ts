@@ -107,6 +107,21 @@ const Q_LATEST_HYBRID_SESSION_PATH = path.join(Q_OUTPUT_ROOT, "latest-hybrid-ses
 const IMMACULATE_OUTPUT_ROOT = path.join(REPO_ROOT, ".training-output", "immaculate");
 const IMMACULATE_LATEST_BUNDLE_PATH = path.join(IMMACULATE_OUTPUT_ROOT, "latest-training-bundle.json");
 const RELEASE_SURFACE_PATH = path.join(REPO_ROOT, "docs", "wiki", "Release-Surface.json");
+const TRACKED_TRAINING_LOCK_RECEIPTS = [
+  RELEASE_SURFACE_PATH,
+  path.join(REPO_ROOT, "docs", "wiki", "Arobi-Audit-Integrity.json"),
+  path.join(REPO_ROOT, "docs", "wiki", "Arobi-Live-Ledger-Receipt.json"),
+  path.join(REPO_ROOT, "docs", "wiki", "Live-Mission-Readiness.json"),
+  path.join(REPO_ROOT, "docs", "wiki", "Live-Operator-Activity.json"),
+  path.join(REPO_ROOT, "docs", "wiki", "Q-Gateway-Substrate.json"),
+  path.join(REPO_ROOT, "docs", "wiki", "Q-Mediation-Drift.json"),
+  path.join(REPO_ROOT, "docs", "wiki", "Roundtable-Actionability.json"),
+  path.join(REPO_ROOT, "docs", "wiki", "Roundtable-Runtime.json"),
+  path.join(REPO_ROOT, "docs", "wiki", "Supervised-Mission-Showcase.json"),
+  path.join(REPO_ROOT, "docs", "wiki", "Terminal-Bench-Public-Task.json"),
+  path.join(REPO_ROOT, "docs", "wiki", "Terminal-Bench-Receipt.json"),
+  path.join(REPO_ROOT, "docs", "wiki", "Terminal-Bench-Rerun.json")
+];
 let cachedReleaseMetadata: ReleaseMetadata | undefined;
 
 type PackageJson = {
@@ -219,7 +234,7 @@ type QBenchmarkPromotionWikiFile = {
   };
 };
 
-type ReleaseSurfaceWikiFile = {
+type TrainingLockReceiptWikiFile = {
   release?: {
     q?: {
       trainingLock?: Partial<QTrainingLockSummary>;
@@ -425,10 +440,9 @@ async function readTrainingLockSummary(): Promise<QTrainingLockSummary | undefin
 async function readTrainingLockSummaryFromTrackedWiki(): Promise<QTrainingLockSummary | undefined> {
   const hybridPath = path.join(REPO_ROOT, "docs", "wiki", "Q-Hybrid-Training.json");
   const promotionPath = path.join(REPO_ROOT, "docs", "wiki", "Q-Benchmark-Promotion.json");
-  const [hybrid, promotion, trackedSurfaceLock] = await Promise.all([
+  const [hybrid, promotion] = await Promise.all([
     existsSync(hybridPath) ? readJsonFile<QHybridTrainingWikiFile>(hybridPath) : undefined,
-    existsSync(promotionPath) ? readJsonFile<QBenchmarkPromotionWikiFile>(promotionPath) : undefined,
-    readTrainingLockSummaryFromReleaseSurface()
+    existsSync(promotionPath) ? readJsonFile<QBenchmarkPromotionWikiFile>(promotionPath) : undefined
   ]);
   const promoted = promotion?.promotion ?? promotion?.active;
   const bundleId = promoted?.bundleId?.trim() || hybrid?.q?.trainingBundleId?.trim();
@@ -449,14 +463,39 @@ async function readTrainingLockSummaryFromTrackedWiki(): Promise<QTrainingLockSu
       normalizeReportedPath(promotion?.promotion?.lockPath ?? hybrid?.q?.trainingLockPath) ??
       "docs/wiki/Q-Hybrid-Training.json"
   };
-  return mergeTrackedTrainingLock(summary, trackedSurfaceLock);
+  const trackedLock = await readTrainingLockSummaryFromTrackedReceipts(bundleId);
+  return mergeTrackedTrainingLock(summary, trackedLock);
 }
 
-async function readTrainingLockSummaryFromReleaseSurface(): Promise<QTrainingLockSummary | undefined> {
-  if (!existsSync(RELEASE_SURFACE_PATH)) {
+function hasCompleteTrainingProof(lock: QTrainingLockSummary): boolean {
+  return Boolean(
+    lock.trainDatasetSha256 &&
+      lock.mixManifestSha256 &&
+      typeof lock.mixSupplementalCount === "number" &&
+      lock.mixSupplementalPaths &&
+      lock.mixSupplementalPaths.length > 0
+  );
+}
+
+async function readTrainingLockSummaryFromTrackedReceipts(
+  bundleId: string
+): Promise<QTrainingLockSummary | undefined> {
+  const trackedLocks = await Promise.all(
+    TRACKED_TRAINING_LOCK_RECEIPTS.map((receiptPath) => readTrainingLockSummaryFromTrackedReceipt(receiptPath))
+  );
+  const matchingLocks = trackedLocks.filter(
+    (lock): lock is QTrainingLockSummary => lock?.bundleId === bundleId
+  );
+  return matchingLocks.find(hasCompleteTrainingProof) ?? matchingLocks[0];
+}
+
+async function readTrainingLockSummaryFromTrackedReceipt(
+  receiptPath: string
+): Promise<QTrainingLockSummary | undefined> {
+  if (!existsSync(receiptPath)) {
     return undefined;
   }
-  const payload = await readJsonFile<ReleaseSurfaceWikiFile>(RELEASE_SURFACE_PATH);
+  const payload = await readJsonFile<TrainingLockReceiptWikiFile>(receiptPath);
   const tracked = payload?.release?.q?.trainingLock;
   const bundleId = tracked?.bundleId?.trim();
   if (!tracked || !bundleId) {
@@ -479,7 +518,10 @@ async function readTrainingLockSummaryFromReleaseSurface(): Promise<QTrainingLoc
       .filter((entry): entry is string => Boolean(entry)),
     curationRunPath: normalizeReportedPath(tracked.curationRunPath),
     curationRunId: tracked.curationRunId,
-    lockPath: normalizeReportedPath(tracked.lockPath) ?? "docs/wiki/Release-Surface.json"
+    lockPath:
+      normalizeReportedPath(tracked.lockPath) ??
+      normalizeReportedPath(receiptPath) ??
+      path.relative(REPO_ROOT, receiptPath).replaceAll("\\", "/")
   };
 }
 

@@ -16,6 +16,7 @@ import {
   isRetryableGatewaySmokeCheck,
   isQGatewayValidationAccepted,
   resolveQGatewayValidationTimeoutMs,
+  shouldRunDirectQFoundationSmokeAfterGateway,
   type QGatewayValidationReport,
   writeQGatewayValidationReport
 } from "./q-gateway-validate.js";
@@ -206,6 +207,40 @@ test("direct Q foundation smoke retries refused local provider sockets", () => {
       thinkingDetected: false,
       responsePreview: "invalid credentials",
       failureClass: "http_error"
+    }),
+    false
+  );
+});
+
+test("direct Q foundation smoke waits for successful gateway upstream proof", () => {
+  assert.equal(
+    shouldRunDirectQFoundationSmokeAfterGateway({
+      status: 200,
+      body: {},
+      headers: {
+        "x-upstream-latency-ms": "42.5"
+      },
+      wallLatencyMs: 44
+    }),
+    true
+  );
+  assert.equal(
+    shouldRunDirectQFoundationSmokeAfterGateway({
+      status: 503,
+      body: {
+        failureClass: "circuit_open"
+      },
+      headers: {},
+      wallLatencyMs: 1
+    }),
+    false
+  );
+  assert.equal(
+    shouldRunDirectQFoundationSmokeAfterGateway({
+      status: 200,
+      body: {},
+      headers: {},
+      wallLatencyMs: 1
     }),
     false
   );
