@@ -807,18 +807,18 @@ async function main(): Promise<void> {
     const chatMessages: OllamaChatMessage[] = [
       {
         role: "system",
-        content: "Reply briefly and directly."
+        content: "Answer only with final visible text. Do not think. Do not explain."
       },
       {
         role: "user",
-        content: "Reply with exactly three words that confirm the Q gateway is healthy."
+        content: "Reply with exactly three words: Gateway is fine."
       }
     ];
     const chatBody = {
       model: getQModelName(),
       messages: chatMessages,
-      max_tokens: 64,
-      temperature: 0.1,
+      max_tokens: 16,
+      temperature: 0,
       stream: false
     };
 

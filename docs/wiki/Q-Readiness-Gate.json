@@ -1,28 +1,40 @@
 {
-  "generatedAt": "2026-05-07T07:00:39.562Z",
+  "generatedAt": "2026-05-07T07:32:49.907Z",
   "threshold": 0.75,
   "ready": true,
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "eb4cbe1f8c76e51861c434c6f8eedd51d88f649b",
-    "gitShortSha": "eb4cbe1",
-    "gitBranch": "codex/release-metadata-training-proof-final-20260507",
-    "buildId": "0.1.0+eb4cbe1",
+    "gitSha": "d1c83bf7b316710b00d4a2ab956b424ce834fd79",
+    "gitShortSha": "d1c83bf",
+    "gitBranch": "codex/q-fast-smoke-budget-20260507",
+    "buildId": "0.1.0+d1c83bf",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
       "truthfulLabel": "Q",
       "trainingLock": {
-        "generatedAt": "2026-04-19T07:46:03Z",
+        "generatedAt": "2026-04-19T07:46:04Z",
         "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
         "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23",
         "modelName": "Q",
         "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl",
         "trainDatasetRowCount": 117,
         "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.manifest.json",
-        "lockPath": ".training-output/q/latest-training-lock.json"
+        "lockPath": ".training-output/q/latest-training-lock.json",
+        "lockVersion": 1,
+        "trainDatasetSha256": "286326ce786c0a9b9b4a636a38114cc221c1b978a083ca55d70cc6ca6172cb07",
+        "mixManifestSha256": "4c7df8284cedaf8e43f1715c8eaf4c30826687e27a5d511ef8ccd4ca78df991e",
+        "mixSupplementalCount": 6,
+        "mixSupplementalPaths": [
+          "training/q/q_harness_identity_seed.json",
+          "training/q/q_immaculate_reasoning_seed.json",
+          "training/q/terminal_bench_semantic_seed.json",
+          "training/q/bridgebench_seed.json",
+          "training/q/coding_long_context_seed.json",
+          ".training-output/q/q-failure-corpus.jsonl"
+        ]
       },
       "hybridSession": {
         "generatedAt": "2026-04-19T07:46:17Z",
@@ -41,7 +53,7 @@
   "sources": {
     "modelComparisonGeneratedAt": "2026-05-07T06:03:07.620Z",
     "bridgeBenchGeneratedAt": "2026-05-07T04:12:53.126Z",
-    "qGatewayValidationGeneratedAt": "2026-05-07T06:51:04.223Z"
+    "qGatewayValidationGeneratedAt": "2026-05-07T07:32:32.750Z"
   },
   "q": {
     "modelComparison": {
