@@ -88,6 +88,7 @@ const STRUCTURED_REQUEST_TIMEOUT_MS = INFERENCE_PROFILE.timeouts.structuredMs;
 const STRUCTURED_REPAIR_TIMEOUT_MS = INFERENCE_PROFILE.timeouts.structuredRepairMs;
 const STRUCTURED_FAST_NUM_CTX = INFERENCE_PROFILE.structured.fastNumCtx;
 const STRUCTURED_FAST_NUM_BATCH = INFERENCE_PROFILE.structured.fastNumBatch;
+const FAST_SMOKE_MAX_TOKENS = 16;
 const BENCHMARK_NUM_CTX = INFERENCE_PROFILE.benchmark.numCtx;
 const BENCHMARK_NUM_BATCH = INFERENCE_PROFILE.benchmark.numBatch;
 const Q_MODEL_TARGET = getQModelTarget();
@@ -455,17 +456,10 @@ function buildGatewayMessages(
   fastSmoke = false
 ): OllamaChatMessage[] {
   if (fastSmoke && includeIdentityInstruction) {
-    const context = buildQRuntimeContext();
     return [
       {
         role: "system",
-        content: [
-          `You are ${getQModelName()}, developed by ${getQDeveloperName()}, built on ${getQFoundationModelName()}, and governed by ${getImmaculateHarnessName()}.`,
-          `Current date: ${context.currentDateLabel} (${context.currentDateIso}, UTC).`,
-          `Static model knowledge cutoff: ${context.knowledgeCutoff}.`,
-          context.currentInformationPolicy,
-          "This is a bounded gateway transport smoke. Answer briefly, truthfully, and without analysis."
-        ].join(" ")
+        content: "Answer only with final visible text. Do not think. Do not explain."
       },
       ...messages
     ];
@@ -847,8 +841,11 @@ app.post("/v1/chat/completions", {
   const temperature = typeof body.temperature === "number" ? body.temperature : 0.2;
   const maxTokens = typeof body.max_tokens === "number" ? body.max_tokens : 256;
   const structuredRequest = isStructuredContractRequest(messages);
+  const qFastSmokeRequest = isTruthyHeaderValue(request.headers[FAST_SMOKE_HEADER]);
   const effectiveMaxTokens = structuredRequest
     ? Math.min(maxTokens, STRUCTURED_REQUEST_MAX_TOKENS)
+    : qFastSmokeRequest
+      ? Math.min(maxTokens, FAST_SMOKE_MAX_TOKENS)
     : maxTokens;
   const timeoutOverrideMs = parseTimeoutOverrideMs(
     request.headers[REQUEST_TIMEOUT_OVERRIDE_HEADER]
@@ -864,13 +861,12 @@ app.post("/v1/chat/completions", {
   const skipBenchmarkIdentity = isTruthyHeaderValue(
     request.headers[BENCHMARK_SKIP_Q_IDENTITY_HEADER]
   );
-  const qFastSmokeRequest = isTruthyHeaderValue(request.headers[FAST_SMOKE_HEADER]);
   const fastSmokeRequest =
     skipBenchmarkIdentity || qFastSmokeRequest;
   const benchmarkOllamaOptions = fastSmokeRequest
     ? {
-        num_ctx: BENCHMARK_NUM_CTX,
-        num_batch: BENCHMARK_NUM_BATCH
+        num_ctx: qFastSmokeRequest ? STRUCTURED_FAST_NUM_CTX : BENCHMARK_NUM_CTX,
+        num_batch: qFastSmokeRequest ? STRUCTURED_FAST_NUM_BATCH : BENCHMARK_NUM_BATCH
       }
     : undefined;
   if (canonicalIdentityKind && !skipBenchmarkIdentity) {
