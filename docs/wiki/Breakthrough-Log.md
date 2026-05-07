@@ -38,6 +38,7 @@ Evidence:
 - `apps/harness/src/q-gateway-validate.test.ts` covers timeout clamping, hung HTTP probes, structured timeout evidence, accepted publication, and failed runtime-only evidence
 - `apps/harness/src/q-release-gate.ts` folds the live gateway contract into Q readiness and separates passing publication from failed runtime receipts
 - `apps/harness/src/q-release-gate.test.ts` covers full-contract acceptance, authenticated-chat timeout rejection, and readiness report persistence
+- `.github/workflows/security.yml` opts JavaScript actions into Node 24 so dependency-review stops emitting the runner deprecation warning
 
 What this unlocks next:
 - operators can rerun Q gateway validation during degraded local runtime incidents without dirtying public release docs
