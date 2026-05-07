@@ -11,6 +11,7 @@ import {
   captureHttpCheck,
   DEFAULT_Q_GATEWAY_HTTP_TIMEOUT_MS,
   buildQGatewayValidationHeaders,
+  hasOpenGatewayCircuit,
   isRetryableDirectQFoundationSmoke,
   isRetryableGatewaySmokeCheck,
   isQGatewayValidationAccepted,
@@ -115,6 +116,26 @@ test("captureHttpCheck records hung gateway probes as transport timeout evidence
     }
     await close(server);
   }
+});
+
+test("Q gateway validation detects open circuit health payloads", () => {
+  assert.equal(
+    hasOpenGatewayCircuit({
+      circuit: {
+        state: "open"
+      }
+    }),
+    true
+  );
+  assert.equal(
+    hasOpenGatewayCircuit({
+      circuit: {
+        state: "closed"
+      }
+    }),
+    false
+  );
+  assert.equal(hasOpenGatewayCircuit({ status: "ok" }), false);
 });
 
 test("Q gateway validation retries transient local model transport resets only", () => {

@@ -528,6 +528,14 @@ async function stopGatewayProcess(child: ChildProcess | undefined): Promise<void
   ]);
 }
 
+export function hasOpenGatewayCircuit(body: unknown): boolean {
+  if (!body || typeof body !== "object") {
+    return false;
+  }
+  const circuit = (body as { circuit?: { state?: unknown } }).circuit;
+  return circuit?.state === "open";
+}
+
 async function ensureGatewayAvailable(options: {
   gatewayUrl: string;
   runtimeDir: string;
@@ -548,7 +556,7 @@ async function ensureGatewayAvailable(options: {
         { headers: options.validationHeaders },
         healthTimeoutMs
       );
-      if (authCheck.status === 200) {
+      if (authCheck.status === 200 && !hasOpenGatewayCircuit(health.body) && !hasOpenGatewayCircuit(authCheck.body)) {
         return {
           gatewayUrl
         };
@@ -576,7 +584,7 @@ async function ensureGatewayAvailable(options: {
           { headers: options.validationHeaders },
           healthTimeoutMs
         );
-        if (authCheck.status === 200) {
+        if (authCheck.status === 200 && !hasOpenGatewayCircuit(health.body) && !hasOpenGatewayCircuit(authCheck.body)) {
           return {
             child,
             gatewayUrl
