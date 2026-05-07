@@ -1,5 +1,6 @@
-import { existsSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { join, resolve } from "node:path";
+import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
 import { githubAssetUrl, readJawsReleaseConfig } from "./jaws-release-config.mjs";
 
@@ -7,6 +8,12 @@ const EXPECTED_SITE_ID = "4a9b7d84-9d87-4e10-9951-fb121f9626bd";
 const EXPECTED_SITE_NAME = "immaculate-iorch-20260415022035";
 const EXPECTED_DOMAIN = "iorch.net";
 const NETLIFY_WORKSPACE_FILTER = "@immaculate/dashboard";
+const DEPLOY_LOCK_DIR = join(tmpdir(), `netlify-${EXPECTED_SITE_ID}.deploy.lock`);
+const DEPLOY_LOCK_POLL_MS = 2000;
+const DEPLOY_LOCK_TIMEOUT_MS = Number.parseInt(
+  process.env.NETLIFY_DEPLOY_LOCK_TIMEOUT_MS ?? `${20 * 60 * 1000}`,
+  10
+);
 const BAD_PUBLIC_COPY_TERMS = [
   /\bthis is the true\b/i,
   /\bsynthesized\/offline\b/i,
@@ -33,6 +40,89 @@ const JAWS_DOWNLOADS = Object.fromEntries(
 );
 const outDir = resolve(repoRoot, "apps", "dashboard", "out");
 const functionsDir = resolve(repoRoot, "netlify", "functions");
+
+function sleep(ms) {
+  return new Promise((resolveSleep) => setTimeout(resolveSleep, ms));
+}
+
+function processExists(pid) {
+  if (!Number.isInteger(pid) || pid <= 0) {
+    return false;
+  }
+
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return error?.code === "EPERM";
+  }
+}
+
+function readDeployLockOwner() {
+  try {
+    return JSON.parse(readFileSync(join(DEPLOY_LOCK_DIR, "owner.json"), "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+function describeDeployLock(owner) {
+  if (!owner) {
+    return "unknown owner";
+  }
+
+  return `pid=${owner.pid ?? "unknown"} mode=${owner.mode ?? "unknown"} startedAt=${owner.startedAt ?? "unknown"} cwd=${owner.cwd ?? "unknown"}`;
+}
+
+async function acquireDeployLock(mode) {
+  const timeoutMs =
+    Number.isFinite(DEPLOY_LOCK_TIMEOUT_MS) && DEPLOY_LOCK_TIMEOUT_MS > 0
+      ? DEPLOY_LOCK_TIMEOUT_MS
+      : 20 * 60 * 1000;
+  const deadline = Date.now() + timeoutMs;
+
+  while (true) {
+    try {
+      mkdirSync(DEPLOY_LOCK_DIR, { recursive: false });
+      const owner = {
+        pid: process.pid,
+        mode,
+        siteId: EXPECTED_SITE_ID,
+        siteName: EXPECTED_SITE_NAME,
+        domain: EXPECTED_DOMAIN,
+        cwd: process.cwd(),
+        startedAt: new Date().toISOString(),
+      };
+      writeFileSync(join(DEPLOY_LOCK_DIR, "owner.json"), `${JSON.stringify(owner, null, 2)}\n`);
+
+      return () => {
+        const currentOwner = readDeployLockOwner();
+        if (currentOwner?.pid === process.pid) {
+          rmSync(DEPLOY_LOCK_DIR, { recursive: true, force: true });
+        }
+      };
+    } catch (error) {
+      if (error?.code !== "EEXIST") {
+        throw error;
+      }
+
+      const owner = readDeployLockOwner();
+      if (!processExists(Number(owner?.pid))) {
+        rmSync(DEPLOY_LOCK_DIR, { recursive: true, force: true });
+        continue;
+      }
+
+      if (Date.now() >= deadline) {
+        throw new Error(
+          `Timed out waiting for ${EXPECTED_DOMAIN} deploy lock after ${Math.round(timeoutMs / 1000)}s; active ${describeDeployLock(owner)}.`
+        );
+      }
+
+      console.warn(`Waiting for ${EXPECTED_DOMAIN} deploy lock held by ${describeDeployLock(owner)}.`);
+      await sleep(DEPLOY_LOCK_POLL_MS);
+    }
+  }
+}
 
 function run(command, commandArgs, options = {}) {
   const result = spawnSync(command, commandArgs, {
@@ -279,6 +369,8 @@ async function smoke(baseUrl) {
 }
 
 async function main() {
+  const releaseDeployLock = await acquireDeployLock(prod ? "prod" : "check");
+  try {
   assertCorrectWorkspace();
   const token = readNetlifyAuthToken();
   const site = await assertExpectedSite(token);
@@ -341,6 +433,9 @@ async function main() {
     draftSmoke,
     productionSmoke,
   }, null, 2));
+  } finally {
+    releaseDeployLock();
+  }
 }
 
 main().catch((error) => {
