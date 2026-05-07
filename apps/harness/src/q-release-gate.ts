@@ -40,14 +40,46 @@ type BridgeBenchReport = {
   models: BridgeBenchModel[];
 };
 
-type QGatewayValidationReport = {
+export type QGatewayValidationReport = {
   generatedAt: string;
   identity?: {
     canonical?: boolean;
   };
+  checks?: {
+    health?: { status?: number };
+    unauthorizedChat?: { status?: number };
+    info?: { status?: number };
+    models?: { status?: number };
+    authorizedChat?: {
+      status?: number;
+      body?: {
+        error?: string;
+        failureClass?: string;
+        message?: string;
+      };
+    };
+    identityChat?: { status?: number };
+    concurrentRejection?: { status?: number };
+  };
+  localQFoundationRun?: {
+    failureClass?: string;
+  };
 };
 
-type QReadinessGateReport = {
+export type QGatewayContractSummary = {
+  healthStatus?: number;
+  unauthorizedChatStatus?: number;
+  infoStatus?: number;
+  modelsStatus?: number;
+  authorizedChatStatus?: number;
+  identityChatStatus?: number;
+  concurrentRejectionStatus?: number;
+  authorizedChatFailureClass?: string;
+  localQFailureClass?: string;
+  ready: boolean;
+};
+
+export type QReadinessGateReport = {
   generatedAt: string;
   threshold: number;
   ready: boolean;
@@ -71,6 +103,7 @@ type QReadinessGateReport = {
       dominantFailureClass?: string;
     };
     gatewayIdentityCanonical?: boolean;
+    gatewayContract?: QGatewayContractSummary;
   };
   output: {
     jsonPath: string;
@@ -78,9 +111,16 @@ type QReadinessGateReport = {
   };
 };
 
+export type QReadinessGateWriteResult = {
+  published: boolean;
+  jsonPath: string;
+  markdownPath: string;
+};
+
 const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(MODULE_ROOT, "../../..");
 const WIKI_ROOT = path.join(REPO_ROOT, "docs", "wiki");
+export const DEFAULT_Q_READINESS_MAX_SOURCE_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 async function readJson<T>(filePath: string): Promise<T | undefined> {
   try {
@@ -102,11 +142,56 @@ function dominantFailureClass(values: Array<{ failureClass?: string }>): string 
   return [...counts.entries()].sort((left, right) => right[1] - left[1])[0]?.[0];
 }
 
+function generatedAtTime(value: { generatedAt?: string } | undefined): number {
+  const parsed = Date.parse(value?.generatedAt ?? "");
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+export function resolveQReadinessMaxSourceAgeMs(value: string | undefined): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return DEFAULT_Q_READINESS_MAX_SOURCE_AGE_MS;
+  }
+  return Math.max(60_000, Math.round(parsed));
+}
+
+export function describeSourceFreshnessReason(options: {
+  label: string;
+  generatedAt?: string;
+  nowMs: number;
+  maxAgeMs: number;
+}): string | undefined {
+  const generatedAtMs = Date.parse(options.generatedAt ?? "");
+  if (!Number.isFinite(generatedAtMs)) {
+    return `${options.label} source is missing a valid generatedAt timestamp.`;
+  }
+  const ageMs = Math.max(0, options.nowMs - generatedAtMs);
+  if (ageMs <= options.maxAgeMs) {
+    return undefined;
+  }
+  const ageHours = Number((ageMs / 3_600_000).toFixed(1));
+  const maxAgeHours = Number((options.maxAgeMs / 3_600_000).toFixed(1));
+  return `${options.label} source is stale at ${ageHours} hours old; max allowed age is ${maxAgeHours} hours.`;
+}
+
+export function selectLatestQGatewayValidationReport(options: {
+  tracked?: QGatewayValidationReport;
+  runtimeFailure?: QGatewayValidationReport;
+}): QGatewayValidationReport | undefined {
+  if (
+    options.runtimeFailure &&
+    generatedAtTime(options.runtimeFailure) >= generatedAtTime(options.tracked)
+  ) {
+    return options.runtimeFailure;
+  }
+  return options.tracked;
+}
+
 function renderMarkdown(report: QReadinessGateReport): string {
   return [
     "# Q Readiness Gate",
     "",
-    "This page is generated from the tracked direct-Q report surfaces. It does not grade the gateway transport; it grades whether the underlying Q model is ready for structured route/reason/commit work on this machine.",
+    "This page is generated from the tracked direct-Q and gateway report surfaces. It fails closed when the model benchmarks pass but the live gateway contract cannot complete authenticated chat.",
     "",
     `- Generated: ${report.generatedAt}`,
     `- Release: \`${report.release.buildId}\``,
@@ -126,6 +211,10 @@ function renderMarkdown(report: QReadinessGateReport): string {
     `- BridgeBench parse success: \`${report.q.bridgeBench?.parseSuccessRate ?? "n/a"}\``,
     `- BridgeBench dominant failure: \`${report.q.bridgeBench?.dominantFailureClass ?? "none"}\``,
     `- Q gateway identity canonical: \`${report.q.gatewayIdentityCanonical ?? "n/a"}\``,
+    `- Q gateway contract ready: \`${report.q.gatewayContract?.ready ?? "n/a"}\``,
+    `- Q gateway authenticated chat status: \`${report.q.gatewayContract?.authorizedChatStatus ?? "n/a"}\``,
+    `- Q gateway authenticated chat failure: \`${report.q.gatewayContract?.authorizedChatFailureClass ?? "none"}\``,
+    `- Direct local Q failure: \`${report.q.gatewayContract?.localQFailureClass ?? "none"}\``,
     "",
     "## Reasons",
     "",
@@ -133,14 +222,124 @@ function renderMarkdown(report: QReadinessGateReport): string {
   ].join("\n");
 }
 
+export async function writeQReadinessGateReport(
+  report: QReadinessGateReport,
+  options: {
+    repoRoot?: string;
+    runtimeDir: string;
+  }
+): Promise<QReadinessGateWriteResult> {
+  if (report.ready) {
+    const repoRoot = options.repoRoot ?? REPO_ROOT;
+    const jsonPath = path.join(repoRoot, report.output.jsonPath);
+    const markdownPath = path.join(repoRoot, report.output.markdownPath);
+    await mkdir(path.dirname(jsonPath), { recursive: true });
+    await writeFile(jsonPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+    await writeFile(markdownPath, `${renderMarkdown(report)}\n`, "utf8");
+    return {
+      published: true,
+      jsonPath,
+      markdownPath
+    };
+  }
+
+  const failureRoot = path.join(options.runtimeDir, "q-readiness-gate");
+  const jsonPath = path.join(failureRoot, "latest-failed.json");
+  const markdownPath = path.join(failureRoot, "latest-failed.md");
+  await mkdir(failureRoot, { recursive: true });
+  await writeFile(jsonPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+  await writeFile(markdownPath, `${renderMarkdown(report)}\n`, "utf8");
+  return {
+    published: false,
+    jsonPath,
+    markdownPath
+  };
+}
+
+export function summarizeQGatewayContract(
+  report: QGatewayValidationReport | undefined
+): QGatewayContractSummary {
+  const summary: QGatewayContractSummary = {
+    healthStatus: report?.checks?.health?.status,
+    unauthorizedChatStatus: report?.checks?.unauthorizedChat?.status,
+    infoStatus: report?.checks?.info?.status,
+    modelsStatus: report?.checks?.models?.status,
+    authorizedChatStatus: report?.checks?.authorizedChat?.status,
+    identityChatStatus: report?.checks?.identityChat?.status,
+    concurrentRejectionStatus: report?.checks?.concurrentRejection?.status,
+    authorizedChatFailureClass:
+      report?.checks?.authorizedChat?.body?.failureClass ??
+      report?.checks?.authorizedChat?.body?.error,
+    localQFailureClass: report?.localQFoundationRun?.failureClass,
+    ready: false
+  };
+  summary.ready =
+    summary.healthStatus === 200 &&
+    summary.unauthorizedChatStatus === 401 &&
+    summary.infoStatus === 200 &&
+    summary.modelsStatus === 200 &&
+    summary.authorizedChatStatus === 200 &&
+    summary.identityChatStatus === 200 &&
+    summary.concurrentRejectionStatus === 429 &&
+    report?.identity?.canonical === true &&
+    !summary.authorizedChatFailureClass &&
+    !summary.localQFailureClass;
+  return summary;
+}
+
+export function describeQGatewayContractReasons(
+  summary: QGatewayContractSummary,
+  canonicalIdentity: boolean
+): string[] {
+  const reasons: string[] = [];
+  const expectedStatuses: Array<[string, number | undefined, number]> = [
+    ["Q gateway /health", summary.healthStatus, 200],
+    ["Q gateway unauthorized chat guard", summary.unauthorizedChatStatus, 401],
+    ["Q gateway /api/q/info", summary.infoStatus, 200],
+    ["Q gateway /v1/models", summary.modelsStatus, 200],
+    ["Q gateway authenticated chat", summary.authorizedChatStatus, 200],
+    ["Q gateway identity smoke", summary.identityChatStatus, 200],
+    ["Q gateway concurrent rejection", summary.concurrentRejectionStatus, 429]
+  ];
+  for (const [label, actual, expected] of expectedStatuses) {
+    if (actual !== expected) {
+      reasons.push(`${label} returned ${actual ?? "missing"} instead of ${expected}.`);
+    }
+  }
+  if (!canonicalIdentity) {
+    reasons.push("Q gateway identity validation is missing or not canonical.");
+  }
+  if (summary.authorizedChatFailureClass) {
+    reasons.push(`Q gateway authenticated chat failed with ${summary.authorizedChatFailureClass}.`);
+  }
+  if (summary.localQFailureClass) {
+    reasons.push(`Direct local Q foundation call failed with ${summary.localQFailureClass}.`);
+  }
+  return reasons;
+}
+
 async function main(): Promise<void> {
   const threshold = Number(process.env.IMMACULATE_Q_READINESS_THRESHOLD ?? 0.75);
+  const maxSourceAgeMs = resolveQReadinessMaxSourceAgeMs(
+    process.env.IMMACULATE_Q_READINESS_MAX_SOURCE_AGE_MS
+  );
+  const nowMs = Date.now();
   const comparisonPath = path.join(WIKI_ROOT, "Model-Benchmark-Comparison.json");
   const bridgeBenchPath = path.join(WIKI_ROOT, "BridgeBench.json");
   const qGatewayValidationPath = path.join(WIKI_ROOT, "Q-Gateway-Validation.json");
+  const runtimeDir = process.env.IMMACULATE_RUNTIME_DIR?.trim()
+    ? path.resolve(process.env.IMMACULATE_RUNTIME_DIR)
+    : path.join(REPO_ROOT, ".runtime");
   const modelComparison = await readJson<ModelComparisonReport>(comparisonPath);
   const bridgeBench = await readJson<BridgeBenchReport>(bridgeBenchPath);
-  const qGatewayValidation = await readJson<QGatewayValidationReport>(qGatewayValidationPath);
+  const trackedQGatewayValidation = await readJson<QGatewayValidationReport>(qGatewayValidationPath);
+  const runtimeQGatewayFailure = await readJson<QGatewayValidationReport>(
+    path.join(runtimeDir, "q-gateway-validation", "latest-failed.json")
+  );
+  const qGatewayValidation = selectLatestQGatewayValidationReport({
+    tracked: trackedQGatewayValidation,
+    runtimeFailure: runtimeQGatewayFailure
+  });
 
   const qComparison = modelComparison?.models.find((model) => model.truthfulLabel.trim().startsWith("Q"));
   const qBridgeBench = bridgeBench?.models.find((model) => model.truthfulLabel.trim().startsWith("Q"));
@@ -162,9 +361,37 @@ async function main(): Promise<void> {
       `Q BridgeBench parse success ${qBridgeBench.parseSuccessRate} is below the ${threshold} readiness threshold.`
     );
   }
-  if (qGatewayValidation?.identity?.canonical !== true) {
-    reasons.push("Q gateway identity validation is missing or not canonical.");
+  for (const reason of [
+    describeSourceFreshnessReason({
+      label: "Model comparison",
+      generatedAt: modelComparison?.generatedAt,
+      nowMs,
+      maxAgeMs: maxSourceAgeMs
+    }),
+    describeSourceFreshnessReason({
+      label: "BridgeBench",
+      generatedAt: bridgeBench?.generatedAt,
+      nowMs,
+      maxAgeMs: maxSourceAgeMs
+    }),
+    describeSourceFreshnessReason({
+      label: "Q gateway validation",
+      generatedAt: qGatewayValidation?.generatedAt,
+      nowMs,
+      maxAgeMs: maxSourceAgeMs
+    })
+  ]) {
+    if (reason) {
+      reasons.push(reason);
+    }
   }
+  const gatewayContract = summarizeQGatewayContract(qGatewayValidation);
+  reasons.push(
+    ...describeQGatewayContractReasons(
+      gatewayContract,
+      qGatewayValidation?.identity?.canonical === true
+    )
+  );
 
   const report: QReadinessGateReport = {
     generatedAt: new Date().toISOString(),
@@ -193,7 +420,8 @@ async function main(): Promise<void> {
             dominantFailureClass: dominantFailureClass(qBridgeBench.tasks)
           }
         : undefined,
-      gatewayIdentityCanonical: qGatewayValidation?.identity?.canonical === true
+      gatewayIdentityCanonical: qGatewayValidation?.identity?.canonical === true,
+      gatewayContract
     },
     output: {
       jsonPath: path.join("docs", "wiki", "Q-Readiness-Gate.json"),
@@ -201,17 +429,34 @@ async function main(): Promise<void> {
     }
   };
 
-  await mkdir(WIKI_ROOT, { recursive: true });
-  await writeFile(path.join(REPO_ROOT, report.output.jsonPath), `${JSON.stringify(report, null, 2)}\n`, "utf8");
-  await writeFile(path.join(REPO_ROOT, report.output.markdownPath), `${renderMarkdown(report)}\n`, "utf8");
+  const writeResult = await writeQReadinessGateReport(report, {
+    repoRoot: REPO_ROOT,
+    runtimeDir
+  });
 
-  process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
+  process.stdout.write(
+    `${JSON.stringify(
+      {
+        ...report,
+        persistedOutput: writeResult
+      },
+      null,
+      2
+    )}\n`
+  );
   if (!report.ready) {
+    process.stderr.write(`Q readiness gate failed. Failure evidence: ${writeResult.jsonPath}\n`);
     process.exitCode = 1;
   }
 }
 
-void main().catch((error) => {
-  process.stderr.write(error instanceof Error ? error.message : "Q readiness gate failed.");
-  process.exitCode = 1;
-});
+const isDirectExecution =
+  typeof process.argv[1] === "string" &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+
+if (isDirectExecution) {
+  void main().catch((error) => {
+    process.stderr.write(`${error instanceof Error ? error.message : "Q readiness gate failed."}\n`);
+    process.exitCode = 1;
+  });
+}

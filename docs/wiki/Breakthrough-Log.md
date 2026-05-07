@@ -21,6 +21,28 @@ For each breakthrough, record:
 
 ### 2026-05-07
 
+#### Failed Q gateway and readiness runs stopped overwriting public proof docs
+
+What changed:
+- the Q gateway validation runner now bounds live HTTP checks and direct local-Q checks through explicit timeout controls, and records timed-out gateway probes as structured failed contract evidence
+- successful validation still publishes `docs/wiki/Q-Gateway-Validation.*`
+- failed validation writes `q-gateway-validation/latest-failed.*` under the configured runtime directory instead of overwriting tracked public proof surfaces
+- the Q readiness gate now requires the full live gateway contract and writes failed readiness receipts to `q-readiness-gate/latest-failed.*` under runtime state
+
+Why it matters:
+- a local Ollama transport timeout is real operator evidence, but it should not silently replace the last known-good public validation page before the release contract passes
+- keeping failed validation evidence in runtime state preserves auditability while keeping the release tree clean
+
+Evidence:
+- `apps/harness/src/q-gateway-validate.ts` separates contract acceptance from report publication
+- `apps/harness/src/q-gateway-validate.test.ts` covers timeout clamping, hung HTTP probes, structured timeout evidence, accepted publication, and failed runtime-only evidence
+- `apps/harness/src/q-release-gate.ts` folds the live gateway contract into Q readiness and separates passing publication from failed runtime receipts
+- `apps/harness/src/q-release-gate.test.ts` covers full-contract acceptance, authenticated-chat timeout rejection, and readiness report persistence
+
+What this unlocks next:
+- operators can rerun Q gateway validation during degraded local runtime incidents without dirtying public release docs
+- the release gate can continue to fail closed while still leaving a runtime receipt for debugging
+
 #### The local worker plane stopped aging out after startup
 
 What changed:
