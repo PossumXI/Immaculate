@@ -114,7 +114,24 @@ function githubReleaseDownloadBase(tag) {
   return `https://github.com/${repo}/releases/download/${encodeURIComponent(tag)}`;
 }
 
-async function resolveManifestUrl() {
+function staticMirrorManifestUrl(event) {
+  const assetName = manifestAssetName();
+  const rawUrl = clean(event?.rawUrl);
+  if (rawUrl) {
+    try {
+      const url = new URL(rawUrl);
+      if (url.protocol === "https:") {
+        return `${url.origin}/downloads/jaws/${encodeURIComponent(assetName)}`;
+      }
+    } catch {
+      // Fall through to the production domain below.
+    }
+  }
+
+  return `https://iorch.net/downloads/jaws/${encodeURIComponent(assetName)}`;
+}
+
+async function resolveManifestUrl(event) {
   const directManifestUrl = clean(process.env.JAWS_UPDATER_MANIFEST_URL);
   if (directManifestUrl) {
     return directManifestUrl.startsWith("https://") ? directManifestUrl : null;
@@ -127,7 +144,7 @@ async function resolveManifestUrl() {
 
   const releases = await fetchJson(`${githubApiBase()}?per_page=25`);
   if (!Array.isArray(releases)) {
-    return null;
+    return staticMirrorManifestUrl(event);
   }
 
   const allowPrerelease = clean(process.env.JAWS_UPDATER_ALLOW_PRERELEASES) === "1";
@@ -147,7 +164,7 @@ async function resolveManifestUrl() {
     }
   }
 
-  return null;
+  return staticMirrorManifestUrl(event);
 }
 
 function readPlatformManifest(manifest, platformKey) {
@@ -214,7 +231,7 @@ export async function handler(event) {
     });
   }
 
-  const manifestUrl = await resolveManifestUrl();
+  const manifestUrl = await resolveManifestUrl(event);
   if (!manifestUrl) {
     return json(503, {
       ok: false,
