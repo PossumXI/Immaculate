@@ -17,6 +17,23 @@ The normal harness, gateway, and local-Q paths resolve through:
 
 That is the right path for everyday local use after the Ollama reinstall.
 
+## Local Worker Plane
+
+The harness registers local execution workers for the local `Q` lane and now renews
+those worker leases on a bounded heartbeat. This keeps `/api/intelligence/status`
+from degrading to `no_workers` after startup while preserving the existing lease
+expiry semantics for genuinely stale workers.
+
+- default local worker lease: `45s`
+- default local worker heartbeat: `15s`
+- override: `IMMACULATE_LOCAL_WORKER_HEARTBEAT_INTERVAL_MS`
+- clamp: at least `1s` and no more than half the local worker lease
+
+Startup traces are runtime evidence, not source. With no explicit
+`IMMACULATE_RUNTIME_DIR`, the harness writes them under
+`apps/harness/.runtime/startup-trace.ndjson`, which is ignored with the rest of
+the generated runtime state.
+
 ## Isolated Roundtable Lane
 
 The roundtable runtime keeps its own explicit lane through:

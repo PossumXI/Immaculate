@@ -13,6 +13,8 @@ __pycache__/
 .runtime/
 .runtime*/
 apps/**/.runtime/
+startup-trace.ndjson
+apps/**/startup-trace.ndjson
 .training-output/
 apps/**/.training-output/
 wandb/
