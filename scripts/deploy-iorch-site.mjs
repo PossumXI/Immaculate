@@ -244,6 +244,14 @@ async function assertExpectedSite(token) {
   return site;
 }
 
+function ensureNetlifyProjectLink(token) {
+  run(
+    "netlify",
+    ["link", "--id", EXPECTED_SITE_ID, "--filter", NETLIFY_WORKSPACE_FILTER],
+    { capture: true, env: { NETLIFY_AUTH_TOKEN: token } }
+  );
+}
+
 async function assertDeployIncludesJawsFunction(token, deployId) {
   if (!deployId) {
     throw new Error("Netlify deploy output did not include a deploy id; cannot verify function bundle.");
@@ -381,6 +389,7 @@ async function deployIorch() {
   assertCorrectWorkspace();
   const token = readNetlifyAuthToken();
   const site = await assertExpectedSite(token);
+  ensureNetlifyProjectLink(token);
 
   run("npm", ["run", "build", "-w", "@immaculate/core"]);
   run("npm", ["run", "build", "-w", "@immaculate/dashboard"]);
