@@ -369,9 +369,8 @@ function isRetryableDirectQFoundationSmoke(result: OllamaChatCompletionResult): 
   }
   const preview = result.responsePreview.toLowerCase();
   return (
-    result.failureClass === "transport_timeout" ||
-    (result.failureClass === "http_error" &&
-      (preview.includes("loading model") || preview.includes("timed out")))
+    result.failureClass === "http_error" &&
+    (preview.includes("loading model") || preview.includes("model is loading"))
   );
 }
 
