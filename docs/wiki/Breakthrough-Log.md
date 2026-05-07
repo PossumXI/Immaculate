@@ -21,6 +21,26 @@ For each breakthrough, record:
 
 ### 2026-05-07
 
+#### Q gateway circuit accounting stopped treating contract-invalid output as upstream failure
+
+What changed:
+- the dedicated Q gateway now keeps `contract_invalid` structured-output failures circuit-neutral instead of counting them as primary transport/provider failures
+- transport, HTTP, timeout, and empty-response failures still increment the upstream circuit and can open it fail-closed
+- regression coverage in `apps/harness/src/q-resilience.test.ts` proves contract-invalid output does not poison the circuit while real upstream failure still counts
+
+Why it matters:
+- malformed structured output should trigger repair or a truthful failed contract response, but it should not make the gateway believe the provider itself is down
+- this keeps Q validation and Discord/OpenJaws calls from inheriting stale `circuit_open` failures caused by a previous model-format miss
+- the boundary is now clearer: model-contract failures remain observable, while infrastructure failures still protect the runtime by opening the circuit
+
+Evidence:
+- `npm test -w @immaculate/harness -- q-resilience.test.ts q-gateway-validate.test.ts`
+- `npm run typecheck -w @immaculate/harness`
+
+What this unlocks next:
+- cleaner Q gateway validation loops under structured-contract pressure
+- safer long-running Discord and OpenJaws operator sessions where one malformed response does not degrade the whole Q route
+
 #### Q release validation became bounded, OCI-routable, and current again
 
 What changed:

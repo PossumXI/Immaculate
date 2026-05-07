@@ -43,7 +43,7 @@ import {
   redactQInferenceProfile,
   resolveQInferenceProfile
 } from "./q-inference-profile.js";
-import { createFailureCircuitBreaker } from "./q-resilience.js";
+import { createFailureCircuitBreaker, shouldRecordQGatewayCircuitFailure } from "./q-resilience.js";
 
 type GatewayPrincipal = {
   subject: string;
@@ -347,9 +347,9 @@ function isRetryableStructuredFailure(failureClass: string | undefined): boolean
 }
 
 function finalizeGatewayCircuit(failureClass?: string) {
-  if (failureClass) {
+  if (shouldRecordQGatewayCircuitFailure(failureClass)) {
     qPrimaryCircuit.recordFailure(failureClass);
-  } else {
+  } else if (!failureClass) {
     qPrimaryCircuit.recordSuccess();
   }
   return qPrimaryCircuit.snapshot();
