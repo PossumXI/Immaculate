@@ -910,7 +910,7 @@ app.post("/v1/chat/completions", {
     qFastSmokeRequest && !structuredRequest
       ? parseFastSmokeHoldMs(request.headers[FAST_SMOKE_HOLD_HEADER])
       : 0;
-  if (fastSmokeHoldMs > 0) {
+  if (qFastSmokeRequest && !structuredRequest) {
     await delay(fastSmokeHoldMs);
     const circuit = qPrimaryCircuit.snapshot();
     attachQResponseHeaders(reply, circuit);

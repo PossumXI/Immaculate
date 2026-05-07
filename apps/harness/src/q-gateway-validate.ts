@@ -337,15 +337,24 @@ export async function captureHttpCheck(
   }
 }
 
-function isRetryableGatewaySmokeCheck(check: HttpCheck): boolean {
+export function isRetryableGatewaySmokeCheck(check: HttpCheck): boolean {
   if (check.status === 429) {
     return true;
   }
   if (check.status !== 503 || !check.body || typeof check.body !== "object") {
     return false;
   }
+  const body = check.body as { error?: string; failureClass?: string; message?: string };
+  const failureClass = body.failureClass ?? body.error ?? "";
+  const transientMessage = `${body.message ?? ""} ${failureClass}`.toLowerCase();
   return (
-    (check.body as { failureClass?: string }).failureClass === "transport_timeout"
+    failureClass === "transport_timeout" ||
+    (failureClass === "http_error" &&
+      (transientMessage.includes("econnreset") ||
+        transientMessage.includes("econnrefused") ||
+        transientMessage.includes("loading model") ||
+        transientMessage.includes("model is loading") ||
+        transientMessage.includes("timed out")))
   );
 }
 
@@ -363,14 +372,19 @@ async function captureGatewaySmokeCheck(
   return latest;
 }
 
-function isRetryableDirectQFoundationSmoke(result: OllamaChatCompletionResult): boolean {
+export function isRetryableDirectQFoundationSmoke(result: OllamaChatCompletionResult): boolean {
   if (!result.failureClass) {
     return false;
   }
   const preview = result.responsePreview.toLowerCase();
   return (
     result.failureClass === "http_error" &&
-    (preview.includes("loading model") || preview.includes("model is loading"))
+    (preview.includes("loading model") ||
+      preview.includes("model is loading") ||
+      preview.includes("econnreset") ||
+      preview.includes("econnrefused") ||
+      preview.includes("connection refused") ||
+      preview.includes("timed out"))
   );
 }
 
