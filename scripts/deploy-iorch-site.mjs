@@ -371,6 +371,13 @@ async function smoke(baseUrl) {
 async function main() {
   const releaseDeployLock = await acquireDeployLock(prod ? "prod" : "check");
   try {
+    await deployIorch();
+  } finally {
+    releaseDeployLock();
+  }
+}
+
+async function deployIorch() {
   assertCorrectWorkspace();
   const token = readNetlifyAuthToken();
   const site = await assertExpectedSite(token);
@@ -433,9 +440,6 @@ async function main() {
     draftSmoke,
     productionSmoke,
   }, null, 2));
-  } finally {
-    releaseDeployLock();
-  }
 }
 
 main().catch((error) => {
