@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-05-07T06:31:24.240Z",
+  "generatedAt": "2026-05-07T06:52:06.826Z",
   "threshold": 0.75,
   "ready": true,
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "6e45f72eada610d530d22db94b87d19e6e86bb97",
-    "gitShortSha": "6e45f72",
-    "gitBranch": "codex/q-gateway-fast-smoke-validation-20260507",
-    "buildId": "0.1.0+6e45f72",
+    "gitSha": "c082790f62f3b63438c5366b7f38a0d65009f781",
+    "gitShortSha": "c082790",
+    "gitBranch": "main",
+    "buildId": "0.1.0+c082790",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -41,7 +41,7 @@
   "sources": {
     "modelComparisonGeneratedAt": "2026-05-07T06:03:07.620Z",
     "bridgeBenchGeneratedAt": "2026-05-07T04:12:53.126Z",
-    "qGatewayValidationGeneratedAt": "2026-05-07T06:24:54.607Z"
+    "qGatewayValidationGeneratedAt": "2026-05-07T06:51:04.223Z"
   },
   "q": {
     "modelComparison": {

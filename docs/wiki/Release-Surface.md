@@ -2,10 +2,10 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-04-22T01:20:45.925Z
-- Immaculate release: `0.1.0+ba51737`
-- Repo commit: `ba51737efc2a5b6a7b5234ff2f6fb86fb6b28a04`
-- Branch: `publish-q-win`
+- Generated: 2026-05-07T06:52:09.390Z
+- Immaculate release: `0.1.0+c082790`
+- Repo commit: `c082790f62f3b63438c5366b7f38a0d65009f781`
+- Branch: `main`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
 - Core package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+ba51737` is the current repo build stamp.
+- Immaculate build `0.1.0+c082790` is the current repo build stamp.
 - Arobi Network is the ledger-backed private and public operator network and audit substrate. Immaculate is the governed harness and orchestrator inside it. Q is the reasoning brain inside that governed stack.
 - Q is the only public model name used across the repo, and it is built on `Gemma 4`.
 - The latest tracked Q training bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`, tied to dataset `.training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
@@ -25,19 +25,19 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## Current Evidence Surfaces
 
-- BridgeBench: `2026-04-19T07:51:12.922Z` via `docs/wiki/BridgeBench.json`
+- BridgeBench: `2026-05-07T04:12:53.126Z` via `docs/wiki/BridgeBench.json`
 - BridgeBench soak: `2026-04-15T06:15:54.188Z` via `docs/wiki/BridgeBench-Soak.json`
-- Q structured contract benchmark: `2026-04-19T07:48:09.656Z` via `docs/wiki/Model-Benchmark-Comparison.json`
-- Q readiness gate: `2026-04-21T16:17:13.434Z` via `docs/wiki/Q-Readiness-Gate.json`
-- Q gateway validation: `2026-04-19T07:47:33.854Z` via `docs/wiki/Q-Gateway-Validation.json`
+- Q structured contract benchmark: `2026-05-07T06:03:07.620Z` via `docs/wiki/Model-Benchmark-Comparison.json`
+- Q readiness gate: `2026-05-07T06:52:06.826Z` via `docs/wiki/Q-Readiness-Gate.json`
+- Q gateway validation: `2026-05-07T06:51:04.223Z` via `docs/wiki/Q-Gateway-Validation.json`
 - Q gateway substrate: `2026-04-19T22:06:38.757Z` via `docs/wiki/Q-Gateway-Substrate.json`
 - Q mediation drift: `2026-04-19T22:06:40.025Z` via `docs/wiki/Q-Mediation-Drift.json`
 - Arobi audit integrity: `2026-04-19T23:41:05.513Z` via `docs/wiki/Arobi-Audit-Integrity.json`
 - Arobi live ledger receipt: `2026-04-21T22:18:04.712Z` via `docs/wiki/Arobi-Live-Ledger-Receipt.json`
 - Live mission readiness: `2026-04-22T00:57:50.993Z` via `docs/wiki/Live-Mission-Readiness.json`
 - Live operator activity: `2026-04-22T00:57:56.085Z` via `docs/wiki/Live-Operator-Activity.json`
-- Live operator public export: `2026-04-22T01:20:44.169Z` via `docs/wiki/Live-Operator-Public-Export.json`
-- Cross-project workflow health: `2026-04-21T23:58:39.554Z` via `docs/wiki/Cross-Project-Workflow-Health.json`
+- Live operator public export: `2026-04-25T18:32:05.367Z` via `docs/wiki/Live-Operator-Public-Export.json`
+- Cross-project workflow health: `2026-05-07T06:51:30.739Z` via `docs/wiki/Cross-Project-Workflow-Health.json`
 - Supervised mission showcase: `2026-04-22T01:20:45.053Z` via `docs/wiki/Supervised-Mission-Showcase.json`
 - Roundtable actionability: `2026-04-21T16:11:05.129Z` via `docs/wiki/Roundtable-Actionability.json`
 - Roundtable runtime: `2026-04-21T22:19:50.626Z` via `docs/wiki/Roundtable-Runtime.json`
@@ -52,7 +52,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - OCI region capacity: `2026-04-17T02:02:24Z` via `docs/wiki/OCI-Region-Capacity.json`
 - Q benchmark corpus: `2026-04-21T16:17:07Z` via `docs/wiki/Q-Benchmark-Corpus.json`
 - Q benchmark promotion: `2026-04-19T07:46:03Z` via `docs/wiki/Q-Benchmark-Promotion.json`
-- W&B benchmark export: `2026-04-22T00:00:28.939949+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
+- W&B benchmark export: `2026-05-06T10:02:03.260385+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
 - Harbor terminal bench: `2026-04-19T07:43:17.831Z` via `docs/wiki/Harbor-Terminal-Bench.json`
 - Terminal-Bench public task: `2026-04-19T14:31:45.217Z` via `docs/wiki/Terminal-Bench-Public-Task.json`
 - Terminal-Bench leaderboard status: `2026-04-19T14:31:45.545Z` via `docs/wiki/Terminal-Bench-Receipt.json`
@@ -64,13 +64,13 @@ This page is generated from repo state. It is the plain-English answer to a simp
 ## Q Training Bundle
 
 - Lock path: `.training-output/q/latest-training-lock.json`
-- Lock generated: `2026-04-19T07:46:04Z`
+- Lock generated: `2026-04-19T07:46:03Z`
 - Run name: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23`
 - Training dataset rows: `117`
-- Training dataset SHA-256: `286326ce786c0a9b9b4a636a38114cc221c1b978a083ca55d70cc6ca6172cb07`
+- Training dataset SHA-256: `n/a`
 - Mix manifest: `.training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.manifest.json`
-- Mix supplemental count: `6`
-- Mix supplementals: `training/q/q_harness_identity_seed.json, training/q/q_immaculate_reasoning_seed.json, training/q/terminal_bench_semantic_seed.json, training/q/bridgebench_seed.json, training/q/coding_long_context_seed.json, .training-output/q/q-failure-corpus.jsonl`
+- Mix supplemental count: `n/a`
+- Mix supplementals: `n/a`
 - Curation run: `n/a`
 
 ## Hybrid Training Session
@@ -81,7 +81,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Cloud lane status: `ready`
 - Cloud provider: `hf_jobs`
 - Immaculate orchestration bundle: `immaculate-orchestration-5ed19b9-cd094c28`
-- Immaculate bundle source: `.training-output/immaculate/latest-training-bundle.json`
+- Immaculate bundle source: `.training-output/immaculate/immaculate-training-bundle-q-hybrid-harbor-opt-2384cf5-bench-v23.json`
 
 ## Cloudflare Inference Readiness
 
