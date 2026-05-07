@@ -2,10 +2,10 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-05-07T07:00:42.484Z
-- Immaculate release: `0.1.0+eb4cbe1`
-- Repo commit: `eb4cbe1f8c76e51861c434c6f8eedd51d88f649b`
-- Branch: `codex/release-metadata-training-proof-final-20260507`
+- Generated: 2026-05-07T07:24:25.340Z
+- Immaculate release: `0.1.0+403b7ed`
+- Repo commit: `403b7eda5d89dcca7b364d92cc6bdaf5a44dbe63`
+- Branch: `main`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
 - Core package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+eb4cbe1` is the current repo build stamp.
+- Immaculate build `0.1.0+403b7ed` is the current repo build stamp.
 - Arobi Network is the ledger-backed private and public operator network and audit substrate. Immaculate is the governed harness and orchestrator inside it. Q is the reasoning brain inside that governed stack.
 - Q is the only public model name used across the repo, and it is built on `Gemma 4`.
 - The latest tracked Q training bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`, tied to dataset `.training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
@@ -64,13 +64,13 @@ This page is generated from repo state. It is the plain-English answer to a simp
 ## Q Training Bundle
 
 - Lock path: `.training-output/q/latest-training-lock.json`
-- Lock generated: `2026-04-19T07:46:03Z`
+- Lock generated: `2026-04-19T07:46:04Z`
 - Run name: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23`
 - Training dataset rows: `117`
-- Training dataset SHA-256: `n/a`
+- Training dataset SHA-256: `286326ce786c0a9b9b4a636a38114cc221c1b978a083ca55d70cc6ca6172cb07`
 - Mix manifest: `.training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.manifest.json`
-- Mix supplemental count: `n/a`
-- Mix supplementals: `n/a`
+- Mix supplemental count: `6`
+- Mix supplementals: `training/q/q_harness_identity_seed.json, training/q/q_immaculate_reasoning_seed.json, training/q/terminal_bench_semantic_seed.json, training/q/bridgebench_seed.json, training/q/coding_long_context_seed.json, .training-output/q/q-failure-corpus.jsonl`
 - Curation run: `n/a`
 
 ## Hybrid Training Session
