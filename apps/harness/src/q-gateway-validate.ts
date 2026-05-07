@@ -643,7 +643,7 @@ function renderMarkdown(report: QGatewayValidationReport): string {
 
 export function isQGatewayValidationAccepted(report: Pick<
   QGatewayValidationReport,
-  "checks" | "identity" | "localQFoundationRun"
+  "checks" | "identity" | "localQFoundationRun" | "comparison"
 >): boolean {
   return (
     report.checks.health.status === 200 &&
@@ -652,6 +652,7 @@ export function isQGatewayValidationAccepted(report: Pick<
     report.checks.models.status === 200 &&
     report.checks.authorizedChat.status === 200 &&
     report.checks.identityChat.status === 200 &&
+    Number.isFinite(report.comparison.gatewayUpstreamLatencyMs) &&
     report.identity.canonical &&
     report.checks.concurrentRejection.status === 429 &&
     !report.localQFoundationRun.failureClass

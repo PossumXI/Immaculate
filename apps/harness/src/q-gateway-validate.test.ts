@@ -252,6 +252,8 @@ function validationReport(
     },
     comparison: {
       gatewayEndToEndLatencyMs: 1,
+      gatewayUpstreamLatencyMs: 0.8,
+      gatewayAddedLatencyMs: 0.2,
       localQFoundationLatencyMs: 1
     },
     output: {
@@ -286,6 +288,17 @@ test("Q gateway validation accepts only the full live contract", () => {
           wallLatencyMs: 1,
           responsePreview: "timeout",
           failureClass: "transport_timeout"
+        }
+      })
+    ),
+    false
+  );
+  assert.equal(
+    isQGatewayValidationAccepted(
+      validationReport({
+        comparison: {
+          gatewayEndToEndLatencyMs: 1,
+          localQFoundationLatencyMs: 1
         }
       })
     ),
