@@ -1,16 +1,16 @@
 {
-  "generatedAt": "2026-05-07T06:24:54.607Z",
-  "gatewayUrl": "http://127.0.0.1:52687",
+  "generatedAt": "2026-05-07T06:51:04.223Z",
+  "gatewayUrl": "http://127.0.0.1:52279",
   "modelName": "Q",
   "foundationModel": "Gemma 4",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "607169b3a95b6caae27028974bb7e3a9c4ff2d82",
-    "gitShortSha": "607169b",
-    "gitBranch": "codex/q-gateway-fast-smoke-validation-20260507",
-    "buildId": "0.1.0+607169b",
+    "gitSha": "c082790f62f3b63438c5366b7f38a0d65009f781",
+    "gitShortSha": "c082790",
+    "gitBranch": "main",
+    "buildId": "0.1.0+c082790",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -53,8 +53,8 @@
       "body": {
         "ok": true,
         "release": {
-          "buildId": "0.1.0+607169b",
-          "gitShortSha": "607169b"
+          "buildId": "0.1.0+05f8e65",
+          "gitShortSha": "05f8e65"
         },
         "gateway": "q",
         "modelName": "Q",
@@ -109,20 +109,20 @@
         },
         "authMode": "api-key",
         "host": "127.0.0.1",
-        "port": 52687
+        "port": 52279
       },
       "headers": {
         "connection": "keep-alive",
         "content-length": "1328",
         "content-type": "application/json; charset=utf-8",
-        "date": "Thu, 07 May 2026 06:24:42 GMT",
+        "date": "Thu, 07 May 2026 06:50:45 GMT",
         "keep-alive": "timeout=72",
         "vary": "Origin",
         "x-ratelimit-limit": "60",
         "x-ratelimit-remaining": "58",
         "x-ratelimit-reset": "60"
       },
-      "wallLatencyMs": 4.95
+      "wallLatencyMs": 5.72
     },
     "unauthorizedChat": {
       "status": 401,
@@ -134,14 +134,14 @@
         "connection": "keep-alive",
         "content-length": "91",
         "content-type": "application/json; charset=utf-8",
-        "date": "Thu, 07 May 2026 06:24:42 GMT",
+        "date": "Thu, 07 May 2026 06:50:45 GMT",
         "keep-alive": "timeout=72",
         "vary": "Origin",
         "x-ratelimit-limit": "60",
         "x-ratelimit-remaining": "59",
         "x-ratelimit-reset": "60"
       },
-      "wallLatencyMs": 12.7
+      "wallLatencyMs": 17.79
     },
     "info": {
       "status": 200,
@@ -155,8 +155,8 @@
         "harness": "Immaculate",
         "identitySummary": "Q is the only public model identity. Q was developed by Arobi Technology Alliance, built on Gemma 4, and led by founder, CEO, lead architect, and lead engineer Gaetano Comparcola. Arobi Network is the ledger-backed private and public operator network and audit substrate. Immaculate is the governed harness around Q and should use Q as its primary reasoning model.",
         "release": {
-          "buildId": "0.1.0+607169b",
-          "gitShortSha": "607169b",
+          "buildId": "0.1.0+05f8e65",
+          "gitShortSha": "05f8e65",
           "qTrainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce"
         },
         "circuit": {
@@ -202,7 +202,7 @@
           }
         },
         "authMode": "api-key",
-        "keyId": "qkey-mov3pjym-76ca9cf9",
+        "keyId": "qkey-mov4nar3-cd82077a",
         "rateLimit": {
           "requestsPerMinute": 30,
           "burst": 30,
@@ -219,7 +219,7 @@
         "connection": "keep-alive",
         "content-length": "1537",
         "content-type": "application/json; charset=utf-8",
-        "date": "Thu, 07 May 2026 06:24:42 GMT",
+        "date": "Thu, 07 May 2026 06:50:45 GMT",
         "keep-alive": "timeout=72",
         "vary": "Origin",
         "x-ratelimit-limit": "30",
@@ -227,7 +227,7 @@
         "x-ratelimit-reset": "60",
         "x-ratelimit-reset-ms": "0"
       },
-      "wallLatencyMs": 118.89
+      "wallLatencyMs": 171.6
     },
     "models": {
       "status": 200,
@@ -248,7 +248,7 @@
         "connection": "keep-alive",
         "content-length": "134",
         "content-type": "application/json; charset=utf-8",
-        "date": "Thu, 07 May 2026 06:24:42 GMT",
+        "date": "Thu, 07 May 2026 06:50:45 GMT",
         "keep-alive": "timeout=72",
         "vary": "Origin",
         "x-ratelimit-limit": "30",
@@ -256,21 +256,21 @@
         "x-ratelimit-reset": "60",
         "x-ratelimit-reset-ms": "0"
       },
-      "wallLatencyMs": 116.19
+      "wallLatencyMs": 180.59
     },
     "authorizedChat": {
       "status": 200,
       "body": {
-        "id": "chatcmpl-mov3q2mf",
+        "id": "chatcmpl-mov4njpk",
         "object": "chat.completion",
-        "created": 1778135092,
+        "created": 1778136654,
         "model": "Q",
         "foundationModel": "Gemma 4",
         "developer": "Arobi Technology Alliance",
         "lead": "Gaetano Comparcola",
         "harness": "Immaculate",
         "circuitState": "closed",
-        "latencyMs": 6504.99,
+        "latencyMs": 8751.67,
         "thinkingDetected": false,
         "structuredRetryAttempted": false,
         "structuredRetryUsed": false,
@@ -281,7 +281,7 @@
             "index": 0,
             "message": {
               "role": "assistant",
-              "content": "Gateway is healthy."
+              "content": "Q Gateway Healthy"
             },
             "finish_reason": "stop"
           }
@@ -294,31 +294,31 @@
       },
       "headers": {
         "connection": "keep-alive",
-        "content-length": "571",
+        "content-length": "569",
         "content-type": "application/json; charset=utf-8",
-        "date": "Thu, 07 May 2026 06:24:52 GMT",
+        "date": "Thu, 07 May 2026 06:50:54 GMT",
         "keep-alive": "timeout=72",
         "vary": "Origin",
         "x-q-circuit-state": "closed",
         "x-q-developer": "Arobi Technology Alliance",
         "x-q-foundation-model": "Gemma 4",
-        "x-q-latency-ms": "6504.99",
+        "x-q-latency-ms": "8751.67",
         "x-q-lead": "Gaetano Comparcola",
         "x-q-model-name": "Q",
         "x-ratelimit-limit": "30",
         "x-ratelimit-remaining": "26",
         "x-ratelimit-reset": "60",
         "x-ratelimit-reset-ms": "0",
-        "x-upstream-latency-ms": "6504.99"
+        "x-upstream-latency-ms": "8751.67"
       },
-      "wallLatencyMs": 10086.55
+      "wallLatencyMs": 9003.16
     },
     "identityChat": {
       "status": 200,
       "body": {
-        "id": "chatcmpl-mov3q2pd",
+        "id": "chatcmpl-mov4njsy",
         "object": "chat.completion",
-        "created": 1778135093,
+        "created": 1778136654,
         "model": "Q",
         "foundationModel": "Gemma 4",
         "developer": "Arobi Technology Alliance",
@@ -347,7 +347,7 @@
         "connection": "keep-alive",
         "content-length": "709",
         "content-type": "application/json; charset=utf-8",
-        "date": "Thu, 07 May 2026 06:24:52 GMT",
+        "date": "Thu, 07 May 2026 06:50:54 GMT",
         "keep-alive": "timeout=72",
         "vary": "Origin",
         "x-q-circuit-state": "closed",
@@ -357,10 +357,10 @@
         "x-q-model-name": "Q",
         "x-ratelimit-limit": "30",
         "x-ratelimit-remaining": "29",
-        "x-ratelimit-reset": "50",
+        "x-ratelimit-reset": "51",
         "x-ratelimit-reset-ms": "0"
       },
-      "wallLatencyMs": 106.28
+      "wallLatencyMs": 120.83
     },
     "concurrentRejection": {
       "status": 429,
@@ -373,16 +373,16 @@
         "connection": "keep-alive",
         "content-length": "101",
         "content-type": "application/json; charset=utf-8",
-        "date": "Thu, 07 May 2026 06:24:53 GMT",
+        "date": "Thu, 07 May 2026 06:50:55 GMT",
         "keep-alive": "timeout=72",
         "retry-after": "1",
         "vary": "Origin",
         "x-ratelimit-limit": "30",
         "x-ratelimit-remaining": "28",
-        "x-ratelimit-reset": "50",
+        "x-ratelimit-reset": "51",
         "x-ratelimit-reset-ms": "1000"
       },
-      "wallLatencyMs": 112.6
+      "wallLatencyMs": 129.6
     }
   },
   "identity": {
@@ -390,15 +390,15 @@
     "responsePreview": "I am Q, developed by Arobi Technology Alliance and built on Gemma 4. Gaetano Comparcola is the founder, CEO, lead architect, and lead engineer behind the project. Immaculate is my governed orchestration harness, and Arobi Network is the operator ledger and audit substrate around us."
   },
   "localQFoundationRun": {
-    "latencyMs": 11463.26,
-    "wallLatencyMs": 11572.76,
+    "latencyMs": 7936.53,
+    "wallLatencyMs": 7943.53,
     "responsePreview": "Gateway is fine."
   },
   "comparison": {
-    "gatewayEndToEndLatencyMs": 10086.55,
-    "gatewayUpstreamLatencyMs": 6504.99,
-    "gatewayAddedLatencyMs": 3581.56,
-    "localQFoundationLatencyMs": 11463.26
+    "gatewayEndToEndLatencyMs": 9003.16,
+    "gatewayUpstreamLatencyMs": 8751.67,
+    "gatewayAddedLatencyMs": 251.49,
+    "localQFoundationLatencyMs": 7936.53
   },
   "output": {
     "jsonPath": "docs\\wiki\\Q-Gateway-Validation.json",

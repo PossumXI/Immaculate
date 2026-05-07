@@ -1,37 +1,24 @@
 {
-  "generatedAt": "2026-04-22T01:20:45.925Z",
+  "generatedAt": "2026-05-07T06:52:09.390Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "ba51737efc2a5b6a7b5234ff2f6fb86fb6b28a04",
-    "gitShortSha": "ba51737",
-    "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+ba51737",
+    "gitSha": "c082790f62f3b63438c5366b7f38a0d65009f781",
+    "gitShortSha": "c082790",
+    "gitBranch": "main",
+    "buildId": "0.1.0+c082790",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
       "trainingLock": {
-        "generatedAt": "2026-04-19T07:46:04Z",
-        "lockVersion": 1,
+        "generatedAt": "2026-04-19T07:46:03Z",
         "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
         "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23",
         "modelName": "Q",
         "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl",
-        "trainDatasetSha256": "286326ce786c0a9b9b4a636a38114cc221c1b978a083ca55d70cc6ca6172cb07",
         "trainDatasetRowCount": 117,
         "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.manifest.json",
-        "mixManifestSha256": "4c7df8284cedaf8e43f1715c8eaf4c30826687e27a5d511ef8ccd4ca78df991e",
-        "mixSupplementalCount": 6,
-        "mixSupplementalPaths": [
-          "training/q/q_harness_identity_seed.json",
-          "training/q/q_immaculate_reasoning_seed.json",
-          "training/q/terminal_bench_semantic_seed.json",
-          "training/q/bridgebench_seed.json",
-          "training/q/coding_long_context_seed.json",
-          ".training-output/q/q-failure-corpus.jsonl"
-        ],
-        "curationRunId": null,
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
@@ -43,7 +30,7 @@
         "cloudProvider": "hf_jobs",
         "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
         "immaculateBundleId": "immaculate-orchestration-5ed19b9-cd094c28",
-        "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
+        "immaculateBundlePath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-harbor-opt-2384cf5-bench-v23.json"
       }
     }
   },
@@ -51,7 +38,7 @@
     {
       "label": "BridgeBench",
       "path": "docs\\wiki\\BridgeBench.json",
-      "generatedAt": "2026-04-19T07:51:12.922Z"
+      "generatedAt": "2026-05-07T04:12:53.126Z"
     },
     {
       "label": "BridgeBench soak",
@@ -61,17 +48,17 @@
     {
       "label": "Q structured contract benchmark",
       "path": "docs\\wiki\\Model-Benchmark-Comparison.json",
-      "generatedAt": "2026-04-19T07:48:09.656Z"
+      "generatedAt": "2026-05-07T06:03:07.620Z"
     },
     {
       "label": "Q readiness gate",
       "path": "docs\\wiki\\Q-Readiness-Gate.json",
-      "generatedAt": "2026-04-21T16:17:13.434Z"
+      "generatedAt": "2026-05-07T06:52:06.826Z"
     },
     {
       "label": "Q gateway validation",
       "path": "docs\\wiki\\Q-Gateway-Validation.json",
-      "generatedAt": "2026-04-19T07:47:33.854Z"
+      "generatedAt": "2026-05-07T06:51:04.223Z"
     },
     {
       "label": "Q gateway substrate",
@@ -106,12 +93,12 @@
     {
       "label": "Live operator public export",
       "path": "docs\\wiki\\Live-Operator-Public-Export.json",
-      "generatedAt": "2026-04-22T01:20:44.169Z"
+      "generatedAt": "2026-04-25T18:32:05.367Z"
     },
     {
       "label": "Cross-project workflow health",
       "path": "docs\\wiki\\Cross-Project-Workflow-Health.json",
-      "generatedAt": "2026-04-21T23:58:39.554Z"
+      "generatedAt": "2026-05-07T06:51:30.739Z"
     },
     {
       "label": "Supervised mission showcase",
@@ -186,7 +173,7 @@
     {
       "label": "W&B benchmark export",
       "path": "docs\\wiki\\Benchmark-Wandb-Export.json",
-      "generatedAt": "2026-04-22T00:00:28.939949+00:00"
+      "generatedAt": "2026-05-06T10:02:03.260385+00:00"
     },
     {
       "label": "Harbor terminal bench",

@@ -2,10 +2,10 @@
 
 This page is generated from a real live loopback validation pass against the dedicated Q gateway process, plus a direct configured Q inference call against the same Q stack.
 
-- Generated: 2026-05-07T06:24:54.607Z
-- Release: 0.1.0+607169b
-- Repo commit: 607169b
-- Gateway URL: http://127.0.0.1:52687
+- Generated: 2026-05-07T06:51:04.223Z
+- Release: 0.1.0+c082790
+- Repo commit: c082790
+- Gateway URL: http://127.0.0.1:52279
 - Q model name: Q
 - Q foundation model: Gemma 4
 - Q training bundle: q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce
@@ -13,11 +13,11 @@ This page is generated from a real live loopback validation pass against the ded
 
 ## Contract Checks
 
-- /health: `200` in `4.95` ms
+- /health: `200` in `5.72` ms
 - unauthorized /v1/chat/completions: `401`
 - authenticated /api/q/info: `200`
 - authenticated /v1/models: `200`
-- authenticated /v1/chat/completions: `200` in `10086.55` ms
+- authenticated /v1/chat/completions: `200` in `9003.16` ms
 - authenticated identity smoke: `200` | canonical `true`
 - concurrent rejection: `429`
 
@@ -27,14 +27,14 @@ This page is generated from a real live loopback validation pass against the ded
 
 ## Latency Comparison
 
-- gateway end-to-end latency: `10086.55` ms
-- gateway upstream latency header: `6504.99` ms
-- gateway added latency: `3581.56` ms
-- direct configured Q inference latency: `11463.26` ms
+- gateway end-to-end latency: `9003.16` ms
+- gateway upstream latency header: `8751.67` ms
+- gateway added latency: `251.49` ms
+- direct configured Q inference latency: `7936.53` ms
 
 ## Direct Q Inference Result
 
 - failure class: `none`
-- latency: `11463.26` ms
-- wall latency: `11572.76` ms
+- latency: `7936.53` ms
+- wall latency: `7943.53` ms
 - preview: Gateway is fine.
