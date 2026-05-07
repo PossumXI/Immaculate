@@ -2,10 +2,10 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-05-07T07:24:25.340Z
-- Immaculate release: `0.1.0+403b7ed`
-- Repo commit: `403b7eda5d89dcca7b364d92cc6bdaf5a44dbe63`
-- Branch: `main`
+- Generated: 2026-05-07T07:32:59.155Z
+- Immaculate release: `0.1.0+d1c83bf`
+- Repo commit: `d1c83bf7b316710b00d4a2ab956b424ce834fd79`
+- Branch: `codex/q-fast-smoke-budget-20260507`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
 - Core package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+403b7ed` is the current repo build stamp.
+- Immaculate build `0.1.0+d1c83bf` is the current repo build stamp.
 - Arobi Network is the ledger-backed private and public operator network and audit substrate. Immaculate is the governed harness and orchestrator inside it. Q is the reasoning brain inside that governed stack.
 - Q is the only public model name used across the repo, and it is built on `Gemma 4`.
 - The latest tracked Q training bundle is `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`, tied to dataset `.training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
@@ -28,8 +28,8 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - BridgeBench: `2026-05-07T04:12:53.126Z` via `docs/wiki/BridgeBench.json`
 - BridgeBench soak: `2026-04-15T06:15:54.188Z` via `docs/wiki/BridgeBench-Soak.json`
 - Q structured contract benchmark: `2026-05-07T06:03:07.620Z` via `docs/wiki/Model-Benchmark-Comparison.json`
-- Q readiness gate: `2026-05-07T07:00:39.562Z` via `docs/wiki/Q-Readiness-Gate.json`
-- Q gateway validation: `2026-05-07T06:51:04.223Z` via `docs/wiki/Q-Gateway-Validation.json`
+- Q readiness gate: `2026-05-07T07:32:49.907Z` via `docs/wiki/Q-Readiness-Gate.json`
+- Q gateway validation: `2026-05-07T07:32:32.750Z` via `docs/wiki/Q-Gateway-Validation.json`
 - Q gateway substrate: `2026-04-19T22:06:38.757Z` via `docs/wiki/Q-Gateway-Substrate.json`
 - Q mediation drift: `2026-04-19T22:06:40.025Z` via `docs/wiki/Q-Mediation-Drift.json`
 - Arobi audit integrity: `2026-04-19T23:41:05.513Z` via `docs/wiki/Arobi-Audit-Integrity.json`

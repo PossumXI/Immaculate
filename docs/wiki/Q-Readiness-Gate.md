@@ -2,15 +2,15 @@
 
 This page is generated from the tracked direct-Q and gateway report surfaces. It fails closed when the model benchmarks pass but the live gateway contract cannot complete authenticated chat.
 
-- Generated: 2026-05-07T07:00:39.562Z
-- Release: `0.1.0+eb4cbe1`
-- Repo commit: `eb4cbe1`
+- Generated: 2026-05-07T07:32:49.907Z
+- Release: `0.1.0+d1c83bf`
+- Repo commit: `d1c83bf`
 - Ready: `true`
 - Threshold: `0.75`
 - Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`
 - Model comparison source: `2026-05-07T06:03:07.620Z`
 - BridgeBench source: `2026-05-07T04:12:53.126Z`
-- Q gateway validation source: `2026-05-07T06:51:04.223Z`
+- Q gateway validation source: `2026-05-07T07:32:32.750Z`
 
 ## Q Direct Results
 
