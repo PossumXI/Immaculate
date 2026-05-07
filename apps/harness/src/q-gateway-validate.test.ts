@@ -11,6 +11,8 @@ import {
   captureHttpCheck,
   DEFAULT_Q_GATEWAY_HTTP_TIMEOUT_MS,
   buildQGatewayValidationHeaders,
+  isRetryableDirectQFoundationSmoke,
+  isRetryableGatewaySmokeCheck,
   isQGatewayValidationAccepted,
   resolveQGatewayValidationTimeoutMs,
   type QGatewayValidationReport,
@@ -113,6 +115,79 @@ test("captureHttpCheck records hung gateway probes as transport timeout evidence
     }
     await close(server);
   }
+});
+
+test("Q gateway validation retries transient local model transport resets only", () => {
+  assert.equal(
+    isRetryableGatewaySmokeCheck({
+      status: 503,
+      body: {
+        error: "q_upstream_failure",
+        failureClass: "http_error",
+        message: "read ECONNRESET"
+      },
+      headers: {},
+      wallLatencyMs: 1
+    }),
+    true
+  );
+  assert.equal(
+    isRetryableGatewaySmokeCheck({
+      status: 503,
+      body: {
+        error: "q_upstream_failure",
+        failureClass: "http_error",
+        message: "model is loading"
+      },
+      headers: {},
+      wallLatencyMs: 1
+    }),
+    true
+  );
+  assert.equal(
+    isRetryableGatewaySmokeCheck({
+      status: 503,
+      body: {
+        error: "q_upstream_failure",
+        failureClass: "policy_denied",
+        message: "blocked"
+      },
+      headers: {},
+      wallLatencyMs: 1
+    }),
+    false
+  );
+});
+
+test("direct Q foundation smoke retries refused local provider sockets", () => {
+  assert.equal(
+    isRetryableDirectQFoundationSmoke({
+      response: "",
+      model: "q:latest",
+      startedAt: "2026-05-07T00:00:00.000Z",
+      completedAt: "2026-05-07T00:00:00.000Z",
+      latencyMs: 1,
+      done: false,
+      thinkingDetected: false,
+      responsePreview: "connect ECONNREFUSED 127.0.0.1:11434",
+      failureClass: "http_error"
+    }),
+    true
+  );
+  assert.equal(
+    isRetryableDirectQFoundationSmoke({
+      response: "",
+      model: "q:latest",
+      startedAt: "2026-05-07T00:00:00.000Z",
+      completedAt: "2026-05-07T00:00:00.000Z",
+      latencyMs: 1,
+      done: false,
+      thinkingDetected: false,
+      responsePreview: "invalid credentials",
+      failureClass: "http_error"
+    }),
+    false
+  );
 });
 
 function httpCheck(status: number) {
