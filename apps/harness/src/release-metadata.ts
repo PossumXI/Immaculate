@@ -106,6 +106,7 @@ const Q_LATEST_LOCK_PATH = path.join(Q_OUTPUT_ROOT, "latest-training-lock.json")
 const Q_LATEST_HYBRID_SESSION_PATH = path.join(Q_OUTPUT_ROOT, "latest-hybrid-session.json");
 const IMMACULATE_OUTPUT_ROOT = path.join(REPO_ROOT, ".training-output", "immaculate");
 const IMMACULATE_LATEST_BUNDLE_PATH = path.join(IMMACULATE_OUTPUT_ROOT, "latest-training-bundle.json");
+const RELEASE_SURFACE_PATH = path.join(REPO_ROOT, "docs", "wiki", "Release-Surface.json");
 let cachedReleaseMetadata: ReleaseMetadata | undefined;
 
 type PackageJson = {
@@ -215,6 +216,14 @@ type QBenchmarkPromotionWikiFile = {
     trainDatasetRowCount?: number;
     mixManifestPath?: string;
     lockPath?: string;
+  };
+};
+
+type ReleaseSurfaceWikiFile = {
+  release?: {
+    q?: {
+      trainingLock?: Partial<QTrainingLockSummary>;
+    };
   };
 };
 
@@ -416,16 +425,17 @@ async function readTrainingLockSummary(): Promise<QTrainingLockSummary | undefin
 async function readTrainingLockSummaryFromTrackedWiki(): Promise<QTrainingLockSummary | undefined> {
   const hybridPath = path.join(REPO_ROOT, "docs", "wiki", "Q-Hybrid-Training.json");
   const promotionPath = path.join(REPO_ROOT, "docs", "wiki", "Q-Benchmark-Promotion.json");
-  const [hybrid, promotion] = await Promise.all([
+  const [hybrid, promotion, trackedSurfaceLock] = await Promise.all([
     existsSync(hybridPath) ? readJsonFile<QHybridTrainingWikiFile>(hybridPath) : undefined,
-    existsSync(promotionPath) ? readJsonFile<QBenchmarkPromotionWikiFile>(promotionPath) : undefined
+    existsSync(promotionPath) ? readJsonFile<QBenchmarkPromotionWikiFile>(promotionPath) : undefined,
+    readTrainingLockSummaryFromReleaseSurface()
   ]);
   const promoted = promotion?.promotion ?? promotion?.active;
   const bundleId = promoted?.bundleId?.trim() || hybrid?.q?.trainingBundleId?.trim();
   if (!bundleId) {
     return undefined;
   }
-  return {
+  const summary: QTrainingLockSummary = {
     generatedAt: promotion?.generatedAt ?? hybrid?.generatedAt,
     bundleId,
     runName: promoted?.runName,
@@ -438,6 +448,59 @@ async function readTrainingLockSummaryFromTrackedWiki(): Promise<QTrainingLockSu
     lockPath:
       normalizeReportedPath(promotion?.promotion?.lockPath ?? hybrid?.q?.trainingLockPath) ??
       "docs/wiki/Q-Hybrid-Training.json"
+  };
+  return mergeTrackedTrainingLock(summary, trackedSurfaceLock);
+}
+
+async function readTrainingLockSummaryFromReleaseSurface(): Promise<QTrainingLockSummary | undefined> {
+  if (!existsSync(RELEASE_SURFACE_PATH)) {
+    return undefined;
+  }
+  const payload = await readJsonFile<ReleaseSurfaceWikiFile>(RELEASE_SURFACE_PATH);
+  const tracked = payload?.release?.q?.trainingLock;
+  const bundleId = tracked?.bundleId?.trim();
+  if (!tracked || !bundleId) {
+    return undefined;
+  }
+  return {
+    generatedAt: tracked.generatedAt,
+    lockVersion: tracked.lockVersion,
+    bundleId,
+    runName: tracked.runName,
+    modelName: tracked.modelName,
+    trainDatasetPath: normalizeReportedPath(tracked.trainDatasetPath),
+    trainDatasetSha256: tracked.trainDatasetSha256,
+    trainDatasetRowCount: tracked.trainDatasetRowCount,
+    mixManifestPath: normalizeReportedPath(tracked.mixManifestPath),
+    mixManifestSha256: tracked.mixManifestSha256,
+    mixSupplementalCount: tracked.mixSupplementalCount,
+    mixSupplementalPaths: tracked.mixSupplementalPaths
+      ?.map((entry) => normalizeReportedPath(entry))
+      .filter((entry): entry is string => Boolean(entry)),
+    curationRunPath: normalizeReportedPath(tracked.curationRunPath),
+    curationRunId: tracked.curationRunId,
+    lockPath: normalizeReportedPath(tracked.lockPath) ?? "docs/wiki/Release-Surface.json"
+  };
+}
+
+function mergeTrackedTrainingLock(
+  summary: QTrainingLockSummary,
+  tracked: QTrainingLockSummary | undefined
+): QTrainingLockSummary {
+  if (!tracked || tracked.bundleId !== summary.bundleId) {
+    return summary;
+  }
+  return {
+    ...summary,
+    generatedAt: tracked.generatedAt ?? summary.generatedAt,
+    lockVersion: summary.lockVersion ?? tracked.lockVersion,
+    trainDatasetSha256: summary.trainDatasetSha256 ?? tracked.trainDatasetSha256,
+    mixManifestSha256: summary.mixManifestSha256 ?? tracked.mixManifestSha256,
+    mixSupplementalCount: summary.mixSupplementalCount ?? tracked.mixSupplementalCount,
+    mixSupplementalPaths:
+      summary.mixSupplementalPaths && summary.mixSupplementalPaths.length > 0
+        ? summary.mixSupplementalPaths
+        : tracked.mixSupplementalPaths
   };
 }
 
