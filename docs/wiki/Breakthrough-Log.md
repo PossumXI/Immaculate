@@ -21,6 +21,32 @@ For each breakthrough, record:
 
 ### 2026-05-07
 
+#### Q release validation became bounded, OCI-routable, and current again
+
+What changed:
+- Q gateway validation now uses an ephemeral loopback gateway when an existing listener does not match the validation keyset, so local proof runs do not collide with a stale gateway process
+- gateway validation fast-smoke requests carry bounded timeout headers and can exercise the authenticated chat, identity, and concurrency paths without forcing every probe through the full local model latency
+- Q inference profiles now support an `oci-iam-bridge` provider that routes through the OpenJaws OCI helper with IAM auth while keeping OCI config, project, compartment, and bridge details out of the public profile
+- direct Q model comparison gained explicit prewarm, task, and retry timeout controls so stale or slow local runtimes produce bounded, truthful benchmark evidence instead of hanging the release lane
+- `docs/wiki/Model-Benchmark-Comparison.*`, `docs/wiki/Q-Gateway-Validation.*`, and `docs/wiki/Q-Readiness-Gate.*` were refreshed against the current `0.1.0+af0899f` build
+
+Why it matters:
+- release readiness now distinguishes route health, gateway contract health, and direct local model structured-contract health without conflating a slow local runtime with missing production routes
+- operators can route Q through local Ollama, OpenAI-compatible responses, or the OpenJaws OCI IAM bridge under one redacted inference profile contract
+- the release gate no longer depends on April evidence or unbounded local model calls
+
+Evidence:
+- `apps/harness/src/q-inference-profile.ts` accepts and redacts `oci-iam-bridge`
+- `apps/harness/src/oci-iam-bridge.ts` wraps the OpenJaws OCI helper through a bounded temp-file bridge
+- `apps/harness/src/q-gateway.ts` routes chat and structured requests through the OCI IAM bridge provider and supports bounded gateway fast-smoke probes
+- `apps/harness/src/model-comparison.ts` accepts bounded model-comparison prewarm/task/retry timeouts
+- `npm run compare:models` refreshed direct Q at `4/4` structured parse success
+- `npm run q:release-gate` published a passing gate with fresh model comparison, BridgeBench, and gateway-validation sources
+
+What this unlocks next:
+- Immaculate can keep Q release evidence current while using a production OCI-backed route when the local Ollama lane is too slow or unavailable
+- downstream OpenJaws and Discord agents can trust the gateway contract surface instead of guessing whether Q is stale, local-only, or routed through OCI
+
 #### Failed Q gateway and readiness runs stopped overwriting public proof docs
 
 What changed:

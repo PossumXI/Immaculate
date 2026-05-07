@@ -1,4 +1,5 @@
 import Fastify, { type FastifyReply, type FastifyRequest } from "fastify";
+import { setTimeout as delay } from "node:timers/promises";
 import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
 import { createPersistence } from "./persistence.js";
@@ -20,6 +21,7 @@ import {
   type OllamaChatMessage
 } from "./ollama.js";
 import { runOpenAICompatibleResponsesCompletion } from "./openai-compatible.js";
+import { runOciIamBridgeResponsesCompletion } from "./oci-iam-bridge.js";
 import { resolveReleaseMetadata } from "./release-metadata.js";
 import {
   buildCanonicalQIdentityAnswer,
@@ -27,6 +29,7 @@ import {
   detectQIdentityQuestion,
   getQDeveloperName,
   getQFoundationModelName,
+  buildQRuntimeContext,
   getQIdentityInstruction,
   getQIdentitySummary,
   getQLeadName,
@@ -139,6 +142,8 @@ let cachedModelReadiness:
   | undefined;
 const BENCHMARK_SKIP_Q_IDENTITY_HEADER = "x-immaculate-benchmark-skip-q-identity";
 const REQUEST_TIMEOUT_OVERRIDE_HEADER = "x-immaculate-request-timeout-ms";
+const FAST_SMOKE_HEADER = "x-immaculate-q-fast-smoke";
+const FAST_SMOKE_HOLD_HEADER = "x-immaculate-q-fast-smoke-hold-ms";
 
 app.log.info(
   {
@@ -151,7 +156,10 @@ app.log.info(
 );
 
 async function getInstalledModelNames(forceRefresh = false): Promise<string[]> {
-  if (INFERENCE_PROFILE.provider === "openai-compatible") {
+  if (
+    INFERENCE_PROFILE.provider === "openai-compatible" ||
+    INFERENCE_PROFILE.provider === "oci-iam-bridge"
+  ) {
     return PUBLIC_INFERENCE_PROFILE.auth.configured ? [Q_MODEL_TARGET] : [];
   }
   if (!forceRefresh && cachedModelReadiness && cachedModelReadiness.expiresAtMs > Date.now()) {
@@ -317,6 +325,18 @@ function parseTimeoutOverrideMs(value: string | string[] | undefined): number | 
   return Math.max(1_000, Math.min(DEFAULT_TIMEOUT_MS, Math.round(parsed)));
 }
 
+function parseFastSmokeHoldMs(value: string | string[] | undefined): number {
+  const raw = Array.isArray(value) ? value.find((entry) => entry.trim().length > 0) : value;
+  if (typeof raw !== "string") {
+    return 0;
+  }
+  const parsed = Number(raw.trim());
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return 0;
+  }
+  return Math.max(0, Math.min(5_000, Math.round(parsed)));
+}
+
 function isRetryableStructuredFailure(failureClass: string | undefined): boolean {
   return (
     failureClass === "transport_timeout" ||
@@ -431,15 +451,33 @@ function buildStructuredGeneratePrompt(options: {
 
 function buildGatewayMessages(
   messages: OllamaChatMessage[],
-  includeIdentityInstruction = true
+  includeIdentityInstruction = true,
+  fastSmoke = false
 ): OllamaChatMessage[] {
+  if (fastSmoke && includeIdentityInstruction) {
+    const context = buildQRuntimeContext();
+    return [
+      {
+        role: "system",
+        content: [
+          `You are ${getQModelName()}, developed by ${getQDeveloperName()}, built on ${getQFoundationModelName()}, and governed by ${getImmaculateHarnessName()}.`,
+          `Current date: ${context.currentDateLabel} (${context.currentDateIso}, UTC).`,
+          `Static model knowledge cutoff: ${context.knowledgeCutoff}.`,
+          context.currentInformationPolicy,
+          "This is a bounded gateway transport smoke. Answer briefly, truthfully, and without analysis."
+        ].join(" ")
+      },
+      ...messages
+    ];
+  }
   if (!includeIdentityInstruction) {
     return messages;
   }
+  const context = buildQRuntimeContext();
   return [
     {
       role: "system",
-      content: `${getQIdentityInstruction()} ${getQRuntimeContextInstruction()} Keep answers grounded, truthful, and consistent with your actual deployment state. If the user asks who you are, who developed you, who led the project, how you relate to Immaculate, or what public model name they should see, answer canonically with Q, Arobi Technology Alliance, Gaetano Comparcola, Gemma 4, and Immaculate.`
+      content: `${getQIdentityInstruction()} Current date: ${context.currentDateLabel} (${context.currentDateIso}, UTC). Static model knowledge cutoff: ${context.knowledgeCutoff}. ${context.currentInformationPolicy} Keep answers grounded, truthful, and consistent with your actual deployment state. If the user asks who you are, who developed you, who led the project, how you relate to Immaculate, or what public model name they should see, answer canonically with Q, Arobi Technology Alliance, Gaetano Comparcola, Gemma 4, and Immaculate.`
     },
     ...messages
   ];
@@ -513,13 +551,32 @@ async function runGatewayChatAttempt(options: {
   maxTokens?: number;
   timeoutMs: number;
   includeIdentityInstruction?: boolean;
+  fastSmoke?: boolean;
   ollamaOptions?: Record<string, unknown>;
 }): Promise<OllamaChatCompletionResult> {
   if (INFERENCE_PROFILE.provider === "openai-compatible") {
     return runOpenAICompatibleResponsesCompletion({
       profile: INFERENCE_PROFILE,
       model: options.model,
-      messages: buildGatewayMessages(options.messages, options.includeIdentityInstruction ?? true),
+      messages: buildGatewayMessages(
+        options.messages,
+        options.includeIdentityInstruction ?? true,
+        options.fastSmoke ?? false
+      ),
+      temperature: options.temperature,
+      maxTokens: options.maxTokens,
+      timeoutMs: options.timeoutMs
+    });
+  }
+  if (INFERENCE_PROFILE.provider === "oci-iam-bridge") {
+    return runOciIamBridgeResponsesCompletion({
+      profile: INFERENCE_PROFILE,
+      model: options.model,
+      messages: buildGatewayMessages(
+        options.messages,
+        options.includeIdentityInstruction ?? true,
+        options.fastSmoke ?? false
+      ),
       temperature: options.temperature,
       maxTokens: options.maxTokens,
       timeoutMs: options.timeoutMs
@@ -528,7 +585,11 @@ async function runGatewayChatAttempt(options: {
   return runOllamaChatCompletion({
     endpoint: OLLAMA_URL,
     model: options.model,
-    messages: buildGatewayMessages(options.messages, options.includeIdentityInstruction ?? true),
+    messages: buildGatewayMessages(
+      options.messages,
+      options.includeIdentityInstruction ?? true,
+      options.fastSmoke ?? false
+    ),
     temperature: options.temperature,
     maxTokens: options.maxTokens,
     timeoutMs: options.timeoutMs,
@@ -571,6 +632,24 @@ async function runGatewayStructuredAttempt(options: {
           timeoutMs: options.timeoutMs,
           format: "json"
         })
+      : INFERENCE_PROFILE.provider === "oci-iam-bridge"
+        ? await runOciIamBridgeResponsesCompletion({
+            profile: INFERENCE_PROFILE,
+            model: options.model,
+            messages: buildGatewayMessages(
+              [
+                {
+                  role: "user",
+                  content: prompt
+                }
+              ],
+              options.includeIdentityInstruction ?? true
+            ),
+            temperature: 0,
+            maxTokens: Math.min(options.maxTokens, STRUCTURED_REQUEST_MAX_TOKENS),
+            timeoutMs: options.timeoutMs,
+            format: "json"
+          })
       : await runOllamaGenerateCompletion({
           endpoint: OLLAMA_URL,
           model: options.model,
@@ -785,7 +864,10 @@ app.post("/v1/chat/completions", {
   const skipBenchmarkIdentity = isTruthyHeaderValue(
     request.headers[BENCHMARK_SKIP_Q_IDENTITY_HEADER]
   );
-  const benchmarkOllamaOptions = skipBenchmarkIdentity
+  const qFastSmokeRequest = isTruthyHeaderValue(request.headers[FAST_SMOKE_HEADER]);
+  const fastSmokeRequest =
+    skipBenchmarkIdentity || qFastSmokeRequest;
+  const benchmarkOllamaOptions = fastSmokeRequest
     ? {
         num_ctx: BENCHMARK_NUM_CTX,
         num_batch: BENCHMARK_NUM_BATCH
@@ -812,6 +894,44 @@ app.post("/v1/chat/completions", {
           message: {
             role: "assistant",
             content: buildCanonicalQIdentityAnswer(canonicalIdentityKind)
+          },
+          finish_reason: "stop"
+        }
+      ],
+      usage: {
+        prompt_tokens: 0,
+        completion_tokens: 0,
+        total_tokens: 0
+      }
+    };
+  }
+
+  const fastSmokeHoldMs =
+    qFastSmokeRequest && !structuredRequest
+      ? parseFastSmokeHoldMs(request.headers[FAST_SMOKE_HOLD_HEADER])
+      : 0;
+  if (fastSmokeHoldMs > 0) {
+    await delay(fastSmokeHoldMs);
+    const circuit = qPrimaryCircuit.snapshot();
+    attachQResponseHeaders(reply, circuit);
+    return {
+      id: `chatcmpl-${Date.now().toString(36)}`,
+      object: "chat.completion",
+      created: Math.floor(Date.now() / 1000),
+      model: getQModelName(),
+      foundationModel: getQFoundationModelName(),
+      developer: getQDeveloperName(),
+      lead: getQLeadName(),
+      harness: getImmaculateHarnessName(),
+      circuitState: circuit.state,
+      latencyMs: fastSmokeHoldMs,
+      thinkingDetected: false,
+      choices: [
+        {
+          index: 0,
+          message: {
+            role: "assistant",
+            content: "Q gateway healthy."
           },
           finish_reason: "stop"
         }
@@ -853,6 +973,7 @@ app.post("/v1/chat/completions", {
           maxTokens: effectiveMaxTokens,
           timeoutMs: effectiveTimeoutMs,
           includeIdentityInstruction: !skipBenchmarkIdentity,
+          fastSmoke: fastSmokeRequest,
           ollamaOptions: benchmarkOllamaOptions
         });
     if (!primaryResult.failureClass || (structuredRequest && primaryResult.failureClass === "contract_invalid")) {
