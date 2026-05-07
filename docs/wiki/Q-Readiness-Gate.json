@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-05-07T06:52:06.826Z",
+  "generatedAt": "2026-05-07T07:00:39.562Z",
   "threshold": 0.75,
   "ready": true,
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "c082790f62f3b63438c5366b7f38a0d65009f781",
-    "gitShortSha": "c082790",
-    "gitBranch": "main",
-    "buildId": "0.1.0+c082790",
+    "gitSha": "eb4cbe1f8c76e51861c434c6f8eedd51d88f649b",
+    "gitShortSha": "eb4cbe1",
+    "gitBranch": "codex/release-metadata-training-proof-final-20260507",
+    "buildId": "0.1.0+eb4cbe1",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
