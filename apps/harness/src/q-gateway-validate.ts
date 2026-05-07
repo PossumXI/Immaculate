@@ -24,9 +24,11 @@ type ValidationFlags = {
   gatewayUrl: string;
   runtimeDir?: string;
   keysPath?: string;
+  httpTimeoutMs: number;
+  localQTimeoutMs: number;
 };
 
-type HttpCheck = {
+export type HttpCheck = {
   status: number;
   body: unknown;
   headers: Record<string, string>;
@@ -48,7 +50,7 @@ type PublicReleaseMetadata = Omit<ReleaseMetadata, "q"> & {
   q: Pick<ReleaseMetadata["q"], "modelName" | "foundationModel" | "trainingLock" | "hybridSession">;
 };
 
-type QGatewayValidationReport = {
+export type QGatewayValidationReport = {
   generatedAt: string;
   gatewayUrl: string;
   modelName: string;
@@ -86,14 +88,52 @@ type QGatewayValidationReport = {
   };
 };
 
+export type QGatewayValidationWriteResult = {
+  published: boolean;
+  jsonPath: string;
+  markdownPath: string;
+};
+
 const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const HARNESS_ROOT = path.resolve(MODULE_ROOT, "..");
 const REPO_ROOT = path.resolve(MODULE_ROOT, "../../..");
-const WIKI_ROOT = path.join(REPO_ROOT, "docs", "wiki");
+export const DEFAULT_Q_GATEWAY_HTTP_TIMEOUT_MS = 30_000;
+export const DEFAULT_Q_GATEWAY_LOCAL_Q_TIMEOUT_MS = 120_000;
+const MIN_Q_GATEWAY_VALIDATION_TIMEOUT_MS = 250;
+const MAX_Q_GATEWAY_VALIDATION_TIMEOUT_MS = 600_000;
+
+export function resolveQGatewayValidationTimeoutMs(
+  value: string | number | undefined,
+  fallbackMs: number
+): number {
+  const parsed =
+    typeof value === "number"
+      ? value
+      : typeof value === "string" && value.trim().length > 0
+        ? Number(value)
+        : fallbackMs;
+  const resolved = Number.isFinite(parsed) ? parsed : fallbackMs;
+  return Math.round(
+    Math.min(
+      MAX_Q_GATEWAY_VALIDATION_TIMEOUT_MS,
+      Math.max(MIN_Q_GATEWAY_VALIDATION_TIMEOUT_MS, resolved)
+    )
+  );
+}
 
 function parseFlags(argv: string[]): ValidationFlags {
   const flags: ValidationFlags = {
-    gatewayUrl: "http://127.0.0.1:8897"
+    gatewayUrl: "http://127.0.0.1:8897",
+    httpTimeoutMs: resolveQGatewayValidationTimeoutMs(
+      process.env.IMMACULATE_Q_GATEWAY_VALIDATE_HTTP_TIMEOUT_MS ??
+        process.env.npm_config_http_timeout_ms,
+      DEFAULT_Q_GATEWAY_HTTP_TIMEOUT_MS
+    ),
+    localQTimeoutMs: resolveQGatewayValidationTimeoutMs(
+      process.env.IMMACULATE_Q_GATEWAY_VALIDATE_LOCAL_Q_TIMEOUT_MS ??
+        process.env.npm_config_local_q_timeout_ms,
+      DEFAULT_Q_GATEWAY_LOCAL_Q_TIMEOUT_MS
+    )
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -123,6 +163,36 @@ function parseFlags(argv: string[]): ValidationFlags {
     }
     if (token.startsWith("--keys-path=")) {
       flags.keysPath = token.slice("--keys-path=".length).trim();
+      continue;
+    }
+    if (token === "--http-timeout-ms") {
+      flags.httpTimeoutMs = resolveQGatewayValidationTimeoutMs(
+        argv[index + 1],
+        flags.httpTimeoutMs
+      );
+      index += 1;
+      continue;
+    }
+    if (token.startsWith("--http-timeout-ms=")) {
+      flags.httpTimeoutMs = resolveQGatewayValidationTimeoutMs(
+        token.slice("--http-timeout-ms=".length),
+        flags.httpTimeoutMs
+      );
+      continue;
+    }
+    if (token === "--local-q-timeout-ms") {
+      flags.localQTimeoutMs = resolveQGatewayValidationTimeoutMs(
+        argv[index + 1],
+        flags.localQTimeoutMs
+      );
+      index += 1;
+      continue;
+    }
+    if (token.startsWith("--local-q-timeout-ms=")) {
+      flags.localQTimeoutMs = resolveQGatewayValidationTimeoutMs(
+        token.slice("--local-q-timeout-ms=".length),
+        flags.localQTimeoutMs
+      );
     }
   }
 
@@ -144,29 +214,87 @@ function captureHardwareContext(): HardwareContext {
   };
 }
 
-async function checkHttp(
+export async function checkHttp(
   url: string,
-  init?: RequestInit
+  init?: RequestInit,
+  timeoutMs = DEFAULT_Q_GATEWAY_HTTP_TIMEOUT_MS
 ): Promise<HttpCheck> {
   const started = performance.now();
-  const response = await fetch(url, init);
-  const text = await response.text();
-  let body: unknown = text;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  const callerSignal = init?.signal;
+  const abortFromCaller = () => controller.abort(callerSignal?.reason);
+  if (callerSignal?.aborted) {
+    controller.abort(callerSignal.reason);
+  } else {
+    callerSignal?.addEventListener("abort", abortFromCaller, { once: true });
+  }
   try {
-    body = text.length > 0 ? JSON.parse(text) : null;
-  } catch {
-    body = text;
+    const { signal: _ignoredSignal, ...requestInit } = init ?? {};
+    const response = await fetch(url, {
+      ...requestInit,
+      signal: controller.signal
+    });
+    const text = await response.text();
+    let body: unknown = text;
+    try {
+      body = text.length > 0 ? JSON.parse(text) : null;
+    } catch {
+      body = text;
+    }
+    const headers: Record<string, string> = {};
+    for (const [key, value] of response.headers.entries()) {
+      headers[key] = value;
+    }
+    return {
+      status: response.status,
+      body,
+      headers,
+      wallLatencyMs: Number((performance.now() - started).toFixed(2))
+    };
+  } catch (error) {
+    if (controller.signal.aborted && !callerSignal?.aborted) {
+      throw new Error(`HTTP check timed out after ${timeoutMs} ms: ${url}`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+    callerSignal?.removeEventListener("abort", abortFromCaller);
   }
-  const headers: Record<string, string> = {};
-  for (const [key, value] of response.headers.entries()) {
-    headers[key] = value;
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function classifyHttpCheckFailure(error: unknown): string {
+  const message = errorMessage(error).toLowerCase();
+  if (message.includes("timed out") || message.includes("aborted")) {
+    return "transport_timeout";
   }
-  return {
-    status: response.status,
-    body,
-    headers,
-    wallLatencyMs: Number((performance.now() - started).toFixed(2))
-  };
+  return "transport_error";
+}
+
+export async function captureHttpCheck(
+  url: string,
+  init?: RequestInit,
+  timeoutMs = DEFAULT_Q_GATEWAY_HTTP_TIMEOUT_MS
+): Promise<HttpCheck> {
+  const started = performance.now();
+  try {
+    return await checkHttp(url, init, timeoutMs);
+  } catch (error) {
+    return {
+      status: 503,
+      body: {
+        error: "q_gateway_validation_http_failure",
+        failureClass: classifyHttpCheckFailure(error),
+        message: errorMessage(error)
+      },
+      headers: {},
+      wallLatencyMs: Number((performance.now() - started).toFixed(2))
+    };
+  }
 }
 
 function parseGatewayPort(gatewayUrl: string): number {
@@ -232,9 +360,11 @@ async function ensureGatewayAvailable(options: {
   gatewayUrl: string;
   runtimeDir: string;
   keysPath: string;
+  httpTimeoutMs: number;
 }): Promise<ChildProcess | undefined> {
+  const healthTimeoutMs = Math.min(options.httpTimeoutMs, 5_000);
   try {
-    const health = await checkHttp(`${options.gatewayUrl}/health`);
+    const health = await checkHttp(`${options.gatewayUrl}/health`, undefined, healthTimeoutMs);
     if (health.status === 200) {
       return undefined;
     }
@@ -251,7 +381,7 @@ async function ensureGatewayAvailable(options: {
   let lastError: unknown;
   for (let attempt = 0; attempt < 80; attempt += 1) {
     try {
-      const health = await checkHttp(`${options.gatewayUrl}/health`);
+      const health = await checkHttp(`${options.gatewayUrl}/health`, undefined, healthTimeoutMs);
       if (health.status === 200) {
         return child;
       }
@@ -309,6 +439,58 @@ function renderMarkdown(report: QGatewayValidationReport): string {
     `- wall latency: \`${report.localQFoundationRun.wallLatencyMs}\` ms`,
     `- preview: ${report.localQFoundationRun.responsePreview}`
   ].join("\n");
+}
+
+export function isQGatewayValidationAccepted(report: Pick<
+  QGatewayValidationReport,
+  "checks" | "identity" | "localQFoundationRun"
+>): boolean {
+  return (
+    report.checks.health.status === 200 &&
+    report.checks.unauthorizedChat.status === 401 &&
+    report.checks.info.status === 200 &&
+    report.checks.models.status === 200 &&
+    report.checks.authorizedChat.status === 200 &&
+    report.checks.identityChat.status === 200 &&
+    report.identity.canonical &&
+    report.checks.concurrentRejection.status === 429 &&
+    !report.localQFoundationRun.failureClass
+  );
+}
+
+export async function writeQGatewayValidationReport(
+  report: QGatewayValidationReport,
+  options: {
+    accepted: boolean;
+    repoRoot?: string;
+    runtimeDir: string;
+  }
+): Promise<QGatewayValidationWriteResult> {
+  if (options.accepted) {
+    const repoRoot = options.repoRoot ?? REPO_ROOT;
+    const jsonPath = path.join(repoRoot, report.output.jsonPath);
+    const markdownPath = path.join(repoRoot, report.output.markdownPath);
+    await mkdir(path.dirname(jsonPath), { recursive: true });
+    await writeFile(jsonPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+    await writeFile(markdownPath, `${renderMarkdown(report)}\n`, "utf8");
+    return {
+      published: true,
+      jsonPath,
+      markdownPath
+    };
+  }
+
+  const failureRoot = path.join(options.runtimeDir, "q-gateway-validation");
+  const jsonPath = path.join(failureRoot, "latest-failed.json");
+  const markdownPath = path.join(failureRoot, "latest-failed.md");
+  await mkdir(failureRoot, { recursive: true });
+  await writeFile(jsonPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+  await writeFile(markdownPath, `${renderMarkdown(report)}\n`, "utf8");
+  return {
+    published: false,
+    jsonPath,
+    markdownPath
+  };
 }
 
 function normalizeText(value: string): string {
@@ -369,7 +551,8 @@ async function main(): Promise<void> {
     spawnedGateway = await ensureGatewayAvailable({
       gatewayUrl,
       runtimeDir,
-      keysPath
+      keysPath,
+      httpTimeoutMs: flags.httpTimeoutMs
     });
     const gatewayHeaders = {
       Authorization: `Bearer ${created.plainTextKey}`,
@@ -393,25 +576,41 @@ async function main(): Promise<void> {
       stream: false
     };
 
-    const health = await checkHttp(`${gatewayUrl}/health`);
-    const unauthorizedChat = await checkHttp(`${gatewayUrl}/v1/chat/completions`, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json"
+    const health = await captureHttpCheck(`${gatewayUrl}/health`, undefined, flags.httpTimeoutMs);
+    const unauthorizedChat = await captureHttpCheck(
+      `${gatewayUrl}/v1/chat/completions`,
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json"
+        },
+        body: JSON.stringify(chatBody)
       },
-      body: JSON.stringify(chatBody)
-    });
-    const info = await checkHttp(`${gatewayUrl}/api/q/info`, {
-      headers: gatewayHeaders
-    });
-    const models = await checkHttp(`${gatewayUrl}/v1/models`, {
-      headers: gatewayHeaders
-    });
-    const authorizedChat = await checkHttp(`${gatewayUrl}/v1/chat/completions`, {
-      method: "POST",
-      headers: gatewayHeaders,
-      body: JSON.stringify(chatBody)
-    });
+      flags.httpTimeoutMs
+    );
+    const info = await captureHttpCheck(
+      `${gatewayUrl}/api/q/info`,
+      {
+        headers: gatewayHeaders
+      },
+      flags.httpTimeoutMs
+    );
+    const models = await captureHttpCheck(
+      `${gatewayUrl}/v1/models`,
+      {
+        headers: gatewayHeaders
+      },
+      flags.httpTimeoutMs
+    );
+    const authorizedChat = await captureHttpCheck(
+      `${gatewayUrl}/v1/chat/completions`,
+      {
+        method: "POST",
+        headers: gatewayHeaders,
+        body: JSON.stringify(chatBody)
+      },
+      flags.httpTimeoutMs
+    );
     const identityBody = {
       model: getQModelName(),
       messages: [
@@ -425,27 +624,38 @@ async function main(): Promise<void> {
       temperature: 0.05,
       stream: false
     };
-    const identityChat = await checkHttp(`${gatewayUrl}/v1/chat/completions`, {
-      method: "POST",
-      headers: gatewayHeaders,
-      body: JSON.stringify(identityBody)
-    });
+    const identityChat = await captureHttpCheck(
+      `${gatewayUrl}/v1/chat/completions`,
+      {
+        method: "POST",
+        headers: gatewayHeaders,
+        body: JSON.stringify(identityBody)
+      },
+      flags.httpTimeoutMs
+    );
     const identityContent = extractChatContent(identityChat.body);
     const identityCanonical = identityChat.status === 200 && isCanonicalIdentityResponse(identityContent);
 
-    const concurrentPrimary = fetch(`${gatewayUrl}/v1/chat/completions`, {
-      method: "POST",
-      headers: gatewayHeaders,
-      body: JSON.stringify(chatBody)
-    });
+    const concurrentPrimary = captureHttpCheck(
+      `${gatewayUrl}/v1/chat/completions`,
+      {
+        method: "POST",
+        headers: gatewayHeaders,
+        body: JSON.stringify(chatBody)
+      },
+      flags.httpTimeoutMs
+    );
     await new Promise((resolve) => setTimeout(resolve, 150));
-    const concurrentRejection = await checkHttp(`${gatewayUrl}/v1/chat/completions`, {
-      method: "POST",
-      headers: gatewayHeaders,
-      body: JSON.stringify(chatBody)
-    });
-    const primaryResponse = await concurrentPrimary;
-    await primaryResponse.text();
+    const concurrentRejection = await captureHttpCheck(
+      `${gatewayUrl}/v1/chat/completions`,
+      {
+        method: "POST",
+        headers: gatewayHeaders,
+        body: JSON.stringify(chatBody)
+      },
+      flags.httpTimeoutMs
+    );
+    await concurrentPrimary.catch(() => undefined);
 
     const directStarted = performance.now();
     const direct = await runOllamaChatCompletion({
@@ -454,7 +664,8 @@ async function main(): Promise<void> {
       messages: chatMessages,
       maxTokens: 64,
       temperature: 0.1,
-      think: false
+      think: false,
+      timeoutMs: flags.localQTimeoutMs
     });
     const directWallLatencyMs = Number((performance.now() - directStarted).toFixed(2));
 
@@ -515,22 +726,17 @@ async function main(): Promise<void> {
       }
     };
 
-    await mkdir(WIKI_ROOT, { recursive: true });
-    await writeFile(path.join(REPO_ROOT, report.output.jsonPath), `${JSON.stringify(report, null, 2)}\n`, "utf8");
-    await writeFile(path.join(REPO_ROOT, report.output.markdownPath), `${renderMarkdown(report)}\n`, "utf8");
+    const accepted = isQGatewayValidationAccepted(report);
+    const writeResult = await writeQGatewayValidationReport(report, {
+      accepted,
+      repoRoot: REPO_ROOT,
+      runtimeDir
+    });
 
-    if (
-      health.status !== 200 ||
-      unauthorizedChat.status !== 401 ||
-      info.status !== 200 ||
-      models.status !== 200 ||
-      authorizedChat.status !== 200 ||
-      identityChat.status !== 200 ||
-      !identityCanonical ||
-      concurrentRejection.status !== 429 ||
-      direct.failureClass
-    ) {
-      throw new Error("Q gateway validation did not satisfy the expected contract.");
+    if (!accepted) {
+      throw new Error(
+        `Q gateway validation did not satisfy the expected contract. Failure evidence: ${writeResult.jsonPath}`
+      );
     }
 
     process.stdout.write(
@@ -538,7 +744,10 @@ async function main(): Promise<void> {
         {
           accepted: true,
           gatewayUrl,
-          output: report.output,
+          output: {
+            jsonPath: writeResult.jsonPath,
+            markdownPath: writeResult.markdownPath
+          },
           authorizedChatStatus: authorizedChat.status,
           concurrentRejectionStatus: concurrentRejection.status
         },
@@ -552,7 +761,13 @@ async function main(): Promise<void> {
   }
 }
 
-void main().catch((error) => {
-  process.stderr.write(error instanceof Error ? error.message : "Q gateway validation failed.");
-  process.exitCode = 1;
-});
+const isDirectExecution =
+  typeof process.argv[1] === "string" &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+
+if (isDirectExecution) {
+  void main().catch((error) => {
+    process.stderr.write(`${error instanceof Error ? error.message : "Q gateway validation failed."}\n`);
+    process.exit(1);
+  });
+}
