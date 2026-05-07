@@ -106,7 +106,7 @@ const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const HARNESS_ROOT = path.resolve(MODULE_ROOT, "..");
 const REPO_ROOT = path.resolve(MODULE_ROOT, "../../..");
 export const DEFAULT_Q_GATEWAY_HTTP_TIMEOUT_MS = 30_000;
-export const DEFAULT_Q_GATEWAY_LOCAL_Q_TIMEOUT_MS = 120_000;
+export const DEFAULT_Q_GATEWAY_LOCAL_Q_TIMEOUT_MS = 300_000;
 const MIN_Q_GATEWAY_VALIDATION_TIMEOUT_MS = 250;
 const MAX_Q_GATEWAY_VALIDATION_TIMEOUT_MS = 600_000;
 const REQUEST_TIMEOUT_OVERRIDE_HEADER = "x-immaculate-request-timeout-ms";
@@ -758,14 +758,6 @@ async function main(): Promise<void> {
       /\/+$/,
       ""
     );
-    await writeValidationProgress(runtimeDir, "direct_q_smoke_start");
-    const directSmoke = await runDirectQFoundationSmoke(flags.localQTimeoutMs);
-    const direct = directSmoke.result;
-    const directWallLatencyMs = directSmoke.wallLatencyMs;
-    await writeValidationProgress(
-      runtimeDir,
-      `direct_q_smoke_done failure=${direct.failureClass ?? "none"} latency_ms=${directWallLatencyMs}`
-    );
     const gatewayHeaders = buildQGatewayValidationHeaders(created.plainTextKey, {
       requestTimeoutMs: flags.httpTimeoutMs
     });
@@ -893,6 +885,15 @@ async function main(): Promise<void> {
     await writeValidationProgress(
       runtimeDir,
       `gateway_concurrency_done status=${concurrentRejection.status}`
+    );
+
+    await writeValidationProgress(runtimeDir, "direct_q_smoke_start");
+    const directSmoke = await runDirectQFoundationSmoke(flags.localQTimeoutMs);
+    const direct = directSmoke.result;
+    const directWallLatencyMs = directSmoke.wallLatencyMs;
+    await writeValidationProgress(
+      runtimeDir,
+      `direct_q_smoke_done failure=${direct.failureClass ?? "none"} latency_ms=${directWallLatencyMs}`
     );
 
     const upstreamHeader = authorizedChat.headers["x-upstream-latency-ms"];

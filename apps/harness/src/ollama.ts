@@ -1119,7 +1119,7 @@ export async function runOllamaChatCompletion(options: {
         body: JSON.stringify({
           model: options.model,
           stream: false,
-          think: options.think ?? false,
+          ...(options.think === true ? { think: true } : {}),
           ...(options.format ? { format: options.format } : {}),
           messages: options.messages,
           options: {
