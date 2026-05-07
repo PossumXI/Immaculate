@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-07T03:47:01.505Z",
+  "generatedAt": "2026-05-07T06:16:52.871Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "e71da0fa36e0d16a33f326c295b1ef20fded8242",
-    "gitShortSha": "e71da0f",
-    "gitBranch": "main",
-    "buildId": "0.1.0+e71da0f",
+    "gitSha": "af0899fcd3a7283aeeddf17d2f4b31a036c949c7",
+    "gitShortSha": "af0899f",
+    "gitBranch": "codex/q-gateway-fast-smoke-validation-20260507",
+    "buildId": "0.1.0+af0899f",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -38,7 +38,7 @@
     "repoCount": 3,
     "fullyHealthyRepoCount": 3,
     "allObservedWorkflowRunsSuccessful": true,
-    "detail": "Immaculate (public repo, github-rest-public): latest observed runs green; observed 6/8 active workflows, 2 not recently observed | OpenJaws (public repo, gh-auth): latest observed runs green; observed 4/6 active workflows, 2 not recently observed | Asgard_Arobi (private repo, gh-auth): latest observed runs green; observed 10/10 active workflows"
+    "detail": "Immaculate (public repo, gh-auth): latest observed runs green; observed 6/8 active workflows, 2 not recently observed | OpenJaws (public repo, gh-auth): latest observed runs green; observed 4/6 active workflows, 2 not recently observed | Asgard_Arobi (private repo, gh-auth): latest observed runs green; observed 10/10 active workflows"
   },
   "repos": [
     {
@@ -48,7 +48,7 @@
       "visibility": "public",
       "defaultBranch": "main",
       "access": {
-        "source": "github-rest-public",
+        "source": "gh-auth",
         "detail": "public repo verified through GitHub Actions REST surfaces"
       },
       "verification": {
@@ -137,14 +137,14 @@
           {
             "name": "CI",
             "workflowPath": ".github/workflows/benchmark-gate.yml",
-            "runNumber": 220,
+            "runNumber": 225,
             "event": "push",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-07T03:24:17Z",
-            "updatedAt": "2026-05-07T03:25:43Z",
-            "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25474315794",
-            "headSha": "e71da0fa36e0d16a33f326c295b1ef20fded8242"
+            "createdAt": "2026-05-07T04:33:39Z",
+            "updatedAt": "2026-05-07T04:35:06Z",
+            "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25476239271",
+            "headSha": "af0899fcd3a7283aeeddf17d2f4b31a036c949c7"
           },
           {
             "name": "npm_and_yarn in /. - Update #1345480481",
@@ -161,26 +161,26 @@
           {
             "name": "GitGuardian",
             "workflowPath": ".github/workflows/gitguardian.yml",
-            "runNumber": 214,
+            "runNumber": 219,
             "event": "push",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-07T03:24:17Z",
-            "updatedAt": "2026-05-07T03:24:39Z",
-            "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25474315813",
-            "headSha": "e71da0fa36e0d16a33f326c295b1ef20fded8242"
+            "createdAt": "2026-05-07T04:33:39Z",
+            "updatedAt": "2026-05-07T04:34:02Z",
+            "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25476239259",
+            "headSha": "af0899fcd3a7283aeeddf17d2f4b31a036c949c7"
           },
           {
             "name": "Security",
             "workflowPath": ".github/workflows/security.yml",
-            "runNumber": 220,
+            "runNumber": 225,
             "event": "push",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-07T03:24:17Z",
-            "updatedAt": "2026-05-07T03:27:09Z",
-            "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25474315793",
-            "headSha": "e71da0fa36e0d16a33f326c295b1ef20fded8242"
+            "createdAt": "2026-05-07T04:33:39Z",
+            "updatedAt": "2026-05-07T04:36:19Z",
+            "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25476239266",
+            "headSha": "af0899fcd3a7283aeeddf17d2f4b31a036c949c7"
           }
         ],
         "notRecentlyObserved": [
@@ -204,7 +204,7 @@
         "observedWorkflowCount": 4,
         "notRecentlyObservedWorkflowCount": 2,
         "allObservedRunsSuccessful": true,
-        "latestObservedRunAt": "2026-05-07T03:30:12Z"
+        "latestObservedRunAt": "2026-05-07T04:48:15Z"
       },
       "workflows": {
         "active": [
@@ -249,14 +249,14 @@
           {
             "name": "CI",
             "workflowPath": ".github/workflows/ci.yml",
-            "runNumber": 393,
+            "runNumber": 399,
             "event": "push",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-07T03:23:37Z",
-            "updatedAt": "2026-05-07T03:30:12Z",
-            "htmlUrl": "https://github.com/PossumXI/OpenJaws/actions/runs/25474296457",
-            "headSha": "a448cad36c14522425577063620eeb7a33af1427"
+            "createdAt": "2026-05-07T04:45:11Z",
+            "updatedAt": "2026-05-07T04:48:15Z",
+            "htmlUrl": "https://github.com/PossumXI/OpenJaws/actions/runs/25476551193",
+            "headSha": "d9bbc638bbd2ea5bc7b1a37ac23597a1e69f33ea"
           },
           {
             "name": "Q Benchmark Soak",
@@ -273,26 +273,26 @@
           {
             "name": "Security",
             "workflowPath": ".github/workflows/security.yml",
-            "runNumber": 405,
+            "runNumber": 411,
             "event": "push",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-07T03:23:37Z",
-            "updatedAt": "2026-05-07T03:23:57Z",
-            "htmlUrl": "https://github.com/PossumXI/OpenJaws/actions/runs/25474296467",
-            "headSha": "a448cad36c14522425577063620eeb7a33af1427"
+            "createdAt": "2026-05-07T04:45:11Z",
+            "updatedAt": "2026-05-07T04:45:26Z",
+            "htmlUrl": "https://github.com/PossumXI/OpenJaws/actions/runs/25476551200",
+            "headSha": "d9bbc638bbd2ea5bc7b1a37ac23597a1e69f33ea"
           },
           {
             "name": "System Check",
             "workflowPath": ".github/workflows/system-check.yml",
-            "runNumber": 394,
+            "runNumber": 400,
             "event": "push",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-07T03:23:37Z",
-            "updatedAt": "2026-05-07T03:27:11Z",
-            "htmlUrl": "https://github.com/PossumXI/OpenJaws/actions/runs/25474296471",
-            "headSha": "a448cad36c14522425577063620eeb7a33af1427"
+            "createdAt": "2026-05-07T04:45:11Z",
+            "updatedAt": "2026-05-07T04:48:02Z",
+            "htmlUrl": "https://github.com/PossumXI/OpenJaws/actions/runs/25476551204",
+            "headSha": "d9bbc638bbd2ea5bc7b1a37ac23597a1e69f33ea"
           }
         ],
         "notRecentlyObserved": [
@@ -391,19 +391,17 @@
             "conclusion": "success",
             "createdAt": "2026-05-07T01:11:03Z",
             "updatedAt": "2026-05-07T01:12:15Z",
-            "htmlUrl": "https://github.com/PossumXI/Asgard_Arobi/actions/runs/25470216446",
             "headSha": "ee85327b9f47afec681544b9cb93e1ca46b67be8"
           },
           {
             "name": "ARIA Heartbeat",
             "workflowPath": ".github/workflows/agent_aria_heartbeat.yml",
-            "runNumber": 1180,
+            "runNumber": 1181,
             "event": "schedule",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-07T03:00:57Z",
-            "updatedAt": "2026-05-07T03:01:20Z",
-            "htmlUrl": "https://github.com/PossumXI/Asgard_Arobi/actions/runs/25473616758",
+            "createdAt": "2026-05-07T05:04:48Z",
+            "updatedAt": "2026-05-07T05:05:13Z",
             "headSha": "ee85327b9f47afec681544b9cb93e1ca46b67be8"
           },
           {
@@ -415,19 +413,17 @@
             "conclusion": "success",
             "createdAt": "2026-05-06T22:27:47Z",
             "updatedAt": "2026-05-06T22:34:07Z",
-            "htmlUrl": "https://github.com/PossumXI/Asgard_Arobi/actions/runs/25464676458",
             "headSha": "ee85327b9f47afec681544b9cb93e1ca46b67be8"
           },
           {
             "name": "billing-production-smoke",
             "workflowPath": ".github/workflows/billing-production-smoke.yml",
-            "runNumber": 117,
+            "runNumber": 118,
             "event": "schedule",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-07T03:21:33Z",
-            "updatedAt": "2026-05-07T03:22:03Z",
-            "htmlUrl": "https://github.com/PossumXI/Asgard_Arobi/actions/runs/25474236320",
+            "createdAt": "2026-05-07T05:18:48Z",
+            "updatedAt": "2026-05-07T05:19:25Z",
             "headSha": "ee85327b9f47afec681544b9cb93e1ca46b67be8"
           },
           {
@@ -439,7 +435,6 @@
             "conclusion": "success",
             "createdAt": "2026-05-05T23:00:56Z",
             "updatedAt": "2026-05-05T23:02:39Z",
-            "htmlUrl": "https://github.com/PossumXI/Asgard_Arobi/actions/runs/25406983122",
             "headSha": "6e250e1f706bd587031c57d9eb63483d3958f71c"
           },
           {
@@ -451,7 +446,6 @@
             "conclusion": "success",
             "createdAt": "2026-05-05T21:34:24Z",
             "updatedAt": "2026-05-05T21:37:04Z",
-            "htmlUrl": "https://github.com/PossumXI/Asgard_Arobi/actions/runs/25403579823",
             "headSha": "daea3109ecc092147ee8e1175250f86fd1aa57e4"
           },
           {
@@ -463,43 +457,39 @@
             "conclusion": "success",
             "createdAt": "2026-05-06T22:27:47Z",
             "updatedAt": "2026-05-06T22:28:12Z",
-            "htmlUrl": "https://github.com/PossumXI/Asgard_Arobi/actions/runs/25464676459",
             "headSha": "ee85327b9f47afec681544b9cb93e1ca46b67be8"
           },
           {
             "name": "public-status-production-smoke",
             "workflowPath": ".github/workflows/public-status-production-smoke.yml",
-            "runNumber": 120,
+            "runNumber": 121,
             "event": "schedule",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-07T03:42:30Z",
-            "updatedAt": "2026-05-07T03:45:34Z",
-            "htmlUrl": "https://github.com/PossumXI/Asgard_Arobi/actions/runs/25474836723",
+            "createdAt": "2026-05-07T05:38:54Z",
+            "updatedAt": "2026-05-07T05:40:34Z",
             "headSha": "ee85327b9f47afec681544b9cb93e1ca46b67be8"
           },
           {
             "name": "SENTINEL Heartbeat",
             "workflowPath": ".github/workflows/agent_sentinel_heartbeat.yml",
-            "runNumber": 2158,
+            "runNumber": 2160,
             "event": "schedule",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-07T02:40:50Z",
-            "updatedAt": "2026-05-07T02:41:14Z",
-            "htmlUrl": "https://github.com/PossumXI/Asgard_Arobi/actions/runs/25473020266",
+            "createdAt": "2026-05-07T05:26:20Z",
+            "updatedAt": "2026-05-07T05:26:44Z",
             "headSha": "ee85327b9f47afec681544b9cb93e1ca46b67be8"
           },
           {
             "name": "stripe-webhook-production-smoke",
             "workflowPath": ".github/workflows/stripe-webhook-production-smoke.yml",
-            "runNumber": 318,
+            "runNumber": 320,
             "event": "schedule",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-07T01:15:24Z",
-            "updatedAt": "2026-05-07T01:15:49Z",
-            "htmlUrl": "https://github.com/PossumXI/Asgard_Arobi/actions/runs/25470354293",
+            "createdAt": "2026-05-07T05:43:43Z",
+            "updatedAt": "2026-05-07T05:44:11Z",
             "headSha": "ee85327b9f47afec681544b9cb93e1ca46b67be8"
           }
         ],

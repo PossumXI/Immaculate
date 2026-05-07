@@ -112,6 +112,8 @@ type CrossProjectWorkflowHealthReport = {
 const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(MODULE_ROOT, "../../..");
 const WIKI_ROOT = path.join(REPO_ROOT, "docs", "wiki");
+const GITHUB_FETCH_TIMEOUT_MS = 15_000;
+const GH_CLI_API_TIMEOUT_MS = 30_000;
 
 const REPO_TARGETS = [
   {
@@ -136,15 +138,6 @@ function workflowRunSuccess(run: { status?: string; conclusion?: string | null }
   return run.status === "completed" && normalizeConclusion(run.conclusion) === "success";
 }
 
-function hasGhCli(): boolean {
-  const result = spawnSync("gh", ["--version"], {
-    cwd: REPO_ROOT,
-    encoding: "utf8",
-    windowsHide: true
-  });
-  return result.status === 0;
-}
-
 function ghApi<T>(apiPath: string): T {
   const result = spawnSync("gh", ["api", apiPath], {
     cwd: REPO_ROOT,
@@ -154,12 +147,27 @@ function ghApi<T>(apiPath: string): T {
       ...process.env,
       GH_PAGER: "",
       PAGER: ""
-    }
+    },
+    timeout: GH_CLI_API_TIMEOUT_MS,
+    maxBuffer: 10 * 1024 * 1024
   });
+  if (result.error) {
+    throw new Error(
+      `gh api failed for ${apiPath}: ${result.error.message || String(result.error)}`
+    );
+  }
   if (result.status !== 0) {
     throw new Error((result.stderr || result.stdout || `gh api failed for ${apiPath}`).trim());
   }
-  return JSON.parse(result.stdout) as T;
+  try {
+    return JSON.parse(result.stdout) as T;
+  } catch (error) {
+    throw new Error(
+      `gh api returned invalid JSON for ${apiPath}: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
 }
 
 async function fetchGitHubJson<T>(
@@ -175,10 +183,29 @@ async function fetchGitHubJson<T>(
         "User-Agent": "Immaculate-Cross-Project-Workflow-Health",
         Accept: "application/vnd.github+json",
         ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
-      }
+      },
+      signal: AbortSignal.timeout(GITHUB_FETCH_TIMEOUT_MS)
     });
 
-  const response = await request(token);
+  let response: Response;
+  try {
+    response = await request(token);
+  } catch (error) {
+    try {
+      return {
+        data: ghApi<T>(apiPath),
+        source: "gh-auth"
+      };
+    } catch (ghError) {
+      throw new Error(
+        `GitHub request failed for ${apiPath}: ${
+          error instanceof Error ? error.message : String(error)
+        }; gh fallback failed: ${
+          ghError instanceof Error ? ghError.message : String(ghError)
+        }`
+      );
+    }
+  }
   if (response.ok) {
     return {
       data: (await response.json()) as T,
@@ -186,14 +213,18 @@ async function fetchGitHubJson<T>(
     };
   }
 
-  if (hasGhCli()) {
+  try {
     return {
       data: ghApi<T>(apiPath),
       source: "gh-auth"
     };
+  } catch (error) {
+    throw new Error(
+      `GitHub request failed (${response.status}) for ${apiPath}; gh fallback failed: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
   }
-
-  throw new Error(`GitHub request failed (${response.status}) for ${apiPath}`);
 }
 
 function dedupeLatestWorkflowRuns(
@@ -274,6 +305,16 @@ function summarizeRepoHealth(repo: RepoWorkflowHealth): string {
   const outcome = repo.verification.allObservedRunsSuccessful ? "latest observed runs green" : "some observed runs not green";
   const visibility = repo.visibility === "private" ? "private repo" : "public repo";
   return `${repo.label} (${visibility}, ${repo.access.source}): ${outcome}; observed ${observed}/${repo.verification.activeWorkflowCount} active workflows${missing > 0 ? `, ${missing} not recently observed` : ""}`;
+}
+
+export function redactWorkflowRunSummariesForVisibility(
+  runs: WorkflowRunSummary[],
+  visibility: RepoWorkflowHealth["visibility"]
+): WorkflowRunSummary[] {
+  if (visibility !== "private") {
+    return runs;
+  }
+  return runs.map(({ htmlUrl: _htmlUrl, ...run }) => run);
 }
 
 function renderMarkdown(report: CrossProjectWorkflowHealthReport): string {
@@ -358,9 +399,12 @@ async function buildRepoWorkflowHealth(
     }))
     .sort((left, right) => left.name.localeCompare(right.name));
 
-  const workflowRunResponses = await Promise.all(
-    activeWorkflows.map((workflow) => fetchLatestWorkflowRun(target.repoFullName, defaultBranch, workflow))
-  );
+  const workflowRunResponses: Array<Awaited<ReturnType<typeof fetchLatestWorkflowRun>>> = [];
+  for (const workflow of activeWorkflows) {
+    workflowRunResponses.push(
+      await fetchLatestWorkflowRun(target.repoFullName, defaultBranch, workflow)
+    );
+  }
   const sampledRuns = workflowRunResponses
     .map((response) => response.run)
     .filter((run): run is WorkflowRun => Boolean(run));
@@ -371,6 +415,10 @@ async function buildRepoWorkflowHealth(
   );
 
   const visibility = repoData.private === true ? "private" : "public";
+  const visibleLatestObservedRuns = redactWorkflowRunSummariesForVisibility(
+    latestObservedRuns,
+    visibility
+  );
   const sources = new Set<GitHubFetchSource>([
     repoResponse.source,
     workflowResponse.source,
@@ -406,7 +454,7 @@ async function buildRepoWorkflowHealth(
     },
     workflows: {
       active: activeWorkflows,
-      latestObservedRuns,
+      latestObservedRuns: visibleLatestObservedRuns,
       notRecentlyObserved
     }
   };
@@ -414,7 +462,10 @@ async function buildRepoWorkflowHealth(
 
 async function main(): Promise<void> {
   const release = await resolveReleaseMetadata();
-  const repos = await Promise.all(REPO_TARGETS.map((target) => buildRepoWorkflowHealth(target)));
+  const repos: RepoWorkflowHealth[] = [];
+  for (const target of REPO_TARGETS) {
+    repos.push(await buildRepoWorkflowHealth(target));
+  }
   const fullyHealthyRepoCount = repos.filter(
     (repo) =>
       repo.verification.observedWorkflowCount > 0 && repo.verification.allObservedRunsSuccessful
@@ -465,7 +516,13 @@ async function main(): Promise<void> {
   process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
 }
 
-void main().catch((error) => {
-  process.stderr.write(error instanceof Error ? error.message : "Cross-project workflow health generation failed.");
-  process.exitCode = 1;
-});
+const isDirectExecution =
+  typeof process.argv[1] === "string" &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+
+if (isDirectExecution) {
+  void main().catch((error) => {
+    process.stderr.write(error instanceof Error ? error.message : "Cross-project workflow health generation failed.");
+    process.exitCode = 1;
+  });
+}

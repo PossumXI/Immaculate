@@ -10,6 +10,7 @@ import {
   checkHttp,
   captureHttpCheck,
   DEFAULT_Q_GATEWAY_HTTP_TIMEOUT_MS,
+  buildQGatewayValidationHeaders,
   isQGatewayValidationAccepted,
   resolveQGatewayValidationTimeoutMs,
   type QGatewayValidationReport,
@@ -50,6 +51,23 @@ test("resolveQGatewayValidationTimeoutMs clamps invalid and extreme values", () 
   assert.equal(resolveQGatewayValidationTimeoutMs("not-a-number", 12_345), 12_345);
   assert.equal(resolveQGatewayValidationTimeoutMs("10", 12_345), 250);
   assert.equal(resolveQGatewayValidationTimeoutMs("900000", 12_345), 600_000);
+});
+
+test("Q gateway validation headers bind timeout overrides and fast smoke probes", () => {
+  const normalHeaders = buildQGatewayValidationHeaders("test-key", {
+    requestTimeoutMs: 900_000
+  });
+  assert.equal(normalHeaders.Authorization, "Bearer test-key");
+  assert.equal(normalHeaders["content-type"], "application/json");
+  assert.equal(normalHeaders["x-immaculate-request-timeout-ms"], "600000");
+  assert.equal(normalHeaders["x-immaculate-q-fast-smoke"], undefined);
+
+  const fastHeaders = buildQGatewayValidationHeaders("test-key", {
+    requestTimeoutMs: 120_000,
+    fastSmoke: true
+  });
+  assert.equal(fastHeaders["x-immaculate-request-timeout-ms"], "120000");
+  assert.equal(fastHeaders["x-immaculate-q-fast-smoke"], "true");
 });
 
 test("checkHttp fails fast when the gateway accepts a socket but does not answer", async () => {

@@ -1104,6 +1104,7 @@ export async function runOllamaChatCompletion(options: {
   maxTokens?: number;
   timeoutMs?: number;
   think?: boolean;
+  format?: OllamaResponseFormat;
   ollamaOptions?: Record<string, unknown>;
 }): Promise<OllamaChatCompletionResult> {
   const startedAt = new Date().toISOString();
@@ -1119,6 +1120,7 @@ export async function runOllamaChatCompletion(options: {
           model: options.model,
           stream: false,
           think: options.think ?? false,
+          ...(options.format ? { format: options.format } : {}),
           messages: options.messages,
           options: {
             temperature: options.temperature ?? 0.2,
@@ -1253,13 +1255,23 @@ export async function prewarmOllamaModel(options: {
   timeoutMs?: number;
 }): Promise<OllamaChatCompletionResult> {
   if (isQExecutionModel(options.model)) {
-    return runOllamaGenerateCompletion({
+    return runOllamaChatCompletion({
       endpoint: options.endpoint,
       model: options.model,
-      prompt: "Reply with the single lowercase word ready.",
+      messages: [
+        {
+          role: "system",
+          content: "Warm the local Q runtime and answer with one short word."
+        },
+        {
+          role: "user",
+          content: "ready"
+        }
+      ],
       temperature: 0,
       maxTokens: 8,
       timeoutMs: options.timeoutMs ?? Math.max(DEFAULT_CONTROL_TIMEOUT_MS, 240_000),
+      think: false,
       ollamaOptions: {
         num_ctx: Q_GENERATE_FAST_NUM_CTX,
         num_batch: Q_GENERATE_FAST_NUM_BATCH
@@ -1294,6 +1306,8 @@ export async function runOllamaExecution(options: {
   recentDeniedCount?: number;
   context?: string;
   qContext?: QOrchestrationContext;
+  timeoutMs?: number;
+  retryTimeoutMs?: number;
 }): Promise<OllamaExecutionResult> {
   const activeObjective = options.objective?.trim() || options.snapshot.objective;
   const activeContext = options.context?.trim() || "none";
@@ -1336,6 +1350,9 @@ You convert state into route/reason/commit outputs for a durable orchestration s
     prompt,
     role: options.layer.role
   });
+  const controlTimeoutMs = options.timeoutMs ?? DEFAULT_CONTROL_TIMEOUT_MS;
+  const retryTimeoutMs =
+    options.retryTimeoutMs ?? (options.timeoutMs ?? Math.max(DEFAULT_CONTROL_TIMEOUT_MS, 240_000));
   const executeStructuredAttempt = async (
     attempt: "initial" | "retry"
   ): Promise<OllamaChatCompletionResult> => {
@@ -1355,22 +1372,29 @@ You convert state into route/reason/commit outputs for a durable orchestration s
         ],
         temperature: executionProfile.temperature,
         maxTokens: executionProfile.maxTokens,
-        timeoutMs: DEFAULT_CONTROL_TIMEOUT_MS,
+        timeoutMs: attempt === "initial" ? controlTimeoutMs : retryTimeoutMs,
         think: false
       });
     }
 
-    const generated = await runOllamaGenerateCompletion({
+    const generated = await runOllamaChatCompletion({
       endpoint: options.layer.endpoint,
       model: options.layer.model,
-      prompt: qGeneratePrompt,
+      messages: [
+        {
+          role: "system",
+          content: system
+        },
+        {
+          role: "user",
+          content: qGeneratePrompt
+        }
+      ],
       temperature: executionProfile.temperature,
       maxTokens: executionProfile.maxTokens,
-      timeoutMs:
-        attempt === "initial"
-          ? DEFAULT_CONTROL_TIMEOUT_MS
-          : Math.max(DEFAULT_CONTROL_TIMEOUT_MS, 240_000),
+      timeoutMs: attempt === "initial" ? controlTimeoutMs : retryTimeoutMs,
       format: "json",
+      think: false,
       ollamaOptions: {
         num_ctx: Q_GENERATE_FAST_NUM_CTX,
         num_batch: Q_GENERATE_FAST_NUM_BATCH

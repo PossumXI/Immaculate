@@ -1,40 +1,27 @@
 {
-  "generatedAt": "2026-04-21T16:17:13.434Z",
+  "generatedAt": "2026-05-07T06:20:39.545Z",
   "threshold": 0.75,
   "ready": true,
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "9117c8feb0438f0fc6a7ada0707046cc77823a54",
-    "gitShortSha": "9117c8f",
-    "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+9117c8f",
+    "gitSha": "af0899fcd3a7283aeeddf17d2f4b31a036c949c7",
+    "gitShortSha": "af0899f",
+    "gitBranch": "codex/q-gateway-fast-smoke-validation-20260507",
+    "buildId": "0.1.0+af0899f",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
       "truthfulLabel": "Q",
       "trainingLock": {
-        "generatedAt": "2026-04-19T07:46:04Z",
-        "lockVersion": 1,
+        "generatedAt": "2026-04-19T07:46:03Z",
         "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
         "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23",
         "modelName": "Q",
         "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl",
-        "trainDatasetSha256": "286326ce786c0a9b9b4a636a38114cc221c1b978a083ca55d70cc6ca6172cb07",
         "trainDatasetRowCount": 117,
         "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.manifest.json",
-        "mixManifestSha256": "4c7df8284cedaf8e43f1715c8eaf4c30826687e27a5d511ef8ccd4ca78df991e",
-        "mixSupplementalCount": 6,
-        "mixSupplementalPaths": [
-          "training/q/q_harness_identity_seed.json",
-          "training/q/q_immaculate_reasoning_seed.json",
-          "training/q/terminal_bench_semantic_seed.json",
-          "training/q/bridgebench_seed.json",
-          "training/q/coding_long_context_seed.json",
-          ".training-output/q/q-failure-corpus.jsonl"
-        ],
-        "curationRunId": null,
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
@@ -46,15 +33,15 @@
         "cloudProvider": "hf_jobs",
         "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
         "immaculateBundleId": "immaculate-orchestration-5ed19b9-cd094c28",
-        "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
+        "immaculateBundlePath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-harbor-opt-2384cf5-bench-v23.json"
       }
     }
   },
   "reasons": [],
   "sources": {
-    "modelComparisonGeneratedAt": "2026-04-19T07:48:09.656Z",
-    "bridgeBenchGeneratedAt": "2026-04-19T07:51:12.922Z",
-    "qGatewayValidationGeneratedAt": "2026-04-19T07:47:33.854Z"
+    "modelComparisonGeneratedAt": "2026-05-07T06:03:07.620Z",
+    "bridgeBenchGeneratedAt": "2026-05-07T04:12:53.126Z",
+    "qGatewayValidationGeneratedAt": "2026-05-07T06:20:01.229Z"
   },
   "q": {
     "modelComparison": {
@@ -66,7 +53,17 @@
       "parseSuccessRate": 1,
       "taskCount": 4
     },
-    "gatewayIdentityCanonical": true
+    "gatewayIdentityCanonical": true,
+    "gatewayContract": {
+      "healthStatus": 200,
+      "unauthorizedChatStatus": 401,
+      "infoStatus": 200,
+      "modelsStatus": 200,
+      "authorizedChatStatus": 200,
+      "identityChatStatus": 200,
+      "concurrentRejectionStatus": 429,
+      "ready": true
+    }
   },
   "output": {
     "jsonPath": "docs\\wiki\\Q-Readiness-Gate.json",

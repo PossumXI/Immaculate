@@ -121,6 +121,55 @@ const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(MODULE_ROOT, "../../..");
 const WIKI_ROOT = path.join(REPO_ROOT, "docs", "wiki");
 const DEFAULT_OLLAMA_URL = resolveQLocalOllamaUrl();
+const DEFAULT_MODEL_COMPARISON_TASK_TIMEOUT_MS = 180_000;
+const DEFAULT_MODEL_COMPARISON_RETRY_TIMEOUT_MS = 180_000;
+const DEFAULT_MODEL_COMPARISON_PREWARM_TIMEOUT_MS = 120_000;
+const MIN_MODEL_COMPARISON_TIMEOUT_MS = 1_000;
+const MAX_MODEL_COMPARISON_TIMEOUT_MS = 600_000;
+
+export function resolveModelComparisonTimeoutMs(
+  value: string | number | undefined,
+  fallbackMs: number
+): number {
+  const parsed =
+    typeof value === "number"
+      ? value
+      : typeof value === "string" && value.trim().length > 0
+        ? Number(value)
+        : fallbackMs;
+  const resolved = Number.isFinite(parsed) ? parsed : fallbackMs;
+  return Math.round(
+    Math.min(
+      MAX_MODEL_COMPARISON_TIMEOUT_MS,
+      Math.max(MIN_MODEL_COMPARISON_TIMEOUT_MS, resolved)
+    )
+  );
+}
+
+function resolveModelComparisonRuntimeOptions(): {
+  taskTimeoutMs: number;
+  retryTimeoutMs: number;
+  prewarmTimeoutMs: number;
+} {
+  const taskTimeoutMs = resolveModelComparisonTimeoutMs(
+    process.env.IMMACULATE_MODEL_COMPARISON_TASK_TIMEOUT_MS ??
+      process.env.npm_config_model_comparison_task_timeout_ms,
+    DEFAULT_MODEL_COMPARISON_TASK_TIMEOUT_MS
+  );
+  return {
+    taskTimeoutMs,
+    retryTimeoutMs: resolveModelComparisonTimeoutMs(
+      process.env.IMMACULATE_MODEL_COMPARISON_RETRY_TIMEOUT_MS ??
+        process.env.npm_config_model_comparison_retry_timeout_ms,
+      Math.max(DEFAULT_MODEL_COMPARISON_RETRY_TIMEOUT_MS, taskTimeoutMs)
+    ),
+    prewarmTimeoutMs: resolveModelComparisonTimeoutMs(
+      process.env.IMMACULATE_MODEL_COMPARISON_PREWARM_TIMEOUT_MS ??
+        process.env.npm_config_model_comparison_prewarm_timeout_ms,
+      Math.min(DEFAULT_MODEL_COMPARISON_PREWARM_TIMEOUT_MS, taskTimeoutMs)
+    )
+  };
+}
 
 const COMPARISON_TASKS: ComparisonTask[] = [
   {
@@ -237,12 +286,14 @@ function buildTaskResultsSummary(
 async function runModelComparisonTasks(
   requestedModel: string,
   actualModel: string,
-  qRuntimeBaseUrl: string
+  qRuntimeBaseUrl: string,
+  runtimeOptions = resolveModelComparisonRuntimeOptions()
 ): Promise<ModelSummary> {
   const tasks: ModelTaskResult[] = [];
   await prewarmOllamaModel({
     endpoint: qRuntimeBaseUrl,
-    model: actualModel
+    model: actualModel,
+    timeoutMs: runtimeOptions.prewarmTimeoutMs
   });
 
   for (const task of COMPARISON_TASKS) {
@@ -270,7 +321,9 @@ async function runModelComparisonTasks(
         },
         objective: task.objective,
         governancePressure: task.governancePressure,
-        context: task.context
+        context: task.context,
+        timeoutMs: runtimeOptions.taskTimeoutMs,
+        retryTimeoutMs: runtimeOptions.retryTimeoutMs
       });
       const structuredFieldCount =
         result.structuredFieldCount ||

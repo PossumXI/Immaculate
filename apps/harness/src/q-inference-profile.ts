@@ -1,5 +1,20 @@
-export type QInferenceProvider = "ollama" | "openai-compatible";
-export type QInferenceAuthMode = "none" | "bearer";
+import { existsSync } from "node:fs";
+import { homedir } from "node:os";
+import path from "node:path";
+
+export type QInferenceProvider = "ollama" | "openai-compatible" | "oci-iam-bridge";
+export type QInferenceAuthMode = "none" | "bearer" | "oci-iam";
+
+export type QOciIamBridgeProfile = {
+  scriptPath: string;
+  pythonCommand: string;
+  pythonPrefixArgs: string[];
+  configFile: string;
+  profile: string;
+  projectId: string;
+  compartmentId: string;
+  model: string;
+};
 
 export type QInferenceProfile = {
   provider: QInferenceProvider;
@@ -10,6 +25,7 @@ export type QInferenceProfile = {
     mode: QInferenceAuthMode;
     bearerToken?: string;
   };
+  ociBridge?: QOciIamBridgeProfile;
   requestBounds: {
     maxMessages: number;
     maxInputChars: number;
@@ -35,7 +51,7 @@ export type QInferenceProfile = {
   };
 };
 
-export type PublicQInferenceProfile = Omit<QInferenceProfile, "runtimeUrl" | "auth"> & {
+export type PublicQInferenceProfile = Omit<QInferenceProfile, "runtimeUrl" | "auth" | "ociBridge"> & {
   runtime: {
     configured: boolean;
     endpointVisible: false;
@@ -51,6 +67,16 @@ export type PublicQInferenceProfile = Omit<QInferenceProfile, "runtimeUrl" | "au
 function envValue(env: NodeJS.ProcessEnv, key: string): string | undefined {
   const value = env[key]?.trim();
   return value && value.length > 0 ? value : undefined;
+}
+
+function envChain(env: NodeJS.ProcessEnv, keys: string[]): string | undefined {
+  for (const key of keys) {
+    const value = envValue(env, key);
+    if (value) {
+      return value;
+    }
+  }
+  return undefined;
 }
 
 function positiveInteger(
@@ -80,6 +106,14 @@ export function resolveQInferenceProvider(env: NodeJS.ProcessEnv = process.env):
   const provider = envValue(env, "IMMACULATE_Q_INFERENCE_PROVIDER")?.toLowerCase();
   if (!provider || provider === "ollama") {
     return "ollama";
+  }
+  if (
+    provider === "oci-iam" ||
+    provider === "oci-iam-bridge" ||
+    provider === "oci-bridge" ||
+    provider === "openjaws-oci-bridge"
+  ) {
+    return "oci-iam-bridge";
   }
   if (
     provider === "openai" ||
@@ -113,31 +147,136 @@ function normalizeRuntimeUrl(value: string): string {
   return value.replace(/\/+$/, "");
 }
 
+function resolveDefaultOciConfigFile(): string | undefined {
+  const candidate = path.join(homedir(), ".oci", "config");
+  return existsSync(candidate) ? candidate : undefined;
+}
+
+function resolveOciBridgeScriptPath(env: NodeJS.ProcessEnv): string | undefined {
+  const configured = envChain(env, [
+    "IMMACULATE_Q_OCI_BRIDGE_SCRIPT",
+    "OPENJAWS_OCI_BRIDGE_SCRIPT"
+  ]);
+  if (configured) {
+    return configured;
+  }
+
+  const candidates = [
+    path.resolve(process.cwd(), "scripts", "oci-q-response.py"),
+    path.resolve(process.cwd(), "..", "OpenJaws", "scripts", "oci-q-response.py"),
+    path.resolve("D:\\openjaws\\OpenJaws\\scripts\\oci-q-response.py")
+  ];
+  return candidates.find((candidate) => existsSync(candidate));
+}
+
+function resolveOciBridgePythonInvocation(env: NodeJS.ProcessEnv): {
+  command: string;
+  prefixArgs: string[];
+} {
+  const configured = envChain(env, ["IMMACULATE_Q_OCI_PYTHON", "OCI_Q_PYTHON"]);
+  if (configured) {
+    return {
+      command: configured,
+      prefixArgs: []
+    };
+  }
+  if (process.platform === "win32") {
+    return {
+      command: "py",
+      prefixArgs: ["-3.13"]
+    };
+  }
+  return {
+    command: "python3",
+    prefixArgs: []
+  };
+}
+
+function resolveOciBridgeProfile(env: NodeJS.ProcessEnv): QOciIamBridgeProfile {
+  const scriptPath = resolveOciBridgeScriptPath(env);
+  const configFile =
+    envChain(env, ["IMMACULATE_Q_OCI_CONFIG_FILE", "OCI_CONFIG_FILE"]) ??
+    resolveDefaultOciConfigFile();
+  const profile = envChain(env, ["IMMACULATE_Q_OCI_PROFILE", "OCI_PROFILE"]) ?? "DEFAULT";
+  const projectId = envChain(env, [
+    "IMMACULATE_Q_OCI_PROJECT_ID",
+    "IMMACULATE_Q_OCI_GENAI_PROJECT_ID",
+    "OCI_GENAI_PROJECT_ID"
+  ]);
+  const compartmentId = envChain(env, [
+    "IMMACULATE_Q_OCI_COMPARTMENT_ID",
+    "OCI_COMPARTMENT_ID"
+  ]);
+  const baseModel = envChain(env, [
+    "IMMACULATE_Q_OCI_MODEL",
+    "Q_MODEL",
+    "OCI_MODEL"
+  ]);
+  const missing = [
+    scriptPath ? undefined : "IMMACULATE_Q_OCI_BRIDGE_SCRIPT or OPENJAWS_OCI_BRIDGE_SCRIPT",
+    configFile ? undefined : "IMMACULATE_Q_OCI_CONFIG_FILE or OCI_CONFIG_FILE",
+    projectId ? undefined : "IMMACULATE_Q_OCI_PROJECT_ID or OCI_GENAI_PROJECT_ID",
+    compartmentId ? undefined : "IMMACULATE_Q_OCI_COMPARTMENT_ID or OCI_COMPARTMENT_ID",
+    baseModel ? undefined : "IMMACULATE_Q_OCI_MODEL, Q_MODEL, or OCI_MODEL"
+  ].filter((value): value is string => Boolean(value));
+  if (missing.length > 0 || !scriptPath || !configFile || !projectId || !compartmentId || !baseModel) {
+    throw new Error(`OCI IAM bridge Q inference is incomplete: missing ${missing.join(", ")}.`);
+  }
+  const python = resolveOciBridgePythonInvocation(env);
+  return {
+    scriptPath,
+    pythonCommand: python.command,
+    pythonPrefixArgs: python.prefixArgs,
+    configFile,
+    profile,
+    projectId,
+    compartmentId,
+    model: baseModel
+  };
+}
+
 export function resolveQInferenceProfile(
   env: NodeJS.ProcessEnv = process.env
 ): QInferenceProfile {
   const provider = resolveQInferenceProvider(env);
   const routeLabel =
     envValue(env, "IMMACULATE_Q_INFERENCE_ROUTE_LABEL") ??
-    (provider === "ollama" ? "q-primary-ollama" : "q-primary-responses");
+    (provider === "ollama"
+      ? "q-primary-ollama"
+      : provider === "oci-iam-bridge"
+        ? "q-primary-oci-iam-bridge"
+        : "q-primary-responses");
   const runtimeUrl =
     provider === "ollama"
       ? envValue(env, "IMMACULATE_Q_OLLAMA_URL") ??
         envValue(env, "IMMACULATE_OLLAMA_URL") ??
         "http://127.0.0.1:11434"
+      : provider === "oci-iam-bridge"
+        ? envChain(env, [
+            "IMMACULATE_Q_OCI_BASE_URL",
+            "Q_BASE_URL",
+            "OCI_BASE_URL"
+          ])
       : envValue(env, "IMMACULATE_Q_RESPONSES_BASE_URL") ??
         envValue(env, "IMMACULATE_Q_OPENAI_BASE_URL") ??
         envValue(env, "IMMACULATE_Q_OCI_BASE_URL");
   if (!runtimeUrl) {
-    throw new Error("OpenAI-compatible Q inference requires IMMACULATE_Q_RESPONSES_BASE_URL, IMMACULATE_Q_OPENAI_BASE_URL, or IMMACULATE_Q_OCI_BASE_URL.");
+    throw new Error(
+      provider === "oci-iam-bridge"
+        ? "OCI IAM bridge Q inference requires IMMACULATE_Q_OCI_BASE_URL, Q_BASE_URL, or OCI_BASE_URL."
+        : "OpenAI-compatible Q inference requires IMMACULATE_Q_RESPONSES_BASE_URL, IMMACULATE_Q_OPENAI_BASE_URL, or IMMACULATE_Q_OCI_BASE_URL."
+    );
   }
+  const ociBridge = provider === "oci-iam-bridge" ? resolveOciBridgeProfile(env) : undefined;
   const bearerToken =
     envValue(env, "IMMACULATE_Q_RESPONSES_API_KEY") ??
     envValue(env, "IMMACULATE_Q_OPENAI_API_KEY") ??
     envValue(env, "IMMACULATE_Q_OCI_BEARER_TOKEN");
   const requestedAuthMode = resolveQInferenceAuthMode(env);
   const authMode =
-    requestedAuthMode ?? (provider === "openai-compatible" ? "bearer" : "none");
+    provider === "oci-iam-bridge"
+      ? "oci-iam"
+      : requestedAuthMode ?? (provider === "openai-compatible" ? "bearer" : "none");
   const defaultTimeoutMs = positiveInteger(
     env,
     "IMMACULATE_Q_GATEWAY_TIMEOUT_MS",
@@ -157,6 +296,7 @@ export function resolveQInferenceProfile(
       mode: authMode,
       bearerToken: authMode === "bearer" ? bearerToken : undefined
     },
+    ociBridge,
     requestBounds: {
       maxMessages: positiveInteger(env, "IMMACULATE_Q_GATEWAY_MAX_MESSAGES", 24, 1),
       maxInputChars: positiveInteger(env, "IMMACULATE_Q_GATEWAY_MAX_INPUT_CHARS", 16_000, 512)
@@ -233,7 +373,7 @@ export function resolveQInferenceProfile(
 export function redactQInferenceProfile(
   profile: QInferenceProfile
 ): PublicQInferenceProfile {
-  const { runtimeUrl: _runtimeUrl, auth, ...publicProfile } = profile;
+  const { runtimeUrl: _runtimeUrl, auth, ociBridge: _ociBridge, ...publicProfile } = profile;
   return {
     ...publicProfile,
     runtime: {
@@ -243,7 +383,10 @@ export function redactQInferenceProfile(
     },
     auth: {
       mode: auth.mode,
-      configured: auth.mode === "none" || Boolean(auth.bearerToken?.trim()),
+      configured:
+        auth.mode === "none" ||
+        auth.mode === "oci-iam" ||
+        Boolean(auth.bearerToken?.trim()),
       secretVisible: false
     }
   };
