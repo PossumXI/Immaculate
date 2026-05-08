@@ -22,7 +22,7 @@ This repository is prepared for public collaboration under the Apache 2.0 licens
 
 ## Public Site
 
-- live website: [iorch.net](https://iorch.net)
+- live website: [www.iorch.net](https://www.iorch.net)
 - company profile: [Aura Genesis / Arobi](https://aura-genesis.org)
 
 ## What It Does Today
@@ -37,7 +37,7 @@ This repository is prepared for public collaboration under the Apache 2.0 licens
 
 ## Current Build And Evidence
 
-- public website: [iorch.net](https://iorch.net)
+- public website: [www.iorch.net](https://www.iorch.net)
 - current release surface: [docs/wiki/Release-Surface.md](docs/wiki/Release-Surface.md)
 - Arobi architecture explainer: [docs/wiki/Arobi-Network-Architecture.md](docs/wiki/Arobi-Network-Architecture.md)
 - live Arobi ledger receipt: [docs/wiki/Arobi-Live-Ledger-Receipt.md](docs/wiki/Arobi-Live-Ledger-Receipt.md)

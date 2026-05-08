@@ -128,7 +128,7 @@ function staticMirrorManifestUrl(event) {
     }
   }
 
-  return `https://iorch.net/downloads/jaws/${encodeURIComponent(assetName)}`;
+  return `https://www.iorch.net/downloads/jaws/${encodeURIComponent(assetName)}`;
 }
 
 async function resolveManifestUrl(event) {

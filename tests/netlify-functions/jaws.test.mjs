@@ -24,7 +24,7 @@ afterEach(() => {
 function makeEvent(path) {
   return {
     path,
-    rawUrl: `https://iorch.net${path}`,
+    rawUrl: `https://www.iorch.net${path}`,
     queryStringParameters: null,
   };
 }
@@ -100,7 +100,7 @@ test("falls back to the site static manifest when GitHub release discovery is un
         json: async () => ({ message: "rate limited" }),
       };
     }
-    assert.equal(url, "https://iorch.net/downloads/jaws/latest.json");
+    assert.equal(url, "https://www.iorch.net/downloads/jaws/latest.json");
     return {
       ok: true,
       json: async () => manifest,
@@ -112,7 +112,7 @@ test("falls back to the site static manifest when GitHub release discovery is un
 
   assert.deepEqual(requestedUrls, [
     "https://api.github.com/repos/PossumXI/OpenJaws/releases?per_page=25",
-    "https://iorch.net/downloads/jaws/latest.json",
+    "https://www.iorch.net/downloads/jaws/latest.json",
   ]);
   assert.equal(response.statusCode, 200);
   assert.equal(body.version, release.version);

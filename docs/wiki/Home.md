@@ -10,7 +10,7 @@ In the operating model, Arobi Network is the ledger-backed private and public op
 
 Public website:
 
-- [https://iorch.net](https://iorch.net)
+- [https://www.iorch.net](https://www.iorch.net)
 
 If you only read one generated page before diving deeper, read [[Release-Surface]]. It tells you exactly which build, commit, and Q training bundle the current docs refer to.
 
