@@ -11,6 +11,7 @@ const EXPECTED_PRIMARY_DOMAIN = "www.iorch.net";
 const EXPECTED_PUBLIC_ORIGIN = `https://${EXPECTED_PRIMARY_DOMAIN}`;
 const NETLIFY_WORKSPACE_FILTER = "@immaculate/dashboard";
 const DEPLOY_LOCK_DIR = join(tmpdir(), `netlify-${EXPECTED_SITE_ID}.deploy.lock`);
+const NETLIFY_UPLOAD_CWD = join(tmpdir(), `netlify-${EXPECTED_SITE_ID}.upload`);
 const DEPLOY_LOCK_POLL_MS = 2000;
 const DEPLOY_LOCK_TIMEOUT_MS = Number.parseInt(
   process.env.NETLIFY_DEPLOY_LOCK_TIMEOUT_MS ?? `${20 * 60 * 1000}`,
@@ -128,7 +129,7 @@ async function acquireDeployLock(mode) {
 
 function run(command, commandArgs, options = {}) {
   const result = spawnSync(command, commandArgs, {
-    cwd: repoRoot,
+    cwd: options.cwd ?? repoRoot,
     encoding: "utf8",
     shell: options.shell ?? (process.platform === "win32"),
     stdio: options.capture ? ["ignore", "pipe", "pipe"] : "inherit",
@@ -281,6 +282,22 @@ function ensureNetlifyProjectLink(deployEnv) {
     ["link", "--id", EXPECTED_SITE_ID, "--filter", NETLIFY_WORKSPACE_FILTER],
     { capture: true, env: deployEnv }
   );
+}
+
+function ensureNetlifyUploadCwd() {
+  mkdirSync(NETLIFY_UPLOAD_CWD, { recursive: true });
+  return NETLIFY_UPLOAD_CWD;
+}
+
+function materializeNetlifyRedirects() {
+  const redirectLines = [
+    "/api/jaws/* /.netlify/functions/jaws/:splat 200!",
+    ...Object.entries(JAWS_DOWNLOADS).map(
+      ([path, fileName]) => `${path} ${githubAssetUrl(jawsRelease, fileName)} 302!`
+    ),
+  ];
+
+  writeFileSync(resolve(outDir, "_redirects"), `${redirectLines.join("\n")}\n`, "utf8");
 }
 
 async function assertDeployIncludesJawsFunction(token, deployId) {
@@ -456,6 +473,7 @@ async function deployIorch() {
   if (!existsSync(functionsDir)) {
     throw new Error(`Netlify functions directory is missing: ${functionsDir}.`);
   }
+  materializeNetlifyRedirects();
 
   const deployArgs = [
     "deploy",
@@ -463,8 +481,6 @@ async function deployIorch() {
     "--no-build",
     "--site",
     EXPECTED_SITE_ID,
-    "--filter",
-    NETLIFY_WORKSPACE_FILTER,
     "--dir",
     outDir,
     "--functions",
@@ -477,7 +493,13 @@ async function deployIorch() {
     deployArgs.splice(1, 0, "--prod");
   }
 
-  const deploy = parseDeployOutput(run("netlify", deployArgs, { capture: true, env: netlifyAuth.deployEnv }));
+  const deploy = parseDeployOutput(
+    run("netlify", deployArgs, {
+      capture: true,
+      cwd: ensureNetlifyUploadCwd(),
+      env: netlifyAuth.deployEnv,
+    })
+  );
   const deployedUrl = deploy.deploy_ssl_url ?? deploy.deploy_url ?? deploy.ssl_url ?? deploy.url;
   const deployId = deploy.deploy_id ?? deploy.id ?? null;
   if (!deployedUrl) {
