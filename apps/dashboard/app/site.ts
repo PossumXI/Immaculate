@@ -1,4 +1,4 @@
-const fallbackSiteUrl = "https://iorch.net";
+const fallbackSiteUrl = "https://www.iorch.net";
 
 export const siteName = "Immaculate";
 export const siteDescription =

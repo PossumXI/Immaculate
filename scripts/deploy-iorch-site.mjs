@@ -7,6 +7,8 @@ import { githubAssetUrl, readJawsReleaseConfig } from "./jaws-release-config.mjs
 const EXPECTED_SITE_ID = "4a9b7d84-9d87-4e10-9951-fb121f9626bd";
 const EXPECTED_SITE_NAME = "immaculate-iorch-20260415022035";
 const EXPECTED_DOMAIN = "iorch.net";
+const EXPECTED_PRIMARY_DOMAIN = "www.iorch.net";
+const EXPECTED_PUBLIC_ORIGIN = `https://${EXPECTED_PRIMARY_DOMAIN}`;
 const NETLIFY_WORKSPACE_FILTER = "@immaculate/dashboard";
 const DEPLOY_LOCK_DIR = join(tmpdir(), `netlify-${EXPECTED_SITE_ID}.deploy.lock`);
 const DEPLOY_LOCK_POLL_MS = 2000;
@@ -145,10 +147,13 @@ function run(command, commandArgs, options = {}) {
   return `${result.stdout ?? ""}${result.stderr ?? ""}`;
 }
 
-function readNetlifyAuthToken() {
+function readNetlifyAuthCredential() {
   const directToken = process.env.NETLIFY_AUTH_TOKEN?.trim();
   if (directToken) {
-    return directToken;
+    return {
+      token: directToken,
+      deployEnv: { NETLIFY_AUTH_TOKEN: directToken }
+    };
   }
 
   const candidatePaths = [
@@ -167,7 +172,10 @@ function readNetlifyAuthToken() {
     const firstUser = config.users ? Object.values(config.users)[0] : null;
     const token = firstUser?.auth?.token?.trim();
     if (token) {
-      return token;
+      return {
+        token,
+        deployEnv: {}
+      };
     }
   }
 
@@ -204,6 +212,22 @@ function readJson(path) {
   return JSON.parse(readFileSync(path, "utf8"));
 }
 
+function normalizeDomain(value) {
+  return typeof value === "string" ? value.trim().toLowerCase() : "";
+}
+
+function getSiteDomains(site) {
+  return new Set(
+    [
+      site.custom_domain,
+      site.url?.replace(/^https?:\/\//i, ""),
+      ...(Array.isArray(site.domain_aliases) ? site.domain_aliases : [])
+    ]
+      .map(normalizeDomain)
+      .filter(Boolean)
+  );
+}
+
 function assertCorrectWorkspace() {
   const normalizedRoot = repoRoot.replaceAll("\\", "/");
   if (
@@ -237,18 +261,25 @@ async function assertExpectedSite(token) {
   if (site.name !== EXPECTED_SITE_NAME) {
     throw new Error(`Wrong Netlify site name: expected ${EXPECTED_SITE_NAME}, got ${site.name ?? "unknown"}.`);
   }
-  if (site.custom_domain !== EXPECTED_DOMAIN) {
-    throw new Error(`Wrong Netlify custom domain: expected ${EXPECTED_DOMAIN}, got ${site.custom_domain ?? "none"}.`);
+  const domains = getSiteDomains(site);
+  if (!domains.has(EXPECTED_DOMAIN) || !domains.has(EXPECTED_PRIMARY_DOMAIN)) {
+    throw new Error(
+      `Wrong Netlify domain: expected ${EXPECTED_PRIMARY_DOMAIN} primary with ${EXPECTED_DOMAIN} alias, got primary=${site.custom_domain ?? "none"} aliases=${
+        Array.isArray(site.domain_aliases) && site.domain_aliases.length > 0
+          ? site.domain_aliases.join(", ")
+          : "none"
+      }.`
+    );
   }
 
   return site;
 }
 
-function ensureNetlifyProjectLink(token) {
+function ensureNetlifyProjectLink(deployEnv) {
   run(
     "netlify",
     ["link", "--id", EXPECTED_SITE_ID, "--filter", NETLIFY_WORKSPACE_FILTER],
-    { capture: true, env: { NETLIFY_AUTH_TOKEN: token } }
+    { capture: true, env: deployEnv }
   );
 }
 
@@ -282,13 +313,37 @@ function parseDeployOutput(output) {
   }
 }
 
-async function fetchText(url) {
-  const response = await fetch(url, { headers: { Accept: "text/html,text/plain" } });
-  const body = await response.text();
-  if (!response.ok) {
-    throw new Error(`${url} returned ${response.status}: ${body.slice(0, 400)}`);
+async function fetchText(url, options = {}) {
+  const maxAttempts = options.maxAttempts ?? 8;
+  let lastStatus = 0;
+  let lastBody = "";
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const response = await fetch(url, {
+      headers: {
+        Accept: "text/html,text/plain",
+        "User-Agent": "immaculate-iorch-deployer/1.0"
+      }
+    });
+    const body = await response.text();
+    if (response.ok) {
+      return body;
+    }
+
+    lastStatus = response.status;
+    lastBody = body;
+    if (![404, 425, 429, 500, 502, 503, 504].includes(response.status) || attempt === maxAttempts) {
+      break;
+    }
+
+    const delayMs = Math.min(10_000, 1_000 * 2 ** (attempt - 1));
+    console.warn(
+      `${url} returned ${response.status}; retrying smoke probe in ${Math.round(delayMs / 1000)}s (${attempt}/${maxAttempts}).`
+    );
+    await sleep(delayMs);
   }
-  return body;
+
+  throw new Error(`${url} returned ${lastStatus}: ${lastBody.slice(0, 400)}`);
 }
 
 async function fetchRedirect(url) {
@@ -387,9 +442,10 @@ async function main() {
 
 async function deployIorch() {
   assertCorrectWorkspace();
-  const token = readNetlifyAuthToken();
+  const netlifyAuth = readNetlifyAuthCredential();
+  const token = netlifyAuth.token;
   const site = await assertExpectedSite(token);
-  ensureNetlifyProjectLink(token);
+  ensureNetlifyProjectLink(netlifyAuth.deployEnv);
 
   run("npm", ["run", "build", "-w", "@immaculate/core"]);
   run("npm", ["run", "build", "-w", "@immaculate/dashboard"]);
@@ -421,7 +477,7 @@ async function deployIorch() {
     deployArgs.splice(1, 0, "--prod");
   }
 
-  const deploy = parseDeployOutput(run("netlify", deployArgs, { capture: true, env: { NETLIFY_AUTH_TOKEN: token } }));
+  const deploy = parseDeployOutput(run("netlify", deployArgs, { capture: true, env: netlifyAuth.deployEnv }));
   const deployedUrl = deploy.deploy_ssl_url ?? deploy.deploy_url ?? deploy.ssl_url ?? deploy.url;
   const deployId = deploy.deploy_id ?? deploy.id ?? null;
   if (!deployedUrl) {
@@ -430,7 +486,7 @@ async function deployIorch() {
 
   const deployedFunctions = await assertDeployIncludesJawsFunction(token, deployId);
   const draftSmoke = await smoke(deployedUrl);
-  const productionSmoke = prod ? await smoke(`https://${EXPECTED_DOMAIN}`) : null;
+  const productionSmoke = prod ? await smoke(EXPECTED_PUBLIC_ORIGIN) : null;
 
   console.log(JSON.stringify({
     status: "ok",
