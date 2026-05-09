@@ -1,52 +1,52 @@
 {
-  "version": "0.1.9",
-  "tag": "jaws-v0.1.9",
-  "previousPatchVersion": "0.1.8",
-  "publishedAt": "2026-05-02T05:51:32Z",
-  "publishedAtLabel": "May 2, 2026",
+  "version": "0.2.0",
+  "tag": "jaws-v0.2.0",
+  "previousPatchVersion": "0.1.9",
+  "publishedAt": "2026-05-09T17:45:00Z",
+  "publishedAtLabel": "May 9, 2026",
   "githubRepo": "PossumXI/OpenJaws",
   "downloads": [
     {
       "path": "/downloads/jaws/windows",
       "label": "Windows installer",
-      "file": "JAWS_0.1.9_x64-setup.exe",
-      "size": "34.62 MB",
-      "digest": "a7d4bc6fa0178d5488300034a313ef800d988b9d3301686fba2ea958599d2cfe"
+      "file": "JAWS_0.2.0_x64-setup.exe",
+      "size": "35.0 MB",
+      "digest": "pending-build"
     },
     {
       "path": "/downloads/jaws/windows-msi",
       "label": "Windows MSI",
-      "file": "JAWS_0.1.9_x64_en-US.msi",
-      "size": "51.46 MB",
-      "digest": "45b55a6b5ec2499d828377c1e5109ddb7321276aa03799d084433cf968666b83"
+      "file": "JAWS_0.2.0_x64_en-US.msi",
+      "size": "52.0 MB",
+      "digest": "pending-build"
     },
     {
       "path": "/downloads/jaws/macos",
       "label": "macOS Intel",
-      "file": "JAWS_0.1.9_x64.dmg",
-      "size": "41.84 MB",
-      "digest": "31af253d405ed603cc9db37f96feac89c217159b52c1d3d65ac4292b123095ca"
+      "file": "JAWS_0.2.0_x64.dmg",
+      "size": "42.0 MB",
+      "digest": "pending-build"
     },
     {
       "path": "/downloads/jaws/linux-deb",
       "label": "Linux DEB",
-      "file": "JAWS_0.1.9_amd64.deb",
-      "size": "51.41 MB",
-      "digest": "98f44ae0e4dfe2d12eafbec070152510efad1d820c137bc1490e0bb35dbc2eef"
+      "file": "JAWS_0.2.0_amd64.deb",
+      "size": "52.0 MB",
+      "digest": "pending-build"
     },
     {
       "path": "/downloads/jaws/linux-rpm",
       "label": "Linux RPM",
-      "file": "JAWS-0.1.9-1.x86_64.rpm",
-      "size": "51.42 MB",
-      "digest": "8addb420744c86629be2c48836625741863354beac8a83b34be8cf7340e38fb0"
+      "file": "JAWS-0.2.0-1.x86_64.rpm",
+      "size": "52.0 MB",
+      "digest": "pending-build"
     },
     {
       "path": "/downloads/jaws/latest.json",
       "label": "Updater manifest",
       "file": "latest.json",
       "size": "1.25 KB",
-      "digest": "fdb30ccc47cfdb3d6bf26866d4196ce829253b58eb6128d5a17a4885589e7089"
+      "digest": "pending-build"
     }
   ]
 }
