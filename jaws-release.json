@@ -1,7 +1,7 @@
 {
-  "version": "0.2.0",
-  "tag": "jaws-v0.2.0",
-  "previousPatchVersion": "0.1.9",
+  "version": "0.2.1",
+  "tag": "jaws-v0.2.1",
+  "previousPatchVersion": "0.2.0",
   "publishedAt": "2026-05-09T17:45:00Z",
   "publishedAtLabel": "May 9, 2026",
   "githubRepo": "PossumXI/OpenJaws",
@@ -9,35 +9,35 @@
     {
       "path": "/downloads/jaws/windows",
       "label": "Windows installer",
-      "file": "JAWS_0.2.0_x64-setup.exe",
+      "file": "JAWS_0.2.1_x64-setup.exe",
       "size": "35.0 MB",
       "digest": "pending-build"
     },
     {
       "path": "/downloads/jaws/windows-msi",
       "label": "Windows MSI",
-      "file": "JAWS_0.2.0_x64_en-US.msi",
+      "file": "JAWS_0.2.1_x64_en-US.msi",
       "size": "52.0 MB",
       "digest": "pending-build"
     },
     {
       "path": "/downloads/jaws/macos",
       "label": "macOS Intel",
-      "file": "JAWS_0.2.0_x64.dmg",
+      "file": "JAWS_0.2.1_x64.dmg",
       "size": "42.0 MB",
       "digest": "pending-build"
     },
     {
       "path": "/downloads/jaws/linux-deb",
       "label": "Linux DEB",
-      "file": "JAWS_0.2.0_amd64.deb",
+      "file": "JAWS_0.2.1_amd64.deb",
       "size": "52.0 MB",
       "digest": "pending-build"
     },
     {
       "path": "/downloads/jaws/linux-rpm",
       "label": "Linux RPM",
-      "file": "JAWS-0.2.0-1.x86_64.rpm",
+      "file": "JAWS-0.2.1-1.x86_64.rpm",
       "size": "52.0 MB",
       "digest": "pending-build"
     },
