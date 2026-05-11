@@ -24,36 +24,36 @@
 
 [[redirects]]
   from = "/downloads/jaws/windows"
-  to = "https://github.com/PossumXI/OpenJaws/releases/download/jaws-v0.1.9/JAWS_0.1.9_x64-setup.exe"
+  to = "https://github.com/PossumXI/OpenJaws/releases/download/jaws-v0.2.2/JAWS_0.2.2_x64-setup.exe"
   status = 302
   force = true
 
 [[redirects]]
   from = "/downloads/jaws/windows-msi"
-  to = "https://github.com/PossumXI/OpenJaws/releases/download/jaws-v0.1.9/JAWS_0.1.9_x64_en-US.msi"
+  to = "https://github.com/PossumXI/OpenJaws/releases/download/jaws-v0.2.2/JAWS_0.2.2_x64_en-US.msi"
   status = 302
   force = true
 
 [[redirects]]
   from = "/downloads/jaws/macos"
-  to = "https://github.com/PossumXI/OpenJaws/releases/download/jaws-v0.1.9/JAWS_0.1.9_x64.dmg"
+  to = "https://github.com/PossumXI/OpenJaws/releases/download/jaws-v0.2.2/JAWS_0.2.2_x64.dmg"
   status = 302
   force = true
 
 [[redirects]]
   from = "/downloads/jaws/linux-deb"
-  to = "https://github.com/PossumXI/OpenJaws/releases/download/jaws-v0.1.9/JAWS_0.1.9_amd64.deb"
+  to = "https://github.com/PossumXI/OpenJaws/releases/download/jaws-v0.2.2/JAWS_0.2.2_amd64.deb"
   status = 302
   force = true
 
 [[redirects]]
   from = "/downloads/jaws/linux-rpm"
-  to = "https://github.com/PossumXI/OpenJaws/releases/download/jaws-v0.1.9/JAWS-0.1.9-1.x86_64.rpm"
+  to = "https://github.com/PossumXI/OpenJaws/releases/download/jaws-v0.2.2/JAWS-0.2.2-1.x86_64.rpm"
   status = 302
   force = true
 
 [[redirects]]
   from = "/downloads/jaws/latest.json"
-  to = "https://github.com/PossumXI/OpenJaws/releases/download/jaws-v0.1.9/latest.json"
+  to = "https://github.com/PossumXI/OpenJaws/releases/download/jaws-v0.2.2/latest.json"
   status = 302
   force = true
