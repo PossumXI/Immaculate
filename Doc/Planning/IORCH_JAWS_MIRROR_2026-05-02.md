@@ -17,6 +17,10 @@ Third follow-up pass: OpenJaws published `jaws-v0.1.9` at 2026-05-02 05:51:32 UT
 mirror was advanced by changing only `jaws-release.json`; the release guard derives the static
 download redirects, updater expectations, and dashboard copy from that single audited contract.
 
+Fourth follow-up pass: OpenJaws published `jaws-v0.2.2` at 2026-05-10 02:44:49 UTC. The iorch
+mirror contract was advanced again from the single release source of truth in `jaws-release.json`,
+using the published GitHub release asset names, sizes, and SHA-256 digests.
+
 ## Changes
 
 - Hardened `scripts/deploy-iorch-site.mjs` so it:
