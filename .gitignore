@@ -14,6 +14,7 @@ __pycache__/
 .runtime*/
 apps/**/.runtime/
 apps/**/artifacts/
+artifacts/
 startup-trace.ndjson
 apps/**/startup-trace.ndjson
 .training-output/
@@ -35,6 +36,7 @@ desktop.ini
 apps/**/dist/
 packages/**/dist/
 apps/dashboard/out/
+apps/dashboard/public/_redirects
 
 # Local scratch and research artifacts
 tmp-probe.h5
