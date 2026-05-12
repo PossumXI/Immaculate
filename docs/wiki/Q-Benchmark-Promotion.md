@@ -3,14 +3,14 @@
 This page is generated from the tracked Q training state.
 It records whether the latest benchmark corpus has already been promoted into the active locked Q bundle. It does not claim a fine-tune or cloud launch happened.
 
-- Generated: `2026-05-12T13:15:40Z`
-- Status: `promoted`
-- Release: `0.1.0+7f0ae1c`
-- Repo commit: `7f0ae1c`
+- Generated: `2026-05-12T19:01:08Z`
+- Status: `already-current`
+- Release: `0.1.0+89ca6a7`
+- Repo commit: `89ca6a7`
 - Benchmark corpus JSONL: `.training-output/q/q-benchmark-corpus.jsonl`
 - Benchmark corpus SHA-256: `b482df4cbb4da296c7811d36530e046108b7d6cb5c3d218cc6a13f93db951a0c`
 - Benchmark corpus rows: `58`
-- Active Q bundle: `q-arobi-main-roots-20260512-bench-v1-7f0ae1c-22043bf3`
+- Active Q bundle: `q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3`
 - Active run: `q-arobi-main-roots-20260512-bench-v1`
 - Active session: `q-arobi-main-roots-20260512-bench-v1`
 
@@ -23,16 +23,6 @@ It records whether the latest benchmark corpus has already been promoted into th
 - Active session manifest: `.training-output/q/sessions/q-arobi-main-roots-20260512-bench-v1/hybrid-session.manifest.json`
 - Next candidate run name: `q-arobi-main-roots-20260512-bench-v2`
 - Next candidate session id: `q-arobi-main-roots-20260512-bench-v2`
-
-## Latest Promotion
-
-- Promoted bundle: `q-arobi-main-roots-20260512-bench-v1-7f0ae1c-22043bf3`
-- Promoted run: `q-arobi-main-roots-20260512-bench-v1`
-- Promoted session: `q-arobi-main-roots-20260512-bench-v1`
-- Dataset rows: `2053`
-- Mix manifest: `.training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.manifest.json`
-- Config: `.training-output/q/q-lora-config-arobi-main-roots-20260512-bench-v1.json`
-- Lock: `.training-output/q/latest-training-lock.json`
 
 ## Truth Boundary
 

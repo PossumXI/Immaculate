@@ -124,6 +124,14 @@ const TRACKED_TRAINING_LOCK_RECEIPTS = [
 ];
 let cachedReleaseMetadata: ReleaseMetadata | undefined;
 
+function shouldUseTrackedReleaseMetadataOnly(): boolean {
+  return process.env.IMMACULATE_RELEASE_METADATA_TRACKED_ONLY === "1";
+}
+
+export function resetReleaseMetadataCacheForTests(): void {
+  cachedReleaseMetadata = undefined;
+}
+
 type PackageJson = {
   version?: string;
 };
@@ -390,6 +398,9 @@ function normalizeReportedPath(pathValue: string | undefined): string | undefine
 }
 
 async function resolveLatestTrainingLockPath(): Promise<string | undefined> {
+  if (shouldUseTrackedReleaseMetadataOnly()) {
+    return undefined;
+  }
   if (existsSync(Q_LATEST_LOCK_PATH)) {
     return Q_LATEST_LOCK_PATH;
   }
@@ -445,22 +456,27 @@ async function readTrainingLockSummaryFromTrackedWiki(): Promise<QTrainingLockSu
     existsSync(promotionPath) ? readJsonFile<QBenchmarkPromotionWikiFile>(promotionPath) : undefined
   ]);
   const promoted = promotion?.promotion ?? promotion?.active;
-  const bundleId = promoted?.bundleId?.trim() || hybrid?.q?.trainingBundleId?.trim();
+  const hybridBundleId = hybrid?.q?.trainingBundleId?.trim();
+  const promotedBundleId = promoted?.bundleId?.trim();
+  const bundleId = hybridBundleId || promotedBundleId;
   if (!bundleId) {
     return undefined;
   }
+  const currentPromotion = promotedBundleId === bundleId ? promoted : undefined;
+  const currentPromotionLockPath =
+    promotion?.promotion?.bundleId?.trim() === bundleId ? promotion.promotion.lockPath : undefined;
   const summary: QTrainingLockSummary = {
     generatedAt: promotion?.generatedAt ?? hybrid?.generatedAt,
     bundleId,
-    runName: promoted?.runName,
+    runName: currentPromotion?.runName,
     modelName: hybrid?.q?.modelId,
     trainDatasetPath: normalizeReportedPath(hybrid?.q?.trainDatasetPath),
-    trainDatasetRowCount: hybrid?.q?.trainDatasetRowCount ?? promoted?.trainDatasetRowCount,
-    mixManifestPath: normalizeReportedPath(promoted?.mixManifestPath ?? hybrid?.q?.mixManifestPath),
+    trainDatasetRowCount: hybrid?.q?.trainDatasetRowCount ?? currentPromotion?.trainDatasetRowCount,
+    mixManifestPath: normalizeReportedPath(currentPromotion?.mixManifestPath ?? hybrid?.q?.mixManifestPath),
     curationRunPath: normalizeReportedPath(hybrid?.q?.curationRunPath ?? undefined),
     curationRunId: hybrid?.q?.curationRunId ?? undefined,
     lockPath:
-      normalizeReportedPath(promotion?.promotion?.lockPath ?? hybrid?.q?.trainingLockPath) ??
+      normalizeReportedPath(currentPromotionLockPath ?? hybrid?.q?.trainingLockPath) ??
       "docs/wiki/Q-Hybrid-Training.json"
   };
   const trackedLock = await readTrainingLockSummaryFromTrackedReceipts(bundleId);
@@ -550,7 +566,7 @@ async function readLatestImmaculateBundle(): Promise<{
   bundleId?: string;
   bundlePath?: string;
 }> {
-  if (!existsSync(IMMACULATE_LATEST_BUNDLE_PATH)) {
+  if (shouldUseTrackedReleaseMetadataOnly() || !existsSync(IMMACULATE_LATEST_BUNDLE_PATH)) {
     return {};
   }
   const payload = await readJsonFile<ImmaculateTrainingBundleFile>(IMMACULATE_LATEST_BUNDLE_PATH);
@@ -592,7 +608,7 @@ async function readHybridSessionSummary(): Promise<QHybridTrainingSessionSummary
     };
   }
 
-  if (!existsSync(Q_LATEST_HYBRID_SESSION_PATH)) {
+  if (shouldUseTrackedReleaseMetadataOnly() || !existsSync(Q_LATEST_HYBRID_SESSION_PATH)) {
     return undefined;
   }
   const payload = await readJsonFile<QHybridTrainingSessionFile>(Q_LATEST_HYBRID_SESSION_PATH);
