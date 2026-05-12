@@ -152,6 +152,44 @@ def relative_path(root: Path, path_value: Path) -> str:
         return str(path_value.resolve()).replace("\\", "/")
 
 
+def utc_timestamp() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+def summarize_session_pointer(root: Path, path_value: Path) -> dict[str, object]:
+    payload = try_load_json(path_value)
+    manifest_pointer = str(payload.get("manifestPath", "")).strip() if isinstance(payload, dict) else ""
+    manifest_path = resolve_repo_path(manifest_pointer) if manifest_pointer else None
+    return {
+        "path": relative_path(root, path_value),
+        "exists": path_value.exists(),
+        "sessionId": str(payload.get("sessionId", "")).strip() if isinstance(payload, dict) else None,
+        "manifestPath": manifest_pointer or None,
+        "manifestExists": bool(manifest_path and manifest_path.exists()),
+    }
+
+
+def build_sessionless_doctor_report(root: Path) -> dict[str, object]:
+    candidates = [
+        root / ".training-output" / "q" / "latest-hybrid-session.json",
+        root / "docs" / "wiki" / "Q-Hybrid-Training.json",
+    ]
+    return {
+        "generatedAt": utc_timestamp(),
+        "status": "session-required",
+        "ready": False,
+        "session": {
+            "provided": False,
+            "requiredFor": ["training-lane-validation", "launch"],
+            "candidatePointers": [summarize_session_pointer(root, path_value) for path_value in candidates],
+        },
+        "nextStep": (
+            "Pass --session .training-output/q/sessions/<session-id>/hybrid-session.manifest.json, "
+            "or run npm run q:training:promote-benchmark to stamp the active benchmark session."
+        ),
+    }
+
+
 def ocid_region_key(value: str | None) -> str:
     text = str(value or "").strip()
     parts = text.split(".")
@@ -212,6 +250,10 @@ def python_module_available(python_executable: str, module_name: str) -> bool:
         text=True,
     )
     return result.returncode == 0
+
+
+def should_probe_local_dependencies(*, local_enabled: bool, local_mode: str, local_python_present: bool) -> bool:
+    return local_enabled and local_mode not in {"skip", "disabled"} and local_python_present
 
 
 def default_cloud_env(provider: str) -> list[str]:
@@ -1225,10 +1267,18 @@ def main() -> None:
     root = repo_root()
     sys.argv = normalize_cli_argv(sys.argv)
     parser = argparse.ArgumentParser(description="Doctor and coordinate a hybrid Q training session.")
-    parser.add_argument("--session", required=True, help="Path to the hybrid training session manifest JSON.")
+    parser.add_argument("--session", help="Path to the hybrid training session manifest JSON.")
     parser.add_argument("--doctor", action="store_true", help="Validate and materialize the session summary without launching.")
     parser.add_argument("--launch", action="store_true", help="Launch the enabled session lanes after doctor checks.")
     args = parser.parse_args()
+
+    if not args.session:
+        if args.launch:
+            parser.error("--session is required when --launch is used.")
+        if args.doctor:
+            print(json.dumps(build_sessionless_doctor_report(root), indent=2))
+            return
+        parser.error("--session is required.")
 
     manifest_path = resolve_repo_path(args.session)
     if manifest_path is None or not manifest_path.exists():
@@ -1382,12 +1432,26 @@ def main() -> None:
         local_command.extend(local_extra_args)
 
     local_python_present = Path(local_python_executable).exists() or shutil.which(local_python_executable) is not None
-    local_dependency_state = {
-        "datasets": python_module_available(local_python_executable, "datasets") if local_python_present else False,
-        "transformers": python_module_available(local_python_executable, "transformers") if local_python_present else False,
-        "trl": python_module_available(local_python_executable, "trl") if local_python_present else False,
-        "unsloth": python_module_available(local_python_executable, "unsloth") if local_python_present else False,
-    }
+    probe_local_dependencies = should_probe_local_dependencies(
+        local_enabled=local_enabled,
+        local_mode=local_mode,
+        local_python_present=local_python_present,
+    )
+    local_dependency_state = (
+        {
+            "datasets": python_module_available(local_python_executable, "datasets"),
+            "transformers": python_module_available(local_python_executable, "transformers"),
+            "trl": python_module_available(local_python_executable, "trl"),
+            "unsloth": python_module_available(local_python_executable, "unsloth"),
+        }
+        if probe_local_dependencies
+        else {
+            "datasets": False,
+            "transformers": False,
+            "trl": False,
+            "unsloth": False,
+        }
+    )
     local_reasons: list[str] = []
     if not local_python_present:
         local_reasons.append(f"Python executable not found: {local_python}")

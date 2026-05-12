@@ -2,12 +2,12 @@
 
 This page records one hybrid Q training session. In plain English: it ties the Q fine-tune lane and the Immaculate orchestration-improvement lane into one stamped session, then tells you exactly which parts are ready or missing.
 
-- Generated: `2026-04-19T07:46:17Z`
-- Release: `0.1.0+5ed19b9`
-- Session id: `q-hybrid-harbor-opt-2384cf5-bench-v23`
-- Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`
-- Dataset rows: `117`
-- Immaculate orchestration bundle: `immaculate-orchestration-5ed19b9-cd094c28`
+- Generated: `2026-05-12T13:15:46Z`
+- Release: `0.1.0+7f0ae1c`
+- Session id: `q-arobi-main-roots-20260512-bench-v1`
+- Q training bundle: `q-arobi-main-roots-20260512-bench-v1-7f0ae1c-22043bf3`
+- Dataset rows: `2053`
+- Immaculate orchestration bundle: `immaculate-orchestration-7f0ae1c-e68f2160`
 - HF Jobs training surface: `docs/wiki/HF-Jobs-Training.md`
 - Colab free training surface: `docs/wiki/Colab-Free-Training.md`
 - OCI GPU advisor: `docs/wiki/OCI-GPU-Advisor.md`
@@ -15,71 +15,78 @@ This page records one hybrid Q training session. In plain English: it ties the Q
 
 ## Plain English Status
 
-- Local lane: `ready` in mode `dry-run`
-- Cloud lane: `ready` on provider `hf_jobs` in mode `launch`
+- Local lane: `skipped` in mode `disabled`
+- Cloud lane: `skipped` on provider `manual` in mode `disabled`
 - Hugging Face token or secret path ready: `True` via `HF_TOKEN`
 - W&B state ready: `True` via `WANDB_MODE=offline`
 
 ## Q Fine-Tune Lane
 
 - Training lock: `.training-output/q/latest-training-lock.json`
-- Config: `.training-output/q/q-lora-config-harbor-opt-2384cf5-bench-v23.json`
-- Dataset: `.training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl`
-- Mix manifest: `.training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.manifest.json`
+- Config: `.training-output/q/q-lora-config-arobi-main-roots-20260512-bench-v1.json`
+- Dataset: `.training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.jsonl`
+- Mix manifest: `.training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.manifest.json`
 - Curation run id: `n/a`
 - Curation run path: `n/a`
 - Benchmark corpus: `docs/wiki/Q-Benchmark-Corpus.json`
 - Benchmark corpus JSONL: `.training-output/q/q-benchmark-corpus.jsonl`
-- Benchmark corpus records: `55`
+- Benchmark corpus records: `58`
 - Failure corpus: `docs/wiki/Q-Failure-Corpus.json`
-- Local command: `C:\Users\Knight\AppData\Local\Microsoft\WindowsApps\python.EXE C:\Users\Knight\Desktop\Immaculate\Immaculate-push-harbor\training\q\train_q_lora_unsloth.py --config C:\Users\Knight\Desktop\Immaculate\Immaculate-push-harbor\.training-output\q\q-lora-config-harbor-opt-2384cf5-bench-v23.json --session-manifest C:\Users\Knight\Desktop\Immaculate\Immaculate-push-harbor\.training-output\q\sessions\q-hybrid-harbor-opt-2384cf5-bench-v23\hybrid-session.manifest.json --dry-run`
+- Local command: `n/a`
 
 ## Immaculate Orchestration Lane
 
-- Bundle path: `.training-output/immaculate/immaculate-training-bundle-q-hybrid-harbor-opt-2384cf5-bench-v23.json`
+- Bundle path: `.training-output/immaculate/immaculate-training-bundle-q-arobi-main-roots-20260512-bench-v1.json`
 - Signal count: `14`
 - This lane improves Immaculate through benchmark and orchestration evidence while keeping the tracked Q lineage as the only model-training lane in scope.
 
 ## Cloud Bundle
 
-- Bundle id: `q-hybrid-harbor-opt-2384cf5-bench-v23-5ed19b9`
-- Archive: `.training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v23/cloud-bundle/q-hybrid-harbor-opt-2384cf5-bench-v23-cloud-bundle.tar.gz`
-- Archive SHA-256: `5d82044f529277a1125abd36093bbd25158d0aa523cee85e6f9949a5d7cd1762`
-- Bundle manifest: `.training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v23/cloud-bundle/bundle-manifest.json`
+- Bundle id: `q-arobi-main-roots-20260512-bench-v1-7f0ae1c`
+- Archive: `.training-output/q/sessions/q-arobi-main-roots-20260512-bench-v1/cloud-bundle/q-arobi-main-roots-20260512-bench-v1-cloud-bundle.tar.gz`
+- Archive SHA-256: `d61a55212678aebd26380a7a9d37f2e2b2c7e307ad389c11a8b12f7c7f72d97f`
+- Bundle manifest: `.training-output/q/sessions/q-arobi-main-roots-20260512-bench-v1/cloud-bundle/bundle-manifest.json`
 - Included file count: `9`
 
 ## Cloud Doctor
 
-- Provider: `hf_jobs`
-- Launch command configured: `True`
-- Cloud ready: `True`
-- Env file: `C:/Users/Knight/Desktop/cheeks/Asgard/.env` exists `True`
-- HF CLI path: `C:\Users\Knight\Desktop\Immaculate\Immaculate-push-harbor\.tools\foundry-venv\Scripts\hf.exe`
-- HF auth mode: `token`
-- HF auth source: `HF_TOKEN`
-- HF authenticated user: `TruLumecreator`
-- HF bundle repo: `TruLumecreator/immaculate-q-cloud-bundles`
-- HF bundle staged: `True`
-- HF jobs visible: `0`
-- HF GPU flavors visible: `t4-small, t4-medium, a10g-small, a10g-large, a10g-largex2, a10g-largex4, a100-large, a100x4, h200, h200x2, h200x4, l4x1, l4x4, l40sx1, l40sx4`
-- HF smoke attempted: `False`
-- HF smoke blocker: n/a
-- HF launch blocker: n/a
+- Provider: `manual`
+- Launch command configured: `False`
+- Cloud ready: `False`
+- OCI CLI path: `C:\Users\Knight\Desktop\Immaculate\.tools\foundry-venv\Scripts\hf.exe`
+- OCI auth mode: `token`
+- OCI auth source: `HF_TOKEN`
+- OCI auth config: `n/a`
+- OCI auth profile: `n/a`
+- OCI auth key path: `n/a`
+- OCI auth key repaired: `False`
+- OCI session env updated: `False`
+- OCI region: `n/a`
+- OCI subscribed regions: `none discovered`
+- OCI GPU shapes visible: `t4-small, t4-medium, a10g-small, a10g-large, a10g-largex2, a10g-largex4, a100-large, a100x4, h200, h200x2, h200x4, l4x1, l4x4, l40sx1, l40sx4`
+- OCI target region: `n/a`
+- OCI Object Storage region: `n/a`
+- Launch target `HF_TOKEN`: `True`
 
-## HF Jobs Surface
+## OCI GPU Advisor
 
-- Recommended next step: Hugging Face Jobs is authenticated and hardware is visible. Launch the staged Q hybrid session when ready.
-- Staged archive path: `sessions/q-hybrid-harbor-opt-2384cf5-bench-v22/q-hybrid-harbor-opt-2384cf5-bench-v22-cloud-bundle.tar.gz`
-- Staged manifest path: `sessions/q-hybrid-harbor-opt-2384cf5-bench-v22/bundle-manifest.json`
+- Recommendation status: `none`
+- Recommended region: `n/a`
+- Recommended shape: `n/a`
+- Recommendation reason: Active hybrid session is using the HF Jobs cloud lane; see OCI-Region-Capacity for the current OCI controller state.
+- Public expansion candidates: `none`
 
-## Colab Free Surface
+## OCI Region Capacity
 
-- Recommended next step: Open the notebook in Colab, provide HF_TOKEN, and use the free runtime for doctor plus dry-run or a bounded Q micro-train when a large enough GPU appears.
-- Notebook path: `deploy/colab/notebooks/q-hybrid-harbor-opt-2384cf5-bench-v22-colab-free.ipynb`
-- Open in Colab: `https://colab.research.google.com/github/PossumXI/Immaculate/blob/main/deploy/colab/notebooks/q-hybrid-harbor-opt-2384cf5-bench-v22-colab-free.ipynb`
-- Micro-train max steps: `24`
-- Micro-train max sequence length: `2048`
-- Minimum GPU memory for real train: `20 GB`
+- Latest attempt status: `blocked`
+- Subscription limit reached: `True`
+- Recommended next step: OCI support incident creation is still blocked for this controller identity. Current error: The Requested Domain was not found or not Authorized. Open the limit increase manually in OCI/My Oracle Support or fix the support-account identity binding, then rerun the current Q and Immaculate cloud doctor.
+- OCI support create ready now: `False`
+- OCI support create blocker: The Requested Domain was not found or not Authorized
+- OCI discovered support-domain candidate: `Default`
+- OCI support-domain binding verified: `False`
+- OCI support incident error: The Requested Domain was not found or not Authorized
+- Prepared limit-request helper: `python training/q/create_oci_region_limit_request.py --session .training-output/q/sessions/q-arobi-main-roots-20260512-bench-v1/hybrid-session.manifest.json --check`
 
 ## Truth Boundary
 

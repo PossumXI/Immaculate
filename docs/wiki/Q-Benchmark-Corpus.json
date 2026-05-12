@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-04-21T16:17:07Z",
+  "generatedAt": "2026-05-12T13:15:42Z",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "9117c8feb0438f0fc6a7ada0707046cc77823a54",
-    "gitShortSha": "9117c8f",
-    "buildId": "0.1.0+9117c8f",
-    "qTrainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce"
+    "gitSha": "7f0ae1c7ae858224c58c2c87806faa0e80a17e3e",
+    "gitShortSha": "7f0ae1c",
+    "buildId": "0.1.0+7f0ae1c",
+    "qTrainingBundleId": "q-arobi-main-roots-20260512-bench-v1-7f0ae1c-22043bf3"
   },
   "rowType": "mixed",
   "recordCount": 58,

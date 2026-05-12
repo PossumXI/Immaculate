@@ -49,8 +49,9 @@ def count_jsonl_rows(path_value: Path) -> int:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", required=True, help="Concrete Q LoRA config JSON path")
-    parser.add_argument("--mix-manifest", required=True, help="Sidecar manifest emitted by build_q_mixture.py")
+    parser.add_argument("positionals", nargs="*", help="Optional config and mix manifest paths when npm strips option names.")
+    parser.add_argument("--config", help="Concrete Q LoRA config JSON path")
+    parser.add_argument("--mix-manifest", help="Sidecar manifest emitted by build_q_mixture.py")
     parser.add_argument("--curation-run", help="Optional training-data run.json path for provenance linkage")
     parser.add_argument(
         "--output",
@@ -58,8 +59,13 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    config_path = Path(args.config).resolve()
-    mix_manifest_path = Path(args.mix_manifest).resolve()
+    config_arg = args.config or (args.positionals[0] if len(args.positionals) >= 1 else None)
+    mix_manifest_arg = args.mix_manifest or (args.positionals[1] if len(args.positionals) >= 2 else None)
+    if not config_arg or not mix_manifest_arg:
+        parser.error("--config and --mix-manifest are required.")
+
+    config_path = Path(config_arg).resolve()
+    mix_manifest_path = Path(mix_manifest_arg).resolve()
     curation_run_path = Path(args.curation_run).resolve() if args.curation_run else None
     repo_root = Path(__file__).resolve().parents[2]
 

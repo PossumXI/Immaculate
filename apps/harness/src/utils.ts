@@ -45,24 +45,37 @@ export async function safeUnlink(filePath: string): Promise<void> {
 }
 
 export function getAllowedDataRoot(): string {
-  return path.resolve(process.env.IMMACULATE_DATA_ROOT ?? os.homedir());
+  return getAllowedDataRoots()[0] ?? path.resolve(os.homedir());
+}
+
+export function getAllowedDataRoots(): string[] {
+  const configuredRoots = process.env.IMMACULATE_DATA_ROOTS?.split(/[;,\n\r]+/)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+
+  if (configuredRoots && configuredRoots.length > 0) {
+    return [...new Set(configuredRoots.map((entry) => path.resolve(entry)))];
+  }
+
+  return [path.resolve(process.env.IMMACULATE_DATA_ROOT ?? os.homedir())];
 }
 
 export function resolvePathWithinAllowedRoot(inputPath: string): string {
-  const allowedRoot = getAllowedDataRoot();
   const resolvedPath = path.resolve(inputPath);
-  if (resolvedPath === allowedRoot) {
-    return resolvedPath;
+  for (const allowedRoot of getAllowedDataRoots()) {
+    if (resolvedPath === allowedRoot) {
+      return resolvedPath;
+    }
+
+    const normalizedRoot = `${allowedRoot}${path.sep}`;
+    if (resolvedPath.startsWith(normalizedRoot)) {
+      return resolvedPath;
+    }
   }
 
-  const normalizedRoot = `${allowedRoot}${path.sep}`;
-  if (!resolvedPath.startsWith(normalizedRoot)) {
-    throw new Error(
-      `Path traversal rejected: ${resolvedPath} is outside ${allowedRoot}.`
-    );
-  }
-
-  return resolvedPath;
+  throw new Error(
+    `Path traversal rejected: ${resolvedPath} is outside configured data roots.`
+  );
 }
 
 export function getLocalVenvPythonPath(repoRoot: string): string {

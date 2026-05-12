@@ -1,51 +1,51 @@
 {
-  "generatedAt": "2026-04-19T07:46:17Z",
-  "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v23",
-  "manifestPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v23/hybrid-session.manifest.json",
+  "generatedAt": "2026-05-12T13:15:46Z",
+  "sessionId": "q-arobi-main-roots-20260512-bench-v1",
+  "manifestPath": ".training-output/q/sessions/q-arobi-main-roots-20260512-bench-v1/hybrid-session.manifest.json",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "5ed19b98682545e60ebbc826f19a6e793619ce06",
-    "gitShortSha": "5ed19b9",
-    "buildId": "0.1.0+5ed19b9"
+    "gitSha": "7f0ae1c7ae858224c58c2c87806faa0e80a17e3e",
+    "gitShortSha": "7f0ae1c",
+    "buildId": "0.1.0+7f0ae1c"
   },
   "q": {
-    "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
+    "trainingBundleId": "q-arobi-main-roots-20260512-bench-v1-7f0ae1c-22043bf3",
     "trainingLockPath": ".training-output/q/latest-training-lock.json",
-    "configPath": ".training-output/q/q-lora-config-harbor-opt-2384cf5-bench-v23.json",
+    "configPath": ".training-output/q/q-lora-config-arobi-main-roots-20260512-bench-v1.json",
     "modelId": "Q",
-    "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl",
-    "trainDatasetRowCount": 117,
-    "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.manifest.json",
+    "trainDatasetPath": ".training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.jsonl",
+    "trainDatasetRowCount": 2053,
+    "mixManifestPath": ".training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.manifest.json",
     "curationRunPath": null,
     "curationRunId": null,
     "benchmarkCorpusPath": "docs/wiki/Q-Benchmark-Corpus.json",
     "benchmarkCorpusJsonlPath": ".training-output/q/q-benchmark-corpus.jsonl",
-    "benchmarkCorpusRecordCount": 55,
+    "benchmarkCorpusRecordCount": 58,
     "failureCorpusPath": "docs/wiki/Q-Failure-Corpus.json"
   },
   "immaculate": {
-    "bundleId": "immaculate-orchestration-5ed19b9-cd094c28",
-    "bundlePath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-harbor-opt-2384cf5-bench-v23.json",
+    "bundleId": "immaculate-orchestration-7f0ae1c-e68f2160",
+    "bundlePath": ".training-output/immaculate/immaculate-training-bundle-q-arobi-main-roots-20260512-bench-v1.json",
     "signalCount": 14
   },
   "cloudBundle": {
-    "bundleId": "q-hybrid-harbor-opt-2384cf5-bench-v23-5ed19b9",
-    "archivePath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v23/cloud-bundle/q-hybrid-harbor-opt-2384cf5-bench-v23-cloud-bundle.tar.gz",
-    "archiveSha256": "5d82044f529277a1125abd36093bbd25158d0aa523cee85e6f9949a5d7cd1762",
-    "archiveSizeBytes": 36585,
-    "manifestPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v23/cloud-bundle/bundle-manifest.json",
+    "bundleId": "q-arobi-main-roots-20260512-bench-v1-7f0ae1c",
+    "archivePath": ".training-output/q/sessions/q-arobi-main-roots-20260512-bench-v1/cloud-bundle/q-arobi-main-roots-20260512-bench-v1-cloud-bundle.tar.gz",
+    "archiveSha256": "d61a55212678aebd26380a7a9d37f2e2b2c7e307ad389c11a8b12f7c7f72d97f",
+    "archiveSizeBytes": 6489088,
+    "manifestPath": ".training-output/q/sessions/q-arobi-main-roots-20260512-bench-v1/cloud-bundle/bundle-manifest.json",
     "fileCount": 9,
     "repoRemoteUrl": "https://github.com/PossumXI/Immaculate.git"
   },
   "doctor": {
     "local": {
       "python": "C:\\Users\\Knight\\AppData\\Local\\Microsoft\\WindowsApps\\python.EXE",
-      "ready": true,
-      "mode": "dry-run",
+      "ready": false,
+      "mode": "disabled",
       "pythonPresent": true,
       "gpuVisible": false,
       "dependencies": {
-        "datasets": true,
+        "datasets": false,
         "transformers": false,
         "trl": false,
         "unsloth": false
@@ -53,50 +53,28 @@
       "reasons": []
     },
     "cloud": {
-      "provider": "hf_jobs",
-      "mode": "launch",
-      "ready": true,
-      "envFiles": [
-        {
-          "path": "C:/Users/Knight/Desktop/cheeks/Asgard/.env",
-          "exists": true
-        }
-      ],
+      "provider": "manual",
+      "mode": "disabled",
+      "ready": false,
+      "envFiles": [],
       "inlineEnvKeys": [
         "WANDB_MODE"
       ],
-      "requiredEnv": {
-        "HF_TOKEN": true
-      },
+      "requiredEnv": {},
       "optionalEnv": {
+        "HF_TOKEN": true,
         "HUGGINGFACE_TOKEN": false,
         "WANDB_API_KEY": false,
         "WANDB_ENTITY": false,
         "WANDB_PROJECT": false,
-        "WANDB_MODE": true,
-        "HF_BUNDLE_REPO": false,
-        "HF_JOB_NAMESPACE": false,
-        "HF_JOB_FLAVOR": false,
-        "HF_JOB_TIMEOUT": false,
-        "HF_JOB_IMAGE": false,
-        "HF_JOB_MODE": false,
-        "HF_JOB_SMOKE_FLAVOR": false,
-        "HF_JOB_SMOKE_TIMEOUT": false
+        "WANDB_MODE": true
       },
       "launchTarget": {
         "HF_TOKEN": true
       },
-      "launchCommandConfigured": true,
-      "launchCommand": [
-        "python",
-        "training/q/launch_hf_jobs_training.py",
-        "--session",
-        ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v23/hybrid-session.manifest.json",
-        "--env-file",
-        "C:/Users/Knight/Desktop/cheeks/Asgard/.env",
-        "--check"
-      ],
-      "cliBin": "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-push-harbor\\.tools\\foundry-venv\\Scripts\\hf.exe",
+      "launchCommandConfigured": false,
+      "launchCommand": [],
+      "cliBin": "C:\\Users\\Knight\\Desktop\\Immaculate\\.tools\\foundry-venv\\Scripts\\hf.exe",
       "authMode": "token",
       "authSource": "HF_TOKEN",
       "authConfigPath": null,
@@ -293,11 +271,11 @@
         }
       ],
       "recommendedLaunchTarget": {},
-      "account": "TruLumecreator",
-      "bundleRepo": "TruLumecreator/immaculate-q-cloud-bundles",
-      "bundleStaged": true,
-      "jobsVisibleCount": 0,
-      "smokeAttempted": false,
+      "account": null,
+      "bundleRepo": null,
+      "bundleStaged": null,
+      "jobsVisibleCount": null,
+      "smokeAttempted": null,
       "smokeBlocker": null,
       "launchBlocker": null,
       "reasons": [],
@@ -338,13 +316,13 @@
     },
     "suggestedEnvUpdates": {},
     "actions": [],
-    "generatedAt": "2026-04-19T07:46:17Z",
-    "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v23",
+    "generatedAt": "2026-05-12T13:15:46Z",
+    "sessionId": "q-arobi-main-roots-20260512-bench-v1",
     "release": {
       "packageVersion": "0.1.0",
-      "gitSha": "5ed19b98682545e60ebbc826f19a6e793619ce06",
-      "gitShortSha": "5ed19b9",
-      "buildId": "0.1.0+5ed19b9"
+      "gitSha": "7f0ae1c7ae858224c58c2c87806faa0e80a17e3e",
+      "gitShortSha": "7f0ae1c",
+      "buildId": "0.1.0+7f0ae1c"
     },
     "output": {
       "jsonPath": "docs/wiki/OCI-GPU-Advisor.json",
@@ -730,38 +708,22 @@
   },
   "lanes": {
     "local": {
-      "enabled": true,
-      "mode": "dry-run",
-      "status": "ready",
-      "command": [
-        "C:\\Users\\Knight\\AppData\\Local\\Microsoft\\WindowsApps\\python.EXE",
-        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-push-harbor\\training\\q\\train_q_lora_unsloth.py",
-        "--config",
-        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-push-harbor\\.training-output\\q\\q-lora-config-harbor-opt-2384cf5-bench-v23.json",
-        "--session-manifest",
-        "C:\\Users\\Knight\\Desktop\\Immaculate\\Immaculate-push-harbor\\.training-output\\q\\sessions\\q-hybrid-harbor-opt-2384cf5-bench-v23\\hybrid-session.manifest.json",
-        "--dry-run"
-      ]
+      "enabled": false,
+      "mode": "disabled",
+      "status": "skipped",
+      "command": []
     },
     "cloud": {
-      "enabled": true,
-      "provider": "hf_jobs",
-      "mode": "launch",
-      "status": "ready",
-      "command": [
-        "python",
-        "training/q/launch_hf_jobs_training.py",
-        "--session",
-        ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v23/hybrid-session.manifest.json",
-        "--env-file",
-        "C:/Users/Knight/Desktop/cheeks/Asgard/.env",
-        "--check"
-      ]
+      "enabled": false,
+      "provider": "manual",
+      "mode": "disabled",
+      "status": "skipped",
+      "command": []
     }
   },
   "output": {
-    "sessionJsonPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v23/hybrid-session.json",
-    "sessionMarkdownPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v23/hybrid-session.md",
+    "sessionJsonPath": ".training-output/q/sessions/q-arobi-main-roots-20260512-bench-v1/hybrid-session.json",
+    "sessionMarkdownPath": ".training-output/q/sessions/q-arobi-main-roots-20260512-bench-v1/hybrid-session.md",
     "wikiJsonPath": "docs/wiki/Q-Hybrid-Training.json",
     "wikiMarkdownPath": "docs/wiki/Q-Hybrid-Training.md",
     "hfJobsTrainingJsonPath": "docs/wiki/HF-Jobs-Training.json",

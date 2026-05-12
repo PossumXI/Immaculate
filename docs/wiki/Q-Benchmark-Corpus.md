@@ -3,10 +3,10 @@
 This page is generated from the tracked Q benchmark/report surfaces.
 It records the benchmark-derived corpus currently attached to Q. It is not a readiness gate and it does not replace the strict failure-only Q-Failure-Corpus surface.
 
-- Generated: `2026-04-21T16:17:07Z`
-- Release: `0.1.0+9117c8f`
-- Repo commit: `9117c8f`
-- Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`
+- Generated: `2026-05-12T13:15:42Z`
+- Release: `0.1.0+7f0ae1c`
+- Repo commit: `7f0ae1c`
+- Q training bundle: `q-arobi-main-roots-20260512-bench-v1-7f0ae1c-22043bf3`
 - Records: `58`
 - Row type: `mixed`
 - JSONL: `.training-output/q/q-benchmark-corpus.jsonl`

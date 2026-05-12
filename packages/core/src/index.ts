@@ -434,6 +434,7 @@ export type TrainingCorpusPolicy = {
   allowedLicenses: string[];
   reviewLicenses: string[];
   maxFileBytes: number;
+  maxFilesPerSource?: number;
   includeExtensions: string[];
   includeFileNames: string[];
   excludeDirectories: string[];
@@ -1546,6 +1547,7 @@ export const trainingCorpusPolicySchema = z.object({
   ]),
   reviewLicenses: z.array(z.string()).default(["MPL-2.0", "LGPL-2.1", "LGPL-3.0"]),
   maxFileBytes: z.number().int().positive().default(262144),
+  maxFilesPerSource: z.number().int().positive().optional(),
   includeExtensions: z.array(z.string()).default([
     ".ts",
     ".tsx",

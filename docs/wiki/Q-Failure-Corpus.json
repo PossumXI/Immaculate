@@ -1,13 +1,10 @@
 {
-  "generatedAt": "2026-04-19T07:46:04Z",
-  "recordCount": 6,
-  "evalSeedCount": 6,
-  "resolvedSuccessCount": 9,
+  "generatedAt": "2026-05-12T13:15:42Z",
+  "recordCount": 3,
+  "evalSeedCount": 3,
+  "resolvedSuccessCount": 8,
   "failureClassCounts": {
-    "terminal_bench_public_task_underperforming": 1,
-    "transport_timeout": 1,
-    "missing_prompt": 1,
-    "prompt_too_large": 1,
+    "terminal_bench_generic_semantic_miss": 1,
     "harbor_structured_underperforming": 2
   },
   "sources": {
@@ -15,9 +12,9 @@
     "bridgeBench": "BridgeBench.json",
     "qGatewaySubstrate": "Q-Gateway-Substrate.json",
     "qMediationDrift": "Q-Mediation-Drift.json",
-    "qApiAudit": "q-api-audit.ndjson",
+    "qApiAudit": null,
     "terminalBenchReceipt": "Terminal-Bench-Receipt.json",
-    "terminalBenchGenericSmoke": "Immaculate-push-harbor/.runtime/terminal-bench-jobs/q-terminal-bench-public-generic-smoke-v32/result.json",
+    "terminalBenchGenericSmoke": "Immaculate/.runtime/terminal-bench-jobs/q-terminal-bench-public-generic-smoke-postfix21h/result.json",
     "harborTerminalBench": "Harbor-Terminal-Bench.json"
   },
   "output": {

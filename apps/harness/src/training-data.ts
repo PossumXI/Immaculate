@@ -461,18 +461,47 @@ async function safeRead(filePath: string): Promise<string | null> {
   }
 }
 
-async function walkFiles(rootPath: string): Promise<string[]> {
-  const entries = await readdir(rootPath, { withFileTypes: true });
-  const nested = await Promise.all(
-    entries.flatMap(async (entry) => {
-      const fullPath = path.join(rootPath, entry.name);
-      if (entry.isDirectory()) {
-        return [fullPath, ...(await walkFiles(fullPath))];
-      }
-      return [fullPath];
-    })
+function directoryNameExcluded(name: string, manifest: TrainingCorpusManifest): boolean {
+  const normalizedName = name.toLowerCase();
+  return manifest.policy.excludeDirectories.some(
+    (entry) => entry.toLowerCase() === normalizedName
   );
-  return nested.flat();
+}
+
+async function walkFiles(
+  rootPath: string,
+  manifest: TrainingCorpusManifest,
+  limit = Number.POSITIVE_INFINITY
+): Promise<string[]> {
+  const files: string[] = [];
+
+  async function visit(currentPath: string): Promise<void> {
+    if (files.length >= limit) {
+      return;
+    }
+
+    const entries = (await readdir(currentPath, { withFileTypes: true })).sort((left, right) =>
+      left.name.localeCompare(right.name)
+    );
+
+    for (const entry of entries) {
+      if (files.length >= limit) {
+        return;
+      }
+
+      const fullPath = path.join(currentPath, entry.name);
+      if (entry.isDirectory()) {
+        if (!directoryNameExcluded(entry.name, manifest)) {
+          await visit(fullPath);
+        }
+        continue;
+      }
+      files.push(fullPath);
+    }
+  }
+
+  await visit(rootPath);
+  return files;
 }
 
 async function detectLicense(rootPath: string): Promise<string | undefined> {
@@ -601,9 +630,13 @@ async function scanSourceFiles(
   dedupKeys: Set<string>,
   previousProvenanceRecordId?: string
 ): Promise<SourceEvaluation> {
-  const filesOnDisk = (await walkFiles(source.workingPath)).sort((left, right) =>
-    left.localeCompare(right)
-  );
+  const filesOnDisk = (
+    await walkFiles(
+      source.workingPath,
+      manifest,
+      manifest.policy.maxFilesPerSource ?? Number.POSITIVE_INFINITY
+    )
+  ).sort((left, right) => left.localeCompare(right));
   const scannedFiles: ScannedFile[] = [];
 
   for (const filePath of filesOnDisk) {
