@@ -11,6 +11,7 @@ const EXPECTED_PRIMARY_DOMAIN = "www.iorch.net";
 const EXPECTED_PUBLIC_ORIGIN = `https://${EXPECTED_PRIMARY_DOMAIN}`;
 const NETLIFY_WORKSPACE_FILTER = "@immaculate/dashboard";
 const DEPLOY_LOCK_DIR = join(tmpdir(), `netlify-${EXPECTED_SITE_ID}.deploy.lock`);
+const NETLIFY_UPLOAD_CWD = join(tmpdir(), `netlify-${EXPECTED_SITE_ID}.upload`);
 const DEPLOY_LOCK_POLL_MS = 2000;
 const DEPLOY_LOCK_TIMEOUT_MS = Number.parseInt(
   process.env.NETLIFY_DEPLOY_LOCK_TIMEOUT_MS ?? `${20 * 60 * 1000}`,
@@ -321,6 +322,11 @@ function ensureNetlifyProjectLink(deployEnv) {
   );
 }
 
+function ensureNetlifyUploadCwd() {
+  mkdirSync(NETLIFY_UPLOAD_CWD, { recursive: true });
+  return NETLIFY_UPLOAD_CWD;
+}
+
 function materializeNetlifyRedirects() {
   const redirectLines = [
     "/api/jaws/* /.netlify/functions/jaws/:splat 200!",
@@ -374,7 +380,7 @@ async function runNetlifyDeployWithRetry(deployArgs, deployEnv) {
       return parseDeployOutput(
         run("netlify", deployArgs, {
           capture: true,
-          cwd: repoRoot,
+          cwd: ensureNetlifyUploadCwd(),
           env: deployEnv,
           timeoutMs: NETLIFY_COMMAND_TIMEOUT_MS,
         })
@@ -566,8 +572,6 @@ async function deployIorch() {
     "--no-build",
     "--site",
     EXPECTED_SITE_ID,
-    "--filter",
-    NETLIFY_WORKSPACE_FILTER,
     "--dir",
     outDir,
     "--functions",
