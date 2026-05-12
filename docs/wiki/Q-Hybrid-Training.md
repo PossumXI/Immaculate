@@ -2,12 +2,12 @@
 
 This page records one hybrid Q training session. In plain English: it ties the Q fine-tune lane and the Immaculate orchestration-improvement lane into one stamped session, then tells you exactly which parts are ready or missing.
 
-- Generated: `2026-05-12T13:15:46Z`
-- Release: `0.1.0+7f0ae1c`
+- Generated: `2026-05-12T18:06:56Z`
+- Release: `0.1.0+a7e67ff`
 - Session id: `q-arobi-main-roots-20260512-bench-v1`
-- Q training bundle: `q-arobi-main-roots-20260512-bench-v1-7f0ae1c-22043bf3`
+- Q training bundle: `q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3`
 - Dataset rows: `2053`
-- Immaculate orchestration bundle: `immaculate-orchestration-7f0ae1c-e68f2160`
+- Immaculate orchestration bundle: `immaculate-orchestration-a7e67ff-e68f2160`
 - HF Jobs training surface: `docs/wiki/HF-Jobs-Training.md`
 - Colab free training surface: `docs/wiki/Colab-Free-Training.md`
 - OCI GPU advisor: `docs/wiki/OCI-GPU-Advisor.md`
@@ -26,8 +26,8 @@ This page records one hybrid Q training session. In plain English: it ties the Q
 - Config: `.training-output/q/q-lora-config-arobi-main-roots-20260512-bench-v1.json`
 - Dataset: `.training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.jsonl`
 - Mix manifest: `.training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.manifest.json`
-- Curation run id: `n/a`
-- Curation run path: `n/a`
+- Curation run id: `cur-fnv1a-6e3f6fdf`
+- Curation run path: `.training-output/training-data/runs/cur-fnv1a-6e3f6fdf/run.json`
 - Benchmark corpus: `docs/wiki/Q-Benchmark-Corpus.json`
 - Benchmark corpus JSONL: `.training-output/q/q-benchmark-corpus.jsonl`
 - Benchmark corpus records: `58`
@@ -42,11 +42,11 @@ This page records one hybrid Q training session. In plain English: it ties the Q
 
 ## Cloud Bundle
 
-- Bundle id: `q-arobi-main-roots-20260512-bench-v1-7f0ae1c`
+- Bundle id: `q-arobi-main-roots-20260512-bench-v1-a7e67ff`
 - Archive: `.training-output/q/sessions/q-arobi-main-roots-20260512-bench-v1/cloud-bundle/q-arobi-main-roots-20260512-bench-v1-cloud-bundle.tar.gz`
-- Archive SHA-256: `d61a55212678aebd26380a7a9d37f2e2b2c7e307ad389c11a8b12f7c7f72d97f`
+- Archive SHA-256: `d8af87398f6bf27741a8109256e82d1e2a4c4d4d66c97d95914e13f3b20e7bb4`
 - Bundle manifest: `.training-output/q/sessions/q-arobi-main-roots-20260512-bench-v1/cloud-bundle/bundle-manifest.json`
-- Included file count: `9`
+- Included file count: `10`
 
 ## Cloud Doctor
 

@@ -24,6 +24,47 @@ def load_json(path_value: Path) -> dict:
     return payload
 
 
+def try_load_json(path_value: Path) -> dict | None:
+    if not path_value.exists():
+        return None
+    try:
+        return load_json(path_value)
+    except Exception:
+        return None
+
+
+def repo_path_arg(root: Path, value: object) -> str | None:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    candidate = Path(text).expanduser()
+    if candidate.is_absolute():
+        return str(candidate.resolve(strict=False))
+    return str((root / candidate).resolve(strict=False))
+
+
+def load_latest_training_lock_inputs(root: Path) -> dict[str, str | None]:
+    candidates = [
+        root / ".training-output" / "q" / "latest-hybrid-session.json",
+        root / "docs" / "wiki" / "Q-Hybrid-Training.json",
+    ]
+    for candidate in candidates:
+        payload = try_load_json(candidate)
+        q_payload = payload.get("q") if isinstance(payload, dict) else None
+        if not isinstance(q_payload, dict):
+            continue
+        config_arg = repo_path_arg(root, q_payload.get("configPath"))
+        mix_manifest_arg = repo_path_arg(root, q_payload.get("mixManifestPath"))
+        if not config_arg or not mix_manifest_arg:
+            continue
+        return {
+            "config": config_arg,
+            "mix_manifest": mix_manifest_arg,
+            "curation_run": repo_path_arg(root, q_payload.get("curationRunPath")),
+        }
+    return {"config": None, "mix_manifest": None, "curation_run": None}
+
+
 def git_value(repo_root: Path, *args: str) -> str:
     result = subprocess.run(
         ["git", *args],
@@ -48,8 +89,13 @@ def count_jsonl_rows(path_value: Path) -> int:
 
 
 def main() -> None:
+    repo_root = Path(__file__).resolve().parents[2]
     parser = argparse.ArgumentParser()
-    parser.add_argument("positionals", nargs="*", help="Optional config and mix manifest paths when npm strips option names.")
+    parser.add_argument(
+        "positionals",
+        nargs="*",
+        help="Optional config, mix manifest, curation run, and output paths when npm strips option names.",
+    )
     parser.add_argument("--config", help="Concrete Q LoRA config JSON path")
     parser.add_argument("--mix-manifest", help="Sidecar manifest emitted by build_q_mixture.py")
     parser.add_argument("--curation-run", help="Optional training-data run.json path for provenance linkage")
@@ -61,13 +107,26 @@ def main() -> None:
 
     config_arg = args.config or (args.positionals[0] if len(args.positionals) >= 1 else None)
     mix_manifest_arg = args.mix_manifest or (args.positionals[1] if len(args.positionals) >= 2 else None)
+    default_inputs = (
+        load_latest_training_lock_inputs(repo_root)
+        if not config_arg or not mix_manifest_arg or (not args.curation_run and len(args.positionals) < 3)
+        else {"config": None, "mix_manifest": None, "curation_run": None}
+    )
+    config_arg = config_arg or default_inputs["config"]
+    mix_manifest_arg = mix_manifest_arg or default_inputs["mix_manifest"]
     if not config_arg or not mix_manifest_arg:
         parser.error("--config and --mix-manifest are required.")
 
     config_path = Path(config_arg).resolve()
     mix_manifest_path = Path(mix_manifest_arg).resolve()
-    curation_run_path = Path(args.curation_run).resolve() if args.curation_run else None
-    repo_root = Path(__file__).resolve().parents[2]
+    curation_run_arg = (
+        args.curation_run
+        or (args.positionals[2] if len(args.positionals) >= 3 else None)
+        or default_inputs["curation_run"]
+    )
+    output_arg = args.output or (args.positionals[3] if len(args.positionals) >= 4 else None)
+
+    curation_run_path = Path(curation_run_arg).resolve() if curation_run_arg else None
 
     config = load_json(config_path)
     mix_manifest = load_json(mix_manifest_path)
@@ -77,8 +136,8 @@ def main() -> None:
     lock_root = repo_root / ".training-output" / "q" / "locks"
     lock_root.mkdir(parents=True, exist_ok=True)
     output_path = (
-        Path(args.output).resolve()
-        if args.output
+        Path(output_arg).resolve()
+        if output_arg
         else lock_root / f"q-training-lock-{str(config['run_name']).strip()}.json"
     )
 

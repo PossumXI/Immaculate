@@ -1,20 +1,20 @@
 {
-  "generatedAt": "2026-05-12T13:42:32.365Z",
+  "generatedAt": "2026-05-12T18:27:08.662Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "fb596380c6ec12e4ceaafc4c4bd2cfbbe25dd259",
-    "gitShortSha": "fb59638",
+    "gitSha": "a7e67ffaf54910ea73d652b4f893493fd9d4f184",
+    "gitShortSha": "a7e67ff",
     "gitBranch": "main",
-    "buildId": "0.1.0+fb59638",
+    "buildId": "0.1.0+a7e67ff",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
       "trainingLock": {
-        "generatedAt": "2026-05-12T13:15:41Z",
+        "generatedAt": "2026-05-12T18:26:42Z",
         "lockVersion": 1,
-        "bundleId": "q-arobi-main-roots-20260512-bench-v1-7f0ae1c-22043bf3",
+        "bundleId": "q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3",
         "runName": "q-arobi-main-roots-20260512-bench-v1",
         "modelName": "Q",
         "trainDatasetPath": ".training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.jsonl",
@@ -32,18 +32,19 @@
           ".training-output/q/q-benchmark-corpus.jsonl",
           ".training-output/q/q-failure-corpus.jsonl"
         ],
-        "curationRunId": null,
+        "curationRunPath": ".training-output/training-data/runs/cur-fnv1a-6e3f6fdf/run.json",
+        "curationRunId": "cur-fnv1a-6e3f6fdf",
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-05-12T13:15:46Z",
+        "generatedAt": "2026-05-12T18:06:56Z",
         "sessionId": "q-arobi-main-roots-20260512-bench-v1",
         "sessionPath": ".training-output/q/sessions/q-arobi-main-roots-20260512-bench-v1/hybrid-session.json",
         "localStatus": "skipped",
         "cloudStatus": "skipped",
         "cloudProvider": "manual",
-        "trainingBundleId": "q-arobi-main-roots-20260512-bench-v1-7f0ae1c-22043bf3",
-        "immaculateBundleId": "immaculate-orchestration-7f0ae1c-e68f2160",
+        "trainingBundleId": "q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3",
+        "immaculateBundleId": "immaculate-orchestration-a7e67ff-e68f2160",
         "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
       }
     }
@@ -87,7 +88,7 @@
     {
       "label": "Arobi audit integrity",
       "path": "docs\\wiki\\Arobi-Audit-Integrity.json",
-      "generatedAt": "2026-05-12T13:41:04.962Z"
+      "generatedAt": "2026-05-12T18:09:17.101Z"
     },
     {
       "label": "Arobi live ledger receipt",
@@ -142,7 +143,7 @@
     {
       "label": "Q hybrid training",
       "path": "docs\\wiki\\Q-Hybrid-Training.json",
-      "generatedAt": "2026-05-12T13:15:46Z"
+      "generatedAt": "2026-05-12T18:06:56Z"
     },
     {
       "label": "HF Jobs training",
@@ -167,7 +168,7 @@
     {
       "label": "OCI GPU advisor",
       "path": "docs\\wiki\\OCI-GPU-Advisor.json",
-      "generatedAt": "2026-05-12T13:15:46Z"
+      "generatedAt": "2026-05-12T18:06:56Z"
     },
     {
       "label": "OCI region capacity",
@@ -177,7 +178,7 @@
     {
       "label": "Q benchmark corpus",
       "path": "docs\\wiki\\Q-Benchmark-Corpus.json",
-      "generatedAt": "2026-05-12T13:15:42Z"
+      "generatedAt": "2026-05-12T18:06:51Z"
     },
     {
       "label": "Q benchmark promotion",

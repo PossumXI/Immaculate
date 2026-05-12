@@ -17,6 +17,14 @@ const DEPLOY_LOCK_TIMEOUT_MS = Number.parseInt(
   process.env.NETLIFY_DEPLOY_LOCK_TIMEOUT_MS ?? `${20 * 60 * 1000}`,
   10
 );
+const NETLIFY_DEPLOY_MAX_ATTEMPTS = Math.max(
+  1,
+  Number.parseInt(process.env.NETLIFY_DEPLOY_MAX_ATTEMPTS ?? "4", 10) || 4
+);
+const NETLIFY_DEPLOY_RETRY_BASE_MS = Math.max(
+  1000,
+  Number.parseInt(process.env.NETLIFY_DEPLOY_RETRY_BASE_MS ?? "15000", 10) || 15000
+);
 const BAD_PUBLIC_COPY_TERMS = [
   /\bthis is the true\b/i,
   /\bsynthesized\/offline\b/i,
@@ -330,6 +338,38 @@ function parseDeployOutput(output) {
   }
 }
 
+function isNetlifyRateLimitError(error) {
+  const message = error instanceof Error ? error.message : String(error);
+  return /\b429\b/i.test(message) || /too many requests/i.test(message) || /JSONHTTPError/i.test(message);
+}
+
+async function runNetlifyDeployWithRetry(deployArgs, deployEnv) {
+  let lastError = null;
+  for (let attempt = 1; attempt <= NETLIFY_DEPLOY_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      return parseDeployOutput(
+        run("netlify", deployArgs, {
+          capture: true,
+          cwd: ensureNetlifyUploadCwd(),
+          env: deployEnv,
+        })
+      );
+    } catch (error) {
+      lastError = error;
+      if (!isNetlifyRateLimitError(error) || attempt >= NETLIFY_DEPLOY_MAX_ATTEMPTS) {
+        throw error;
+      }
+      const delayMs = NETLIFY_DEPLOY_RETRY_BASE_MS * 2 ** (attempt - 1);
+      console.warn(
+        `Netlify deploy upload was rate-limited; retrying in ${Math.round(delayMs / 1000)}s (${attempt}/${NETLIFY_DEPLOY_MAX_ATTEMPTS}).`
+      );
+      await sleep(delayMs);
+    }
+  }
+
+  throw lastError ?? new Error("Netlify deploy upload failed before returning a deploy response.");
+}
+
 async function fetchText(url, options = {}) {
   const maxAttempts = options.maxAttempts ?? 8;
   let lastStatus = 0;
@@ -493,13 +533,7 @@ async function deployIorch() {
     deployArgs.splice(1, 0, "--prod");
   }
 
-  const deploy = parseDeployOutput(
-    run("netlify", deployArgs, {
-      capture: true,
-      cwd: ensureNetlifyUploadCwd(),
-      env: netlifyAuth.deployEnv,
-    })
-  );
+  const deploy = await runNetlifyDeployWithRetry(deployArgs, netlifyAuth.deployEnv);
   const deployedUrl = deploy.deploy_ssl_url ?? deploy.deploy_url ?? deploy.ssl_url ?? deploy.url;
   const deployId = deploy.deploy_id ?? deploy.id ?? null;
   if (!deployedUrl) {

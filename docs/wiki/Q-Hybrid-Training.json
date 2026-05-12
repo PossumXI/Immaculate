@@ -1,40 +1,40 @@
 {
-  "generatedAt": "2026-05-12T13:15:46Z",
+  "generatedAt": "2026-05-12T18:06:56Z",
   "sessionId": "q-arobi-main-roots-20260512-bench-v1",
   "manifestPath": ".training-output/q/sessions/q-arobi-main-roots-20260512-bench-v1/hybrid-session.manifest.json",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "7f0ae1c7ae858224c58c2c87806faa0e80a17e3e",
-    "gitShortSha": "7f0ae1c",
-    "buildId": "0.1.0+7f0ae1c"
+    "gitSha": "a7e67ffaf54910ea73d652b4f893493fd9d4f184",
+    "gitShortSha": "a7e67ff",
+    "buildId": "0.1.0+a7e67ff"
   },
   "q": {
-    "trainingBundleId": "q-arobi-main-roots-20260512-bench-v1-7f0ae1c-22043bf3",
+    "trainingBundleId": "q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3",
     "trainingLockPath": ".training-output/q/latest-training-lock.json",
     "configPath": ".training-output/q/q-lora-config-arobi-main-roots-20260512-bench-v1.json",
     "modelId": "Q",
     "trainDatasetPath": ".training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.jsonl",
     "trainDatasetRowCount": 2053,
     "mixManifestPath": ".training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.manifest.json",
-    "curationRunPath": null,
-    "curationRunId": null,
+    "curationRunPath": ".training-output/training-data/runs/cur-fnv1a-6e3f6fdf/run.json",
+    "curationRunId": "cur-fnv1a-6e3f6fdf",
     "benchmarkCorpusPath": "docs/wiki/Q-Benchmark-Corpus.json",
     "benchmarkCorpusJsonlPath": ".training-output/q/q-benchmark-corpus.jsonl",
     "benchmarkCorpusRecordCount": 58,
     "failureCorpusPath": "docs/wiki/Q-Failure-Corpus.json"
   },
   "immaculate": {
-    "bundleId": "immaculate-orchestration-7f0ae1c-e68f2160",
+    "bundleId": "immaculate-orchestration-a7e67ff-e68f2160",
     "bundlePath": ".training-output/immaculate/immaculate-training-bundle-q-arobi-main-roots-20260512-bench-v1.json",
     "signalCount": 14
   },
   "cloudBundle": {
-    "bundleId": "q-arobi-main-roots-20260512-bench-v1-7f0ae1c",
+    "bundleId": "q-arobi-main-roots-20260512-bench-v1-a7e67ff",
     "archivePath": ".training-output/q/sessions/q-arobi-main-roots-20260512-bench-v1/cloud-bundle/q-arobi-main-roots-20260512-bench-v1-cloud-bundle.tar.gz",
-    "archiveSha256": "d61a55212678aebd26380a7a9d37f2e2b2c7e307ad389c11a8b12f7c7f72d97f",
-    "archiveSizeBytes": 6489088,
+    "archiveSha256": "d8af87398f6bf27741a8109256e82d1e2a4c4d4d66c97d95914e13f3b20e7bb4",
+    "archiveSizeBytes": 6702087,
     "manifestPath": ".training-output/q/sessions/q-arobi-main-roots-20260512-bench-v1/cloud-bundle/bundle-manifest.json",
-    "fileCount": 9,
+    "fileCount": 10,
     "repoRemoteUrl": "https://github.com/PossumXI/Immaculate.git"
   },
   "doctor": {
@@ -316,13 +316,13 @@
     },
     "suggestedEnvUpdates": {},
     "actions": [],
-    "generatedAt": "2026-05-12T13:15:46Z",
+    "generatedAt": "2026-05-12T18:06:56Z",
     "sessionId": "q-arobi-main-roots-20260512-bench-v1",
     "release": {
       "packageVersion": "0.1.0",
-      "gitSha": "7f0ae1c7ae858224c58c2c87806faa0e80a17e3e",
-      "gitShortSha": "7f0ae1c",
-      "buildId": "0.1.0+7f0ae1c"
+      "gitSha": "a7e67ffaf54910ea73d652b4f893493fd9d4f184",
+      "gitShortSha": "a7e67ff",
+      "buildId": "0.1.0+a7e67ff"
     },
     "output": {
       "jsonPath": "docs/wiki/OCI-GPU-Advisor.json",

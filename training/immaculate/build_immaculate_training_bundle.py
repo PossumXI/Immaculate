@@ -254,6 +254,11 @@ def main() -> None:
     root = repo_root()
     parser = argparse.ArgumentParser(description="Build the Immaculate orchestration training bundle from live repo surfaces.")
     parser.add_argument(
+        "positionals",
+        nargs="*",
+        help="Optional output path when npm strips the --output option name.",
+    )
+    parser.add_argument(
         "--output",
         default=str(root / ".training-output" / "immaculate" / "immaculate-training-bundle.json"),
         help="Output path for the bundle JSON.",
@@ -284,9 +289,10 @@ def main() -> None:
         help="Path to Q-Readiness-Gate.json",
     )
     args = parser.parse_args()
+    output_arg = args.positionals[0] if args.positionals else args.output
 
     result = build_bundle(
-        output_path=Path(args.output).resolve(),
+        output_path=Path(output_arg).resolve(),
         harbor_path=Path(args.harbor).resolve(),
         bridgebench_path=Path(args.bridgebench).resolve(),
         comparison_path=Path(args.model_comparison).resolve(),
@@ -300,7 +306,7 @@ def main() -> None:
                 "accepted": True,
                 "bundle_id": result["bundle"]["bundleId"],
                 "signal_count": result["bundle"]["summary"]["signalCount"],
-                "output": str(Path(args.output).resolve()),
+                "output": str(Path(output_arg).resolve()),
                 "latest": str(result["latestPath"].resolve()),
             },
             indent=2,
