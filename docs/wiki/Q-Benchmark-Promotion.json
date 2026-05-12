@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-05-12T13:15:40Z",
-  "status": "promoted",
+  "generatedAt": "2026-05-12T19:01:08Z",
+  "status": "already-current",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "7f0ae1c7ae858224c58c2c87806faa0e80a17e3e",
-    "gitShortSha": "7f0ae1c",
-    "buildId": "0.1.0+7f0ae1c"
+    "gitSha": "89ca6a73a718ce3455d748a472105fc30447dee8",
+    "gitShortSha": "89ca6a7",
+    "buildId": "0.1.0+89ca6a7"
   },
   "benchmarkCorpus": {
     "jsonlPath": ".training-output/q/q-benchmark-corpus.jsonl",
@@ -23,7 +23,7 @@
     "manifestRecordCount": 3
   },
   "active": {
-    "bundleId": "q-arobi-main-roots-20260512-bench-v1-7f0ae1c-22043bf3",
+    "bundleId": "q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3",
     "runName": "q-arobi-main-roots-20260512-bench-v1",
     "sessionId": "q-arobi-main-roots-20260512-bench-v1",
     "benchmarkCorpusIncluded": true,
@@ -39,14 +39,5 @@
   "output": {
     "manifestPath": "docs/wiki/Q-Benchmark-Promotion.json",
     "markdownPath": "docs/wiki/Q-Benchmark-Promotion.md"
-  },
-  "promotion": {
-    "bundleId": "q-arobi-main-roots-20260512-bench-v1-7f0ae1c-22043bf3",
-    "runName": "q-arobi-main-roots-20260512-bench-v1",
-    "sessionId": "q-arobi-main-roots-20260512-bench-v1",
-    "trainDatasetRowCount": 2053,
-    "mixManifestPath": ".training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.manifest.json",
-    "configPath": ".training-output/q/q-lora-config-arobi-main-roots-20260512-bench-v1.json",
-    "lockPath": ".training-output/q/latest-training-lock.json"
   }
 }
