@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-12T13:15:47.701Z",
+  "generatedAt": "2026-05-12T13:42:32.365Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "7f0ae1c7ae858224c58c2c87806faa0e80a17e3e",
-    "gitShortSha": "7f0ae1c",
+    "gitSha": "fb596380c6ec12e4ceaafc4c4bd2cfbbe25dd259",
+    "gitShortSha": "fb59638",
     "gitBranch": "main",
-    "buildId": "0.1.0+7f0ae1c",
+    "buildId": "0.1.0+fb59638",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -87,7 +87,7 @@
     {
       "label": "Arobi audit integrity",
       "path": "docs\\wiki\\Arobi-Audit-Integrity.json",
-      "generatedAt": "2026-04-19T23:41:05.513Z"
+      "generatedAt": "2026-05-12T13:41:04.962Z"
     },
     {
       "label": "Arobi live ledger receipt",
@@ -187,7 +187,7 @@
     {
       "label": "W&B benchmark export",
       "path": "docs\\wiki\\Benchmark-Wandb-Export.json",
-      "generatedAt": "2026-05-11T13:54:37.800757+00:00"
+      "generatedAt": "2026-05-12T10:07:09.017944+00:00"
     },
     {
       "label": "Harbor terminal bench",
