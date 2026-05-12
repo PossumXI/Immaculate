@@ -25,6 +25,18 @@ const NETLIFY_DEPLOY_RETRY_BASE_MS = Math.max(
   1000,
   Number.parseInt(process.env.NETLIFY_DEPLOY_RETRY_BASE_MS ?? "15000", 10) || 15000
 );
+const NETLIFY_COMMAND_TIMEOUT_MS = Math.max(
+  60_000,
+  Number.parseInt(process.env.NETLIFY_COMMAND_TIMEOUT_MS ?? `${10 * 60 * 1000}`, 10) || 10 * 60 * 1000
+);
+const NETLIFY_API_TIMEOUT_MS = Math.max(
+  5_000,
+  Number.parseInt(process.env.NETLIFY_API_TIMEOUT_MS ?? "30000", 10) || 30000
+);
+const PUBLIC_SMOKE_TIMEOUT_MS = Math.max(
+  5_000,
+  Number.parseInt(process.env.IORCH_PUBLIC_SMOKE_TIMEOUT_MS ?? "30000", 10) || 30000
+);
 const BAD_PUBLIC_COPY_TERMS = [
   /\bthis is the true\b/i,
   /\bsynthesized\/offline\b/i,
@@ -142,9 +154,16 @@ function run(command, commandArgs, options = {}) {
     shell: options.shell ?? (process.platform === "win32"),
     stdio: options.capture ? ["ignore", "pipe", "pipe"] : "inherit",
     env: { ...process.env, CI: "true", ...(options.env ?? {}) },
+    timeout: options.timeoutMs,
+    killSignal: "SIGTERM",
   });
 
   if (result.error) {
+    if (result.error.code === "ETIMEDOUT") {
+      throw new Error(
+        `${command} ${commandArgs.join(" ")} timed out after ${Math.round((options.timeoutMs ?? 0) / 1000)}s.`
+      );
+    }
     throw result.error;
   }
 
@@ -197,13 +216,24 @@ async function netlifyApi(token, path) {
   let lastStatus = 0;
   let lastStatusText = "Unknown";
   for (let attempt = 0; attempt < 6; attempt++) {
-    const response = await fetch(`https://api.netlify.com/api/v1${path}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "User-Agent": "immaculate-iorch-deployer/1.0",
-        Accept: "application/json"
+    let response;
+    try {
+      response = await fetch(`https://api.netlify.com/api/v1${path}`, {
+        signal: AbortSignal.timeout(NETLIFY_API_TIMEOUT_MS),
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "User-Agent": "immaculate-iorch-deployer/1.0",
+          Accept: "application/json"
+        }
+      });
+    } catch (error) {
+      lastStatusText = error instanceof Error ? error.message : String(error);
+      if (attempt === 5) {
+        break;
       }
-    });
+      await sleep(2000 * (attempt + 1));
+      continue;
+    }
     if (response.ok) {
       return response.json();
     }
@@ -288,7 +318,7 @@ function ensureNetlifyProjectLink(deployEnv) {
   run(
     "netlify",
     ["link", "--id", EXPECTED_SITE_ID, "--filter", NETLIFY_WORKSPACE_FILTER],
-    { capture: true, env: deployEnv }
+    { capture: true, env: deployEnv, timeoutMs: Math.min(NETLIFY_COMMAND_TIMEOUT_MS, 120_000) }
   );
 }
 
@@ -352,6 +382,7 @@ async function runNetlifyDeployWithRetry(deployArgs, deployEnv) {
           capture: true,
           cwd: ensureNetlifyUploadCwd(),
           env: deployEnv,
+          timeoutMs: NETLIFY_COMMAND_TIMEOUT_MS,
         })
       );
     } catch (error) {
@@ -374,14 +405,30 @@ async function fetchText(url, options = {}) {
   const maxAttempts = options.maxAttempts ?? 8;
   let lastStatus = 0;
   let lastBody = "";
+  let lastError = "";
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-    const response = await fetch(url, {
-      headers: {
-        Accept: "text/html,text/plain",
-        "User-Agent": "immaculate-iorch-deployer/1.0"
+    let response;
+    try {
+      response = await fetch(url, {
+        signal: AbortSignal.timeout(options.timeoutMs ?? PUBLIC_SMOKE_TIMEOUT_MS),
+        headers: {
+          Accept: "text/html,text/plain",
+          "User-Agent": "immaculate-iorch-deployer/1.0"
+        }
+      });
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : String(error);
+      if (attempt === maxAttempts) {
+        break;
       }
-    });
+      const delayMs = Math.min(10_000, 1_000 * 2 ** (attempt - 1));
+      console.warn(
+        `${url} probe failed before HTTP response; retrying in ${Math.round(delayMs / 1000)}s (${attempt}/${maxAttempts}).`
+      );
+      await sleep(delayMs);
+      continue;
+    }
     const body = await response.text();
     if (response.ok) {
       return body;
@@ -400,11 +447,13 @@ async function fetchText(url, options = {}) {
     await sleep(delayMs);
   }
 
-  throw new Error(`${url} returned ${lastStatus}: ${lastBody.slice(0, 400)}`);
+  const detail = lastStatus > 0 ? `${lastStatus}: ${lastBody.slice(0, 400)}` : lastError || "no response";
+  throw new Error(`${url} returned ${detail}`);
 }
 
 async function fetchRedirect(url) {
   return fetch(url, {
+    signal: AbortSignal.timeout(PUBLIC_SMOKE_TIMEOUT_MS),
     redirect: "manual",
     headers: { Accept: "text/html,text/plain,application/json" }
   });
@@ -431,6 +480,7 @@ async function checkJawsUpdaterApi(baseUrl) {
   const previousPath = `/api/jaws/windows/x86_64/${JAWS_PREVIOUS_PATCH_VERSION}`;
   const currentPath = `/api/jaws/windows/x86_64/${JAWS_RELEASE_VERSION}`;
   const previousResponse = await fetch(`${baseUrl}${previousPath}`, {
+    signal: AbortSignal.timeout(PUBLIC_SMOKE_TIMEOUT_MS),
     headers: { Accept: "application/json" }
   });
   const previousBody = await previousResponse.text();
@@ -454,6 +504,7 @@ async function checkJawsUpdaterApi(baseUrl) {
   }
 
   const currentResponse = await fetch(`${baseUrl}${currentPath}`, {
+    signal: AbortSignal.timeout(PUBLIC_SMOKE_TIMEOUT_MS),
     headers: { Accept: "application/json" }
   });
   if (currentResponse.status !== 204) {

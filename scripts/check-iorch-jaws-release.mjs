@@ -38,6 +38,9 @@ if (!deployScript.includes("assertDeployIncludesJawsFunction")) {
 if (!deployScript.includes("Refusing to deploy legacy iorch.net static mirror from OpenJaws")) {
   errors.push("deploy guard must explicitly refuse the legacy OpenJaws iorch.net static mirror");
 }
+if (!deployScript.includes("NETLIFY_COMMAND_TIMEOUT_MS") || !deployScript.includes("AbortSignal.timeout")) {
+  errors.push("deploy guard must keep bounded Netlify command/API/public smoke timeouts");
+}
 if (!downloadsPage.includes("jaws-release.json")) {
   errors.push("downloads page must read jaws-release.json instead of duplicating release metadata");
 }
