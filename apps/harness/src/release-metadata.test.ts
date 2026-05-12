@@ -26,6 +26,7 @@ test("release metadata preserves tracked Q training evidence in clean checkouts"
     release?: {
       q?: {
         trainingLock?: {
+          bundleId?: string;
           trainDatasetSha256?: string;
           mixManifestSha256?: string;
           mixSupplementalCount?: number;
