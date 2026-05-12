@@ -21,7 +21,7 @@ test("release metadata preserves tracked Q training evidence in clean checkouts"
     };
   };
   const trackedProof = JSON.parse(
-    readFileSync(path.join(repoRoot, "docs", "wiki", "Arobi-Audit-Integrity.json"), "utf8")
+    readFileSync(path.join(repoRoot, "docs", "wiki", "Release-Surface.json"), "utf8")
   ) as {
     release?: {
       q?: {
@@ -44,6 +44,7 @@ test("release metadata preserves tracked Q training evidence in clean checkouts"
   assert.ok(metadata.q.trainingLock?.mixManifestSha256);
   assert.ok((metadata.q.trainingLock?.mixSupplementalCount ?? 0) > 0);
   assert.ok((metadata.q.trainingLock?.mixSupplementalPaths?.length ?? 0) > 0);
+  assert.equal(trackedProof.release?.q?.trainingLock?.bundleId, hybrid.q?.trainingBundleId);
   assert.equal(
     metadata.q.trainingLock?.trainDatasetSha256,
     trackedProof.release?.q?.trainingLock?.trainDatasetSha256
