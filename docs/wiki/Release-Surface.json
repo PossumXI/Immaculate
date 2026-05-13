@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-13T20:26:11.069Z",
+  "generatedAt": "2026-05-13T20:58:51.329Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "ef835d35602affe00f48cb149b27237f19b2bbf3",
-    "gitShortSha": "ef835d3",
+    "gitSha": "0b8b3db3138ec07d50142c307daf413700570268",
+    "gitShortSha": "0b8b3db",
     "gitBranch": "main",
-    "buildId": "0.1.0+ef835d3",
+    "buildId": "0.1.0+0b8b3db",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -78,7 +78,7 @@
       "label": "Q readiness gate",
       "path": "docs\\wiki\\Q-Readiness-Gate.json",
       "required": true,
-      "generatedAt": "2026-05-13T20:25:56.210Z",
+      "generatedAt": "2026-05-13T20:26:35.675Z",
       "healthStatus": "healthy",
       "healthReason": "no failed receipt signals detected"
     },
@@ -119,7 +119,7 @@
       "path": "docs\\wiki\\Arobi-Live-Ledger-Receipt.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-05-13T20:25:58.405Z",
+      "generatedAt": "2026-05-13T20:58:37.653Z",
       "healthStatus": "healthy",
       "healthReason": "no failed receipt signals detected"
     },
@@ -128,7 +128,7 @@
       "path": "docs\\wiki\\Live-Mission-Readiness.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-05-13T20:25:56.760Z",
+      "generatedAt": "2026-05-13T20:58:42.728Z",
       "healthStatus": "unhealthy",
       "healthReason": "mission readiness receipt reports missionSurfaceReady=false"
     },
@@ -137,7 +137,7 @@
       "path": "docs\\wiki\\Live-Operator-Activity.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-05-13T20:26:04.796Z",
+      "generatedAt": "2026-05-13T20:58:47.300Z",
       "healthStatus": "unhealthy",
       "healthReason": "mission readiness receipt reports missionSurfaceReady=false"
     },
@@ -146,7 +146,7 @@
       "path": "docs\\wiki\\Live-Operator-Public-Export.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-05-13T20:26:11.069Z",
+      "generatedAt": "2026-05-13T20:58:51.329Z",
       "healthStatus": "healthy",
       "healthReason": "no failed receipt signals detected"
     },
@@ -181,9 +181,9 @@
       "path": "docs\\wiki\\Roundtable-Runtime.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-04-21T22:19:50.626Z",
+      "generatedAt": "2026-05-13T20:38:25.498Z",
       "healthStatus": "unhealthy",
-      "healthReason": "mission readiness receipt reports missionSurfaceReady=false"
+      "healthReason": "benchmark reports 1 failed assertion(s)"
     },
     {
       "label": "Q API audit",
@@ -346,14 +346,14 @@
       "total": 35,
       "required": 20,
       "fresh": 17,
-      "stale": 16,
+      "stale": 15,
       "missing": 0,
       "invalid": 0,
-      "unhealthy": 2,
+      "unhealthy": 3,
       "optional": 0,
       "blocking": 4
     },
-    "summary": "4 blocking release evidence gap(s): BridgeBench soak stale outside 7d budget; Live mission readiness mission readiness receipt reports missionSurfaceReady=false; Live operator activity mission readiness receipt reports missionSurfaceReady=false; Roundtable runtime stale outside 24h budget",
+    "summary": "4 blocking release evidence gap(s): BridgeBench soak stale outside 7d budget; Live mission readiness mission readiness receipt reports missionSurfaceReady=false; Live operator activity mission readiness receipt reports missionSurfaceReady=false; Roundtable runtime benchmark reports 1 failed assertion(s)",
     "surfaces": [
       {
         "label": "BridgeBench",
@@ -396,7 +396,7 @@
         "path": "docs\\wiki\\Q-Readiness-Gate.json",
         "required": true,
         "maxAgeMs": 604800000,
-        "generatedAt": "2026-05-13T20:25:56.210Z",
+        "generatedAt": "2026-05-13T20:26:35.675Z",
         "healthStatus": "healthy",
         "healthReason": "no failed receipt signals detected",
         "status": "fresh",
@@ -456,7 +456,7 @@
         "path": "docs\\wiki\\Arobi-Live-Ledger-Receipt.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-05-13T20:25:58.405Z",
+        "generatedAt": "2026-05-13T20:58:37.653Z",
         "healthStatus": "healthy",
         "healthReason": "no failed receipt signals detected",
         "status": "fresh",
@@ -468,7 +468,7 @@
         "path": "docs\\wiki\\Live-Mission-Readiness.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-05-13T20:25:56.760Z",
+        "generatedAt": "2026-05-13T20:58:42.728Z",
         "healthStatus": "unhealthy",
         "healthReason": "mission readiness receipt reports missionSurfaceReady=false",
         "status": "unhealthy",
@@ -480,7 +480,7 @@
         "path": "docs\\wiki\\Live-Operator-Activity.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-05-13T20:26:04.796Z",
+        "generatedAt": "2026-05-13T20:58:47.300Z",
         "healthStatus": "unhealthy",
         "healthReason": "mission readiness receipt reports missionSurfaceReady=false",
         "status": "unhealthy",
@@ -492,7 +492,7 @@
         "path": "docs\\wiki\\Live-Operator-Public-Export.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-05-13T20:26:11.069Z",
+        "generatedAt": "2026-05-13T20:58:51.329Z",
         "healthStatus": "healthy",
         "healthReason": "no failed receipt signals detected",
         "status": "fresh",
@@ -540,12 +540,12 @@
         "path": "docs\\wiki\\Roundtable-Runtime.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-04-21T22:19:50.626Z",
+        "generatedAt": "2026-05-13T20:38:25.498Z",
         "healthStatus": "unhealthy",
-        "healthReason": "mission readiness receipt reports missionSurfaceReady=false",
-        "status": "stale",
+        "healthReason": "benchmark reports 1 failed assertion(s)",
+        "status": "unhealthy",
         "blocking": true,
-        "reason": "stale outside 24h budget"
+        "reason": "benchmark reports 1 failed assertion(s)"
       },
       {
         "label": "Q API audit",

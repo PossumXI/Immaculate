@@ -2,9 +2,9 @@
 
 This page is the machine-stamped local activity feed for the supervised Discord/Q/OpenJaws loop. It summarizes the canonical OpenJaws receipts so Immaculate can expose one operator-facing activity surface without inventing a duplicate schema.
 
-- Generated: `2026-05-13T20:26:04.796Z`
-- Release: `0.1.0+ef835d3`
-- Repo commit: `ef835d35602affe00f48cb149b27237f19b2bbf3`
+- Generated: `2026-05-13T20:58:47.300Z`
+- Release: `0.1.0+0b8b3db`
+- Repo commit: `0b8b3db3138ec07d50142c307daf413700570268`
 
 ## Publication Gate
 
@@ -15,17 +15,17 @@ This page is the machine-stamped local activity feed for the supervised Discord/
 ## Shared Readiness Context
 
 - Mission-surface ready: `false`
-- Summary: shared readiness blocked: openjaws/artifacts/fabric-audit-soak-20260420T022653Z: verified private node is blocked by mission treasury signer mismatch despite rerun delta 1
+- Summary: shared readiness blocked: openjaws/artifacts/fabric-audit-soak-20260420T022653Z: verified private node is blocked by mission treasury signer mismatch despite rerun delta 1 | http://127.0.0.1:11435: local Q accepted 0/0 seed+mediation scenario pair(s)
 - ledger.public: `ready` @ `https://arobi.aura-genesis.org` | public edge surfaced a fresh governed audit record on live 3.3.1 and the local public node contract is configured
-- discord.transport: `ready` @ `http://127.0.0.1:8788/health` | status=ready; gateway=true; guilds=1; health 200; updated 39s ago (budget 900s)
-- q.oci: `ready` @ `https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1` | Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 39s ago (budget 900s)
+- discord.transport: `ready` @ `http://127.0.0.1:8788/health` | status=ready; gateway=true; guilds=1; health 200; updated 18s ago (budget 900s)
+- q.oci: `ready` @ `https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1` | Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 18s ago (budget 900s)
 
 ## Q Patrol
 
 - Status: `ready`
 - Summary: state changed but routing cooldown held
 - Last decision: `state changed but routing cooldown held`
-- Last posted channel: `openjaws-updates`
+- Last posted channel: `q-command-station`
 - Last summary: state changed but routing cooldown held
 - Queue length: `182`
 - Recommended layer: `Q`
@@ -36,12 +36,12 @@ This page is the machine-stamped local activity feed for the supervised Discord/
 - Status: `ready`
 - Session status: `running`
 - Channel: `dev_support`
-- Turns: `80`
-- Next persona: `blackbeak`
-- Last speaker: `viola`
-- Last summary: Viola posted turn 80
+- Turns: `88`
+- Next persona: `viola`
+- Last speaker: `q`
+- Last summary: Q posted turn 88
 - Action receipts: `21`
-- Summary: running | Viola posted turn 80 | 80 turns | 2/21 recent actions passed verification | 469 blocked job(s)
+- Summary: running | Q posted turn 88 | 88 turns | 2/21 recent actions passed verification | 470 blocked job(s)
 - State source: `openjaws/local-command-station/roundtable-runtime/discord-roundtable.state.json`
 - Session source: `openjaws/local-command-station/roundtable-runtime/discord-roundtable.session.json`
 
@@ -72,32 +72,32 @@ This page is the machine-stamped local activity feed for the supervised Discord/
 ### Blackbeak
 
 - Status: `ready`
-- Updated: `2026-05-13T19:05:16.976Z`
+- Updated: `2026-05-13T20:42:40.778Z`
 - Guilds: `2`
 - Backend: `Q backend: oci:Q via OCI IAM`
-- Summary: ready | gateway online (2 guild) | Q backend: oci:Q via OCI IAM | gateway_ready · connected to 2 guilds | knowledge 2500 files | voice off
+- Summary: ready | gateway online (2 guild) | Q backend: oci:Q via OCI IAM | blackbeak_meme_skipped · scheduled meme skipped: media_blocked until 2026-05-13T20:42:59.380Z · #daily_meme | knowledge 2500 files | voice off
 - Source: `openjaws/local-command-station/bots/blackbeak/discord-agent-receipt.json`
 - Recent events:
+  - `2026-05-13T20:42:40.778Z` | `blackbeak_meme_skipped` @ `#daily_meme` | scheduled meme skipped: media_blocked until 2026-05-13T20:42:59.380Z
   - `2026-05-13T19:05:16.976Z` | `gateway_ready` | connected to 2 guilds
   - `2026-05-13T19:05:05.895Z` | `gateway_reconnecting` | Discord gateway closed with code 1000: Discord WebSocket requesting client reconnect.
   - `2026-05-13T19:05:05.885Z` | `gateway_closed` | Discord gateway closed with code 1000: Discord WebSocket requesting client reconnect.
   - `2026-05-13T18:43:25.230Z` | `gateway_ready` | connected to 2 guilds
-  - `2026-05-13T18:43:17.099Z` | `gateway_reconnecting` | Discord gateway closed with code 1000.
 
 ### Viola
 
 - Status: `ready`
-- Updated: `2026-05-13T20:00:23.179Z`
+- Updated: `2026-05-13T20:57:16.427Z`
 - Guilds: `1`
 - Backend: `Q backend: oci:Q via OCI IAM`
 - Summary: ready | gateway online (1 guild) | Q backend: oci:Q via OCI IAM | voice_joined · joined #viola-lounge · #viola-lounge | knowledge 2500 files | voice connected @ viola-lounge
 - Source: `openjaws/local-command-station/bots/viola/discord-agent-receipt.json`
 - Recent events:
+  - `2026-05-13T20:57:16.427Z` | `voice_joined` @ `#viola-lounge` | joined #viola-lounge
+  - `2026-05-13T20:57:06.921Z` | `gateway_ready` | connected to 1 guild
+  - `2026-05-13T20:56:08.510Z` | `gateway_reconnecting` | Discord gateway closed with code 1000: Discord WebSocket requesting client reconnect.
+  - `2026-05-13T20:56:03.174Z` | `gateway_closed` | Discord gateway closed with code 1000: Discord WebSocket requesting client reconnect.
   - `2026-05-13T20:00:23.179Z` | `voice_joined` @ `#viola-lounge` | joined #viola-lounge
-  - `2026-05-13T20:00:17.337Z` | `gateway_ready` | connected to 1 guild
-  - `2026-05-13T20:00:10.828Z` | `gateway_reconnecting` | Discord gateway closed with code 1006: Connection ended
-  - `2026-05-13T20:00:10.762Z` | `gateway_closed` | Discord gateway closed with code 1006: Connection ended
-  - `2026-05-13T18:56:34.902Z` | `voice_joined` @ `#viola-lounge` | joined #viola-lounge
 
 ## Operator State
 

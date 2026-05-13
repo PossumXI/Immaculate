@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-13T20:25:58.405Z",
+  "generatedAt": "2026-05-13T20:58:37.653Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "ef835d35602affe00f48cb149b27237f19b2bbf3",
-    "gitShortSha": "ef835d3",
+    "gitSha": "0b8b3db3138ec07d50142c307daf413700570268",
+    "gitShortSha": "0b8b3db",
     "gitBranch": "main",
-    "buildId": "0.1.0+ef835d3",
+    "buildId": "0.1.0+0b8b3db",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -56,27 +56,27 @@
     "apiBaseUrl": "https://arobi.aura-genesis.org",
     "version": "3.3.1",
     "network": "AROBI1",
-    "height": 59372,
-    "peerCount": 0,
+    "height": 59399,
+    "peerCount": 2,
     "consensusType": "proof_of_intelligence",
-    "poiSolved": 2,
-    "totalEntries": 32945,
+    "poiSolved": 29,
+    "totalEntries": 32995,
     "chainValid": true,
     "fabricSource": "nysus",
     "orchestrationAvailable": true,
     "brainReady": true
   },
   "latestVisibleEntry": {
-    "entryId": "flightgear-q-20260513-160518-q_cruise-2026-05-13t202556.2651697z",
-    "timestamp": "2026-05-13T20:25:56.2651697Z",
+    "entryId": "flightgear-q-20260513-160518-q_cruise-2026-05-13t204042.2630995z",
+    "timestamp": "2026-05-13T20:40:42.2630995Z",
     "blockHeight": null,
     "sourceLabel": "immaculate_showcase",
     "modelId": "q-operator-public-showcase",
     "modelVersion": "n/a",
-    "inputSummary": "Simulator-only Q decision via local-q-safety during pattern profile. Health degraded, reason base high energy descent, challenge runway hold short, altitude 724.2 ft AGL, airspeed 110.5 kt, rpm 1207, throttle 0.00, elevator 0.200, target heading 250.0, target altitude 568.9 ft. Awareness: Q sees cruise: agl 724.2ft, projected 764.0ft in 3s, speed margin 30.6kt, heading error -5.4deg, terrain risk clear. Map KJFK/31L says runway along -13575ft, remaining 14549ft, approach distance 13575ft, and signed centerline offset 6202ft.",
+    "inputSummary": "Simulator-only Q decision via local-q-safety during pattern profile. Health degraded, reason base high energy descent, challenge runway hold short, altitude 642.8 ft AGL, airspeed 121.6 kt, rpm 1347, throttle 0.00, elevator -0.055, target heading 251.9, target altitude 568.9 ft. Awareness: Q sees cruise: agl 642.8ft, projected 558.2ft in 3s, speed margin 44.7kt, heading error -51.1deg, terrain risk clear. Map KJFK/31L says runway along -14791ft, remaining 14549ft, approach distance 14791ft, and signed centerline offset 7288ft.",
     "decision": "Q FlightGear decision: q_cruise base high energy descent",
     "networkContext": "PUBLIC",
-    "reasoning": "Simulator-only Q FlightGear decision mirrored through Immaculate. Health degraded. Public decision basis: Q sees cruise: agl 724.2ft, projected 764.0ft in 3s, speed margin 30.6kt, heading error -5.4deg, terrain risk clear. Map KJFK/31L says runway along -13575ft, remaining 14549ft, approach distance 13575ft, and signed centerline offset 6202ft."
+    "reasoning": "Simulator-only Q FlightGear decision mirrored through Immaculate. Health degraded. Public decision basis: Q sees cruise: agl 642.8ft, projected 558.2ft in 3s, speed margin 44.7kt, heading error -51.1deg, terrain risk clear. Map KJFK/31L says runway along -14791ft, remaining 14549ft, approach distance 14791ft, and signed centerline offset 7288ft."
   },
   "latestLocalRerun": {
     "runId": "fabric-audit-soak-20260420T022653Z",
