@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-05-13T17:50:15.472Z",
+  "generatedAt": "2026-05-13T18:19:10.199Z",
   "threshold": 0.75,
   "ready": true,
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "d733583967e50faf8b9f3bdb740f095570dd3edd",
-    "gitShortSha": "d733583",
+    "gitSha": "d4ba2de448111bc87ce427c4d358b597f5f11b93",
+    "gitShortSha": "d4ba2de",
     "gitBranch": "main",
-    "buildId": "0.1.0+d733583",
+    "buildId": "0.1.0+d4ba2de",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -55,7 +55,7 @@
   "reasons": [],
   "sources": {
     "modelComparisonGeneratedAt": "2026-05-07T06:03:07.620Z",
-    "bridgeBenchGeneratedAt": "2026-05-07T04:12:53.126Z",
+    "bridgeBenchGeneratedAt": "2026-05-13T18:17:15.790Z",
     "qGatewayValidationGeneratedAt": "2026-05-07T07:32:32.750Z"
   },
   "q": {

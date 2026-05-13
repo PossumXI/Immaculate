@@ -3,9 +3,9 @@
 This page is the machine-stamped GitHub Actions truth surface for the three coordinated repos in the current workstation orbit.
 It exists so operational claims do not rely on one green repo while another repo is red, inaccessible, or only visible through private GitHub auth.
 
-- Generated: `2026-05-13T17:50:13.165Z`
-- Immaculate release: `0.1.0+d733583`
-- Repo commit: `d733583967e50faf8b9f3bdb740f095570dd3edd`
+- Generated: `2026-05-13T18:19:00.172Z`
+- Immaculate release: `0.1.0+d4ba2de`
+- Repo commit: `d4ba2de448111bc87ce427c4d358b597f5f11b93`
 
 ## Summary
 
@@ -32,11 +32,11 @@ It exists so operational claims do not rely on one green repo while another repo
 ### Latest Observed Workflow Runs
 
 - Benchmark Credibility #32: `success` | `success` - workflow concluded success (https://github.com/PossumXI/Immaculate/actions/runs/25792361142)
-- Benchmark Publication #264: `success` | `success` - workflow concluded success (https://github.com/PossumXI/Immaculate/actions/runs/25816323230)
-- CI #327: `success` | `success` - workflow concluded success (https://github.com/PossumXI/Immaculate/actions/runs/25816325303)
+- Benchmark Publication #268: `success` | `success` - workflow concluded success (https://github.com/PossumXI/Immaculate/actions/runs/25817460627)
+- CI #332: `success` | `success` - workflow concluded success (https://github.com/PossumXI/Immaculate/actions/runs/25817460645)
 - npm_and_yarn in /. for next - Update #1361215239 #55: `failure` | `non_actionable` - dynamic Dependabot update failure is tracked as dependency automation noise; code-bearing workflow evidence remains listed separately (https://github.com/PossumXI/Immaculate/actions/runs/25705950214)
-- GitGuardian #321: `success` | `success` - workflow concluded success (https://github.com/PossumXI/Immaculate/actions/runs/25816325765)
-- Security #327: `success` | `success` - workflow concluded success (https://github.com/PossumXI/Immaculate/actions/runs/25816323194)
+- GitGuardian #326: `success` | `success` - workflow concluded success (https://github.com/PossumXI/Immaculate/actions/runs/25817460661)
+- Security #332: `success` | `success` - workflow concluded success (https://github.com/PossumXI/Immaculate/actions/runs/25817460610)
 
 ### Active Workflow Definitions
 
@@ -113,7 +113,7 @@ It exists so operational claims do not rely on one green repo while another repo
 - Graph Update: go_modules in /., /Valkyrie #1361336421 #29: `success` | `success` - workflow concluded success (private run URL withheld)
 - GitGuardian Secret Detection #426: `success` | `success` - workflow concluded success (private run URL withheld)
 - public-status-production-smoke #199: `success` | `success` - workflow concluded success (private run URL withheld)
-- SENTINEL Heartbeat #2363: `success` | `success` - workflow concluded success (private run URL withheld)
+- SENTINEL Heartbeat #2364: `success` | `success` - workflow concluded success (private run URL withheld)
 - stripe-webhook-production-smoke #398: `success` | `success` - workflow concluded success (private run URL withheld)
 
 ### Active Workflow Definitions

@@ -1,20 +1,20 @@
 {
-  "generatedAt": "2026-05-13T17:50:33.850Z",
+  "generatedAt": "2026-05-13T18:18:05.871Z",
   "repo": {
     "fullName": "PossumXI/Immaculate",
     "htmlUrl": "https://github.com/PossumXI/Immaculate"
   },
   "targetCommit": {
-    "sha": "d733583967e50faf8b9f3bdb740f095570dd3edd",
-    "shortSha": "d733583",
-    "htmlUrl": "https://github.com/PossumXI/Immaculate/commit/d733583967e50faf8b9f3bdb740f095570dd3edd"
+    "sha": "d4ba2de448111bc87ce427c4d358b597f5f11b93",
+    "shortSha": "d4ba2de",
+    "htmlUrl": "https://github.com/PossumXI/Immaculate/commit/d4ba2de448111bc87ce427c4d358b597f5f11b93"
   },
   "release": {
-    "buildId": "0.1.0+d733583",
+    "buildId": "0.1.0+d4ba2de",
     "branch": "main"
   },
   "verification": {
-    "source": "github-rest",
+    "source": "github-rest+gh-auth",
     "classicStatusState": "pending",
     "classicStatusContexts": 0,
     "workflowRunCount": 4,
@@ -25,101 +25,101 @@
   "workflows": [
     {
       "name": "GitGuardian",
-      "runNumber": 321,
+      "runNumber": 326,
       "event": "push",
       "status": "completed",
       "conclusion": "success",
-      "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25816325765",
-      "createdAt": "2026-05-13T17:46:13Z",
-      "updatedAt": "2026-05-13T17:46:40Z"
-    },
-    {
-      "name": "CI",
-      "runNumber": 327,
-      "event": "push",
-      "status": "completed",
-      "conclusion": "success",
-      "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25816325303",
-      "createdAt": "2026-05-13T17:46:13Z",
-      "updatedAt": "2026-05-13T17:47:46Z"
+      "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25817460661",
+      "createdAt": "2026-05-13T18:07:56Z",
+      "updatedAt": "2026-05-13T18:08:12Z"
     },
     {
       "name": "Benchmark Publication",
-      "runNumber": 264,
+      "runNumber": 268,
       "event": "push",
       "status": "completed",
       "conclusion": "success",
-      "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25816323230",
-      "createdAt": "2026-05-13T17:46:11Z",
-      "updatedAt": "2026-05-13T17:47:32Z"
+      "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25817460627",
+      "createdAt": "2026-05-13T18:07:56Z",
+      "updatedAt": "2026-05-13T18:09:22Z"
+    },
+    {
+      "name": "CI",
+      "runNumber": 332,
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25817460645",
+      "createdAt": "2026-05-13T18:07:56Z",
+      "updatedAt": "2026-05-13T18:09:39Z"
     },
     {
       "name": "Security",
-      "runNumber": 327,
+      "runNumber": 332,
       "event": "push",
       "status": "completed",
       "conclusion": "success",
-      "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25816323194",
-      "createdAt": "2026-05-13T17:46:11Z",
-      "updatedAt": "2026-05-13T17:48:40Z"
+      "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25817460610",
+      "createdAt": "2026-05-13T18:07:56Z",
+      "updatedAt": "2026-05-13T18:10:50Z"
     }
   ],
   "checkRuns": [
     {
-      "name": "gitguardian",
-      "status": "completed",
-      "conclusion": "success",
-      "url": "https://github.com/PossumXI/Immaculate/actions/runs/25816325765/job/75845675359",
-      "startedAt": "2026-05-13T17:46:24Z",
-      "completedAt": "2026-05-13T17:46:39Z"
-    },
-    {
-      "name": "benchmark-gate",
-      "status": "completed",
-      "conclusion": "success",
-      "url": "https://github.com/PossumXI/Immaculate/actions/runs/25816325303/job/75845672192",
-      "startedAt": "2026-05-13T17:46:23Z",
-      "completedAt": "2026-05-13T17:47:45Z"
-    },
-    {
       "name": "dependency-review",
       "status": "completed",
       "conclusion": "skipped",
-      "url": "https://github.com/PossumXI/Immaculate/actions/runs/25816323194/job/75845667970",
-      "startedAt": "2026-05-13T17:46:12Z",
-      "completedAt": "2026-05-13T17:46:12Z"
-    },
-    {
-      "name": "publish-benchmarks",
-      "status": "completed",
-      "conclusion": "success",
-      "url": "https://github.com/PossumXI/Immaculate/actions/runs/25816323230/job/75845667572",
-      "startedAt": "2026-05-13T17:46:21Z",
-      "completedAt": "2026-05-13T17:47:31Z"
-    },
-    {
-      "name": "codeql",
-      "status": "completed",
-      "conclusion": "success",
-      "url": "https://github.com/PossumXI/Immaculate/actions/runs/25816323194/job/75845667360",
-      "startedAt": "2026-05-13T17:46:14Z",
-      "completedAt": "2026-05-13T17:48:39Z"
+      "url": "https://github.com/PossumXI/Immaculate/actions/runs/25817460610/job/75849588566",
+      "startedAt": "2026-05-13T18:07:58Z",
+      "completedAt": "2026-05-13T18:07:57Z"
     },
     {
       "name": "gitleaks",
       "status": "completed",
       "conclusion": "success",
-      "url": "https://github.com/PossumXI/Immaculate/actions/runs/25816323194/job/75845667327",
-      "startedAt": "2026-05-13T17:46:20Z",
-      "completedAt": "2026-05-13T17:46:34Z"
+      "url": "https://github.com/PossumXI/Immaculate/actions/runs/25817460610/job/75849587613",
+      "startedAt": "2026-05-13T18:08:00Z",
+      "completedAt": "2026-05-13T18:08:14Z"
+    },
+    {
+      "name": "codeql",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/PossumXI/Immaculate/actions/runs/25817460610/job/75849587544",
+      "startedAt": "2026-05-13T18:08:00Z",
+      "completedAt": "2026-05-13T18:10:49Z"
     },
     {
       "name": "npm-audit",
       "status": "completed",
       "conclusion": "success",
-      "url": "https://github.com/PossumXI/Immaculate/actions/runs/25816323194/job/75845667313",
-      "startedAt": "2026-05-13T17:46:21Z",
-      "completedAt": "2026-05-13T17:46:40Z"
+      "url": "https://github.com/PossumXI/Immaculate/actions/runs/25817460610/job/75849587498",
+      "startedAt": "2026-05-13T18:08:06Z",
+      "completedAt": "2026-05-13T18:08:28Z"
+    },
+    {
+      "name": "benchmark-gate",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/PossumXI/Immaculate/actions/runs/25817460645/job/75849587349",
+      "startedAt": "2026-05-13T18:08:06Z",
+      "completedAt": "2026-05-13T18:09:38Z"
+    },
+    {
+      "name": "publish-benchmarks",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/PossumXI/Immaculate/actions/runs/25817460627/job/75849587144",
+      "startedAt": "2026-05-13T18:08:07Z",
+      "completedAt": "2026-05-13T18:09:22Z"
+    },
+    {
+      "name": "gitguardian",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/PossumXI/Immaculate/actions/runs/25817460661/job/75849586920",
+      "startedAt": "2026-05-13T18:07:59Z",
+      "completedAt": "2026-05-13T18:08:11Z"
     }
   ],
   "truthBoundary": [
