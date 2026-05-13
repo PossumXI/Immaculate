@@ -8323,6 +8323,29 @@ app.get("/stream/actuation/device", { websocket: true }, (socket, request) => {
 
 let interval: NodeJS.Timeout | null = null;
 
+function persistTickerSnapshot(context: string): void {
+  try {
+    const durableState = engine.getDurableState();
+    void persistence.persist(durableState).catch((error) => {
+      app.log.error(
+        {
+          err: error instanceof Error ? error : new Error(String(error)),
+          context
+        },
+        "Immaculate skipped a durable-state persist after persistence rejected the snapshot."
+      );
+    });
+  } catch (error) {
+    app.log.error(
+      {
+        err: error instanceof Error ? error : new Error(String(error)),
+        context
+      },
+      "Immaculate skipped a durable-state persist after snapshot cloning failed."
+    );
+  }
+}
+
 function startTicker(): void {
   if (interval) {
     return;
@@ -8330,7 +8353,7 @@ function startTicker(): void {
 
   interval = setInterval(() => {
     engine.tick();
-    void persistence.persist(engine.getDurableState());
+    persistTickerSnapshot("ticker");
     emitSnapshot();
   }, tickIntervalMs);
 }

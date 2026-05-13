@@ -2731,7 +2731,10 @@ function defaultNeuralCouplingState(): NeuralCouplingState & {
 const ENGINE_SERVICE = "immaculate-harness";
 const ENGINE_INSTANCE = "orchestration-core";
 const HISTORY_LIMIT = 240;
-const EVENT_LIMIT = 2048;
+// The append-only persistence ledger keeps the long audit stream. The in-memory
+// durable snapshot stays smaller so frequent tick persistence cannot OOM while
+// cloning large roundtable or cognition payloads.
+const EVENT_LIMIT = 512;
 
 type EngineState = {
   snapshot: PhaseSnapshot;
@@ -2746,19 +2749,24 @@ type EngineState = {
   predictionError: number;
 };
 
+function cloneSerializableState<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
 function cloneDurableState(durableState: EngineDurableState): EngineDurableState {
   const parsed = engineDurableStateSchema.parse(durableState) as EngineDurableState;
+  const cloned = cloneSerializableState(parsed);
   const predictionError = Number.isFinite(parsed.predictionError) ? parsed.predictionError : 0;
   return {
-    ...structuredClone(parsed),
+    ...cloned,
     snapshot: {
-      ...structuredClone(parsed.snapshot),
+      ...cloned.snapshot,
       metrics: {
-        ...structuredClone(parsed.snapshot.metrics),
+        ...cloned.snapshot.metrics,
         predictionError
       },
       neuralCoupling: {
-        ...structuredClone(parsed.snapshot.neuralCoupling),
+        ...cloned.snapshot.neuralCoupling,
         predictionError
       }
     },
@@ -5823,17 +5831,18 @@ export function createEngine(options?: {
     getSnapshot: () => state.snapshot,
     getHistory: () => state.history,
     getEvents: () => state.events,
-    getDurableState: () => ({
-      snapshot: structuredClone(state.snapshot),
-      history: structuredClone(state.history),
-      events: structuredClone(state.events),
-      serial: state.serial,
-      pulse: state.pulse,
-      phaseIncrement: structuredClone(state.phaseIncrement),
-      expectedLatency: structuredClone(state.expectedLatency),
-      latencyWindows: structuredClone(state.latencyWindows),
-      predictionError: state.predictionError
-    }),
+    getDurableState: () =>
+      cloneDurableState({
+        snapshot: state.snapshot,
+        history: state.history,
+        events: state.events,
+        serial: state.serial,
+        pulse: state.pulse,
+        phaseIncrement: state.phaseIncrement,
+        expectedLatency: state.expectedLatency,
+        latencyWindows: state.latencyWindows,
+        predictionError: state.predictionError
+      }),
     tick: () => advanceSnapshot(state, false),
     control,
     registerDataset,
