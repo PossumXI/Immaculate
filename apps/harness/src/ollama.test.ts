@@ -4,7 +4,7 @@ import type { AddressInfo } from "node:net";
 import test from "node:test";
 import { runOllamaChatCompletion } from "./ollama.js";
 
-test("Ollama chat runner omits disabled thinking flag while preserving explicit enablement", async () => {
+test("Ollama chat runner serializes explicit thinking mode", async () => {
   const capturedBodies: Array<Record<string, unknown>> = [];
   const server = http.createServer((request, response) => {
     const chunks: Buffer[] = [];
@@ -56,7 +56,7 @@ test("Ollama chat runner omits disabled thinking flag while preserving explicit 
     });
 
     assert.equal(capturedBodies.length, 2);
-    assert.equal("think" in capturedBodies[0], false);
+    assert.equal(capturedBodies[0].think, false);
     assert.equal(capturedBodies[1].think, true);
   } finally {
     await new Promise<void>((resolve, reject) => {
