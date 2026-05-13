@@ -2,9 +2,9 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-05-13T16:59:36.274Z
-- Immaculate release: `0.1.0+d06acb6`
-- Repo commit: `d06acb6d11e0d6ac9446b331eaf363fc7a894b37`
+- Generated: 2026-05-13T17:01:25.956Z
+- Immaculate release: `0.1.0+5e64812`
+- Repo commit: `5e64812c5415bdafa990085f235371b20b670abf`
 - Branch: `main`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+d06acb6` is the current repo build stamp.
+- Immaculate build `0.1.0+5e64812` is the current repo build stamp.
 - Arobi Network is the ledger-backed private and public operator network and audit substrate. Immaculate is the governed harness and orchestrator inside it. Q is the reasoning brain inside that governed stack.
 - Q is the only public model name used across the repo, and it is built on `Gemma 4`.
 - The latest tracked Q training bundle is `q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3`, tied to dataset `.training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
