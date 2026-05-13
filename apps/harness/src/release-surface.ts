@@ -415,6 +415,41 @@ export function inferSurfaceHealth(payload: unknown): Pick<
     };
   }
 
+  if (record.ready === false) {
+    return {
+      healthStatus: "unhealthy",
+      healthReason: "receipt reports ready=false"
+    };
+  }
+
+  const models = record.models;
+  if (
+    Array.isArray(models) &&
+    models.some((entry) => {
+      const model = asRecord(entry);
+      if (!model) {
+        return false;
+      }
+      const parseSuccessRate = model.parseSuccessRate;
+      if (typeof parseSuccessRate === "number" && parseSuccessRate < 1) {
+        return true;
+      }
+      const parseSuccessCount = model.parseSuccessCount;
+      const taskCount = model.taskCount;
+      return (
+        typeof parseSuccessCount === "number" &&
+        typeof taskCount === "number" &&
+        taskCount > 0 &&
+        parseSuccessCount < taskCount
+      );
+    })
+  ) {
+    return {
+      healthStatus: "unhealthy",
+      healthReason: "model lane receipt reports incomplete structured parse success"
+    };
+  }
+
   const verification = nestedRecord(record, "verification");
   if (verification?.allWorkflowRunsSuccessful === false) {
     return {

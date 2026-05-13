@@ -129,6 +129,32 @@ test("release surface health blocks non-green actionable workflow receipts", () 
   assert.match(health.healthReason ?? "", /actionable/u);
 });
 
+test("release surface health blocks receipts that explicitly report not ready", () => {
+  const health = inferSurfaceHealth({
+    ready: false,
+    reasons: ["Q BridgeBench parse success is below threshold."]
+  });
+
+  assert.equal(health.healthStatus, "unhealthy");
+  assert.match(health.healthReason ?? "", /ready=false/u);
+});
+
+test("release surface health blocks model lanes with incomplete parse success", () => {
+  const health = inferSurfaceHealth({
+    models: [
+      {
+        truthfulLabel: "Q",
+        taskCount: 4,
+        parseSuccessCount: 0,
+        parseSuccessRate: 0
+      }
+    ]
+  });
+
+  assert.equal(health.healthStatus, "unhealthy");
+  assert.match(health.healthReason ?? "", /parse success/u);
+});
+
 test("release accountability markdown lists blockers before warnings", () => {
   const evidence = evaluateReleaseSurfaceEvidence(
     [
