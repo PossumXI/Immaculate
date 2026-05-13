@@ -24,6 +24,16 @@ The intended path is:
 - Immaculate exists so the system has a harness that can govern action, not just generate text.
 - Q exists so the system has one clear reasoning brain instead of a shifting set of public model identities.
 
+## Lane Policy
+
+Arobi Network evidence now carries an explicit lane policy in Immaculate event envelopes.
+
+- `public` is for public-safe status, benchmark, release, and showcase summaries. It may feed Q training only after redaction.
+- `private` is the default operator-audit lane. It can feed internal training/evaluation when policy allows and secrets are excluded.
+- `zero-zero` is the sealed path for device, actuation, defense, physical-control, biometric, or explicitly sealed records. It is not public-exportable and is blocked from training datasets.
+
+Older event envelopes without lane metadata migrate to `private` during schema parsing so historical ledgers remain readable without rewriting their hashes. New `1.1.0` events bind the lane policy into the event integrity hash.
+
 ## Why Auditors And Insurers Care
 
 For review and insurability, the important question is not just "what answer did the AI give?"
