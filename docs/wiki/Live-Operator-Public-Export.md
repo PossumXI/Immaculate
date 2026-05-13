@@ -2,9 +2,9 @@
 
 This page is the public-safe operator export for the current workstation. It mirrors the `fabric.showcase` contract already used by the aura-genesis status page, keeps the private mission lane closed, and only emits aggregate operator activity that is safe to publish on public surfaces.
 
-- Generated: `2026-05-13T20:58:51.329Z`
-- Release: `0.1.0+0b8b3db`
-- Repo commit: `0b8b3db3138ec07d50142c307daf413700570268`
+- Generated: `2026-05-13T21:03:01.982Z`
+- Release: `0.1.0+ec17e41`
+- Repo commit: `ec17e4161f8f32a45c4c16ab550c65457304222b`
 - Contract target: `fabric.showcase` v1
 
 ## Publication Gate
@@ -17,9 +17,9 @@ This page is the public-safe operator export for the current workstation. It mir
 
 ## Source Freshness
 
-- Live mission readiness: `fresh` via `docs/wiki/Live-Mission-Readiness.json` at `2026-05-13T20:58:42.728Z` - fresh (0m old, budget 24h)
-- Live operator activity: `fresh` via `docs/wiki/Live-Operator-Activity.json` at `2026-05-13T20:58:47.300Z` - fresh (0m old, budget 24h)
-- Arobi live ledger receipt: `fresh` via `docs/wiki/Arobi-Live-Ledger-Receipt.json` at `2026-05-13T20:58:37.653Z` - fresh (0m old, budget 24h)
+- Live mission readiness: `fresh` via `docs/wiki/Live-Mission-Readiness.json` at `2026-05-13T21:02:57.669Z` - fresh (0m old, budget 24h)
+- Live operator activity: `fresh` via `docs/wiki/Live-Operator-Activity.json` at `2026-05-13T21:03:00.075Z` - fresh (0m old, budget 24h)
+- Arobi live ledger receipt: `fresh` via `docs/wiki/Arobi-Live-Ledger-Receipt.json` at `2026-05-13T21:02:56.622Z` - fresh (0m old, budget 24h)
 
 ## Public Showcase Status
 
@@ -33,11 +33,11 @@ This page is the public-safe operator export for the current workstation. It mir
 - Publish targets: aura-genesis.org/status (public-safe aggregate only) | iorch.net (results only) | qline.site (results only; not published from this repo)
 - Subsystems: total `5` | online `3` | degraded `2` | offline `0` | unconfigured `0`
 - Network version: `3.3.1`
-- Verified ledger entries: `32995`
-- Public height: `59399`
+- Verified ledger entries: `32999`
+- Public height: `59409`
 - Orchestration profile: `immaculate-supervised-operator-loop`
 - Q auth mode: `oci_iam`
-- Last checked: `2026-05-13T20:58:51.329Z`
+- Last checked: `2026-05-13T21:03:01.982Z`
 
 ## Activity Feed
 
@@ -45,7 +45,7 @@ This page is the public-safe operator export for the current workstation. It mir
 
 - Status: `ok`
 - Kind: `showcase`
-- Timestamp: `2026-05-13T20:58:51.329Z`
+- Timestamp: `2026-05-13T21:03:01.982Z`
 - Source: `fabric.showcase`
 - Summary: Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is blocked; OCI-backed Q is ready; Discord transport is ready; public ledger publication is currently ready
 - Subsystems: immaculate, openjaws, q
@@ -56,7 +56,7 @@ This page is the public-safe operator export for the current workstation. It mir
 
 - Status: `ok`
 - Kind: `publication`
-- Timestamp: `2026-05-13T20:58:51.329Z`
+- Timestamp: `2026-05-13T21:03:01.982Z`
 - Source: `immaculate.live_operator_activity`
 - Summary: public-safe operator export is publishable on the current workstation
 - Subsystems: arobi, immaculate
@@ -67,9 +67,9 @@ This page is the public-safe operator export for the current workstation. It mir
 
 - Status: `ok`
 - Kind: `agent`
-- Timestamp: `2026-05-13T20:58:47.300Z`
+- Timestamp: `2026-05-13T21:03:00.075Z`
 - Source: `immaculate.live_operator_activity`
-- Summary: state changed but routing cooldown held
+- Summary: posted immaculate state changed -> #openjaws-updates
 - Subsystems: q, discord
 - Artifacts: receipt:q-patrol, layer:Q
 - Tags: q, patrol, operator
@@ -78,7 +78,7 @@ This page is the public-safe operator export for the current workstation. It mir
 
 - Status: `ok`
 - Kind: `roundtable`
-- Timestamp: `2026-05-13T20:58:47.300Z`
+- Timestamp: `2026-05-13T21:03:00.075Z`
 - Source: `immaculate.live_operator_activity`
 - Summary: running | Q posted turn 88 | 88 turns | 2/21 recent actions passed verification | 470 blocked job(s)
 - Subsystems: discord, openjaws, immaculate
@@ -100,7 +100,7 @@ This page is the public-safe operator export for the current workstation. It mir
 
 - Status: `warning`
 - Kind: `operator`
-- Timestamp: `2026-05-13T20:58:47.300Z`
+- Timestamp: `2026-05-13T21:03:00.075Z`
 - Source: `immaculate.live_operator_activity`
 - Summary: PossumX
 - Subsystems: openjaws, immaculate
@@ -111,9 +111,9 @@ This page is the public-safe operator export for the current workstation. It mir
 
 - Status: `ok`
 - Kind: `transport`
-- Timestamp: `2026-05-13T20:58:51.329Z`
+- Timestamp: `2026-05-13T21:03:01.982Z`
 - Source: `immaculate.live_mission_readiness`
-- Summary: status=ready; gateway=true; guilds=1; health 200; updated 18s ago (budget 900s)
+- Summary: status=ready; gateway=true; guilds=1; health 200; updated 22s ago (budget 900s)
 - Subsystems: discord, q
 - Artifacts: readiness:discord-transport
 - Tags: discord, transport
@@ -122,9 +122,9 @@ This page is the public-safe operator export for the current workstation. It mir
 
 - Status: `ok`
 - Kind: `ledger`
-- Timestamp: `2026-05-13T20:58:37.653Z`
+- Timestamp: `2026-05-13T21:02:56.622Z`
 - Source: `immaculate.arobi_live_ledger`
-- Summary: public ledger version 3.3.1 on block 59,399 with 32,995 visible aggregate entries; fabric source nysus
+- Summary: public ledger version 3.3.1 on block 59,409 with 32,999 visible aggregate entries; fabric source nysus
 - Subsystems: arobi, ledger
 - Artifacts: receipt:arobi-live-ledger
 - Tags: ledger, public, audit

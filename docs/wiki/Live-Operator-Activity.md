@@ -2,9 +2,9 @@
 
 This page is the machine-stamped local activity feed for the supervised Discord/Q/OpenJaws loop. It summarizes the canonical OpenJaws receipts so Immaculate can expose one operator-facing activity surface without inventing a duplicate schema.
 
-- Generated: `2026-05-13T20:58:47.300Z`
-- Release: `0.1.0+0b8b3db`
-- Repo commit: `0b8b3db3138ec07d50142c307daf413700570268`
+- Generated: `2026-05-13T21:03:00.075Z`
+- Release: `0.1.0+ec17e41`
+- Repo commit: `ec17e4161f8f32a45c4c16ab550c65457304222b`
 
 ## Publication Gate
 
@@ -17,16 +17,16 @@ This page is the machine-stamped local activity feed for the supervised Discord/
 - Mission-surface ready: `false`
 - Summary: shared readiness blocked: openjaws/artifacts/fabric-audit-soak-20260420T022653Z: verified private node is blocked by mission treasury signer mismatch despite rerun delta 1 | http://127.0.0.1:11435: local Q accepted 0/0 seed+mediation scenario pair(s)
 - ledger.public: `ready` @ `https://arobi.aura-genesis.org` | public edge surfaced a fresh governed audit record on live 3.3.1 and the local public node contract is configured
-- discord.transport: `ready` @ `http://127.0.0.1:8788/health` | status=ready; gateway=true; guilds=1; health 200; updated 18s ago (budget 900s)
-- q.oci: `ready` @ `https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1` | Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 18s ago (budget 900s)
+- discord.transport: `ready` @ `http://127.0.0.1:8788/health` | status=ready; gateway=true; guilds=1; health 200; updated 22s ago (budget 900s)
+- q.oci: `ready` @ `https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1` | Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 22s ago (budget 900s)
 
 ## Q Patrol
 
 - Status: `ready`
-- Summary: state changed but routing cooldown held
-- Last decision: `state changed but routing cooldown held`
-- Last posted channel: `q-command-station`
-- Last summary: state changed but routing cooldown held
+- Summary: posted immaculate state changed -> #openjaws-updates
+- Last decision: `posted immaculate state changed -> #openjaws-updates`
+- Last posted channel: `openjaws-updates`
+- Last summary: 1 patrol post sent
 - Queue length: `182`
 - Recommended layer: `Q`
 - Source: `openjaws/local-command-station/discord-q-agent-receipt.json`

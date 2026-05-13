@@ -2,7 +2,7 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-05-13T20:58:51.329Z
+- Generated: 2026-05-13T21:03:01.982Z
 - Immaculate release: `0.1.0+0b8b3db`
 - Repo commit: `0b8b3db3138ec07d50142c307daf413700570268`
 - Branch: `main`
@@ -28,15 +28,15 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - BridgeBench: `2026-05-13T18:26:23.858Z` via `docs/wiki/BridgeBench.json`
 - BridgeBench soak: `2026-04-15T06:15:54.188Z` via `docs/wiki/BridgeBench-Soak.json`
 - Q structured contract benchmark: `2026-05-07T06:03:07.620Z` via `docs/wiki/Model-Benchmark-Comparison.json`
-- Q readiness gate: `2026-05-13T20:26:35.675Z` via `docs/wiki/Q-Readiness-Gate.json`
+- Q readiness gate: `2026-05-13T21:02:52.833Z` via `docs/wiki/Q-Readiness-Gate.json`
 - Q gateway validation: `2026-05-13T19:56:21.252Z` via `docs/wiki/Q-Gateway-Validation.json`
 - Q gateway substrate: `2026-05-13T18:30:35.581Z` via `docs/wiki/Q-Gateway-Substrate.json`
 - Q mediation drift: `2026-05-13T19:56:56.189Z` via `docs/wiki/Q-Mediation-Drift.json`
 - Arobi audit integrity: `2026-05-12T18:09:17.101Z` via `docs/wiki/Arobi-Audit-Integrity.json`
-- Arobi live ledger receipt: `2026-05-13T20:58:37.653Z` via `docs/wiki/Arobi-Live-Ledger-Receipt.json`
-- Live mission readiness: `2026-05-13T20:58:42.728Z` via `docs/wiki/Live-Mission-Readiness.json`
-- Live operator activity: `2026-05-13T20:58:47.300Z` via `docs/wiki/Live-Operator-Activity.json`
-- Live operator public export: `2026-05-13T20:58:51.329Z` via `docs/wiki/Live-Operator-Public-Export.json`
+- Arobi live ledger receipt: `2026-05-13T21:02:56.622Z` via `docs/wiki/Arobi-Live-Ledger-Receipt.json`
+- Live mission readiness: `2026-05-13T21:02:57.669Z` via `docs/wiki/Live-Mission-Readiness.json`
+- Live operator activity: `2026-05-13T21:03:00.075Z` via `docs/wiki/Live-Operator-Activity.json`
+- Live operator public export: `2026-05-13T21:03:01.982Z` via `docs/wiki/Live-Operator-Public-Export.json`
 - Cross-project workflow health: `2026-05-13T18:23:07.770Z` via `docs/wiki/Cross-Project-Workflow-Health.json`
 - Supervised mission showcase: `2026-04-22T01:20:45.053Z` via `docs/wiki/Supervised-Mission-Showcase.json`
 - Roundtable actionability: `2026-05-13T17:06:06.500Z` via `docs/wiki/Roundtable-Actionability.json`
