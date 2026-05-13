@@ -49,11 +49,15 @@ type WorkflowRunSummary = {
   event?: string;
   status?: string;
   conclusion?: string | null;
+  classification?: WorkflowRunClassification;
+  classificationReason?: string;
   createdAt?: string;
   updatedAt?: string;
   htmlUrl?: string;
   headSha?: string;
 };
+
+type WorkflowRunClassification = "success" | "pending" | "failure" | "non_actionable";
 
 type ActiveWorkflowDefinition = {
   id?: number;
@@ -76,7 +80,9 @@ type RepoWorkflowHealth = {
     activeWorkflowCount: number;
     observedWorkflowCount: number;
     notRecentlyObservedWorkflowCount: number;
+    nonActionableWorkflowCount: number;
     allObservedRunsSuccessful: boolean;
+    allActionableRunsHealthy: boolean;
     latestObservedRunAt?: string;
   };
   workflows: {
@@ -99,6 +105,7 @@ type CrossProjectWorkflowHealthReport = {
     repoCount: number;
     fullyHealthyRepoCount: number;
     allObservedWorkflowRunsSuccessful: boolean;
+    allActionableWorkflowRunsHealthy: boolean;
     detail: string;
   };
   repos: RepoWorkflowHealth[];
@@ -136,6 +143,60 @@ function normalizeConclusion(conclusion: string | null | undefined): string {
 
 function workflowRunSuccess(run: { status?: string; conclusion?: string | null }): boolean {
   return run.status === "completed" && normalizeConclusion(run.conclusion) === "success";
+}
+
+function isDynamicDependabotUpdate(run: {
+  name?: string;
+  workflowPath?: string;
+  event?: string;
+}): boolean {
+  const name = run.name?.toLowerCase() ?? "";
+  const workflowPath = run.workflowPath?.toLowerCase() ?? "";
+  return (
+    run.event === "dynamic" &&
+    (name.includes("dependabot") || workflowPath.startsWith("dynamic/dependabot"))
+  );
+}
+
+export function classifyWorkflowRunForReleaseHealth(run: {
+  name?: string;
+  workflowPath?: string;
+  event?: string;
+  status?: string;
+  conclusion?: string | null;
+}): {
+  classification: WorkflowRunClassification;
+  healthy: boolean;
+  reason: string;
+} {
+  const conclusion = normalizeConclusion(run.conclusion);
+  if (run.status === "completed" && (conclusion === "success" || conclusion === "skipped")) {
+    return {
+      classification: "success",
+      healthy: true,
+      reason: `workflow concluded ${conclusion}`
+    };
+  }
+  if (run.status === "completed" && conclusion === "failure" && isDynamicDependabotUpdate(run)) {
+    return {
+      classification: "non_actionable",
+      healthy: true,
+      reason:
+        "dynamic Dependabot update failure is tracked as dependency automation noise; code-bearing workflow evidence remains listed separately"
+    };
+  }
+  if (run.status !== "completed") {
+    return {
+      classification: "pending",
+      healthy: false,
+      reason: `workflow is ${run.status ?? "unknown"}`
+    };
+  }
+  return {
+    classification: "failure",
+    healthy: false,
+    reason: `workflow concluded ${conclusion}`
+  };
 }
 
 function ghApi<T>(apiPath: string): T {
@@ -253,7 +314,7 @@ function dedupeLatestWorkflowRuns(
       continue;
     }
     seen.add(key);
-    latestObservedRuns.push({
+    const baseSummary = {
       name: run.name?.trim() || "unknown",
       workflowPath: run.path?.trim(),
       runNumber: run.run_number,
@@ -264,6 +325,12 @@ function dedupeLatestWorkflowRuns(
       updatedAt: run.updated_at,
       htmlUrl: run.html_url,
       headSha: run.head_sha
+    };
+    const classification = classifyWorkflowRunForReleaseHealth(baseSummary);
+    latestObservedRuns.push({
+      ...baseSummary,
+      classification: classification.classification,
+      classificationReason: classification.reason
     });
   }
 
@@ -302,9 +369,11 @@ async function fetchLatestWorkflowRun(
 function summarizeRepoHealth(repo: RepoWorkflowHealth): string {
   const observed = repo.verification.observedWorkflowCount;
   const missing = repo.verification.notRecentlyObservedWorkflowCount;
-  const outcome = repo.verification.allObservedRunsSuccessful ? "latest observed runs green" : "some observed runs not green";
+  const outcome = repo.verification.allActionableRunsHealthy
+    ? "latest actionable runs green"
+    : "some actionable runs not green";
   const visibility = repo.visibility === "private" ? "private repo" : "public repo";
-  return `${repo.label} (${visibility}, ${repo.access.source}): ${outcome}; observed ${observed}/${repo.verification.activeWorkflowCount} active workflows${missing > 0 ? `, ${missing} not recently observed` : ""}`;
+  return `${repo.label} (${visibility}, ${repo.access.source}): ${outcome}; observed ${observed}/${repo.verification.activeWorkflowCount} active workflows${missing > 0 ? `, ${missing} not recently observed` : ""}${repo.verification.nonActionableWorkflowCount > 0 ? `, ${repo.verification.nonActionableWorkflowCount} non-actionable dynamic workflow(s)` : ""}`;
 }
 
 export function redactWorkflowRunSummariesForVisibility(
@@ -333,6 +402,7 @@ function renderMarkdown(report: CrossProjectWorkflowHealthReport): string {
     `- Repo count: \`${report.summary.repoCount}\``,
     `- Fully healthy repos: \`${report.summary.fullyHealthyRepoCount}\``,
     `- All observed workflow runs successful: \`${report.summary.allObservedWorkflowRunsSuccessful}\``,
+    `- All actionable workflow runs healthy: \`${report.summary.allActionableWorkflowRunsHealthy}\``,
     `- Detail: ${report.summary.detail}`,
     "",
     ...report.repos.flatMap((repo) => [
@@ -345,7 +415,9 @@ function renderMarkdown(report: CrossProjectWorkflowHealthReport): string {
       `- Active workflows: \`${repo.verification.activeWorkflowCount}\``,
       `- Latest observed workflow runs: \`${repo.verification.observedWorkflowCount}\``,
       `- Not recently observed in the sampled branch window: \`${repo.verification.notRecentlyObservedWorkflowCount}\``,
+      `- Non-actionable dynamic workflow runs: \`${repo.verification.nonActionableWorkflowCount}\``,
       `- All observed workflow runs successful: \`${repo.verification.allObservedRunsSuccessful}\``,
+      `- All actionable workflow runs healthy: \`${repo.verification.allActionableRunsHealthy}\``,
       `- Latest observed run updated: \`${repo.verification.latestObservedRunAt ?? "unknown"}\``,
       "",
       "### Latest Observed Workflow Runs",
@@ -354,7 +426,7 @@ function renderMarkdown(report: CrossProjectWorkflowHealthReport): string {
         ? repo.workflows.latestObservedRuns.map((run) => {
             const link =
               repo.visibility === "public" && run.htmlUrl ? ` (${run.htmlUrl})` : repo.visibility === "private" ? " (private run URL withheld)" : "";
-            return `- ${run.name} #${run.runNumber ?? "?"}: \`${run.conclusion ?? run.status ?? "unknown"}\`${link}`;
+            return `- ${run.name} #${run.runNumber ?? "?"}: \`${run.conclusion ?? run.status ?? "unknown"}\` | \`${run.classification ?? "unknown"}\` - ${run.classificationReason ?? "unclassified"}${link}`;
           })
         : ["- none observed"]),
       "",
@@ -419,6 +491,12 @@ async function buildRepoWorkflowHealth(
     latestObservedRuns,
     visibility
   );
+  const nonActionableWorkflowCount = latestObservedRuns.filter(
+    (run) => run.classification === "non_actionable"
+  ).length;
+  const allActionableRunsHealthy =
+    latestObservedRuns.length > 0 &&
+    latestObservedRuns.every((run) => classifyWorkflowRunForReleaseHealth(run).healthy);
   const sources = new Set<GitHubFetchSource>([
     repoResponse.source,
     workflowResponse.source,
@@ -446,8 +524,10 @@ async function buildRepoWorkflowHealth(
       activeWorkflowCount: activeWorkflows.length,
       observedWorkflowCount: latestObservedRuns.length,
       notRecentlyObservedWorkflowCount: notRecentlyObserved.length,
+      nonActionableWorkflowCount,
       allObservedRunsSuccessful:
         latestObservedRuns.length > 0 && latestObservedRuns.every(workflowRunSuccess),
+      allActionableRunsHealthy,
       latestObservedRunAt: latestObservedRuns
         .map((run) => run.updatedAt || run.createdAt)
         .find((value) => typeof value === "string" && value.length > 0)
@@ -468,7 +548,7 @@ async function main(): Promise<void> {
   }
   const fullyHealthyRepoCount = repos.filter(
     (repo) =>
-      repo.verification.observedWorkflowCount > 0 && repo.verification.allObservedRunsSuccessful
+      repo.verification.observedWorkflowCount > 0 && repo.verification.allActionableRunsHealthy
   ).length;
 
   const report: CrossProjectWorkflowHealthReport = {
@@ -494,6 +574,9 @@ async function main(): Promise<void> {
       allObservedWorkflowRunsSuccessful: repos.every(
         (repo) => repo.verification.observedWorkflowCount > 0 && repo.verification.allObservedRunsSuccessful
       ),
+      allActionableWorkflowRunsHealthy: repos.every(
+        (repo) => repo.verification.observedWorkflowCount > 0 && repo.verification.allActionableRunsHealthy
+      ),
       detail: repos.map(summarizeRepoHealth).join(" | ")
     },
     repos,
@@ -501,6 +584,7 @@ async function main(): Promise<void> {
       "This receipt verifies the latest observed GitHub Actions workflow runs on each repo's default branch; it does not claim local dirty branches were pushed or validated.",
       "Public repos are verified through raw GitHub REST endpoints when possible.",
       "Private repos fail closed unless authenticated GitHub access is available; when private access is used, private workflow run URLs are withheld from this public receipt.",
+      "Dynamic Dependabot update failures are classified as non-actionable dependency automation noise; they remain listed instead of hidden and code-bearing workflow evidence remains separate.",
       "A workflow not recently observed in the sampled branch window is not treated as green by absence; it is explicitly listed as not recently observed.",
       "This page does not claim a live Discord mission, a fresh public Arobi write, or a fresh OCI provider probe."
     ],

@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   DEFAULT_RELEASE_SURFACE_MAX_AGE_MS,
   evaluateReleaseSurfaceEvidence,
+  inferSurfaceHealth,
   renderReleaseAccountabilityGapLines,
   type SurfaceTimestamp
 } from "./release-surface.js";
@@ -66,6 +67,66 @@ test("release surface evidence fails closed on missing required receipts", () =>
   assert.equal(evidence.surfaces[0].status, "missing");
   assert.equal(evidence.surfaces[0].blocking, true);
   assert.match(evidence.summary, /missing/u);
+});
+
+test("release surface evidence blocks fresh required receipts that report unhealthy state", () => {
+  const evidence = evaluateReleaseSurfaceEvidence(
+    [
+      {
+        label: "Roundtable runtime",
+        path: "docs/wiki/Roundtable-Runtime.json",
+        generatedAt: "2026-05-13T11:55:00.000Z",
+        required: true,
+        healthStatus: "unhealthy",
+        healthReason: "benchmark reports 1 failed assertion(s)"
+      },
+      {
+        label: "Optional public export",
+        path: "docs/wiki/Optional-Public-Export.json",
+        generatedAt: "2026-05-13T11:55:00.000Z",
+        required: false,
+        healthStatus: "unhealthy",
+        healthReason: "publication status is blocked"
+      }
+    ],
+    {
+      nowMs: Date.parse("2026-05-13T12:00:00.000Z"),
+      maxAgeMs: DEFAULT_RELEASE_SURFACE_MAX_AGE_MS
+    }
+  );
+
+  assert.equal(evidence.status, "blocked");
+  assert.equal(evidence.counts.unhealthy, 2);
+  assert.equal(evidence.counts.blocking, 1);
+  assert.equal(evidence.surfaces[0].status, "unhealthy");
+  assert.equal(evidence.surfaces[0].blocking, true);
+  assert.match(evidence.surfaces[0].reason, /failed assertion/u);
+  assert.equal(evidence.surfaces[1].status, "unhealthy");
+  assert.equal(evidence.surfaces[1].blocking, false);
+});
+
+test("release surface health honors actionable workflow health over noisy observed bot runs", () => {
+  const health = inferSurfaceHealth({
+    summary: {
+      allObservedWorkflowRunsSuccessful: false,
+      allActionableWorkflowRunsHealthy: true
+    }
+  });
+
+  assert.equal(health.healthStatus, "healthy");
+  assert.match(health.healthReason ?? "", /no failed receipt signals/u);
+});
+
+test("release surface health blocks non-green actionable workflow receipts", () => {
+  const health = inferSurfaceHealth({
+    summary: {
+      allObservedWorkflowRunsSuccessful: false,
+      allActionableWorkflowRunsHealthy: false
+    }
+  });
+
+  assert.equal(health.healthStatus, "unhealthy");
+  assert.match(health.healthReason ?? "", /actionable/u);
 });
 
 test("release accountability markdown lists blockers before warnings", () => {

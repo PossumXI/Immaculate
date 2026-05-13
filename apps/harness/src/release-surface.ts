@@ -11,9 +11,17 @@ export type SurfaceTimestamp = {
   generatedAt?: string;
   required?: boolean;
   maxAgeMs?: number;
+  healthStatus?: "healthy" | "unhealthy" | "unknown";
+  healthReason?: string;
 };
 
-type ReleaseSurfaceEvidenceStatus = "fresh" | "stale" | "missing" | "invalid" | "optional";
+type ReleaseSurfaceEvidenceStatus =
+  | "fresh"
+  | "stale"
+  | "missing"
+  | "invalid"
+  | "optional"
+  | "unhealthy";
 
 type ReleaseSurfaceEvidenceEntry = SurfaceTimestamp & {
   required: boolean;
@@ -33,6 +41,7 @@ type ReleaseSurfaceEvidence = {
     stale: number;
     missing: number;
     invalid: number;
+    unhealthy: number;
     optional: number;
     blocking: number;
   };
@@ -276,6 +285,16 @@ export function evaluateReleaseSurfaceEvidence(
     }
     const ageMs = Math.max(0, nowMs - parsed);
     const fresh = ageMs <= maxAgeMs;
+    if (fresh && surface.healthStatus === "unhealthy") {
+      return {
+        ...surface,
+        required,
+        maxAgeMs,
+        status: "unhealthy",
+        blocking: required,
+        reason: surface.healthReason ?? "required receipt reports an unhealthy state"
+      };
+    }
     return {
       ...surface,
       required,
@@ -295,6 +314,7 @@ export function evaluateReleaseSurfaceEvidence(
     stale: entries.filter((entry) => entry.status === "stale").length,
     missing: entries.filter((entry) => entry.status === "missing").length,
     invalid: entries.filter((entry) => entry.status === "invalid").length,
+    unhealthy: entries.filter((entry) => entry.status === "unhealthy").length,
     optional: entries.filter((entry) => entry.status === "optional").length,
     blocking: blocking.length
   };
@@ -322,7 +342,7 @@ export function renderReleaseAccountabilityGapLines(evidence: ReleaseSurfaceEvid
     "",
     `- Status: \`${evidence.status}\``,
     `- Summary: ${evidence.summary}`,
-    `- Counts: \`${evidence.counts.fresh} fresh / ${evidence.counts.blocking} blocking / ${evidence.counts.optional} optional missing\``,
+    `- Counts: \`${evidence.counts.fresh} fresh / ${evidence.counts.blocking} blocking / ${evidence.counts.unhealthy} unhealthy / ${evidence.counts.optional} optional missing\``,
     ""
   ];
   if (blocking.length > 0) {
@@ -350,15 +370,149 @@ export function renderReleaseAccountabilityGapLines(evidence: ReleaseSurfaceEvid
   return lines;
 }
 
-async function readGeneratedAt(filePath: string): Promise<string | undefined> {
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
+}
+
+function nestedRecord(
+  record: Record<string, unknown>,
+  key: string
+): Record<string, unknown> | undefined {
+  return asRecord(record[key]);
+}
+
+export function inferSurfaceHealth(payload: unknown): Pick<
+  SurfaceTimestamp,
+  "healthStatus" | "healthReason"
+> {
+  const record = asRecord(payload);
+  if (!record) {
+    return {
+      healthStatus: "unknown",
+      healthReason: "receipt payload was not a JSON object"
+    };
+  }
+
+  const benchmark = nestedRecord(record, "benchmark");
+  const failedAssertions = benchmark?.failedAssertions;
+  if (typeof failedAssertions === "number" && failedAssertions > 0) {
+    return {
+      healthStatus: "unhealthy",
+      healthReason: `benchmark reports ${failedAssertions} failed assertion(s)`
+    };
+  }
+
+  const assertions = record.assertions;
+  if (
+    Array.isArray(assertions) &&
+    assertions.some((entry) => asRecord(entry)?.status === "fail")
+  ) {
+    return {
+      healthStatus: "unhealthy",
+      healthReason: "receipt assertions include failing checks"
+    };
+  }
+
+  const verification = nestedRecord(record, "verification");
+  if (verification?.allWorkflowRunsSuccessful === false) {
+    return {
+      healthStatus: "unhealthy",
+      healthReason: "GitHub workflow receipt reports non-green workflow runs"
+    };
+  }
+  if (verification?.allCheckRunsSuccessful === false) {
+    return {
+      healthStatus: "unhealthy",
+      healthReason: "GitHub checks receipt reports non-green check runs"
+    };
+  }
+
+  const summary = nestedRecord(record, "summary");
+  if (summary?.allActionableWorkflowRunsHealthy === false) {
+    return {
+      healthStatus: "unhealthy",
+      healthReason: "cross-project workflow receipt reports non-green actionable runs"
+    };
+  }
+  if (
+    summary?.allActionableWorkflowRunsHealthy !== true &&
+    summary?.allObservedWorkflowRunsSuccessful === false
+  ) {
+    return {
+      healthStatus: "unhealthy",
+      healthReason: "cross-project workflow receipt reports non-green observed runs"
+    };
+  }
+
+  const readiness = nestedRecord(record, "readiness");
+  if (readiness?.missionSurfaceReady === false) {
+    return {
+      healthStatus: "unhealthy",
+      healthReason: "mission readiness receipt reports missionSurfaceReady=false"
+    };
+  }
+
+  const publication = nestedRecord(record, "publication");
+  const publicationStatus = publication?.status;
+  if (
+    typeof publicationStatus === "string" &&
+    /blocked|failed|degraded/i.test(publicationStatus)
+  ) {
+    return {
+      healthStatus: "unhealthy",
+      healthReason: `publication status is ${publicationStatus}`
+    };
+  }
+
+  const proof = nestedRecord(record, "proof");
+  if (proof?.liveRecordVisible === false) {
+    return {
+      healthStatus: "unhealthy",
+      healthReason: "live ledger receipt does not show the latest governed record publicly"
+    };
+  }
+
+  const topLevelStatus = record.status;
+  if (typeof topLevelStatus === "string" && /blocked|failed|degraded/i.test(topLevelStatus)) {
+    return {
+      healthStatus: "unhealthy",
+      healthReason: `receipt status is ${topLevelStatus}`
+    };
+  }
+
+  const summaryStatus = summary?.status;
+  if (typeof summaryStatus === "string" && /blocked|failed|degraded/i.test(summaryStatus)) {
+    return {
+      healthStatus: "unhealthy",
+      healthReason: `summary status is ${summaryStatus}`
+    };
+  }
+
+  return {
+    healthStatus: "healthy",
+    healthReason: "no failed receipt signals detected"
+  };
+}
+
+async function readSurfaceReceipt(filePath: string): Promise<
+  Pick<SurfaceTimestamp, "generatedAt" | "healthStatus" | "healthReason">
+> {
   try {
     const payload = JSON.parse(await readFile(path.join(REPO_ROOT, filePath), "utf8")) as {
       generatedAt?: string;
       exportedAt?: string;
     };
-    return payload.generatedAt ?? payload.exportedAt;
+    return {
+      generatedAt: payload.generatedAt ?? payload.exportedAt,
+      ...inferSurfaceHealth(payload)
+    };
   } catch {
-    return undefined;
+    return {
+      healthStatus: "unknown",
+      healthReason: "receipt could not be read or parsed"
+    };
   }
 }
 
@@ -483,10 +637,10 @@ async function main(): Promise<void> {
   const release = bindReleaseSurfaceSourceCommit(await resolveReleaseMetadata());
   const [surfaces, cloudflare] = await Promise.all([
     Promise.all(
-    SURFACE_FILES.map(async (surface) => ({
-      ...surface,
-      generatedAt: await readGeneratedAt(surface.path)
-    }))
+      SURFACE_FILES.map(async (surface) => ({
+        ...surface,
+        ...(await readSurfaceReceipt(surface.path))
+      }))
     ),
     readCloudflareSummary()
   ]);
