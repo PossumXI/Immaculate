@@ -2,14 +2,14 @@
 
 This page is generated from the dedicated `q-mediation-drift` benchmark pack. It measures whether Immaculate preserves Q's governed route through arbitration, scheduling, and routing under mixed pressure without drift.
 
-- Generated: 2026-05-13T19:54:30.215Z
-- Release: `0.1.0+694a149`
-- Repo commit: `694a149`
+- Generated: 2026-05-13T19:56:56.189Z
+- Release: `0.1.0+f4777be`
+- Repo commit: `f4777be`
 - Q training bundle: `q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3`
 
 ## Benchmark
 
-- Suite: `immaculate-benchmark-2026-05-13T19-53-03-303Z`
+- Suite: `immaculate-benchmark-2026-05-13T19-54-57-745Z`
 - Pack: `Q Mediation Drift (q-mediation-drift)`
 - Scenario count: `4`
 - Failed assertions: `0`
@@ -18,11 +18,11 @@ This page is generated from the dedicated `q-mediation-drift` benchmark pack. It
 - Drift detected max: `0`
 - Local replicas P50: `0`
 - Verification quorum P50: `1`
-- Mediation latency P95: `8032.2 ms`
-- Runner path latency P95: `6.27 ms`
-- Arbitration latency P95: `1.73 ms`
-- Scheduling latency P95: `3.19 ms`
-- Routing latency P95: `1.35 ms`
+- Mediation latency P95: `43978.1 ms`
+- Runner path latency P95: `6.69 ms`
+- Arbitration latency P95: `1.84 ms`
+- Scheduling latency P95: `3.4 ms`
+- Routing latency P95: `1.45 ms`
 - Hardware: knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics
 
 ## Causal Diagnosis

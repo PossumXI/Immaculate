@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-13T19:54:30.215Z",
+  "generatedAt": "2026-05-13T19:56:56.189Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "694a14958ca7bc45c825179168c4635921fdc0eb",
-    "gitShortSha": "694a149",
+    "gitSha": "f4777bef11719d5a482a0bb6dc450bcf160898e2",
+    "gitShortSha": "f4777be",
     "gitBranch": "main",
-    "buildId": "0.1.0+694a149",
+    "buildId": "0.1.0+f4777be",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -51,8 +51,8 @@
     }
   },
   "benchmark": {
-    "suiteId": "immaculate-benchmark-2026-05-13T19-53-03-303Z",
-    "generatedAt": "2026-05-13T19:53:03.303Z",
+    "suiteId": "immaculate-benchmark-2026-05-13T19-54-57-745Z",
+    "generatedAt": "2026-05-13T19:54:57.745Z",
     "packId": "q-mediation-drift",
     "packLabel": "Q Mediation Drift",
     "scenarioCount": 4,
@@ -62,11 +62,11 @@
     "driftDetectedMax": 0,
     "localReplicaP50": 0,
     "verificationQuorumP50": 1,
-    "latencyP95Ms": 8032.2,
-    "runnerPathP95Ms": 6.27,
-    "arbitrationP95Ms": 1.73,
-    "schedulingP95Ms": 3.19,
-    "routingP95Ms": 1.35,
+    "latencyP95Ms": 43978.1,
+    "runnerPathP95Ms": 6.69,
+    "arbitrationP95Ms": 1.84,
+    "schedulingP95Ms": 3.4,
+    "routingP95Ms": 1.45,
     "hardware": "knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics"
   },
   "diagnostics": [

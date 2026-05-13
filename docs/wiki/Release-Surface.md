@@ -2,9 +2,9 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-05-13T19:54:30.215Z
-- Immaculate release: `0.1.0+3b53770`
-- Repo commit: `3b53770d85710a2054155d3f409bda48babaab91`
+- Generated: 2026-05-13T19:57:58.472Z
+- Immaculate release: `0.1.0+f4777be`
+- Repo commit: `f4777bef11719d5a482a0bb6dc450bcf160898e2`
 - Branch: `main`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+3b53770` is the current repo build stamp.
+- Immaculate build `0.1.0+f4777be` is the current repo build stamp.
 - Arobi Network is the ledger-backed private and public operator network and audit substrate. Immaculate is the governed harness and orchestrator inside it. Q is the reasoning brain inside that governed stack.
 - Q is the only public model name used across the repo, and it is built on `Gemma 4`.
 - The latest tracked Q training bundle is `q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3`, tied to dataset `.training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
@@ -28,10 +28,10 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - BridgeBench: `2026-05-13T18:26:23.858Z` via `docs/wiki/BridgeBench.json`
 - BridgeBench soak: `2026-04-15T06:15:54.188Z` via `docs/wiki/BridgeBench-Soak.json`
 - Q structured contract benchmark: `2026-05-07T06:03:07.620Z` via `docs/wiki/Model-Benchmark-Comparison.json`
-- Q readiness gate: `2026-05-13T19:53:50.601Z` via `docs/wiki/Q-Readiness-Gate.json`
-- Q gateway validation: `2026-05-13T19:46:15.900Z` via `docs/wiki/Q-Gateway-Validation.json`
+- Q readiness gate: `2026-05-13T19:57:58.472Z` via `docs/wiki/Q-Readiness-Gate.json`
+- Q gateway validation: `2026-05-13T19:56:21.252Z` via `docs/wiki/Q-Gateway-Validation.json`
 - Q gateway substrate: `2026-05-13T18:30:35.581Z` via `docs/wiki/Q-Gateway-Substrate.json`
-- Q mediation drift: `2026-05-13T19:54:30.215Z` via `docs/wiki/Q-Mediation-Drift.json`
+- Q mediation drift: `2026-05-13T19:56:56.189Z` via `docs/wiki/Q-Mediation-Drift.json`
 - Arobi audit integrity: `2026-05-12T18:09:17.101Z` via `docs/wiki/Arobi-Audit-Integrity.json`
 - Arobi live ledger receipt: `2026-05-13T19:49:02.852Z` via `docs/wiki/Arobi-Live-Ledger-Receipt.json`
 - Live mission readiness: `2026-05-13T19:50:18.464Z` via `docs/wiki/Live-Mission-Readiness.json`
