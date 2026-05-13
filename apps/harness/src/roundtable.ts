@@ -1,5 +1,5 @@
 import path from "node:path";
-import { existsSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
@@ -117,6 +117,27 @@ type RoundtableTrackedWorkspaceSnapshot = {
 
 const roundtableTrackedWorkspaceCache = new Map<string, RoundtableTrackedWorkspaceSnapshot>();
 const roundtableRepoAuditFindingCache = new Map<string, RoundtableRepoAuditFinding[]>();
+
+function pathIsInside(parent: string, candidate: string): boolean {
+  const relative = path.relative(path.resolve(parent), path.resolve(candidate));
+  return relative.length === 0 || (!relative.startsWith("..") && !path.isAbsolute(relative));
+}
+
+function hasGitWorktreeMetadata(worktreePath: string): boolean {
+  return existsSync(path.join(worktreePath, ".git"));
+}
+
+function removeStaleRoundtableWorktreeDirectory(repoPath: string, worktreePath: string): boolean {
+  if (!existsSync(worktreePath) || hasGitWorktreeMetadata(worktreePath)) {
+    return false;
+  }
+  if (!pathIsInside(WORKTREE_ROOT, worktreePath)) {
+    throw new Error(`Refusing to remove stale roundtable worktree outside ${WORKTREE_ROOT}: ${worktreePath}`);
+  }
+  runGitDetailed(repoPath, ["worktree", "prune"]);
+  rmSync(worktreePath, { recursive: true, force: true });
+  return true;
+}
 
 type BuildRoundtableActionPlanInput = {
   objective: string;
@@ -1145,6 +1166,7 @@ export function materializeRoundtableActionWorktree(action: RoundtableAction): {
     throw new Error(`Roundtable action ${action.id} is missing worktree metadata.`);
   }
   mkdirSync(path.dirname(worktreePath), { recursive: true });
+  removeStaleRoundtableWorktreeDirectory(repoPath, worktreePath);
   if (!existsSync(worktreePath)) {
     const branchExists = Boolean(runGit(repoPath, ["rev-parse", "--verify", branch]));
     const result = runGitDetailed(
@@ -1172,6 +1194,9 @@ export function cleanupRoundtableActionWorktree(action: RoundtableAction): void 
     return;
   }
   if (!worktreePath || !existsSync(worktreePath)) {
+    return;
+  }
+  if (removeStaleRoundtableWorktreeDirectory(repoPath, worktreePath)) {
     return;
   }
   const result = runGitDetailed(repoPath, ["worktree", "remove", "--force", worktreePath]);
