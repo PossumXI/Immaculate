@@ -69,6 +69,38 @@ type ScenarioDefinition = {
 };
 
 const DEFAULT_OLLAMA_URL = resolveQLocalOllamaUrl();
+export type QGatewaySubstrateBenchmarkControls = {
+  maxTokens: number;
+  timeoutMs: number;
+  timeoutOverrideMs: number;
+};
+
+export function resolveQGatewaySubstrateBenchmarkControls(
+  env: Record<string, string | undefined> = process.env
+): QGatewaySubstrateBenchmarkControls {
+  const maxTokens = Math.max(
+    48,
+    Number(env.IMMACULATE_BENCHMARK_Q_SUBSTRATE_MAX_TOKENS ?? 192) || 192
+  );
+  const timeoutMs = Math.max(
+    5_000,
+    Number(env.IMMACULATE_BENCHMARK_Q_SUBSTRATE_TIMEOUT_MS ?? 180_000) || 180_000
+  );
+  const timeoutOverrideMs = Math.max(
+    timeoutMs,
+    Number(env.IMMACULATE_BENCHMARK_Q_SUBSTRATE_TIMEOUT_OVERRIDE_MS ?? 240_000) || 240_000
+  );
+  return {
+    maxTokens,
+    timeoutMs,
+    timeoutOverrideMs
+  };
+}
+
+const SUBSTRATE_BENCHMARK_CONTROLS = resolveQGatewaySubstrateBenchmarkControls();
+const SUBSTRATE_BENCHMARK_MAX_TOKENS = SUBSTRATE_BENCHMARK_CONTROLS.maxTokens;
+const SUBSTRATE_BENCHMARK_TIMEOUT_MS = SUBSTRATE_BENCHMARK_CONTROLS.timeoutMs;
+const SUBSTRATE_BENCHMARK_TIMEOUT_OVERRIDE_MS = SUBSTRATE_BENCHMARK_CONTROLS.timeoutOverrideMs;
 const HARNESS_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const REPO_ROOT = path.resolve(HARNESS_ROOT, "../..");
 
@@ -281,18 +313,28 @@ function startGatewayProcess(options: {
       IMMACULATE_Q_GATEWAY_HOST: "127.0.0.1",
       IMMACULATE_Q_GATEWAY_PORT: String(options.port),
       IMMACULATE_OLLAMA_URL: DEFAULT_OLLAMA_URL,
-      IMMACULATE_Q_API_DEFAULT_MAX_CONCURRENT: "1"
+      IMMACULATE_Q_API_DEFAULT_MAX_CONCURRENT: "1",
+      IMMACULATE_Q_GATEWAY_TIMEOUT_MS: String(SUBSTRATE_BENCHMARK_TIMEOUT_OVERRIDE_MS),
+      IMMACULATE_Q_GATEWAY_STRUCTURED_TIMEOUT_MS: String(SUBSTRATE_BENCHMARK_TIMEOUT_MS),
+      IMMACULATE_Q_GATEWAY_STRUCTURED_MAX_TOKENS: String(SUBSTRATE_BENCHMARK_MAX_TOKENS),
+      IMMACULATE_OLLAMA_CONTROL_TIMEOUT_MS: String(SUBSTRATE_BENCHMARK_TIMEOUT_OVERRIDE_MS),
+      IMMACULATE_OLLAMA_Q_EXECUTION_MAX_TOKENS: String(SUBSTRATE_BENCHMARK_MAX_TOKENS),
+      IMMACULATE_OLLAMA_Q_EXECUTION_TEMPERATURE: "0"
     },
     stdio: "ignore",
     windowsHide: true
   });
 }
 
-function buildBenchmarkChatHeaders(authorization: string): Record<string, string> {
+export function buildBenchmarkChatHeaders(
+  authorization: string,
+  controls: Pick<QGatewaySubstrateBenchmarkControls, "timeoutOverrideMs"> = SUBSTRATE_BENCHMARK_CONTROLS
+): Record<string, string> {
   return {
     Authorization: authorization,
     "content-type": "application/json",
-    "x-immaculate-benchmark-skip-q-identity": "1"
+    "x-immaculate-benchmark-skip-q-identity": "1",
+    "x-immaculate-request-timeout-ms": String(controls.timeoutOverrideMs)
   };
 }
 
@@ -340,8 +382,8 @@ async function runScenario(options: {
     body: JSON.stringify({
       model: getQModelName(),
       stream: false,
-      temperature: 0.05,
-      max_tokens: 192,
+      temperature: 0,
+      max_tokens: SUBSTRATE_BENCHMARK_MAX_TOKENS,
       messages: [
         {
           role: "system",
@@ -525,6 +567,7 @@ export async function runQGatewaySubstrateBenchmark(options: {
       body: JSON.stringify({
         model: getQModelName(),
         stream: false,
+        max_tokens: SUBSTRATE_BENCHMARK_MAX_TOKENS,
         messages: [
           {
             role: "user",
@@ -540,6 +583,7 @@ export async function runQGatewaySubstrateBenchmark(options: {
       body: JSON.stringify({
         model: getQModelName(),
         stream: false,
+        max_tokens: SUBSTRATE_BENCHMARK_MAX_TOKENS,
         messages: [
           {
             role: "user",
