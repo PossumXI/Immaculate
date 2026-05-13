@@ -83,6 +83,8 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/wiki/Benchmark-Status.md docs/wiki/Benchmark-Status.json docs/wiki/Benchmark-Wandb-Export.md docs/wiki/Benchmark-Wandb-Export.json
           git commit -m "Update long-run benchmark status [skip ci]"
+          git fetch origin main
+          git rebase origin/main
           git push
 
       - name: Upload long-run benchmark artifacts
