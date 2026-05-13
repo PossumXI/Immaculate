@@ -1,6 +1,6 @@
 import path from "node:path";
 import { mkdir, writeFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 import { resolveReleaseMetadata } from "./release-metadata.js";
 
@@ -97,9 +97,12 @@ type GitHubChecksReceipt = {
   };
 };
 
+type GitHubChecksReceiptSource = "github-rest" | "gh-auth";
+
 const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(MODULE_ROOT, "../../..");
 const WIKI_ROOT = path.join(REPO_ROOT, "docs", "wiki");
+const GH_CLI_API_TIMEOUT_MS = 30_000;
 
 function runGit(args: string[]): string | undefined {
   const result = spawnSync("git", args, {
@@ -159,21 +162,78 @@ function inferRepoFullName(): string {
   throw new Error(`Unable to parse GitHub repository from remote URL: ${remote}`);
 }
 
-async function fetchJson<T>(url: string): Promise<T> {
-  const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
-  const response = await fetch(url, {
-    headers: {
-      "User-Agent": "Immaculate-GitHub-Checks-Receipt",
-      Accept: "application/vnd.github+json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {})
-    }
+function ghApi<T>(apiPath: string): T {
+  const result = spawnSync("gh", ["api", apiPath], {
+    cwd: REPO_ROOT,
+    encoding: "utf8",
+    windowsHide: true,
+    env: {
+      ...process.env,
+      GH_PAGER: "",
+      PAGER: ""
+    },
+    timeout: GH_CLI_API_TIMEOUT_MS,
+    maxBuffer: 10 * 1024 * 1024
   });
+  if (result.error) {
+    throw new Error(
+      `gh api failed for ${apiPath}: ${result.error.message || String(result.error)}`
+    );
+  }
+  if (result.status !== 0) {
+    throw new Error((result.stderr || result.stdout || `gh api failed for ${apiPath}`).trim());
+  }
+  try {
+    return JSON.parse(result.stdout) as T;
+  } catch (error) {
+    throw new Error(
+      `gh api returned invalid JSON for ${apiPath}: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
+}
 
-  if (!response.ok) {
-    throw new Error(`GitHub request failed (${response.status}) for ${url}`);
+export async function fetchGitHubJson<T>(
+  apiPath: string,
+  options?: {
+    fetchImpl?: typeof fetch;
+    ghApiImpl?: <Value>(apiPath: string) => Value;
+    token?: string;
+  }
+): Promise<{
+  data: T;
+  source: GitHubChecksReceiptSource;
+}> {
+  const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+  const authToken = options?.token ?? token;
+  const fetchImpl = options?.fetchImpl ?? fetch;
+  const ghApiImpl = options?.ghApiImpl ?? ghApi;
+  const url = `https://api.github.com/${apiPath}`;
+
+  try {
+    const response = await fetchImpl(url, {
+      headers: {
+        "User-Agent": "Immaculate-GitHub-Checks-Receipt",
+        Accept: "application/vnd.github+json",
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
+      }
+    });
+
+    if (response.ok) {
+      return {
+        data: (await response.json()) as T,
+        source: "github-rest"
+      };
+    }
+  } catch {
+    // Fall back to the authenticated gh CLI path below.
   }
 
-  return (await response.json()) as T;
+  return {
+    data: ghApiImpl<T>(apiPath),
+    source: "gh-auth"
+  };
 }
 
 function normalizeConclusion(conclusion: string | null | undefined): string {
@@ -242,18 +302,30 @@ async function main(): Promise<void> {
   const sha = args.sha || release.gitSha;
   const outputBaseName = args.outputBaseName;
 
-  const [workflowRuns, checkRuns, commit, classicStatus] = await Promise.all([
-    fetchJson<WorkflowRunsResponse>(`https://api.github.com/repos/${repoFullName}/actions/runs?head_sha=${sha}`),
-    fetchJson<CheckRunsResponse>(`https://api.github.com/repos/${repoFullName}/commits/${sha}/check-runs`),
-    fetchJson<CommitResponse>(`https://api.github.com/repos/${repoFullName}/commits/${sha}`),
-    fetchJson<StatusResponse>(`https://api.github.com/repos/${repoFullName}/commits/${sha}/status`).catch(
+  const [workflowRunsResult, checkRunsResult, commitResult, classicStatusResult] = await Promise.all([
+    fetchGitHubJson<WorkflowRunsResponse>(`repos/${repoFullName}/actions/runs?head_sha=${sha}`),
+    fetchGitHubJson<CheckRunsResponse>(`repos/${repoFullName}/commits/${sha}/check-runs`),
+    fetchGitHubJson<CommitResponse>(`repos/${repoFullName}/commits/${sha}`),
+    fetchGitHubJson<StatusResponse>(`repos/${repoFullName}/commits/${sha}/status`).catch(
       () =>
         ({
-          state: undefined,
-          statuses: []
-        }) satisfies StatusResponse
+          data: {
+            state: undefined,
+            statuses: []
+          } satisfies StatusResponse,
+          source: undefined
+        })
     )
   ]);
+  const workflowRuns = workflowRunsResult.data;
+  const checkRuns = checkRunsResult.data;
+  const commit = commitResult.data;
+  const classicStatus = classicStatusResult.data;
+  const receiptSource = [workflowRunsResult, checkRunsResult, commitResult, classicStatusResult].some(
+    (result) => result.source === "gh-auth"
+  )
+    ? "github-rest+gh-auth"
+    : "github-rest";
 
   const workflowEntries = (workflowRuns.workflow_runs || []).map((workflow) => ({
     name: workflow.name,
@@ -291,7 +363,7 @@ async function main(): Promise<void> {
       branch: release.gitBranch
     },
     verification: {
-      source: "github-rest",
+      source: receiptSource,
       classicStatusState: classicStatus.state,
       classicStatusContexts: classicStatus.statuses?.length ?? 0,
       workflowRunCount: workflowEntries.length,
@@ -318,7 +390,9 @@ async function main(): Promise<void> {
   process.stdout.write(`${JSON.stringify(receipt, null, 2)}\n`);
 }
 
-void main().catch((error) => {
-  process.stderr.write(error instanceof Error ? error.message : "GitHub checks receipt generation failed.");
-  process.exitCode = 1;
-});
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
+  void main().catch((error) => {
+    process.stderr.write(error instanceof Error ? error.message : "GitHub checks receipt generation failed.");
+    process.exitCode = 1;
+  });
+}
