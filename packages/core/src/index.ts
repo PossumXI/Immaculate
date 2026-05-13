@@ -45,6 +45,48 @@ export const controlActions = [
 ] as const;
 export type ControlAction = (typeof controlActions)[number];
 
+export const arobiNetworkLaneIds = ["public", "private", "zero-zero"] as const;
+export type ArobiNetworkLaneId = (typeof arobiNetworkLaneIds)[number];
+
+export const arobiNetworkExportScopes = [
+  "public-redacted",
+  "operator-audit",
+  "sealed"
+] as const;
+export type ArobiNetworkExportScope = (typeof arobiNetworkExportScopes)[number];
+
+export const arobiNetworkTrainingPolicies = [
+  "allowed-redacted",
+  "allowed-internal",
+  "blocked"
+] as const;
+export type ArobiNetworkTrainingPolicy = (typeof arobiNetworkTrainingPolicies)[number];
+
+export const arobiNetworkRetentionClasses = [
+  "public-summary",
+  "audit-evidence",
+  "sealed-evidence"
+] as const;
+export type ArobiNetworkRetentionClass = (typeof arobiNetworkRetentionClasses)[number];
+
+export type ArobiNetworkLanePolicy = {
+  laneId: ArobiNetworkLaneId;
+  exportScope: ArobiNetworkExportScope;
+  trainingPolicy: ArobiNetworkTrainingPolicy;
+  retentionClass: ArobiNetworkRetentionClass;
+  reasons: string[];
+};
+
+export function defaultArobiNetworkLanePolicy(): ArobiNetworkLanePolicy {
+  return {
+    laneId: "private",
+    exportScope: "operator-audit",
+    trainingPolicy: "allowed-internal",
+    retentionClass: "audit-evidence",
+    reasons: ["default-private-audit-lane"]
+  };
+}
+
 export type Vec3 = {
   x: number;
   y: number;
@@ -1171,6 +1213,7 @@ export type EventEnvelope = {
   purpose: string[];
   consent: { policyId: string; scopeHash: string };
   schema: { name: string; version: string };
+  lane: ArobiNetworkLanePolicy;
   payload: Record<string, unknown>;
   integrity: { hash: string; prevEventHash?: string; sig?: string };
   summary: string;
@@ -1311,6 +1354,14 @@ const benchmarkHardwareContextSchema = z.object({
   memoryGiB: z.number().positive(),
   diskKind: z.string().optional(),
   nodeVersion: z.string()
+});
+
+export const arobiNetworkLanePolicySchema = z.object({
+  laneId: z.enum(arobiNetworkLaneIds),
+  exportScope: z.enum(arobiNetworkExportScopes),
+  trainingPolicy: z.enum(arobiNetworkTrainingPolicies),
+  retentionClass: z.enum(arobiNetworkRetentionClasses),
+  reasons: z.array(z.string()).default([])
 });
 
 const benchmarkAssertionSchema = z.object({
@@ -2258,6 +2309,7 @@ export const eventEnvelopeSchema = z.object({
     name: z.string(),
     version: z.string()
   }),
+  lane: arobiNetworkLanePolicySchema.default(defaultArobiNetworkLanePolicy()),
   payload: z.record(z.string(), z.unknown()),
   integrity: z.object({
     hash: z.string(),
@@ -2845,6 +2897,69 @@ const sha256Constants = [
   0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
 ];
 
+function laneTokens(input: {
+  purpose?: string[];
+  subject?: EventEnvelope["subject"];
+  consentScope?: string;
+  schemaName?: string;
+}): string[] {
+  return [
+    ...(input.purpose ?? []),
+    input.subject?.type,
+    input.subject?.id,
+    input.consentScope,
+    input.schemaName
+  ]
+    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    .map((value) => value.trim().toLowerCase());
+}
+
+export function resolveArobiNetworkLanePolicy(input: {
+  purpose?: string[];
+  subject?: EventEnvelope["subject"];
+  consentScope?: string;
+  schemaName?: string;
+}): ArobiNetworkLanePolicy {
+  const tokens = laneTokens(input);
+  const hasToken = (...needles: string[]) =>
+    tokens.some((token) => needles.some((needle) => token.includes(needle)));
+
+  if (
+    input.subject?.type === "device" ||
+    input.subject?.type === "human" ||
+    hasToken(
+      "00",
+      "zero-zero",
+      "sealed",
+      "defense",
+      "actuation",
+      "physical",
+      "biometric",
+      "control"
+    )
+  ) {
+    return {
+      laneId: "zero-zero",
+      exportScope: "sealed",
+      trainingPolicy: "blocked",
+      retentionClass: "sealed-evidence",
+      reasons: ["sealed-lane-subject-or-purpose"]
+    };
+  }
+
+  if (hasToken("public", "benchmark", "release", "showcase", "status")) {
+    return {
+      laneId: "public",
+      exportScope: "public-redacted",
+      trainingPolicy: "allowed-redacted",
+      retentionClass: "public-summary",
+      reasons: ["public-redacted-purpose"]
+    };
+  }
+
+  return defaultArobiNetworkLanePolicy();
+}
+
 function computeEventIntegrityHash(input: {
   eventId: string;
   eventTimeUtc: string;
@@ -2853,10 +2968,18 @@ function computeEventIntegrityHash(input: {
   purpose: EventEnvelope["purpose"];
   consent: EventEnvelope["consent"];
   schema: EventEnvelope["schema"];
+  lane?: EventEnvelope["lane"];
   payload: EventEnvelope["payload"];
   summary: EventEnvelope["summary"];
   prevEventHash?: string;
 }): string {
+  const laneIntegrity =
+    input.schema.version === "1.0.0" || !input.lane
+      ? {}
+      : {
+          lane: input.lane
+        };
+
   return secureHash(
     JSON.stringify({
       eventId: input.eventId,
@@ -2866,6 +2989,7 @@ function computeEventIntegrityHash(input: {
       purpose: input.purpose,
       consent: input.consent,
       schema: input.schema,
+      ...laneIntegrity,
       payload: input.payload,
       summary: input.summary,
       prevEventHash: input.prevEventHash ?? null
@@ -4560,6 +4684,7 @@ function buildIntegrityReport(
       purpose: event.purpose,
       consent: event.consent,
       schema: event.schema,
+      lane: event.lane,
       payload: event.payload,
       summary: event.summary,
       prevEventHash: event.integrity.prevEventHash
@@ -4750,8 +4875,13 @@ function pushEvent(
   };
   const schema: EventEnvelope["schema"] = {
     name: input.schemaName ?? "immaculate.event",
-    version: "1.0.0"
+    version: "1.1.0"
   };
+  const lane = resolveArobiNetworkLanePolicy({
+    purpose: input.purpose,
+    subject: input.subject,
+    schemaName: schema.name
+  });
   const event: EventEnvelope = {
     eventId,
     eventTimeUtc,
@@ -4760,6 +4890,7 @@ function pushEvent(
     purpose: input.purpose,
     consent,
     schema,
+    lane,
     payload,
     integrity: {
       hash: computeEventIntegrityHash({
@@ -4770,6 +4901,7 @@ function pushEvent(
         purpose: input.purpose,
         consent,
         schema,
+        lane,
         payload,
         summary: input.summary,
         prevEventHash: previousEventHash

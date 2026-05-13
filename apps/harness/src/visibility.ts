@@ -1,3 +1,4 @@
+import { defaultArobiNetworkLanePolicy } from "@immaculate/core";
 import type {
   AgentTurn,
   AgentWorkspaceScope,
@@ -300,12 +301,21 @@ export function redactPhaseSnapshot(snapshot: PhaseSnapshot): PhaseSnapshot {
 }
 
 export function summarizeEventEnvelope(event: EventEnvelope): EventEnvelope {
+  const lane = event.lane ?? defaultArobiNetworkLanePolicy();
+  const publicSummary =
+    lane.exportScope === "public-redacted" ? event.summary : REDACTED;
   return {
     ...event,
+    lane,
+    summary: publicSummary,
     payload: {
       eventType: event.schema.name,
       subjectType: event.subject.type,
-      subjectId: event.subject.id
+      subjectId: event.subject.id,
+      laneId: lane.laneId,
+      exportScope: lane.exportScope,
+      trainingPolicy: lane.trainingPolicy,
+      retentionClass: lane.retentionClass
     }
   };
 }
