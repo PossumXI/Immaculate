@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -98,6 +98,49 @@ test("roundtable materialization prunes missing worktree metadata before re-addi
     assert.equal(existsSync(path.join(worktreePath, ".git")), true);
   } finally {
     cleanupRoundtableActionWorktree(action);
+    rmSync(worktreePath, { recursive: true, force: true });
+    pruneWorktrees();
+    deleteBranch(branch);
+  }
+});
+
+test("roundtable cleanup removes managed worktrees with ignored runtime leftovers", () => {
+  const worktreePath = path.join(WORKTREE_TEST_ROOT, `ignored-leftover-${process.pid}`);
+  const branch = `agents/test-roundtable-ignored-leftover-${process.pid}`;
+  const action = testAction(worktreePath, branch);
+  rmSync(worktreePath, { recursive: true, force: true });
+
+  try {
+    materializeRoundtableActionWorktree(action);
+    const ignoredOutputPath = path.join(worktreePath, ".runtime", "leftover.ndjson");
+    mkdirSync(path.dirname(ignoredOutputPath), { recursive: true });
+    writeFileSync(ignoredOutputPath, "{}\n", "utf8");
+
+    cleanupRoundtableActionWorktree(action);
+
+    assert.equal(existsSync(worktreePath), false);
+  } finally {
+    cleanupRoundtableActionWorktree(action);
+    rmSync(worktreePath, { recursive: true, force: true });
+    pruneWorktrees();
+    deleteBranch(branch);
+  }
+});
+
+test("roundtable cleanup force-removes managed directories when git removal cannot", () => {
+  const worktreePath = path.join(WORKTREE_TEST_ROOT, `git-remove-fallback-${process.pid}`);
+  const branch = `agents/test-roundtable-git-remove-fallback-${process.pid}`;
+  rmSync(worktreePath, { recursive: true, force: true });
+
+  try {
+    mkdirSync(path.join(worktreePath, ".runtime"), { recursive: true });
+    writeFileSync(path.join(worktreePath, ".git"), "gitdir: missing-runtime-metadata\n", "utf8");
+    writeFileSync(path.join(worktreePath, ".runtime", "leftover.ndjson"), "{}\n", "utf8");
+
+    cleanupRoundtableActionWorktree(testAction(worktreePath, branch));
+
+    assert.equal(existsSync(worktreePath), false);
+  } finally {
     rmSync(worktreePath, { recursive: true, force: true });
     pruneWorktrees();
     deleteBranch(branch);

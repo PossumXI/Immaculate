@@ -6,6 +6,7 @@ import test from "node:test";
 import {
   buildRoundtableMediationHeaders,
   buildRoundtableMediationRequestBody,
+  resolveRoundtableOllamaUrl,
   resolveRoundtableRuntimeTimeoutControls,
   resolveRoundtableSharedQFallbackAllowed,
   shouldAttemptRoundtableSharedQFallback,
@@ -170,6 +171,22 @@ test("roundtable runtime allows shared Q fallback by default with explicit opt-o
   );
 });
 
+test("roundtable runtime defaults to the shared local Q lane unless explicitly isolated", () => {
+  assert.equal(
+    resolveRoundtableOllamaUrl({}, "http://127.0.0.1:11434"),
+    "http://127.0.0.1:11434"
+  );
+  assert.equal(
+    resolveRoundtableOllamaUrl(
+      {
+        IMMACULATE_ROUNDTABLE_OLLAMA_URL: " http://127.0.0.1:11435 "
+      },
+      "http://127.0.0.1:11434"
+    ),
+    "http://127.0.0.1:11435"
+  );
+});
+
 test("roundtable runtime does not start shared fallback while dedicated Q is still loading", () => {
   assert.equal(
     shouldAttemptRoundtableSharedQFallback({
@@ -194,8 +211,8 @@ test("roundtable runtime does not start shared fallback while dedicated Q is sti
 test("roundtable runtime default timeouts finish before the release command budget", () => {
   const controls = resolveRoundtableRuntimeTimeoutControls({});
 
-  assert.equal(controls.prewarmTimeoutMs, 60_000);
-  assert.equal(controls.cognitiveRequestTimeoutMs, 60_000);
+  assert.equal(controls.prewarmTimeoutMs, 180_000);
+  assert.equal(controls.cognitiveRequestTimeoutMs, 180_000);
 });
 
 test("roundtable runtime aborts after failed local Q prewarm instead of leaving stale evidence", () => {

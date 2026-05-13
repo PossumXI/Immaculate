@@ -1206,8 +1206,17 @@ export function cleanupRoundtableActionWorktree(action: RoundtableAction): void 
   }
   const result = runGitDetailed(repoPath, ["worktree", "remove", "--force", worktreePath]);
   if (result.status !== 0) {
+    const detail = (result.stderr || result.stdout || "git worktree remove failed").trim();
+    if (/directory not empty|failed to delete|not a working tree/i.test(detail)) {
+      if (!pathIsInside(WORKTREE_ROOT, worktreePath)) {
+        throw new Error(`Refusing to remove failed roundtable worktree outside ${WORKTREE_ROOT}: ${worktreePath}`);
+      }
+      rmSync(worktreePath, { recursive: true, force: true });
+      runGitDetailed(repoPath, ["worktree", "prune"]);
+      return;
+    }
     throw new Error(
-      `Unable to remove roundtable worktree for ${action.repoLabel}: ${(result.stderr || result.stdout || "git worktree remove failed").trim()}`
+      `Unable to remove roundtable worktree for ${action.repoLabel}: ${detail}`
     );
   }
 }

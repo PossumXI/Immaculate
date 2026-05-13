@@ -5,7 +5,7 @@ This page is the operator-facing map for the local `Q` runtime after the Ollama 
 It keeps one truth explicit:
 
 - the normal local `Q` lane follows the default local Ollama service on `http://127.0.0.1:11434`
-- the roundtable runtime keeps a separate isolated local lane on `http://127.0.0.1:11435` so it can self-bootstrap and benchmark without depending on the everyday service state
+- the roundtable runtime now defaults to that same shared local `Q` lane for reliability, while keeping the isolated `http://127.0.0.1:11435` lane available as an explicit opt-in benchmark path
 
 ## General Local Q Lane
 
@@ -34,28 +34,45 @@ Startup traces are runtime evidence, not source. With no explicit
 `apps/harness/.runtime/startup-trace.ndjson`, which is ignored with the rest of
 the generated runtime state.
 
-## Isolated Roundtable Lane
+## Roundtable Runtime Lane
 
-The roundtable runtime keeps its own explicit lane through:
+The roundtable runtime resolves through:
 
 - `IMMACULATE_ROUNDTABLE_OLLAMA_URL`
 - `IMMACULATE_ROUNDTABLE_Q_OLLAMA_URL`
-- fallback `http://127.0.0.1:11435`
+- fallback `http://127.0.0.1:11434`
 
-That lane is intentionally separate so the roundtable benchmark can:
+The shared fallback is the default because this host has repeatedly shown the
+everyday local `Q` lane can complete the live roundtable benchmark while the
+isolated lane can accept health checks but stall during generation. The runtime
+keeps explicit isolated-lane support for benchmark passes that need separation:
+
+```powershell
+$env:IMMACULATE_ROUNDTABLE_OLLAMA_URL = 'http://127.0.0.1:11435'
+```
+
+When an isolated lane is explicitly configured, the benchmark can:
 
 - boot its own Ollama process if needed
 - keep benchmark startup bounded and reproducible
 - avoid inheriting stale or overloaded state from the normal local lane
 - keep `Q` aliases such as `q-e2b:test` on the structured control path instead of silently falling back to the heavier generic chat route
 
-If the isolated lane cannot prewarm because the host is already carrying the
-shared local `Q` model, the runtime may fall back to the healthy shared lane and
-records that fallback in the benchmark output. Strict isolation can be restored
-with:
+If the explicitly configured isolated lane cannot prewarm because the host is
+already carrying the shared local `Q` model, the runtime may fall back to the
+healthy shared lane and records that fallback in the benchmark output. Strict
+isolation can be restored with:
 
 ```powershell
 $env:IMMACULATE_ROUNDTABLE_ALLOW_SHARED_Q_FALLBACK = 'false'
+```
+
+The default roundtable prewarm and cognitive request budgets are `180s`. Operators
+can still lower or raise them within the `5s` to `600s` clamp:
+
+```powershell
+$env:IMMACULATE_ROUNDTABLE_OLLAMA_PREWARM_TIMEOUT_MS = '180000'
+$env:IMMACULATE_ROUNDTABLE_COGNITIVE_TIMEOUT_MS = '180000'
 ```
 
 ## OpenJaws Alignment

@@ -223,10 +223,18 @@ type OllamaProcessHandle = {
 };
 
 const DEFAULT_OLLAMA_URL = resolveQLocalOllamaUrl();
-const DEFAULT_ROUNDTABLE_OLLAMA_URL =
-  process.env.IMMACULATE_ROUNDTABLE_OLLAMA_URL?.trim() ||
-  process.env.IMMACULATE_ROUNDTABLE_Q_OLLAMA_URL?.trim() ||
-  "http://127.0.0.1:11435";
+export function resolveRoundtableOllamaUrl(
+  env: NodeJS.ProcessEnv = process.env,
+  sharedLocalQUrl = DEFAULT_OLLAMA_URL
+): string {
+  return (
+    env.IMMACULATE_ROUNDTABLE_OLLAMA_URL?.trim() ||
+    env.IMMACULATE_ROUNDTABLE_Q_OLLAMA_URL?.trim() ||
+    sharedLocalQUrl
+  );
+}
+
+const DEFAULT_ROUNDTABLE_OLLAMA_URL = resolveRoundtableOllamaUrl();
 
 export function resolveRoundtableSharedQFallbackAllowed(
   env: NodeJS.ProcessEnv = process.env
@@ -261,10 +269,10 @@ export function resolveRoundtableRuntimeTimeoutControls(
 ): RoundtableRuntimeTimeoutControls {
   return {
     prewarmTimeoutMs: clampRuntimeTimeoutMs(
-      parsePositiveInteger(env.IMMACULATE_ROUNDTABLE_OLLAMA_PREWARM_TIMEOUT_MS, 60_000)
+      parsePositiveInteger(env.IMMACULATE_ROUNDTABLE_OLLAMA_PREWARM_TIMEOUT_MS, 180_000)
     ),
     cognitiveRequestTimeoutMs: clampRuntimeTimeoutMs(
-      parsePositiveInteger(env.IMMACULATE_ROUNDTABLE_COGNITIVE_TIMEOUT_MS, 60_000)
+      parsePositiveInteger(env.IMMACULATE_ROUNDTABLE_COGNITIVE_TIMEOUT_MS, 180_000)
     )
   };
 }
