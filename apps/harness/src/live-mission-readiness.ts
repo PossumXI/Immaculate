@@ -45,6 +45,14 @@ type ArobiVerifiedRepairReport = {
   };
 };
 
+export type ArobiMissionTreasuryStatus = {
+  treasury_wallet?: string;
+  pool_balance?: number;
+  pool_balance_aura?: number;
+  control_mode?: string;
+  wallet_issue?: string;
+};
+
 type DiscordQAgentReceipt = {
   updatedAt?: string;
   status?: string;
@@ -73,6 +81,7 @@ type LiveMissionReadinessReport = {
     arobiLiveLedgerPath: string;
     discordAgentReceiptPath: string;
     discordAgentHealthUrl: string;
+    arobiVerifiedTreasuryUrl: string;
     openjawsRoot: string;
     roundtableRuntimeGeneratedAt?: string;
     arobiLiveLedgerGeneratedAt?: string;
@@ -81,6 +90,8 @@ type LiveMissionReadinessReport = {
     discordHealth: SimpleHttpProbe;
     arobiLocalPublicReady: boolean;
     arobiLocalPrivateReady: boolean;
+    arobiVerifiedTreasuryControlMode?: string;
+    arobiVerifiedTreasuryGovernanceReady: boolean;
   };
   truthBoundary: string[];
   output: {
@@ -104,6 +115,9 @@ const DEFAULT_AROBI_ROOT = process.env.AROBI_ROOT?.trim() || "C:\\Users\\Knight\
 const DEFAULT_AROBI_VERIFIED_ROOT =
   process.env.AROBI_PRIVATE_VERIFIED_ROOT?.trim() ||
   path.join(DEFAULT_AROBI_ROOT, "public-chain-verified");
+const DEFAULT_AROBI_VERIFIED_BASE_URL =
+  process.env.AROBI_PRIVATE_VERIFIED_BASE_URL?.trim() || "http://127.0.0.1:8101";
+const DEFAULT_AROBI_VERIFIED_TREASURY_URL = `${DEFAULT_AROBI_VERIFIED_BASE_URL.replace(/\/+$/u, "")}/api/v1/autonomo/mission/treasury`;
 
 function normalizeOptionalValue(value: string | undefined | null): string | undefined {
   const trimmed = value?.trim();
@@ -208,6 +222,22 @@ async function probeHttp(url: string): Promise<SimpleHttpProbe> {
   }
 }
 
+async function probeJson<T>(url: string): Promise<T | undefined> {
+  try {
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "Immaculate-Live-Mission-Readiness"
+      }
+    });
+    if (!response.ok) {
+      return undefined;
+    }
+    return (await response.json()) as T;
+  } catch {
+    return undefined;
+  }
+}
+
 function describeLedgerPublic(readiness: {
   receipt: ArobiLiveLedgerReceipt | undefined;
   localReady: boolean;
@@ -238,25 +268,73 @@ function describeLedgerPublic(readiness: {
   };
 }
 
-function describeLedgerPrivate(readiness: {
+export function isArobiGovernanceTreasuryReady(
+  treasuryStatus: ArobiMissionTreasuryStatus | undefined
+): boolean {
+  if (treasuryStatus?.control_mode !== "governance_release") {
+    return false;
+  }
+  const wallet = normalizeOptionalValue(treasuryStatus.treasury_wallet);
+  const poolBalanceAura = treasuryStatus.pool_balance_aura;
+  const poolBalance = treasuryStatus.pool_balance;
+  const positiveBalance =
+    (typeof poolBalanceAura === "number" && poolBalanceAura > 0) ||
+    (typeof poolBalance === "number" && poolBalance > 0);
+  return Boolean(wallet) && positiveBalance;
+}
+
+export function resolveArobiLocalPrivateReadiness(options: {
+  repairOk?: boolean;
+  verifiedAuditLedgerCount: number;
+  verifiedLog: string | undefined;
+  treasuryStatus?: ArobiMissionTreasuryStatus;
+}): {
+  ready: boolean;
+  signerBlocked: boolean;
+  treasuryGovernanceReady: boolean;
+} {
+  const verifiedLog = options.verifiedLog ?? "";
+  const signerBlocked = verifiedLog.includes("Mission treasury signer disabled");
+  const treasuryGovernanceReady = isArobiGovernanceTreasuryReady(options.treasuryStatus);
+  const ready =
+    options.repairOk === true &&
+    options.verifiedAuditLedgerCount > 0 &&
+    verifiedLog.includes("Loaded ") &&
+    verifiedLog.includes("AI Decision Audit Ledger initialized") &&
+    verifiedLog.includes("API server on") &&
+    (!signerBlocked || treasuryGovernanceReady);
+  return {
+    ready,
+    signerBlocked,
+    treasuryGovernanceReady
+  };
+}
+
+export function describeLedgerPrivate(readiness: {
   receipt: ArobiLiveLedgerReceipt | undefined;
   localReady: boolean;
   signerBlocked: boolean;
+  treasuryGovernanceReady?: boolean;
 }): { endpoint?: string; ready?: boolean; detail: string } {
   const endpoint =
     formatEvidencePath(readiness.receipt?.latestLocalRerun?.outputDir) ??
     formatEvidencePath(DEFAULT_AROBI_VERIFIED_ROOT);
   const privateDelta = readiness.receipt?.proof?.privateEntryDelta;
+  const advanced =
+    typeof privateDelta === "number" && privateDelta > 0 && readiness.localReady;
+  if (advanced && readiness.signerBlocked && readiness.treasuryGovernanceReady === true) {
+    return {
+      endpoint,
+      ready: true,
+      detail: `latest supervised rerun advanced the private ledger by ${privateDelta}; verified private node is governance-controlled, so the legacy mission treasury wallet warning is non-blocking`
+    };
+  }
   return {
     endpoint,
-    ready:
-      typeof privateDelta === "number" &&
-      privateDelta > 0 &&
-      readiness.localReady &&
-      !readiness.signerBlocked,
+    ready: advanced && !readiness.signerBlocked,
     detail: readiness.signerBlocked
       ? `verified private node is blocked by mission treasury signer mismatch despite rerun delta ${privateDelta ?? "unknown"}`
-      : typeof privateDelta === "number" && privateDelta > 0 && readiness.localReady
+      : advanced
         ? `latest supervised rerun advanced the private ledger by ${privateDelta} and the verified private node contract is intact`
         : `latest supervised rerun did not prove private ledger advance (delta ${privateDelta ?? "unknown"}) or the verified private node contract is incomplete`
   };
@@ -354,6 +432,7 @@ function renderMarkdown(report: LiveMissionReadinessReport): string {
     `- Arobi live ledger receipt: \`${report.evidence.arobiLiveLedgerPath}\` @ \`${report.evidence.arobiLiveLedgerGeneratedAt ?? "missing"}\``,
     `- Discord agent receipt: \`${report.evidence.discordAgentReceiptPath}\` @ \`${report.evidence.discordAgentReceiptUpdatedAt ?? "missing"}\``,
     `- Discord agent health: \`${report.evidence.discordAgentHealthUrl}\` -> \`${report.evidence.discordHealth.status ?? "error"}\`${report.evidence.discordHealth.body ? ` | ${report.evidence.discordHealth.body}` : report.evidence.discordHealth.error ? ` | ${report.evidence.discordHealth.error}` : ""}`,
+    `- Verified Arobi treasury control: \`${report.evidence.arobiVerifiedTreasuryControlMode ?? "missing"}\` @ \`${report.evidence.arobiVerifiedTreasuryUrl}\` | governance ready \`${report.evidence.arobiVerifiedTreasuryGovernanceReady}\``,
     `- OpenJaws root: \`${report.evidence.openjawsRoot}\``,
     `- Receipt-backed OCI backend: \`${report.evidence.qOciBackend ?? "missing"}\``,
     `- Local Arobi public-ready markers: \`${report.evidence.arobiLocalPublicReady}\``,
@@ -390,7 +469,8 @@ async function main(): Promise<void> {
     arobiManualStartLog,
     arobiVerifiedRepairReport,
     arobiVerifiedAuditLedgerRaw,
-    arobiVerifiedLog
+    arobiVerifiedLog,
+    arobiVerifiedTreasuryStatus
   ] = await Promise.all([
     readJsonFile<RoundtableRuntimeReceipt>(roundtableRuntimePath),
     readJsonFile<ArobiLiveLedgerReceipt>(arobiLiveLedgerPath),
@@ -402,7 +482,8 @@ async function main(): Promise<void> {
     readOptionalText(arobiManualStartLogPath),
     readJsonFile<ArobiVerifiedRepairReport>(arobiVerifiedRepairReportPath),
     readOptionalText(arobiVerifiedAuditLedgerPath),
-    readOptionalText(arobiVerifiedLogPath)
+    readOptionalText(arobiVerifiedLogPath),
+    probeJson<ArobiMissionTreasuryStatus>(DEFAULT_AROBI_VERIFIED_TREASURY_URL)
   ]);
 
   const publicLogs = `${arobiRestartLog ?? ""}\n${arobiManualStartLog ?? ""}`;
@@ -420,14 +501,14 @@ async function main(): Promise<void> {
       return 0;
     }
   })();
-  const arobiPrivateSignerBlocked = (arobiVerifiedLog ?? "").includes("Mission treasury signer disabled");
-  const arobiLocalPrivateReady =
-    arobiVerifiedRepairReport?.finalVerification?.ok === true &&
-    verifiedAuditLedgerCount > 0 &&
-    (arobiVerifiedLog ?? "").includes("Loaded ") &&
-    (arobiVerifiedLog ?? "").includes("AI Decision Audit Ledger initialized") &&
-    (arobiVerifiedLog ?? "").includes("API server on") &&
-    !arobiPrivateSignerBlocked;
+  const arobiPrivateReadiness = resolveArobiLocalPrivateReadiness({
+    repairOk: arobiVerifiedRepairReport?.finalVerification?.ok,
+    verifiedAuditLedgerCount,
+    verifiedLog: arobiVerifiedLog,
+    treasuryStatus: arobiVerifiedTreasuryStatus
+  });
+  const arobiPrivateSignerBlocked = arobiPrivateReadiness.signerBlocked;
+  const arobiLocalPrivateReady = arobiPrivateReadiness.ready;
 
   const publicLedger = describeLedgerPublic({
     receipt: arobiLiveLedger,
@@ -436,7 +517,8 @@ async function main(): Promise<void> {
   const privateLedger = describeLedgerPrivate({
     receipt: arobiLiveLedger,
     localReady: arobiLocalPrivateReady,
-    signerBlocked: arobiPrivateSignerBlocked
+    signerBlocked: arobiPrivateSignerBlocked,
+    treasuryGovernanceReady: arobiPrivateReadiness.treasuryGovernanceReady
   });
   const qLocalLane = roundtableRuntime?.readiness?.q?.local;
   const qOci = describeQOci({
@@ -482,6 +564,7 @@ async function main(): Promise<void> {
       discordAgentReceiptPath:
         formatEvidencePath(discordAgentReceiptPath) ?? discordAgentReceiptPath,
       discordAgentHealthUrl: DEFAULT_DISCORD_AGENT_HEALTH_URL,
+      arobiVerifiedTreasuryUrl: DEFAULT_AROBI_VERIFIED_TREASURY_URL,
       openjawsRoot: formatEvidencePath(openjawsRoot) ?? openjawsRoot,
       roundtableRuntimeGeneratedAt: roundtableRuntime?.generatedAt,
       arobiLiveLedgerGeneratedAt: arobiLiveLedger?.generatedAt,
@@ -489,14 +572,16 @@ async function main(): Promise<void> {
       qOciBackend: discordAgentReceipt?.backend,
       discordHealth,
       arobiLocalPublicReady,
-      arobiLocalPrivateReady
+      arobiLocalPrivateReady,
+      arobiVerifiedTreasuryControlMode: arobiVerifiedTreasuryStatus?.control_mode,
+      arobiVerifiedTreasuryGovernanceReady: arobiPrivateReadiness.treasuryGovernanceReady
     },
     truthBoundary: [
       "This page is a readiness receipt, not proof that a live Discord operator command or multi-subsystem mission was executed.",
       "q.local is taken from the latest machine-stamped roundtable runtime receipt and remains blocked if that receipt is missing or failed.",
       "q.oci is receipt-backed from the live Discord Q agent runtime plus the local health endpoint; it is not a fresh direct provider probe unless a separate OCI probe surface says so explicitly.",
       "ledger.public is only ready when the public aura-genesis edge surfaced a fresh governed audit record, not merely when the public read endpoints responded.",
-      "ledger.private is only ready when the latest supervised rerun proved private ledger advance.",
+      "ledger.private is only ready when the latest supervised rerun proved private ledger advance and the verified node proves either a valid signer path or governance_release treasury control.",
       "This page does not expose secrets, Discord tokens, OCI keys, or private ledger payloads."
     ],
     output: {
@@ -511,7 +596,13 @@ async function main(): Promise<void> {
   process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
 }
 
-void main().catch((error) => {
-  process.stderr.write(error instanceof Error ? error.message : "Live mission readiness generation failed.");
-  process.exitCode = 1;
-});
+const isDirectExecution =
+  typeof process.argv[1] === "string" &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+
+if (isDirectExecution) {
+  void main().catch((error) => {
+    process.stderr.write(error instanceof Error ? error.message : "Live mission readiness generation failed.");
+    process.exitCode = 1;
+  });
+}
