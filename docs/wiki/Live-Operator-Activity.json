@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-13T22:51:57.521Z",
+  "generatedAt": "2026-05-13T22:57:30.062Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "b15ba648e1ff7be35786425a2bbbee5b8146fc1e",
-    "gitShortSha": "b15ba64",
-    "gitBranch": "codex/live-mission-governance-treasury-readiness-20260513",
-    "buildId": "0.1.0+b15ba64",
+    "gitSha": "59b1c1ae55baf9b1565ac9be15da52b4327e8867",
+    "gitShortSha": "59b1c1a",
+    "gitBranch": "main",
+    "buildId": "0.1.0+59b1c1a",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -57,25 +57,25 @@
   },
   "qPatrol": {
     "status": "ready",
-    "summary": "posted patrol digest after state change -> #q-command-station",
+    "summary": "state changed but routing cooldown held",
     "sourcePath": "openjaws/local-command-station/discord-q-agent-receipt.json",
-    "lastDecision": "posted patrol digest after state change -> #q-command-station",
+    "lastDecision": "state changed but routing cooldown held",
     "lastPostedChannelName": "q-command-station",
-    "lastSummary": "1 patrol post sent",
+    "lastSummary": "state changed but routing cooldown held",
     "queueLength": 182,
     "recommendedLayerId": "Q"
   },
   "roundtable": {
     "status": "ready",
-    "summary": "running | Q posted turn 28 | 28 turns | 2/21 recent actions passed verification | 470 blocked job(s)",
+    "summary": "running | OpenJaws roundtable action q-follow-through-openjaws-2026-05-13t22-56-39.503z was held back: no code changes detected. | 30 turns | 2/21 recent actions passed verification | 470 blocked job(s)",
     "sourcePath": "openjaws/local-command-station/roundtable-runtime/discord-roundtable.state.json",
     "sessionSourcePath": "openjaws/local-command-station/roundtable-runtime/discord-roundtable.session.json",
     "channelName": "dev_support",
     "sessionStatus": "running",
-    "turnCount": 28,
-    "nextPersona": "viola",
-    "lastSpeaker": "q",
-    "lastSummary": "Q posted turn 28",
+    "turnCount": 30,
+    "nextPersona": "q",
+    "lastSpeaker": "blackbeak",
+    "lastSummary": "OpenJaws roundtable action q-follow-through-openjaws-2026-05-13t22-56-39.503z was held back: no code changes detected.",
     "actionReceiptCount": 21,
     "actions": [
       {
@@ -246,7 +246,7 @@
         "configured": true,
         "ready": true,
         "endpoint": "https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1",
-        "detail": "Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 22s ago (budget 900s)"
+        "detail": "Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 40s ago (budget 900s)"
       }
     },
     "discord": {
@@ -255,7 +255,7 @@
         "configured": true,
         "ready": true,
         "endpoint": "http://127.0.0.1:8788/health",
-        "detail": "status=ready; gateway=true; guilds=1; health 200; updated 22s ago (budget 900s)"
+        "detail": "status=ready; gateway=true; guilds=1; health 200; updated 40s ago (budget 900s)"
       }
     },
     "missionSurfaceReady": true,
