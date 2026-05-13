@@ -2,7 +2,7 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-05-13T18:19:10.199Z
+- Generated: 2026-05-13T18:23:07.770Z
 - Immaculate release: `0.1.0+d4ba2de`
 - Repo commit: `d4ba2de448111bc87ce427c4d358b597f5f11b93`
 - Branch: `main`
@@ -25,19 +25,19 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## Current Evidence Surfaces
 
-- BridgeBench: `2026-05-13T18:17:15.790Z` via `docs/wiki/BridgeBench.json`
+- BridgeBench: `2026-05-13T18:22:54.094Z` via `docs/wiki/BridgeBench.json`
 - BridgeBench soak: `2026-04-15T06:15:54.188Z` via `docs/wiki/BridgeBench-Soak.json`
 - Q structured contract benchmark: `2026-05-07T06:03:07.620Z` via `docs/wiki/Model-Benchmark-Comparison.json`
-- Q readiness gate: `2026-05-13T18:19:10.199Z` via `docs/wiki/Q-Readiness-Gate.json`
+- Q readiness gate: `2026-05-13T18:21:45.147Z` via `docs/wiki/Q-Readiness-Gate.json`
 - Q gateway validation: `2026-05-07T07:32:32.750Z` via `docs/wiki/Q-Gateway-Validation.json`
 - Q gateway substrate: `2026-04-19T22:06:38.757Z` via `docs/wiki/Q-Gateway-Substrate.json`
 - Q mediation drift: `2026-04-19T22:06:40.025Z` via `docs/wiki/Q-Mediation-Drift.json`
 - Arobi audit integrity: `2026-05-12T18:09:17.101Z` via `docs/wiki/Arobi-Audit-Integrity.json`
-- Arobi live ledger receipt: `2026-05-13T17:05:15.331Z` via `docs/wiki/Arobi-Live-Ledger-Receipt.json`
+- Arobi live ledger receipt: `2026-05-13T18:21:04.045Z` via `docs/wiki/Arobi-Live-Ledger-Receipt.json`
 - Live mission readiness: `2026-05-13T17:05:26.971Z` via `docs/wiki/Live-Mission-Readiness.json`
 - Live operator activity: `2026-05-13T17:05:45.299Z` via `docs/wiki/Live-Operator-Activity.json`
 - Live operator public export: `2026-05-13T17:05:58.453Z` via `docs/wiki/Live-Operator-Public-Export.json`
-- Cross-project workflow health: `2026-05-13T18:19:00.172Z` via `docs/wiki/Cross-Project-Workflow-Health.json`
+- Cross-project workflow health: `2026-05-13T18:23:07.770Z` via `docs/wiki/Cross-Project-Workflow-Health.json`
 - Supervised mission showcase: `2026-04-22T01:20:45.053Z` via `docs/wiki/Supervised-Mission-Showcase.json`
 - Roundtable actionability: `2026-05-13T17:06:06.500Z` via `docs/wiki/Roundtable-Actionability.json`
 - Roundtable runtime: `2026-04-21T22:19:50.626Z` via `docs/wiki/Roundtable-Runtime.json`
@@ -57,7 +57,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Terminal-Bench public task: `2026-04-19T14:31:45.217Z` via `docs/wiki/Terminal-Bench-Public-Task.json`
 - Terminal-Bench leaderboard status: `2026-04-19T14:31:45.545Z` via `docs/wiki/Terminal-Bench-Receipt.json`
 - Terminal-Bench rerun (diagnostic-only): `2026-04-19T14:31:45.730Z` via `docs/wiki/Terminal-Bench-Rerun.json`
-- GitHub checks receipt: `2026-05-13T18:18:05.871Z` via `docs/wiki/GitHub-Checks-Receipt.json`
+- GitHub checks receipt: `2026-05-13T18:22:56.279Z` via `docs/wiki/GitHub-Checks-Receipt.json`
 - Harbor terminal bench soak: `2026-04-16T13:05:24.510Z` via `docs/wiki/Harbor-Terminal-Bench-Soak.json`
 - Q benchmark sweep (60m): `2026-04-17T20:56:29.772Z` via `docs/wiki/Q-Benchmark-Sweep-60m.json`
 

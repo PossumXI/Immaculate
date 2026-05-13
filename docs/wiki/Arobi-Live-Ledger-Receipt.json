@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-13T17:05:15.331Z",
+  "generatedAt": "2026-05-13T18:21:04.045Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "585973070c9a2cd34de1d38f9675b430bc7421a4",
-    "gitShortSha": "5859730",
+    "gitSha": "b6d30a1ee4dd2d2123d8d785787a8f05484fa9e8",
+    "gitShortSha": "b6d30a1",
     "gitBranch": "main",
-    "buildId": "0.1.0+5859730",
+    "buildId": "0.1.0+b6d30a1",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -56,27 +56,27 @@
     "apiBaseUrl": "https://arobi.aura-genesis.org",
     "version": "3.3.1",
     "network": "AROBI1",
-    "height": 59178,
+    "height": 59254,
     "peerCount": 2,
     "consensusType": "proof_of_intelligence",
-    "poiSolved": 295,
-    "totalEntries": 32156,
+    "poiSolved": 371,
+    "totalEntries": 32398,
     "chainValid": true,
-    "fabricSource": "synthesized",
-    "orchestrationAvailable": false,
-    "brainReady": false
+    "fabricSource": "nysus",
+    "orchestrationAvailable": true,
+    "brainReady": true
   },
   "latestVisibleEntry": {
-    "entryId": "flightgear-q-20260513-130102-q_cruise-2026-05-13t170439.0029789z",
-    "timestamp": "2026-05-13T17:04:39.0029789Z",
+    "entryId": "flightgear-q-20260513-141611-q_cruise-2026-05-13t182052.6291355z",
+    "timestamp": "2026-05-13T18:20:52.6291355Z",
     "blockHeight": null,
     "sourceLabel": "immaculate_showcase",
     "modelId": "q-operator-public-showcase",
     "modelVersion": "n/a",
-    "inputSummary": "Simulator-only Q decision via local-q-safety during pattern profile. Health degraded, reason downwind high energy descent, challenge runway hold short, altitude 1140.3 ft AGL, airspeed 102.3 kt, rpm 1095, throttle 0.00, elevator 0.180, target heading 111.2, target altitude 713.0 ft. Awareness: Q sees cruise: agl 1140.3ft, projected 1090.6ft in 3s, speed margin 14.3kt, heading error -5.0deg, terrain risk clear. Map KJFK/31L says runway along -7075ft, remaining 14549ft, approach distance 7075ft, and signed centerline offset -3805ft.",
+    "inputSummary": "Simulator-only Q decision via local-q-safety during pattern profile. Health degraded, reason downwind high energy descent, challenge runway hold short, altitude 1122.3 ft AGL, airspeed 97.9 kt, rpm 1054, throttle 0.00, elevator 0.120, target heading 113.7, target altitude 713.0 ft. Awareness: Q sees cruise: agl 1122.3ft, projected 1133.1ft in 3s, speed margin 9.9kt, heading error -4.7deg, terrain risk clear. Map KJFK/31L says runway along -1646ft, remaining 14549ft, approach distance 1646ft, and signed centerline offset -4426ft.",
     "decision": "Q FlightGear decision: q_cruise downwind high energy descent",
     "networkContext": "PUBLIC",
-    "reasoning": "Simulator-only Q FlightGear decision mirrored through Immaculate. Health degraded. Public decision basis: Q sees cruise: agl 1140.3ft, projected 1090.6ft in 3s, speed margin 14.3kt, heading error -5.0deg, terrain risk clear. Map KJFK/31L says runway along -7075ft, remaining 14549ft, approach distance 7075ft, and signed centerline offset -3805ft."
+    "reasoning": "Simulator-only Q FlightGear decision mirrored through Immaculate. Health degraded. Public decision basis: Q sees cruise: agl 1122.3ft, projected 1133.1ft in 3s, speed margin 9.9kt, heading error -4.7deg, terrain risk clear. Map KJFK/31L says runway along -1646ft, remaining 14549ft, approach distance 1646ft, and signed centerline offset -4426ft."
   },
   "latestLocalRerun": {
     "runId": "fabric-audit-soak-20260420T022653Z",
@@ -102,7 +102,7 @@
     "This page is a live-node receipt, not a benchmark score.",
     "It is generated from the public aura-genesis status and ledger endpoints plus the latest local supervised fabric-audit rerun receipt.",
     "The public visible record currently comes from the latest governed audit record surfaced on the public ledger feed.",
-    "At generation time, the public aura-genesis telemetry edge was synthesized/offline, so this receipt falls back to the last verified supervised rerun instead of claiming a live public-node match.",
+    "At generation time, the public aura-genesis telemetry edge was reachable enough to compare the latest visible public record against the latest supervised rerun.",
     "This page does not expose secrets, raw private payloads, or raw chain-of-thought."
   ],
   "output": {

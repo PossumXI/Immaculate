@@ -1,67 +1,57 @@
 {
-  "generatedAt": "2026-05-13T18:18:05.871Z",
+  "generatedAt": "2026-05-13T18:22:56.279Z",
   "repo": {
     "fullName": "PossumXI/Immaculate",
     "htmlUrl": "https://github.com/PossumXI/Immaculate"
   },
   "targetCommit": {
-    "sha": "d4ba2de448111bc87ce427c4d358b597f5f11b93",
-    "shortSha": "d4ba2de",
-    "htmlUrl": "https://github.com/PossumXI/Immaculate/commit/d4ba2de448111bc87ce427c4d358b597f5f11b93"
+    "sha": "b6d30a1ee4dd2d2123d8d785787a8f05484fa9e8",
+    "shortSha": "b6d30a1",
+    "htmlUrl": "https://github.com/PossumXI/Immaculate/commit/b6d30a1ee4dd2d2123d8d785787a8f05484fa9e8"
   },
   "release": {
-    "buildId": "0.1.0+d4ba2de",
+    "buildId": "0.1.0+b6d30a1",
     "branch": "main"
   },
   "verification": {
     "source": "github-rest+gh-auth",
     "classicStatusState": "pending",
     "classicStatusContexts": 0,
-    "workflowRunCount": 4,
-    "checkRunCount": 7,
+    "workflowRunCount": 3,
+    "checkRunCount": 6,
     "allWorkflowRunsSuccessful": true,
     "allCheckRunsSuccessful": true
   },
   "workflows": [
     {
       "name": "GitGuardian",
-      "runNumber": 326,
+      "runNumber": 327,
       "event": "push",
       "status": "completed",
       "conclusion": "success",
-      "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25817460661",
-      "createdAt": "2026-05-13T18:07:56Z",
-      "updatedAt": "2026-05-13T18:08:12Z"
-    },
-    {
-      "name": "Benchmark Publication",
-      "runNumber": 268,
-      "event": "push",
-      "status": "completed",
-      "conclusion": "success",
-      "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25817460627",
-      "createdAt": "2026-05-13T18:07:56Z",
-      "updatedAt": "2026-05-13T18:09:22Z"
+      "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25818049222",
+      "createdAt": "2026-05-13T18:19:37Z",
+      "updatedAt": "2026-05-13T18:19:55Z"
     },
     {
       "name": "CI",
-      "runNumber": 332,
+      "runNumber": 333,
       "event": "push",
       "status": "completed",
       "conclusion": "success",
-      "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25817460645",
-      "createdAt": "2026-05-13T18:07:56Z",
-      "updatedAt": "2026-05-13T18:09:39Z"
+      "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25818049230",
+      "createdAt": "2026-05-13T18:19:37Z",
+      "updatedAt": "2026-05-13T18:21:06Z"
     },
     {
       "name": "Security",
-      "runNumber": 332,
+      "runNumber": 333,
       "event": "push",
       "status": "completed",
       "conclusion": "success",
-      "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25817460610",
-      "createdAt": "2026-05-13T18:07:56Z",
-      "updatedAt": "2026-05-13T18:10:50Z"
+      "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25818049208",
+      "createdAt": "2026-05-13T18:19:37Z",
+      "updatedAt": "2026-05-13T18:22:14Z"
     }
   ],
   "checkRuns": [
@@ -69,57 +59,49 @@
       "name": "dependency-review",
       "status": "completed",
       "conclusion": "skipped",
-      "url": "https://github.com/PossumXI/Immaculate/actions/runs/25817460610/job/75849588566",
-      "startedAt": "2026-05-13T18:07:58Z",
-      "completedAt": "2026-05-13T18:07:57Z"
-    },
-    {
-      "name": "gitleaks",
-      "status": "completed",
-      "conclusion": "success",
-      "url": "https://github.com/PossumXI/Immaculate/actions/runs/25817460610/job/75849587613",
-      "startedAt": "2026-05-13T18:08:00Z",
-      "completedAt": "2026-05-13T18:08:14Z"
-    },
-    {
-      "name": "codeql",
-      "status": "completed",
-      "conclusion": "success",
-      "url": "https://github.com/PossumXI/Immaculate/actions/runs/25817460610/job/75849587544",
-      "startedAt": "2026-05-13T18:08:00Z",
-      "completedAt": "2026-05-13T18:10:49Z"
-    },
-    {
-      "name": "npm-audit",
-      "status": "completed",
-      "conclusion": "success",
-      "url": "https://github.com/PossumXI/Immaculate/actions/runs/25817460610/job/75849587498",
-      "startedAt": "2026-05-13T18:08:06Z",
-      "completedAt": "2026-05-13T18:08:28Z"
+      "url": "https://github.com/PossumXI/Immaculate/actions/runs/25818049208/job/75851649228",
+      "startedAt": "2026-05-13T18:19:38Z",
+      "completedAt": "2026-05-13T18:19:37Z"
     },
     {
       "name": "benchmark-gate",
       "status": "completed",
       "conclusion": "success",
-      "url": "https://github.com/PossumXI/Immaculate/actions/runs/25817460645/job/75849587349",
-      "startedAt": "2026-05-13T18:08:06Z",
-      "completedAt": "2026-05-13T18:09:38Z"
+      "url": "https://github.com/PossumXI/Immaculate/actions/runs/25818049230/job/75851648214",
+      "startedAt": "2026-05-13T18:19:39Z",
+      "completedAt": "2026-05-13T18:21:06Z"
     },
     {
-      "name": "publish-benchmarks",
+      "name": "codeql",
       "status": "completed",
       "conclusion": "success",
-      "url": "https://github.com/PossumXI/Immaculate/actions/runs/25817460627/job/75849587144",
-      "startedAt": "2026-05-13T18:08:07Z",
-      "completedAt": "2026-05-13T18:09:22Z"
+      "url": "https://github.com/PossumXI/Immaculate/actions/runs/25818049208/job/75851648166",
+      "startedAt": "2026-05-13T18:19:40Z",
+      "completedAt": "2026-05-13T18:22:13Z"
+    },
+    {
+      "name": "npm-audit",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/PossumXI/Immaculate/actions/runs/25818049208/job/75851648147",
+      "startedAt": "2026-05-13T18:19:42Z",
+      "completedAt": "2026-05-13T18:20:07Z"
     },
     {
       "name": "gitguardian",
       "status": "completed",
       "conclusion": "success",
-      "url": "https://github.com/PossumXI/Immaculate/actions/runs/25817460661/job/75849586920",
-      "startedAt": "2026-05-13T18:07:59Z",
-      "completedAt": "2026-05-13T18:08:11Z"
+      "url": "https://github.com/PossumXI/Immaculate/actions/runs/25818049222/job/75851648113",
+      "startedAt": "2026-05-13T18:19:40Z",
+      "completedAt": "2026-05-13T18:19:55Z"
+    },
+    {
+      "name": "gitleaks",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/PossumXI/Immaculate/actions/runs/25818049208/job/75851648105",
+      "startedAt": "2026-05-13T18:19:47Z",
+      "completedAt": "2026-05-13T18:20:00Z"
     }
   ],
   "truthBoundary": [

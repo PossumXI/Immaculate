@@ -3,9 +3,9 @@
 This page is the machine-stamped GitHub Actions truth surface for the three coordinated repos in the current workstation orbit.
 It exists so operational claims do not rely on one green repo while another repo is red, inaccessible, or only visible through private GitHub auth.
 
-- Generated: `2026-05-13T18:19:00.172Z`
-- Immaculate release: `0.1.0+d4ba2de`
-- Repo commit: `d4ba2de448111bc87ce427c4d358b597f5f11b93`
+- Generated: `2026-05-13T18:23:07.770Z`
+- Immaculate release: `0.1.0+b6d30a1`
+- Repo commit: `b6d30a1ee4dd2d2123d8d785787a8f05484fa9e8`
 
 ## Summary
 
@@ -13,14 +13,14 @@ It exists so operational claims do not rely on one green repo while another repo
 - Fully healthy repos: `3`
 - All observed workflow runs successful: `false`
 - All actionable workflow runs healthy: `true`
-- Detail: Immaculate (public repo, gh-auth): latest actionable runs green; observed 6/8 active workflows, 2 not recently observed, 1 non-actionable dynamic workflow(s) | OpenJaws (public repo, gh-auth): latest actionable runs green; observed 4/6 active workflows, 2 not recently observed | Asgard_Arobi (private repo, gh-auth): latest actionable runs green; observed 10/10 active workflows
+- Detail: Immaculate (public repo, github-rest-token): latest actionable runs green; observed 6/8 active workflows, 2 not recently observed, 1 non-actionable dynamic workflow(s) | OpenJaws (public repo, github-rest-token): latest actionable runs green; observed 4/6 active workflows, 2 not recently observed | Asgard_Arobi (private repo, github-rest-token): latest actionable runs green; observed 10/10 active workflows
 
 ## Immaculate
 
 - Repository: `PossumXI/Immaculate`
 - Visibility: `public`
 - Default branch: `main`
-- Access path: `gh-auth` | public repo verified through GitHub Actions REST surfaces
+- Access path: `github-rest-token` | public repo verified through GitHub Actions REST surfaces
 - Active workflows: `8`
 - Latest observed workflow runs: `6`
 - Not recently observed in the sampled branch window: `2`
@@ -33,10 +33,10 @@ It exists so operational claims do not rely on one green repo while another repo
 
 - Benchmark Credibility #32: `success` | `success` - workflow concluded success (https://github.com/PossumXI/Immaculate/actions/runs/25792361142)
 - Benchmark Publication #268: `success` | `success` - workflow concluded success (https://github.com/PossumXI/Immaculate/actions/runs/25817460627)
-- CI #332: `success` | `success` - workflow concluded success (https://github.com/PossumXI/Immaculate/actions/runs/25817460645)
+- CI #333: `success` | `success` - workflow concluded success (https://github.com/PossumXI/Immaculate/actions/runs/25818049230)
 - npm_and_yarn in /. for next - Update #1361215239 #55: `failure` | `non_actionable` - dynamic Dependabot update failure is tracked as dependency automation noise; code-bearing workflow evidence remains listed separately (https://github.com/PossumXI/Immaculate/actions/runs/25705950214)
-- GitGuardian #326: `success` | `success` - workflow concluded success (https://github.com/PossumXI/Immaculate/actions/runs/25817460661)
-- Security #332: `success` | `success` - workflow concluded success (https://github.com/PossumXI/Immaculate/actions/runs/25817460610)
+- GitGuardian #327: `success` | `success` - workflow concluded success (https://github.com/PossumXI/Immaculate/actions/runs/25818049222)
+- Security #333: `success` | `success` - workflow concluded success (https://github.com/PossumXI/Immaculate/actions/runs/25818049208)
 
 ### Active Workflow Definitions
 
@@ -59,7 +59,7 @@ It exists so operational claims do not rely on one green repo while another repo
 - Repository: `PossumXI/OpenJaws`
 - Visibility: `public`
 - Default branch: `main`
-- Access path: `gh-auth` | public repo verified through GitHub Actions REST surfaces
+- Access path: `github-rest-token` | public repo verified through GitHub Actions REST surfaces
 - Active workflows: `6`
 - Latest observed workflow runs: `4`
 - Not recently observed in the sampled branch window: `2`
@@ -94,7 +94,7 @@ It exists so operational claims do not rely on one green repo while another repo
 - Repository: `PossumXI/Asgard_Arobi`
 - Visibility: `private`
 - Default branch: `main`
-- Access path: `gh-auth` | private repo required authenticated GitHub access; private workflow run URLs are withheld on this public receipt
+- Access path: `github-rest-token` | private repo required authenticated GitHub access; private workflow run URLs are withheld on this public receipt
 - Active workflows: `10`
 - Latest observed workflow runs: `10`
 - Not recently observed in the sampled branch window: `0`
