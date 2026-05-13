@@ -2,53 +2,131 @@
 
 This page is generated from a live harness pass. It proves the roundtable planner is not just text: Immaculate runs a governed mediation route, records repo-scoped roundtable actions, and binds those actions to isolated agent worktrees across Immaculate, OpenJaws, and Asgard. The direct seed step is a best-effort warm-up signal; the governed mediation path is the authoritative route.
 
-- Generated: 2026-05-13T21:36:50.342Z
-- Release: `0.1.0+816dbd9`
-- Repo commit: `816dbd9`
+- Generated: 2026-05-13T21:58:28.066Z
+- Release: `0.1.0+4b7b9b4`
+- Repo commit: `4b7b9b4`
 - Q training bundle: `q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3`
 
 ## Benchmark
 
-- Harness URL: `http://127.0.0.1:56683`
-- Scenario count: `0`
-- Failed assertions: `1`
-- Seed accepted scenarios: `0/0`
-- Mediation accepted scenarios: `0/0`
-- Repo coverage P50: `0`
-- Materialized actions P50: `0`
-- Probed actions P50: `0`
-- Branch-authority matches P50: `0`
-- Execution bundles P50: `0`
-- Execution-ready lanes P50: `0`
-- Task documents P50: `0`
-- Audit receipts P50: `0`
-- Execution receipts P50: `0`
-- Recorded roundtable actions P50: `0`
+- Harness URL: `http://127.0.0.1:60061`
+- Scenario count: `3`
+- Failed assertions: `0`
+- Seed accepted scenarios: `3/3`
+- Mediation accepted scenarios: `3/3`
+- Repo coverage P50: `3`
+- Materialized actions P50: `3`
+- Probed actions P50: `3`
+- Branch-authority matches P50: `3`
+- Execution bundles P50: `3`
+- Execution-ready lanes P50: `3`
+- Task documents P50: `3`
+- Audit receipts P50: `3`
+- Execution receipts P50: `3`
+- Recorded roundtable actions P50: `3`
 - Workspace-scoped turns P50: `0`
-- Tracked files P50: `0`
-- Seed latency P95: `0` ms
-- Mediation latency P95: `0` ms
-- Runner path latency P95: `0` ms
+- Tracked files P50: `369`
+- Seed latency P95: `41831.66` ms
+- Mediation latency P95: `23272.14` ms
+- Runner path latency P95: `65105.29` ms
 - Hardware: knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics / 16 cores / Q foundation Gemma 4
-- Execution integrity digest: `3142f25e5c9a1435`
-- Decision trace ledger: `pending`
-- Decision trace events: `0`
+- Execution integrity digest: `db946fabef62c50a`
+- Decision trace ledger: `verified`
+- Decision trace events: `1`
 - Decision trace findings: `0`
-- Decision trace head hash: `none`
+- Decision trace head hash: `e71b028b3e966dda`
 
 ## Shared Readiness
 
 - Mission-surface ready: `false`
-- Summary: shared readiness blocked: unconfigured: public ledger endpoint not configured for this pass | unconfigured: private ledger endpoint not configured for this pass | http://127.0.0.1:11435: local Q accepted 0/0 seed+mediation scenario pair(s) | unconfigured: OCI-backed Q runtime not configured for this pass | unconfigured: Discord transport not configured for this pass
+- Summary: shared readiness blocked: unconfigured: public ledger endpoint not configured for this pass | unconfigured: private ledger endpoint not configured for this pass | unconfigured: OCI-backed Q runtime not configured for this pass | unconfigured: Discord transport not configured for this pass
 - ledger.public: `not_configured` | public ledger endpoint not configured for this pass
 - ledger.private: `not_configured` | private ledger endpoint not configured for this pass
-- q.local: `blocked` @ `http://127.0.0.1:11435` | local Q accepted 0/0 seed+mediation scenario pair(s)
+- q.local: `ready` @ `http://127.0.0.1:11434` | local Q accepted 3/3 seed+mediation scenario pair(s)
 - q.oci: `not_configured` | OCI-backed Q runtime not configured for this pass
 - discord.transport: `not_configured` | Discord transport not configured for this pass
 
 ## Scenarios
 
+### Immaculate and OpenJaws governed repair
+
+- Status: `completed`
+- Seed status: `200` / accepted `true`
+- Mediation status: `200` / accepted `true`
+- Route suggestion: `cognitive`
+- Guard verdict: `unknown`
+- Repo coverage: `3`
+- Materialized actions: `3`
+- Probed actions: `3`
+- Branch-authority matches: `3`
+- Execution bundles: `3`
+- Execution-ready lanes: `3`
+- Task documents: `3`
+- Audit receipts: `3`
+- Execution receipts: `3`
+- Recorded roundtable actions: `3`
+- Workspace-scoped turns: `0`
+- Tracked files P50: `369`
+- Schedule roundtable counts: actions `3` / repos `3`
+- Session scope preserved: `true`
+- Sample files: `Doc/Planning/README.md`, `README.md`, `apps/dashboard/package.json`, `apps/dashboard/tsconfig.json`, `apps/harness/package.json`, `apps/harness/src/server.ts`
+- Summary: Roundtable single-lane plan across 3 repo(s) with 3 isolated agent action(s); 3 ready for immediate worktree materialization. Execution bundles prepared for 3/3 lane(s); 3/3 lane(s) remain authority-bound and ready for isolated agent work. Repo audit receipts captured for 3/3 lane(s), and bounded execution receipts captured for 3/3 lane(s).
+
+### Asgard audit and ledger continuity
+
+- Status: `completed`
+- Seed status: `200` / accepted `true`
+- Mediation status: `200` / accepted `true`
+- Route suggestion: `cognitive`
+- Guard verdict: `unknown`
+- Repo coverage: `3`
+- Materialized actions: `3`
+- Probed actions: `3`
+- Branch-authority matches: `3`
+- Execution bundles: `3`
+- Execution-ready lanes: `3`
+- Task documents: `3`
+- Audit receipts: `3`
+- Execution receipts: `3`
+- Recorded roundtable actions: `3`
+- Workspace-scoped turns: `0`
+- Tracked files P50: `369`
+- Schedule roundtable counts: actions `3` / repos `3`
+- Session scope preserved: `true`
+- Sample files: `Doc/Planning/README.md`, `README.md`, `apps/dashboard/package.json`, `apps/dashboard/tsconfig.json`, `apps/harness/package.json`, `apps/harness/src/server.ts`
+- Summary: Roundtable single-lane plan across 3 repo(s) with 3 isolated agent action(s); 3 ready for immediate worktree materialization. Execution bundles prepared for 3/3 lane(s); 3/3 lane(s) remain authority-bound and ready for isolated agent work. Repo audit receipts captured for 3/3 lane(s), and bounded execution receipts captured for 3/3 lane(s).
+
+### Mixed-pressure roundtable
+
+- Status: `completed`
+- Seed status: `200` / accepted `true`
+- Mediation status: `200` / accepted `true`
+- Route suggestion: `cognitive`
+- Guard verdict: `unknown`
+- Repo coverage: `3`
+- Materialized actions: `3`
+- Probed actions: `3`
+- Branch-authority matches: `3`
+- Execution bundles: `3`
+- Execution-ready lanes: `3`
+- Task documents: `3`
+- Audit receipts: `3`
+- Execution receipts: `3`
+- Recorded roundtable actions: `3`
+- Workspace-scoped turns: `0`
+- Tracked files P50: `363`
+- Schedule roundtable counts: actions `3` / repos `3`
+- Session scope preserved: `true`
+- Sample files: `Doc/Planning/README.md`, `README.md`, `apps/dashboard/package.json`, `apps/dashboard/tsconfig.json`, `apps/harness/package.json`, `apps/harness/src/server.ts`
+- Summary: Roundtable single-lane plan across 3 repo(s) with 3 isolated agent action(s); 3 ready for immediate worktree materialization. Execution bundles prepared for 3/3 lane(s); 3/3 lane(s) remain authority-bound and ready for isolated agent work. Repo audit receipts captured for 3/3 lane(s), and bounded execution receipts captured for 3/3 lane(s).
+
 
 ## Assertions
 
-- roundtable-runtime-iteration-error: `fail` | target `loop iteration completes` | actual `Roundtable runtime local Q prewarm failed at http://127.0.0.1:11435: transport_timeout / Ollama request timed out after 60000 ms.`
+- roundtable-runtime-scenarios-green: `pass` | target `all scenarios completed` | actual `3/3`
+- roundtable-runtime-worktrees-materialized: `pass` | target `all ready actions materialized on agent branches` | actual `immaculate-openjaws:3/3, asgard-audit-ledger:3/3, mixed-pressure-roundtable:3/3`
+- roundtable-runtime-branch-authority-bound: `pass` | target `all ready actions probed and bound to their agent branch authority` | actual `immaculate-openjaws:probes=3/3,authority=3/3 | asgard-audit-ledger:probes=3/3,authority=3/3 | mixed-pressure-roundtable:probes=3/3,authority=3/3`
+- roundtable-runtime-execution-bundles: `pass` | target `all ready actions emitted execution bundles` | actual `immaculate-openjaws:bundles=3/3,ready=3/3,docs=3 | asgard-audit-ledger:bundles=3/3,ready=3/3,docs=3 | mixed-pressure-roundtable:bundles=3/3,ready=3/3,docs=3`
+- roundtable-runtime-audit-receipts: `pass` | target `all ready actions emitted repo audit receipts` | actual `immaculate-openjaws:receipts=3/3 | asgard-audit-ledger:receipts=3/3 | mixed-pressure-roundtable:receipts=3/3`
+- roundtable-runtime-execution-receipts: `pass` | target `all ready actions emitted bounded execution receipts` | actual `immaculate-openjaws:receipts=3/3 | asgard-audit-ledger:receipts=3/3 | mixed-pressure-roundtable:receipts=3/3`
+- roundtable-runtime-audit-captured: `pass` | target `roundtable actions and execution bundles recorded` | actual `immaculate-openjaws:actions=3,turns=0,bundles=3,scope=true | asgard-audit-ledger:actions=3,turns=0,bundles=3,scope=true | mixed-pressure-roundtable:actions=3,turns=0,bundles=3,scope=true`

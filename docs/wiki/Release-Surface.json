@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-13T21:37:00.009Z",
+  "generatedAt": "2026-05-13T21:58:39.436Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "816dbd9dd1c4d57cd9fd24a17d0479ef3280b392",
-    "gitShortSha": "816dbd9",
+    "gitSha": "be4e37d537a4c83a739cac24a7c1a14d270f15b3",
+    "gitShortSha": "be4e37d",
     "gitBranch": "main",
-    "buildId": "0.1.0+816dbd9",
+    "buildId": "0.1.0+be4e37d",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -128,7 +128,7 @@
       "path": "docs\\wiki\\Live-Mission-Readiness.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-05-13T21:37:00.009Z",
+      "generatedAt": "2026-05-13T21:58:39.436Z",
       "healthStatus": "unhealthy",
       "healthReason": "mission readiness receipt reports missionSurfaceReady=false"
     },
@@ -181,9 +181,9 @@
       "path": "docs\\wiki\\Roundtable-Runtime.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-05-13T21:36:50.342Z",
+      "generatedAt": "2026-05-13T21:58:28.066Z",
       "healthStatus": "unhealthy",
-      "healthReason": "benchmark reports 1 failed assertion(s)"
+      "healthReason": "mission readiness receipt reports missionSurfaceReady=false"
     },
     {
       "label": "Q API audit",
@@ -353,7 +353,7 @@
       "optional": 0,
       "blocking": 4
     },
-    "summary": "4 blocking release evidence gap(s): BridgeBench soak stale outside 7d budget; Live mission readiness mission readiness receipt reports missionSurfaceReady=false; Live operator activity mission readiness receipt reports missionSurfaceReady=false; Roundtable runtime benchmark reports 1 failed assertion(s)",
+    "summary": "4 blocking release evidence gap(s): BridgeBench soak stale outside 7d budget; Live mission readiness mission readiness receipt reports missionSurfaceReady=false; Live operator activity mission readiness receipt reports missionSurfaceReady=false; Roundtable runtime mission readiness receipt reports missionSurfaceReady=false",
     "surfaces": [
       {
         "label": "BridgeBench",
@@ -468,7 +468,7 @@
         "path": "docs\\wiki\\Live-Mission-Readiness.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-05-13T21:37:00.009Z",
+        "generatedAt": "2026-05-13T21:58:39.436Z",
         "healthStatus": "unhealthy",
         "healthReason": "mission readiness receipt reports missionSurfaceReady=false",
         "status": "unhealthy",
@@ -540,12 +540,12 @@
         "path": "docs\\wiki\\Roundtable-Runtime.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-05-13T21:36:50.342Z",
+        "generatedAt": "2026-05-13T21:58:28.066Z",
         "healthStatus": "unhealthy",
-        "healthReason": "benchmark reports 1 failed assertion(s)",
+        "healthReason": "mission readiness receipt reports missionSurfaceReady=false",
         "status": "unhealthy",
         "blocking": true,
-        "reason": "benchmark reports 1 failed assertion(s)"
+        "reason": "mission readiness receipt reports missionSurfaceReady=false"
       },
       {
         "label": "Q API audit",
