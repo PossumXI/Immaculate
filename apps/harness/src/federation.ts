@@ -3,6 +3,28 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 export const federationSignatureAlgorithms = ["hmac-sha256"] as const;
 export type FederationSignatureAlgorithm = (typeof federationSignatureAlgorithms)[number];
 
+export const federationLanes = ["public", "private-00"] as const;
+export type FederationLane = (typeof federationLanes)[number];
+
+export const PUBLIC_FEDERATION_MEMBERSHIP_EXPORT_CLASS = "public-federation-membership-v1";
+export const PUBLIC_FEDERATION_LEASE_EXPORT_CLASS = "public-federation-lease-v1";
+export const PRIVATE_00_FEDERATION_MEMBERSHIP_EXPORT_CLASS =
+  "private-00-federation-membership-v1";
+export const PRIVATE_00_FEDERATION_LEASE_EXPORT_CLASS = "private-00-federation-lease-v1";
+
+export const federationExportClasses = [
+  PUBLIC_FEDERATION_MEMBERSHIP_EXPORT_CLASS,
+  PUBLIC_FEDERATION_LEASE_EXPORT_CLASS,
+  PRIVATE_00_FEDERATION_MEMBERSHIP_EXPORT_CLASS,
+  PRIVATE_00_FEDERATION_LEASE_EXPORT_CLASS
+] as const;
+export type FederationExportClass = (typeof federationExportClasses)[number];
+
+export type FederationVisibilityClaim = {
+  federationLane: FederationLane;
+  exportClass: FederationExportClass;
+};
+
 export type FederationSignedEnvelope<T> = {
   algorithm: FederationSignatureAlgorithm;
   keyId: string;
@@ -12,7 +34,7 @@ export type FederationSignedEnvelope<T> = {
   signature: string;
 };
 
-export type FederationNodeIdentityPayload = {
+export type FederationNodeIdentityPayload = FederationVisibilityClaim & {
   nodeId: string;
   nodeLabel?: string | null;
   hostLabel?: string | null;
@@ -27,7 +49,7 @@ export type FederationNodeIdentityPayload = {
   deviceAffinityTags: string[];
 };
 
-export type FederationWorkerIdentityPayload = {
+export type FederationWorkerIdentityPayload = FederationVisibilityClaim & {
   workerId: string;
   workerLabel?: string | null;
   hostLabel?: string | null;
@@ -46,18 +68,129 @@ export type FederationWorkerIdentityPayload = {
   deviceAffinityTags: string[];
 };
 
-export type FederationNodeLeasePayload = {
+export type FederationNodeLeasePayload = FederationVisibilityClaim & {
   nodeId: string;
   heartbeatAt: string;
   leaseDurationMs: number;
 };
 
-export type FederationWorkerLeasePayload = {
+export type FederationWorkerLeasePayload = FederationVisibilityClaim & {
   workerId: string;
   nodeId: string;
   heartbeatAt: string;
   leaseDurationMs: number;
 };
+
+const privateFederationMarkerPattern =
+  /(^|[-_:./\s])(00|0-0|zero-zero|private-00|private|restricted|classified|sensitive|secret|defense-00)([-_:./\s]|$)/i;
+
+function normalizeTags(values: readonly string[] | undefined): string[] {
+  return [
+    ...new Set(
+      (values ?? []).map((entry) => (typeof entry === "string" ? entry.trim() : "")).filter(Boolean)
+    )
+  ];
+}
+
+function hasPrivateFederationMarker(value: string | null | undefined): boolean {
+  return typeof value === "string" && privateFederationMarkerPattern.test(value.trim());
+}
+
+export function hasPrivateFederationLaneMarker(values: readonly string[] | undefined): boolean {
+  return normalizeTags(values).some((entry) => hasPrivateFederationMarker(entry));
+}
+
+export function sanitizePublicFederationTags(values: readonly string[] | undefined): string[] {
+  return normalizeTags(values).filter((entry) => !hasPrivateFederationMarker(entry));
+}
+
+function isPrivateIpHost(hostname: string): boolean {
+  const lower = hostname.toLowerCase();
+  if (
+    lower === "localhost" ||
+    lower.endsWith(".localhost") ||
+    lower.endsWith(".local") ||
+    lower === "::1" ||
+    lower === "[::1]"
+  ) {
+    return true;
+  }
+  const ipv4 = lower.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+  if (!ipv4) {
+    return false;
+  }
+  const octets = ipv4.slice(1).map((entry) => Number(entry));
+  if (octets.some((entry) => !Number.isInteger(entry) || entry < 0 || entry > 255)) {
+    return true;
+  }
+  return (
+    octets[0] === 10 ||
+    octets[0] === 127 ||
+    (octets[0] === 169 && octets[1] === 254) ||
+    (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31) ||
+    (octets[0] === 192 && octets[1] === 168)
+  );
+}
+
+export function isPublicFederationEndpoint(value: string | null | undefined): boolean {
+  const normalized = value?.trim();
+  if (!normalized) {
+    return false;
+  }
+  try {
+    const parsed = new URL(normalized);
+    if (parsed.protocol !== "https:") {
+      return false;
+    }
+    return !isPrivateIpHost(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
+export function classifyFederationWorkerLane(options: {
+  allowHostRisk?: boolean;
+  executionEndpoint?: string | null;
+  deviceAffinityTags?: readonly string[];
+  preferredLayerIds?: readonly string[];
+  locality?: string | null;
+  hostLabel?: string | null;
+  workerLabel?: string | null;
+}): FederationLane {
+  if (options.allowHostRisk === true) {
+    return "private-00";
+  }
+  if (
+    hasPrivateFederationLaneMarker(options.deviceAffinityTags) ||
+    hasPrivateFederationLaneMarker(options.preferredLayerIds) ||
+    hasPrivateFederationMarker(options.locality) ||
+    hasPrivateFederationMarker(options.hostLabel) ||
+    hasPrivateFederationMarker(options.workerLabel)
+  ) {
+    return "private-00";
+  }
+  if (options.executionEndpoint && !isPublicFederationEndpoint(options.executionEndpoint)) {
+    return "private-00";
+  }
+  return "public";
+}
+
+export function assertFederationPublicExportClaim(
+  payload: Partial<FederationVisibilityClaim>,
+  expectedExportClass: FederationExportClass,
+  subject: string
+): void {
+  if (payload.federationLane !== "public") {
+    throw new Error(
+      `${subject} is not valid for the public federation lane: expected lane public, got ${String(payload.federationLane)}.`
+    );
+  }
+  if (payload.exportClass !== expectedExportClass) {
+    throw new Error(
+      `${subject} is not valid for the public federation lane: expected export class ${expectedExportClass}, got ${String(payload.exportClass)}.`
+    );
+  }
+}
 
 function canonicalize(value: unknown): string {
   if (value === null || typeof value !== "object") {

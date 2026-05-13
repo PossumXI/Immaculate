@@ -2,7 +2,12 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import {
+  PUBLIC_FEDERATION_MEMBERSHIP_EXPORT_CLASS,
+  assertFederationPublicExportClaim,
   buildFederationKeyId,
+  classifyFederationWorkerLane,
+  isPublicFederationEndpoint,
+  sanitizePublicFederationTags,
   signFederationPayload,
   verifyFederationEnvelope
 } from "./federation.js";
@@ -43,4 +48,144 @@ test("federation envelopes sign and verify with derived key ids", () => {
       verified: true
     }
   );
+});
+
+test("federation envelopes fail closed on tampering and expiry", () => {
+  const secret = "federation-shared-secret";
+  const envelope = signFederationPayload(
+    {
+      nodeId: "node-a",
+      heartbeatAt: "2026-05-01T00:00:00.000Z",
+      leaseDurationMs: 30_000
+    },
+    {
+      issuerNodeId: "node-a",
+      secret,
+      issuedAt: "2026-05-01T00:00:00.000Z"
+    }
+  );
+
+  assert.deepEqual(
+    verifyFederationEnvelope(
+      {
+        ...envelope,
+        payload: {
+          ...envelope.payload,
+          nodeId: "node-b"
+        }
+      },
+      {
+        secret,
+        expectedIssuerNodeId: "node-a",
+        now: "2026-05-01T00:00:01.000Z"
+      }
+    ),
+    {
+      verified: false,
+      reason: "signature mismatch"
+    }
+  );
+  assert.deepEqual(
+    verifyFederationEnvelope(envelope, {
+      secret,
+      expectedIssuerNodeId: "node-a",
+      now: "2026-05-01T00:02:01.000Z",
+      maxAgeMs: 60_000
+    }),
+    {
+      verified: false,
+      reason: "envelope expired"
+    }
+  );
+});
+
+test("public federation lane claims reject missing or private payloads", () => {
+  assert.doesNotThrow(() =>
+    assertFederationPublicExportClaim(
+      {
+        federationLane: "public",
+        exportClass: PUBLIC_FEDERATION_MEMBERSHIP_EXPORT_CLASS
+      },
+      PUBLIC_FEDERATION_MEMBERSHIP_EXPORT_CLASS,
+      "node-a"
+    )
+  );
+
+  assert.throws(
+    () =>
+      assertFederationPublicExportClaim(
+        {
+          federationLane: "private-00",
+          exportClass: PUBLIC_FEDERATION_MEMBERSHIP_EXPORT_CLASS
+        },
+        PUBLIC_FEDERATION_MEMBERSHIP_EXPORT_CLASS,
+        "node-a"
+      ),
+    /expected lane public/
+  );
+  assert.throws(
+    () =>
+      assertFederationPublicExportClaim(
+        {},
+        PUBLIC_FEDERATION_MEMBERSHIP_EXPORT_CLASS,
+        "node-a"
+      ),
+    /expected lane public/
+  );
+});
+
+test("public federation worker classifier keeps private and local routes out of public exports", () => {
+  assert.equal(isPublicFederationEndpoint("https://workers.example.com/q"), true);
+  assert.equal(isPublicFederationEndpoint("http://workers.example.com/q"), false);
+  assert.equal(isPublicFederationEndpoint("https://127.0.0.1:8787"), false);
+
+  assert.equal(
+    classifyFederationWorkerLane({
+      allowHostRisk: false,
+      executionEndpoint: "https://workers.example.com/q",
+      deviceAffinityTags: ["gpu", "swarm"],
+      preferredLayerIds: ["q-public"]
+    }),
+    "public"
+  );
+  assert.equal(
+    classifyFederationWorkerLane({
+      allowHostRisk: true,
+      executionEndpoint: "https://workers.example.com/q",
+      deviceAffinityTags: ["gpu"],
+      preferredLayerIds: ["q-public"]
+    }),
+    "private-00"
+  );
+  assert.equal(
+    classifyFederationWorkerLane({
+      allowHostRisk: false,
+      executionEndpoint: "http://127.0.0.1:11434",
+      deviceAffinityTags: ["gpu"],
+      preferredLayerIds: ["q-public"]
+    }),
+    "private-00"
+  );
+  assert.equal(
+    classifyFederationWorkerLane({
+      allowHostRisk: false,
+      executionEndpoint: "http://workers.example.com/q",
+      deviceAffinityTags: ["gpu"],
+      preferredLayerIds: ["q-public"]
+    }),
+    "private-00"
+  );
+  assert.equal(
+    classifyFederationWorkerLane({
+      allowHostRisk: false,
+      executionEndpoint: "https://workers.example.com/q",
+      deviceAffinityTags: ["gpu", "00-lane"],
+      preferredLayerIds: ["q-public"]
+    }),
+    "private-00"
+  );
+  assert.deepEqual(sanitizePublicFederationTags(["gpu", "private-00", "swarm"]), [
+    "gpu",
+    "swarm"
+  ]);
 });

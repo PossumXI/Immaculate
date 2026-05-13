@@ -34,6 +34,17 @@ Arobi Network evidence now carries an explicit lane policy in Immaculate event e
 
 Older event envelopes without lane metadata migrate to `private` during schema parsing so historical ledgers remain readable without rewriting their hashes. New `1.1.0` events bind the lane policy into the event integrity hash.
 
+## Federation Boundary
+
+The public federation routes (`/api/federation/membership` and `/api/federation/leases`) now sign an explicit public lane claim into every node and worker envelope.
+
+- Public membership payloads use `federationLane: public` and `exportClass: public-federation-membership-v1`.
+- Public lease payloads use `federationLane: public` and `exportClass: public-federation-lease-v1`.
+- Private, zero-zero, local-only, and host-risk workers are not exported through the public federation route.
+- Imported public federation payloads fail closed when the lane claim is missing, private, or the wrong export class.
+
+This lets the public and 00 networks share the same federation code path while keeping their routes and evidence lanes separate. A future private 00 federation route must use a separate export class and must not be exposed through the public membership endpoint.
+
 ## Why Auditors And Insurers Care
 
 For review and insurability, the important question is not just "what answer did the AI give?"
