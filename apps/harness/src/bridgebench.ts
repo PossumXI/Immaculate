@@ -96,6 +96,12 @@ export type BridgeBenchReport = {
   };
 };
 
+export type BridgeBenchRunOptions = {
+  prewarmTimeoutMs?: number;
+  executionTimeoutMs?: number;
+  retryTimeoutMs?: number;
+};
+
 const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(MODULE_ROOT, "../../..");
 const WIKI_ROOT = path.join(REPO_ROOT, "docs", "wiki");
@@ -181,11 +187,16 @@ function buildBridgeBenchModels(installedModelNames: string[]): string[] {
     : [];
 }
 
-async function runBridgeBenchModel(requestedModel: string, actualModel: string): Promise<BridgeBenchModelSummary> {
+async function runBridgeBenchModel(
+  requestedModel: string,
+  actualModel: string,
+  options: BridgeBenchRunOptions = {}
+): Promise<BridgeBenchModelSummary> {
   const tasks: BridgeBenchTaskResult[] = [];
   await prewarmOllamaModel({
     endpoint: DEFAULT_OLLAMA_URL,
-    model: actualModel
+    model: actualModel,
+    timeoutMs: options.prewarmTimeoutMs
   });
 
   for (const scenario of BRIDGEBENCH_SCENARIOS) {
@@ -213,7 +224,9 @@ async function runBridgeBenchModel(requestedModel: string, actualModel: string):
         },
         objective: scenario.objective,
         governancePressure: scenario.governancePressure,
-        context: scenario.context
+        context: scenario.context,
+        timeoutMs: options.executionTimeoutMs,
+        retryTimeoutMs: options.retryTimeoutMs
       });
       const structuredFieldCount =
         result.structuredFieldCount ||
@@ -332,7 +345,7 @@ function buildMarkdown(report: BridgeBenchReport): string {
   return `${lines.join("\n")}\n`;
 }
 
-export async function runBridgeBench(): Promise<BridgeBenchReport> {
+export async function runBridgeBench(options: BridgeBenchRunOptions = {}): Promise<BridgeBenchReport> {
   await mkdir(WIKI_ROOT, { recursive: true });
   const installedModels = await listOllamaModels(DEFAULT_OLLAMA_URL);
   const models = buildBridgeBenchModels(installedModels.map((model) => model.name));
@@ -340,7 +353,7 @@ export async function runBridgeBench(): Promise<BridgeBenchReport> {
 
   for (const requestedModel of models) {
     const actualModel = resolveQModel(requestedModel) ?? requestedModel;
-    modelSummaries.push(await runBridgeBenchModel(requestedModel, actualModel));
+    modelSummaries.push(await runBridgeBenchModel(requestedModel, actualModel, options));
   }
 
   const bridgeRuntimeReport = await runPublishedBenchmark({

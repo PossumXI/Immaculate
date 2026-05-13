@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-13T21:58:39.436Z",
+  "generatedAt": "2026-05-13T22:36:24.073Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "4b7b9b46f8c3d292c31f5b523ea9ac76ff5fdb83",
-    "gitShortSha": "4b7b9b4",
+    "gitSha": "b73c0b1f6ceba8a94e504407b68537e07121aded",
+    "gitShortSha": "b73c0b1",
     "gitBranch": "main",
-    "buildId": "0.1.0+4b7b9b4",
+    "buildId": "0.1.0+b73c0b1",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -80,7 +80,7 @@
         "configured": true,
         "ready": true,
         "endpoint": "https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1",
-        "detail": "Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 20s ago (budget 900s)"
+        "detail": "Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 34s ago (budget 900s)"
       }
     },
     "discord": {
@@ -89,7 +89,7 @@
         "configured": true,
         "ready": true,
         "endpoint": "http://127.0.0.1:8788/health",
-        "detail": "status=ready; gateway=true; guilds=1; health 200; updated 20s ago (budget 900s)"
+        "detail": "status=ready; gateway=true; guilds=1; health 200; updated 34s ago (budget 900s)"
       }
     },
     "missionSurfaceReady": false,
@@ -101,14 +101,14 @@
     "discordAgentReceiptPath": "openjaws/local-command-station/discord-q-agent-receipt.json",
     "discordAgentHealthUrl": "http://127.0.0.1:8788/health",
     "openjawsRoot": "openjaws",
-    "roundtableRuntimeGeneratedAt": "2026-05-13T21:58:28.066Z",
+    "roundtableRuntimeGeneratedAt": "2026-05-13T22:01:54.879Z",
     "arobiLiveLedgerGeneratedAt": "2026-05-13T21:02:56.622Z",
-    "discordAgentReceiptUpdatedAt": "2026-05-13T21:58:06.549Z",
+    "discordAgentReceiptUpdatedAt": "2026-05-13T22:36:13.406Z",
     "qOciBackend": "Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1)",
     "discordHealth": {
       "status": 200,
       "ok": true,
-      "body": "{\"status\":\"ok\",\"profile\":\"q\",\"label\":\"Q\",\"interactionReady\":true,\"gatewayReady\":true,\"gatewayConnected\":true,\"guildCount\":1,\"gatewayLastError\":null,\"gatewayLastCloseCode\":null,\"gatewayBlocked\":false,\"gatewayReconnectable\":null,\"updatedAt\":\"2026-05-13T21:58:06.549Z\"}"
+      "body": "{\"status\":\"ok\",\"profile\":\"q\",\"label\":\"Q\",\"interactionReady\":true,\"gatewayReady\":true,\"gatewayConnected\":true,\"guildCount\":1,\"gatewayLastError\":null,\"gatewayLastCloseCode\":null,\"gatewayBlocked\":false,\"gatewayReconnectable\":null,\"updatedAt\":\"2026-05-13T22:36:13.406Z\"}"
     },
     "arobiLocalPublicReady": true,
     "arobiLocalPrivateReady": false

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-13T21:58:39.436Z",
+  "generatedAt": "2026-05-13T22:36:24.394Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
@@ -54,7 +54,7 @@
       "label": "BridgeBench",
       "path": "docs\\wiki\\BridgeBench.json",
       "required": true,
-      "generatedAt": "2026-05-13T18:26:23.858Z",
+      "generatedAt": "2026-05-13T22:36:02.136Z",
       "healthStatus": "healthy",
       "healthReason": "no failed receipt signals detected"
     },
@@ -62,7 +62,7 @@
       "label": "BridgeBench soak",
       "path": "docs\\wiki\\BridgeBench-Soak.json",
       "required": true,
-      "generatedAt": "2026-04-15T06:15:54.188Z",
+      "generatedAt": "2026-05-13T22:36:02.143Z",
       "healthStatus": "healthy",
       "healthReason": "no failed receipt signals detected"
     },
@@ -128,7 +128,7 @@
       "path": "docs\\wiki\\Live-Mission-Readiness.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-05-13T21:58:39.436Z",
+      "generatedAt": "2026-05-13T22:36:24.073Z",
       "healthStatus": "unhealthy",
       "healthReason": "mission readiness receipt reports missionSurfaceReady=false"
     },
@@ -137,9 +137,9 @@
       "path": "docs\\wiki\\Live-Operator-Activity.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-05-13T21:03:00.075Z",
-      "healthStatus": "unhealthy",
-      "healthReason": "mission readiness receipt reports missionSurfaceReady=false"
+      "generatedAt": "2026-05-13T22:36:24.394Z",
+      "healthStatus": "healthy",
+      "healthReason": "no failed receipt signals detected"
     },
     {
       "label": "Live operator public export",
@@ -181,9 +181,9 @@
       "path": "docs\\wiki\\Roundtable-Runtime.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-05-13T21:58:28.066Z",
-      "healthStatus": "unhealthy",
-      "healthReason": "mission readiness receipt reports missionSurfaceReady=false"
+      "generatedAt": "2026-05-13T22:01:54.879Z",
+      "healthStatus": "healthy",
+      "healthReason": "no failed receipt signals detected"
     },
     {
       "label": "Q API audit",
@@ -345,22 +345,22 @@
     "counts": {
       "total": 35,
       "required": 20,
-      "fresh": 17,
-      "stale": 15,
+      "fresh": 20,
+      "stale": 14,
       "missing": 0,
       "invalid": 0,
-      "unhealthy": 3,
+      "unhealthy": 1,
       "optional": 0,
-      "blocking": 4
+      "blocking": 1
     },
-    "summary": "4 blocking release evidence gap(s): BridgeBench soak stale outside 7d budget; Live mission readiness mission readiness receipt reports missionSurfaceReady=false; Live operator activity mission readiness receipt reports missionSurfaceReady=false; Roundtable runtime mission readiness receipt reports missionSurfaceReady=false",
+    "summary": "1 blocking release evidence gap(s): Live mission readiness mission readiness receipt reports missionSurfaceReady=false",
     "surfaces": [
       {
         "label": "BridgeBench",
         "path": "docs\\wiki\\BridgeBench.json",
         "required": true,
         "maxAgeMs": 604800000,
-        "generatedAt": "2026-05-13T18:26:23.858Z",
+        "generatedAt": "2026-05-13T22:36:02.136Z",
         "healthStatus": "healthy",
         "healthReason": "no failed receipt signals detected",
         "status": "fresh",
@@ -372,12 +372,12 @@
         "path": "docs\\wiki\\BridgeBench-Soak.json",
         "required": true,
         "maxAgeMs": 604800000,
-        "generatedAt": "2026-04-15T06:15:54.188Z",
+        "generatedAt": "2026-05-13T22:36:02.143Z",
         "healthStatus": "healthy",
         "healthReason": "no failed receipt signals detected",
-        "status": "stale",
-        "blocking": true,
-        "reason": "stale outside 7d budget"
+        "status": "fresh",
+        "blocking": false,
+        "reason": "fresh within 7d budget"
       },
       {
         "label": "Q structured contract benchmark",
@@ -468,7 +468,7 @@
         "path": "docs\\wiki\\Live-Mission-Readiness.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-05-13T21:58:39.436Z",
+        "generatedAt": "2026-05-13T22:36:24.073Z",
         "healthStatus": "unhealthy",
         "healthReason": "mission readiness receipt reports missionSurfaceReady=false",
         "status": "unhealthy",
@@ -480,12 +480,12 @@
         "path": "docs\\wiki\\Live-Operator-Activity.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-05-13T21:03:00.075Z",
-        "healthStatus": "unhealthy",
-        "healthReason": "mission readiness receipt reports missionSurfaceReady=false",
-        "status": "unhealthy",
-        "blocking": true,
-        "reason": "mission readiness receipt reports missionSurfaceReady=false"
+        "generatedAt": "2026-05-13T22:36:24.394Z",
+        "healthStatus": "healthy",
+        "healthReason": "no failed receipt signals detected",
+        "status": "fresh",
+        "blocking": false,
+        "reason": "fresh within 24h budget"
       },
       {
         "label": "Live operator public export",
@@ -540,12 +540,12 @@
         "path": "docs\\wiki\\Roundtable-Runtime.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-05-13T21:58:28.066Z",
-        "healthStatus": "unhealthy",
-        "healthReason": "mission readiness receipt reports missionSurfaceReady=false",
-        "status": "unhealthy",
-        "blocking": true,
-        "reason": "mission readiness receipt reports missionSurfaceReady=false"
+        "generatedAt": "2026-05-13T22:01:54.879Z",
+        "healthStatus": "healthy",
+        "healthReason": "no failed receipt signals detected",
+        "status": "fresh",
+        "blocking": false,
+        "reason": "fresh within 24h budget"
       },
       {
         "label": "Q API audit",

@@ -383,7 +383,10 @@ function nestedRecord(
   return asRecord(record[key]);
 }
 
-export function inferSurfaceHealth(payload: unknown): Pick<
+export function inferSurfaceHealth(
+  payload: unknown,
+  options?: { label?: string }
+): Pick<
   SurfaceTimestamp,
   "healthStatus" | "healthReason"
 > {
@@ -481,14 +484,6 @@ export function inferSurfaceHealth(payload: unknown): Pick<
     };
   }
 
-  const readiness = nestedRecord(record, "readiness");
-  if (readiness?.missionSurfaceReady === false) {
-    return {
-      healthStatus: "unhealthy",
-      healthReason: "mission readiness receipt reports missionSurfaceReady=false"
-    };
-  }
-
   const publication = nestedRecord(record, "publication");
   const publicationStatus = publication?.status;
   if (
@@ -499,6 +494,25 @@ export function inferSurfaceHealth(payload: unknown): Pick<
       healthStatus: "unhealthy",
       healthReason: `publication status is ${publicationStatus}`
     };
+  }
+
+  const readiness = nestedRecord(record, "readiness");
+  if (readiness?.missionSurfaceReady === false) {
+    if (options?.label === "Roundtable runtime") {
+      const q = nestedRecord(readiness, "q");
+      const local = q ? nestedRecord(q, "local") : undefined;
+      if (local?.ready === false) {
+        return {
+          healthStatus: "unhealthy",
+          healthReason: "roundtable runtime local Q readiness is false"
+        };
+      }
+    } else if (options?.label !== "Live operator activity") {
+      return {
+        healthStatus: "unhealthy",
+        healthReason: "mission readiness receipt reports missionSurfaceReady=false"
+      };
+    }
   }
 
   const proof = nestedRecord(record, "proof");
@@ -531,17 +545,17 @@ export function inferSurfaceHealth(payload: unknown): Pick<
   };
 }
 
-async function readSurfaceReceipt(filePath: string): Promise<
+async function readSurfaceReceipt(surface: SurfaceTimestamp): Promise<
   Pick<SurfaceTimestamp, "generatedAt" | "healthStatus" | "healthReason">
 > {
   try {
-    const payload = JSON.parse(await readFile(path.join(REPO_ROOT, filePath), "utf8")) as {
+    const payload = JSON.parse(await readFile(path.join(REPO_ROOT, surface.path), "utf8")) as {
       generatedAt?: string;
       exportedAt?: string;
     };
     return {
       generatedAt: payload.generatedAt ?? payload.exportedAt,
-      ...inferSurfaceHealth(payload)
+      ...inferSurfaceHealth(payload, { label: surface.label })
     };
   } catch {
     return {
@@ -674,7 +688,7 @@ async function main(): Promise<void> {
     Promise.all(
       SURFACE_FILES.map(async (surface) => ({
         ...surface,
-        ...(await readSurfaceReceipt(surface.path))
+        ...(await readSurfaceReceipt(surface))
       }))
     ),
     readCloudflareSummary()

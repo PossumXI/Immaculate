@@ -80,6 +80,10 @@ type BridgeBenchSoakReport = {
 
 type ParsedSoakOptions = {
   durationSeconds: number;
+  maxAttempts?: number;
+  prewarmTimeoutMs?: number;
+  executionTimeoutMs?: number;
+  retryTimeoutMs?: number;
 };
 
 const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
@@ -116,8 +120,21 @@ function parsePositiveNumber(value: string | undefined): number | undefined {
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
 }
 
-function parseSoakOptions(argv: string[]): ParsedSoakOptions {
+function parsePositiveInteger(value: string | undefined): number | undefined {
+  const parsed = parsePositiveNumber(value);
+  return parsed === undefined ? undefined : Math.trunc(parsed);
+}
+
+function clampTimeoutMs(value: number | undefined): number | undefined {
+  return value === undefined ? undefined : Math.max(1_000, value);
+}
+
+export function parseSoakOptions(argv: string[]): ParsedSoakOptions {
   let durationSeconds = DEFAULT_DURATION_SECONDS;
+  let maxAttempts: number | undefined;
+  let prewarmTimeoutMs: number | undefined;
+  let executionTimeoutMs: number | undefined;
+  let retryTimeoutMs: number | undefined;
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
     if (!argument) {
@@ -134,10 +151,57 @@ function parseSoakOptions(argv: string[]): ParsedSoakOptions {
     }
     if (argument.startsWith("--duration=")) {
       durationSeconds = parsePositiveNumber(argument.slice("--duration=".length)) ?? durationSeconds;
+      continue;
+    }
+    if (argument === "--max-attempts") {
+      maxAttempts = parsePositiveInteger(argv[index + 1]) ?? maxAttempts;
+      index += 1;
+      continue;
+    }
+    if (argument.startsWith("--max-attempts=")) {
+      maxAttempts = parsePositiveInteger(argument.slice("--max-attempts=".length)) ?? maxAttempts;
+      continue;
+    }
+    if (argument === "--prewarm-timeout-ms") {
+      prewarmTimeoutMs = parsePositiveInteger(argv[index + 1]) ?? prewarmTimeoutMs;
+      index += 1;
+      continue;
+    }
+    if (argument.startsWith("--prewarm-timeout-ms=")) {
+      prewarmTimeoutMs =
+        parsePositiveInteger(argument.slice("--prewarm-timeout-ms=".length)) ?? prewarmTimeoutMs;
+      continue;
+    }
+    if (argument === "--execution-timeout-ms") {
+      executionTimeoutMs = parsePositiveInteger(argv[index + 1]) ?? executionTimeoutMs;
+      index += 1;
+      continue;
+    }
+    if (argument.startsWith("--execution-timeout-ms=")) {
+      executionTimeoutMs =
+        parsePositiveInteger(argument.slice("--execution-timeout-ms=".length)) ?? executionTimeoutMs;
+      continue;
+    }
+    if (argument === "--retry-timeout-ms") {
+      retryTimeoutMs = parsePositiveInteger(argv[index + 1]) ?? retryTimeoutMs;
+      index += 1;
+      continue;
+    }
+    if (argument.startsWith("--retry-timeout-ms=")) {
+      retryTimeoutMs =
+        parsePositiveInteger(argument.slice("--retry-timeout-ms=".length)) ?? retryTimeoutMs;
+      continue;
+    }
+    if (!argument.startsWith("-")) {
+      durationSeconds = parsePositiveNumber(argument) ?? durationSeconds;
     }
   }
   return {
-    durationSeconds: Math.max(0, durationSeconds)
+    durationSeconds: Math.max(0, durationSeconds),
+    maxAttempts: maxAttempts === undefined ? undefined : Math.max(1, maxAttempts),
+    prewarmTimeoutMs: clampTimeoutMs(prewarmTimeoutMs),
+    executionTimeoutMs: clampTimeoutMs(executionTimeoutMs),
+    retryTimeoutMs: clampTimeoutMs(retryTimeoutMs)
   };
 }
 
@@ -261,7 +325,13 @@ function buildMarkdownSummary(report: Pick<
 }
 
 async function main(): Promise<void> {
-  const { durationSeconds } = parseSoakOptions(process.argv.slice(2));
+  const {
+    durationSeconds,
+    maxAttempts,
+    prewarmTimeoutMs,
+    executionTimeoutMs,
+    retryTimeoutMs
+  } = parseSoakOptions(process.argv.slice(2));
   await mkdir(WIKI_ROOT, { recursive: true });
 
   const startedAt = new Date().toISOString();
@@ -280,13 +350,20 @@ async function main(): Promise<void> {
   let truthfulModelLabel = "Q";
 
   let attempt = 0;
-  while (attempt === 0 || Date.now() < deadlineAtMs) {
+  while (
+    attempt === 0 ||
+    (Date.now() < deadlineAtMs && (maxAttempts === undefined || attempt < maxAttempts))
+  ) {
     attempt += 1;
     const runStartedAt = new Date().toISOString();
     const runStartedMs = performance.now();
 
     try {
-      const report = await runBridgeBench();
+      const report = await runBridgeBench({
+        prewarmTimeoutMs,
+        executionTimeoutMs,
+        retryTimeoutMs
+      });
       const durationMs = performance.now() - runStartedMs;
       const run = summarizeRun(attempt, report, runStartedAt, durationMs);
       runs.push(run.summary);
@@ -382,7 +459,19 @@ async function main(): Promise<void> {
   }
 }
 
-void main().catch((error) => {
-  process.stderr.write(error instanceof Error ? error.message : "BridgeBench soak failed.");
-  process.exitCode = 1;
-});
+function isDirectCli(): boolean {
+  const entrypoint = process.argv[1] ? path.resolve(process.argv[1]) : "";
+  const modulePath = fileURLToPath(import.meta.url);
+  return (
+    entrypoint === modulePath ||
+    entrypoint.endsWith(`${path.sep}bridgebench-soak.ts`) ||
+    entrypoint.endsWith(`${path.sep}bridgebench-soak.js`)
+  );
+}
+
+if (isDirectCli()) {
+  void main().catch((error) => {
+    process.stderr.write(error instanceof Error ? error.message : "BridgeBench soak failed.");
+    process.exitCode = 1;
+  });
+}

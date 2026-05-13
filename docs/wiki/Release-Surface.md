@@ -2,7 +2,7 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-05-13T21:58:39.436Z
+- Generated: 2026-05-13T22:36:24.394Z
 - Immaculate release: `0.1.0+be4e37d`
 - Repo commit: `be4e37d537a4c83a739cac24a7c1a14d270f15b3`
 - Branch: `main`
@@ -25,8 +25,8 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## Current Evidence Surfaces
 
-- BridgeBench: `2026-05-13T18:26:23.858Z` via `docs/wiki/BridgeBench.json`
-- BridgeBench soak: `2026-04-15T06:15:54.188Z` via `docs/wiki/BridgeBench-Soak.json`
+- BridgeBench: `2026-05-13T22:36:02.136Z` via `docs/wiki/BridgeBench.json`
+- BridgeBench soak: `2026-05-13T22:36:02.143Z` via `docs/wiki/BridgeBench-Soak.json`
 - Q structured contract benchmark: `2026-05-07T06:03:07.620Z` via `docs/wiki/Model-Benchmark-Comparison.json`
 - Q readiness gate: `2026-05-13T21:02:52.833Z` via `docs/wiki/Q-Readiness-Gate.json`
 - Q gateway validation: `2026-05-13T19:56:21.252Z` via `docs/wiki/Q-Gateway-Validation.json`
@@ -34,13 +34,13 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Q mediation drift: `2026-05-13T19:56:56.189Z` via `docs/wiki/Q-Mediation-Drift.json`
 - Arobi audit integrity: `2026-05-12T18:09:17.101Z` via `docs/wiki/Arobi-Audit-Integrity.json`
 - Arobi live ledger receipt: `2026-05-13T21:02:56.622Z` via `docs/wiki/Arobi-Live-Ledger-Receipt.json`
-- Live mission readiness: `2026-05-13T21:58:39.436Z` via `docs/wiki/Live-Mission-Readiness.json`
-- Live operator activity: `2026-05-13T21:03:00.075Z` via `docs/wiki/Live-Operator-Activity.json`
+- Live mission readiness: `2026-05-13T22:36:24.073Z` via `docs/wiki/Live-Mission-Readiness.json`
+- Live operator activity: `2026-05-13T22:36:24.394Z` via `docs/wiki/Live-Operator-Activity.json`
 - Live operator public export: `2026-05-13T21:03:01.982Z` via `docs/wiki/Live-Operator-Public-Export.json`
 - Cross-project workflow health: `2026-05-13T18:23:07.770Z` via `docs/wiki/Cross-Project-Workflow-Health.json`
 - Supervised mission showcase: `2026-04-22T01:20:45.053Z` via `docs/wiki/Supervised-Mission-Showcase.json`
 - Roundtable actionability: `2026-05-13T17:06:06.500Z` via `docs/wiki/Roundtable-Actionability.json`
-- Roundtable runtime: `2026-05-13T21:58:28.066Z` via `docs/wiki/Roundtable-Runtime.json`
+- Roundtable runtime: `2026-05-13T22:01:54.879Z` via `docs/wiki/Roundtable-Runtime.json`
 - Q API audit: `2026-04-19T22:47:48Z` via `docs/wiki/Q-API-Audit.json`
 - Arobi decision review: `2026-04-19T22:47:51.678Z` via `docs/wiki/Arobi-Decision-Review.json`
 - Q hybrid training: `2026-05-13T01:11:39Z` via `docs/wiki/Q-Hybrid-Training.json`
@@ -64,15 +64,12 @@ This page is generated from repo state. It is the plain-English answer to a simp
 ## Release Accountability Gaps
 
 - Status: `blocked`
-- Summary: 4 blocking release evidence gap(s): BridgeBench soak stale outside 7d budget; Live mission readiness mission readiness receipt reports missionSurfaceReady=false; Live operator activity mission readiness receipt reports missionSurfaceReady=false; Roundtable runtime mission readiness receipt reports missionSurfaceReady=false
-- Counts: `17 fresh / 4 blocking / 3 unhealthy / 0 optional missing`
+- Summary: 1 blocking release evidence gap(s): Live mission readiness mission readiness receipt reports missionSurfaceReady=false
+- Counts: `20 fresh / 1 blocking / 1 unhealthy / 0 optional missing`
 
 ### Blocking gaps
 
-- BridgeBench soak: `stale` via `docs/wiki/BridgeBench-Soak.json` - stale outside 7d budget
 - Live mission readiness: `unhealthy` via `docs/wiki/Live-Mission-Readiness.json` - mission readiness receipt reports missionSurfaceReady=false
-- Live operator activity: `unhealthy` via `docs/wiki/Live-Operator-Activity.json` - mission readiness receipt reports missionSurfaceReady=false
-- Roundtable runtime: `unhealthy` via `docs/wiki/Roundtable-Runtime.json` - mission readiness receipt reports missionSurfaceReady=false
 
 ### Non-blocking warnings
 

@@ -139,6 +139,59 @@ test("release surface health blocks receipts that explicitly report not ready", 
   assert.match(health.healthReason ?? "", /ready=false/u);
 });
 
+test("release surface health keeps mission readiness fail-closed on missionSurfaceReady=false", () => {
+  const health = inferSurfaceHealth(
+    {
+      readiness: {
+        missionSurfaceReady: false
+      }
+    },
+    { label: "Live mission readiness" }
+  );
+
+  assert.equal(health.healthStatus, "unhealthy");
+  assert.match(health.healthReason ?? "", /missionSurfaceReady=false/u);
+});
+
+test("release surface health judges roundtable runtime by benchmark and local Q readiness", () => {
+  const health = inferSurfaceHealth(
+    {
+      benchmark: {
+        failedAssertions: 0
+      },
+      readiness: {
+        missionSurfaceReady: false,
+        q: {
+          local: {
+            ready: true
+          }
+        }
+      }
+    },
+    { label: "Roundtable runtime" }
+  );
+
+  assert.equal(health.healthStatus, "healthy");
+  assert.match(health.healthReason ?? "", /no failed receipt signals/u);
+});
+
+test("release surface health lets publishable operator activity stand apart from private mission readiness", () => {
+  const health = inferSurfaceHealth(
+    {
+      publication: {
+        status: "publishable"
+      },
+      readiness: {
+        missionSurfaceReady: false
+      }
+    },
+    { label: "Live operator activity" }
+  );
+
+  assert.equal(health.healthStatus, "healthy");
+  assert.match(health.healthReason ?? "", /no failed receipt signals/u);
+});
+
 test("release surface health blocks model lanes with incomplete parse success", () => {
   const health = inferSurfaceHealth({
     models: [
