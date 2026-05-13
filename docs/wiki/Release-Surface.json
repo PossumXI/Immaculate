@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-12T18:27:08.662Z",
+  "generatedAt": "2026-05-13T16:59:36.274Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "a7e67ffaf54910ea73d652b4f893493fd9d4f184",
-    "gitShortSha": "a7e67ff",
+    "gitSha": "d06acb6d11e0d6ac9446b331eaf363fc7a894b37",
+    "gitShortSha": "d06acb6",
     "gitBranch": "main",
-    "buildId": "0.1.0+a7e67ff",
+    "buildId": "0.1.0+d06acb6",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -37,14 +37,14 @@
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-05-12T18:06:56Z",
+        "generatedAt": "2026-05-13T01:11:39Z",
         "sessionId": "q-arobi-main-roots-20260512-bench-v1",
         "sessionPath": ".training-output/q/sessions/q-arobi-main-roots-20260512-bench-v1/hybrid-session.json",
         "localStatus": "skipped",
         "cloudStatus": "skipped",
         "cloudProvider": "manual",
         "trainingBundleId": "q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3",
-        "immaculateBundleId": "immaculate-orchestration-a7e67ff-e68f2160",
+        "immaculateBundleId": "immaculate-orchestration-9b85dbc-e68f2160",
         "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
       }
     }
@@ -53,179 +53,624 @@
     {
       "label": "BridgeBench",
       "path": "docs\\wiki\\BridgeBench.json",
+      "required": true,
       "generatedAt": "2026-05-07T04:12:53.126Z"
     },
     {
       "label": "BridgeBench soak",
       "path": "docs\\wiki\\BridgeBench-Soak.json",
+      "required": true,
       "generatedAt": "2026-04-15T06:15:54.188Z"
     },
     {
       "label": "Q structured contract benchmark",
       "path": "docs\\wiki\\Model-Benchmark-Comparison.json",
+      "required": true,
       "generatedAt": "2026-05-07T06:03:07.620Z"
     },
     {
       "label": "Q readiness gate",
       "path": "docs\\wiki\\Q-Readiness-Gate.json",
+      "required": true,
       "generatedAt": "2026-05-07T07:32:49.907Z"
     },
     {
       "label": "Q gateway validation",
       "path": "docs\\wiki\\Q-Gateway-Validation.json",
+      "required": true,
       "generatedAt": "2026-05-07T07:32:32.750Z"
     },
     {
       "label": "Q gateway substrate",
       "path": "docs\\wiki\\Q-Gateway-Substrate.json",
+      "required": true,
       "generatedAt": "2026-04-19T22:06:38.757Z"
     },
     {
       "label": "Q mediation drift",
       "path": "docs\\wiki\\Q-Mediation-Drift.json",
+      "required": true,
       "generatedAt": "2026-04-19T22:06:40.025Z"
     },
     {
       "label": "Arobi audit integrity",
       "path": "docs\\wiki\\Arobi-Audit-Integrity.json",
+      "required": true,
       "generatedAt": "2026-05-12T18:09:17.101Z"
     },
     {
       "label": "Arobi live ledger receipt",
       "path": "docs\\wiki\\Arobi-Live-Ledger-Receipt.json",
+      "required": true,
+      "maxAgeMs": 86400000,
       "generatedAt": "2026-04-21T22:18:04.712Z"
     },
     {
       "label": "Live mission readiness",
       "path": "docs\\wiki\\Live-Mission-Readiness.json",
+      "required": true,
+      "maxAgeMs": 86400000,
       "generatedAt": "2026-04-22T00:57:50.993Z"
     },
     {
       "label": "Live operator activity",
       "path": "docs\\wiki\\Live-Operator-Activity.json",
+      "required": true,
+      "maxAgeMs": 86400000,
       "generatedAt": "2026-04-22T00:57:56.085Z"
     },
     {
       "label": "Live operator public export",
       "path": "docs\\wiki\\Live-Operator-Public-Export.json",
+      "required": true,
+      "maxAgeMs": 86400000,
       "generatedAt": "2026-04-25T18:32:05.367Z"
     },
     {
       "label": "Cross-project workflow health",
       "path": "docs\\wiki\\Cross-Project-Workflow-Health.json",
+      "required": true,
+      "maxAgeMs": 86400000,
       "generatedAt": "2026-05-07T07:45:24.059Z"
     },
     {
       "label": "Supervised mission showcase",
       "path": "docs\\wiki\\Supervised-Mission-Showcase.json",
+      "required": false,
       "generatedAt": "2026-04-22T01:20:45.053Z"
     },
     {
       "label": "Roundtable actionability",
       "path": "docs\\wiki\\Roundtable-Actionability.json",
+      "required": true,
+      "maxAgeMs": 86400000,
       "generatedAt": "2026-04-21T16:11:05.129Z"
     },
     {
       "label": "Roundtable runtime",
       "path": "docs\\wiki\\Roundtable-Runtime.json",
+      "required": true,
+      "maxAgeMs": 86400000,
       "generatedAt": "2026-04-21T22:19:50.626Z"
     },
     {
       "label": "Q API audit",
       "path": "docs\\wiki\\Q-API-Audit.json",
+      "required": false,
       "generatedAt": "2026-04-19T22:47:48Z"
     },
     {
       "label": "Arobi decision review",
       "path": "docs\\wiki\\Arobi-Decision-Review.json",
+      "required": false,
       "generatedAt": "2026-04-19T22:47:51.678Z"
     },
     {
       "label": "Q hybrid training",
       "path": "docs\\wiki\\Q-Hybrid-Training.json",
-      "generatedAt": "2026-05-12T18:06:56Z"
+      "required": true,
+      "generatedAt": "2026-05-13T01:11:39Z"
     },
     {
       "label": "HF Jobs training",
       "path": "docs\\wiki\\HF-Jobs-Training.json",
+      "required": false,
       "generatedAt": "2026-04-19T05:52:40Z"
     },
     {
       "label": "Colab free training",
       "path": "docs\\wiki\\Colab-Free-Training.json",
+      "required": false,
       "generatedAt": "2026-04-19T05:52:29Z"
     },
     {
       "label": "Kaggle free training",
       "path": "docs\\wiki\\Kaggle-Free-Training.json",
+      "required": false,
       "generatedAt": "2026-04-19T05:52:00Z"
     },
     {
       "label": "Cloudflare Q inference",
       "path": "docs\\wiki\\Cloudflare-Q-Inference.json",
+      "required": false,
       "generatedAt": "2026-04-19T05:52:31Z"
     },
     {
       "label": "OCI GPU advisor",
       "path": "docs\\wiki\\OCI-GPU-Advisor.json",
-      "generatedAt": "2026-05-12T18:06:56Z"
+      "required": false,
+      "generatedAt": "2026-05-13T01:11:39Z"
     },
     {
       "label": "OCI region capacity",
       "path": "docs\\wiki\\OCI-Region-Capacity.json",
+      "required": false,
       "generatedAt": "2026-04-17T02:02:24Z"
     },
     {
       "label": "Q benchmark corpus",
       "path": "docs\\wiki\\Q-Benchmark-Corpus.json",
-      "generatedAt": "2026-05-12T18:06:51Z"
+      "required": true,
+      "generatedAt": "2026-05-13T01:11:30Z"
     },
     {
       "label": "Q benchmark promotion",
       "path": "docs\\wiki\\Q-Benchmark-Promotion.json",
-      "generatedAt": "2026-05-12T13:15:40Z"
+      "required": true,
+      "generatedAt": "2026-05-12T19:01:08Z"
     },
     {
       "label": "W&B benchmark export",
       "path": "docs\\wiki\\Benchmark-Wandb-Export.json",
+      "required": true,
       "generatedAt": "2026-05-12T10:07:09.017944+00:00"
     },
     {
       "label": "Harbor terminal bench",
       "path": "docs\\wiki\\Harbor-Terminal-Bench.json",
+      "required": false,
       "generatedAt": "2026-04-19T07:43:17.831Z"
     },
     {
       "label": "Terminal-Bench public task",
       "path": "docs\\wiki\\Terminal-Bench-Public-Task.json",
+      "required": false,
       "generatedAt": "2026-04-19T14:31:45.217Z"
     },
     {
       "label": "Terminal-Bench leaderboard status",
       "path": "docs\\wiki\\Terminal-Bench-Receipt.json",
+      "required": false,
       "generatedAt": "2026-04-19T14:31:45.545Z"
     },
     {
       "label": "Terminal-Bench rerun (diagnostic-only)",
       "path": "docs\\wiki\\Terminal-Bench-Rerun.json",
+      "required": false,
       "generatedAt": "2026-04-19T14:31:45.730Z"
     },
     {
       "label": "GitHub checks receipt",
       "path": "docs\\wiki\\GitHub-Checks-Receipt.json",
+      "required": true,
+      "maxAgeMs": 86400000,
       "generatedAt": "2026-04-16T17:54:12.583Z"
     },
     {
       "label": "Harbor terminal bench soak",
       "path": "docs\\wiki\\Harbor-Terminal-Bench-Soak.json",
+      "required": false,
       "generatedAt": "2026-04-16T13:05:24.510Z"
     },
     {
       "label": "Q benchmark sweep (60m)",
       "path": "docs\\wiki\\Q-Benchmark-Sweep-60m.json",
+      "required": false,
       "generatedAt": "2026-04-17T20:56:29.772Z"
     }
   ],
+  "releaseEvidence": {
+    "status": "blocked",
+    "maxAgeMs": 604800000,
+    "counts": {
+      "total": 35,
+      "required": 20,
+      "fresh": 10,
+      "stale": 25,
+      "missing": 0,
+      "invalid": 0,
+      "optional": 0,
+      "blocking": 11
+    },
+    "summary": "11 blocking release evidence gap(s): BridgeBench soak stale (28d old, budget 7d); Q gateway substrate stale (24d old, budget 7d); Q mediation drift stale (24d old, budget 7d); Arobi live ledger receipt stale (22d old, budget 24h); Live mission readiness stale (22d old, budget 24h); Live operator activity stale (22d old, budget 24h); Live operator public export stale (18d old, budget 24h); Cross-project workflow health stale (6d old, budget 24h); Roundtable actionability stale (22d old, budget 24h); Roundtable runtime stale (22d old, budget 24h); GitHub checks receipt stale (27d old, budget 24h)",
+    "surfaces": [
+      {
+        "label": "BridgeBench",
+        "path": "docs\\wiki\\BridgeBench.json",
+        "required": true,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-05-07T04:12:53.126Z",
+        "ageMs": 564403147,
+        "status": "fresh",
+        "blocking": false,
+        "reason": "fresh (7d old, budget 7d)"
+      },
+      {
+        "label": "BridgeBench soak",
+        "path": "docs\\wiki\\BridgeBench-Soak.json",
+        "required": true,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-04-15T06:15:54.188Z",
+        "ageMs": 2457822085,
+        "status": "stale",
+        "blocking": true,
+        "reason": "stale (28d old, budget 7d)"
+      },
+      {
+        "label": "Q structured contract benchmark",
+        "path": "docs\\wiki\\Model-Benchmark-Comparison.json",
+        "required": true,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-05-07T06:03:07.620Z",
+        "ageMs": 557788653,
+        "status": "fresh",
+        "blocking": false,
+        "reason": "fresh (6d old, budget 7d)"
+      },
+      {
+        "label": "Q readiness gate",
+        "path": "docs\\wiki\\Q-Readiness-Gate.json",
+        "required": true,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-05-07T07:32:49.907Z",
+        "ageMs": 552406366,
+        "status": "fresh",
+        "blocking": false,
+        "reason": "fresh (6d old, budget 7d)"
+      },
+      {
+        "label": "Q gateway validation",
+        "path": "docs\\wiki\\Q-Gateway-Validation.json",
+        "required": true,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-05-07T07:32:32.750Z",
+        "ageMs": 552423523,
+        "status": "fresh",
+        "blocking": false,
+        "reason": "fresh (6d old, budget 7d)"
+      },
+      {
+        "label": "Q gateway substrate",
+        "path": "docs\\wiki\\Q-Gateway-Substrate.json",
+        "required": true,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-04-19T22:06:38.757Z",
+        "ageMs": 2055177516,
+        "status": "stale",
+        "blocking": true,
+        "reason": "stale (24d old, budget 7d)"
+      },
+      {
+        "label": "Q mediation drift",
+        "path": "docs\\wiki\\Q-Mediation-Drift.json",
+        "required": true,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-04-19T22:06:40.025Z",
+        "ageMs": 2055176248,
+        "status": "stale",
+        "blocking": true,
+        "reason": "stale (24d old, budget 7d)"
+      },
+      {
+        "label": "Arobi audit integrity",
+        "path": "docs\\wiki\\Arobi-Audit-Integrity.json",
+        "required": true,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-05-12T18:09:17.101Z",
+        "ageMs": 82219172,
+        "status": "fresh",
+        "blocking": false,
+        "reason": "fresh (23h old, budget 7d)"
+      },
+      {
+        "label": "Arobi live ledger receipt",
+        "path": "docs\\wiki\\Arobi-Live-Ledger-Receipt.json",
+        "required": true,
+        "maxAgeMs": 86400000,
+        "generatedAt": "2026-04-21T22:18:04.712Z",
+        "ageMs": 1881691561,
+        "status": "stale",
+        "blocking": true,
+        "reason": "stale (22d old, budget 24h)"
+      },
+      {
+        "label": "Live mission readiness",
+        "path": "docs\\wiki\\Live-Mission-Readiness.json",
+        "required": true,
+        "maxAgeMs": 86400000,
+        "generatedAt": "2026-04-22T00:57:50.993Z",
+        "ageMs": 1872105280,
+        "status": "stale",
+        "blocking": true,
+        "reason": "stale (22d old, budget 24h)"
+      },
+      {
+        "label": "Live operator activity",
+        "path": "docs\\wiki\\Live-Operator-Activity.json",
+        "required": true,
+        "maxAgeMs": 86400000,
+        "generatedAt": "2026-04-22T00:57:56.085Z",
+        "ageMs": 1872100188,
+        "status": "stale",
+        "blocking": true,
+        "reason": "stale (22d old, budget 24h)"
+      },
+      {
+        "label": "Live operator public export",
+        "path": "docs\\wiki\\Live-Operator-Public-Export.json",
+        "required": true,
+        "maxAgeMs": 86400000,
+        "generatedAt": "2026-04-25T18:32:05.367Z",
+        "ageMs": 1549650906,
+        "status": "stale",
+        "blocking": true,
+        "reason": "stale (18d old, budget 24h)"
+      },
+      {
+        "label": "Cross-project workflow health",
+        "path": "docs\\wiki\\Cross-Project-Workflow-Health.json",
+        "required": true,
+        "maxAgeMs": 86400000,
+        "generatedAt": "2026-05-07T07:45:24.059Z",
+        "ageMs": 551652214,
+        "status": "stale",
+        "blocking": true,
+        "reason": "stale (6d old, budget 24h)"
+      },
+      {
+        "label": "Supervised mission showcase",
+        "path": "docs\\wiki\\Supervised-Mission-Showcase.json",
+        "required": false,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-04-22T01:20:45.053Z",
+        "ageMs": 1870731220,
+        "status": "stale",
+        "blocking": false,
+        "reason": "stale (22d old, budget 7d)"
+      },
+      {
+        "label": "Roundtable actionability",
+        "path": "docs\\wiki\\Roundtable-Actionability.json",
+        "required": true,
+        "maxAgeMs": 86400000,
+        "generatedAt": "2026-04-21T16:11:05.129Z",
+        "ageMs": 1903711144,
+        "status": "stale",
+        "blocking": true,
+        "reason": "stale (22d old, budget 24h)"
+      },
+      {
+        "label": "Roundtable runtime",
+        "path": "docs\\wiki\\Roundtable-Runtime.json",
+        "required": true,
+        "maxAgeMs": 86400000,
+        "generatedAt": "2026-04-21T22:19:50.626Z",
+        "ageMs": 1881585647,
+        "status": "stale",
+        "blocking": true,
+        "reason": "stale (22d old, budget 24h)"
+      },
+      {
+        "label": "Q API audit",
+        "path": "docs\\wiki\\Q-API-Audit.json",
+        "required": false,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-04-19T22:47:48Z",
+        "ageMs": 2052708273,
+        "status": "stale",
+        "blocking": false,
+        "reason": "stale (24d old, budget 7d)"
+      },
+      {
+        "label": "Arobi decision review",
+        "path": "docs\\wiki\\Arobi-Decision-Review.json",
+        "required": false,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-04-19T22:47:51.678Z",
+        "ageMs": 2052704595,
+        "status": "stale",
+        "blocking": false,
+        "reason": "stale (24d old, budget 7d)"
+      },
+      {
+        "label": "Q hybrid training",
+        "path": "docs\\wiki\\Q-Hybrid-Training.json",
+        "required": true,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-05-13T01:11:39Z",
+        "ageMs": 56877273,
+        "status": "fresh",
+        "blocking": false,
+        "reason": "fresh (16h old, budget 7d)"
+      },
+      {
+        "label": "HF Jobs training",
+        "path": "docs\\wiki\\HF-Jobs-Training.json",
+        "required": false,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-04-19T05:52:40Z",
+        "ageMs": 2113616273,
+        "status": "stale",
+        "blocking": false,
+        "reason": "stale (24d old, budget 7d)"
+      },
+      {
+        "label": "Colab free training",
+        "path": "docs\\wiki\\Colab-Free-Training.json",
+        "required": false,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-04-19T05:52:29Z",
+        "ageMs": 2113627273,
+        "status": "stale",
+        "blocking": false,
+        "reason": "stale (24d old, budget 7d)"
+      },
+      {
+        "label": "Kaggle free training",
+        "path": "docs\\wiki\\Kaggle-Free-Training.json",
+        "required": false,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-04-19T05:52:00Z",
+        "ageMs": 2113656273,
+        "status": "stale",
+        "blocking": false,
+        "reason": "stale (24d old, budget 7d)"
+      },
+      {
+        "label": "Cloudflare Q inference",
+        "path": "docs\\wiki\\Cloudflare-Q-Inference.json",
+        "required": false,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-04-19T05:52:31Z",
+        "ageMs": 2113625273,
+        "status": "stale",
+        "blocking": false,
+        "reason": "stale (24d old, budget 7d)"
+      },
+      {
+        "label": "OCI GPU advisor",
+        "path": "docs\\wiki\\OCI-GPU-Advisor.json",
+        "required": false,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-05-13T01:11:39Z",
+        "ageMs": 56877273,
+        "status": "fresh",
+        "blocking": false,
+        "reason": "fresh (16h old, budget 7d)"
+      },
+      {
+        "label": "OCI region capacity",
+        "path": "docs\\wiki\\OCI-Region-Capacity.json",
+        "required": false,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-04-17T02:02:24Z",
+        "ageMs": 2300232273,
+        "status": "stale",
+        "blocking": false,
+        "reason": "stale (27d old, budget 7d)"
+      },
+      {
+        "label": "Q benchmark corpus",
+        "path": "docs\\wiki\\Q-Benchmark-Corpus.json",
+        "required": true,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-05-13T01:11:30Z",
+        "ageMs": 56886273,
+        "status": "fresh",
+        "blocking": false,
+        "reason": "fresh (16h old, budget 7d)"
+      },
+      {
+        "label": "Q benchmark promotion",
+        "path": "docs\\wiki\\Q-Benchmark-Promotion.json",
+        "required": true,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-05-12T19:01:08Z",
+        "ageMs": 79108273,
+        "status": "fresh",
+        "blocking": false,
+        "reason": "fresh (22h old, budget 7d)"
+      },
+      {
+        "label": "W&B benchmark export",
+        "path": "docs\\wiki\\Benchmark-Wandb-Export.json",
+        "required": true,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-05-12T10:07:09.017944+00:00",
+        "ageMs": 111147256,
+        "status": "fresh",
+        "blocking": false,
+        "reason": "fresh (31h old, budget 7d)"
+      },
+      {
+        "label": "Harbor terminal bench",
+        "path": "docs\\wiki\\Harbor-Terminal-Bench.json",
+        "required": false,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-04-19T07:43:17.831Z",
+        "ageMs": 2106978442,
+        "status": "stale",
+        "blocking": false,
+        "reason": "stale (24d old, budget 7d)"
+      },
+      {
+        "label": "Terminal-Bench public task",
+        "path": "docs\\wiki\\Terminal-Bench-Public-Task.json",
+        "required": false,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-04-19T14:31:45.217Z",
+        "ageMs": 2082471056,
+        "status": "stale",
+        "blocking": false,
+        "reason": "stale (24d old, budget 7d)"
+      },
+      {
+        "label": "Terminal-Bench leaderboard status",
+        "path": "docs\\wiki\\Terminal-Bench-Receipt.json",
+        "required": false,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-04-19T14:31:45.545Z",
+        "ageMs": 2082470728,
+        "status": "stale",
+        "blocking": false,
+        "reason": "stale (24d old, budget 7d)"
+      },
+      {
+        "label": "Terminal-Bench rerun (diagnostic-only)",
+        "path": "docs\\wiki\\Terminal-Bench-Rerun.json",
+        "required": false,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-04-19T14:31:45.730Z",
+        "ageMs": 2082470543,
+        "status": "stale",
+        "blocking": false,
+        "reason": "stale (24d old, budget 7d)"
+      },
+      {
+        "label": "GitHub checks receipt",
+        "path": "docs\\wiki\\GitHub-Checks-Receipt.json",
+        "required": true,
+        "maxAgeMs": 86400000,
+        "generatedAt": "2026-04-16T17:54:12.583Z",
+        "ageMs": 2329523690,
+        "status": "stale",
+        "blocking": true,
+        "reason": "stale (27d old, budget 24h)"
+      },
+      {
+        "label": "Harbor terminal bench soak",
+        "path": "docs\\wiki\\Harbor-Terminal-Bench-Soak.json",
+        "required": false,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-04-16T13:05:24.510Z",
+        "ageMs": 2346851763,
+        "status": "stale",
+        "blocking": false,
+        "reason": "stale (27d old, budget 7d)"
+      },
+      {
+        "label": "Q benchmark sweep (60m)",
+        "path": "docs\\wiki\\Q-Benchmark-Sweep-60m.json",
+        "required": false,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-04-17T20:56:29.772Z",
+        "ageMs": 2232186501,
+        "status": "stale",
+        "blocking": false,
+        "reason": "stale (26d old, budget 7d)"
+      }
+    ]
+  },
   "cloudflare": {
     "generatedAt": "2026-04-19T05:52:31Z",
     "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v22",

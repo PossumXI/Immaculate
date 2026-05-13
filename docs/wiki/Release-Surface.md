@@ -2,9 +2,9 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-05-12T18:27:08.662Z
-- Immaculate release: `0.1.0+a7e67ff`
-- Repo commit: `a7e67ffaf54910ea73d652b4f893493fd9d4f184`
+- Generated: 2026-05-13T16:59:36.274Z
+- Immaculate release: `0.1.0+d06acb6`
+- Repo commit: `d06acb6d11e0d6ac9446b331eaf363fc7a894b37`
 - Branch: `main`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+a7e67ff` is the current repo build stamp.
+- Immaculate build `0.1.0+d06acb6` is the current repo build stamp.
 - Arobi Network is the ledger-backed private and public operator network and audit substrate. Immaculate is the governed harness and orchestrator inside it. Q is the reasoning brain inside that governed stack.
 - Q is the only public model name used across the repo, and it is built on `Gemma 4`.
 - The latest tracked Q training bundle is `q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3`, tied to dataset `.training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
@@ -43,15 +43,15 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Roundtable runtime: `2026-04-21T22:19:50.626Z` via `docs/wiki/Roundtable-Runtime.json`
 - Q API audit: `2026-04-19T22:47:48Z` via `docs/wiki/Q-API-Audit.json`
 - Arobi decision review: `2026-04-19T22:47:51.678Z` via `docs/wiki/Arobi-Decision-Review.json`
-- Q hybrid training: `2026-05-12T18:06:56Z` via `docs/wiki/Q-Hybrid-Training.json`
+- Q hybrid training: `2026-05-13T01:11:39Z` via `docs/wiki/Q-Hybrid-Training.json`
 - HF Jobs training: `2026-04-19T05:52:40Z` via `docs/wiki/HF-Jobs-Training.json`
 - Colab free training: `2026-04-19T05:52:29Z` via `docs/wiki/Colab-Free-Training.json`
 - Kaggle free training: `2026-04-19T05:52:00Z` via `docs/wiki/Kaggle-Free-Training.json`
 - Cloudflare Q inference: `2026-04-19T05:52:31Z` via `docs/wiki/Cloudflare-Q-Inference.json`
-- OCI GPU advisor: `2026-05-12T18:06:56Z` via `docs/wiki/OCI-GPU-Advisor.json`
+- OCI GPU advisor: `2026-05-13T01:11:39Z` via `docs/wiki/OCI-GPU-Advisor.json`
 - OCI region capacity: `2026-04-17T02:02:24Z` via `docs/wiki/OCI-Region-Capacity.json`
-- Q benchmark corpus: `2026-05-12T18:06:51Z` via `docs/wiki/Q-Benchmark-Corpus.json`
-- Q benchmark promotion: `2026-05-12T13:15:40Z` via `docs/wiki/Q-Benchmark-Promotion.json`
+- Q benchmark corpus: `2026-05-13T01:11:30Z` via `docs/wiki/Q-Benchmark-Corpus.json`
+- Q benchmark promotion: `2026-05-12T19:01:08Z` via `docs/wiki/Q-Benchmark-Promotion.json`
 - W&B benchmark export: `2026-05-12T10:07:09.017944+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
 - Harbor terminal bench: `2026-04-19T07:43:17.831Z` via `docs/wiki/Harbor-Terminal-Bench.json`
 - Terminal-Bench public task: `2026-04-19T14:31:45.217Z` via `docs/wiki/Terminal-Bench-Public-Task.json`
@@ -60,6 +60,44 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - GitHub checks receipt: `2026-04-16T17:54:12.583Z` via `docs/wiki/GitHub-Checks-Receipt.json`
 - Harbor terminal bench soak: `2026-04-16T13:05:24.510Z` via `docs/wiki/Harbor-Terminal-Bench-Soak.json`
 - Q benchmark sweep (60m): `2026-04-17T20:56:29.772Z` via `docs/wiki/Q-Benchmark-Sweep-60m.json`
+
+## Release Accountability Gaps
+
+- Status: `blocked`
+- Summary: 11 blocking release evidence gap(s): BridgeBench soak stale (28d old, budget 7d); Q gateway substrate stale (24d old, budget 7d); Q mediation drift stale (24d old, budget 7d); Arobi live ledger receipt stale (22d old, budget 24h); Live mission readiness stale (22d old, budget 24h); Live operator activity stale (22d old, budget 24h); Live operator public export stale (18d old, budget 24h); Cross-project workflow health stale (6d old, budget 24h); Roundtable actionability stale (22d old, budget 24h); Roundtable runtime stale (22d old, budget 24h); GitHub checks receipt stale (27d old, budget 24h)
+- Counts: `10 fresh / 11 blocking / 0 optional missing`
+
+### Blocking gaps
+
+- BridgeBench soak: `stale` via `docs/wiki/BridgeBench-Soak.json` - stale (28d old, budget 7d)
+- Q gateway substrate: `stale` via `docs/wiki/Q-Gateway-Substrate.json` - stale (24d old, budget 7d)
+- Q mediation drift: `stale` via `docs/wiki/Q-Mediation-Drift.json` - stale (24d old, budget 7d)
+- Arobi live ledger receipt: `stale` via `docs/wiki/Arobi-Live-Ledger-Receipt.json` - stale (22d old, budget 24h)
+- Live mission readiness: `stale` via `docs/wiki/Live-Mission-Readiness.json` - stale (22d old, budget 24h)
+- Live operator activity: `stale` via `docs/wiki/Live-Operator-Activity.json` - stale (22d old, budget 24h)
+- Live operator public export: `stale` via `docs/wiki/Live-Operator-Public-Export.json` - stale (18d old, budget 24h)
+- Cross-project workflow health: `stale` via `docs/wiki/Cross-Project-Workflow-Health.json` - stale (6d old, budget 24h)
+- Roundtable actionability: `stale` via `docs/wiki/Roundtable-Actionability.json` - stale (22d old, budget 24h)
+- Roundtable runtime: `stale` via `docs/wiki/Roundtable-Runtime.json` - stale (22d old, budget 24h)
+- GitHub checks receipt: `stale` via `docs/wiki/GitHub-Checks-Receipt.json` - stale (27d old, budget 24h)
+
+### Non-blocking warnings
+
+- Supervised mission showcase: `stale` via `docs/wiki/Supervised-Mission-Showcase.json` - stale (22d old, budget 7d)
+- Q API audit: `stale` via `docs/wiki/Q-API-Audit.json` - stale (24d old, budget 7d)
+- Arobi decision review: `stale` via `docs/wiki/Arobi-Decision-Review.json` - stale (24d old, budget 7d)
+- HF Jobs training: `stale` via `docs/wiki/HF-Jobs-Training.json` - stale (24d old, budget 7d)
+- Colab free training: `stale` via `docs/wiki/Colab-Free-Training.json` - stale (24d old, budget 7d)
+- Kaggle free training: `stale` via `docs/wiki/Kaggle-Free-Training.json` - stale (24d old, budget 7d)
+- Cloudflare Q inference: `stale` via `docs/wiki/Cloudflare-Q-Inference.json` - stale (24d old, budget 7d)
+- OCI region capacity: `stale` via `docs/wiki/OCI-Region-Capacity.json` - stale (27d old, budget 7d)
+- Harbor terminal bench: `stale` via `docs/wiki/Harbor-Terminal-Bench.json` - stale (24d old, budget 7d)
+- Terminal-Bench public task: `stale` via `docs/wiki/Terminal-Bench-Public-Task.json` - stale (24d old, budget 7d)
+- Terminal-Bench leaderboard status: `stale` via `docs/wiki/Terminal-Bench-Receipt.json` - stale (24d old, budget 7d)
+- Terminal-Bench rerun (diagnostic-only): `stale` via `docs/wiki/Terminal-Bench-Rerun.json` - stale (24d old, budget 7d)
+- Harbor terminal bench soak: `stale` via `docs/wiki/Harbor-Terminal-Bench-Soak.json` - stale (27d old, budget 7d)
+- Q benchmark sweep (60m): `stale` via `docs/wiki/Q-Benchmark-Sweep-60m.json` - stale (26d old, budget 7d)
+
 
 ## Q Training Bundle
 
@@ -76,11 +114,11 @@ This page is generated from repo state. It is the plain-English answer to a simp
 ## Hybrid Training Session
 
 - Session path: `.training-output/q/sessions/q-arobi-main-roots-20260512-bench-v1/hybrid-session.json`
-- Session generated: `2026-05-12T18:06:56Z`
+- Session generated: `2026-05-13T01:11:39Z`
 - Local lane status: `skipped`
 - Cloud lane status: `skipped`
 - Cloud provider: `manual`
-- Immaculate orchestration bundle: `immaculate-orchestration-a7e67ff-e68f2160`
+- Immaculate orchestration bundle: `immaculate-orchestration-9b85dbc-e68f2160`
 - Immaculate bundle source: `.training-output/immaculate/latest-training-bundle.json`
 
 ## Cloudflare Inference Readiness

@@ -4,10 +4,40 @@ import { fileURLToPath } from "node:url";
 import { getArobiNetworkName, getImmaculateHarnessName, getQModelName } from "./q-model.js";
 import { resolveReleaseMetadata, type ReleaseMetadata } from "./release-metadata.js";
 
-type SurfaceTimestamp = {
+export type SurfaceTimestamp = {
   label: string;
   path: string;
   generatedAt?: string;
+  required?: boolean;
+  maxAgeMs?: number;
+};
+
+type ReleaseSurfaceEvidenceStatus = "fresh" | "stale" | "missing" | "invalid" | "optional";
+
+type ReleaseSurfaceEvidenceEntry = SurfaceTimestamp & {
+  required: boolean;
+  maxAgeMs: number;
+  ageMs?: number;
+  status: ReleaseSurfaceEvidenceStatus;
+  blocking: boolean;
+  reason: string;
+};
+
+type ReleaseSurfaceEvidence = {
+  status: "ready" | "blocked";
+  maxAgeMs: number;
+  counts: {
+    total: number;
+    required: number;
+    fresh: number;
+    stale: number;
+    missing: number;
+    invalid: number;
+    optional: number;
+    blocking: number;
+  };
+  summary: string;
+  surfaces: ReleaseSurfaceEvidenceEntry[];
 };
 
 type ReleaseSurfaceReport = {
@@ -16,6 +46,7 @@ type ReleaseSurfaceReport = {
     q: Pick<ReleaseMetadata["q"], "modelName" | "foundationModel" | "trainingLock" | "hybridSession">;
   };
   surfaces: SurfaceTimestamp[];
+  releaseEvidence: ReleaseSurfaceEvidence;
   cloudflare?: {
     generatedAt?: string;
     sessionId?: string;
@@ -36,149 +67,215 @@ type ReleaseSurfaceReport = {
 const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(MODULE_ROOT, "../../..");
 const WIKI_ROOT = path.join(REPO_ROOT, "docs", "wiki");
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+export const DEFAULT_RELEASE_SURFACE_MAX_AGE_MS = 7 * ONE_DAY_MS;
+
+function surface(
+  label: string,
+  filePath: string,
+  options?: { required?: boolean; maxAgeMs?: number }
+): SurfaceTimestamp {
+  return {
+    label,
+    path: path.join("docs", "wiki", filePath),
+    required: options?.required ?? false,
+    maxAgeMs: options?.maxAgeMs
+  };
+}
 
 const SURFACE_FILES: SurfaceTimestamp[] = [
-  {
-    label: "BridgeBench",
-    path: path.join("docs", "wiki", "BridgeBench.json")
-  },
-  {
-    label: "BridgeBench soak",
-    path: path.join("docs", "wiki", "BridgeBench-Soak.json")
-  },
-  {
-    label: "Q structured contract benchmark",
-    path: path.join("docs", "wiki", "Model-Benchmark-Comparison.json")
-  },
-  {
-    label: "Q readiness gate",
-    path: path.join("docs", "wiki", "Q-Readiness-Gate.json")
-  },
-  {
-    label: "Q gateway validation",
-    path: path.join("docs", "wiki", "Q-Gateway-Validation.json")
-  },
-  {
-    label: "Q gateway substrate",
-    path: path.join("docs", "wiki", "Q-Gateway-Substrate.json")
-  },
-  {
-    label: "Q mediation drift",
-    path: path.join("docs", "wiki", "Q-Mediation-Drift.json")
-  },
-  {
-    label: "Arobi audit integrity",
-    path: path.join("docs", "wiki", "Arobi-Audit-Integrity.json")
-  },
-  {
-    label: "Arobi live ledger receipt",
-    path: path.join("docs", "wiki", "Arobi-Live-Ledger-Receipt.json")
-  },
-  {
-    label: "Live mission readiness",
-    path: path.join("docs", "wiki", "Live-Mission-Readiness.json")
-  },
-  {
-    label: "Live operator activity",
-    path: path.join("docs", "wiki", "Live-Operator-Activity.json")
-  },
-  {
-    label: "Live operator public export",
-    path: path.join("docs", "wiki", "Live-Operator-Public-Export.json")
-  },
-  {
-    label: "Cross-project workflow health",
-    path: path.join("docs", "wiki", "Cross-Project-Workflow-Health.json")
-  },
-  {
-    label: "Supervised mission showcase",
-    path: path.join("docs", "wiki", "Supervised-Mission-Showcase.json")
-  },
-  {
-    label: "Roundtable actionability",
-    path: path.join("docs", "wiki", "Roundtable-Actionability.json")
-  },
-  {
-    label: "Roundtable runtime",
-    path: path.join("docs", "wiki", "Roundtable-Runtime.json")
-  },
-  {
-    label: "Q API audit",
-    path: path.join("docs", "wiki", "Q-API-Audit.json")
-  },
-  {
-    label: "Arobi decision review",
-    path: path.join("docs", "wiki", "Arobi-Decision-Review.json")
-  },
-  {
-    label: "Q hybrid training",
-    path: path.join("docs", "wiki", "Q-Hybrid-Training.json")
-  },
-  {
-    label: "HF Jobs training",
-    path: path.join("docs", "wiki", "HF-Jobs-Training.json")
-  },
-  {
-    label: "Colab free training",
-    path: path.join("docs", "wiki", "Colab-Free-Training.json")
-  },
-  {
-    label: "Kaggle free training",
-    path: path.join("docs", "wiki", "Kaggle-Free-Training.json")
-  },
-  {
-    label: "Cloudflare Q inference",
-    path: path.join("docs", "wiki", "Cloudflare-Q-Inference.json")
-  },
-  {
-    label: "OCI GPU advisor",
-    path: path.join("docs", "wiki", "OCI-GPU-Advisor.json")
-  },
-  {
-    label: "OCI region capacity",
-    path: path.join("docs", "wiki", "OCI-Region-Capacity.json")
-  },
-  {
-    label: "Q benchmark corpus",
-    path: path.join("docs", "wiki", "Q-Benchmark-Corpus.json")
-  },
-  {
-    label: "Q benchmark promotion",
-    path: path.join("docs", "wiki", "Q-Benchmark-Promotion.json")
-  },
-  {
-    label: "W&B benchmark export",
-    path: path.join("docs", "wiki", "Benchmark-Wandb-Export.json")
-  },
-  {
-    label: "Harbor terminal bench",
-    path: path.join("docs", "wiki", "Harbor-Terminal-Bench.json")
-  },
-  {
-    label: "Terminal-Bench public task",
-    path: path.join("docs", "wiki", "Terminal-Bench-Public-Task.json")
-  },
-  {
-    label: "Terminal-Bench leaderboard status",
-    path: path.join("docs", "wiki", "Terminal-Bench-Receipt.json")
-  },
-  {
-    label: "Terminal-Bench rerun (diagnostic-only)",
-    path: path.join("docs", "wiki", "Terminal-Bench-Rerun.json")
-  },
-  {
-    label: "GitHub checks receipt",
-    path: path.join("docs", "wiki", "GitHub-Checks-Receipt.json")
-  },
-  {
-    label: "Harbor terminal bench soak",
-    path: path.join("docs", "wiki", "Harbor-Terminal-Bench-Soak.json")
-  },
-  {
-    label: "Q benchmark sweep (60m)",
-    path: path.join("docs", "wiki", "Q-Benchmark-Sweep-60m.json")
-  }
+  surface("BridgeBench", "BridgeBench.json", { required: true }),
+  surface("BridgeBench soak", "BridgeBench-Soak.json", { required: true }),
+  surface("Q structured contract benchmark", "Model-Benchmark-Comparison.json", {
+    required: true
+  }),
+  surface("Q readiness gate", "Q-Readiness-Gate.json", { required: true }),
+  surface("Q gateway validation", "Q-Gateway-Validation.json", { required: true }),
+  surface("Q gateway substrate", "Q-Gateway-Substrate.json", { required: true }),
+  surface("Q mediation drift", "Q-Mediation-Drift.json", { required: true }),
+  surface("Arobi audit integrity", "Arobi-Audit-Integrity.json", { required: true }),
+  surface("Arobi live ledger receipt", "Arobi-Live-Ledger-Receipt.json", {
+    required: true,
+    maxAgeMs: ONE_DAY_MS
+  }),
+  surface("Live mission readiness", "Live-Mission-Readiness.json", {
+    required: true,
+    maxAgeMs: ONE_DAY_MS
+  }),
+  surface("Live operator activity", "Live-Operator-Activity.json", {
+    required: true,
+    maxAgeMs: ONE_DAY_MS
+  }),
+  surface("Live operator public export", "Live-Operator-Public-Export.json", {
+    required: true,
+    maxAgeMs: ONE_DAY_MS
+  }),
+  surface("Cross-project workflow health", "Cross-Project-Workflow-Health.json", {
+    required: true,
+    maxAgeMs: ONE_DAY_MS
+  }),
+  surface("Supervised mission showcase", "Supervised-Mission-Showcase.json"),
+  surface("Roundtable actionability", "Roundtable-Actionability.json", {
+    required: true,
+    maxAgeMs: ONE_DAY_MS
+  }),
+  surface("Roundtable runtime", "Roundtable-Runtime.json", {
+    required: true,
+    maxAgeMs: ONE_DAY_MS
+  }),
+  surface("Q API audit", "Q-API-Audit.json"),
+  surface("Arobi decision review", "Arobi-Decision-Review.json"),
+  surface("Q hybrid training", "Q-Hybrid-Training.json", { required: true }),
+  surface("HF Jobs training", "HF-Jobs-Training.json"),
+  surface("Colab free training", "Colab-Free-Training.json"),
+  surface("Kaggle free training", "Kaggle-Free-Training.json"),
+  surface("Cloudflare Q inference", "Cloudflare-Q-Inference.json"),
+  surface("OCI GPU advisor", "OCI-GPU-Advisor.json"),
+  surface("OCI region capacity", "OCI-Region-Capacity.json"),
+  surface("Q benchmark corpus", "Q-Benchmark-Corpus.json", { required: true }),
+  surface("Q benchmark promotion", "Q-Benchmark-Promotion.json", { required: true }),
+  surface("W&B benchmark export", "Benchmark-Wandb-Export.json", { required: true }),
+  surface("Harbor terminal bench", "Harbor-Terminal-Bench.json"),
+  surface("Terminal-Bench public task", "Terminal-Bench-Public-Task.json"),
+  surface("Terminal-Bench leaderboard status", "Terminal-Bench-Receipt.json"),
+  surface("Terminal-Bench rerun (diagnostic-only)", "Terminal-Bench-Rerun.json"),
+  surface("GitHub checks receipt", "GitHub-Checks-Receipt.json", {
+    required: true,
+    maxAgeMs: ONE_DAY_MS
+  }),
+  surface("Harbor terminal bench soak", "Harbor-Terminal-Bench-Soak.json"),
+  surface("Q benchmark sweep (60m)", "Q-Benchmark-Sweep-60m.json")
 ];
+
+function parseIsoMs(value: string | undefined): number | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function formatDurationMs(value: number): string {
+  const minutes = Math.round(value / 60_000);
+  if (minutes < 90) {
+    return `${minutes}m`;
+  }
+  const hours = Math.round(value / 3_600_000);
+  if (hours < 48) {
+    return `${hours}h`;
+  }
+  return `${Math.round(value / ONE_DAY_MS)}d`;
+}
+
+export function evaluateReleaseSurfaceEvidence(
+  surfaces: SurfaceTimestamp[],
+  options?: {
+    nowMs?: number;
+    maxAgeMs?: number;
+  }
+): ReleaseSurfaceEvidence {
+  const nowMs = options?.nowMs ?? Date.now();
+  const defaultMaxAgeMs = options?.maxAgeMs ?? DEFAULT_RELEASE_SURFACE_MAX_AGE_MS;
+  const entries = surfaces.map((surface): ReleaseSurfaceEvidenceEntry => {
+    const required = surface.required === true;
+    const maxAgeMs = surface.maxAgeMs ?? defaultMaxAgeMs;
+    const parsed = parseIsoMs(surface.generatedAt);
+    if (!surface.generatedAt) {
+      return {
+        ...surface,
+        required,
+        maxAgeMs,
+        status: required ? "missing" : "optional",
+        blocking: required,
+        reason: required ? "required evidence timestamp missing" : "optional evidence missing"
+      };
+    }
+    if (parsed === undefined) {
+      return {
+        ...surface,
+        required,
+        maxAgeMs,
+        status: "invalid",
+        blocking: required,
+        reason: "evidence timestamp is not valid ISO time"
+      };
+    }
+    const ageMs = Math.max(0, nowMs - parsed);
+    const fresh = ageMs <= maxAgeMs;
+    return {
+      ...surface,
+      required,
+      maxAgeMs,
+      ageMs,
+      status: fresh ? "fresh" : "stale",
+      blocking: required && !fresh,
+      reason: fresh
+        ? `fresh (${formatDurationMs(ageMs)} old, budget ${formatDurationMs(maxAgeMs)})`
+        : `stale (${formatDurationMs(ageMs)} old, budget ${formatDurationMs(maxAgeMs)})`
+    };
+  });
+  const blocking = entries.filter((entry) => entry.blocking);
+  const counts = {
+    total: entries.length,
+    required: entries.filter((entry) => entry.required).length,
+    fresh: entries.filter((entry) => entry.status === "fresh").length,
+    stale: entries.filter((entry) => entry.status === "stale").length,
+    missing: entries.filter((entry) => entry.status === "missing").length,
+    invalid: entries.filter((entry) => entry.status === "invalid").length,
+    optional: entries.filter((entry) => entry.status === "optional").length,
+    blocking: blocking.length
+  };
+  return {
+    status: blocking.length === 0 ? "ready" : "blocked",
+    maxAgeMs: defaultMaxAgeMs,
+    counts,
+    summary:
+      blocking.length === 0
+        ? `all ${counts.required} required release evidence receipt(s) are fresh`
+        : `${blocking.length} blocking release evidence gap(s): ${blocking
+            .map((entry) => `${entry.label} ${entry.reason}`)
+            .join("; ")}`,
+    surfaces: entries
+  };
+}
+
+export function renderReleaseAccountabilityGapLines(evidence: ReleaseSurfaceEvidence): string[] {
+  const blocking = evidence.surfaces.filter((surface) => surface.blocking);
+  const warnings = evidence.surfaces.filter(
+    (surface) => !surface.blocking && surface.status !== "fresh"
+  );
+  const lines = [
+    "## Release Accountability Gaps",
+    "",
+    `- Status: \`${evidence.status}\``,
+    `- Summary: ${evidence.summary}`,
+    `- Counts: \`${evidence.counts.fresh} fresh / ${evidence.counts.blocking} blocking / ${evidence.counts.optional} optional missing\``,
+    ""
+  ];
+  if (blocking.length > 0) {
+    lines.push("### Blocking gaps", "");
+    lines.push(
+      ...blocking.map(
+        (surface) =>
+          `- ${surface.label}: \`${surface.status}\` via \`${surface.path.replaceAll("\\", "/")}\` - ${surface.reason}`
+      ),
+      ""
+    );
+  } else {
+    lines.push("- No blocking release evidence gaps.", "");
+  }
+  if (warnings.length > 0) {
+    lines.push("### Non-blocking warnings", "");
+    lines.push(
+      ...warnings.map(
+        (surface) =>
+          `- ${surface.label}: \`${surface.status}\` via \`${surface.path.replaceAll("\\", "/")}\` - ${surface.reason}`
+      ),
+      ""
+    );
+  }
+  return lines;
+}
 
 async function readGeneratedAt(filePath: string): Promise<string | undefined> {
   try {
@@ -268,6 +365,8 @@ function renderMarkdown(report: ReleaseSurfaceReport): string {
       (surface) => `- ${surface.label}: \`${surface.generatedAt ?? "missing"}\` via \`${surface.path.replaceAll("\\", "/")}\``
     ),
     "",
+    ...renderReleaseAccountabilityGapLines(report.releaseEvidence),
+    "",
     "## Q Training Bundle",
     "",
     `- Lock path: \`${trainingLock?.lockPath ?? "none"}\``,
@@ -318,6 +417,7 @@ async function main(): Promise<void> {
     ),
     readCloudflareSummary()
   ]);
+  const releaseEvidence = evaluateReleaseSurfaceEvidence(surfaces);
 
   const report: ReleaseSurfaceReport = {
     generatedAt: new Date().toISOString(),
@@ -331,6 +431,7 @@ async function main(): Promise<void> {
       }
     },
     surfaces,
+    releaseEvidence,
     cloudflare,
     output: {
       jsonPath: path.join("docs", "wiki", "Release-Surface.json"),
@@ -344,7 +445,13 @@ async function main(): Promise<void> {
   process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
 }
 
-void main().catch((error) => {
-  process.stderr.write(error instanceof Error ? error.message : "Release surface generation failed.");
-  process.exitCode = 1;
-});
+const isDirectExecution =
+  typeof process.argv[1] === "string" &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+
+if (isDirectExecution) {
+  void main().catch((error) => {
+    process.stderr.write(error instanceof Error ? error.message : "Release surface generation failed.");
+    process.exitCode = 1;
+  });
+}
