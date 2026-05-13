@@ -6246,7 +6246,16 @@ export async function runPublishedBenchmark(
       "event-benchmark-visibility",
       "Benchmark-scope event reads receive a bounded payload projection",
       Object.keys(benchmarkEventProjection.payload).every((key) =>
-        ["eventType", "subjectType", "subjectId", "benchmarkVisible"].includes(key)
+        [
+          "eventType",
+          "subjectType",
+          "subjectId",
+          "laneId",
+          "exportScope",
+          "trainingPolicy",
+          "retentionClass",
+          "benchmarkVisible"
+        ].includes(key)
       ),
       "bounded benchmark payload keys",
       Object.keys(benchmarkEventProjection.payload).join(", "),
