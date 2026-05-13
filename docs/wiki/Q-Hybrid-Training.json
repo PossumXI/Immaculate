@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-05-12T18:06:56Z",
+  "generatedAt": "2026-05-13T01:11:39Z",
   "sessionId": "q-arobi-main-roots-20260512-bench-v1",
   "manifestPath": ".training-output/q/sessions/q-arobi-main-roots-20260512-bench-v1/hybrid-session.manifest.json",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "a7e67ffaf54910ea73d652b4f893493fd9d4f184",
-    "gitShortSha": "a7e67ff",
-    "buildId": "0.1.0+a7e67ff"
+    "gitSha": "9b85dbc905e7b92b4ebcaf7893633a5dcf6074ed",
+    "gitShortSha": "9b85dbc",
+    "buildId": "0.1.0+9b85dbc"
   },
   "q": {
     "trainingBundleId": "q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3",
@@ -24,15 +24,15 @@
     "failureCorpusPath": "docs/wiki/Q-Failure-Corpus.json"
   },
   "immaculate": {
-    "bundleId": "immaculate-orchestration-a7e67ff-e68f2160",
+    "bundleId": "immaculate-orchestration-9b85dbc-e68f2160",
     "bundlePath": ".training-output/immaculate/immaculate-training-bundle-q-arobi-main-roots-20260512-bench-v1.json",
     "signalCount": 14
   },
   "cloudBundle": {
-    "bundleId": "q-arobi-main-roots-20260512-bench-v1-a7e67ff",
+    "bundleId": "q-arobi-main-roots-20260512-bench-v1-9b85dbc",
     "archivePath": ".training-output/q/sessions/q-arobi-main-roots-20260512-bench-v1/cloud-bundle/q-arobi-main-roots-20260512-bench-v1-cloud-bundle.tar.gz",
-    "archiveSha256": "d8af87398f6bf27741a8109256e82d1e2a4c4d4d66c97d95914e13f3b20e7bb4",
-    "archiveSizeBytes": 6702087,
+    "archiveSha256": "6de1a3e64c89c573ace485cd4fd77e40c2e46841c6d7a74e2fdb0ab992aae947",
+    "archiveSizeBytes": 6702113,
     "manifestPath": ".training-output/q/sessions/q-arobi-main-roots-20260512-bench-v1/cloud-bundle/bundle-manifest.json",
     "fileCount": 10,
     "repoRemoteUrl": "https://github.com/PossumXI/Immaculate.git"
@@ -316,13 +316,13 @@
     },
     "suggestedEnvUpdates": {},
     "actions": [],
-    "generatedAt": "2026-05-12T18:06:56Z",
+    "generatedAt": "2026-05-13T01:11:39Z",
     "sessionId": "q-arobi-main-roots-20260512-bench-v1",
     "release": {
       "packageVersion": "0.1.0",
-      "gitSha": "a7e67ffaf54910ea73d652b4f893493fd9d4f184",
-      "gitShortSha": "a7e67ff",
-      "buildId": "0.1.0+a7e67ff"
+      "gitSha": "9b85dbc905e7b92b4ebcaf7893633a5dcf6074ed",
+      "gitShortSha": "9b85dbc",
+      "buildId": "0.1.0+9b85dbc"
     },
     "output": {
       "jsonPath": "docs/wiki/OCI-GPU-Advisor.json",

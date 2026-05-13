@@ -2,12 +2,12 @@
 
 This page records one hybrid Q training session. In plain English: it ties the Q fine-tune lane and the Immaculate orchestration-improvement lane into one stamped session, then tells you exactly which parts are ready or missing.
 
-- Generated: `2026-05-12T18:06:56Z`
-- Release: `0.1.0+a7e67ff`
+- Generated: `2026-05-13T01:11:39Z`
+- Release: `0.1.0+9b85dbc`
 - Session id: `q-arobi-main-roots-20260512-bench-v1`
 - Q training bundle: `q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3`
 - Dataset rows: `2053`
-- Immaculate orchestration bundle: `immaculate-orchestration-a7e67ff-e68f2160`
+- Immaculate orchestration bundle: `immaculate-orchestration-9b85dbc-e68f2160`
 - HF Jobs training surface: `docs/wiki/HF-Jobs-Training.md`
 - Colab free training surface: `docs/wiki/Colab-Free-Training.md`
 - OCI GPU advisor: `docs/wiki/OCI-GPU-Advisor.md`
@@ -42,9 +42,9 @@ This page records one hybrid Q training session. In plain English: it ties the Q
 
 ## Cloud Bundle
 
-- Bundle id: `q-arobi-main-roots-20260512-bench-v1-a7e67ff`
+- Bundle id: `q-arobi-main-roots-20260512-bench-v1-9b85dbc`
 - Archive: `.training-output/q/sessions/q-arobi-main-roots-20260512-bench-v1/cloud-bundle/q-arobi-main-roots-20260512-bench-v1-cloud-bundle.tar.gz`
-- Archive SHA-256: `d8af87398f6bf27741a8109256e82d1e2a4c4d4d66c97d95914e13f3b20e7bb4`
+- Archive SHA-256: `6de1a3e64c89c573ace485cd4fd77e40c2e46841c6d7a74e2fdb0ab992aae947`
 - Bundle manifest: `.training-output/q/sessions/q-arobi-main-roots-20260512-bench-v1/cloud-bundle/bundle-manifest.json`
 - Included file count: `10`
 

@@ -16,13 +16,13 @@
   },
   "suggestedEnvUpdates": {},
   "actions": [],
-  "generatedAt": "2026-05-12T18:06:56Z",
+  "generatedAt": "2026-05-13T01:11:39Z",
   "sessionId": "q-arobi-main-roots-20260512-bench-v1",
   "release": {
     "packageVersion": "0.1.0",
-    "gitSha": "a7e67ffaf54910ea73d652b4f893493fd9d4f184",
-    "gitShortSha": "a7e67ff",
-    "buildId": "0.1.0+a7e67ff"
+    "gitSha": "9b85dbc905e7b92b4ebcaf7893633a5dcf6074ed",
+    "gitShortSha": "9b85dbc",
+    "buildId": "0.1.0+9b85dbc"
   },
   "output": {
     "jsonPath": "docs/wiki/OCI-GPU-Advisor.json",

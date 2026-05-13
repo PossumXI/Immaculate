@@ -2,8 +2,8 @@
 
 This page records the current OCI GPU launch advice for the active Q hybrid training session.
 
-- Generated: `2026-05-12T18:06:56Z`
-- Release: `0.1.0+a7e67ff`
+- Generated: `2026-05-13T01:11:39Z`
+- Release: `0.1.0+9b85dbc`
 - Session id: `q-arobi-main-roots-20260512-bench-v1`
 - Probe scope: `verified-subscribed-regions-only`
 - Controller region: `n/a`

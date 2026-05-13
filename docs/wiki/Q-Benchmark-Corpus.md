@@ -3,9 +3,9 @@
 This page is generated from the tracked Q benchmark/report surfaces.
 It records the benchmark-derived corpus currently attached to Q. It is not a readiness gate and it does not replace the strict failure-only Q-Failure-Corpus surface.
 
-- Generated: `2026-05-12T18:06:51Z`
-- Release: `0.1.0+a7e67ff`
-- Repo commit: `a7e67ff`
+- Generated: `2026-05-13T01:11:30Z`
+- Release: `0.1.0+9b85dbc`
+- Repo commit: `9b85dbc`
 - Q training bundle: `q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3`
 - Records: `58`
 - Row type: `mixed`
