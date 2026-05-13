@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-13T20:22:02.597Z",
+  "generatedAt": "2026-05-13T20:25:56.760Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "0acf403d1d63c115e78a8ac5254325c1efb47dae",
-    "gitShortSha": "0acf403",
+    "gitSha": "ef835d35602affe00f48cb149b27237f19b2bbf3",
+    "gitShortSha": "ef835d3",
     "gitBranch": "main",
-    "buildId": "0.1.0+0acf403",
+    "buildId": "0.1.0+ef835d3",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -80,7 +80,7 @@
         "configured": true,
         "ready": true,
         "endpoint": "https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1",
-        "detail": "Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 28s ago (budget 900s)"
+        "detail": "Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 39s ago (budget 900s)"
       }
     },
     "discord": {
@@ -89,7 +89,7 @@
         "configured": true,
         "ready": true,
         "endpoint": "http://127.0.0.1:8788/health",
-        "detail": "status=ready; gateway=true; guilds=1; health 200; updated 28s ago (budget 900s)"
+        "detail": "status=ready; gateway=true; guilds=1; health 200; updated 39s ago (budget 900s)"
       }
     },
     "missionSurfaceReady": false,
@@ -103,12 +103,12 @@
     "openjawsRoot": "openjaws",
     "roundtableRuntimeGeneratedAt": "2026-04-21T22:19:50.626Z",
     "arobiLiveLedgerGeneratedAt": "2026-05-13T20:21:53.430Z",
-    "discordAgentReceiptUpdatedAt": "2026-05-13T20:21:45.877Z",
+    "discordAgentReceiptUpdatedAt": "2026-05-13T20:25:45.879Z",
     "qOciBackend": "Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1)",
     "discordHealth": {
       "status": 200,
       "ok": true,
-      "body": "{\"status\":\"ok\",\"profile\":\"q\",\"label\":\"Q\",\"interactionReady\":true,\"gatewayReady\":true,\"gatewayConnected\":true,\"guildCount\":1,\"gatewayLastError\":null,\"gatewayLastCloseCode\":null,\"gatewayBlocked\":false,\"gatewayReconnectable\":null,\"updatedAt\":\"2026-05-13T20:21:45.877Z\"}"
+      "body": "{\"status\":\"ok\",\"profile\":\"q\",\"label\":\"Q\",\"interactionReady\":true,\"gatewayReady\":true,\"gatewayConnected\":true,\"guildCount\":1,\"gatewayLastError\":null,\"gatewayLastCloseCode\":null,\"gatewayBlocked\":false,\"gatewayReconnectable\":null,\"updatedAt\":\"2026-05-13T20:25:45.879Z\"}"
     },
     "arobiLocalPublicReady": true,
     "arobiLocalPrivateReady": false

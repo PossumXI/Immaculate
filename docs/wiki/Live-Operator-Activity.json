@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-13T20:22:13.578Z",
+  "generatedAt": "2026-05-13T20:26:04.796Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "0acf403d1d63c115e78a8ac5254325c1efb47dae",
-    "gitShortSha": "0acf403",
+    "gitSha": "ef835d35602affe00f48cb149b27237f19b2bbf3",
+    "gitShortSha": "ef835d3",
     "gitBranch": "main",
-    "buildId": "0.1.0+0acf403",
+    "buildId": "0.1.0+ef835d3",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -57,25 +57,25 @@
   },
   "qPatrol": {
     "status": "ready",
-    "summary": "posted immaculate state changed -> #openjaws-updates",
+    "summary": "state changed but routing cooldown held",
     "sourcePath": "openjaws/local-command-station/discord-q-agent-receipt.json",
-    "lastDecision": "posted immaculate state changed -> #openjaws-updates",
+    "lastDecision": "state changed but routing cooldown held",
     "lastPostedChannelName": "openjaws-updates",
-    "lastSummary": "1 patrol post sent",
+    "lastSummary": "state changed but routing cooldown held",
     "queueLength": 182,
     "recommendedLayerId": "Q"
   },
   "roundtable": {
     "status": "ready",
-    "summary": "running | Q posted turn 79 | 79 turns | 2/21 recent actions passed verification | 469 blocked job(s)",
+    "summary": "running | Viola posted turn 80 | 80 turns | 2/21 recent actions passed verification | 469 blocked job(s)",
     "sourcePath": "openjaws/local-command-station/roundtable-runtime/discord-roundtable.state.json",
     "sessionSourcePath": "openjaws/local-command-station/roundtable-runtime/discord-roundtable.session.json",
     "channelName": "dev_support",
     "sessionStatus": "running",
-    "turnCount": 79,
-    "nextPersona": "viola",
-    "lastSpeaker": "q",
-    "lastSummary": "Q posted turn 79",
+    "turnCount": 80,
+    "nextPersona": "blackbeak",
+    "lastSpeaker": "viola",
+    "lastSummary": "Viola posted turn 80",
     "actionReceiptCount": 21,
     "actions": [
       {
@@ -245,7 +245,7 @@
         "configured": true,
         "ready": true,
         "endpoint": "https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1",
-        "detail": "Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 28s ago (budget 900s)"
+        "detail": "Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 39s ago (budget 900s)"
       }
     },
     "discord": {
@@ -254,7 +254,7 @@
         "configured": true,
         "ready": true,
         "endpoint": "http://127.0.0.1:8788/health",
-        "detail": "status=ready; gateway=true; guilds=1; health 200; updated 28s ago (budget 900s)"
+        "detail": "status=ready; gateway=true; guilds=1; health 200; updated 39s ago (budget 900s)"
       }
     },
     "missionSurfaceReady": false,

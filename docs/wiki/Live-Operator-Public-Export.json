@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-13T20:23:36.264Z",
+  "generatedAt": "2026-05-13T20:26:11.069Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "0acf403d1d63c115e78a8ac5254325c1efb47dae",
-    "gitShortSha": "0acf403",
+    "gitSha": "ef835d35602affe00f48cb149b27237f19b2bbf3",
+    "gitShortSha": "ef835d3",
     "gitBranch": "main",
-    "buildId": "0.1.0+0acf403",
+    "buildId": "0.1.0+ef835d3",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -68,26 +68,26 @@
       {
         "label": "Live mission readiness",
         "path": "docs/wiki/Live-Mission-Readiness.json",
-        "generatedAt": "2026-05-13T20:22:02.597Z",
-        "ageMs": 93667,
+        "generatedAt": "2026-05-13T20:25:56.760Z",
+        "ageMs": 14309,
         "status": "fresh",
-        "detail": "fresh (2m old, budget 24h)"
+        "detail": "fresh (0m old, budget 24h)"
       },
       {
         "label": "Live operator activity",
         "path": "docs/wiki/Live-Operator-Activity.json",
-        "generatedAt": "2026-05-13T20:22:13.578Z",
-        "ageMs": 82686,
+        "generatedAt": "2026-05-13T20:26:04.796Z",
+        "ageMs": 6273,
         "status": "fresh",
-        "detail": "fresh (1m old, budget 24h)"
+        "detail": "fresh (0m old, budget 24h)"
       },
       {
         "label": "Arobi live ledger receipt",
         "path": "docs/wiki/Arobi-Live-Ledger-Receipt.json",
-        "generatedAt": "2026-05-13T20:21:53.430Z",
-        "ageMs": 102834,
+        "generatedAt": "2026-05-13T20:25:58.405Z",
+        "ageMs": 12664,
         "status": "fresh",
-        "detail": "fresh (2m old, budget 24h)"
+        "detail": "fresh (0m old, budget 24h)"
       }
     ]
   },
@@ -111,15 +111,15 @@
     "offlineSubsystemCount": 0,
     "unconfiguredSubsystemCount": 0,
     "networkVersion": "3.3.1",
-    "verifiedLedgerEntries": null,
-    "publicHeight": 59370,
+    "verifiedLedgerEntries": 32945,
+    "publicHeight": 59372,
     "orchestrationProfile": "immaculate-supervised-operator-loop",
     "qAuthMode": "oci_iam",
-    "lastChecked": "2026-05-13T20:23:36.264Z",
+    "lastChecked": "2026-05-13T20:26:11.069Z",
     "activityFeed": [
       {
         "id": "showcase-summary",
-        "timestamp": "2026-05-13T20:23:36.264Z",
+        "timestamp": "2026-05-13T20:26:11.069Z",
         "title": "Supervised operator activity export updated",
         "summary": "Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is blocked; OCI-backed Q is ready; Discord transport is ready; public ledger publication is currently ready",
         "kind": "showcase",
@@ -142,7 +142,7 @@
       },
       {
         "id": "publication-gate",
-        "timestamp": "2026-05-13T20:23:36.264Z",
+        "timestamp": "2026-05-13T20:26:11.069Z",
         "title": "Public publication gate",
         "summary": "public-safe operator export is publishable on the current workstation",
         "kind": "publication",
@@ -162,9 +162,9 @@
       },
       {
         "id": "q-patrol",
-        "timestamp": "2026-05-13T20:22:13.578Z",
+        "timestamp": "2026-05-13T20:26:04.796Z",
         "title": "Q patrol lane",
-        "summary": "posted immaculate state changed -> #openjaws-updates",
+        "summary": "state changed but routing cooldown held",
         "kind": "agent",
         "status": "ok",
         "source": "immaculate.live_operator_activity",
@@ -184,9 +184,9 @@
       },
       {
         "id": "roundtable",
-        "timestamp": "2026-05-13T20:22:13.578Z",
+        "timestamp": "2026-05-13T20:26:04.796Z",
         "title": "Bounded roundtable lane",
-        "summary": "running | Q posted turn 79 | 79 turns | 2/21 recent actions passed verification | 469 blocked job(s)",
+        "summary": "running | Viola posted turn 80 | 80 turns | 2/21 recent actions passed verification | 469 blocked job(s)",
         "kind": "roundtable",
         "status": "ok",
         "source": "immaculate.live_operator_activity",
@@ -229,7 +229,7 @@
       },
       {
         "id": "operator-state",
-        "timestamp": "2026-05-13T20:22:13.578Z",
+        "timestamp": "2026-05-13T20:26:04.796Z",
         "title": "Operator state",
         "summary": "PossumX",
         "kind": "operator",
@@ -249,9 +249,9 @@
       },
       {
         "id": "discord-transport",
-        "timestamp": "2026-05-13T20:23:36.264Z",
+        "timestamp": "2026-05-13T20:26:11.069Z",
         "title": "Discord transport readiness",
-        "summary": "status=ready; gateway=true; guilds=1; health 200; updated 28s ago (budget 900s)",
+        "summary": "status=ready; gateway=true; guilds=1; health 200; updated 39s ago (budget 900s)",
         "kind": "transport",
         "status": "ok",
         "source": "immaculate.live_mission_readiness",
@@ -269,11 +269,11 @@
       },
       {
         "id": "public-ledger",
-        "timestamp": "2026-05-13T20:21:53.430Z",
+        "timestamp": "2026-05-13T20:25:58.405Z",
         "title": "Public ledger visibility",
-        "summary": "public ledger version 3.3.1 on block 59,370 with unknown visible aggregate entries; fabric source nysus",
+        "summary": "public ledger version 3.3.1 on block 59,372 with 32,945 visible aggregate entries; fabric source nysus",
         "kind": "ledger",
-        "status": "warning",
+        "status": "ok",
         "source": "immaculate.arobi_live_ledger",
         "subsystems": [
           "arobi",

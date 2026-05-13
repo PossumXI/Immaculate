@@ -2,9 +2,9 @@
 
 This page is generated from the live public Arobi status and ledger endpoints plus the latest supervised fabric audit rerun on the controller. It exists to answer a simple question: did a fresh governed audit record actually land on the public Arobi Network node and surface on aura-genesis?
 
-- Generated: `2026-05-13T20:21:53.430Z`
-- Release: `0.1.0+0acf403`
-- Repo commit: `0acf403d1d63c115e78a8ac5254325c1efb47dae`
+- Generated: `2026-05-13T20:25:58.405Z`
+- Release: `0.1.0+ef835d3`
+- Repo commit: `ef835d35602affe00f48cb149b27237f19b2bbf3`
 - Live status page: https://aura-genesis.org/status
 - Live ledger page: https://aura-genesis.org/ledger
 - Public API base: `https://arobi.aura-genesis.org`
@@ -13,22 +13,22 @@ This page is generated from the live public Arobi status and ledger endpoints pl
 
 - Public node version: `3.3.1`
 - Public network: `AROBI1`
-- Public height: `59370`
-- Public peer count: `unknown`
-- Public ledger entries: `unknown`
-- Public chain valid: `false`
+- Public height: `59372`
+- Public peer count: `0`
+- Public ledger entries: `32945`
+- Public chain valid: `true`
 - Fabric source: `nysus`
 - Orchestration available: `true`
 - Brain ready: `true`
 
 ## Latest Visible Public Record
 
-- Latest visible entry: `2026-05-13T20:21:51.1632338Z` at block `unknown`
+- Latest visible entry: `2026-05-13T20:25:56.2651697Z` at block `unknown`
 - Entry source: `immaculate_showcase`
 - Model id: `q-operator-public-showcase`
 - Model version: `n/a`
-- Input summary: `Simulator-only Q decision via local-q-safety during pattern profile. Health degraded, reason stabilized final energy gate, challenge runway hold short, altitude 783.2 ft AGL, airspeed 108.1 kt, rpm 1179, throttle 0.00, elevator 0.220, target heading 350.7, target altitude 688.9 ft. Awareness: Q sees cruise: agl 783.2ft, projected 839.7ft in 3s, speed margin 33.9kt, heading error -22.0deg, terrain risk clear. Map KJFK/31L says runway along -8329ft, remaining 14549ft, approach distance 8329ft, and signed centerline offset -187ft.`
-- Decision: `Q FlightGear decision: q_cruise stabilized final energy gate`
+- Input summary: `Simulator-only Q decision via local-q-safety during pattern profile. Health degraded, reason base high energy descent, challenge runway hold short, altitude 724.2 ft AGL, airspeed 110.5 kt, rpm 1207, throttle 0.00, elevator 0.200, target heading 250.0, target altitude 568.9 ft. Awareness: Q sees cruise: agl 724.2ft, projected 764.0ft in 3s, speed margin 30.6kt, heading error -5.4deg, terrain risk clear. Map KJFK/31L says runway along -13575ft, remaining 14549ft, approach distance 13575ft, and signed centerline offset 6202ft.`
+- Decision: `Q FlightGear decision: q_cruise base high energy descent`
 - Network context: `PUBLIC`
 
 ## Latest Supervised Rerun
@@ -45,7 +45,7 @@ This page is generated from the live public Arobi status and ledger endpoints pl
 ## Plain-English Readout
 
 - The public aura-genesis status and ledger surfaces are reading the live 3.3.1 Arobi node, not a stale local-only file.
-- A fresh governed audit record is visible publicly at `2026-05-13T20:21:51.1632338Z`, which proves the audit trail is landing on the live public node.
+- A fresh governed audit record is visible publicly at `2026-05-13T20:25:56.2651697Z`, which proves the audit trail is landing on the live public node.
 - The latest visible public record does not match the latest local rerun receipt.
 
 ## Truth Boundary
