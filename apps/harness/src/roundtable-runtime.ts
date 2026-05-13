@@ -103,7 +103,7 @@ type RoundtableRuntimeScenarioResult = {
   failureClass?: string;
 };
 
-type RoundtableRuntimeSurface = {
+export type RoundtableRuntimeSurface = {
   generatedAt: string;
   release: ReleaseMetadata;
   benchmark: {
@@ -1702,6 +1702,28 @@ function renderMarkdown(report: RoundtableRuntimeSurface): string {
   ].join("\n");
 }
 
+function resolveCanonicalReportPath(repoRoot: string, outputPath: string): string {
+  const root = path.resolve(repoRoot);
+  const resolved = path.resolve(root, outputPath);
+  if (resolved !== root && !resolved.startsWith(`${root}${path.sep}`)) {
+    throw new Error(`Refusing to write roundtable runtime evidence outside repo root: ${outputPath}`);
+  }
+  return resolved;
+}
+
+export async function writeRoundtableRuntimeCanonicalReport(
+  report: RoundtableRuntimeSurface,
+  options?: { repoRoot?: string }
+): Promise<void> {
+  const repoRoot = options?.repoRoot ?? REPO_ROOT;
+  await writeJsonArtifact(resolveCanonicalReportPath(repoRoot, report.output.jsonPath), report);
+  await writeFile(
+    resolveCanonicalReportPath(repoRoot, report.output.markdownPath),
+    `${renderMarkdown(report)}\n`,
+    "utf8"
+  );
+}
+
 async function main(): Promise<void> {
   const cli = parseArgs(process.argv.slice(2));
   const runId = buildRunId(cli);
@@ -1987,6 +2009,7 @@ async function main(): Promise<void> {
     await writeJsonArtifact(path.join(runRoot, "run-manifest.json"), manifest);
     await writeJsonArtifact(latestRunPath, manifest);
     await writeJsonArtifact(latestReportPath, latestReport);
+    await writeRoundtableRuntimeCanonicalReport(latestReport);
 
     if (latestReport.benchmark.failedAssertions > 0 || iterationArtifacts.some((entry) => entry.status === "failed")) {
       const failurePayload = {
@@ -2001,8 +2024,6 @@ async function main(): Promise<void> {
       );
     }
 
-    await writeJsonArtifact(path.join(REPO_ROOT, latestReport.output.jsonPath), latestReport);
-    await writeFile(path.join(REPO_ROOT, latestReport.output.markdownPath), `${renderMarkdown(latestReport)}\n`, "utf8");
     process.stdout.write(
       `${JSON.stringify(
         cli.iterations === 1 ? latestReport : manifest,
@@ -2016,7 +2037,9 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((error) => {
-  process.stderr.write(error instanceof Error ? error.message : "Roundtable runtime benchmark failed.");
-  process.exitCode = 1;
-});
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((error) => {
+    process.stderr.write(error instanceof Error ? error.message : "Roundtable runtime benchmark failed.");
+    process.exitCode = 1;
+  });
+}
