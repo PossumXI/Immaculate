@@ -227,8 +227,18 @@ const DEFAULT_ROUNDTABLE_OLLAMA_URL =
   process.env.IMMACULATE_ROUNDTABLE_OLLAMA_URL?.trim() ||
   process.env.IMMACULATE_ROUNDTABLE_Q_OLLAMA_URL?.trim() ||
   "http://127.0.0.1:11435";
-const ROUNDTABLE_ALLOW_SHARED_Q_FALLBACK =
-  process.env.IMMACULATE_ROUNDTABLE_ALLOW_SHARED_Q_FALLBACK === "true";
+
+export function resolveRoundtableSharedQFallbackAllowed(
+  env: NodeJS.ProcessEnv = process.env
+): boolean {
+  const configured = env.IMMACULATE_ROUNDTABLE_ALLOW_SHARED_Q_FALLBACK?.trim().toLowerCase();
+  if (!configured) {
+    return true;
+  }
+  return configured === "1" || configured === "true" || configured === "yes";
+}
+
+const ROUNDTABLE_ALLOW_SHARED_Q_FALLBACK = resolveRoundtableSharedQFallbackAllowed();
 const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const HARNESS_ROOT = path.resolve(MODULE_ROOT, "..");
 const REPO_ROOT = path.resolve(HARNESS_ROOT, "../..");

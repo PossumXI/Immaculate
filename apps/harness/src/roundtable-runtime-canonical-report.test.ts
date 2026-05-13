@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import {
+  resolveRoundtableSharedQFallbackAllowed,
   writeRoundtableRuntimeCanonicalReport,
   type RoundtableRuntimeSurface
 } from "./roundtable-runtime.js";
@@ -146,4 +147,20 @@ test("roundtable runtime refuses canonical evidence paths outside the repo root"
   } finally {
     await rm(tempRoot, { recursive: true, force: true });
   }
+});
+
+test("roundtable runtime allows shared Q fallback by default with explicit opt-out", () => {
+  assert.equal(resolveRoundtableSharedQFallbackAllowed({}), true);
+  assert.equal(
+    resolveRoundtableSharedQFallbackAllowed({
+      IMMACULATE_ROUNDTABLE_ALLOW_SHARED_Q_FALLBACK: "true"
+    }),
+    true
+  );
+  assert.equal(
+    resolveRoundtableSharedQFallbackAllowed({
+      IMMACULATE_ROUNDTABLE_ALLOW_SHARED_Q_FALLBACK: "false"
+    }),
+    false
+  );
 });

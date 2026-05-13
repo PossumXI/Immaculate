@@ -49,6 +49,15 @@ That lane is intentionally separate so the roundtable benchmark can:
 - avoid inheriting stale or overloaded state from the normal local lane
 - keep `Q` aliases such as `q-e2b:test` on the structured control path instead of silently falling back to the heavier generic chat route
 
+If the isolated lane cannot prewarm because the host is already carrying the
+shared local `Q` model, the runtime may fall back to the healthy shared lane and
+records that fallback in the benchmark output. Strict isolation can be restored
+with:
+
+```powershell
+$env:IMMACULATE_ROUNDTABLE_ALLOW_SHARED_Q_FALLBACK = 'false'
+```
+
 ## OpenJaws Alignment
 
 OpenJaws now matches the same split model:
