@@ -2,9 +2,9 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-05-13T17:01:52.461Z
-- Immaculate release: `0.1.0+ecc53a8`
-- Repo commit: `ecc53a84cf9a8426843f97fb6346b2340b447c38`
+- Generated: 2026-05-13T17:02:25.802Z
+- Immaculate release: `0.1.0+55b9557`
+- Repo commit: `55b95576c12d3d9f76658a2a0bbd4c4b58722b15`
 - Branch: `main`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+ecc53a8` is the current repo build stamp.
+- Immaculate build `0.1.0+55b9557` is the current repo build stamp.
 - Arobi Network is the ledger-backed private and public operator network and audit substrate. Immaculate is the governed harness and orchestrator inside it. Q is the reasoning brain inside that governed stack.
 - Q is the only public model name used across the repo, and it is built on `Gemma 4`.
 - The latest tracked Q training bundle is `q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3`, tied to dataset `.training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
@@ -52,7 +52,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - OCI region capacity: `2026-04-17T02:02:24Z` via `docs/wiki/OCI-Region-Capacity.json`
 - Q benchmark corpus: `2026-05-13T01:11:30Z` via `docs/wiki/Q-Benchmark-Corpus.json`
 - Q benchmark promotion: `2026-05-12T19:01:08Z` via `docs/wiki/Q-Benchmark-Promotion.json`
-- W&B benchmark export: `2026-05-12T10:07:09.017944+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
+- W&B benchmark export: `2026-05-13T10:06:59.572421+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
 - Harbor terminal bench: `2026-04-19T07:43:17.831Z` via `docs/wiki/Harbor-Terminal-Bench.json`
 - Terminal-Bench public task: `2026-04-19T14:31:45.217Z` via `docs/wiki/Terminal-Bench-Public-Task.json`
 - Terminal-Bench leaderboard status: `2026-04-19T14:31:45.545Z` via `docs/wiki/Terminal-Bench-Receipt.json`
