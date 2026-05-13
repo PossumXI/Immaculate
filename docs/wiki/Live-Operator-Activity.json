@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-13T22:57:30.062Z",
+  "generatedAt": "2026-05-13T23:11:29.913Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "59b1c1ae55baf9b1565ac9be15da52b4327e8867",
-    "gitShortSha": "59b1c1a",
+    "gitSha": "cec62b6e2c7bfd8f13a34ba6b4db4c827e5bbebe",
+    "gitShortSha": "cec62b6",
     "gitBranch": "main",
-    "buildId": "0.1.0+59b1c1a",
+    "buildId": "0.1.0+cec62b6",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -60,22 +60,22 @@
     "summary": "state changed but routing cooldown held",
     "sourcePath": "openjaws/local-command-station/discord-q-agent-receipt.json",
     "lastDecision": "state changed but routing cooldown held",
-    "lastPostedChannelName": "q-command-station",
+    "lastPostedChannelName": "openjaws-updates",
     "lastSummary": "state changed but routing cooldown held",
     "queueLength": 182,
     "recommendedLayerId": "Q"
   },
   "roundtable": {
     "status": "ready",
-    "summary": "running | OpenJaws roundtable action q-follow-through-openjaws-2026-05-13t22-56-39.503z was held back: no code changes detected. | 30 turns | 2/21 recent actions passed verification | 470 blocked job(s)",
+    "summary": "running | Q posted turn 34 | 34 turns | 2/21 recent actions passed verification | 470 blocked job(s)",
     "sourcePath": "openjaws/local-command-station/roundtable-runtime/discord-roundtable.state.json",
     "sessionSourcePath": "openjaws/local-command-station/roundtable-runtime/discord-roundtable.session.json",
     "channelName": "dev_support",
     "sessionStatus": "running",
-    "turnCount": 30,
-    "nextPersona": "q",
-    "lastSpeaker": "blackbeak",
-    "lastSummary": "OpenJaws roundtable action q-follow-through-openjaws-2026-05-13t22-56-39.503z was held back: no code changes detected.",
+    "turnCount": 34,
+    "nextPersona": "viola",
+    "lastSpeaker": "q",
+    "lastSummary": "Q posted turn 34",
     "actionReceiptCount": 21,
     "actions": [
       {
@@ -169,7 +169,7 @@
     {
       "label": "Viola",
       "sourcePath": "openjaws/local-command-station/bots/viola/discord-agent-receipt.json",
-      "updatedAt": "2026-05-13T22:15:14.999Z",
+      "updatedAt": "2026-05-13T23:02:02.915Z",
       "status": "ready",
       "backend": "Q backend: oci:Q via OCI IAM",
       "connected": true,
@@ -177,28 +177,28 @@
       "summary": "ready | gateway online (1 guild) | Q backend: oci:Q via OCI IAM | voice_joined · joined #viola-lounge · #viola-lounge | knowledge 2500 files | voice connected @ viola-lounge",
       "recentEvents": [
         {
-          "at": "2026-05-13T22:15:14.999Z",
+          "at": "2026-05-13T23:02:02.915Z",
           "status": "voice_joined",
           "summary": "joined #viola-lounge",
           "channelName": "viola-lounge"
         },
         {
-          "at": "2026-05-13T22:15:06.948Z",
+          "at": "2026-05-13T23:01:57.468Z",
           "status": "gateway_ready",
           "summary": "connected to 1 guild"
         },
         {
-          "at": "2026-05-13T22:14:58.052Z",
+          "at": "2026-05-13T23:01:51.562Z",
           "status": "gateway_reconnecting",
-          "summary": "Discord gateway closed with code 1000: Discord WebSocket requesting client reconnect."
+          "summary": "Discord gateway closed with code 1006: Connection ended"
         },
         {
-          "at": "2026-05-13T22:14:58.004Z",
+          "at": "2026-05-13T23:01:51.548Z",
           "status": "gateway_closed",
-          "summary": "Discord gateway closed with code 1000: Discord WebSocket requesting client reconnect."
+          "summary": "Discord gateway closed with code 1006: Connection ended"
         },
         {
-          "at": "2026-05-13T20:57:16.427Z",
+          "at": "2026-05-13T22:15:14.999Z",
           "status": "voice_joined",
           "summary": "joined #viola-lounge",
           "channelName": "viola-lounge"
@@ -246,7 +246,7 @@
         "configured": true,
         "ready": true,
         "endpoint": "https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1",
-        "detail": "Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 40s ago (budget 900s)"
+        "detail": "Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 1s ago (budget 900s)"
       }
     },
     "discord": {
@@ -255,7 +255,7 @@
         "configured": true,
         "ready": true,
         "endpoint": "http://127.0.0.1:8788/health",
-        "detail": "status=ready; gateway=true; guilds=1; health 200; updated 40s ago (budget 900s)"
+        "detail": "status=ready; gateway=true; guilds=1; health 200; updated 1s ago (budget 900s)"
       }
     },
     "missionSurfaceReady": true,

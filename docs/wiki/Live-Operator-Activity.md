@@ -2,9 +2,9 @@
 
 This page is the machine-stamped local activity feed for the supervised Discord/Q/OpenJaws loop. It summarizes the canonical OpenJaws receipts so Immaculate can expose one operator-facing activity surface without inventing a duplicate schema.
 
-- Generated: `2026-05-13T22:57:30.062Z`
-- Release: `0.1.0+59b1c1a`
-- Repo commit: `59b1c1ae55baf9b1565ac9be15da52b4327e8867`
+- Generated: `2026-05-13T23:11:29.913Z`
+- Release: `0.1.0+cec62b6`
+- Repo commit: `cec62b6e2c7bfd8f13a34ba6b4db4c827e5bbebe`
 
 ## Publication Gate
 
@@ -17,15 +17,15 @@ This page is the machine-stamped local activity feed for the supervised Discord/
 - Mission-surface ready: `true`
 - Summary: shared ledger.public, ledger.private, q.local, q.oci, and discord.transport readiness verified for this pass
 - ledger.public: `ready` @ `https://arobi.aura-genesis.org` | public edge surfaced a fresh governed audit record on live 3.3.1 and the local public node contract is configured
-- discord.transport: `ready` @ `http://127.0.0.1:8788/health` | status=ready; gateway=true; guilds=1; health 200; updated 40s ago (budget 900s)
-- q.oci: `ready` @ `https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1` | Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 40s ago (budget 900s)
+- discord.transport: `ready` @ `http://127.0.0.1:8788/health` | status=ready; gateway=true; guilds=1; health 200; updated 1s ago (budget 900s)
+- q.oci: `ready` @ `https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1` | Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 1s ago (budget 900s)
 
 ## Q Patrol
 
 - Status: `ready`
 - Summary: state changed but routing cooldown held
 - Last decision: `state changed but routing cooldown held`
-- Last posted channel: `q-command-station`
+- Last posted channel: `openjaws-updates`
 - Last summary: state changed but routing cooldown held
 - Queue length: `182`
 - Recommended layer: `Q`
@@ -36,12 +36,12 @@ This page is the machine-stamped local activity feed for the supervised Discord/
 - Status: `ready`
 - Session status: `running`
 - Channel: `dev_support`
-- Turns: `30`
-- Next persona: `q`
-- Last speaker: `blackbeak`
-- Last summary: OpenJaws roundtable action q-follow-through-openjaws-2026-05-13t22-56-39.503z was held back: no code changes detected.
+- Turns: `34`
+- Next persona: `viola`
+- Last speaker: `q`
+- Last summary: Q posted turn 34
 - Action receipts: `21`
-- Summary: running | OpenJaws roundtable action q-follow-through-openjaws-2026-05-13t22-56-39.503z was held back: no code changes detected. | 30 turns | 2/21 recent actions passed verification | 470 blocked job(s)
+- Summary: running | Q posted turn 34 | 34 turns | 2/21 recent actions passed verification | 470 blocked job(s)
 - State source: `openjaws/local-command-station/roundtable-runtime/discord-roundtable.state.json`
 - Session source: `openjaws/local-command-station/roundtable-runtime/discord-roundtable.session.json`
 
@@ -87,17 +87,17 @@ This page is the machine-stamped local activity feed for the supervised Discord/
 ### Viola
 
 - Status: `ready`
-- Updated: `2026-05-13T22:15:14.999Z`
+- Updated: `2026-05-13T23:02:02.915Z`
 - Guilds: `1`
 - Backend: `Q backend: oci:Q via OCI IAM`
 - Summary: ready | gateway online (1 guild) | Q backend: oci:Q via OCI IAM | voice_joined · joined #viola-lounge · #viola-lounge | knowledge 2500 files | voice connected @ viola-lounge
 - Source: `openjaws/local-command-station/bots/viola/discord-agent-receipt.json`
 - Recent events:
+  - `2026-05-13T23:02:02.915Z` | `voice_joined` @ `#viola-lounge` | joined #viola-lounge
+  - `2026-05-13T23:01:57.468Z` | `gateway_ready` | connected to 1 guild
+  - `2026-05-13T23:01:51.562Z` | `gateway_reconnecting` | Discord gateway closed with code 1006: Connection ended
+  - `2026-05-13T23:01:51.548Z` | `gateway_closed` | Discord gateway closed with code 1006: Connection ended
   - `2026-05-13T22:15:14.999Z` | `voice_joined` @ `#viola-lounge` | joined #viola-lounge
-  - `2026-05-13T22:15:06.948Z` | `gateway_ready` | connected to 1 guild
-  - `2026-05-13T22:14:58.052Z` | `gateway_reconnecting` | Discord gateway closed with code 1000: Discord WebSocket requesting client reconnect.
-  - `2026-05-13T22:14:58.004Z` | `gateway_closed` | Discord gateway closed with code 1000: Discord WebSocket requesting client reconnect.
-  - `2026-05-13T20:57:16.427Z` | `voice_joined` @ `#viola-lounge` | joined #viola-lounge
 
 ## Operator State
 

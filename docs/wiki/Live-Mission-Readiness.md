@@ -2,9 +2,9 @@
 
 This page is the machine-stamped live mission gate for the current workstation. It compresses the current proof signals for the shared ledger, local Q, OCI-backed Q, and Discord transport into one operator-facing readiness contract.
 
-- Generated: `2026-05-13T22:57:23.892Z`
-- Release: `0.1.0+59b1c1a`
-- Repo commit: `59b1c1ae55baf9b1565ac9be15da52b4327e8867`
+- Generated: `2026-05-13T23:11:24.882Z`
+- Release: `0.1.0+cec62b6`
+- Repo commit: `cec62b6e2c7bfd8f13a34ba6b4db4c827e5bbebe`
 
 ## Shared Readiness
 
@@ -13,15 +13,15 @@ This page is the machine-stamped live mission gate for the current workstation. 
 - ledger.public: `ready` @ `https://arobi.aura-genesis.org` | public edge surfaced a fresh governed audit record on live 3.3.1 and the local public node contract is configured
 - ledger.private: `ready` @ `openjaws/artifacts/fabric-audit-soak-20260420T022653Z` | latest supervised rerun advanced the private ledger by 1; verified private node is governance-controlled, so the legacy mission treasury wallet warning is non-blocking
 - q.local: `ready` @ `http://127.0.0.1:11434` | local Q accepted 3/3 seed+mediation scenario pair(s)
-- q.oci: `ready` @ `https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1` | Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 40s ago (budget 900s)
-- discord.transport: `ready` @ `http://127.0.0.1:8788/health` | status=ready; gateway=true; guilds=1; health 200; updated 40s ago (budget 900s)
+- q.oci: `ready` @ `https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1` | Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 1s ago (budget 900s)
+- discord.transport: `ready` @ `http://127.0.0.1:8788/health` | status=ready; gateway=true; guilds=1; health 200; updated 1s ago (budget 900s)
 
 ## Evidence Sources
 
 - Roundtable runtime receipt: `docs/wiki/Roundtable-Runtime.json` @ `2026-05-13T22:01:54.879Z`
 - Arobi live ledger receipt: `docs/wiki/Arobi-Live-Ledger-Receipt.json` @ `2026-05-13T21:02:56.622Z`
-- Discord agent receipt: `openjaws/local-command-station/discord-q-agent-receipt.json` @ `2026-05-13T22:57:13.469Z`
-- Discord agent health: `http://127.0.0.1:8788/health` -> `200` | {"status":"ok","profile":"q","label":"Q","interactionReady":true,"gatewayReady":true,"gatewayConnected":true,"guildCount":1,"gatewayLastError":null,"gatewayLastCloseCode":null,"gatewayBlocked":false,"gatewayReconnectable":null,"updatedAt":"2026-05-13T22:57:13.469Z"}
+- Discord agent receipt: `openjaws/local-command-station/discord-q-agent-receipt.json` @ `2026-05-13T23:11:13.589Z`
+- Discord agent health: `http://127.0.0.1:8788/health` -> `200` | {"status":"ok","profile":"q","label":"Q","interactionReady":true,"gatewayReady":true,"gatewayConnected":true,"guildCount":1,"gatewayLastError":null,"gatewayLastCloseCode":null,"gatewayBlocked":false,"gatewayReconnectable":null,"updatedAt":"2026-05-13T23:11:13.589Z"}
 - Verified Arobi treasury control: `governance_release` @ `http://127.0.0.1:8101/api/v1/autonomo/mission/treasury` | governance ready `true`
 - OpenJaws root: `openjaws`
 - Receipt-backed OCI backend: `Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1)`
