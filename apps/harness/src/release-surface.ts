@@ -1,5 +1,6 @@
 import path from "node:path";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { getArobiNetworkName, getImmaculateHarnessName, getQModelName } from "./q-model.js";
 import { resolveReleaseMetadata, type ReleaseMetadata } from "./release-metadata.js";
@@ -17,7 +18,6 @@ type ReleaseSurfaceEvidenceStatus = "fresh" | "stale" | "missing" | "invalid" | 
 type ReleaseSurfaceEvidenceEntry = SurfaceTimestamp & {
   required: boolean;
   maxAgeMs: number;
-  ageMs?: number;
   status: ReleaseSurfaceEvidenceStatus;
   blocking: boolean;
   reason: string;
@@ -67,6 +67,8 @@ type ReleaseSurfaceReport = {
 const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(MODULE_ROOT, "../../..");
 const WIKI_ROOT = path.join(REPO_ROOT, "docs", "wiki");
+const RELEASE_SURFACE_JSON_PATH = path.join("docs", "wiki", "Release-Surface.json");
+const RELEASE_SURFACE_MARKDOWN_PATH = path.join("docs", "wiki", "Release-Surface.md");
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 export const DEFAULT_RELEASE_SURFACE_MAX_AGE_MS = 7 * ONE_DAY_MS;
 
@@ -167,6 +169,75 @@ function formatDurationMs(value: number): string {
   return `${Math.round(value / ONE_DAY_MS)}d`;
 }
 
+function runGit(args: string[]): string | undefined {
+  const result = spawnSync("git", args, {
+    cwd: REPO_ROOT,
+    encoding: "utf8",
+    windowsHide: true
+  });
+  if (result.status !== 0) {
+    return undefined;
+  }
+  const value = result.stdout.trim();
+  return value.length > 0 ? value : undefined;
+}
+
+function resolveReleaseSurfaceSourceCommit(): Pick<
+  ReleaseMetadata,
+  "gitSha" | "gitShortSha" | "buildId" | "packageVersion"
+> | undefined {
+  const gitSha = runGit([
+    "log",
+    "-1",
+    "--format=%H",
+    "--",
+    ".",
+    `:(exclude)${RELEASE_SURFACE_JSON_PATH.replaceAll("\\", "/")}`,
+    `:(exclude)${RELEASE_SURFACE_MARKDOWN_PATH.replaceAll("\\", "/")}`
+  ]);
+  if (!gitSha) {
+    return undefined;
+  }
+  const gitShortSha =
+    runGit([
+      "log",
+      "-1",
+      "--format=%h",
+      "--abbrev=7",
+      "--",
+      ".",
+      `:(exclude)${RELEASE_SURFACE_JSON_PATH.replaceAll("\\", "/")}`,
+      `:(exclude)${RELEASE_SURFACE_MARKDOWN_PATH.replaceAll("\\", "/")}`
+    ]) ?? gitSha.slice(0, 7);
+  return {
+    gitSha,
+    gitShortSha,
+    packageVersion: "0.0.0",
+    buildId: `0.0.0+${gitShortSha}`
+  };
+}
+
+function bindReleaseSurfaceSourceCommit(release: ReleaseMetadata): ReleaseMetadata {
+  const sourceCommit = resolveReleaseSurfaceSourceCommit();
+  if (!sourceCommit) {
+    return release;
+  }
+  return {
+    ...release,
+    gitSha: sourceCommit.gitSha,
+    gitShortSha: sourceCommit.gitShortSha,
+    buildId: `${release.packageVersion}+${sourceCommit.gitShortSha}`
+  };
+}
+
+function resolveStableReportGeneratedAt(surfaces: SurfaceTimestamp[]): string {
+  const newestTimestamp = surfaces
+    .map((surface) => surface.generatedAt)
+    .filter((value): value is string => Boolean(value))
+    .sort((left, right) => Date.parse(right) - Date.parse(left))[0];
+  return newestTimestamp ?? new Date(0).toISOString();
+}
+
 export function evaluateReleaseSurfaceEvidence(
   surfaces: SurfaceTimestamp[],
   options?: {
@@ -206,7 +277,6 @@ export function evaluateReleaseSurfaceEvidence(
       ...surface,
       required,
       maxAgeMs,
-      ageMs,
       status: fresh ? "fresh" : "stale",
       blocking: required && !fresh,
       reason: fresh
@@ -407,7 +477,7 @@ function renderMarkdown(report: ReleaseSurfaceReport): string {
 }
 
 async function main(): Promise<void> {
-  const release = await resolveReleaseMetadata();
+  const release = bindReleaseSurfaceSourceCommit(await resolveReleaseMetadata());
   const [surfaces, cloudflare] = await Promise.all([
     Promise.all(
     SURFACE_FILES.map(async (surface) => ({
@@ -420,7 +490,7 @@ async function main(): Promise<void> {
   const releaseEvidence = evaluateReleaseSurfaceEvidence(surfaces);
 
   const report: ReleaseSurfaceReport = {
-    generatedAt: new Date().toISOString(),
+    generatedAt: resolveStableReportGeneratedAt(surfaces),
     release: {
       ...release,
       q: {
@@ -434,8 +504,8 @@ async function main(): Promise<void> {
     releaseEvidence,
     cloudflare,
     output: {
-      jsonPath: path.join("docs", "wiki", "Release-Surface.json"),
-      markdownPath: path.join("docs", "wiki", "Release-Surface.md")
+      jsonPath: RELEASE_SURFACE_JSON_PATH,
+      markdownPath: RELEASE_SURFACE_MARKDOWN_PATH
     }
   };
 

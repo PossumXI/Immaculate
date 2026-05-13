@@ -38,6 +38,7 @@ test("release surface evidence marks stale required receipts as blocking", () =>
   assert.equal(evidence.counts.fresh, 1);
   assert.equal(evidence.counts.blocking, 1);
   assert.equal(evidence.surfaces[0].status, "fresh");
+  assert.equal("ageMs" in evidence.surfaces[0], false);
   assert.equal(evidence.surfaces[1].status, "stale");
   assert.equal(evidence.surfaces[1].blocking, true);
   assert.match(evidence.surfaces[1].reason, /stale/u);
