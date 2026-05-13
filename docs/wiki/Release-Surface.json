@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-13T17:01:25.956Z",
+  "generatedAt": "2026-05-13T17:01:52.461Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "5e64812c5415bdafa990085f235371b20b670abf",
-    "gitShortSha": "5e64812",
+    "gitSha": "ecc53a84cf9a8426843f97fb6346b2340b447c38",
+    "gitShortSha": "ecc53a8",
     "gitBranch": "main",
-    "buildId": "0.1.0+5e64812",
+    "buildId": "0.1.0+ecc53a8",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -290,7 +290,7 @@
         "required": true,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-05-07T04:12:53.126Z",
-        "ageMs": 564512829,
+        "ageMs": 564539335,
         "status": "fresh",
         "blocking": false,
         "reason": "fresh (7d old, budget 7d)"
@@ -301,7 +301,7 @@
         "required": true,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-15T06:15:54.188Z",
-        "ageMs": 2457931767,
+        "ageMs": 2457958273,
         "status": "stale",
         "blocking": true,
         "reason": "stale (28d old, budget 7d)"
@@ -312,7 +312,7 @@
         "required": true,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-05-07T06:03:07.620Z",
-        "ageMs": 557898335,
+        "ageMs": 557924841,
         "status": "fresh",
         "blocking": false,
         "reason": "fresh (6d old, budget 7d)"
@@ -323,7 +323,7 @@
         "required": true,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-05-07T07:32:49.907Z",
-        "ageMs": 552516048,
+        "ageMs": 552542554,
         "status": "fresh",
         "blocking": false,
         "reason": "fresh (6d old, budget 7d)"
@@ -334,7 +334,7 @@
         "required": true,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-05-07T07:32:32.750Z",
-        "ageMs": 552533205,
+        "ageMs": 552559711,
         "status": "fresh",
         "blocking": false,
         "reason": "fresh (6d old, budget 7d)"
@@ -345,7 +345,7 @@
         "required": true,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-19T22:06:38.757Z",
-        "ageMs": 2055287198,
+        "ageMs": 2055313704,
         "status": "stale",
         "blocking": true,
         "reason": "stale (24d old, budget 7d)"
@@ -356,7 +356,7 @@
         "required": true,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-19T22:06:40.025Z",
-        "ageMs": 2055285930,
+        "ageMs": 2055312436,
         "status": "stale",
         "blocking": true,
         "reason": "stale (24d old, budget 7d)"
@@ -367,7 +367,7 @@
         "required": true,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-05-12T18:09:17.101Z",
-        "ageMs": 82328854,
+        "ageMs": 82355360,
         "status": "fresh",
         "blocking": false,
         "reason": "fresh (23h old, budget 7d)"
@@ -378,7 +378,7 @@
         "required": true,
         "maxAgeMs": 86400000,
         "generatedAt": "2026-04-21T22:18:04.712Z",
-        "ageMs": 1881801243,
+        "ageMs": 1881827749,
         "status": "stale",
         "blocking": true,
         "reason": "stale (22d old, budget 24h)"
@@ -389,7 +389,7 @@
         "required": true,
         "maxAgeMs": 86400000,
         "generatedAt": "2026-04-22T00:57:50.993Z",
-        "ageMs": 1872214962,
+        "ageMs": 1872241468,
         "status": "stale",
         "blocking": true,
         "reason": "stale (22d old, budget 24h)"
@@ -400,7 +400,7 @@
         "required": true,
         "maxAgeMs": 86400000,
         "generatedAt": "2026-04-22T00:57:56.085Z",
-        "ageMs": 1872209870,
+        "ageMs": 1872236376,
         "status": "stale",
         "blocking": true,
         "reason": "stale (22d old, budget 24h)"
@@ -411,7 +411,7 @@
         "required": true,
         "maxAgeMs": 86400000,
         "generatedAt": "2026-04-25T18:32:05.367Z",
-        "ageMs": 1549760588,
+        "ageMs": 1549787094,
         "status": "stale",
         "blocking": true,
         "reason": "stale (18d old, budget 24h)"
@@ -422,7 +422,7 @@
         "required": true,
         "maxAgeMs": 86400000,
         "generatedAt": "2026-05-07T07:45:24.059Z",
-        "ageMs": 551761896,
+        "ageMs": 551788402,
         "status": "stale",
         "blocking": true,
         "reason": "stale (6d old, budget 24h)"
@@ -433,7 +433,7 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-22T01:20:45.053Z",
-        "ageMs": 1870840902,
+        "ageMs": 1870867408,
         "status": "stale",
         "blocking": false,
         "reason": "stale (22d old, budget 7d)"
@@ -444,7 +444,7 @@
         "required": true,
         "maxAgeMs": 86400000,
         "generatedAt": "2026-04-21T16:11:05.129Z",
-        "ageMs": 1903820826,
+        "ageMs": 1903847332,
         "status": "stale",
         "blocking": true,
         "reason": "stale (22d old, budget 24h)"
@@ -455,7 +455,7 @@
         "required": true,
         "maxAgeMs": 86400000,
         "generatedAt": "2026-04-21T22:19:50.626Z",
-        "ageMs": 1881695329,
+        "ageMs": 1881721835,
         "status": "stale",
         "blocking": true,
         "reason": "stale (22d old, budget 24h)"
@@ -466,7 +466,7 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-19T22:47:48Z",
-        "ageMs": 2052817955,
+        "ageMs": 2052844461,
         "status": "stale",
         "blocking": false,
         "reason": "stale (24d old, budget 7d)"
@@ -477,7 +477,7 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-19T22:47:51.678Z",
-        "ageMs": 2052814277,
+        "ageMs": 2052840783,
         "status": "stale",
         "blocking": false,
         "reason": "stale (24d old, budget 7d)"
@@ -488,7 +488,7 @@
         "required": true,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-05-13T01:11:39Z",
-        "ageMs": 56986955,
+        "ageMs": 57013461,
         "status": "fresh",
         "blocking": false,
         "reason": "fresh (16h old, budget 7d)"
@@ -499,7 +499,7 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-19T05:52:40Z",
-        "ageMs": 2113725955,
+        "ageMs": 2113752461,
         "status": "stale",
         "blocking": false,
         "reason": "stale (24d old, budget 7d)"
@@ -510,7 +510,7 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-19T05:52:29Z",
-        "ageMs": 2113736955,
+        "ageMs": 2113763461,
         "status": "stale",
         "blocking": false,
         "reason": "stale (24d old, budget 7d)"
@@ -521,7 +521,7 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-19T05:52:00Z",
-        "ageMs": 2113765955,
+        "ageMs": 2113792461,
         "status": "stale",
         "blocking": false,
         "reason": "stale (24d old, budget 7d)"
@@ -532,7 +532,7 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-19T05:52:31Z",
-        "ageMs": 2113734955,
+        "ageMs": 2113761461,
         "status": "stale",
         "blocking": false,
         "reason": "stale (24d old, budget 7d)"
@@ -543,7 +543,7 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-05-13T01:11:39Z",
-        "ageMs": 56986955,
+        "ageMs": 57013461,
         "status": "fresh",
         "blocking": false,
         "reason": "fresh (16h old, budget 7d)"
@@ -554,7 +554,7 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-17T02:02:24Z",
-        "ageMs": 2300341955,
+        "ageMs": 2300368461,
         "status": "stale",
         "blocking": false,
         "reason": "stale (27d old, budget 7d)"
@@ -565,7 +565,7 @@
         "required": true,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-05-13T01:11:30Z",
-        "ageMs": 56995955,
+        "ageMs": 57022461,
         "status": "fresh",
         "blocking": false,
         "reason": "fresh (16h old, budget 7d)"
@@ -576,7 +576,7 @@
         "required": true,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-05-12T19:01:08Z",
-        "ageMs": 79217955,
+        "ageMs": 79244461,
         "status": "fresh",
         "blocking": false,
         "reason": "fresh (22h old, budget 7d)"
@@ -587,7 +587,7 @@
         "required": true,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-05-12T10:07:09.017944+00:00",
-        "ageMs": 111256938,
+        "ageMs": 111283444,
         "status": "fresh",
         "blocking": false,
         "reason": "fresh (31h old, budget 7d)"
@@ -598,7 +598,7 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-19T07:43:17.831Z",
-        "ageMs": 2107088124,
+        "ageMs": 2107114630,
         "status": "stale",
         "blocking": false,
         "reason": "stale (24d old, budget 7d)"
@@ -609,7 +609,7 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-19T14:31:45.217Z",
-        "ageMs": 2082580738,
+        "ageMs": 2082607244,
         "status": "stale",
         "blocking": false,
         "reason": "stale (24d old, budget 7d)"
@@ -620,7 +620,7 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-19T14:31:45.545Z",
-        "ageMs": 2082580410,
+        "ageMs": 2082606916,
         "status": "stale",
         "blocking": false,
         "reason": "stale (24d old, budget 7d)"
@@ -631,7 +631,7 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-19T14:31:45.730Z",
-        "ageMs": 2082580225,
+        "ageMs": 2082606731,
         "status": "stale",
         "blocking": false,
         "reason": "stale (24d old, budget 7d)"
@@ -642,7 +642,7 @@
         "required": true,
         "maxAgeMs": 86400000,
         "generatedAt": "2026-04-16T17:54:12.583Z",
-        "ageMs": 2329633372,
+        "ageMs": 2329659878,
         "status": "stale",
         "blocking": true,
         "reason": "stale (27d old, budget 24h)"
@@ -653,7 +653,7 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-16T13:05:24.510Z",
-        "ageMs": 2346961445,
+        "ageMs": 2346987951,
         "status": "stale",
         "blocking": false,
         "reason": "stale (27d old, budget 7d)"
@@ -664,7 +664,7 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-17T20:56:29.772Z",
-        "ageMs": 2232296183,
+        "ageMs": 2232322689,
         "status": "stale",
         "blocking": false,
         "reason": "stale (26d old, budget 7d)"
