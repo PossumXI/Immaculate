@@ -2,9 +2,9 @@
 
 This page is generated from the live public Arobi status and ledger endpoints plus the latest supervised fabric audit rerun on the controller. It exists to answer a simple question: did a fresh governed audit record actually land on the public Arobi Network node and surface on aura-genesis?
 
-- Generated: `2026-05-13T19:49:02.852Z`
-- Release: `0.1.0+694a149`
-- Repo commit: `694a14958ca7bc45c825179168c4635921fdc0eb`
+- Generated: `2026-05-13T20:03:17.539Z`
+- Release: `0.1.0+f2df138`
+- Repo commit: `f2df1381849150c65a0d2f056d927d011bf47cf9`
 - Live status page: https://aura-genesis.org/status
 - Live ledger page: https://aura-genesis.org/ledger
 - Public API base: `https://arobi.aura-genesis.org`
@@ -13,9 +13,9 @@ This page is generated from the live public Arobi status and ledger endpoints pl
 
 - Public node version: `3.3.1`
 - Public network: `AROBI1`
-- Public height: `59339`
+- Public height: `59353`
 - Public peer count: `2`
-- Public ledger entries: `32763`
+- Public ledger entries: `32827`
 - Public chain valid: `true`
 - Fabric source: `nysus`
 - Orchestration available: `true`
@@ -23,11 +23,11 @@ This page is generated from the live public Arobi status and ledger endpoints pl
 
 ## Latest Visible Public Record
 
-- Latest visible entry: `2026-05-13T19:48:46.6227745Z` at block `unknown`
+- Latest visible entry: `2026-05-13T19:55:28.6227454Z` at block `unknown`
 - Entry source: `immaculate_showcase`
 - Model id: `q-operator-public-showcase`
 - Model version: `n/a`
-- Input summary: `Simulator-only Q decision via local-q-safety during pattern profile. Health degraded, reason downwind high energy descent, challenge runway hold short, altitude 1163.1 ft AGL, airspeed 98.0 kt, rpm 1050, throttle 0.00, elevator 0.120, target heading 113.4, target altitude 713.0 ft. Awareness: Q sees cruise: agl 1163.1ft, projected 1170.4ft in 3s, speed margin 10.2kt, heading error -3.4deg, terrain risk clear. Map KJFK/31L says runway along -4008ft, remaining 14549ft, approach distance 4008ft, and signed centerline offset -4173ft.`
+- Input summary: `Simulator-only Q decision via local-q-safety during pattern profile. Health degraded, reason downwind high energy descent, challenge runway hold short, altitude 1042.5 ft AGL, airspeed 98.9 kt, rpm 1063, throttle 0.00, elevator 0.120, target heading 142.9, target altitude 713.0 ft. Awareness: Q sees cruise: agl 1042.5ft, projected 1011.3ft in 3s, speed margin 10.9kt, heading error 5.3deg, terrain risk clear. Map KJFK/31L says runway along -12212ft, remaining 14549ft, approach distance 12212ft, and signed centerline offset 3804ft.`
 - Decision: `Q FlightGear decision: q_cruise downwind high energy descent`
 - Network context: `PUBLIC`
 
