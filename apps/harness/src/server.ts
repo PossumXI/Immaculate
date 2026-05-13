@@ -1183,7 +1183,8 @@ function getEngagementField(
   request: FastifyRequest,
   searchParams: URLSearchParams,
   headerNames: string[],
-  queryNames: string[]
+  queryNames: string[],
+  bodyNames = queryNames
 ): string | undefined {
   for (const headerName of headerNames) {
     const value = getHeaderValue(request.headers[headerName]);
@@ -1196,6 +1197,25 @@ function getEngagementField(
     const value = searchParams.get(queryName)?.trim();
     if (value) {
       return value;
+    }
+  }
+
+  const body =
+    typeof request.body === "object" && request.body !== null
+      ? (request.body as Record<string, unknown>)
+      : undefined;
+  if (body) {
+    for (const bodyName of bodyNames) {
+      const rawValue = body[bodyName];
+      if (typeof rawValue === "string" && rawValue.trim()) {
+        return rawValue.trim();
+      }
+      if (typeof rawValue === "boolean") {
+        return rawValue ? "true" : "false";
+      }
+      if (typeof rawValue === "number" && Number.isFinite(rawValue)) {
+        return String(rawValue);
+      }
     }
   }
 

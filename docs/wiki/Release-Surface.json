@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-13T21:03:01.982Z",
+  "generatedAt": "2026-05-13T21:35:11.089Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
@@ -128,7 +128,7 @@
       "path": "docs\\wiki\\Live-Mission-Readiness.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-05-13T21:02:57.669Z",
+      "generatedAt": "2026-05-13T21:35:11.089Z",
       "healthStatus": "unhealthy",
       "healthReason": "mission readiness receipt reports missionSurfaceReady=false"
     },
@@ -181,7 +181,7 @@
       "path": "docs\\wiki\\Roundtable-Runtime.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-05-13T20:38:25.498Z",
+      "generatedAt": "2026-05-13T21:29:48.381Z",
       "healthStatus": "unhealthy",
       "healthReason": "benchmark reports 1 failed assertion(s)"
     },
@@ -468,7 +468,7 @@
         "path": "docs\\wiki\\Live-Mission-Readiness.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-05-13T21:02:57.669Z",
+        "generatedAt": "2026-05-13T21:35:11.089Z",
         "healthStatus": "unhealthy",
         "healthReason": "mission readiness receipt reports missionSurfaceReady=false",
         "status": "unhealthy",
@@ -540,7 +540,7 @@
         "path": "docs\\wiki\\Roundtable-Runtime.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-05-13T20:38:25.498Z",
+        "generatedAt": "2026-05-13T21:29:48.381Z",
         "healthStatus": "unhealthy",
         "healthReason": "benchmark reports 1 failed assertion(s)",
         "status": "unhealthy",

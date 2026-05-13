@@ -4,7 +4,12 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import {
+  buildRoundtableMediationHeaders,
+  buildRoundtableMediationRequestBody,
+  resolveRoundtableRuntimeTimeoutControls,
   resolveRoundtableSharedQFallbackAllowed,
+  shouldAttemptRoundtableSharedQFallback,
+  shouldAbortRoundtableRuntimeAfterPrewarm,
   writeRoundtableRuntimeCanonicalReport,
   type RoundtableRuntimeSurface
 } from "./roundtable-runtime.js";
@@ -163,4 +168,80 @@ test("roundtable runtime allows shared Q fallback by default with explicit opt-o
     }),
     false
   );
+});
+
+test("roundtable runtime does not start shared fallback while dedicated Q is still loading", () => {
+  assert.equal(
+    shouldAttemptRoundtableSharedQFallback({
+      dedicatedLaneRequested: true,
+      sharedFallbackAllowed: true,
+      sharedEndpointHealthy: true,
+      dedicatedFailureClass: "transport_timeout"
+    }),
+    false
+  );
+  assert.equal(
+    shouldAttemptRoundtableSharedQFallback({
+      dedicatedLaneRequested: true,
+      sharedFallbackAllowed: true,
+      sharedEndpointHealthy: true,
+      dedicatedFailureClass: "http_error"
+    }),
+    true
+  );
+});
+
+test("roundtable runtime default timeouts finish before the release command budget", () => {
+  const controls = resolveRoundtableRuntimeTimeoutControls({});
+
+  assert.equal(controls.prewarmTimeoutMs, 60_000);
+  assert.equal(controls.cognitiveRequestTimeoutMs, 60_000);
+});
+
+test("roundtable runtime aborts after failed local Q prewarm instead of leaving stale evidence", () => {
+  assert.equal(
+    shouldAbortRoundtableRuntimeAfterPrewarm({
+      prewarmReady: false,
+      prewarmWarning: "dedicated prewarm transport_timeout; shared fallback prewarm transport_timeout"
+    }),
+    true
+  );
+  assert.equal(
+    shouldAbortRoundtableRuntimeAfterPrewarm({
+      prewarmReady: true,
+      prewarmWarning: "dedicated prewarm transport_timeout; fell back to shared local Q lane"
+    }),
+    false
+  );
+});
+
+test("roundtable runtime mediation stays plan-only while carrying engagement evidence", () => {
+  const body = buildRoundtableMediationRequestBody({
+    sessionId: "roundtable-runtime-demo",
+    sourceExecutionId: "cog-demo",
+    objective: "Create a governed repo-scoped action plan.",
+    receiptTarget: ".runtime/roundtable-runtime/runs/demo/engagement.ndjson"
+  });
+
+  assert.equal(body.dispatchOnApproval, false);
+  assert.equal(body.suppressed, true);
+  assert.equal(body.operatorConfirmed, true);
+  assert.equal(body.receiptTarget, ".runtime/roundtable-runtime/runs/demo/engagement.ndjson");
+  assert.match(body.operatorSummary, /suppressed plan-only roundtable mediation/u);
+  assert.match(body.rollbackPlan, /No external dispatch is authorized/u);
+});
+
+test("roundtable runtime mediation headers carry prehandler engagement evidence", () => {
+  const headers = buildRoundtableMediationHeaders({
+    consentScope: "session:roundtable-runtime-test",
+    receiptTarget: ".runtime/roundtable-runtime/engagement/test.ndjson"
+  });
+
+  assert.equal(headers["x-immaculate-purpose"], "actuation-dispatch,cognitive-execution");
+  assert.equal(headers["x-immaculate-consent-scope"], "session:roundtable-runtime-test");
+  assert.equal(headers["x-immaculate-actor"], "roundtable-runtime");
+  assert.equal(headers["x-immaculate-receipt-target"], ".runtime/roundtable-runtime/engagement/test.ndjson");
+  assert.equal(headers["x-immaculate-operator-confirmed"], "true");
+  assert.match(headers["x-immaculate-operator-summary"], /suppressed plan-only roundtable mediation/u);
+  assert.match(headers["x-immaculate-rollback-plan"], /dispatchOnApproval=false/u);
 });

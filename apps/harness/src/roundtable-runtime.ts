@@ -246,20 +246,34 @@ const WIKI_ROOT = path.join(REPO_ROOT, "docs", "wiki");
 const CONSENT_PREFIX = "session:roundtable-runtime";
 const ROUNDTABLE_RUNTIME_ROOT = path.join(REPO_ROOT, ".runtime", "roundtable-runtime");
 const ROUNDTABLE_RUNTIME_RUNS_ROOT = path.join(ROUNDTABLE_RUNTIME_ROOT, "runs");
-const ROUNDTABLE_OLLAMA_PREWARM_TIMEOUT_MS = Math.max(
-  240_000,
-  parsePositiveInteger(
-    process.env.IMMACULATE_ROUNDTABLE_OLLAMA_PREWARM_TIMEOUT_MS,
-    480_000
-  )
-);
-const ROUNDTABLE_COGNITIVE_REQUEST_TIMEOUT_MS = Math.max(
-  180_000,
-  parsePositiveInteger(
-    process.env.IMMACULATE_ROUNDTABLE_COGNITIVE_TIMEOUT_MS,
-    480_000
-  )
-);
+
+export type RoundtableRuntimeTimeoutControls = {
+  prewarmTimeoutMs: number;
+  cognitiveRequestTimeoutMs: number;
+};
+
+function clampRuntimeTimeoutMs(value: number): number {
+  return Math.min(600_000, Math.max(5_000, value));
+}
+
+export function resolveRoundtableRuntimeTimeoutControls(
+  env: NodeJS.ProcessEnv = process.env
+): RoundtableRuntimeTimeoutControls {
+  return {
+    prewarmTimeoutMs: clampRuntimeTimeoutMs(
+      parsePositiveInteger(env.IMMACULATE_ROUNDTABLE_OLLAMA_PREWARM_TIMEOUT_MS, 60_000)
+    ),
+    cognitiveRequestTimeoutMs: clampRuntimeTimeoutMs(
+      parsePositiveInteger(env.IMMACULATE_ROUNDTABLE_COGNITIVE_TIMEOUT_MS, 60_000)
+    )
+  };
+}
+
+const ROUNDTABLE_RUNTIME_TIMEOUT_CONTROLS = resolveRoundtableRuntimeTimeoutControls();
+const ROUNDTABLE_OLLAMA_PREWARM_TIMEOUT_MS =
+  ROUNDTABLE_RUNTIME_TIMEOUT_CONTROLS.prewarmTimeoutMs;
+const ROUNDTABLE_COGNITIVE_REQUEST_TIMEOUT_MS =
+  ROUNDTABLE_RUNTIME_TIMEOUT_CONTROLS.cognitiveRequestTimeoutMs;
 
 const SCENARIOS: ScenarioDefinition[] = [
   {
@@ -832,6 +846,7 @@ async function bootstrapRoundtableOllama(options: {
   endpoint: string;
   process: OllamaProcessHandle | null;
   fallbackFrom?: string;
+  prewarmReady: boolean;
   prewarmWarning?: string;
 }> {
   let endpoint = DEFAULT_ROUNDTABLE_OLLAMA_URL;
@@ -843,7 +858,8 @@ async function bootstrapRoundtableOllama(options: {
   if (process.env.IMMACULATE_ROUNDTABLE_PREWARM === "false") {
     return {
       endpoint,
-      process: processHandle
+      process: processHandle,
+      prewarmReady: true
     };
   }
 
@@ -855,14 +871,18 @@ async function bootstrapRoundtableOllama(options: {
   if (!prewarm.failureClass) {
     return {
       endpoint,
-      process: processHandle
+      process: processHandle,
+      prewarmReady: true
     };
   }
 
   if (
-    dedicatedLaneRequested &&
-    ROUNDTABLE_ALLOW_SHARED_Q_FALLBACK &&
-    (await isOllamaEndpointHealthy(DEFAULT_OLLAMA_URL))
+    shouldAttemptRoundtableSharedQFallback({
+      dedicatedLaneRequested,
+      sharedFallbackAllowed: ROUNDTABLE_ALLOW_SHARED_Q_FALLBACK,
+      sharedEndpointHealthy: await isOllamaEndpointHealthy(DEFAULT_OLLAMA_URL),
+      dedicatedFailureClass: prewarm.failureClass
+    })
   ) {
     if (processHandle) {
       await stopOllamaProcess(processHandle);
@@ -877,6 +897,7 @@ async function bootstrapRoundtableOllama(options: {
       endpoint: fallbackEndpoint,
       process: null,
       fallbackFrom: endpoint,
+      prewarmReady: !fallbackPrewarm.failureClass,
       prewarmWarning: fallbackPrewarm.failureClass
         ? `dedicated prewarm ${prewarm.failureClass}${prewarm.errorMessage ? ` / ${prewarm.errorMessage}` : ""}; shared fallback prewarm ${fallbackPrewarm.failureClass}${fallbackPrewarm.errorMessage ? ` / ${fallbackPrewarm.errorMessage}` : ""}`
         : `dedicated prewarm ${prewarm.failureClass}${prewarm.errorMessage ? ` / ${prewarm.errorMessage}` : ""}; fell back to shared local Q lane`
@@ -886,12 +907,34 @@ async function bootstrapRoundtableOllama(options: {
   return {
     endpoint,
     process: processHandle,
+    prewarmReady: false,
     prewarmWarning: `${prewarm.failureClass}${prewarm.errorMessage ? ` / ${prewarm.errorMessage}` : ""}${
       dedicatedLaneRequested && !ROUNDTABLE_ALLOW_SHARED_Q_FALLBACK
         ? "; dedicated roundtable Q lane retained because shared fallback is disabled"
         : ""
     }`
   };
+}
+
+export function shouldAbortRoundtableRuntimeAfterPrewarm(options: {
+  prewarmReady: boolean;
+  prewarmWarning?: string;
+}): boolean {
+  return options.prewarmReady === false;
+}
+
+export function shouldAttemptRoundtableSharedQFallback(options: {
+  dedicatedLaneRequested: boolean;
+  sharedFallbackAllowed: boolean;
+  sharedEndpointHealthy: boolean;
+  dedicatedFailureClass?: string;
+}): boolean {
+  return (
+    options.dedicatedLaneRequested &&
+    options.sharedFallbackAllowed &&
+    options.sharedEndpointHealthy &&
+    options.dedicatedFailureClass !== "transport_timeout"
+  );
 }
 
 function resolveHarnessCommand(): { command: string; args: string[] } {
@@ -958,7 +1001,10 @@ function startHarnessProcess(options: {
   };
 }
 
-async function stopHarnessProcess(handle: HarnessProcessHandle): Promise<void> {
+async function stopHarnessProcess(handle?: HarnessProcessHandle): Promise<void> {
+  if (!handle) {
+    return;
+  }
   const child = handle.child;
   if (child.exitCode !== null || child.killed) {
     return;
@@ -1009,6 +1055,46 @@ function buildHeaders(
     "x-immaculate-consent-scope": consentScope,
     "x-immaculate-purpose": purpose,
     ...(authorization ? { Authorization: authorization } : {})
+  };
+}
+
+const ROUNDTABLE_MEDIATION_OPERATOR_SUMMARY =
+  "Run suppressed plan-only roundtable mediation for local release evidence; no external actuation or public mutation is authorized.";
+const ROUNDTABLE_MEDIATION_ROLLBACK_PLAN =
+  "No external dispatch is authorized. Keep dispatchOnApproval=false and suppressed=true; if mediation drifts, stop the harness and discard the runtime artifacts.";
+
+export function buildRoundtableMediationHeaders(options: {
+  consentScope: string;
+  receiptTarget: string;
+  actor?: string;
+}): Record<string, string> {
+  return {
+    ...buildHeaders(options.consentScope, "actuation-dispatch,cognitive-execution"),
+    "x-immaculate-actor": options.actor?.trim() || "roundtable-runtime",
+    "x-immaculate-receipt-target": options.receiptTarget,
+    "x-immaculate-operator-summary": ROUNDTABLE_MEDIATION_OPERATOR_SUMMARY,
+    "x-immaculate-operator-confirmed": "true",
+    "x-immaculate-rollback-plan": ROUNDTABLE_MEDIATION_ROLLBACK_PLAN
+  };
+}
+
+export function buildRoundtableMediationRequestBody(options: {
+  sessionId: string;
+  sourceExecutionId?: string;
+  objective: string;
+  receiptTarget: string;
+}) {
+  return {
+    sessionId: options.sessionId,
+    sourceExecutionId: options.sourceExecutionId,
+    objective: options.objective,
+    requestedExecutionDecision: "allow_local" as const,
+    dispatchOnApproval: false,
+    suppressed: true,
+    receiptTarget: options.receiptTarget,
+    operatorSummary: ROUNDTABLE_MEDIATION_OPERATOR_SUMMARY,
+    operatorConfirmed: true,
+    rollbackPlan: ROUNDTABLE_MEDIATION_ROLLBACK_PLAN
   };
 }
 
@@ -1120,17 +1206,24 @@ async function runScenario(options: {
     const seedResult = await runSeedExecution();
     const seed = seedResult.check;
     const seedExecutionId = seedResult.executionId;
+    const engagementReceiptTarget = path
+      .relative(
+        REPO_ROOT,
+        path.join(ROUNDTABLE_RUNTIME_ROOT, "engagement", `${scenarioRunSeed}.ndjson`)
+      )
+      .replace(/\\/g, "/");
     const mediation = await checkHttp(`${options.harnessUrl}/api/orchestration/mediate`, {
       method: "POST",
-      headers: buildHeaders(consentScope, "actuation-dispatch,cognitive-execution"),
-      body: JSON.stringify({
+      headers: buildRoundtableMediationHeaders({
+        consentScope,
+        receiptTarget: engagementReceiptTarget
+      }),
+      body: JSON.stringify(buildRoundtableMediationRequestBody({
         sessionId,
         sourceExecutionId: seedExecutionId,
         objective: options.scenario.mediationObjective,
-        requestedExecutionDecision: "allow_local",
-        dispatchOnApproval: false,
-        suppressed: true
-      })
+        receiptTarget: engagementReceiptTarget
+      }))
     }, ROUNDTABLE_COGNITIVE_REQUEST_TIMEOUT_MS);
     let conversation = (mediation.body as { conversation?: MultiAgentConversation })?.conversation;
     let schedule = (mediation.body as { scheduleDecision?: ExecutionSchedule })?.scheduleDecision;
@@ -1762,38 +1855,87 @@ async function main(): Promise<void> {
   const activeOllamaEndpoint = ollamaBootstrap.endpoint;
   const ollamaProcess = ollamaBootstrap.process;
 
-  const harnessProcess = startHarnessProcess({
-    repoRoot: REPO_ROOT,
-    runtimeDir: harnessRuntimeDir,
-    keysPath,
-    port,
-    ollamaEndpoint: activeOllamaEndpoint
-  });
-  await writeJsonArtifact(path.join(runRoot, "bootstrap.json"), {
-    runId,
-    createdAt: new Date().toISOString(),
-    harnessUrl,
-    harness: {
-      stdoutPath: path.relative(REPO_ROOT, harnessProcess.stdoutPath).replaceAll("\\", "/"),
-      stderrPath: path.relative(REPO_ROOT, harnessProcess.stderrPath).replaceAll("\\", "/"),
-      startupTracePath: path.relative(REPO_ROOT, harnessProcess.startupTracePath).replaceAll("\\", "/")
-    },
-    ollama: {
-      requestedEndpoint: DEFAULT_ROUNDTABLE_OLLAMA_URL,
-      endpoint: activeOllamaEndpoint,
-      runtimeDir: path.relative(REPO_ROOT, ollamaRuntimeDir).replaceAll("\\", "/"),
-      spawned: Boolean(ollamaProcess),
-      sharedFallbackAllowed: ROUNDTABLE_ALLOW_SHARED_Q_FALLBACK,
-      fallbackFrom: ollamaBootstrap.fallbackFrom,
-      prewarmWarning: ollamaBootstrap.prewarmWarning
-    }
-  });
-
   const iterationArtifacts: RoundtableRuntimeIterationArtifact[] = [];
   let latestReport: RoundtableRuntimeSurface | undefined;
   let latestFailureMessage: string | undefined;
+  let harnessProcess: HarnessProcessHandle | undefined;
 
   try {
+    if (shouldAbortRoundtableRuntimeAfterPrewarm(ollamaBootstrap)) {
+      const message = `Roundtable runtime local Q prewarm failed at ${activeOllamaEndpoint}: ${
+        ollamaBootstrap.prewarmWarning ?? "prewarm did not complete"
+      }`;
+      const readiness = buildRuntimeReadiness({
+        publicLedgerBaseUrl,
+        privateLedgerBaseUrl,
+        scenarioResults: [],
+        qLocalEndpoint: activeOllamaEndpoint
+      });
+      const failedReport = buildFailedRoundtableRuntimeSurface({
+        harnessUrl,
+        release,
+        message,
+        readiness
+      });
+      const failurePayload = {
+        generatedAt: new Date().toISOString(),
+        runId,
+        latestReport: failedReport,
+        latestFailureMessage: message
+      };
+      await writeJsonArtifact(path.join(runRoot, "bootstrap.json"), {
+        runId,
+        createdAt: new Date().toISOString(),
+        harnessUrl,
+        harness: {
+          started: false,
+          reason: "local Q prewarm failed"
+        },
+        ollama: {
+          requestedEndpoint: DEFAULT_ROUNDTABLE_OLLAMA_URL,
+          endpoint: activeOllamaEndpoint,
+          runtimeDir: path.relative(REPO_ROOT, ollamaRuntimeDir).replaceAll("\\", "/"),
+          spawned: Boolean(ollamaProcess),
+          sharedFallbackAllowed: ROUNDTABLE_ALLOW_SHARED_Q_FALLBACK,
+          fallbackFrom: ollamaBootstrap.fallbackFrom,
+          prewarmReady: ollamaBootstrap.prewarmReady,
+          prewarmWarning: ollamaBootstrap.prewarmWarning
+        }
+      });
+      await writeJsonArtifact(latestReportPath, failedReport);
+      await writeJsonArtifact(failedReportPath, failurePayload);
+      await writeRoundtableRuntimeCanonicalReport(failedReport);
+      throw new Error(message);
+    }
+
+    harnessProcess = startHarnessProcess({
+      repoRoot: REPO_ROOT,
+      runtimeDir: harnessRuntimeDir,
+      keysPath,
+      port,
+      ollamaEndpoint: activeOllamaEndpoint
+    });
+    await writeJsonArtifact(path.join(runRoot, "bootstrap.json"), {
+      runId,
+      createdAt: new Date().toISOString(),
+      harnessUrl,
+      harness: {
+        stdoutPath: path.relative(REPO_ROOT, harnessProcess.stdoutPath).replaceAll("\\", "/"),
+        stderrPath: path.relative(REPO_ROOT, harnessProcess.stderrPath).replaceAll("\\", "/"),
+        startupTracePath: path.relative(REPO_ROOT, harnessProcess.startupTracePath).replaceAll("\\", "/")
+      },
+      ollama: {
+        requestedEndpoint: DEFAULT_ROUNDTABLE_OLLAMA_URL,
+        endpoint: activeOllamaEndpoint,
+        runtimeDir: path.relative(REPO_ROOT, ollamaRuntimeDir).replaceAll("\\", "/"),
+        spawned: Boolean(ollamaProcess),
+        sharedFallbackAllowed: ROUNDTABLE_ALLOW_SHARED_Q_FALLBACK,
+        fallbackFrom: ollamaBootstrap.fallbackFrom,
+        prewarmReady: ollamaBootstrap.prewarmReady,
+        prewarmWarning: ollamaBootstrap.prewarmWarning
+      }
+    });
+
     await waitForHarness(harnessUrl, harnessProcess);
     await ensureHarnessQRuntimeLayer(harnessUrl, `session:${runId}`);
     if (ollamaBootstrap.prewarmWarning) {

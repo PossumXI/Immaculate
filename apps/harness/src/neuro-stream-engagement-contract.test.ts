@@ -41,3 +41,11 @@ test("dashboard and TUI live neuro callers propagate engagement evidence", async
     assert.equal(source.includes("rollbackPlan"), true);
   }
 });
+
+test("server engagement extractor accepts JSON body evidence", async () => {
+  const server = await readRepoFile("./server.ts");
+
+  assert.match(server, /request\.body/u);
+  assert.match(server, /bodyNames/u);
+  assert.match(server, /operatorConfirmed/u);
+});

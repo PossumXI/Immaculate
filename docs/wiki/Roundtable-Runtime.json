@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-13T20:38:25.498Z",
+  "generatedAt": "2026-05-13T21:29:48.381Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "81edc26b6d54b923a7cfad6d562a2fc2513e7fe8",
-    "gitShortSha": "81edc26",
+    "gitSha": "7eb919a7b1e615562eb53fad9791d4c106ee5e36",
+    "gitShortSha": "7eb919a",
     "gitBranch": "main",
-    "buildId": "0.1.0+81edc26",
+    "buildId": "0.1.0+7eb919a",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -51,7 +51,7 @@
     }
   },
   "benchmark": {
-    "harnessUrl": "http://127.0.0.1:65478",
+    "harnessUrl": "http://127.0.0.1:55570",
     "scenarioCount": 0,
     "failedAssertions": 1,
     "seedAcceptedCount": 0,
@@ -72,11 +72,10 @@
     "seedLatencyP95Ms": 0,
     "mediationLatencyP95Ms": 0,
     "hardware": "knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics / 16 cores / Q foundation Gemma 4",
-    "executionIntegrityDigest": "72c9323d764128833c1cdaecdc89e9d1ceffa9889f69aa00df27a3640ba7b38a",
-    "decisionTraceStatus": "verified",
-    "decisionTraceEventCount": 1,
-    "decisionTraceFindingCount": 0,
-    "decisionTraceHeadHash": "51e986d973706b7f7b6fbb07101ecf1fa2775909e7e39d58372b204e3e35f90b"
+    "executionIntegrityDigest": "651a3cfb27cd2ba84981da0e37ef5448206bab569a0d353adf23a0a8b8a770f1",
+    "decisionTraceStatus": "pending",
+    "decisionTraceEventCount": 0,
+    "decisionTraceFindingCount": 0
   },
   "scenarios": [],
   "assertions": [
@@ -84,8 +83,8 @@
       "id": "roundtable-runtime-iteration-error",
       "status": "fail",
       "target": "loop iteration completes",
-      "actual": "Unable to materialize roundtable worktree for Immaculate: Preparing worktree (checking out 'agents/session-roundtable-runtime-immaculate-openjaws-m/immaculate-mid')\nfatal: Unable to create 'C:/Users/Knight/Desktop/Immaculate/.git/worktrees/session-roundtable-runtime-immaculate-openjaws-m-mid1/index.lock': File exists.\n\nAnother git process seems to be running in this repository, e.g.\nan editor opened by 'git commit'. Please make sure all processes\nare terminated then try again. If it still fails, a git process\nmay have crashed in this repository earlier:\nremove the file manually to continue.",
-      "detail": "Unable to materialize roundtable worktree for Immaculate: Preparing worktree (checking out 'agents/session-roundtable-runtime-immaculate-openjaws-m/immaculate-mid')\nfatal: Unable to create 'C:/Users/Knight/Desktop/Immaculate/.git/worktrees/session-roundtable-runtime-immaculate-openjaws-m-mid1/index.lock': File exists.\n\nAnother git process seems to be running in this repository, e.g.\nan editor opened by 'git commit'. Please make sure all processes\nare terminated then try again. If it still fails, a git process\nmay have crashed in this repository earlier:\nremove the file manually to continue."
+      "actual": "Roundtable runtime local Q prewarm failed at http://127.0.0.1:11434: dedicated prewarm transport_timeout / Ollama request timed out after 60000 ms.; shared fallback prewarm transport_timeout / Ollama request timed out after 60000 ms.",
+      "detail": "Roundtable runtime local Q prewarm failed at http://127.0.0.1:11434: dedicated prewarm transport_timeout / Ollama request timed out after 60000 ms.; shared fallback prewarm transport_timeout / Ollama request timed out after 60000 ms."
     }
   ],
   "output": {
@@ -112,7 +111,7 @@
         "status": "blocked",
         "configured": true,
         "ready": false,
-        "endpoint": "http://127.0.0.1:11435",
+        "endpoint": "http://127.0.0.1:11434",
         "detail": "local Q accepted 0/0 seed+mediation scenario pair(s)"
       },
       "oci": {
@@ -131,6 +130,6 @@
       }
     },
     "missionSurfaceReady": false,
-    "summary": "shared readiness blocked: unconfigured: public ledger endpoint not configured for this pass | unconfigured: private ledger endpoint not configured for this pass | http://127.0.0.1:11435: local Q accepted 0/0 seed+mediation scenario pair(s) | unconfigured: OCI-backed Q runtime not configured for this pass | unconfigured: Discord transport not configured for this pass"
+    "summary": "shared readiness blocked: unconfigured: public ledger endpoint not configured for this pass | unconfigured: private ledger endpoint not configured for this pass | http://127.0.0.1:11434: local Q accepted 0/0 seed+mediation scenario pair(s) | unconfigured: OCI-backed Q runtime not configured for this pass | unconfigured: Discord transport not configured for this pass"
   }
 }
