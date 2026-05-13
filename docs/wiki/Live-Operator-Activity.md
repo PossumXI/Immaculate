@@ -2,9 +2,9 @@
 
 This page is the machine-stamped local activity feed for the supervised Discord/Q/OpenJaws loop. It summarizes the canonical OpenJaws receipts so Immaculate can expose one operator-facing activity surface without inventing a duplicate schema.
 
-- Generated: `2026-05-13T22:36:24.394Z`
-- Release: `0.1.0+b73c0b1`
-- Repo commit: `b73c0b1f6ceba8a94e504407b68537e07121aded`
+- Generated: `2026-05-13T22:51:57.521Z`
+- Release: `0.1.0+b15ba64`
+- Repo commit: `b15ba648e1ff7be35786425a2bbbee5b8146fc1e`
 
 ## Publication Gate
 
@@ -14,19 +14,19 @@ This page is the machine-stamped local activity feed for the supervised Discord/
 
 ## Shared Readiness Context
 
-- Mission-surface ready: `false`
-- Summary: shared readiness blocked: openjaws/artifacts/fabric-audit-soak-20260420T022653Z: verified private node is blocked by mission treasury signer mismatch despite rerun delta 1
+- Mission-surface ready: `true`
+- Summary: shared ledger.public, ledger.private, q.local, q.oci, and discord.transport readiness verified for this pass
 - ledger.public: `ready` @ `https://arobi.aura-genesis.org` | public edge surfaced a fresh governed audit record on live 3.3.1 and the local public node contract is configured
-- discord.transport: `ready` @ `http://127.0.0.1:8788/health` | status=ready; gateway=true; guilds=1; health 200; updated 34s ago (budget 900s)
-- q.oci: `ready` @ `https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1` | Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 34s ago (budget 900s)
+- discord.transport: `ready` @ `http://127.0.0.1:8788/health` | status=ready; gateway=true; guilds=1; health 200; updated 22s ago (budget 900s)
+- q.oci: `ready` @ `https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1` | Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 22s ago (budget 900s)
 
 ## Q Patrol
 
 - Status: `ready`
-- Summary: state changed but routing cooldown held
-- Last decision: `state changed but routing cooldown held`
-- Last posted channel: `openjaws-updates`
-- Last summary: state changed but routing cooldown held
+- Summary: posted patrol digest after state change -> #q-command-station
+- Last decision: `posted patrol digest after state change -> #q-command-station`
+- Last posted channel: `q-command-station`
+- Last summary: 1 patrol post sent
 - Queue length: `182`
 - Recommended layer: `Q`
 - Source: `openjaws/local-command-station/discord-q-agent-receipt.json`
@@ -36,12 +36,12 @@ This page is the machine-stamped local activity feed for the supervised Discord/
 - Status: `ready`
 - Session status: `running`
 - Channel: `dev_support`
-- Turns: `24`
-- Next persona: `q`
-- Last speaker: `blackbeak`
-- Last summary: Blackbeak posted turn 24
+- Turns: `28`
+- Next persona: `viola`
+- Last speaker: `q`
+- Last summary: Q posted turn 28
 - Action receipts: `21`
-- Summary: running | Blackbeak posted turn 24 | 24 turns | 2/21 recent actions passed verification | 470 blocked job(s)
+- Summary: running | Q posted turn 28 | 28 turns | 2/21 recent actions passed verification | 470 blocked job(s)
 - State source: `openjaws/local-command-station/roundtable-runtime/discord-roundtable.state.json`
 - Session source: `openjaws/local-command-station/roundtable-runtime/discord-roundtable.session.json`
 
@@ -72,17 +72,17 @@ This page is the machine-stamped local activity feed for the supervised Discord/
 ### Blackbeak
 
 - Status: `ready`
-- Updated: `2026-05-13T21:46:59.815Z`
+- Updated: `2026-05-13T22:43:58.521Z`
 - Guilds: `2`
 - Backend: `Q backend: oci:Q via OCI IAM`
-- Summary: ready | gateway online (2 guild) | Q backend: oci:Q via OCI IAM | gateway_ready · connected to 2 guilds | knowledge 2500 files | voice off
+- Summary: ready | gateway online (2 guild) | Q backend: oci:Q via OCI IAM | blackbeak_meme_posted · scheduled image meme quota_blocked -> text drop (aerospace · absurdist and observant) · #daily_meme | knowledge 2500 files | voice off
 - Source: `openjaws/local-command-station/bots/blackbeak/discord-agent-receipt.json`
 - Recent events:
+  - `2026-05-13T22:43:58.521Z` | `blackbeak_meme_posted` @ `#daily_meme` | scheduled image meme quota_blocked -> text drop (aerospace · absurdist and observant)
+  - `2026-05-13T22:43:35.165Z` | `gateway_ready` | connected to 2 guilds
+  - `2026-05-13T22:43:27.477Z` | `gateway_reconnecting` | Discord gateway closed with code 1000.
+  - `2026-05-13T22:43:27.472Z` | `gateway_closed` | Discord gateway closed with code 1000.
   - `2026-05-13T21:46:59.815Z` | `gateway_ready` | connected to 2 guilds
-  - `2026-05-13T21:46:41.256Z` | `gateway_reconnecting` | Discord gateway closed with code 1000: Discord WebSocket requesting client reconnect.
-  - `2026-05-13T21:46:40.455Z` | `gateway_closed` | Discord gateway closed with code 1000: Discord WebSocket requesting client reconnect.
-  - `2026-05-13T20:42:40.778Z` | `blackbeak_meme_skipped` @ `#daily_meme` | scheduled meme skipped: media_blocked until 2026-05-13T20:42:59.380Z
-  - `2026-05-13T19:05:16.976Z` | `gateway_ready` | connected to 2 guilds
 
 ### Viola
 

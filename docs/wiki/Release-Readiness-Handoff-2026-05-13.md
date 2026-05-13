@@ -41,24 +41,40 @@ Results:
 
 ## Current Release Blocker
 
-`Live mission readiness` is still blocked because the verified private Arobi node rejects `public-chain-verified/mission_treasury_wallet.json`.
+Resolved in the follow-up governance-readiness pass.
+
+`Live mission readiness` had been blocked because the verified private Arobi node logs a disabled legacy `public-chain-verified/mission_treasury_wallet.json` signer warning.
 
 Observed from `C:\Users\Knight\.arobi\public-chain-verified\logs\verified-node.log`:
 
 - The verified private node loaded the audit ledger and started its API.
 - The mission treasury signer was disabled because the wallet address does not match the verified chain genesis treasury address.
 
+Root cause:
+
+- This was an obsolete readiness assumption. The March 29 treasury recovery intentionally moved mission treasury control from a hot wallet file to governance-controlled release mode.
+- The verified node now reports `control_mode=governance_release` from `http://127.0.0.1:8101/api/v1/autonomo/mission/treasury`.
+- A disabled legacy hot-wallet warning is only non-blocking when that treasury endpoint proves governance release mode and a funded treasury address.
+
 Additional isolated temp probe:
 
 - The root `C:\Users\Knight\.arobi\mission_treasury_wallet.json` has the expected public address, but the Arobi binary rejects it as internally inconsistent.
 - Do not copy that root wallet into `public-chain-verified`; it does not repair the signer.
 
-Safe remediation path:
+Implemented remediation:
 
-1. Restore or regenerate a valid local-only mission treasury signer for the verified chain genesis treasury address.
+1. `apps/harness/src/live-mission-readiness.ts` now probes the verified node treasury endpoint.
+2. The private Arobi lane stays blocked if a signer warning appears without governance-control proof.
+3. The private Arobi lane is ready when the verified ledger/API contract is intact, the private ledger advanced, and `governance_release` treasury control is proven.
+4. `apps/harness/src/live-mission-readiness.test.ts` covers both the accepted governance path and the fail-closed no-governance path.
+
+Safe operator path if this regresses:
+
+1. Do not restore or regenerate a mission treasury hot wallet as the first fix.
 2. Keep signer material out of public/exported/documentation paths.
-3. Restart the verified private node with `C:\Users\Knight\.arobi\start-private-verified-node.ps1`.
-4. Rerun:
+3. Confirm `GET http://127.0.0.1:8101/api/v1/autonomo/mission/treasury` reports `control_mode=governance_release`.
+4. Restart the verified private node with `C:\Users\Knight\.arobi\start-private-verified-node.ps1` only if the endpoint is unreachable.
+5. Rerun:
 
 ```powershell
 npm run live:mission:readiness
@@ -66,7 +82,7 @@ npm run live:operator:activity
 npm run release:surface
 ```
 
-Expected release-surface result after the signer is valid: `releaseEvidence.status=ready`.
+Current release-surface result after the governance-control fix: `releaseEvidence.status=ready`.
 
 ## Do Not Repeat
 

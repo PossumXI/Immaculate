@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-13T22:36:24.073Z",
+  "generatedAt": "2026-05-13T22:50:08.144Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "b73c0b1f6ceba8a94e504407b68537e07121aded",
-    "gitShortSha": "b73c0b1",
-    "gitBranch": "main",
-    "buildId": "0.1.0+b73c0b1",
+    "gitSha": "b15ba648e1ff7be35786425a2bbbee5b8146fc1e",
+    "gitShortSha": "b15ba64",
+    "gitBranch": "codex/live-mission-governance-treasury-readiness-20260513",
+    "buildId": "0.1.0+b15ba64",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -60,11 +60,11 @@
         "detail": "public edge surfaced a fresh governed audit record on live 3.3.1 and the local public node contract is configured"
       },
       "private": {
-        "status": "blocked",
+        "status": "ready",
         "configured": true,
-        "ready": false,
+        "ready": true,
         "endpoint": "openjaws/artifacts/fabric-audit-soak-20260420T022653Z",
-        "detail": "verified private node is blocked by mission treasury signer mismatch despite rerun delta 1"
+        "detail": "latest supervised rerun advanced the private ledger by 1; verified private node is governance-controlled, so the legacy mission treasury wallet warning is non-blocking"
       }
     },
     "q": {
@@ -80,7 +80,7 @@
         "configured": true,
         "ready": true,
         "endpoint": "https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1",
-        "detail": "Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 34s ago (budget 900s)"
+        "detail": "Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 22s ago (budget 900s)"
       }
     },
     "discord": {
@@ -89,36 +89,39 @@
         "configured": true,
         "ready": true,
         "endpoint": "http://127.0.0.1:8788/health",
-        "detail": "status=ready; gateway=true; guilds=1; health 200; updated 34s ago (budget 900s)"
+        "detail": "status=ready; gateway=true; guilds=1; health 200; updated 22s ago (budget 900s)"
       }
     },
-    "missionSurfaceReady": false,
-    "summary": "shared readiness blocked: openjaws/artifacts/fabric-audit-soak-20260420T022653Z: verified private node is blocked by mission treasury signer mismatch despite rerun delta 1"
+    "missionSurfaceReady": true,
+    "summary": "shared ledger.public, ledger.private, q.local, q.oci, and discord.transport readiness verified for this pass"
   },
   "evidence": {
     "roundtableRuntimePath": "docs/wiki/Roundtable-Runtime.json",
     "arobiLiveLedgerPath": "docs/wiki/Arobi-Live-Ledger-Receipt.json",
     "discordAgentReceiptPath": "openjaws/local-command-station/discord-q-agent-receipt.json",
     "discordAgentHealthUrl": "http://127.0.0.1:8788/health",
+    "arobiVerifiedTreasuryUrl": "http://127.0.0.1:8101/api/v1/autonomo/mission/treasury",
     "openjawsRoot": "openjaws",
     "roundtableRuntimeGeneratedAt": "2026-05-13T22:01:54.879Z",
     "arobiLiveLedgerGeneratedAt": "2026-05-13T21:02:56.622Z",
-    "discordAgentReceiptUpdatedAt": "2026-05-13T22:36:13.406Z",
+    "discordAgentReceiptUpdatedAt": "2026-05-13T22:49:13.636Z",
     "qOciBackend": "Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1)",
     "discordHealth": {
       "status": 200,
       "ok": true,
-      "body": "{\"status\":\"ok\",\"profile\":\"q\",\"label\":\"Q\",\"interactionReady\":true,\"gatewayReady\":true,\"gatewayConnected\":true,\"guildCount\":1,\"gatewayLastError\":null,\"gatewayLastCloseCode\":null,\"gatewayBlocked\":false,\"gatewayReconnectable\":null,\"updatedAt\":\"2026-05-13T22:36:13.406Z\"}"
+      "body": "{\"status\":\"ok\",\"profile\":\"q\",\"label\":\"Q\",\"interactionReady\":true,\"gatewayReady\":true,\"gatewayConnected\":true,\"guildCount\":1,\"gatewayLastError\":null,\"gatewayLastCloseCode\":null,\"gatewayBlocked\":false,\"gatewayReconnectable\":null,\"updatedAt\":\"2026-05-13T22:49:13.636Z\"}"
     },
     "arobiLocalPublicReady": true,
-    "arobiLocalPrivateReady": false
+    "arobiLocalPrivateReady": true,
+    "arobiVerifiedTreasuryControlMode": "governance_release",
+    "arobiVerifiedTreasuryGovernanceReady": true
   },
   "truthBoundary": [
     "This page is a readiness receipt, not proof that a live Discord operator command or multi-subsystem mission was executed.",
     "q.local is taken from the latest machine-stamped roundtable runtime receipt and remains blocked if that receipt is missing or failed.",
     "q.oci is receipt-backed from the live Discord Q agent runtime plus the local health endpoint; it is not a fresh direct provider probe unless a separate OCI probe surface says so explicitly.",
     "ledger.public is only ready when the public aura-genesis edge surfaced a fresh governed audit record, not merely when the public read endpoints responded.",
-    "ledger.private is only ready when the latest supervised rerun proved private ledger advance.",
+    "ledger.private is only ready when the latest supervised rerun proved private ledger advance and the verified node proves either a valid signer path or governance_release treasury control.",
     "This page does not expose secrets, Discord tokens, OCI keys, or private ledger payloads."
   ],
   "output": {

@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-13T22:36:24.394Z",
+  "generatedAt": "2026-05-13T22:51:57.521Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "b73c0b1f6ceba8a94e504407b68537e07121aded",
-    "gitShortSha": "b73c0b1",
-    "gitBranch": "main",
-    "buildId": "0.1.0+b73c0b1",
+    "gitSha": "b15ba648e1ff7be35786425a2bbbee5b8146fc1e",
+    "gitShortSha": "b15ba64",
+    "gitBranch": "codex/live-mission-governance-treasury-readiness-20260513",
+    "buildId": "0.1.0+b15ba64",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -57,25 +57,25 @@
   },
   "qPatrol": {
     "status": "ready",
-    "summary": "state changed but routing cooldown held",
+    "summary": "posted patrol digest after state change -> #q-command-station",
     "sourcePath": "openjaws/local-command-station/discord-q-agent-receipt.json",
-    "lastDecision": "state changed but routing cooldown held",
-    "lastPostedChannelName": "openjaws-updates",
-    "lastSummary": "state changed but routing cooldown held",
+    "lastDecision": "posted patrol digest after state change -> #q-command-station",
+    "lastPostedChannelName": "q-command-station",
+    "lastSummary": "1 patrol post sent",
     "queueLength": 182,
     "recommendedLayerId": "Q"
   },
   "roundtable": {
     "status": "ready",
-    "summary": "running | Blackbeak posted turn 24 | 24 turns | 2/21 recent actions passed verification | 470 blocked job(s)",
+    "summary": "running | Q posted turn 28 | 28 turns | 2/21 recent actions passed verification | 470 blocked job(s)",
     "sourcePath": "openjaws/local-command-station/roundtable-runtime/discord-roundtable.state.json",
     "sessionSourcePath": "openjaws/local-command-station/roundtable-runtime/discord-roundtable.session.json",
     "channelName": "dev_support",
     "sessionStatus": "running",
-    "turnCount": 24,
-    "nextPersona": "q",
-    "lastSpeaker": "blackbeak",
-    "lastSummary": "Blackbeak posted turn 24",
+    "turnCount": 28,
+    "nextPersona": "viola",
+    "lastSpeaker": "q",
+    "lastSummary": "Q posted turn 28",
     "actionReceiptCount": 21,
     "actions": [
       {
@@ -131,36 +131,36 @@
     {
       "label": "Blackbeak",
       "sourcePath": "openjaws/local-command-station/bots/blackbeak/discord-agent-receipt.json",
-      "updatedAt": "2026-05-13T21:46:59.815Z",
+      "updatedAt": "2026-05-13T22:43:58.521Z",
       "status": "ready",
       "backend": "Q backend: oci:Q via OCI IAM",
       "connected": true,
       "guildCount": 2,
-      "summary": "ready | gateway online (2 guild) | Q backend: oci:Q via OCI IAM | gateway_ready · connected to 2 guilds | knowledge 2500 files | voice off",
+      "summary": "ready | gateway online (2 guild) | Q backend: oci:Q via OCI IAM | blackbeak_meme_posted · scheduled image meme quota_blocked -> text drop (aerospace · absurdist and observant) · #daily_meme | knowledge 2500 files | voice off",
       "recentEvents": [
         {
-          "at": "2026-05-13T21:46:59.815Z",
+          "at": "2026-05-13T22:43:58.521Z",
+          "status": "blackbeak_meme_posted",
+          "summary": "scheduled image meme quota_blocked -> text drop (aerospace · absurdist and observant)",
+          "channelName": "daily_meme"
+        },
+        {
+          "at": "2026-05-13T22:43:35.165Z",
           "status": "gateway_ready",
           "summary": "connected to 2 guilds"
         },
         {
-          "at": "2026-05-13T21:46:41.256Z",
+          "at": "2026-05-13T22:43:27.477Z",
           "status": "gateway_reconnecting",
-          "summary": "Discord gateway closed with code 1000: Discord WebSocket requesting client reconnect."
+          "summary": "Discord gateway closed with code 1000."
         },
         {
-          "at": "2026-05-13T21:46:40.455Z",
+          "at": "2026-05-13T22:43:27.472Z",
           "status": "gateway_closed",
-          "summary": "Discord gateway closed with code 1000: Discord WebSocket requesting client reconnect."
+          "summary": "Discord gateway closed with code 1000."
         },
         {
-          "at": "2026-05-13T20:42:40.778Z",
-          "status": "blackbeak_meme_skipped",
-          "summary": "scheduled meme skipped: media_blocked until 2026-05-13T20:42:59.380Z",
-          "channelName": "daily_meme"
-        },
-        {
-          "at": "2026-05-13T19:05:16.976Z",
+          "at": "2026-05-13T21:46:59.815Z",
           "status": "gateway_ready",
           "summary": "connected to 2 guilds"
         }
@@ -226,11 +226,11 @@
         "detail": "public edge surfaced a fresh governed audit record on live 3.3.1 and the local public node contract is configured"
       },
       "private": {
-        "status": "blocked",
+        "status": "ready",
         "configured": true,
-        "ready": false,
+        "ready": true,
         "endpoint": "openjaws/artifacts/fabric-audit-soak-20260420T022653Z",
-        "detail": "verified private node is blocked by mission treasury signer mismatch despite rerun delta 1"
+        "detail": "latest supervised rerun advanced the private ledger by 1; verified private node is governance-controlled, so the legacy mission treasury wallet warning is non-blocking"
       }
     },
     "q": {
@@ -246,7 +246,7 @@
         "configured": true,
         "ready": true,
         "endpoint": "https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1",
-        "detail": "Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 34s ago (budget 900s)"
+        "detail": "Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 22s ago (budget 900s)"
       }
     },
     "discord": {
@@ -255,11 +255,11 @@
         "configured": true,
         "ready": true,
         "endpoint": "http://127.0.0.1:8788/health",
-        "detail": "status=ready; gateway=true; guilds=1; health 200; updated 34s ago (budget 900s)"
+        "detail": "status=ready; gateway=true; guilds=1; health 200; updated 22s ago (budget 900s)"
       }
     },
-    "missionSurfaceReady": false,
-    "summary": "shared readiness blocked: openjaws/artifacts/fabric-audit-soak-20260420T022653Z: verified private node is blocked by mission treasury signer mismatch despite rerun delta 1"
+    "missionSurfaceReady": true,
+    "summary": "shared ledger.public, ledger.private, q.local, q.oci, and discord.transport readiness verified for this pass"
   },
   "evidence": {
     "openjawsRoot": "openjaws",

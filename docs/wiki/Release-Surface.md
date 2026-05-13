@@ -2,10 +2,10 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-05-13T22:36:24.394Z
-- Immaculate release: `0.1.0+be4e37d`
-- Repo commit: `be4e37d537a4c83a739cac24a7c1a14d270f15b3`
-- Branch: `main`
+- Generated: 2026-05-13T22:51:57.521Z
+- Immaculate release: `0.1.0+b15ba64`
+- Repo commit: `b15ba648e1ff7be35786425a2bbbee5b8146fc1e`
+- Branch: `codex/live-mission-governance-treasury-readiness-20260513`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
 - Core package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+be4e37d` is the current repo build stamp.
+- Immaculate build `0.1.0+b15ba64` is the current repo build stamp.
 - Arobi Network is the ledger-backed private and public operator network and audit substrate. Immaculate is the governed harness and orchestrator inside it. Q is the reasoning brain inside that governed stack.
 - Q is the only public model name used across the repo, and it is built on `Gemma 4`.
 - The latest tracked Q training bundle is `q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3`, tied to dataset `.training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
@@ -34,8 +34,8 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Q mediation drift: `2026-05-13T19:56:56.189Z` via `docs/wiki/Q-Mediation-Drift.json`
 - Arobi audit integrity: `2026-05-12T18:09:17.101Z` via `docs/wiki/Arobi-Audit-Integrity.json`
 - Arobi live ledger receipt: `2026-05-13T21:02:56.622Z` via `docs/wiki/Arobi-Live-Ledger-Receipt.json`
-- Live mission readiness: `2026-05-13T22:36:24.073Z` via `docs/wiki/Live-Mission-Readiness.json`
-- Live operator activity: `2026-05-13T22:36:24.394Z` via `docs/wiki/Live-Operator-Activity.json`
+- Live mission readiness: `2026-05-13T22:50:08.144Z` via `docs/wiki/Live-Mission-Readiness.json`
+- Live operator activity: `2026-05-13T22:51:57.521Z` via `docs/wiki/Live-Operator-Activity.json`
 - Live operator public export: `2026-05-13T21:03:01.982Z` via `docs/wiki/Live-Operator-Public-Export.json`
 - Cross-project workflow health: `2026-05-13T18:23:07.770Z` via `docs/wiki/Cross-Project-Workflow-Health.json`
 - Supervised mission showcase: `2026-04-22T01:20:45.053Z` via `docs/wiki/Supervised-Mission-Showcase.json`
@@ -63,13 +63,11 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## Release Accountability Gaps
 
-- Status: `blocked`
-- Summary: 1 blocking release evidence gap(s): Live mission readiness mission readiness receipt reports missionSurfaceReady=false
-- Counts: `20 fresh / 1 blocking / 1 unhealthy / 0 optional missing`
+- Status: `ready`
+- Summary: all 20 required release evidence receipt(s) are fresh
+- Counts: `21 fresh / 0 blocking / 0 unhealthy / 0 optional missing`
 
-### Blocking gaps
-
-- Live mission readiness: `unhealthy` via `docs/wiki/Live-Mission-Readiness.json` - mission readiness receipt reports missionSurfaceReady=false
+- No blocking release evidence gaps.
 
 ### Non-blocking warnings
 

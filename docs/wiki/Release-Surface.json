@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-13T22:36:24.394Z",
+  "generatedAt": "2026-05-13T22:51:57.521Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "be4e37d537a4c83a739cac24a7c1a14d270f15b3",
-    "gitShortSha": "be4e37d",
-    "gitBranch": "main",
-    "buildId": "0.1.0+be4e37d",
+    "gitSha": "b15ba648e1ff7be35786425a2bbbee5b8146fc1e",
+    "gitShortSha": "b15ba64",
+    "gitBranch": "codex/live-mission-governance-treasury-readiness-20260513",
+    "buildId": "0.1.0+b15ba64",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -128,16 +128,16 @@
       "path": "docs\\wiki\\Live-Mission-Readiness.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-05-13T22:36:24.073Z",
-      "healthStatus": "unhealthy",
-      "healthReason": "mission readiness receipt reports missionSurfaceReady=false"
+      "generatedAt": "2026-05-13T22:50:08.144Z",
+      "healthStatus": "healthy",
+      "healthReason": "no failed receipt signals detected"
     },
     {
       "label": "Live operator activity",
       "path": "docs\\wiki\\Live-Operator-Activity.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-05-13T22:36:24.394Z",
+      "generatedAt": "2026-05-13T22:51:57.521Z",
       "healthStatus": "healthy",
       "healthReason": "no failed receipt signals detected"
     },
@@ -340,20 +340,20 @@
     }
   ],
   "releaseEvidence": {
-    "status": "blocked",
+    "status": "ready",
     "maxAgeMs": 604800000,
     "counts": {
       "total": 35,
       "required": 20,
-      "fresh": 20,
+      "fresh": 21,
       "stale": 14,
       "missing": 0,
       "invalid": 0,
-      "unhealthy": 1,
+      "unhealthy": 0,
       "optional": 0,
-      "blocking": 1
+      "blocking": 0
     },
-    "summary": "1 blocking release evidence gap(s): Live mission readiness mission readiness receipt reports missionSurfaceReady=false",
+    "summary": "all 20 required release evidence receipt(s) are fresh",
     "surfaces": [
       {
         "label": "BridgeBench",
@@ -468,19 +468,19 @@
         "path": "docs\\wiki\\Live-Mission-Readiness.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-05-13T22:36:24.073Z",
-        "healthStatus": "unhealthy",
-        "healthReason": "mission readiness receipt reports missionSurfaceReady=false",
-        "status": "unhealthy",
-        "blocking": true,
-        "reason": "mission readiness receipt reports missionSurfaceReady=false"
+        "generatedAt": "2026-05-13T22:50:08.144Z",
+        "healthStatus": "healthy",
+        "healthReason": "no failed receipt signals detected",
+        "status": "fresh",
+        "blocking": false,
+        "reason": "fresh within 24h budget"
       },
       {
         "label": "Live operator activity",
         "path": "docs\\wiki\\Live-Operator-Activity.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-05-13T22:36:24.394Z",
+        "generatedAt": "2026-05-13T22:51:57.521Z",
         "healthStatus": "healthy",
         "healthReason": "no failed receipt signals detected",
         "status": "fresh",
