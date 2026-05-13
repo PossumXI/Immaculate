@@ -112,14 +112,44 @@ const Q_STRUCTURED_MAX_TOKENS = Math.max(
 const Q_STRUCTURED_TEMPERATURE = Number(
   process.env.IMMACULATE_OLLAMA_Q_EXECUTION_TEMPERATURE ?? 0.05
 );
-const Q_GENERATE_FAST_NUM_CTX = Math.max(
-  2048,
-  Number(process.env.IMMACULATE_OLLAMA_Q_GENERATE_NUM_CTX ?? 2048) || 2048
-);
-const Q_GENERATE_FAST_NUM_BATCH = Math.max(
-  32,
-  Number(process.env.IMMACULATE_OLLAMA_Q_GENERATE_NUM_BATCH ?? 64) || 64
-);
+export type QGenerateFastOptions = {
+  numCtx: number;
+  numBatch: number;
+};
+
+type QGenerateFastEnv = {
+  IMMACULATE_OLLAMA_Q_GENERATE_NUM_CTX?: string;
+  IMMACULATE_OLLAMA_Q_GENERATE_NUM_BATCH?: string;
+};
+
+function parseBoundedInteger(
+  value: string | undefined,
+  fallback: number,
+  min: number,
+  max: number
+): number {
+  if (typeof value !== "string" || value.trim().length === 0) {
+    return fallback;
+  }
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return fallback;
+  }
+  return Math.min(max, Math.max(min, Math.trunc(parsed)));
+}
+
+export function resolveQGenerateFastOptions(
+  env: QGenerateFastEnv = process.env
+): QGenerateFastOptions {
+  return {
+    numCtx: parseBoundedInteger(env.IMMACULATE_OLLAMA_Q_GENERATE_NUM_CTX, 2048, 512, 16384),
+    numBatch: parseBoundedInteger(env.IMMACULATE_OLLAMA_Q_GENERATE_NUM_BATCH, 64, 8, 1024)
+  };
+}
+
+const Q_GENERATE_FAST_OPTIONS = resolveQGenerateFastOptions();
+const Q_GENERATE_FAST_NUM_CTX = Q_GENERATE_FAST_OPTIONS.numCtx;
+const Q_GENERATE_FAST_NUM_BATCH = Q_GENERATE_FAST_OPTIONS.numBatch;
 const HTTP_KEEP_ALIVE_AGENT = new http.Agent({
   keepAlive: true,
   keepAliveMsecs: 15_000,

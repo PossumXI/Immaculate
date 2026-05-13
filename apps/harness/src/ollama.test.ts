@@ -3,7 +3,38 @@ import * as http from "node:http";
 import type { AddressInfo } from "node:net";
 import test from "node:test";
 import { createEngine } from "@immaculate/core";
-import { runOllamaChatCompletion, runOllamaExecution } from "./ollama.js";
+import {
+  resolveQGenerateFastOptions,
+  runOllamaChatCompletion,
+  runOllamaExecution
+} from "./ollama.js";
+
+test("Q structured generation options allow bounded low-memory overrides", () => {
+  assert.deepEqual(resolveQGenerateFastOptions({}), {
+    numCtx: 2048,
+    numBatch: 64
+  });
+  assert.deepEqual(
+    resolveQGenerateFastOptions({
+      IMMACULATE_OLLAMA_Q_GENERATE_NUM_CTX: "512",
+      IMMACULATE_OLLAMA_Q_GENERATE_NUM_BATCH: "16"
+    }),
+    {
+      numCtx: 512,
+      numBatch: 16
+    }
+  );
+  assert.deepEqual(
+    resolveQGenerateFastOptions({
+      IMMACULATE_OLLAMA_Q_GENERATE_NUM_CTX: "32",
+      IMMACULATE_OLLAMA_Q_GENERATE_NUM_BATCH: "1"
+    }),
+    {
+      numCtx: 512,
+      numBatch: 8
+    }
+  );
+});
 
 test("Ollama chat runner serializes explicit thinking mode", async () => {
   const capturedBodies: Array<Record<string, unknown>> = [];
