@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-13T18:23:07.770Z",
+  "generatedAt": "2026-05-13T18:55:24.543Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "d4ba2de448111bc87ce427c4d358b597f5f11b93",
-    "gitShortSha": "d4ba2de",
+    "gitSha": "3b53770d85710a2054155d3f409bda48babaab91",
+    "gitShortSha": "3b53770",
     "gitBranch": "main",
-    "buildId": "0.1.0+d4ba2de",
+    "buildId": "0.1.0+3b53770",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -54,7 +54,7 @@
       "label": "BridgeBench",
       "path": "docs\\wiki\\BridgeBench.json",
       "required": true,
-      "generatedAt": "2026-05-13T18:22:54.094Z",
+      "generatedAt": "2026-05-13T18:26:23.858Z",
       "healthStatus": "healthy",
       "healthReason": "no failed receipt signals detected"
     },
@@ -94,7 +94,7 @@
       "label": "Q gateway substrate",
       "path": "docs\\wiki\\Q-Gateway-Substrate.json",
       "required": true,
-      "generatedAt": "2026-04-19T22:06:38.757Z",
+      "generatedAt": "2026-05-13T18:30:35.581Z",
       "healthStatus": "healthy",
       "healthReason": "no failed receipt signals detected"
     },
@@ -119,7 +119,7 @@
       "path": "docs\\wiki\\Arobi-Live-Ledger-Receipt.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-05-13T18:21:04.045Z",
+      "generatedAt": "2026-05-13T18:55:24.543Z",
       "healthStatus": "unhealthy",
       "healthReason": "live ledger receipt does not show the latest governed record publicly"
     },
@@ -345,22 +345,22 @@
     "counts": {
       "total": 35,
       "required": 20,
-      "fresh": 13,
-      "stale": 18,
+      "fresh": 14,
+      "stale": 17,
       "missing": 0,
       "invalid": 0,
       "unhealthy": 4,
       "optional": 0,
-      "blocking": 8
+      "blocking": 7
     },
-    "summary": "8 blocking release evidence gap(s): BridgeBench soak stale outside 7d budget; Q gateway substrate stale outside 7d budget; Q mediation drift stale outside 7d budget; Arobi live ledger receipt live ledger receipt does not show the latest governed record publicly; Live mission readiness mission readiness receipt reports missionSurfaceReady=false; Live operator activity mission readiness receipt reports missionSurfaceReady=false; Live operator public export publication status is blocked; Roundtable runtime stale outside 24h budget",
+    "summary": "7 blocking release evidence gap(s): BridgeBench soak stale outside 7d budget; Q mediation drift stale outside 7d budget; Arobi live ledger receipt live ledger receipt does not show the latest governed record publicly; Live mission readiness mission readiness receipt reports missionSurfaceReady=false; Live operator activity mission readiness receipt reports missionSurfaceReady=false; Live operator public export publication status is blocked; Roundtable runtime stale outside 24h budget",
     "surfaces": [
       {
         "label": "BridgeBench",
         "path": "docs\\wiki\\BridgeBench.json",
         "required": true,
         "maxAgeMs": 604800000,
-        "generatedAt": "2026-05-13T18:22:54.094Z",
+        "generatedAt": "2026-05-13T18:26:23.858Z",
         "healthStatus": "healthy",
         "healthReason": "no failed receipt signals detected",
         "status": "fresh",
@@ -420,12 +420,12 @@
         "path": "docs\\wiki\\Q-Gateway-Substrate.json",
         "required": true,
         "maxAgeMs": 604800000,
-        "generatedAt": "2026-04-19T22:06:38.757Z",
+        "generatedAt": "2026-05-13T18:30:35.581Z",
         "healthStatus": "healthy",
         "healthReason": "no failed receipt signals detected",
-        "status": "stale",
-        "blocking": true,
-        "reason": "stale outside 7d budget"
+        "status": "fresh",
+        "blocking": false,
+        "reason": "fresh within 7d budget"
       },
       {
         "label": "Q mediation drift",
@@ -456,7 +456,7 @@
         "path": "docs\\wiki\\Arobi-Live-Ledger-Receipt.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-05-13T18:21:04.045Z",
+        "generatedAt": "2026-05-13T18:55:24.543Z",
         "healthStatus": "unhealthy",
         "healthReason": "live ledger receipt does not show the latest governed record publicly",
         "status": "unhealthy",
