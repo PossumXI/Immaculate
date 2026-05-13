@@ -3,11 +3,11 @@
 This page is generated from GitHub's raw REST checks surfaces for a specific commit.
 It exists because classic commit status contexts can be empty even when GitHub Actions check-runs are green.
 
-- Generated: 2026-05-13T17:04:24.317Z
+- Generated: 2026-05-13T17:50:33.850Z
 - Repository: `PossumXI/Immaculate`
-- Target commit: `5859730`
-- Commit URL: https://github.com/PossumXI/Immaculate/commit/585973070c9a2cd34de1d38f9675b430bc7421a4
-- Release build: `0.1.0+5859730`
+- Target commit: `d733583`
+- Commit URL: https://github.com/PossumXI/Immaculate/commit/d733583967e50faf8b9f3bdb740f095570dd3edd
+- Release build: `0.1.0+d733583`
 - Branch hint: `main`
 
 ## Result
@@ -16,25 +16,25 @@ It exists because classic commit status contexts can be empty even when GitHub A
 - Check runs found: `7`
 - Classic status contexts found: `0`
 - Classic combined status state: `pending`
-- All workflow runs successful: `false`
-- All check runs successful: `false`
+- All workflow runs successful: `true`
+- All check runs successful: `true`
 
 ## Workflow Runs
 
-- Security #325: `in_progress` (https://github.com/PossumXI/Immaculate/actions/runs/25814103240)
-- CI #325: `in_progress` (https://github.com/PossumXI/Immaculate/actions/runs/25814103238)
-- GitGuardian #319: `success` (https://github.com/PossumXI/Immaculate/actions/runs/25814103246)
-- Benchmark Publication #262: `success` (https://github.com/PossumXI/Immaculate/actions/runs/25814103235)
+- GitGuardian #321: `success` (https://github.com/PossumXI/Immaculate/actions/runs/25816325765)
+- CI #327: `success` (https://github.com/PossumXI/Immaculate/actions/runs/25816325303)
+- Benchmark Publication #264: `success` (https://github.com/PossumXI/Immaculate/actions/runs/25816323230)
+- Security #327: `success` (https://github.com/PossumXI/Immaculate/actions/runs/25816323194)
 
 ## Check Runs
 
-- dependency-review: `skipped` (https://github.com/PossumXI/Immaculate/actions/runs/25814103240/job/75837889676)
-- publish-benchmarks: `success` (https://github.com/PossumXI/Immaculate/actions/runs/25814103235/job/75837889168)
-- benchmark-gate: `in_progress` (https://github.com/PossumXI/Immaculate/actions/runs/25814103238/job/75837888888)
-- codeql: `in_progress` (https://github.com/PossumXI/Immaculate/actions/runs/25814103240/job/75837888823)
-- gitleaks: `success` (https://github.com/PossumXI/Immaculate/actions/runs/25814103240/job/75837888804)
-- npm-audit: `success` (https://github.com/PossumXI/Immaculate/actions/runs/25814103240/job/75837888793)
-- gitguardian: `success` (https://github.com/PossumXI/Immaculate/actions/runs/25814103246/job/75837888728)
+- gitguardian: `success` (https://github.com/PossumXI/Immaculate/actions/runs/25816325765/job/75845675359)
+- benchmark-gate: `success` (https://github.com/PossumXI/Immaculate/actions/runs/25816325303/job/75845672192)
+- dependency-review: `skipped` (https://github.com/PossumXI/Immaculate/actions/runs/25816323194/job/75845667970)
+- publish-benchmarks: `success` (https://github.com/PossumXI/Immaculate/actions/runs/25816323230/job/75845667572)
+- codeql: `success` (https://github.com/PossumXI/Immaculate/actions/runs/25816323194/job/75845667360)
+- gitleaks: `success` (https://github.com/PossumXI/Immaculate/actions/runs/25816323194/job/75845667327)
+- npm-audit: `success` (https://github.com/PossumXI/Immaculate/actions/runs/25816323194/job/75845667313)
 
 ## Truth Boundary
 

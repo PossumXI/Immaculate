@@ -3,37 +3,40 @@
 This page is the machine-stamped GitHub Actions truth surface for the three coordinated repos in the current workstation orbit.
 It exists so operational claims do not rely on one green repo while another repo is red, inaccessible, or only visible through private GitHub auth.
 
-- Generated: `2026-05-13T17:04:14.785Z`
-- Immaculate release: `0.1.0+5859730`
-- Repo commit: `585973070c9a2cd34de1d38f9675b430bc7421a4`
+- Generated: `2026-05-13T17:50:13.165Z`
+- Immaculate release: `0.1.0+d733583`
+- Repo commit: `d733583967e50faf8b9f3bdb740f095570dd3edd`
 
 ## Summary
 
 - Repo count: `3`
-- Fully healthy repos: `2`
+- Fully healthy repos: `3`
 - All observed workflow runs successful: `false`
-- Detail: Immaculate (public repo, github-rest-public): some observed runs not green; observed 6/8 active workflows, 2 not recently observed | OpenJaws (public repo, github-rest-public): latest observed runs green; observed 4/6 active workflows, 2 not recently observed | Asgard_Arobi (private repo, gh-auth): latest observed runs green; observed 10/10 active workflows
+- All actionable workflow runs healthy: `true`
+- Detail: Immaculate (public repo, gh-auth): latest actionable runs green; observed 6/8 active workflows, 2 not recently observed, 1 non-actionable dynamic workflow(s) | OpenJaws (public repo, gh-auth): latest actionable runs green; observed 4/6 active workflows, 2 not recently observed | Asgard_Arobi (private repo, gh-auth): latest actionable runs green; observed 10/10 active workflows
 
 ## Immaculate
 
 - Repository: `PossumXI/Immaculate`
 - Visibility: `public`
 - Default branch: `main`
-- Access path: `github-rest-public` | public repo verified through GitHub Actions REST surfaces
+- Access path: `gh-auth` | public repo verified through GitHub Actions REST surfaces
 - Active workflows: `8`
 - Latest observed workflow runs: `6`
 - Not recently observed in the sampled branch window: `2`
+- Non-actionable dynamic workflow runs: `1`
 - All observed workflow runs successful: `false`
+- All actionable workflow runs healthy: `true`
 - Latest observed run updated: `2026-05-13T10:07:05Z`
 
 ### Latest Observed Workflow Runs
 
-- Benchmark Credibility #32: `success` (https://github.com/PossumXI/Immaculate/actions/runs/25792361142)
-- Benchmark Publication #262: `in_progress` (https://github.com/PossumXI/Immaculate/actions/runs/25814103235)
-- CI #325: `in_progress` (https://github.com/PossumXI/Immaculate/actions/runs/25814103238)
-- npm_and_yarn in /. for next - Update #1361215239 #55: `failure` (https://github.com/PossumXI/Immaculate/actions/runs/25705950214)
-- GitGuardian #319: `success` (https://github.com/PossumXI/Immaculate/actions/runs/25814103246)
-- Security #325: `in_progress` (https://github.com/PossumXI/Immaculate/actions/runs/25814103240)
+- Benchmark Credibility #32: `success` | `success` - workflow concluded success (https://github.com/PossumXI/Immaculate/actions/runs/25792361142)
+- Benchmark Publication #264: `success` | `success` - workflow concluded success (https://github.com/PossumXI/Immaculate/actions/runs/25816323230)
+- CI #327: `success` | `success` - workflow concluded success (https://github.com/PossumXI/Immaculate/actions/runs/25816325303)
+- npm_and_yarn in /. for next - Update #1361215239 #55: `failure` | `non_actionable` - dynamic Dependabot update failure is tracked as dependency automation noise; code-bearing workflow evidence remains listed separately (https://github.com/PossumXI/Immaculate/actions/runs/25705950214)
+- GitGuardian #321: `success` | `success` - workflow concluded success (https://github.com/PossumXI/Immaculate/actions/runs/25816325765)
+- Security #327: `success` | `success` - workflow concluded success (https://github.com/PossumXI/Immaculate/actions/runs/25816323194)
 
 ### Active Workflow Definitions
 
@@ -56,19 +59,21 @@ It exists so operational claims do not rely on one green repo while another repo
 - Repository: `PossumXI/OpenJaws`
 - Visibility: `public`
 - Default branch: `main`
-- Access path: `github-rest-public` | public repo verified through GitHub Actions REST surfaces
+- Access path: `gh-auth` | public repo verified through GitHub Actions REST surfaces
 - Active workflows: `6`
 - Latest observed workflow runs: `4`
 - Not recently observed in the sampled branch window: `2`
+- Non-actionable dynamic workflow runs: `0`
 - All observed workflow runs successful: `true`
-- Latest observed run updated: `2026-05-13T16:51:33Z`
+- All actionable workflow runs healthy: `true`
+- Latest observed run updated: `2026-05-13T17:44:23Z`
 
 ### Latest Observed Workflow Runs
 
-- CI #558: `success` (https://github.com/PossumXI/OpenJaws/actions/runs/25813190535)
-- Q Benchmark Soak #33: `success` (https://github.com/PossumXI/OpenJaws/actions/runs/25787206327)
-- Security #570: `success` (https://github.com/PossumXI/OpenJaws/actions/runs/25813190367)
-- System Check #559: `success` (https://github.com/PossumXI/OpenJaws/actions/runs/25813190481)
+- CI #560: `success` | `success` - workflow concluded success (https://github.com/PossumXI/OpenJaws/actions/runs/25815891842)
+- Q Benchmark Soak #33: `success` | `success` - workflow concluded success (https://github.com/PossumXI/OpenJaws/actions/runs/25787206327)
+- Security #572: `success` | `success` - workflow concluded success (https://github.com/PossumXI/OpenJaws/actions/runs/25815891817)
+- System Check #561: `success` | `success` - workflow concluded success (https://github.com/PossumXI/OpenJaws/actions/runs/25815892504)
 
 ### Active Workflow Definitions
 
@@ -93,21 +98,23 @@ It exists so operational claims do not rely on one green repo while another repo
 - Active workflows: `10`
 - Latest observed workflow runs: `10`
 - Not recently observed in the sampled branch window: `0`
+- Non-actionable dynamic workflow runs: `0`
 - All observed workflow runs successful: `true`
+- All actionable workflow runs healthy: `true`
 - Latest observed run updated: `2026-05-13T13:05:36Z`
 
 ### Latest Observed Workflow Runs
 
-- apexos-production-smoke #356: `success` (private run URL withheld)
-- ARIA Heartbeat #1320: `success` (private run URL withheld)
-- asgard-ci #491: `success` (private run URL withheld)
-- billing-production-smoke #196: `success` (private run URL withheld)
-- go_modules in / for golang.org/x/crypto - Update #1361337112 #356: `success` (private run URL withheld)
-- Graph Update: go_modules in /., /Valkyrie #1361336421 #29: `success` (private run URL withheld)
-- GitGuardian Secret Detection #426: `success` (private run URL withheld)
-- public-status-production-smoke #198: `success` (private run URL withheld)
-- SENTINEL Heartbeat #2362: `success` (private run URL withheld)
-- stripe-webhook-production-smoke #397: `success` (private run URL withheld)
+- apexos-production-smoke #356: `success` | `success` - workflow concluded success (private run URL withheld)
+- ARIA Heartbeat #1321: `success` | `success` - workflow concluded success (private run URL withheld)
+- asgard-ci #491: `success` | `success` - workflow concluded success (private run URL withheld)
+- billing-production-smoke #196: `success` | `success` - workflow concluded success (private run URL withheld)
+- go_modules in / for golang.org/x/crypto - Update #1361337112 #356: `success` | `success` - workflow concluded success (private run URL withheld)
+- Graph Update: go_modules in /., /Valkyrie #1361336421 #29: `success` | `success` - workflow concluded success (private run URL withheld)
+- GitGuardian Secret Detection #426: `success` | `success` - workflow concluded success (private run URL withheld)
+- public-status-production-smoke #199: `success` | `success` - workflow concluded success (private run URL withheld)
+- SENTINEL Heartbeat #2363: `success` | `success` - workflow concluded success (private run URL withheld)
+- stripe-webhook-production-smoke #398: `success` | `success` - workflow concluded success (private run URL withheld)
 
 ### Active Workflow Definitions
 
@@ -131,5 +138,6 @@ It exists so operational claims do not rely on one green repo while another repo
 - This receipt verifies the latest observed GitHub Actions workflow runs on each repo's default branch; it does not claim local dirty branches were pushed or validated.
 - Public repos are verified through raw GitHub REST endpoints when possible.
 - Private repos fail closed unless authenticated GitHub access is available; when private access is used, private workflow run URLs are withheld from this public receipt.
+- Dynamic Dependabot update failures are classified as non-actionable dependency automation noise; they remain listed instead of hidden and code-bearing workflow evidence remains separate.
 - A workflow not recently observed in the sampled branch window is not treated as green by absence; it is explicitly listed as not recently observed.
 - This page does not claim a live Discord mission, a fresh public Arobi write, or a fresh OCI provider probe.
