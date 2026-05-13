@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-13T17:05:58.453Z",
+  "generatedAt": "2026-05-13T20:23:36.264Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "585973070c9a2cd34de1d38f9675b430bc7421a4",
-    "gitShortSha": "5859730",
+    "gitSha": "0acf403d1d63c115e78a8ac5254325c1efb47dae",
+    "gitShortSha": "0acf403",
     "gitBranch": "main",
-    "buildId": "0.1.0+5859730",
+    "buildId": "0.1.0+0acf403",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -56,8 +56,8 @@
     "summary": "Public-safe export that mirrors the aura-genesis fabric.showcase contract."
   },
   "publication": {
-    "status": "blocked",
-    "summary": "public publication is blocked by operator.activity: public publication is blocked until the public ledger, Discord transport, and OCI-backed Q all prove readiness on the current workstation | ledger.public: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true",
+    "status": "publishable",
+    "summary": "public-safe operator export is publishable on the current workstation",
     "target": "aura-genesis.org/status"
   },
   "sourceFreshness": {
@@ -68,62 +68,62 @@
       {
         "label": "Live mission readiness",
         "path": "docs/wiki/Live-Mission-Readiness.json",
-        "generatedAt": "2026-05-13T17:05:26.971Z",
-        "ageMs": 31482,
+        "generatedAt": "2026-05-13T20:22:02.597Z",
+        "ageMs": 93667,
         "status": "fresh",
-        "detail": "fresh (1m old, budget 24h)"
+        "detail": "fresh (2m old, budget 24h)"
       },
       {
         "label": "Live operator activity",
         "path": "docs/wiki/Live-Operator-Activity.json",
-        "generatedAt": "2026-05-13T17:05:45.299Z",
-        "ageMs": 13154,
+        "generatedAt": "2026-05-13T20:22:13.578Z",
+        "ageMs": 82686,
         "status": "fresh",
-        "detail": "fresh (0m old, budget 24h)"
+        "detail": "fresh (1m old, budget 24h)"
       },
       {
         "label": "Arobi live ledger receipt",
         "path": "docs/wiki/Arobi-Live-Ledger-Receipt.json",
-        "generatedAt": "2026-05-13T17:05:15.331Z",
-        "ageMs": 43122,
+        "generatedAt": "2026-05-13T20:21:53.430Z",
+        "ageMs": 102834,
         "status": "fresh",
-        "detail": "fresh (1m old, budget 24h)"
+        "detail": "fresh (2m old, budget 24h)"
       }
     ]
   },
   "showcase": {
-    "active": false,
+    "active": true,
     "mode": "controlled",
     "title": "Supervised operator audit export.",
-    "summary": "Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is blocked; OCI-backed Q is ready; Discord transport is ready; public ledger publication remains blocked: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true",
+    "summary": "Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is blocked; OCI-backed Q is ready; Discord transport is ready; public ledger publication is currently ready",
     "expiresAt": null,
-    "windowLabel": "Showcase line closed until public ledger publication is proven",
+    "windowLabel": "Operator-supervised public verification window",
     "publishTargets": [
       "aura-genesis.org/status (public-safe aggregate only)",
       "iorch.net (results only)",
       "qline.site (results only; not published from this repo)"
     ],
-    "resultsReady": false,
+    "resultsReady": true,
     "fleetLabel": "Immaculate / OpenJaws / Q operator loop",
     "subsystemCount": 5,
-    "onlineSubsystemCount": 3,
-    "degradedSubsystemCount": 2,
+    "onlineSubsystemCount": 4,
+    "degradedSubsystemCount": 1,
     "offlineSubsystemCount": 0,
     "unconfiguredSubsystemCount": 0,
     "networkVersion": "3.3.1",
-    "verifiedLedgerEntries": 32156,
-    "publicHeight": 59178,
+    "verifiedLedgerEntries": null,
+    "publicHeight": 59370,
     "orchestrationProfile": "immaculate-supervised-operator-loop",
     "qAuthMode": "oci_iam",
-    "lastChecked": "2026-05-13T17:05:58.453Z",
+    "lastChecked": "2026-05-13T20:23:36.264Z",
     "activityFeed": [
       {
         "id": "showcase-summary",
-        "timestamp": "2026-05-13T17:05:58.453Z",
+        "timestamp": "2026-05-13T20:23:36.264Z",
         "title": "Supervised operator activity export updated",
-        "summary": "Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is blocked; OCI-backed Q is ready; Discord transport is ready; public ledger publication remains blocked: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true",
+        "summary": "Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is blocked; OCI-backed Q is ready; Discord transport is ready; public ledger publication is currently ready",
         "kind": "showcase",
-        "status": "warning",
+        "status": "ok",
         "source": "fabric.showcase",
         "subsystems": [
           "immaculate",
@@ -142,11 +142,11 @@
       },
       {
         "id": "publication-gate",
-        "timestamp": "2026-05-13T17:05:58.453Z",
+        "timestamp": "2026-05-13T20:23:36.264Z",
         "title": "Public publication gate",
-        "summary": "public publication is blocked by operator.activity: public publication is blocked until the public ledger, Discord transport, and OCI-backed Q all prove readiness on the current workstation | ledger.public: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true",
+        "summary": "public-safe operator export is publishable on the current workstation",
         "kind": "publication",
-        "status": "warning",
+        "status": "ok",
         "source": "immaculate.live_operator_activity",
         "subsystems": [
           "arobi",
@@ -162,9 +162,9 @@
       },
       {
         "id": "q-patrol",
-        "timestamp": "2026-05-13T17:05:45.299Z",
+        "timestamp": "2026-05-13T20:22:13.578Z",
         "title": "Q patrol lane",
-        "summary": "posted patrol digest after state change -> #q-command-station",
+        "summary": "posted immaculate state changed -> #openjaws-updates",
         "kind": "agent",
         "status": "ok",
         "source": "immaculate.live_operator_activity",
@@ -173,7 +173,8 @@
           "discord"
         ],
         "artifacts": [
-          "receipt:q-patrol"
+          "receipt:q-patrol",
+          "layer:Q"
         ],
         "tags": [
           "q",
@@ -183,9 +184,9 @@
       },
       {
         "id": "roundtable",
-        "timestamp": "2026-05-13T17:05:45.299Z",
+        "timestamp": "2026-05-13T20:22:13.578Z",
         "title": "Bounded roundtable lane",
-        "summary": "running | Blackbeak posted turn 30 | 30 turns | 2/21 recent actions passed verification | 469 blocked job(s)",
+        "summary": "running | Q posted turn 79 | 79 turns | 2/21 recent actions passed verification | 469 blocked job(s)",
         "kind": "roundtable",
         "status": "ok",
         "source": "immaculate.live_operator_activity",
@@ -206,7 +207,7 @@
       },
       {
         "id": "bot-receipts",
-        "timestamp": "2026-05-13T17:00:49.020Z",
+        "timestamp": "2026-05-13T20:00:23.179Z",
         "title": "Discord bot receipts",
         "summary": "2/3 bot receipts are ready (Blackbeak, Viola).",
         "kind": "discord",
@@ -228,7 +229,7 @@
       },
       {
         "id": "operator-state",
-        "timestamp": "2026-05-13T17:05:45.299Z",
+        "timestamp": "2026-05-13T20:22:13.578Z",
         "title": "Operator state",
         "summary": "PossumX",
         "kind": "operator",
@@ -248,9 +249,9 @@
       },
       {
         "id": "discord-transport",
-        "timestamp": "2026-05-13T17:05:58.453Z",
+        "timestamp": "2026-05-13T20:23:36.264Z",
         "title": "Discord transport readiness",
-        "summary": "status=ready; gateway=true; guilds=1; health 200; updated 12s ago (budget 900s)",
+        "summary": "status=ready; gateway=true; guilds=1; health 200; updated 28s ago (budget 900s)",
         "kind": "transport",
         "status": "ok",
         "source": "immaculate.live_mission_readiness",
@@ -268,9 +269,9 @@
       },
       {
         "id": "public-ledger",
-        "timestamp": "2026-05-13T17:05:15.331Z",
+        "timestamp": "2026-05-13T20:21:53.430Z",
         "title": "Public ledger visibility",
-        "summary": "public ledger version 3.3.1 on block 59,178 with 32,156 visible aggregate entries; fabric source synthesized",
+        "summary": "public ledger version 3.3.1 on block 59,370 with unknown visible aggregate entries; fabric source nysus",
         "kind": "ledger",
         "status": "warning",
         "source": "immaculate.arobi_live_ledger",
@@ -294,7 +295,7 @@
     "This export is shaped to mirror the existing aura-genesis fabric.showcase contract; it does not mutate the public website or the public ledger by itself.",
     "The private mission lane remains closed here even when local Discord transport, OCI-backed Q, and roundtable receipts are ready.",
     "Private paths, worktree roots, secrets, Discord tokens, private ledger payloads, and raw chain-of-thought are intentionally excluded from this export.",
-    "ledger.public remains blocked until a fresh governed public Arobi write is proven on this machine.",
+    "ledger.public has a fresh governed public Arobi write on this machine for this export.",
     "The public publication gate also fails closed when any source receipt used to produce this aggregate export is stale, missing, or invalid."
   ],
   "output": {

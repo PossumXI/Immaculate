@@ -209,7 +209,7 @@ function normalizeVisibleSourceLabel(value: string | undefined): string | undefi
   return trimmed && trimmed.length > 0 ? trimmed : undefined;
 }
 
-function versionLooksCompatible(
+export function versionLooksCompatible(
   entryVersion: string | undefined,
   networkVersion: string | undefined
 ): boolean {
@@ -228,13 +228,29 @@ function versionLooksCompatible(
   );
 }
 
-function isVisibleGovernedAuditEntry(
+function isPublicSafeImmaculateShowcaseEntry(entry: DecisionEntry | undefined): boolean {
+  const sourceLabel = normalizeVisibleSourceLabel(entry?.sourceLabel ?? entry?.source);
+  const modelId = entry?.model_id?.trim().toLowerCase();
+  const networkContext = entry?.network_context?.trim().toUpperCase();
+  return (
+    sourceLabel === "immaculate_showcase" &&
+    modelId === "q-operator-public-showcase" &&
+    networkContext === "PUBLIC" &&
+    Boolean(entry?.input_summary?.trim()) &&
+    Boolean(entry?.decision?.trim())
+  );
+}
+
+export function isVisibleGovernedAuditEntry(
   entry: DecisionEntry | undefined,
   networkVersion: string | undefined
 ): boolean {
-  const sourceLabel = normalizeVisibleSourceLabel(entry?.sourceLabel);
+  const sourceLabel = normalizeVisibleSourceLabel(entry?.sourceLabel ?? entry?.source);
   if (!entry?.entry_id || !entry.timestamp || !sourceLabel) {
     return false;
+  }
+  if (isPublicSafeImmaculateShowcaseEntry(entry)) {
+    return true;
   }
   if (
     ![
@@ -460,7 +476,13 @@ async function main(): Promise<void> {
   process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
 }
 
-void main().catch((error) => {
-  process.stderr.write(error instanceof Error ? error.message : "Arobi live ledger receipt generation failed.");
-  process.exitCode = 1;
-});
+const isDirectExecution =
+  typeof process.argv[1] === "string" &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+
+if (isDirectExecution) {
+  void main().catch((error) => {
+    process.stderr.write(error instanceof Error ? error.message : "Arobi live ledger receipt generation failed.");
+    process.exitCode = 1;
+  });
+}

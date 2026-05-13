@@ -689,6 +689,19 @@ function renderMarkdown(report: LiveOperatorPublicExportReport): string {
   ].join("\n");
 }
 
+export function buildPublicExportTruthBoundary(args: { publicLedgerReady: boolean }): string[] {
+  return [
+    "This export is public-safe aggregate operator activity only; it does not prove that a live Discord operator command or a live mission was executed on this pass.",
+    "This export is shaped to mirror the existing aura-genesis fabric.showcase contract; it does not mutate the public website or the public ledger by itself.",
+    "The private mission lane remains closed here even when local Discord transport, OCI-backed Q, and roundtable receipts are ready.",
+    "Private paths, worktree roots, secrets, Discord tokens, private ledger payloads, and raw chain-of-thought are intentionally excluded from this export.",
+    args.publicLedgerReady
+      ? "ledger.public has a fresh governed public Arobi write on this machine for this export."
+      : "ledger.public remains blocked until a fresh governed public Arobi write is proven on this machine.",
+    "The public publication gate also fails closed when any source receipt used to produce this aggregate export is stale, missing, or invalid."
+  ];
+}
+
 async function main(): Promise<void> {
   const release = await resolveReleaseMetadata();
   const liveMissionReadinessPath = path.join(REPO_ROOT, "docs", "wiki", "Live-Mission-Readiness.json");
@@ -776,14 +789,9 @@ async function main(): Promise<void> {
       lastChecked: generatedAt,
       activityFeed
     },
-    truthBoundary: [
-      "This export is public-safe aggregate operator activity only; it does not prove that a live Discord operator command or a live mission was executed on this pass.",
-      "This export is shaped to mirror the existing aura-genesis fabric.showcase contract; it does not mutate the public website or the public ledger by itself.",
-      "The private mission lane remains closed here even when local Discord transport, OCI-backed Q, and roundtable receipts are ready.",
-      "Private paths, worktree roots, secrets, Discord tokens, private ledger payloads, and raw chain-of-thought are intentionally excluded from this export.",
-      "ledger.public remains blocked until a fresh governed public Arobi write is proven on this machine.",
-      "The public publication gate also fails closed when any source receipt used to produce this aggregate export is stale, missing, or invalid."
-    ],
+    truthBoundary: buildPublicExportTruthBoundary({
+      publicLedgerReady: readiness.ledger.public.ready === true
+    }),
     output: {
       jsonPath: path.join("docs", "wiki", "Live-Operator-Public-Export.json"),
       markdownPath: path.join("docs", "wiki", "Live-Operator-Public-Export.md")

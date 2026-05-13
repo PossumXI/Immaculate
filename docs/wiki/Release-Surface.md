@@ -2,9 +2,9 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-05-13T19:57:58.472Z
-- Immaculate release: `0.1.0+f4777be`
-- Repo commit: `f4777bef11719d5a482a0bb6dc450bcf160898e2`
+- Generated: 2026-05-13T20:23:36.264Z
+- Immaculate release: `0.1.0+0acf403`
+- Repo commit: `0acf403d1d63c115e78a8ac5254325c1efb47dae`
 - Branch: `main`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+f4777be` is the current repo build stamp.
+- Immaculate build `0.1.0+0acf403` is the current repo build stamp.
 - Arobi Network is the ledger-backed private and public operator network and audit substrate. Immaculate is the governed harness and orchestrator inside it. Q is the reasoning brain inside that governed stack.
 - Q is the only public model name used across the repo, and it is built on `Gemma 4`.
 - The latest tracked Q training bundle is `q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3`, tied to dataset `.training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
@@ -28,15 +28,15 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - BridgeBench: `2026-05-13T18:26:23.858Z` via `docs/wiki/BridgeBench.json`
 - BridgeBench soak: `2026-04-15T06:15:54.188Z` via `docs/wiki/BridgeBench-Soak.json`
 - Q structured contract benchmark: `2026-05-07T06:03:07.620Z` via `docs/wiki/Model-Benchmark-Comparison.json`
-- Q readiness gate: `2026-05-13T19:57:58.472Z` via `docs/wiki/Q-Readiness-Gate.json`
+- Q readiness gate: `2026-05-13T20:20:51.574Z` via `docs/wiki/Q-Readiness-Gate.json`
 - Q gateway validation: `2026-05-13T19:56:21.252Z` via `docs/wiki/Q-Gateway-Validation.json`
 - Q gateway substrate: `2026-05-13T18:30:35.581Z` via `docs/wiki/Q-Gateway-Substrate.json`
 - Q mediation drift: `2026-05-13T19:56:56.189Z` via `docs/wiki/Q-Mediation-Drift.json`
 - Arobi audit integrity: `2026-05-12T18:09:17.101Z` via `docs/wiki/Arobi-Audit-Integrity.json`
-- Arobi live ledger receipt: `2026-05-13T19:49:02.852Z` via `docs/wiki/Arobi-Live-Ledger-Receipt.json`
-- Live mission readiness: `2026-05-13T19:50:18.464Z` via `docs/wiki/Live-Mission-Readiness.json`
-- Live operator activity: `2026-05-13T17:05:45.299Z` via `docs/wiki/Live-Operator-Activity.json`
-- Live operator public export: `2026-05-13T17:05:58.453Z` via `docs/wiki/Live-Operator-Public-Export.json`
+- Arobi live ledger receipt: `2026-05-13T20:21:53.430Z` via `docs/wiki/Arobi-Live-Ledger-Receipt.json`
+- Live mission readiness: `2026-05-13T20:22:02.597Z` via `docs/wiki/Live-Mission-Readiness.json`
+- Live operator activity: `2026-05-13T20:22:13.578Z` via `docs/wiki/Live-Operator-Activity.json`
+- Live operator public export: `2026-05-13T20:23:36.264Z` via `docs/wiki/Live-Operator-Public-Export.json`
 - Cross-project workflow health: `2026-05-13T18:23:07.770Z` via `docs/wiki/Cross-Project-Workflow-Health.json`
 - Supervised mission showcase: `2026-04-22T01:20:45.053Z` via `docs/wiki/Supervised-Mission-Showcase.json`
 - Roundtable actionability: `2026-05-13T17:06:06.500Z` via `docs/wiki/Roundtable-Actionability.json`
@@ -64,16 +64,14 @@ This page is generated from repo state. It is the plain-English answer to a simp
 ## Release Accountability Gaps
 
 - Status: `blocked`
-- Summary: 6 blocking release evidence gap(s): BridgeBench soak stale outside 7d budget; Arobi live ledger receipt live ledger receipt does not show the latest governed record publicly; Live mission readiness mission readiness receipt reports missionSurfaceReady=false; Live operator activity mission readiness receipt reports missionSurfaceReady=false; Live operator public export publication status is blocked; Roundtable runtime stale outside 24h budget
-- Counts: `15 fresh / 6 blocking / 4 unhealthy / 0 optional missing`
+- Summary: 4 blocking release evidence gap(s): BridgeBench soak stale outside 7d budget; Live mission readiness mission readiness receipt reports missionSurfaceReady=false; Live operator activity mission readiness receipt reports missionSurfaceReady=false; Roundtable runtime stale outside 24h budget
+- Counts: `17 fresh / 4 blocking / 2 unhealthy / 0 optional missing`
 
 ### Blocking gaps
 
 - BridgeBench soak: `stale` via `docs/wiki/BridgeBench-Soak.json` - stale outside 7d budget
-- Arobi live ledger receipt: `unhealthy` via `docs/wiki/Arobi-Live-Ledger-Receipt.json` - live ledger receipt does not show the latest governed record publicly
 - Live mission readiness: `unhealthy` via `docs/wiki/Live-Mission-Readiness.json` - mission readiness receipt reports missionSurfaceReady=false
 - Live operator activity: `unhealthy` via `docs/wiki/Live-Operator-Activity.json` - mission readiness receipt reports missionSurfaceReady=false
-- Live operator public export: `unhealthy` via `docs/wiki/Live-Operator-Public-Export.json` - publication status is blocked
 - Roundtable runtime: `stale` via `docs/wiki/Roundtable-Runtime.json` - stale outside 24h budget
 
 ### Non-blocking warnings

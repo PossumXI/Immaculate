@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { HarnessReadinessSummary } from "./release-metadata.js";
 import {
+  buildPublicExportTruthBoundary,
   evaluatePublicExportSourceFreshness,
   resolvePublicExportPublication
 } from "./live-operator-public-export.js";
@@ -157,4 +158,19 @@ test("public export publication opens only when operator, freshness, and public 
 
   assert.equal(publication.status, "publishable");
   assert.match(publication.summary, /publishable/u);
+});
+
+test("public export truth boundary describes the actual public ledger state", () => {
+  assert.match(
+    buildPublicExportTruthBoundary({ publicLedgerReady: true }).join("\n"),
+    /ledger\.public has a fresh governed public Arobi write/u
+  );
+  assert.doesNotMatch(
+    buildPublicExportTruthBoundary({ publicLedgerReady: true }).join("\n"),
+    /ledger\.public remains blocked/u
+  );
+  assert.match(
+    buildPublicExportTruthBoundary({ publicLedgerReady: false }).join("\n"),
+    /ledger\.public remains blocked/u
+  );
 });
