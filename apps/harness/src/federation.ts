@@ -192,6 +192,23 @@ export function assertFederationPublicExportClaim(
   }
 }
 
+export function assertFederationPrivate00ExportClaim(
+  payload: Partial<FederationVisibilityClaim>,
+  expectedExportClass: FederationExportClass,
+  subject: string
+): void {
+  if (payload.federationLane !== "private-00") {
+    throw new Error(
+      `${subject} is not valid for the private-00 federation lane: expected lane private-00, got ${String(payload.federationLane)}.`
+    );
+  }
+  if (payload.exportClass !== expectedExportClass) {
+    throw new Error(
+      `${subject} is not valid for the private-00 federation lane: expected export class ${expectedExportClass}, got ${String(payload.exportClass)}.`
+    );
+  }
+}
+
 function canonicalize(value: unknown): string {
   if (value === null || typeof value !== "object") {
     return JSON.stringify(value);

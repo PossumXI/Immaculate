@@ -1,8 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import {
+  PRIVATE_00_FEDERATION_LEASE_EXPORT_CLASS,
+  PRIVATE_00_FEDERATION_MEMBERSHIP_EXPORT_CLASS,
+  PUBLIC_FEDERATION_LEASE_EXPORT_CLASS,
   PUBLIC_FEDERATION_MEMBERSHIP_EXPORT_CLASS,
+  assertFederationPrivate00ExportClaim,
   assertFederationPublicExportClaim,
   buildFederationKeyId,
   classifyFederationWorkerLane,
@@ -132,6 +137,57 @@ test("public federation lane claims reject missing or private payloads", () => {
       ),
     /expected lane public/
   );
+});
+
+test("private-00 federation lane claims reject public or mismatched payloads", () => {
+  assert.doesNotThrow(() =>
+    assertFederationPrivate00ExportClaim(
+      {
+        federationLane: "private-00",
+        exportClass: PRIVATE_00_FEDERATION_MEMBERSHIP_EXPORT_CLASS
+      },
+      PRIVATE_00_FEDERATION_MEMBERSHIP_EXPORT_CLASS,
+      "private membership"
+    )
+  );
+
+  assert.throws(
+    () =>
+      assertFederationPrivate00ExportClaim(
+        {
+          federationLane: "public",
+          exportClass: PRIVATE_00_FEDERATION_MEMBERSHIP_EXPORT_CLASS
+        },
+        PRIVATE_00_FEDERATION_MEMBERSHIP_EXPORT_CLASS,
+        "private membership"
+      ),
+    /expected lane private-00/
+  );
+  assert.throws(
+    () =>
+      assertFederationPrivate00ExportClaim(
+        {
+          federationLane: "private-00",
+          exportClass: PUBLIC_FEDERATION_LEASE_EXPORT_CLASS
+        },
+        PRIVATE_00_FEDERATION_LEASE_EXPORT_CLASS,
+        "private leases"
+      ),
+    /expected export class private-00-federation-lease-v1/
+  );
+});
+
+test("server exposes private-00 federation routes without collapsing public exports", () => {
+  const serverSource = readFileSync(new URL("./server.ts", import.meta.url), "utf8");
+
+  assert.match(serverSource, /\/api\/federation\/membership/);
+  assert.match(serverSource, /\/api\/federation\/leases/);
+  assert.match(serverSource, /\/api\/federation\/private-00\/membership/);
+  assert.match(serverSource, /\/api\/federation\/private-00\/leases/);
+  assert.match(serverSource, /PUBLIC_FEDERATION_MEMBERSHIP_EXPORT_CLASS/);
+  assert.match(serverSource, /PUBLIC_FEDERATION_LEASE_EXPORT_CLASS/);
+  assert.match(serverSource, /PRIVATE_00_FEDERATION_MEMBERSHIP_EXPORT_CLASS/);
+  assert.match(serverSource, /PRIVATE_00_FEDERATION_LEASE_EXPORT_CLASS/);
 });
 
 test("public federation worker classifier keeps private and local routes out of public exports", () => {

@@ -43,7 +43,14 @@ The public federation routes (`/api/federation/membership` and `/api/federation/
 - Private, zero-zero, local-only, and host-risk workers are not exported through the public federation route.
 - Imported public federation payloads fail closed when the lane claim is missing, private, or the wrong export class.
 
-This lets the public and 00 networks share the same federation code path while keeping their routes and evidence lanes separate. A future private 00 federation route must use a separate export class and must not be exposed through the public membership endpoint.
+The private-00 federation routes (`/api/federation/private-00/membership` and `/api/federation/private-00/leases`) use the same signed envelope machinery with separate lane claims and export classes.
+
+- Private-00 membership payloads use `federationLane: private-00` and `exportClass: private-00-federation-membership-v1`.
+- Private-00 lease payloads use `federationLane: private-00` and `exportClass: private-00-federation-lease-v1`.
+- Private-00 exports remain behind the governed federation pre-handler and are not imported by the public membership path.
+- Public exports still sanitize private lane markers from tags and keep local-only or host-risk workers out of the public route.
+
+This lets the public and 00 networks share the same federation code path while keeping their routes, export classes, and evidence lanes separate. Private-00 route data is audit material first; it must not be republished to public surfaces or training datasets unless a separate redaction and downgrade receipt exists.
 
 ## Why Auditors And Insurers Care
 

@@ -83,6 +83,8 @@ import { createLslAdapterManager } from "./lsl-adapter.js";
 import { buildPublicIntelligenceStatus } from "./intelligence-status.js";
 import { resolveLocalWorkerHeartbeatIntervalMs } from "./local-worker-heartbeat.js";
 import {
+  PRIVATE_00_FEDERATION_LEASE_EXPORT_CLASS,
+  PRIVATE_00_FEDERATION_MEMBERSHIP_EXPORT_CLASS,
   PUBLIC_FEDERATION_LEASE_EXPORT_CLASS,
   PUBLIC_FEDERATION_MEMBERSHIP_EXPORT_CLASS,
   assertFederationPublicExportClaim,
@@ -1423,6 +1425,94 @@ function toFederationWorkerLeasePayload(
   };
 }
 
+function toPrivate00FederationNodeIdentityPayload(
+  node: Awaited<ReturnType<typeof nodeRegistry.ensureLocalNode>>
+): FederationNodeIdentityPayload {
+  return {
+    federationLane: "private-00",
+    exportClass: PRIVATE_00_FEDERATION_MEMBERSHIP_EXPORT_CLASS,
+    nodeId: node.nodeId,
+    nodeLabel: node.nodeLabel ?? null,
+    hostLabel: node.hostLabel ?? null,
+    locality: node.locality,
+    controlPlaneUrl: node.controlPlaneUrl?.trim() || null,
+    registeredAt: node.registeredAt,
+    heartbeatAt: node.heartbeatAt,
+    leaseDurationMs: node.leaseDurationMs,
+    capabilities: node.capabilities,
+    isLocal: node.isLocal,
+    costPerHourUsd: node.costPerHourUsd ?? null,
+    deviceAffinityTags: node.deviceAffinityTags
+  };
+}
+
+function isPrivate00FederationWorker(
+  worker: Awaited<ReturnType<typeof intelligenceWorkerRegistry.listWorkers>>[number]
+): boolean {
+  return (
+    classifyFederationWorkerLane({
+      allowHostRisk: worker.allowHostRisk,
+      executionEndpoint: worker.executionEndpoint,
+      deviceAffinityTags: worker.deviceAffinityTags,
+      preferredLayerIds: worker.preferredLayerIds,
+      locality: worker.locality,
+      hostLabel: worker.hostLabel,
+      workerLabel: worker.workerLabel
+    }) === "private-00"
+  );
+}
+
+function toPrivate00FederationWorkerIdentityPayload(
+  worker: Awaited<ReturnType<typeof intelligenceWorkerRegistry.listWorkers>>[number]
+): FederationWorkerIdentityPayload {
+  return {
+    federationLane: "private-00",
+    exportClass: PRIVATE_00_FEDERATION_MEMBERSHIP_EXPORT_CLASS,
+    workerId: worker.workerId,
+    workerLabel: worker.workerLabel ?? null,
+    hostLabel: worker.hostLabel ?? null,
+    nodeId: worker.nodeId ?? null,
+    locality: worker.locality ?? null,
+    executionProfile: worker.executionProfile,
+    executionEndpoint: worker.executionEndpoint ?? null,
+    registeredAt: worker.registeredAt,
+    heartbeatAt: worker.heartbeatAt,
+    leaseDurationMs: worker.leaseDurationMs,
+    watch: worker.watch,
+    allowHostRisk: worker.allowHostRisk,
+    supportedBaseModels: worker.supportedBaseModels,
+    preferredLayerIds: worker.preferredLayerIds,
+    costPerHourUsd: worker.costPerHourUsd ?? null,
+    deviceAffinityTags: worker.deviceAffinityTags
+  };
+}
+
+function toPrivate00FederationNodeLeasePayload(
+  node: Awaited<ReturnType<typeof nodeRegistry.ensureLocalNode>>
+): FederationNodeLeasePayload {
+  return {
+    federationLane: "private-00",
+    exportClass: PRIVATE_00_FEDERATION_LEASE_EXPORT_CLASS,
+    nodeId: node.nodeId,
+    heartbeatAt: node.heartbeatAt,
+    leaseDurationMs: node.leaseDurationMs
+  };
+}
+
+function toPrivate00FederationWorkerLeasePayload(
+  worker: Awaited<ReturnType<typeof intelligenceWorkerRegistry.listWorkers>>[number],
+  fallbackNodeId: string
+): FederationWorkerLeasePayload {
+  return {
+    federationLane: "private-00",
+    exportClass: PRIVATE_00_FEDERATION_LEASE_EXPORT_CLASS,
+    workerId: worker.workerId,
+    nodeId: worker.nodeId ?? fallbackNodeId,
+    heartbeatAt: worker.heartbeatAt,
+    leaseDurationMs: worker.leaseDurationMs
+  };
+}
+
 async function buildFederationMembershipExport(now = new Date().toISOString()) {
   const secret = requireFederationSecret();
   const localNode = await nodeRegistry.ensureLocalNode(now);
@@ -1449,6 +1539,32 @@ async function buildFederationMembershipExport(now = new Date().toISOString()) {
   };
 }
 
+async function buildPrivate00FederationMembershipExport(now = new Date().toISOString()) {
+  const secret = requireFederationSecret();
+  const localNode = await nodeRegistry.ensureLocalNode(now);
+  const nodeState = await nodeRegistry.listNodes(now);
+  const workers = (await intelligenceWorkerRegistry.listWorkers(now, nodeState.nodes)).filter(
+    (worker) => (worker.nodeId ?? localNode.nodeId) === localNode.nodeId && isPrivate00FederationWorker(worker)
+  );
+
+  return {
+    exportedAt: now,
+    exporterNodeId: localNode.nodeId,
+    node: signFederationPayload(toPrivate00FederationNodeIdentityPayload(localNode), {
+      issuerNodeId: localNode.nodeId,
+      secret,
+      issuedAt: now
+    }),
+    workers: workers.map((worker) =>
+      signFederationPayload(toPrivate00FederationWorkerIdentityPayload(worker), {
+        issuerNodeId: localNode.nodeId,
+        secret,
+        issuedAt: now
+      })
+    )
+  };
+}
+
 async function buildFederationLeaseExport(now = new Date().toISOString()) {
   const secret = requireFederationSecret();
   const localNode = await nodeRegistry.ensureLocalNode(now);
@@ -1467,6 +1583,32 @@ async function buildFederationLeaseExport(now = new Date().toISOString()) {
     }),
     workers: workers.map((worker) =>
       signFederationPayload(toFederationWorkerLeasePayload(worker, localNode.nodeId), {
+        issuerNodeId: localNode.nodeId,
+        secret,
+        issuedAt: now
+      })
+    )
+  };
+}
+
+async function buildPrivate00FederationLeaseExport(now = new Date().toISOString()) {
+  const secret = requireFederationSecret();
+  const localNode = await nodeRegistry.ensureLocalNode(now);
+  const nodeState = await nodeRegistry.listNodes(now);
+  const workers = (await intelligenceWorkerRegistry.listWorkers(now, nodeState.nodes)).filter(
+    (worker) => (worker.nodeId ?? localNode.nodeId) === localNode.nodeId && isPrivate00FederationWorker(worker)
+  );
+
+  return {
+    exportedAt: now,
+    exporterNodeId: localNode.nodeId,
+    node: signFederationPayload(toPrivate00FederationNodeLeasePayload(localNode), {
+      issuerNodeId: localNode.nodeId,
+      secret,
+      issuedAt: now
+    }),
+    workers: workers.map((worker) =>
+      signFederationPayload(toPrivate00FederationWorkerLeasePayload(worker, localNode.nodeId), {
         issuerNodeId: localNode.nodeId,
         secret,
         issuedAt: now
@@ -6122,6 +6264,48 @@ app.get("/api/federation/leases", {
     return {
       error: "federation_leases_unavailable",
       message: error instanceof Error ? error.message : "Unable to export federation lease state."
+    };
+  }
+});
+
+app.get("/api/federation/private-00/membership", {
+  preHandler: requireFederationGovernedPreHandler(
+    "cognitive-trace-read",
+    "/api/federation/private-00/membership"
+  )
+}, async (_request, reply) => {
+  try {
+    const membership = await buildPrivate00FederationMembershipExport();
+    return {
+      accepted: true,
+      membership
+    };
+  } catch (error) {
+    reply.code(503);
+    return {
+      error: "private_00_federation_membership_unavailable",
+      message: error instanceof Error ? error.message : "Unable to export private-00 federation membership."
+    };
+  }
+});
+
+app.get("/api/federation/private-00/leases", {
+  preHandler: requireFederationGovernedPreHandler(
+    "cognitive-trace-read",
+    "/api/federation/private-00/leases"
+  )
+}, async (_request, reply) => {
+  try {
+    const leases = await buildPrivate00FederationLeaseExport();
+    return {
+      accepted: true,
+      leases
+    };
+  } catch (error) {
+    reply.code(503);
+    return {
+      error: "private_00_federation_leases_unavailable",
+      message: error instanceof Error ? error.message : "Unable to export private-00 federation lease state."
     };
   }
 });
