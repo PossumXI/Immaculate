@@ -118,18 +118,38 @@ type ScenarioDefinition = {
 };
 
 const DEFAULT_OLLAMA_URL = resolveQLocalOllamaUrl();
-const MEDIATION_BENCHMARK_MAX_TOKENS = Math.max(
-  48,
-  Number(process.env.IMMACULATE_BENCHMARK_Q_MEDIATION_MAX_TOKENS ?? 96) || 96
-);
-const MEDIATION_BENCHMARK_TIMEOUT_MS = Math.max(
-  5_000,
-  Number(process.env.IMMACULATE_BENCHMARK_Q_MEDIATION_TIMEOUT_MS ?? 45_000) || 45_000
-);
-const MEDIATION_BENCHMARK_TIMEOUT_OVERRIDE_MS = Math.max(
-  MEDIATION_BENCHMARK_TIMEOUT_MS,
-  Number(process.env.IMMACULATE_BENCHMARK_Q_MEDIATION_TIMEOUT_OVERRIDE_MS ?? 90_000) || 90_000
-);
+export type QMediationDriftBenchmarkControls = {
+  maxTokens: number;
+  timeoutMs: number;
+  timeoutOverrideMs: number;
+};
+
+export function resolveQMediationDriftBenchmarkControls(
+  env: Record<string, string | undefined> = process.env
+): QMediationDriftBenchmarkControls {
+  const maxTokens = Math.max(
+    48,
+    Number(env.IMMACULATE_BENCHMARK_Q_MEDIATION_MAX_TOKENS ?? 96) || 96
+  );
+  const timeoutMs = Math.max(
+    5_000,
+    Number(env.IMMACULATE_BENCHMARK_Q_MEDIATION_TIMEOUT_MS ?? 180_000) || 180_000
+  );
+  const timeoutOverrideMs = Math.max(
+    timeoutMs,
+    Number(env.IMMACULATE_BENCHMARK_Q_MEDIATION_TIMEOUT_OVERRIDE_MS ?? 240_000) || 240_000
+  );
+  return {
+    maxTokens,
+    timeoutMs,
+    timeoutOverrideMs
+  };
+}
+
+const MEDIATION_BENCHMARK_CONTROLS = resolveQMediationDriftBenchmarkControls();
+const MEDIATION_BENCHMARK_MAX_TOKENS = MEDIATION_BENCHMARK_CONTROLS.maxTokens;
+const MEDIATION_BENCHMARK_TIMEOUT_MS = MEDIATION_BENCHMARK_CONTROLS.timeoutMs;
+const MEDIATION_BENCHMARK_TIMEOUT_OVERRIDE_MS = MEDIATION_BENCHMARK_CONTROLS.timeoutOverrideMs;
 const HARNESS_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const REPO_ROOT = path.resolve(HARNESS_ROOT, "../..");
 
@@ -522,12 +542,15 @@ function buildScenarioSnapshot() {
   };
 }
 
-function buildBenchmarkChatHeaders(authorization: string): Record<string, string> {
+export function buildBenchmarkChatHeaders(
+  authorization: string,
+  controls: Pick<QMediationDriftBenchmarkControls, "timeoutOverrideMs"> = MEDIATION_BENCHMARK_CONTROLS
+): Record<string, string> {
   return {
     Authorization: authorization,
     "content-type": "application/json",
     "x-immaculate-benchmark-skip-q-identity": "1",
-    "x-immaculate-request-timeout-ms": String(MEDIATION_BENCHMARK_TIMEOUT_OVERRIDE_MS)
+    "x-immaculate-request-timeout-ms": String(controls.timeoutOverrideMs)
   };
 }
 
