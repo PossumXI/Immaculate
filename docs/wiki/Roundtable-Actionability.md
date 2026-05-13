@@ -2,10 +2,10 @@
 
 This page is generated from the live roundtable planner. It proves Immaculate can turn a cross-project objective into isolated repo-scoped agent lanes instead of treating roundtable conversation as text only.
 
-- Generated: 2026-04-21T16:11:05.129Z
-- Release: `0.1.0+9117c8f`
-- Repo commit: `9117c8f`
-- Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`
+- Generated: 2026-05-13T17:06:06.500Z
+- Release: `0.1.0+5859730`
+- Repo commit: `5859730`
+- Q training bundle: `q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3`
 
 ## Planner
 
@@ -21,8 +21,8 @@ This page is generated from the live roundtable planner. It proves Immaculate ca
 
 ## Repo Coverage
 
-- Immaculate: branch `publish-q-win` / commit `9117c8f`
-- OpenJaws: branch `agent/openjaws-terminalbench-provenance` / commit `e1f4d65`
+- Immaculate: branch `main` / commit `5859730`
+- OpenJaws: branch `main` / commit `e9a5130`
 - Asgard: branch `main` / commit `88ad56e`
 
 ## Isolated Actions

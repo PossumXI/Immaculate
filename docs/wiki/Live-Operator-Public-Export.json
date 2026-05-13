@@ -1,37 +1,52 @@
 {
-  "generatedAt": "2026-04-25T18:32:05.367Z",
+  "generatedAt": "2026-05-13T17:05:58.453Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "e9175c28a33d3bab5dffbe0d60c38e8234e65d54",
-    "gitShortSha": "e9175c2",
-    "gitBranch": "agent/public-export-freshness-gate-20260425",
-    "buildId": "0.1.0+e9175c2",
+    "gitSha": "585973070c9a2cd34de1d38f9675b430bc7421a4",
+    "gitShortSha": "5859730",
+    "gitBranch": "main",
+    "buildId": "0.1.0+5859730",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
       "truthfulLabel": "Q",
       "trainingLock": {
-        "generatedAt": "2026-04-19T07:46:03Z",
-        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
-        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23",
+        "generatedAt": "2026-05-12T18:26:42Z",
+        "lockVersion": 1,
+        "bundleId": "q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3",
+        "runName": "q-arobi-main-roots-20260512-bench-v1",
         "modelName": "Q",
-        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl",
-        "trainDatasetRowCount": 117,
-        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.manifest.json",
+        "trainDatasetPath": ".training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.jsonl",
+        "trainDatasetSha256": "22043bf3cea9501688346d62e992bc221d9fcc809cb423c19d02075dae13404f",
+        "trainDatasetRowCount": 2053,
+        "mixManifestPath": ".training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.manifest.json",
+        "mixManifestSha256": "0c73421b39dc3d77cc96df918bafb911f303c63add430deb58815eca3f89e940",
+        "mixSupplementalCount": 7,
+        "mixSupplementalPaths": [
+          "training/q/q_harness_identity_seed.json",
+          "training/q/q_immaculate_reasoning_seed.json",
+          "training/q/terminal_bench_semantic_seed.json",
+          "training/q/bridgebench_seed.json",
+          "training/q/coding_long_context_seed.json",
+          ".training-output/q/q-benchmark-corpus.jsonl",
+          ".training-output/q/q-failure-corpus.jsonl"
+        ],
+        "curationRunPath": ".training-output/training-data/runs/cur-fnv1a-6e3f6fdf/run.json",
+        "curationRunId": "cur-fnv1a-6e3f6fdf",
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-19T07:46:17Z",
-        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v23",
-        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v23/hybrid-session.json",
-        "localStatus": "ready",
-        "cloudStatus": "ready",
-        "cloudProvider": "hf_jobs",
-        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
-        "immaculateBundleId": "immaculate-orchestration-5ed19b9-cd094c28",
-        "immaculateBundlePath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-harbor-opt-2384cf5-bench-v23.json"
+        "generatedAt": "2026-05-13T01:11:39Z",
+        "sessionId": "q-arobi-main-roots-20260512-bench-v1",
+        "sessionPath": ".training-output/q/sessions/q-arobi-main-roots-20260512-bench-v1/hybrid-session.json",
+        "localStatus": "skipped",
+        "cloudStatus": "skipped",
+        "cloudProvider": "manual",
+        "trainingBundleId": "q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3",
+        "immaculateBundleId": "immaculate-orchestration-9b85dbc-e68f2160",
+        "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
       }
     }
   },
@@ -42,37 +57,37 @@
   },
   "publication": {
     "status": "blocked",
-    "summary": "public publication is blocked by operator.activity: public publication is blocked until the public ledger, Discord transport, and OCI-backed Q all prove readiness on the current workstation | source.freshness: 3/3 public-export source receipt(s) are stale, missing, or invalid: Live mission readiness stale (4d old, budget 24h); Live operator activity stale (4d old, budget 24h); Arobi live ledger receipt stale (4d old, budget 24h) | ledger.public: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true",
+    "summary": "public publication is blocked by operator.activity: public publication is blocked until the public ledger, Discord transport, and OCI-backed Q all prove readiness on the current workstation | ledger.public: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true",
     "target": "aura-genesis.org/status"
   },
   "sourceFreshness": {
     "maxAgeMs": 86400000,
-    "allFresh": false,
-    "summary": "3/3 public-export source receipt(s) are stale, missing, or invalid: Live mission readiness stale (4d old, budget 24h); Live operator activity stale (4d old, budget 24h); Arobi live ledger receipt stale (4d old, budget 24h)",
+    "allFresh": true,
+    "summary": "all 3 public-export source receipt(s) are fresh",
     "sources": [
       {
         "label": "Live mission readiness",
         "path": "docs/wiki/Live-Mission-Readiness.json",
-        "generatedAt": "2026-04-22T00:57:50.993Z",
-        "ageMs": 322454374,
-        "status": "stale",
-        "detail": "stale (4d old, budget 24h)"
+        "generatedAt": "2026-05-13T17:05:26.971Z",
+        "ageMs": 31482,
+        "status": "fresh",
+        "detail": "fresh (1m old, budget 24h)"
       },
       {
         "label": "Live operator activity",
         "path": "docs/wiki/Live-Operator-Activity.json",
-        "generatedAt": "2026-04-22T00:57:56.085Z",
-        "ageMs": 322449282,
-        "status": "stale",
-        "detail": "stale (4d old, budget 24h)"
+        "generatedAt": "2026-05-13T17:05:45.299Z",
+        "ageMs": 13154,
+        "status": "fresh",
+        "detail": "fresh (0m old, budget 24h)"
       },
       {
         "label": "Arobi live ledger receipt",
         "path": "docs/wiki/Arobi-Live-Ledger-Receipt.json",
-        "generatedAt": "2026-04-21T22:18:04.712Z",
-        "ageMs": 332040655,
-        "status": "stale",
-        "detail": "stale (4d old, budget 24h)"
+        "generatedAt": "2026-05-13T17:05:15.331Z",
+        "ageMs": 43122,
+        "status": "fresh",
+        "detail": "fresh (1m old, budget 24h)"
       }
     ]
   },
@@ -80,7 +95,7 @@
     "active": false,
     "mode": "controlled",
     "title": "Supervised operator audit export.",
-    "summary": "Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public ledger publication remains blocked: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true",
+    "summary": "Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is blocked; OCI-backed Q is ready; Discord transport is ready; public ledger publication remains blocked: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true",
     "expiresAt": null,
     "windowLabel": "Showcase line closed until public ledger publication is proven",
     "publishTargets": [
@@ -96,17 +111,17 @@
     "offlineSubsystemCount": 0,
     "unconfiguredSubsystemCount": 0,
     "networkVersion": "3.3.1",
-    "verifiedLedgerEntries": 394,
-    "publicHeight": 34832,
+    "verifiedLedgerEntries": 32156,
+    "publicHeight": 59178,
     "orchestrationProfile": "immaculate-supervised-operator-loop",
     "qAuthMode": "oci_iam",
-    "lastChecked": "2026-04-25T18:32:05.367Z",
+    "lastChecked": "2026-05-13T17:05:58.453Z",
     "activityFeed": [
       {
         "id": "showcase-summary",
-        "timestamp": "2026-04-25T18:32:05.367Z",
+        "timestamp": "2026-05-13T17:05:58.453Z",
         "title": "Supervised operator activity export updated",
-        "summary": "Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public ledger publication remains blocked: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true",
+        "summary": "Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is blocked; OCI-backed Q is ready; Discord transport is ready; public ledger publication remains blocked: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true",
         "kind": "showcase",
         "status": "warning",
         "source": "fabric.showcase",
@@ -127,9 +142,9 @@
       },
       {
         "id": "publication-gate",
-        "timestamp": "2026-04-25T18:32:05.367Z",
+        "timestamp": "2026-05-13T17:05:58.453Z",
         "title": "Public publication gate",
-        "summary": "public publication is blocked by operator.activity: public publication is blocked until the public ledger, Discord transport, and OCI-backed Q all prove readiness on the current workstation | source.freshness: 3/3 public-export source receipt(s) are stale, missing, or invalid: Live mission readiness stale (4d old, budget 24h); Live operator activity stale (4d old, budget 24h); Arobi live ledger receipt stale (4d old, budget 24h) | ledger.public: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true",
+        "summary": "public publication is blocked by operator.activity: public publication is blocked until the public ledger, Discord transport, and OCI-backed Q all prove readiness on the current workstation | ledger.public: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true",
         "kind": "publication",
         "status": "warning",
         "source": "immaculate.live_operator_activity",
@@ -147,9 +162,9 @@
       },
       {
         "id": "q-patrol",
-        "timestamp": "2026-04-22T00:57:56.085Z",
+        "timestamp": "2026-05-13T17:05:45.299Z",
         "title": "Q patrol lane",
-        "summary": "state changed but routing cooldown held",
+        "summary": "posted patrol digest after state change -> #q-command-station",
         "kind": "agent",
         "status": "ok",
         "source": "immaculate.live_operator_activity",
@@ -158,8 +173,7 @@
           "discord"
         ],
         "artifacts": [
-          "receipt:q-patrol",
-          "layer:Q"
+          "receipt:q-patrol"
         ],
         "tags": [
           "q",
@@ -169,9 +183,9 @@
       },
       {
         "id": "roundtable",
-        "timestamp": "2026-04-22T00:57:56.085Z",
+        "timestamp": "2026-05-13T17:05:45.299Z",
         "title": "Bounded roundtable lane",
-        "summary": "running | Q passed turn 10 | 10 turns | 2/21 recent actions passed verification",
+        "summary": "running | Blackbeak posted turn 30 | 30 turns | 2/21 recent actions passed verification | 469 blocked job(s)",
         "kind": "roundtable",
         "status": "ok",
         "source": "immaculate.live_operator_activity",
@@ -192,7 +206,7 @@
       },
       {
         "id": "bot-receipts",
-        "timestamp": "2026-04-22T00:48:39.358Z",
+        "timestamp": "2026-05-13T17:00:49.020Z",
         "title": "Discord bot receipts",
         "summary": "2/3 bot receipts are ready (Blackbeak, Viola).",
         "kind": "discord",
@@ -214,11 +228,11 @@
       },
       {
         "id": "operator-state",
-        "timestamp": "2026-04-22T00:57:56.085Z",
+        "timestamp": "2026-05-13T17:05:45.299Z",
         "title": "Operator state",
-        "summary": "PossumX | active process present",
+        "summary": "PossumX",
         "kind": "operator",
-        "status": "ok",
+        "status": "warning",
         "source": "immaculate.live_operator_activity",
         "subsystems": [
           "openjaws",
@@ -234,9 +248,9 @@
       },
       {
         "id": "discord-transport",
-        "timestamp": "2026-04-25T18:32:05.367Z",
+        "timestamp": "2026-05-13T17:05:58.453Z",
         "title": "Discord transport readiness",
-        "summary": "status=ready; gateway=true; guilds=1; health 200; updated 15s ago (budget 900s)",
+        "summary": "status=ready; gateway=true; guilds=1; health 200; updated 12s ago (budget 900s)",
         "kind": "transport",
         "status": "ok",
         "source": "immaculate.live_mission_readiness",
@@ -254,9 +268,9 @@
       },
       {
         "id": "public-ledger",
-        "timestamp": "2026-04-21T22:18:04.712Z",
+        "timestamp": "2026-05-13T17:05:15.331Z",
         "title": "Public ledger visibility",
-        "summary": "public ledger version 3.3.1 on block 34,832 with 394 visible aggregate entries; fabric source synthesized",
+        "summary": "public ledger version 3.3.1 on block 59,178 with 32,156 visible aggregate entries; fabric source synthesized",
         "kind": "ledger",
         "status": "warning",
         "source": "immaculate.arobi_live_ledger",

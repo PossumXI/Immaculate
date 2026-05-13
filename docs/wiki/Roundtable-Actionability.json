@@ -1,49 +1,51 @@
 {
-  "generatedAt": "2026-04-21T16:11:05.129Z",
+  "generatedAt": "2026-05-13T17:06:06.500Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "9117c8feb0438f0fc6a7ada0707046cc77823a54",
-    "gitShortSha": "9117c8f",
-    "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+9117c8f",
+    "gitSha": "585973070c9a2cd34de1d38f9675b430bc7421a4",
+    "gitShortSha": "5859730",
+    "gitBranch": "main",
+    "buildId": "0.1.0+5859730",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
       "truthfulLabel": "Q",
       "trainingLock": {
-        "generatedAt": "2026-04-19T07:46:04Z",
+        "generatedAt": "2026-05-12T18:26:42Z",
         "lockVersion": 1,
-        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
-        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23",
+        "bundleId": "q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3",
+        "runName": "q-arobi-main-roots-20260512-bench-v1",
         "modelName": "Q",
-        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl",
-        "trainDatasetSha256": "286326ce786c0a9b9b4a636a38114cc221c1b978a083ca55d70cc6ca6172cb07",
-        "trainDatasetRowCount": 117,
-        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.manifest.json",
-        "mixManifestSha256": "4c7df8284cedaf8e43f1715c8eaf4c30826687e27a5d511ef8ccd4ca78df991e",
-        "mixSupplementalCount": 6,
+        "trainDatasetPath": ".training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.jsonl",
+        "trainDatasetSha256": "22043bf3cea9501688346d62e992bc221d9fcc809cb423c19d02075dae13404f",
+        "trainDatasetRowCount": 2053,
+        "mixManifestPath": ".training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.manifest.json",
+        "mixManifestSha256": "0c73421b39dc3d77cc96df918bafb911f303c63add430deb58815eca3f89e940",
+        "mixSupplementalCount": 7,
         "mixSupplementalPaths": [
           "training/q/q_harness_identity_seed.json",
           "training/q/q_immaculate_reasoning_seed.json",
           "training/q/terminal_bench_semantic_seed.json",
           "training/q/bridgebench_seed.json",
           "training/q/coding_long_context_seed.json",
+          ".training-output/q/q-benchmark-corpus.jsonl",
           ".training-output/q/q-failure-corpus.jsonl"
         ],
-        "curationRunId": null,
+        "curationRunPath": ".training-output/training-data/runs/cur-fnv1a-6e3f6fdf/run.json",
+        "curationRunId": "cur-fnv1a-6e3f6fdf",
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-19T07:46:17Z",
-        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v23",
-        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v23/hybrid-session.json",
-        "localStatus": "ready",
-        "cloudStatus": "ready",
-        "cloudProvider": "hf_jobs",
-        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
-        "immaculateBundleId": "immaculate-orchestration-5ed19b9-cd094c28",
+        "generatedAt": "2026-05-13T01:11:39Z",
+        "sessionId": "q-arobi-main-roots-20260512-bench-v1",
+        "sessionPath": ".training-output/q/sessions/q-arobi-main-roots-20260512-bench-v1/hybrid-session.json",
+        "localStatus": "skipped",
+        "cloudStatus": "skipped",
+        "cloudProvider": "manual",
+        "trainingBundleId": "q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3",
+        "immaculateBundleId": "immaculate-orchestration-9b85dbc-e68f2160",
         "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
       }
     }
@@ -63,14 +65,14 @@
     {
       "repoId": "immaculate",
       "repoLabel": "Immaculate",
-      "gitBranch": "publish-q-win",
-      "repoSha": "9117c8f"
+      "gitBranch": "main",
+      "repoSha": "5859730"
     },
     {
       "repoId": "openjaws",
       "repoLabel": "OpenJaws",
-      "gitBranch": "agent/openjaws-terminalbench-provenance",
-      "repoSha": "e1f4d65"
+      "gitBranch": "main",
+      "repoSha": "e9a5130"
     },
     {
       "repoId": "asgard",

@@ -2,9 +2,9 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-05-13T17:02:25.802Z
-- Immaculate release: `0.1.0+55b9557`
-- Repo commit: `55b95576c12d3d9f76658a2a0bbd4c4b58722b15`
+- Generated: 2026-05-13T17:06:06.500Z
+- Immaculate release: `0.1.0+06969a2`
+- Repo commit: `06969a28ef11161ef936b30ba3f22ead07ca9b46`
 - Branch: `main`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+55b9557` is the current repo build stamp.
+- Immaculate build `0.1.0+06969a2` is the current repo build stamp.
 - Arobi Network is the ledger-backed private and public operator network and audit substrate. Immaculate is the governed harness and orchestrator inside it. Q is the reasoning brain inside that governed stack.
 - Q is the only public model name used across the repo, and it is built on `Gemma 4`.
 - The latest tracked Q training bundle is `q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3`, tied to dataset `.training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
@@ -33,13 +33,13 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Q gateway substrate: `2026-04-19T22:06:38.757Z` via `docs/wiki/Q-Gateway-Substrate.json`
 - Q mediation drift: `2026-04-19T22:06:40.025Z` via `docs/wiki/Q-Mediation-Drift.json`
 - Arobi audit integrity: `2026-05-12T18:09:17.101Z` via `docs/wiki/Arobi-Audit-Integrity.json`
-- Arobi live ledger receipt: `2026-04-21T22:18:04.712Z` via `docs/wiki/Arobi-Live-Ledger-Receipt.json`
-- Live mission readiness: `2026-04-22T00:57:50.993Z` via `docs/wiki/Live-Mission-Readiness.json`
-- Live operator activity: `2026-04-22T00:57:56.085Z` via `docs/wiki/Live-Operator-Activity.json`
-- Live operator public export: `2026-04-25T18:32:05.367Z` via `docs/wiki/Live-Operator-Public-Export.json`
-- Cross-project workflow health: `2026-05-07T07:45:24.059Z` via `docs/wiki/Cross-Project-Workflow-Health.json`
+- Arobi live ledger receipt: `2026-05-13T17:05:15.331Z` via `docs/wiki/Arobi-Live-Ledger-Receipt.json`
+- Live mission readiness: `2026-05-13T17:05:26.971Z` via `docs/wiki/Live-Mission-Readiness.json`
+- Live operator activity: `2026-05-13T17:05:45.299Z` via `docs/wiki/Live-Operator-Activity.json`
+- Live operator public export: `2026-05-13T17:05:58.453Z` via `docs/wiki/Live-Operator-Public-Export.json`
+- Cross-project workflow health: `2026-05-13T17:04:14.785Z` via `docs/wiki/Cross-Project-Workflow-Health.json`
 - Supervised mission showcase: `2026-04-22T01:20:45.053Z` via `docs/wiki/Supervised-Mission-Showcase.json`
-- Roundtable actionability: `2026-04-21T16:11:05.129Z` via `docs/wiki/Roundtable-Actionability.json`
+- Roundtable actionability: `2026-05-13T17:06:06.500Z` via `docs/wiki/Roundtable-Actionability.json`
 - Roundtable runtime: `2026-04-21T22:19:50.626Z` via `docs/wiki/Roundtable-Runtime.json`
 - Q API audit: `2026-04-19T22:47:48Z` via `docs/wiki/Q-API-Audit.json`
 - Arobi decision review: `2026-04-19T22:47:51.678Z` via `docs/wiki/Arobi-Decision-Review.json`
@@ -57,29 +57,22 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Terminal-Bench public task: `2026-04-19T14:31:45.217Z` via `docs/wiki/Terminal-Bench-Public-Task.json`
 - Terminal-Bench leaderboard status: `2026-04-19T14:31:45.545Z` via `docs/wiki/Terminal-Bench-Receipt.json`
 - Terminal-Bench rerun (diagnostic-only): `2026-04-19T14:31:45.730Z` via `docs/wiki/Terminal-Bench-Rerun.json`
-- GitHub checks receipt: `2026-04-16T17:54:12.583Z` via `docs/wiki/GitHub-Checks-Receipt.json`
+- GitHub checks receipt: `2026-05-13T17:04:24.317Z` via `docs/wiki/GitHub-Checks-Receipt.json`
 - Harbor terminal bench soak: `2026-04-16T13:05:24.510Z` via `docs/wiki/Harbor-Terminal-Bench-Soak.json`
 - Q benchmark sweep (60m): `2026-04-17T20:56:29.772Z` via `docs/wiki/Q-Benchmark-Sweep-60m.json`
 
 ## Release Accountability Gaps
 
 - Status: `blocked`
-- Summary: 11 blocking release evidence gap(s): BridgeBench soak stale (28d old, budget 7d); Q gateway substrate stale (24d old, budget 7d); Q mediation drift stale (24d old, budget 7d); Arobi live ledger receipt stale (22d old, budget 24h); Live mission readiness stale (22d old, budget 24h); Live operator activity stale (22d old, budget 24h); Live operator public export stale (18d old, budget 24h); Cross-project workflow health stale (6d old, budget 24h); Roundtable actionability stale (22d old, budget 24h); Roundtable runtime stale (22d old, budget 24h); GitHub checks receipt stale (27d old, budget 24h)
-- Counts: `10 fresh / 11 blocking / 0 optional missing`
+- Summary: 4 blocking release evidence gap(s): BridgeBench soak stale (28d old, budget 7d); Q gateway substrate stale (24d old, budget 7d); Q mediation drift stale (24d old, budget 7d); Roundtable runtime stale (22d old, budget 24h)
+- Counts: `17 fresh / 4 blocking / 0 optional missing`
 
 ### Blocking gaps
 
 - BridgeBench soak: `stale` via `docs/wiki/BridgeBench-Soak.json` - stale (28d old, budget 7d)
 - Q gateway substrate: `stale` via `docs/wiki/Q-Gateway-Substrate.json` - stale (24d old, budget 7d)
 - Q mediation drift: `stale` via `docs/wiki/Q-Mediation-Drift.json` - stale (24d old, budget 7d)
-- Arobi live ledger receipt: `stale` via `docs/wiki/Arobi-Live-Ledger-Receipt.json` - stale (22d old, budget 24h)
-- Live mission readiness: `stale` via `docs/wiki/Live-Mission-Readiness.json` - stale (22d old, budget 24h)
-- Live operator activity: `stale` via `docs/wiki/Live-Operator-Activity.json` - stale (22d old, budget 24h)
-- Live operator public export: `stale` via `docs/wiki/Live-Operator-Public-Export.json` - stale (18d old, budget 24h)
-- Cross-project workflow health: `stale` via `docs/wiki/Cross-Project-Workflow-Health.json` - stale (6d old, budget 24h)
-- Roundtable actionability: `stale` via `docs/wiki/Roundtable-Actionability.json` - stale (22d old, budget 24h)
 - Roundtable runtime: `stale` via `docs/wiki/Roundtable-Runtime.json` - stale (22d old, budget 24h)
-- GitHub checks receipt: `stale` via `docs/wiki/GitHub-Checks-Receipt.json` - stale (27d old, budget 24h)
 
 ### Non-blocking warnings
 

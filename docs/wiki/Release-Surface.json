@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-13T17:02:25.802Z",
+  "generatedAt": "2026-05-13T17:06:06.500Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "55b95576c12d3d9f76658a2a0bbd4c4b58722b15",
-    "gitShortSha": "55b9557",
+    "gitSha": "06969a28ef11161ef936b30ba3f22ead07ca9b46",
+    "gitShortSha": "06969a2",
     "gitBranch": "main",
-    "buildId": "0.1.0+55b9557",
+    "buildId": "0.1.0+06969a2",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -103,35 +103,35 @@
       "path": "docs\\wiki\\Arobi-Live-Ledger-Receipt.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-04-21T22:18:04.712Z"
+      "generatedAt": "2026-05-13T17:05:15.331Z"
     },
     {
       "label": "Live mission readiness",
       "path": "docs\\wiki\\Live-Mission-Readiness.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-04-22T00:57:50.993Z"
+      "generatedAt": "2026-05-13T17:05:26.971Z"
     },
     {
       "label": "Live operator activity",
       "path": "docs\\wiki\\Live-Operator-Activity.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-04-22T00:57:56.085Z"
+      "generatedAt": "2026-05-13T17:05:45.299Z"
     },
     {
       "label": "Live operator public export",
       "path": "docs\\wiki\\Live-Operator-Public-Export.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-04-25T18:32:05.367Z"
+      "generatedAt": "2026-05-13T17:05:58.453Z"
     },
     {
       "label": "Cross-project workflow health",
       "path": "docs\\wiki\\Cross-Project-Workflow-Health.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-05-07T07:45:24.059Z"
+      "generatedAt": "2026-05-13T17:04:14.785Z"
     },
     {
       "label": "Supervised mission showcase",
@@ -144,7 +144,7 @@
       "path": "docs\\wiki\\Roundtable-Actionability.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-04-21T16:11:05.129Z"
+      "generatedAt": "2026-05-13T17:06:06.500Z"
     },
     {
       "label": "Roundtable runtime",
@@ -254,7 +254,7 @@
       "path": "docs\\wiki\\GitHub-Checks-Receipt.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-04-16T17:54:12.583Z"
+      "generatedAt": "2026-05-13T17:04:24.317Z"
     },
     {
       "label": "Harbor terminal bench soak",
@@ -275,14 +275,14 @@
     "counts": {
       "total": 35,
       "required": 20,
-      "fresh": 10,
-      "stale": 25,
+      "fresh": 17,
+      "stale": 18,
       "missing": 0,
       "invalid": 0,
       "optional": 0,
-      "blocking": 11
+      "blocking": 4
     },
-    "summary": "11 blocking release evidence gap(s): BridgeBench soak stale (28d old, budget 7d); Q gateway substrate stale (24d old, budget 7d); Q mediation drift stale (24d old, budget 7d); Arobi live ledger receipt stale (22d old, budget 24h); Live mission readiness stale (22d old, budget 24h); Live operator activity stale (22d old, budget 24h); Live operator public export stale (18d old, budget 24h); Cross-project workflow health stale (6d old, budget 24h); Roundtable actionability stale (22d old, budget 24h); Roundtable runtime stale (22d old, budget 24h); GitHub checks receipt stale (27d old, budget 24h)",
+    "summary": "4 blocking release evidence gap(s): BridgeBench soak stale (28d old, budget 7d); Q gateway substrate stale (24d old, budget 7d); Q mediation drift stale (24d old, budget 7d); Roundtable runtime stale (22d old, budget 24h)",
     "surfaces": [
       {
         "label": "BridgeBench",
@@ -290,7 +290,6 @@
         "required": true,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-05-07T04:12:53.126Z",
-        "ageMs": 564572675,
         "status": "fresh",
         "blocking": false,
         "reason": "fresh (7d old, budget 7d)"
@@ -301,7 +300,6 @@
         "required": true,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-15T06:15:54.188Z",
-        "ageMs": 2457991613,
         "status": "stale",
         "blocking": true,
         "reason": "stale (28d old, budget 7d)"
@@ -312,7 +310,6 @@
         "required": true,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-05-07T06:03:07.620Z",
-        "ageMs": 557958181,
         "status": "fresh",
         "blocking": false,
         "reason": "fresh (6d old, budget 7d)"
@@ -323,7 +320,6 @@
         "required": true,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-05-07T07:32:49.907Z",
-        "ageMs": 552575894,
         "status": "fresh",
         "blocking": false,
         "reason": "fresh (6d old, budget 7d)"
@@ -334,7 +330,6 @@
         "required": true,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-05-07T07:32:32.750Z",
-        "ageMs": 552593051,
         "status": "fresh",
         "blocking": false,
         "reason": "fresh (6d old, budget 7d)"
@@ -345,7 +340,6 @@
         "required": true,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-19T22:06:38.757Z",
-        "ageMs": 2055347044,
         "status": "stale",
         "blocking": true,
         "reason": "stale (24d old, budget 7d)"
@@ -356,7 +350,6 @@
         "required": true,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-19T22:06:40.025Z",
-        "ageMs": 2055345776,
         "status": "stale",
         "blocking": true,
         "reason": "stale (24d old, budget 7d)"
@@ -367,7 +360,6 @@
         "required": true,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-05-12T18:09:17.101Z",
-        "ageMs": 82388700,
         "status": "fresh",
         "blocking": false,
         "reason": "fresh (23h old, budget 7d)"
@@ -377,55 +369,50 @@
         "path": "docs\\wiki\\Arobi-Live-Ledger-Receipt.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-04-21T22:18:04.712Z",
-        "ageMs": 1881861089,
-        "status": "stale",
-        "blocking": true,
-        "reason": "stale (22d old, budget 24h)"
+        "generatedAt": "2026-05-13T17:05:15.331Z",
+        "status": "fresh",
+        "blocking": false,
+        "reason": "fresh (1m old, budget 24h)"
       },
       {
         "label": "Live mission readiness",
         "path": "docs\\wiki\\Live-Mission-Readiness.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-04-22T00:57:50.993Z",
-        "ageMs": 1872274808,
-        "status": "stale",
-        "blocking": true,
-        "reason": "stale (22d old, budget 24h)"
+        "generatedAt": "2026-05-13T17:05:26.971Z",
+        "status": "fresh",
+        "blocking": false,
+        "reason": "fresh (1m old, budget 24h)"
       },
       {
         "label": "Live operator activity",
         "path": "docs\\wiki\\Live-Operator-Activity.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-04-22T00:57:56.085Z",
-        "ageMs": 1872269716,
-        "status": "stale",
-        "blocking": true,
-        "reason": "stale (22d old, budget 24h)"
+        "generatedAt": "2026-05-13T17:05:45.299Z",
+        "status": "fresh",
+        "blocking": false,
+        "reason": "fresh (1m old, budget 24h)"
       },
       {
         "label": "Live operator public export",
         "path": "docs\\wiki\\Live-Operator-Public-Export.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-04-25T18:32:05.367Z",
-        "ageMs": 1549820434,
-        "status": "stale",
-        "blocking": true,
-        "reason": "stale (18d old, budget 24h)"
+        "generatedAt": "2026-05-13T17:05:58.453Z",
+        "status": "fresh",
+        "blocking": false,
+        "reason": "fresh (1m old, budget 24h)"
       },
       {
         "label": "Cross-project workflow health",
         "path": "docs\\wiki\\Cross-Project-Workflow-Health.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-05-07T07:45:24.059Z",
-        "ageMs": 551821742,
-        "status": "stale",
-        "blocking": true,
-        "reason": "stale (6d old, budget 24h)"
+        "generatedAt": "2026-05-13T17:04:14.785Z",
+        "status": "fresh",
+        "blocking": false,
+        "reason": "fresh (3m old, budget 24h)"
       },
       {
         "label": "Supervised mission showcase",
@@ -433,7 +420,6 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-22T01:20:45.053Z",
-        "ageMs": 1870900748,
         "status": "stale",
         "blocking": false,
         "reason": "stale (22d old, budget 7d)"
@@ -443,11 +429,10 @@
         "path": "docs\\wiki\\Roundtable-Actionability.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-04-21T16:11:05.129Z",
-        "ageMs": 1903880672,
-        "status": "stale",
-        "blocking": true,
-        "reason": "stale (22d old, budget 24h)"
+        "generatedAt": "2026-05-13T17:06:06.500Z",
+        "status": "fresh",
+        "blocking": false,
+        "reason": "fresh (1m old, budget 24h)"
       },
       {
         "label": "Roundtable runtime",
@@ -455,7 +440,6 @@
         "required": true,
         "maxAgeMs": 86400000,
         "generatedAt": "2026-04-21T22:19:50.626Z",
-        "ageMs": 1881755175,
         "status": "stale",
         "blocking": true,
         "reason": "stale (22d old, budget 24h)"
@@ -466,7 +450,6 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-19T22:47:48Z",
-        "ageMs": 2052877801,
         "status": "stale",
         "blocking": false,
         "reason": "stale (24d old, budget 7d)"
@@ -477,7 +460,6 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-19T22:47:51.678Z",
-        "ageMs": 2052874123,
         "status": "stale",
         "blocking": false,
         "reason": "stale (24d old, budget 7d)"
@@ -488,7 +470,6 @@
         "required": true,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-05-13T01:11:39Z",
-        "ageMs": 57046801,
         "status": "fresh",
         "blocking": false,
         "reason": "fresh (16h old, budget 7d)"
@@ -499,7 +480,6 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-19T05:52:40Z",
-        "ageMs": 2113785801,
         "status": "stale",
         "blocking": false,
         "reason": "stale (24d old, budget 7d)"
@@ -510,7 +490,6 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-19T05:52:29Z",
-        "ageMs": 2113796801,
         "status": "stale",
         "blocking": false,
         "reason": "stale (24d old, budget 7d)"
@@ -521,7 +500,6 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-19T05:52:00Z",
-        "ageMs": 2113825801,
         "status": "stale",
         "blocking": false,
         "reason": "stale (24d old, budget 7d)"
@@ -532,7 +510,6 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-19T05:52:31Z",
-        "ageMs": 2113794801,
         "status": "stale",
         "blocking": false,
         "reason": "stale (24d old, budget 7d)"
@@ -543,7 +520,6 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-05-13T01:11:39Z",
-        "ageMs": 57046801,
         "status": "fresh",
         "blocking": false,
         "reason": "fresh (16h old, budget 7d)"
@@ -554,7 +530,6 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-17T02:02:24Z",
-        "ageMs": 2300401801,
         "status": "stale",
         "blocking": false,
         "reason": "stale (27d old, budget 7d)"
@@ -565,7 +540,6 @@
         "required": true,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-05-13T01:11:30Z",
-        "ageMs": 57055801,
         "status": "fresh",
         "blocking": false,
         "reason": "fresh (16h old, budget 7d)"
@@ -576,7 +550,6 @@
         "required": true,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-05-12T19:01:08Z",
-        "ageMs": 79277801,
         "status": "fresh",
         "blocking": false,
         "reason": "fresh (22h old, budget 7d)"
@@ -587,7 +560,6 @@
         "required": true,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-05-13T10:06:59.572421+00:00",
-        "ageMs": 24926229,
         "status": "fresh",
         "blocking": false,
         "reason": "fresh (7h old, budget 7d)"
@@ -598,7 +570,6 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-19T07:43:17.831Z",
-        "ageMs": 2107147970,
         "status": "stale",
         "blocking": false,
         "reason": "stale (24d old, budget 7d)"
@@ -609,7 +580,6 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-19T14:31:45.217Z",
-        "ageMs": 2082640584,
         "status": "stale",
         "blocking": false,
         "reason": "stale (24d old, budget 7d)"
@@ -620,7 +590,6 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-19T14:31:45.545Z",
-        "ageMs": 2082640256,
         "status": "stale",
         "blocking": false,
         "reason": "stale (24d old, budget 7d)"
@@ -631,7 +600,6 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-19T14:31:45.730Z",
-        "ageMs": 2082640071,
         "status": "stale",
         "blocking": false,
         "reason": "stale (24d old, budget 7d)"
@@ -641,11 +609,10 @@
         "path": "docs\\wiki\\GitHub-Checks-Receipt.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-04-16T17:54:12.583Z",
-        "ageMs": 2329693218,
-        "status": "stale",
-        "blocking": true,
-        "reason": "stale (27d old, budget 24h)"
+        "generatedAt": "2026-05-13T17:04:24.317Z",
+        "status": "fresh",
+        "blocking": false,
+        "reason": "fresh (2m old, budget 24h)"
       },
       {
         "label": "Harbor terminal bench soak",
@@ -653,7 +620,6 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-16T13:05:24.510Z",
-        "ageMs": 2347021291,
         "status": "stale",
         "blocking": false,
         "reason": "stale (27d old, budget 7d)"
@@ -664,7 +630,6 @@
         "required": false,
         "maxAgeMs": 604800000,
         "generatedAt": "2026-04-17T20:56:29.772Z",
-        "ageMs": 2232356029,
         "status": "stale",
         "blocking": false,
         "reason": "stale (26d old, budget 7d)"

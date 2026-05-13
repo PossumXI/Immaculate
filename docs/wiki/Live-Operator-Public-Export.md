@@ -2,42 +2,42 @@
 
 This page is the public-safe operator export for the current workstation. It mirrors the `fabric.showcase` contract already used by the aura-genesis status page, keeps the private mission lane closed, and only emits aggregate operator activity that is safe to publish on public surfaces.
 
-- Generated: `2026-04-25T18:32:05.367Z`
-- Release: `0.1.0+e9175c2`
-- Repo commit: `e9175c28a33d3bab5dffbe0d60c38e8234e65d54`
+- Generated: `2026-05-13T17:05:58.453Z`
+- Release: `0.1.0+5859730`
+- Repo commit: `585973070c9a2cd34de1d38f9675b430bc7421a4`
 - Contract target: `fabric.showcase` v1
 
 ## Publication Gate
 
 - Status: `blocked`
 - Target: aura-genesis.org/status
-- Summary: public publication is blocked by operator.activity: public publication is blocked until the public ledger, Discord transport, and OCI-backed Q all prove readiness on the current workstation | source.freshness: 3/3 public-export source receipt(s) are stale, missing, or invalid: Live mission readiness stale (4d old, budget 24h); Live operator activity stale (4d old, budget 24h); Arobi live ledger receipt stale (4d old, budget 24h) | ledger.public: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true
-- Source freshness: `blocked` (3/3 public-export source receipt(s) are stale, missing, or invalid: Live mission readiness stale (4d old, budget 24h); Live operator activity stale (4d old, budget 24h); Arobi live ledger receipt stale (4d old, budget 24h))
+- Summary: public publication is blocked by operator.activity: public publication is blocked until the public ledger, Discord transport, and OCI-backed Q all prove readiness on the current workstation | ledger.public: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true
+- Source freshness: `fresh` (all 3 public-export source receipt(s) are fresh)
 - Freshness budget: `24h`
 
 ## Source Freshness
 
-- Live mission readiness: `stale` via `docs/wiki/Live-Mission-Readiness.json` at `2026-04-22T00:57:50.993Z` - stale (4d old, budget 24h)
-- Live operator activity: `stale` via `docs/wiki/Live-Operator-Activity.json` at `2026-04-22T00:57:56.085Z` - stale (4d old, budget 24h)
-- Arobi live ledger receipt: `stale` via `docs/wiki/Arobi-Live-Ledger-Receipt.json` at `2026-04-21T22:18:04.712Z` - stale (4d old, budget 24h)
+- Live mission readiness: `fresh` via `docs/wiki/Live-Mission-Readiness.json` at `2026-05-13T17:05:26.971Z` - fresh (1m old, budget 24h)
+- Live operator activity: `fresh` via `docs/wiki/Live-Operator-Activity.json` at `2026-05-13T17:05:45.299Z` - fresh (0m old, budget 24h)
+- Arobi live ledger receipt: `fresh` via `docs/wiki/Arobi-Live-Ledger-Receipt.json` at `2026-05-13T17:05:15.331Z` - fresh (1m old, budget 24h)
 
 ## Public Showcase Status
 
 - Active: `false`
 - Mode: `controlled`
 - Title: Supervised operator audit export.
-- Summary: Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public ledger publication remains blocked: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true
+- Summary: Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is blocked; OCI-backed Q is ready; Discord transport is ready; public ledger publication remains blocked: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true
 - Window label: Showcase line closed until public ledger publication is proven
 - Results ready: `false`
 - Fleet label: Immaculate / OpenJaws / Q operator loop
 - Publish targets: aura-genesis.org/status (public-safe aggregate only) | iorch.net (results only) | qline.site (results only; not published from this repo)
 - Subsystems: total `5` | online `3` | degraded `2` | offline `0` | unconfigured `0`
 - Network version: `3.3.1`
-- Verified ledger entries: `394`
-- Public height: `34832`
+- Verified ledger entries: `32156`
+- Public height: `59178`
 - Orchestration profile: `immaculate-supervised-operator-loop`
 - Q auth mode: `oci_iam`
-- Last checked: `2026-04-25T18:32:05.367Z`
+- Last checked: `2026-05-13T17:05:58.453Z`
 
 ## Activity Feed
 
@@ -45,9 +45,9 @@ This page is the public-safe operator export for the current workstation. It mir
 
 - Status: `warning`
 - Kind: `showcase`
-- Timestamp: `2026-04-25T18:32:05.367Z`
+- Timestamp: `2026-05-13T17:05:58.453Z`
 - Source: `fabric.showcase`
-- Summary: Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is ready; OCI-backed Q is ready; Discord transport is ready; public ledger publication remains blocked: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true
+- Summary: Q patrol is ready; roundtable is ready on #dev_support; 21 bounded action receipts are present; 2/3 bot receipts are ready; operator state is blocked; OCI-backed Q is ready; Discord transport is ready; public ledger publication remains blocked: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true
 - Subsystems: immaculate, openjaws, q
 - Artifacts: showcase:summary, receipt:live-operator-public-export
 - Tags: showcase, public, operator
@@ -56,9 +56,9 @@ This page is the public-safe operator export for the current workstation. It mir
 
 - Status: `warning`
 - Kind: `publication`
-- Timestamp: `2026-04-25T18:32:05.367Z`
+- Timestamp: `2026-05-13T17:05:58.453Z`
 - Source: `immaculate.live_operator_activity`
-- Summary: public publication is blocked by operator.activity: public publication is blocked until the public ledger, Discord transport, and OCI-backed Q all prove readiness on the current workstation | source.freshness: 3/3 public-export source receipt(s) are stale, missing, or invalid: Live mission readiness stale (4d old, budget 24h); Live operator activity stale (4d old, budget 24h); Arobi live ledger receipt stale (4d old, budget 24h) | ledger.public: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true
+- Summary: public publication is blocked by operator.activity: public publication is blocked until the public ledger, Discord transport, and OCI-backed Q all prove readiness on the current workstation | ledger.public: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true
 - Subsystems: arobi, immaculate
 - Artifacts: gate:publication
 - Tags: public, gate
@@ -67,20 +67,20 @@ This page is the public-safe operator export for the current workstation. It mir
 
 - Status: `ok`
 - Kind: `agent`
-- Timestamp: `2026-04-22T00:57:56.085Z`
+- Timestamp: `2026-05-13T17:05:45.299Z`
 - Source: `immaculate.live_operator_activity`
-- Summary: state changed but routing cooldown held
+- Summary: posted patrol digest after state change -> #q-command-station
 - Subsystems: q, discord
-- Artifacts: receipt:q-patrol, layer:Q
+- Artifacts: receipt:q-patrol
 - Tags: q, patrol, operator
 
 ### Bounded roundtable lane
 
 - Status: `ok`
 - Kind: `roundtable`
-- Timestamp: `2026-04-22T00:57:56.085Z`
+- Timestamp: `2026-05-13T17:05:45.299Z`
 - Source: `immaculate.live_operator_activity`
-- Summary: running | Q passed turn 10 | 10 turns | 2/21 recent actions passed verification
+- Summary: running | Blackbeak posted turn 30 | 30 turns | 2/21 recent actions passed verification | 469 blocked job(s)
 - Subsystems: discord, openjaws, immaculate
 - Artifacts: receipt:roundtable, receipt:roundtable-actions-21
 - Tags: roundtable, accountable, operator
@@ -89,7 +89,7 @@ This page is the public-safe operator export for the current workstation. It mir
 
 - Status: `warning`
 - Kind: `discord`
-- Timestamp: `2026-04-22T00:48:39.358Z`
+- Timestamp: `2026-05-13T17:00:49.020Z`
 - Source: `immaculate.live_operator_activity`
 - Summary: 2/3 bot receipts are ready (Blackbeak, Viola).
 - Subsystems: discord, openjaws, q
@@ -98,11 +98,11 @@ This page is the public-safe operator export for the current workstation. It mir
 
 ### Operator state
 
-- Status: `ok`
+- Status: `warning`
 - Kind: `operator`
-- Timestamp: `2026-04-22T00:57:56.085Z`
+- Timestamp: `2026-05-13T17:05:45.299Z`
 - Source: `immaculate.live_operator_activity`
-- Summary: PossumX | active process present
+- Summary: PossumX
 - Subsystems: openjaws, immaculate
 - Artifacts: receipt:operator-state
 - Tags: operator, human-in-the-loop
@@ -111,9 +111,9 @@ This page is the public-safe operator export for the current workstation. It mir
 
 - Status: `ok`
 - Kind: `transport`
-- Timestamp: `2026-04-25T18:32:05.367Z`
+- Timestamp: `2026-05-13T17:05:58.453Z`
 - Source: `immaculate.live_mission_readiness`
-- Summary: status=ready; gateway=true; guilds=1; health 200; updated 15s ago (budget 900s)
+- Summary: status=ready; gateway=true; guilds=1; health 200; updated 12s ago (budget 900s)
 - Subsystems: discord, q
 - Artifacts: readiness:discord-transport
 - Tags: discord, transport
@@ -122,9 +122,9 @@ This page is the public-safe operator export for the current workstation. It mir
 
 - Status: `warning`
 - Kind: `ledger`
-- Timestamp: `2026-04-21T22:18:04.712Z`
+- Timestamp: `2026-05-13T17:05:15.331Z`
 - Source: `immaculate.arobi_live_ledger`
-- Summary: public ledger version 3.3.1 on block 34,832 with 394 visible aggregate entries; fabric source synthesized
+- Summary: public ledger version 3.3.1 on block 59,178 with 32,156 visible aggregate entries; fabric source synthesized
 - Subsystems: arobi, ledger
 - Artifacts: receipt:arobi-live-ledger
 - Tags: ledger, public, audit

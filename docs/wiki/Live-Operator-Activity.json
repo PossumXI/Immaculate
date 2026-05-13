@@ -1,49 +1,51 @@
 {
-  "generatedAt": "2026-04-22T00:57:56.085Z",
+  "generatedAt": "2026-05-13T17:05:45.299Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "9b31c9d326f161131c480a5602a9c0c182e5a0d1",
-    "gitShortSha": "9b31c9d",
-    "gitBranch": "publish-q-win",
-    "buildId": "0.1.0+9b31c9d",
+    "gitSha": "585973070c9a2cd34de1d38f9675b430bc7421a4",
+    "gitShortSha": "5859730",
+    "gitBranch": "main",
+    "buildId": "0.1.0+5859730",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
       "truthfulLabel": "Q",
       "trainingLock": {
-        "generatedAt": "2026-04-19T07:46:04Z",
+        "generatedAt": "2026-05-12T18:26:42Z",
         "lockVersion": 1,
-        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
-        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23",
+        "bundleId": "q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3",
+        "runName": "q-arobi-main-roots-20260512-bench-v1",
         "modelName": "Q",
-        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl",
-        "trainDatasetSha256": "286326ce786c0a9b9b4a636a38114cc221c1b978a083ca55d70cc6ca6172cb07",
-        "trainDatasetRowCount": 117,
-        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.manifest.json",
-        "mixManifestSha256": "4c7df8284cedaf8e43f1715c8eaf4c30826687e27a5d511ef8ccd4ca78df991e",
-        "mixSupplementalCount": 6,
+        "trainDatasetPath": ".training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.jsonl",
+        "trainDatasetSha256": "22043bf3cea9501688346d62e992bc221d9fcc809cb423c19d02075dae13404f",
+        "trainDatasetRowCount": 2053,
+        "mixManifestPath": ".training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.manifest.json",
+        "mixManifestSha256": "0c73421b39dc3d77cc96df918bafb911f303c63add430deb58815eca3f89e940",
+        "mixSupplementalCount": 7,
         "mixSupplementalPaths": [
           "training/q/q_harness_identity_seed.json",
           "training/q/q_immaculate_reasoning_seed.json",
           "training/q/terminal_bench_semantic_seed.json",
           "training/q/bridgebench_seed.json",
           "training/q/coding_long_context_seed.json",
+          ".training-output/q/q-benchmark-corpus.jsonl",
           ".training-output/q/q-failure-corpus.jsonl"
         ],
-        "curationRunId": null,
+        "curationRunPath": ".training-output/training-data/runs/cur-fnv1a-6e3f6fdf/run.json",
+        "curationRunId": "cur-fnv1a-6e3f6fdf",
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-19T07:46:17Z",
-        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v23",
-        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v23/hybrid-session.json",
-        "localStatus": "ready",
-        "cloudStatus": "ready",
-        "cloudProvider": "hf_jobs",
-        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
-        "immaculateBundleId": "immaculate-orchestration-5ed19b9-cd094c28",
+        "generatedAt": "2026-05-13T01:11:39Z",
+        "sessionId": "q-arobi-main-roots-20260512-bench-v1",
+        "sessionPath": ".training-output/q/sessions/q-arobi-main-roots-20260512-bench-v1/hybrid-session.json",
+        "localStatus": "skipped",
+        "cloudStatus": "skipped",
+        "cloudProvider": "manual",
+        "trainingBundleId": "q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3",
+        "immaculateBundleId": "immaculate-orchestration-9b85dbc-e68f2160",
         "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
       }
     }
@@ -55,25 +57,25 @@
   },
   "qPatrol": {
     "status": "ready",
-    "summary": "state changed but routing cooldown held",
+    "summary": "posted patrol digest after state change -> #q-command-station",
     "sourcePath": "openjaws/local-command-station/discord-q-agent-receipt.json",
-    "lastDecision": "state changed but routing cooldown held",
-    "lastPostedChannelName": "openjaws-updates",
+    "lastDecision": "posted patrol digest after state change -> #q-command-station",
+    "lastPostedChannelName": "q-command-station",
     "lastSummary": "state changed but routing cooldown held",
-    "queueLength": 39,
-    "recommendedLayerId": "Q"
+    "queueLength": 174,
+    "recommendedLayerId": null
   },
   "roundtable": {
     "status": "ready",
-    "summary": "running | Q passed turn 10 | 10 turns | 2/21 recent actions passed verification",
+    "summary": "running | Blackbeak posted turn 30 | 30 turns | 2/21 recent actions passed verification | 469 blocked job(s)",
     "sourcePath": "openjaws/local-command-station/roundtable-runtime/discord-roundtable.state.json",
     "sessionSourcePath": "openjaws/local-command-station/roundtable-runtime/discord-roundtable.session.json",
     "channelName": "dev_support",
     "sessionStatus": "running",
-    "turnCount": 10,
-    "nextPersona": "viola",
-    "lastSpeaker": "q",
-    "lastSummary": "Q passed turn 10",
+    "turnCount": 30,
+    "nextPersona": "q",
+    "lastSpeaker": "blackbeak",
+    "lastSummary": "Blackbeak posted turn 30",
     "actionReceiptCount": 21,
     "actions": [
       {
@@ -118,35 +120,56 @@
     {
       "label": "Q agent",
       "sourcePath": "openjaws/local-command-station/bots/q/discord-agent-receipt.json",
-      "updatedAt": "2026-04-20T19:49:59.478Z",
+      "updatedAt": "2026-05-13T02:40:20.632Z",
       "status": "blocked",
       "backend": "Q backend: oci:Q via OCI IAM",
       "connected": false,
       "guildCount": 0,
-      "summary": "starting | gateway offline (0 guild) | Q backend: oci:Q via OCI IAM | knowledge 2500 files | voice staged",
+      "summary": "starting | gateway offline (0 guild) | Q backend: oci:Q via OCI IAM | knowledge 1482 files | voice staged",
       "recentEvents": []
     },
     {
       "label": "Blackbeak",
       "sourcePath": "openjaws/local-command-station/bots/blackbeak/discord-agent-receipt.json",
-      "updatedAt": "2026-04-22T00:32:09.727Z",
+      "updatedAt": "2026-05-13T17:00:49.020Z",
       "status": "ready",
       "backend": "Q backend: oci:Q via OCI IAM",
       "connected": true,
-      "guildCount": 1,
-      "summary": "ready | gateway online (1 guild) | Q backend: oci:Q via OCI IAM | gateway_ready · connected to 1 guild | knowledge 2500 files | voice off",
+      "guildCount": 2,
+      "summary": "ready | gateway online (2 guild) | Q backend: oci:Q via OCI IAM | gateway_ready · connected to 2 guilds | knowledge 2500 files | voice off",
       "recentEvents": [
         {
-          "at": "2026-04-22T00:32:09.727Z",
+          "at": "2026-05-13T17:00:49.020Z",
           "status": "gateway_ready",
-          "summary": "connected to 1 guild"
+          "summary": "connected to 2 guilds"
+        },
+        {
+          "at": "2026-05-13T17:00:40.866Z",
+          "status": "gateway_reconnecting",
+          "summary": "Discord gateway closed with code 1006: Connection ended"
+        },
+        {
+          "at": "2026-05-13T17:00:40.865Z",
+          "status": "gateway_closed",
+          "summary": "Discord gateway closed with code 1006: Connection ended"
+        },
+        {
+          "at": "2026-05-13T16:42:40.512Z",
+          "status": "blackbeak_meme_skipped",
+          "summary": "scheduled meme skipped: media_blocked until 2026-05-13T20:42:59.380Z",
+          "channelName": "daily_meme"
+        },
+        {
+          "at": "2026-05-13T16:23:34.885Z",
+          "status": "gateway_ready",
+          "summary": "connected to 2 guilds"
         }
       ]
     },
     {
       "label": "Viola",
       "sourcePath": "openjaws/local-command-station/bots/viola/discord-agent-receipt.json",
-      "updatedAt": "2026-04-22T00:48:39.358Z",
+      "updatedAt": "2026-05-13T16:55:48.460Z",
       "status": "ready",
       "backend": "Q backend: oci:Q via OCI IAM",
       "connected": true,
@@ -154,28 +177,28 @@
       "summary": "ready | gateway online (1 guild) | Q backend: oci:Q via OCI IAM | voice_joined · joined #viola-lounge · #viola-lounge | knowledge 2500 files | voice connected @ viola-lounge",
       "recentEvents": [
         {
-          "at": "2026-04-22T00:48:39.358Z",
+          "at": "2026-05-13T16:55:48.460Z",
           "status": "voice_joined",
           "summary": "joined #viola-lounge",
           "channelName": "viola-lounge"
         },
         {
-          "at": "2026-04-22T00:48:39.072Z",
+          "at": "2026-05-13T16:55:38.078Z",
           "status": "gateway_ready",
           "summary": "connected to 1 guild"
         },
         {
-          "at": "2026-04-22T00:48:35.676Z",
+          "at": "2026-05-13T16:55:27.147Z",
           "status": "gateway_reconnecting",
-          "summary": "code 1000 Discord WebSocket requesting client reconnect."
+          "summary": "Discord gateway closed with code 1006: Connection ended"
         },
         {
-          "at": "2026-04-22T00:48:35.675Z",
+          "at": "2026-05-13T16:55:27.103Z",
           "status": "gateway_closed",
-          "summary": "code 1000 Discord WebSocket requesting client reconnect."
+          "summary": "Discord gateway closed with code 1006: Connection ended"
         },
         {
-          "at": "2026-04-22T00:32:10.083Z",
+          "at": "2026-05-13T15:21:34.505Z",
           "status": "voice_joined",
           "summary": "joined #viola-lounge",
           "channelName": "viola-lounge"
@@ -184,14 +207,14 @@
     }
   ],
   "operator": {
-    "status": "ready",
-    "summary": "PossumX | active process present",
+    "status": "blocked",
+    "summary": "PossumX",
     "sourcePath": "openjaws/local-command-station/openjaws-operator-state.json",
     "operatorLabel": "PossumX",
     "lastAction": null,
     "lastSummary": null,
     "lastCompletedAt": null,
-    "activeProcessPresent": true
+    "activeProcessPresent": false
   },
   "readiness": {
     "ledger": {
@@ -223,7 +246,7 @@
         "configured": true,
         "ready": true,
         "endpoint": "https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1",
-        "detail": "Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 15s ago (budget 900s)"
+        "detail": "Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 12s ago (budget 900s)"
       }
     },
     "discord": {
@@ -232,7 +255,7 @@
         "configured": true,
         "ready": true,
         "endpoint": "http://127.0.0.1:8788/health",
-        "detail": "status=ready; gateway=true; guilds=1; health 200; updated 15s ago (budget 900s)"
+        "detail": "status=ready; gateway=true; guilds=1; health 200; updated 12s ago (budget 900s)"
       }
     },
     "missionSurfaceReady": false,
