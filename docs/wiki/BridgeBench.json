@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-13T18:22:54.094Z",
+  "generatedAt": "2026-05-13T18:26:23.858Z",
   "modelLaneSurface": "direct-q-structured-contract",
   "qRuntimeBaseUrl": "http://127.0.0.1:11434",
   "release": {
@@ -73,14 +73,14 @@
       "taskCount": 4,
       "parseSuccessCount": 4,
       "parseSuccessRate": 1,
-      "averageLatencyMs": 132020.04,
-      "p95LatencyMs": 146708.1,
+      "averageLatencyMs": 95004.76,
+      "p95LatencyMs": 140100.72,
       "tasks": [
         {
           "scenarioId": "bridge-ack-fail-closed",
           "label": "Bridge ACK fail-closed",
-          "latencyMs": 141601.27,
-          "wallLatencyMs": 145045.06,
+          "latencyMs": 140100.72,
+          "wallLatencyMs": 320577.04,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
@@ -93,8 +93,8 @@
         {
           "scenarioId": "nonce-forgery-response",
           "label": "ACK nonce forgery response",
-          "latencyMs": 131088.28,
-          "wallLatencyMs": 131101.09,
+          "latencyMs": 83703.94,
+          "wallLatencyMs": 83723.34,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
@@ -107,22 +107,22 @@
         {
           "scenarioId": "public-q-rate-limit",
           "label": "Public Q edge throttling",
-          "latencyMs": 146708.1,
-          "wallLatencyMs": 146733.09,
+          "latencyMs": 43451.98,
+          "wallLatencyMs": 43470.75,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
           "thinkingDetected": false,
           "routeSuggestion": "cognitive",
           "reasonSummary": "Public quota burst occurred while the private operator plane remained stable.",
-          "commitStatement": "Maintain the local governed Q lane to preserve operator plane stability.",
-          "responsePreview": "ROUTE: cognitive REASON: Public quota burst occurred while the private operator plane remained stable. COMMIT: Maintain the local governed Q lane to preserve operator plane stability."
+          "commitStatement": "Maintain the local governed Q lane to preserve private plane stability.",
+          "responsePreview": "ROUTE: cognitive REASON: Public quota burst occurred while the private operator plane remained stable. COMMIT: Maintain the local governed Q lane to preserve private plane stability."
         },
         {
           "scenarioId": "bridge-continuity-routing",
           "label": "Bridge continuity routing",
-          "latencyMs": 108682.52,
-          "wallLatencyMs": 108696.65,
+          "latencyMs": 112762.4,
+          "wallLatencyMs": 112773.66,
           "parseSuccess": true,
           "structuredFieldCount": 3,
           "status": "completed",
@@ -136,7 +136,7 @@
     }
   ],
   "bridgeRuntime": {
-    "suiteId": "immaculate-benchmark-2026-05-13T18-22-23-551Z",
+    "suiteId": "immaculate-benchmark-2026-05-13T18-25-42-645Z",
     "packId": "substrate-readiness",
     "failedAssertions": 0,
     "selectedAssertions": [
@@ -177,7 +177,7 @@
         "label": "Supervised serial transport registration exposes vendor/device identity and heartbeat policy",
         "status": "pass",
         "target": "registered serial-json transport with vendor/model and heartbeat policy",
-        "actual": "atx-fnv1a-47378a2f:http2-json:immaculate-labs:healthy, atx-fnv1a-dfb4d63b:serial-json:immaculate-labs:healthy, atx-fnv1a-fe8f0a21:udp-osc:generic:healthy",
+        "actual": "atx-fnv1a-06d8340d:http2-json:immaculate-labs:healthy, atx-fnv1a-3bab19b9:serial-json:immaculate-labs:healthy, atx-fnv1a-42264f9a:udp-osc:generic:healthy",
         "detail": "vendor/device lanes should be durable registry entries with explicit supervision policy, not anonymous direct writes"
       },
       {
@@ -217,7 +217,7 @@
         "label": "HTTP/2 direct transport registration exposes a supervised RPC-class device endpoint",
         "status": "pass",
         "target": "registered http2-json transport with vendor/model and heartbeat policy",
-        "actual": "atx-fnv1a-47378a2f:http2-json:immaculate-labs:haptic-rpc-s2:20/5000:healthy, atx-fnv1a-dfb4d63b:serial-json:immaculate-labs:haptic-bridge-s1:20/5000:healthy, atx-fnv1a-fe8f0a21:udp-osc:generic:udp-osc:5000/15000:healthy",
+        "actual": "atx-fnv1a-06d8340d:http2-json:immaculate-labs:haptic-rpc-s2:20/5000:healthy, atx-fnv1a-3bab19b9:serial-json:immaculate-labs:haptic-bridge-s1:20/5000:healthy, atx-fnv1a-42264f9a:udp-osc:generic:udp-osc:5000/15000:healthy",
         "detail": "the next direct device lane should be a typed RPC-class endpoint, not just another file or datagram bridge"
       },
       {
