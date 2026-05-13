@@ -69,6 +69,7 @@ const REPO_ROOT = path.resolve(MODULE_ROOT, "../../..");
 const WIKI_ROOT = path.join(REPO_ROOT, "docs", "wiki");
 const RELEASE_SURFACE_JSON_PATH = path.join("docs", "wiki", "Release-Surface.json");
 const RELEASE_SURFACE_MARKDOWN_PATH = path.join("docs", "wiki", "Release-Surface.md");
+const GENERATED_WIKI_PATHSPEC = ":(exclude)docs/wiki/**";
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 export const DEFAULT_RELEASE_SURFACE_MAX_AGE_MS = 7 * ONE_DAY_MS;
 
@@ -192,6 +193,7 @@ function resolveReleaseSurfaceSourceCommit(): Pick<
     "--format=%H",
     "--",
     ".",
+    GENERATED_WIKI_PATHSPEC,
     `:(exclude)${RELEASE_SURFACE_JSON_PATH.replaceAll("\\", "/")}`,
     `:(exclude)${RELEASE_SURFACE_MARKDOWN_PATH.replaceAll("\\", "/")}`
   ]);
@@ -206,6 +208,7 @@ function resolveReleaseSurfaceSourceCommit(): Pick<
       "--abbrev=7",
       "--",
       ".",
+      GENERATED_WIKI_PATHSPEC,
       `:(exclude)${RELEASE_SURFACE_JSON_PATH.replaceAll("\\", "/")}`,
       `:(exclude)${RELEASE_SURFACE_MARKDOWN_PATH.replaceAll("\\", "/")}`
     ]) ?? gitSha.slice(0, 7);
@@ -280,8 +283,8 @@ export function evaluateReleaseSurfaceEvidence(
       status: fresh ? "fresh" : "stale",
       blocking: required && !fresh,
       reason: fresh
-        ? `fresh (${formatDurationMs(ageMs)} old, budget ${formatDurationMs(maxAgeMs)})`
-        : `stale (${formatDurationMs(ageMs)} old, budget ${formatDurationMs(maxAgeMs)})`
+        ? `fresh within ${formatDurationMs(maxAgeMs)} budget`
+        : `stale outside ${formatDurationMs(maxAgeMs)} budget`
     };
   });
   const blocking = entries.filter((entry) => entry.blocking);

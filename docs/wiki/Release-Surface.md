@@ -64,32 +64,32 @@ This page is generated from repo state. It is the plain-English answer to a simp
 ## Release Accountability Gaps
 
 - Status: `blocked`
-- Summary: 4 blocking release evidence gap(s): BridgeBench soak stale (28d old, budget 7d); Q gateway substrate stale (24d old, budget 7d); Q mediation drift stale (24d old, budget 7d); Roundtable runtime stale (22d old, budget 24h)
+- Summary: 4 blocking release evidence gap(s): BridgeBench soak stale outside 7d budget; Q gateway substrate stale outside 7d budget; Q mediation drift stale outside 7d budget; Roundtable runtime stale outside 24h budget
 - Counts: `17 fresh / 4 blocking / 0 optional missing`
 
 ### Blocking gaps
 
-- BridgeBench soak: `stale` via `docs/wiki/BridgeBench-Soak.json` - stale (28d old, budget 7d)
-- Q gateway substrate: `stale` via `docs/wiki/Q-Gateway-Substrate.json` - stale (24d old, budget 7d)
-- Q mediation drift: `stale` via `docs/wiki/Q-Mediation-Drift.json` - stale (24d old, budget 7d)
-- Roundtable runtime: `stale` via `docs/wiki/Roundtable-Runtime.json` - stale (22d old, budget 24h)
+- BridgeBench soak: `stale` via `docs/wiki/BridgeBench-Soak.json` - stale outside 7d budget
+- Q gateway substrate: `stale` via `docs/wiki/Q-Gateway-Substrate.json` - stale outside 7d budget
+- Q mediation drift: `stale` via `docs/wiki/Q-Mediation-Drift.json` - stale outside 7d budget
+- Roundtable runtime: `stale` via `docs/wiki/Roundtable-Runtime.json` - stale outside 24h budget
 
 ### Non-blocking warnings
 
-- Supervised mission showcase: `stale` via `docs/wiki/Supervised-Mission-Showcase.json` - stale (22d old, budget 7d)
-- Q API audit: `stale` via `docs/wiki/Q-API-Audit.json` - stale (24d old, budget 7d)
-- Arobi decision review: `stale` via `docs/wiki/Arobi-Decision-Review.json` - stale (24d old, budget 7d)
-- HF Jobs training: `stale` via `docs/wiki/HF-Jobs-Training.json` - stale (24d old, budget 7d)
-- Colab free training: `stale` via `docs/wiki/Colab-Free-Training.json` - stale (24d old, budget 7d)
-- Kaggle free training: `stale` via `docs/wiki/Kaggle-Free-Training.json` - stale (24d old, budget 7d)
-- Cloudflare Q inference: `stale` via `docs/wiki/Cloudflare-Q-Inference.json` - stale (24d old, budget 7d)
-- OCI region capacity: `stale` via `docs/wiki/OCI-Region-Capacity.json` - stale (27d old, budget 7d)
-- Harbor terminal bench: `stale` via `docs/wiki/Harbor-Terminal-Bench.json` - stale (24d old, budget 7d)
-- Terminal-Bench public task: `stale` via `docs/wiki/Terminal-Bench-Public-Task.json` - stale (24d old, budget 7d)
-- Terminal-Bench leaderboard status: `stale` via `docs/wiki/Terminal-Bench-Receipt.json` - stale (24d old, budget 7d)
-- Terminal-Bench rerun (diagnostic-only): `stale` via `docs/wiki/Terminal-Bench-Rerun.json` - stale (24d old, budget 7d)
-- Harbor terminal bench soak: `stale` via `docs/wiki/Harbor-Terminal-Bench-Soak.json` - stale (27d old, budget 7d)
-- Q benchmark sweep (60m): `stale` via `docs/wiki/Q-Benchmark-Sweep-60m.json` - stale (26d old, budget 7d)
+- Supervised mission showcase: `stale` via `docs/wiki/Supervised-Mission-Showcase.json` - stale outside 7d budget
+- Q API audit: `stale` via `docs/wiki/Q-API-Audit.json` - stale outside 7d budget
+- Arobi decision review: `stale` via `docs/wiki/Arobi-Decision-Review.json` - stale outside 7d budget
+- HF Jobs training: `stale` via `docs/wiki/HF-Jobs-Training.json` - stale outside 7d budget
+- Colab free training: `stale` via `docs/wiki/Colab-Free-Training.json` - stale outside 7d budget
+- Kaggle free training: `stale` via `docs/wiki/Kaggle-Free-Training.json` - stale outside 7d budget
+- Cloudflare Q inference: `stale` via `docs/wiki/Cloudflare-Q-Inference.json` - stale outside 7d budget
+- OCI region capacity: `stale` via `docs/wiki/OCI-Region-Capacity.json` - stale outside 7d budget
+- Harbor terminal bench: `stale` via `docs/wiki/Harbor-Terminal-Bench.json` - stale outside 7d budget
+- Terminal-Bench public task: `stale` via `docs/wiki/Terminal-Bench-Public-Task.json` - stale outside 7d budget
+- Terminal-Bench leaderboard status: `stale` via `docs/wiki/Terminal-Bench-Receipt.json` - stale outside 7d budget
+- Terminal-Bench rerun (diagnostic-only): `stale` via `docs/wiki/Terminal-Bench-Rerun.json` - stale outside 7d budget
+- Harbor terminal bench soak: `stale` via `docs/wiki/Harbor-Terminal-Bench-Soak.json` - stale outside 7d budget
+- Q benchmark sweep (60m): `stale` via `docs/wiki/Q-Benchmark-Sweep-60m.json` - stale outside 7d budget
 
 
 ## Q Training Bundle
