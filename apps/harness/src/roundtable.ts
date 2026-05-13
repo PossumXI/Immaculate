@@ -139,6 +139,10 @@ function removeStaleRoundtableWorktreeDirectory(repoPath: string, worktreePath: 
   return true;
 }
 
+function pruneStaleRoundtableWorktreeMetadata(repoPath: string): void {
+  runGitDetailed(repoPath, ["worktree", "prune"]);
+}
+
 type BuildRoundtableActionPlanInput = {
   objective: string;
   sessionId?: string;
@@ -1166,6 +1170,7 @@ export function materializeRoundtableActionWorktree(action: RoundtableAction): {
     throw new Error(`Roundtable action ${action.id} is missing worktree metadata.`);
   }
   mkdirSync(path.dirname(worktreePath), { recursive: true });
+  pruneStaleRoundtableWorktreeMetadata(repoPath);
   removeStaleRoundtableWorktreeDirectory(repoPath, worktreePath);
   if (!existsSync(worktreePath)) {
     const branchExists = Boolean(runGit(repoPath, ["rev-parse", "--verify", branch]));

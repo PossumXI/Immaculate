@@ -42,6 +42,13 @@ function deleteBranch(branch: string): void {
   });
 }
 
+function pruneWorktrees(): void {
+  spawnSync("git", ["worktree", "prune"], {
+    cwd: REPO_ROOT,
+    stdio: "ignore"
+  });
+}
+
 test("roundtable cleanup removes stale runtime worktree directories with missing git metadata", () => {
   const worktreePath = path.join(WORKTREE_TEST_ROOT, `stale-cleanup-${process.pid}`);
   const branch = `agents/test-roundtable-stale-cleanup-${process.pid}`;
@@ -71,6 +78,28 @@ test("roundtable materialization recovers a stale runtime worktree directory bef
   } finally {
     cleanupRoundtableActionWorktree(action);
     rmSync(worktreePath, { recursive: true, force: true });
+    deleteBranch(branch);
+  }
+});
+
+test("roundtable materialization prunes missing worktree metadata before re-adding", () => {
+  const worktreePath = path.join(WORKTREE_TEST_ROOT, `stale-git-metadata-${process.pid}`);
+  const branch = `agents/test-roundtable-stale-git-metadata-${process.pid}`;
+  const action = testAction(worktreePath, branch);
+  rmSync(worktreePath, { recursive: true, force: true });
+
+  try {
+    materializeRoundtableActionWorktree(action);
+    rmSync(worktreePath, { recursive: true, force: true });
+
+    const materialized = materializeRoundtableActionWorktree(action);
+
+    assert.equal(materialized.worktreePath, worktreePath);
+    assert.equal(existsSync(path.join(worktreePath, ".git")), true);
+  } finally {
+    cleanupRoundtableActionWorktree(action);
+    rmSync(worktreePath, { recursive: true, force: true });
+    pruneWorktrees();
     deleteBranch(branch);
   }
 });
