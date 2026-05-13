@@ -249,6 +249,23 @@ async function fetchJson<T>(
   try {
     return await new Promise<T>((resolve, reject) => {
       const requestImpl = url.protocol === "https:" ? https.request : http.request;
+      let settled = false;
+      const timeoutError = () =>
+        new OllamaRequestError(
+          "transport_timeout",
+          `Ollama request timed out after ${timeoutMs} ms.`
+        );
+      const hardTimeout = setTimeout(() => {
+        request.destroy(timeoutError());
+      }, timeoutMs);
+      const finish = <Result>(callback: (value: Result) => void, value: Result) => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        clearTimeout(hardTimeout);
+        callback(value);
+      };
       const request = requestImpl(
         url,
         {
@@ -265,7 +282,7 @@ async function fetchJson<T>(
             const payloadText = Buffer.concat(chunks).toString("utf8");
             if ((response.statusCode ?? 0) < 200 || (response.statusCode ?? 0) >= 300) {
               const detail = payloadText.trim().slice(0, 240);
-              reject(
+              finish(reject,
                 new OllamaRequestError(
                   "http_error",
                   detail.length > 0
@@ -276,9 +293,9 @@ async function fetchJson<T>(
               return;
             }
             try {
-              resolve(JSON.parse(payloadText) as T);
+              finish(resolve, JSON.parse(payloadText) as T);
             } catch (error) {
-              reject(
+              finish(reject,
                 new OllamaRequestError(
                   "invalid_json",
                   error instanceof Error
@@ -292,15 +309,10 @@ async function fetchJson<T>(
       );
 
       request.setTimeout(timeoutMs, () => {
-        request.destroy(
-          new OllamaRequestError(
-            "transport_timeout",
-            `Ollama request timed out after ${timeoutMs} ms.`
-          )
-        );
+        request.destroy(timeoutError());
       });
       request.on("error", (error) => {
-        reject(
+        finish(reject,
           error instanceof OllamaRequestError
             ? error
             : new OllamaRequestError(

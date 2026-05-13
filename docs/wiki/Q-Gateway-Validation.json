@@ -1,51 +1,54 @@
 {
-  "generatedAt": "2026-05-07T07:32:32.750Z",
-  "gatewayUrl": "http://127.0.0.1:51008",
+  "generatedAt": "2026-05-13T19:46:15.900Z",
+  "gatewayUrl": "http://127.0.0.1:56344",
   "modelName": "Q",
   "foundationModel": "Gemma 4",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "d1c83bf7b316710b00d4a2ab956b424ce834fd79",
-    "gitShortSha": "d1c83bf",
-    "gitBranch": "codex/q-fast-smoke-budget-20260507",
-    "buildId": "0.1.0+d1c83bf",
+    "gitSha": "694a14958ca7bc45c825179168c4635921fdc0eb",
+    "gitShortSha": "694a149",
+    "gitBranch": "main",
+    "buildId": "0.1.0+694a149",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
       "trainingLock": {
-        "generatedAt": "2026-04-19T07:46:04Z",
-        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
-        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23",
-        "modelName": "Q",
-        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl",
-        "trainDatasetRowCount": 117,
-        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.manifest.json",
-        "lockPath": ".training-output/q/latest-training-lock.json",
+        "generatedAt": "2026-05-12T18:26:42Z",
         "lockVersion": 1,
-        "trainDatasetSha256": "286326ce786c0a9b9b4a636a38114cc221c1b978a083ca55d70cc6ca6172cb07",
-        "mixManifestSha256": "4c7df8284cedaf8e43f1715c8eaf4c30826687e27a5d511ef8ccd4ca78df991e",
-        "mixSupplementalCount": 6,
+        "bundleId": "q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3",
+        "runName": "q-arobi-main-roots-20260512-bench-v1",
+        "modelName": "Q",
+        "trainDatasetPath": ".training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.jsonl",
+        "trainDatasetSha256": "22043bf3cea9501688346d62e992bc221d9fcc809cb423c19d02075dae13404f",
+        "trainDatasetRowCount": 2053,
+        "mixManifestPath": ".training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.manifest.json",
+        "mixManifestSha256": "0c73421b39dc3d77cc96df918bafb911f303c63add430deb58815eca3f89e940",
+        "mixSupplementalCount": 7,
         "mixSupplementalPaths": [
           "training/q/q_harness_identity_seed.json",
           "training/q/q_immaculate_reasoning_seed.json",
           "training/q/terminal_bench_semantic_seed.json",
           "training/q/bridgebench_seed.json",
           "training/q/coding_long_context_seed.json",
+          ".training-output/q/q-benchmark-corpus.jsonl",
           ".training-output/q/q-failure-corpus.jsonl"
-        ]
+        ],
+        "curationRunPath": ".training-output/training-data/runs/cur-fnv1a-6e3f6fdf/run.json",
+        "curationRunId": "cur-fnv1a-6e3f6fdf",
+        "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-19T07:46:17Z",
-        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v23",
-        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v23/hybrid-session.json",
-        "localStatus": "ready",
-        "cloudStatus": "ready",
-        "cloudProvider": "hf_jobs",
-        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
-        "immaculateBundleId": "immaculate-orchestration-5ed19b9-cd094c28",
-        "immaculateBundlePath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-harbor-opt-2384cf5-bench-v23.json"
+        "generatedAt": "2026-05-13T01:11:39Z",
+        "sessionId": "q-arobi-main-roots-20260512-bench-v1",
+        "sessionPath": ".training-output/q/sessions/q-arobi-main-roots-20260512-bench-v1/hybrid-session.json",
+        "localStatus": "skipped",
+        "cloudStatus": "skipped",
+        "cloudProvider": "manual",
+        "trainingBundleId": "q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3",
+        "immaculateBundleId": "immaculate-orchestration-9b85dbc-e68f2160",
+        "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
       }
     }
   },
@@ -65,8 +68,8 @@
       "body": {
         "ok": true,
         "release": {
-          "buildId": "0.1.0+0158604",
-          "gitShortSha": "0158604"
+          "buildId": "0.1.0+694a149",
+          "gitShortSha": "694a149"
         },
         "gateway": "q",
         "modelName": "Q",
@@ -82,16 +85,16 @@
           "consecutiveFailures": 0
         },
         "inference": {
-          "provider": "ollama",
-          "routeLabel": "q-primary-ollama",
-          "runtimePath": "/api/chat",
+          "provider": "oci-iam-bridge",
+          "routeLabel": "q-primary-oci-iam-bridge",
+          "runtimePath": "/responses",
           "requestBounds": {
             "maxMessages": 24,
             "maxInputChars": 16000
           },
           "timeouts": {
-            "defaultMs": 300000,
-            "structuredMs": 45000,
+            "defaultMs": 30000,
+            "structuredMs": 30000,
             "structuredRepairMs": 12000,
             "healthCacheTtlMs": 15000
           },
@@ -111,30 +114,30 @@
           "runtime": {
             "configured": true,
             "endpointVisible": false,
-            "path": "/api/chat"
+            "path": "/responses"
           },
           "auth": {
-            "mode": "none",
+            "mode": "oci-iam",
             "configured": true,
             "secretVisible": false
           }
         },
         "authMode": "api-key",
         "host": "127.0.0.1",
-        "port": 51008
+        "port": 56344
       },
       "headers": {
         "connection": "keep-alive",
-        "content-length": "1307",
+        "content-length": "1327",
         "content-type": "application/json; charset=utf-8",
-        "date": "Thu, 07 May 2026 07:31:29 GMT",
+        "date": "Wed, 13 May 2026 19:45:57 GMT",
         "keep-alive": "timeout=72",
         "vary": "Origin",
         "x-ratelimit-limit": "60",
         "x-ratelimit-remaining": "58",
         "x-ratelimit-reset": "60"
       },
-      "wallLatencyMs": 4.24
+      "wallLatencyMs": 2.88
     },
     "unauthorizedChat": {
       "status": 401,
@@ -146,14 +149,14 @@
         "connection": "keep-alive",
         "content-length": "91",
         "content-type": "application/json; charset=utf-8",
-        "date": "Thu, 07 May 2026 07:31:29 GMT",
+        "date": "Wed, 13 May 2026 19:45:57 GMT",
         "keep-alive": "timeout=72",
         "vary": "Origin",
         "x-ratelimit-limit": "60",
         "x-ratelimit-remaining": "59",
         "x-ratelimit-reset": "60"
       },
-      "wallLatencyMs": 14
+      "wallLatencyMs": 9.01
     },
     "info": {
       "status": 200,
@@ -167,25 +170,25 @@
         "harness": "Immaculate",
         "identitySummary": "Q is the only public model identity. Q was developed by Arobi Technology Alliance, built on Gemma 4, and led by founder, CEO, lead architect, and lead engineer Gaetano Comparcola. Arobi Network is the ledger-backed private and public operator network and audit substrate. Immaculate is the governed harness around Q and should use Q as its primary reasoning model.",
         "release": {
-          "buildId": "0.1.0+0158604",
-          "gitShortSha": "0158604",
-          "qTrainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce"
+          "buildId": "0.1.0+694a149",
+          "gitShortSha": "694a149",
+          "qTrainingBundleId": "q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3"
         },
         "circuit": {
           "state": "closed",
           "consecutiveFailures": 0
         },
         "inference": {
-          "provider": "ollama",
-          "routeLabel": "q-primary-ollama",
-          "runtimePath": "/api/chat",
+          "provider": "oci-iam-bridge",
+          "routeLabel": "q-primary-oci-iam-bridge",
+          "runtimePath": "/responses",
           "requestBounds": {
             "maxMessages": 24,
             "maxInputChars": 16000
           },
           "timeouts": {
-            "defaultMs": 300000,
-            "structuredMs": 45000,
+            "defaultMs": 30000,
+            "structuredMs": 30000,
             "structuredRepairMs": 12000,
             "healthCacheTtlMs": 15000
           },
@@ -205,16 +208,16 @@
           "runtime": {
             "configured": true,
             "endpointVisible": false,
-            "path": "/api/chat"
+            "path": "/responses"
           },
           "auth": {
-            "mode": "none",
+            "mode": "oci-iam",
             "configured": true,
             "secretVisible": false
           }
         },
         "authMode": "api-key",
-        "keyId": "qkey-mov63otz-57a6f972",
+        "keyId": "qkey-mp4gzcm5-1c1a0764",
         "rateLimit": {
           "requestsPerMinute": 30,
           "burst": 30,
@@ -229,9 +232,9 @@
       },
       "headers": {
         "connection": "keep-alive",
-        "content-length": "1516",
+        "content-length": "1522",
         "content-type": "application/json; charset=utf-8",
-        "date": "Thu, 07 May 2026 07:31:29 GMT",
+        "date": "Wed, 13 May 2026 19:45:57 GMT",
         "keep-alive": "timeout=72",
         "vary": "Origin",
         "x-ratelimit-limit": "30",
@@ -239,7 +242,7 @@
         "x-ratelimit-reset": "60",
         "x-ratelimit-reset-ms": "0"
       },
-      "wallLatencyMs": 119.1
+      "wallLatencyMs": 100.75
     },
     "models": {
       "status": 200,
@@ -260,7 +263,7 @@
         "connection": "keep-alive",
         "content-length": "134",
         "content-type": "application/json; charset=utf-8",
-        "date": "Thu, 07 May 2026 07:31:29 GMT",
+        "date": "Wed, 13 May 2026 19:45:57 GMT",
         "keep-alive": "timeout=72",
         "vary": "Origin",
         "x-ratelimit-limit": "30",
@@ -268,21 +271,21 @@
         "x-ratelimit-reset": "60",
         "x-ratelimit-reset-ms": "0"
       },
-      "wallLatencyMs": 138.06
+      "wallLatencyMs": 93.64
     },
     "authorizedChat": {
       "status": 200,
       "body": {
-        "id": "chatcmpl-mov6504s",
+        "id": "chatcmpl-mp4gzl9c",
         "object": "chat.completion",
-        "created": 1778139148,
+        "created": 1778701567,
         "model": "Q",
         "foundationModel": "Gemma 4",
         "developer": "Arobi Technology Alliance",
         "lead": "Gaetano Comparcola",
         "harness": "Immaculate",
         "circuitState": "closed",
-        "latencyMs": 58423.98,
+        "latencyMs": 9534.63,
         "thinkingDetected": false,
         "structuredRetryAttempted": false,
         "structuredRetryUsed": false,
@@ -306,31 +309,31 @@
       },
       "headers": {
         "connection": "keep-alive",
-        "content-length": "569",
+        "content-length": "568",
         "content-type": "application/json; charset=utf-8",
-        "date": "Thu, 07 May 2026 07:32:28 GMT",
+        "date": "Wed, 13 May 2026 19:46:07 GMT",
         "keep-alive": "timeout=72",
         "vary": "Origin",
         "x-q-circuit-state": "closed",
         "x-q-developer": "Arobi Technology Alliance",
         "x-q-foundation-model": "Gemma 4",
-        "x-q-latency-ms": "58423.98",
+        "x-q-latency-ms": "9534.63",
         "x-q-lead": "Gaetano Comparcola",
         "x-q-model-name": "Q",
         "x-ratelimit-limit": "30",
         "x-ratelimit-remaining": "26",
         "x-ratelimit-reset": "60",
         "x-ratelimit-reset-ms": "0",
-        "x-upstream-latency-ms": "58423.98"
+        "x-upstream-latency-ms": "9534.63"
       },
-      "wallLatencyMs": 58653.35
+      "wallLatencyMs": 9652.3
     },
     "identityChat": {
       "status": 200,
       "body": {
-        "id": "chatcmpl-mov650a6",
+        "id": "chatcmpl-mp4gzlch",
         "object": "chat.completion",
-        "created": 1778139148,
+        "created": 1778701567,
         "model": "Q",
         "foundationModel": "Gemma 4",
         "developer": "Arobi Technology Alliance",
@@ -359,7 +362,7 @@
         "connection": "keep-alive",
         "content-length": "709",
         "content-type": "application/json; charset=utf-8",
-        "date": "Thu, 07 May 2026 07:32:28 GMT",
+        "date": "Wed, 13 May 2026 19:46:07 GMT",
         "keep-alive": "timeout=72",
         "vary": "Origin",
         "x-q-circuit-state": "closed",
@@ -369,10 +372,10 @@
         "x-q-model-name": "Q",
         "x-ratelimit-limit": "30",
         "x-ratelimit-remaining": "29",
-        "x-ratelimit-reset": "2",
+        "x-ratelimit-reset": "51",
         "x-ratelimit-reset-ms": "0"
       },
-      "wallLatencyMs": 191.71
+      "wallLatencyMs": 112.4
     },
     "concurrentRejection": {
       "status": 429,
@@ -385,16 +388,16 @@
         "connection": "keep-alive",
         "content-length": "101",
         "content-type": "application/json; charset=utf-8",
-        "date": "Thu, 07 May 2026 07:32:29 GMT",
+        "date": "Wed, 13 May 2026 19:46:07 GMT",
         "keep-alive": "timeout=72",
         "retry-after": "1",
         "vary": "Origin",
         "x-ratelimit-limit": "30",
         "x-ratelimit-remaining": "28",
-        "x-ratelimit-reset": "1",
+        "x-ratelimit-reset": "50",
         "x-ratelimit-reset-ms": "1000"
       },
-      "wallLatencyMs": 230.4
+      "wallLatencyMs": 115.51
     }
   },
   "identity": {
@@ -402,15 +405,15 @@
     "responsePreview": "I am Q, developed by Arobi Technology Alliance and built on Gemma 4. Gaetano Comparcola is the founder, CEO, lead architect, and lead engineer behind the project. Immaculate is my governed orchestration harness, and Arobi Network is the operator ledger and audit substrate around us."
   },
   "localQFoundationRun": {
-    "latencyMs": 1889.15,
-    "wallLatencyMs": 1912.07,
-    "responsePreview": "Gateway is fine"
+    "latencyMs": 6776.46,
+    "wallLatencyMs": 6782.22,
+    "responsePreview": "Gateway is fine."
   },
   "comparison": {
-    "gatewayEndToEndLatencyMs": 58653.35,
-    "gatewayUpstreamLatencyMs": 58423.98,
-    "gatewayAddedLatencyMs": 229.37,
-    "localQFoundationLatencyMs": 1889.15
+    "gatewayEndToEndLatencyMs": 9652.3,
+    "gatewayUpstreamLatencyMs": 9534.63,
+    "gatewayAddedLatencyMs": 117.67,
+    "localQFoundationLatencyMs": 6776.46
   },
   "output": {
     "jsonPath": "docs\\wiki\\Q-Gateway-Validation.json",

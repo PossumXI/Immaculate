@@ -31,6 +31,7 @@ jobs:
           npm run typecheck
           npm run build
           npm run benchmark:gate:all
+          npm run q:release-gate
 
       - name: Create release bundle
         shell: bash

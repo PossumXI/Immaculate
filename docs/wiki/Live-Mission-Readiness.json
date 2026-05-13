@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-13T17:05:26.971Z",
+  "generatedAt": "2026-05-13T19:50:18.464Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "585973070c9a2cd34de1d38f9675b430bc7421a4",
-    "gitShortSha": "5859730",
+    "gitSha": "694a14958ca7bc45c825179168c4635921fdc0eb",
+    "gitShortSha": "694a149",
     "gitBranch": "main",
-    "buildId": "0.1.0+5859730",
+    "buildId": "0.1.0+694a149",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -57,7 +57,7 @@
         "configured": true,
         "ready": false,
         "endpoint": "https://arobi.aura-genesis.org",
-        "detail": "public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true"
+        "detail": "public edge did not surface a fresh governed audit record (delta 1) and local public node readiness is true"
       },
       "private": {
         "status": "blocked",
@@ -80,7 +80,7 @@
         "configured": true,
         "ready": true,
         "endpoint": "https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1",
-        "detail": "Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 12s ago (budget 900s)"
+        "detail": "Discord Q receipt reports Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1); gateway=true; guilds=1; health 200; updated 20s ago (budget 900s)"
       }
     },
     "discord": {
@@ -89,11 +89,11 @@
         "configured": true,
         "ready": true,
         "endpoint": "http://127.0.0.1:8788/health",
-        "detail": "status=ready; gateway=true; guilds=1; health 200; updated 12s ago (budget 900s)"
+        "detail": "status=ready; gateway=true; guilds=1; health 200; updated 20s ago (budget 900s)"
       }
     },
     "missionSurfaceReady": false,
-    "summary": "shared readiness blocked: https://arobi.aura-genesis.org: public edge is synthesized/offline; latest supervised rerun public delta was 1 while local public node readiness is true | openjaws/artifacts/fabric-audit-soak-20260420T022653Z: verified private node is blocked by mission treasury signer mismatch despite rerun delta 1"
+    "summary": "shared readiness blocked: https://arobi.aura-genesis.org: public edge did not surface a fresh governed audit record (delta 1) and local public node readiness is true | openjaws/artifacts/fabric-audit-soak-20260420T022653Z: verified private node is blocked by mission treasury signer mismatch despite rerun delta 1"
   },
   "evidence": {
     "roundtableRuntimePath": "docs/wiki/Roundtable-Runtime.json",
@@ -102,13 +102,13 @@
     "discordAgentHealthUrl": "http://127.0.0.1:8788/health",
     "openjawsRoot": "openjaws",
     "roundtableRuntimeGeneratedAt": "2026-04-21T22:19:50.626Z",
-    "arobiLiveLedgerGeneratedAt": "2026-05-13T17:05:15.331Z",
-    "discordAgentReceiptUpdatedAt": "2026-05-13T17:04:51.789Z",
+    "arobiLiveLedgerGeneratedAt": "2026-05-13T19:49:02.852Z",
+    "discordAgentReceiptUpdatedAt": "2026-05-13T19:49:17.963Z",
     "qOciBackend": "Q backend: oci:Q via OCI IAM (https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/openai/v1)",
     "discordHealth": {
       "status": 200,
       "ok": true,
-      "body": "{\"status\":\"ok\",\"profile\":\"q\",\"label\":\"Q\",\"interactionReady\":true,\"gatewayReady\":true,\"gatewayConnected\":true,\"guildCount\":1,\"gatewayLastError\":null,\"gatewayLastCloseCode\":null,\"gatewayBlocked\":false,\"gatewayReconnectable\":null,\"updatedAt\":\"2026-05-13T17:04:51.789Z\"}"
+      "body": "{\"status\":\"ok\",\"profile\":\"q\",\"label\":\"Q\",\"interactionReady\":true,\"gatewayReady\":true,\"gatewayConnected\":true,\"guildCount\":1,\"gatewayLastError\":null,\"gatewayLastCloseCode\":null,\"gatewayBlocked\":false,\"gatewayReconnectable\":null,\"updatedAt\":\"2026-05-13T19:49:17.963Z\"}"
     },
     "arobiLocalPublicReady": true,
     "arobiLocalPrivateReady": false

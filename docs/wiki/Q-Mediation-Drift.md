@@ -2,14 +2,14 @@
 
 This page is generated from the dedicated `q-mediation-drift` benchmark pack. It measures whether Immaculate preserves Q's governed route through arbitration, scheduling, and routing under mixed pressure without drift.
 
-- Generated: 2026-04-19T22:06:40.025Z
-- Release: `0.1.0+6fc8e11`
-- Repo commit: `6fc8e11`
-- Q training bundle: `q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce`
+- Generated: 2026-05-13T19:54:30.215Z
+- Release: `0.1.0+694a149`
+- Repo commit: `694a149`
+- Q training bundle: `q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3`
 
 ## Benchmark
 
-- Suite: `immaculate-benchmark-2026-04-19T22-04-57-220Z`
+- Suite: `immaculate-benchmark-2026-05-13T19-53-03-303Z`
 - Pack: `Q Mediation Drift (q-mediation-drift)`
 - Scenario count: `4`
 - Failed assertions: `0`
@@ -18,11 +18,11 @@ This page is generated from the dedicated `q-mediation-drift` benchmark pack. It
 - Drift detected max: `0`
 - Local replicas P50: `0`
 - Verification quorum P50: `1`
-- Mediation latency P95: `26054.67 ms`
-- Runner path latency P95: `4.4 ms`
-- Arbitration latency P95: `1.61 ms`
-- Scheduling latency P95: `2.04 ms`
-- Routing latency P95: `0.75 ms`
+- Mediation latency P95: `8032.2 ms`
+- Runner path latency P95: `6.27 ms`
+- Arbitration latency P95: `1.73 ms`
+- Scheduling latency P95: `3.19 ms`
+- Routing latency P95: `1.35 ms`
 - Hardware: knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics
 
 ## Causal Diagnosis
@@ -102,7 +102,7 @@ This page is generated from the dedicated `q-mediation-drift` benchmark pack. It
 
 ## Assertions
 
-- q-mediation-drift-health: `pass` | target `200 health / tracked bundle / one Q model entry` | actual `200 / q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce / Q`
+- q-mediation-drift-health: `pass` | target `200 health / tracked bundle / one Q model entry` | actual `200 / q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3 / Q`
 - q-mediation-drift-structured: `pass` | target `all scenarios parse 3 structured fields` | actual `mixed-pressure-local-cognition:completed/3/none, mixed-pressure-local-memory-cognition:completed/3/none, mixed-pressure-guarded-hold:completed/3/none, mixed-pressure-integrity-guarded-hold:completed/3/none`
 - q-mediation-drift-route-alignment: `pass` | target `all scenarios aligned / p50 1 / max drift 0` | actual `mixed-pressure-local-cognition:cognitive->cognitive-assisted/drift=false, mixed-pressure-local-memory-cognition:cognitive->cognitive-assisted/drift=false, mixed-pressure-guarded-hold:guarded->guarded-fallback/drift=false, mixed-pressure-integrity-guarded-hold:guarded->guarded-fallback/drift=false`
 - q-mediation-drift-q-only-selection: `pass` | target `all local cognition scenarios keep Q-only selection with degraded admission` | actual `true/cognitive-assisted/degrade/2, true/cognitive-assisted/degrade/2`

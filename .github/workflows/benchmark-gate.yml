@@ -49,6 +49,9 @@ jobs:
       - name: Run benchmark gate
         run: npm run benchmark:gate:all
 
+      - name: Run Q release gate
+        run: npm run q:release-gate
+
       - name: Upload benchmark publications
         if: always()
         uses: actions/upload-artifact@v7

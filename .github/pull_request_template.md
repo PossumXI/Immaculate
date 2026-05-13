@@ -9,6 +9,7 @@
 - [ ] `npm run typecheck`
 - [ ] `npm run build`
 - [ ] `npm run benchmark:gate:all`
+- [ ] `npm run q:release-gate`
 
 ## Governance / Security Impact
 

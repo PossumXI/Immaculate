@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-13T18:55:24.543Z",
+  "generatedAt": "2026-05-13T19:54:30.215Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
@@ -78,7 +78,7 @@
       "label": "Q readiness gate",
       "path": "docs\\wiki\\Q-Readiness-Gate.json",
       "required": true,
-      "generatedAt": "2026-05-13T18:21:45.147Z",
+      "generatedAt": "2026-05-13T19:53:50.601Z",
       "healthStatus": "healthy",
       "healthReason": "no failed receipt signals detected"
     },
@@ -86,7 +86,7 @@
       "label": "Q gateway validation",
       "path": "docs\\wiki\\Q-Gateway-Validation.json",
       "required": true,
-      "generatedAt": "2026-05-07T07:32:32.750Z",
+      "generatedAt": "2026-05-13T19:46:15.900Z",
       "healthStatus": "healthy",
       "healthReason": "no failed receipt signals detected"
     },
@@ -102,7 +102,7 @@
       "label": "Q mediation drift",
       "path": "docs\\wiki\\Q-Mediation-Drift.json",
       "required": true,
-      "generatedAt": "2026-04-19T22:06:40.025Z",
+      "generatedAt": "2026-05-13T19:54:30.215Z",
       "healthStatus": "healthy",
       "healthReason": "no failed receipt signals detected"
     },
@@ -119,7 +119,7 @@
       "path": "docs\\wiki\\Arobi-Live-Ledger-Receipt.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-05-13T18:55:24.543Z",
+      "generatedAt": "2026-05-13T19:49:02.852Z",
       "healthStatus": "unhealthy",
       "healthReason": "live ledger receipt does not show the latest governed record publicly"
     },
@@ -128,7 +128,7 @@
       "path": "docs\\wiki\\Live-Mission-Readiness.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-05-13T17:05:26.971Z",
+      "generatedAt": "2026-05-13T19:50:18.464Z",
       "healthStatus": "unhealthy",
       "healthReason": "mission readiness receipt reports missionSurfaceReady=false"
     },
@@ -345,15 +345,15 @@
     "counts": {
       "total": 35,
       "required": 20,
-      "fresh": 14,
-      "stale": 17,
+      "fresh": 15,
+      "stale": 16,
       "missing": 0,
       "invalid": 0,
       "unhealthy": 4,
       "optional": 0,
-      "blocking": 7
+      "blocking": 6
     },
-    "summary": "7 blocking release evidence gap(s): BridgeBench soak stale outside 7d budget; Q mediation drift stale outside 7d budget; Arobi live ledger receipt live ledger receipt does not show the latest governed record publicly; Live mission readiness mission readiness receipt reports missionSurfaceReady=false; Live operator activity mission readiness receipt reports missionSurfaceReady=false; Live operator public export publication status is blocked; Roundtable runtime stale outside 24h budget",
+    "summary": "6 blocking release evidence gap(s): BridgeBench soak stale outside 7d budget; Arobi live ledger receipt live ledger receipt does not show the latest governed record publicly; Live mission readiness mission readiness receipt reports missionSurfaceReady=false; Live operator activity mission readiness receipt reports missionSurfaceReady=false; Live operator public export publication status is blocked; Roundtable runtime stale outside 24h budget",
     "surfaces": [
       {
         "label": "BridgeBench",
@@ -396,7 +396,7 @@
         "path": "docs\\wiki\\Q-Readiness-Gate.json",
         "required": true,
         "maxAgeMs": 604800000,
-        "generatedAt": "2026-05-13T18:21:45.147Z",
+        "generatedAt": "2026-05-13T19:53:50.601Z",
         "healthStatus": "healthy",
         "healthReason": "no failed receipt signals detected",
         "status": "fresh",
@@ -408,7 +408,7 @@
         "path": "docs\\wiki\\Q-Gateway-Validation.json",
         "required": true,
         "maxAgeMs": 604800000,
-        "generatedAt": "2026-05-07T07:32:32.750Z",
+        "generatedAt": "2026-05-13T19:46:15.900Z",
         "healthStatus": "healthy",
         "healthReason": "no failed receipt signals detected",
         "status": "fresh",
@@ -432,12 +432,12 @@
         "path": "docs\\wiki\\Q-Mediation-Drift.json",
         "required": true,
         "maxAgeMs": 604800000,
-        "generatedAt": "2026-04-19T22:06:40.025Z",
+        "generatedAt": "2026-05-13T19:54:30.215Z",
         "healthStatus": "healthy",
         "healthReason": "no failed receipt signals detected",
-        "status": "stale",
-        "blocking": true,
-        "reason": "stale outside 7d budget"
+        "status": "fresh",
+        "blocking": false,
+        "reason": "fresh within 7d budget"
       },
       {
         "label": "Arobi audit integrity",
@@ -456,7 +456,7 @@
         "path": "docs\\wiki\\Arobi-Live-Ledger-Receipt.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-05-13T18:55:24.543Z",
+        "generatedAt": "2026-05-13T19:49:02.852Z",
         "healthStatus": "unhealthy",
         "healthReason": "live ledger receipt does not show the latest governed record publicly",
         "status": "unhealthy",
@@ -468,7 +468,7 @@
         "path": "docs\\wiki\\Live-Mission-Readiness.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-05-13T17:05:26.971Z",
+        "generatedAt": "2026-05-13T19:50:18.464Z",
         "healthStatus": "unhealthy",
         "healthReason": "mission readiness receipt reports missionSurfaceReady=false",
         "status": "unhealthy",

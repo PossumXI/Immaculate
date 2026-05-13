@@ -36,18 +36,24 @@ test("benchmark CLI tolerates npm separator argv", () => {
   assert.equal(flags.packId, "q-gateway-substrate");
 });
 
-test("root benchmark aliases use npm config forwarding for packs", () => {
+test("root benchmark aliases forward pack selection to the harness benchmark CLI", () => {
   const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
   const packageJson = JSON.parse(readFileSync(path.join(repoRoot, "package.json"), "utf8")) as {
     scripts?: Record<string, string>;
   };
   const benchmarkAliases = Object.entries(packageJson.scripts ?? {}).filter(
-    ([name, command]) => name.startsWith("benchmark:") && command.includes("npm run benchmark -w @immaculate/harness")
+    ([name, command]) =>
+      name.startsWith("benchmark:") &&
+      command.includes("npm run benchmark -w @immaculate/harness") &&
+      command.includes("--pack=")
   );
-  const legacySeparatorPattern = ["npm run benchmark -w @immaculate/harness --", " --pack="].join("");
 
   assert.ok(benchmarkAliases.length > 0);
   for (const [name, command] of benchmarkAliases) {
-    assert.equal(command.includes(legacySeparatorPattern), false, name);
+    assert.match(
+      command,
+      /npm run benchmark -w @immaculate\/harness -- --pack=[^\s]+/,
+      name
+    );
   }
 });
