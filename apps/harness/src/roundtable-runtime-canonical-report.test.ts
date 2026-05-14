@@ -208,10 +208,10 @@ test("roundtable runtime does not start shared fallback while dedicated Q is sti
   );
 });
 
-test("roundtable runtime default timeouts finish before the release command budget", () => {
+test("roundtable runtime gives local Q enough cold-start budget by default", () => {
   const controls = resolveRoundtableRuntimeTimeoutControls({});
 
-  assert.equal(controls.prewarmTimeoutMs, 180_000);
+  assert.equal(controls.prewarmTimeoutMs, 600_000);
   assert.equal(controls.cognitiveRequestTimeoutMs, 180_000);
 });
 
@@ -243,6 +243,7 @@ test("roundtable runtime mediation stays plan-only while carrying engagement evi
   assert.equal(body.dispatchOnApproval, false);
   assert.equal(body.suppressed, true);
   assert.equal(body.operatorConfirmed, true);
+  assert.equal(body.approvalRef, "operator:roundtable-runtime");
   assert.equal(body.receiptTarget, ".runtime/roundtable-runtime/runs/demo/engagement.ndjson");
   assert.match(body.operatorSummary, /suppressed plan-only roundtable mediation/u);
   assert.match(body.rollbackPlan, /No external dispatch is authorized/u);
@@ -257,6 +258,7 @@ test("roundtable runtime mediation headers carry prehandler engagement evidence"
   assert.equal(headers["x-immaculate-purpose"], "actuation-dispatch,cognitive-execution");
   assert.equal(headers["x-immaculate-consent-scope"], "session:roundtable-runtime-test");
   assert.equal(headers["x-immaculate-actor"], "roundtable-runtime");
+  assert.equal(headers["x-immaculate-approval-ref"], "operator:roundtable-runtime");
   assert.equal(headers["x-immaculate-receipt-target"], ".runtime/roundtable-runtime/engagement/test.ndjson");
   assert.equal(headers["x-immaculate-operator-confirmed"], "true");
   assert.match(headers["x-immaculate-operator-summary"], /suppressed plan-only roundtable mediation/u);

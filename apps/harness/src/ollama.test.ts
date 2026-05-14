@@ -4,6 +4,7 @@ import type { AddressInfo } from "node:net";
 import test from "node:test";
 import { createEngine } from "@immaculate/core";
 import {
+  prewarmOllamaModel,
   resolveQGenerateFastOptions,
   runOllamaChatCompletion,
   runOllamaExecution
@@ -12,7 +13,7 @@ import {
 test("Q structured generation options allow bounded low-memory overrides", () => {
   assert.deepEqual(resolveQGenerateFastOptions({}), {
     numCtx: 2048,
-    numBatch: 64
+    numBatch: 8
   });
   assert.deepEqual(
     resolveQGenerateFastOptions({
@@ -90,6 +91,53 @@ test("Ollama chat runner serializes explicit thinking mode", async () => {
     assert.equal(capturedBodies.length, 2);
     assert.equal(capturedBodies[0].think, false);
     assert.equal(capturedBodies[1].think, true);
+  } finally {
+    await new Promise<void>((resolve, reject) => {
+      server.close((error) => (error ? reject(error) : resolve()));
+    });
+  }
+});
+
+test("Q prewarm uses conservative local generation options", async () => {
+  const capturedBodies: Array<Record<string, unknown>> = [];
+  const server = http.createServer((request, response) => {
+    const chunks: Buffer[] = [];
+    request.on("data", (chunk: Buffer) => chunks.push(chunk));
+    request.on("end", () => {
+      capturedBodies.push(JSON.parse(Buffer.concat(chunks).toString("utf8")));
+      response.writeHead(200, {
+        "content-type": "application/json"
+      });
+      response.end(
+        JSON.stringify({
+          message: {
+            role: "assistant",
+            content: "ready"
+          },
+          done: true
+        })
+      );
+    });
+  });
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+
+  try {
+    const address = server.address();
+    if (!address || typeof address === "string") {
+      throw new Error("Expected loopback server to expose a port.");
+    }
+    const endpoint = `http://127.0.0.1:${(address as AddressInfo).port}`;
+
+    await prewarmOllamaModel({
+      endpoint,
+      model: "q:latest",
+      timeoutMs: 2_000
+    });
+
+    assert.equal(capturedBodies.length, 1);
+    const options = capturedBodies[0].options as Record<string, unknown>;
+    assert.equal(options.num_ctx, 2048);
+    assert.equal(options.num_batch, 8);
   } finally {
     await new Promise<void>((resolve, reject) => {
       server.close((error) => (error ? reject(error) : resolve()));

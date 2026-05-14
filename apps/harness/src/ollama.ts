@@ -143,7 +143,7 @@ export function resolveQGenerateFastOptions(
 ): QGenerateFastOptions {
   return {
     numCtx: parseBoundedInteger(env.IMMACULATE_OLLAMA_Q_GENERATE_NUM_CTX, 2048, 512, 16384),
-    numBatch: parseBoundedInteger(env.IMMACULATE_OLLAMA_Q_GENERATE_NUM_BATCH, 64, 8, 1024)
+    numBatch: parseBoundedInteger(env.IMMACULATE_OLLAMA_Q_GENERATE_NUM_BATCH, 8, 8, 1024)
   };
 }
 

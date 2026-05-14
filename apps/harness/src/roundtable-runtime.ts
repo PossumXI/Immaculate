@@ -269,7 +269,7 @@ export function resolveRoundtableRuntimeTimeoutControls(
 ): RoundtableRuntimeTimeoutControls {
   return {
     prewarmTimeoutMs: clampRuntimeTimeoutMs(
-      parsePositiveInteger(env.IMMACULATE_ROUNDTABLE_OLLAMA_PREWARM_TIMEOUT_MS, 180_000)
+      parsePositiveInteger(env.IMMACULATE_ROUNDTABLE_OLLAMA_PREWARM_TIMEOUT_MS, 600_000)
     ),
     cognitiveRequestTimeoutMs: clampRuntimeTimeoutMs(
       parsePositiveInteger(env.IMMACULATE_ROUNDTABLE_COGNITIVE_TIMEOUT_MS, 180_000)
@@ -1070,6 +1070,7 @@ const ROUNDTABLE_MEDIATION_OPERATOR_SUMMARY =
   "Run suppressed plan-only roundtable mediation for local release evidence; no external actuation or public mutation is authorized.";
 const ROUNDTABLE_MEDIATION_ROLLBACK_PLAN =
   "No external dispatch is authorized. Keep dispatchOnApproval=false and suppressed=true; if mediation drifts, stop the harness and discard the runtime artifacts.";
+const ROUNDTABLE_MEDIATION_APPROVAL_REF = "operator:roundtable-runtime";
 
 export function buildRoundtableMediationHeaders(options: {
   consentScope: string;
@@ -1079,6 +1080,7 @@ export function buildRoundtableMediationHeaders(options: {
   return {
     ...buildHeaders(options.consentScope, "actuation-dispatch,cognitive-execution"),
     "x-immaculate-actor": options.actor?.trim() || "roundtable-runtime",
+    "x-immaculate-approval-ref": ROUNDTABLE_MEDIATION_APPROVAL_REF,
     "x-immaculate-receipt-target": options.receiptTarget,
     "x-immaculate-operator-summary": ROUNDTABLE_MEDIATION_OPERATOR_SUMMARY,
     "x-immaculate-operator-confirmed": "true",
@@ -1099,6 +1101,7 @@ export function buildRoundtableMediationRequestBody(options: {
     requestedExecutionDecision: "allow_local" as const,
     dispatchOnApproval: false,
     suppressed: true,
+    approvalRef: ROUNDTABLE_MEDIATION_APPROVAL_REF,
     receiptTarget: options.receiptTarget,
     operatorSummary: ROUNDTABLE_MEDIATION_OPERATOR_SUMMARY,
     operatorConfirmed: true,
