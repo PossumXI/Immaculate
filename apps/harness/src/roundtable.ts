@@ -18,8 +18,12 @@ const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(MODULE_ROOT, "../../..");
 const WORKTREE_ROOT = path.join(REPO_ROOT, ".runtime", "agent-worktrees");
 const ROUNDTABLE_EXECUTION_ROOT = path.join(REPO_ROOT, ".runtime", "roundtable-execution");
-const DEFAULT_OPENJAWS_ROOT = "D:\\openjaws\\OpenJaws";
-const DEFAULT_ASGARD_ROOT = "C:\\Users\\Knight\\Desktop\\cheeks\\Asgard";
+const DEFAULT_OPENJAWS_ROOTS = ["D:\\openjaws\\OpenJaws"];
+const DEFAULT_ASGARD_ROOTS = [
+  "D:\\openjaws\\Asgard_Arobi",
+  "D:\\cheeks\\Asgard",
+  "C:\\Users\\Knight\\Desktop\\cheeks\\Asgard"
+];
 
 type DiscoveredRoundtableRepo = AgentWorkspaceScope & {
   available: boolean;
@@ -175,6 +179,18 @@ function normalizeSessionScope(sessionId?: string, consentScope?: string): strin
   return sessionId ? `session:${sessionId}` : undefined;
 }
 
+export function resolveRoundtableRepoRoot(
+  explicitRoot: string | undefined,
+  defaultRoots: string[]
+): string {
+  const trimmedRoot = explicitRoot?.trim();
+  if (trimmedRoot) {
+    return trimmedRoot;
+  }
+  const existingRoot = defaultRoots.find((candidate) => existsSync(candidate));
+  return existingRoot ?? defaultRoots[0] ?? "";
+}
+
 function preferredIsolationMode(repoId: string): AgentWorkspaceScope["isolationMode"] {
   if (repoId === "asgard") {
     return "branch";
@@ -250,8 +266,8 @@ function discoverRepo(args: {
 }
 
 export function discoverRoundtableProjects(sessionScope?: string): DiscoveredRoundtableRepo[] {
-  const openjawsRoot = process.env.OPENJAWS_ROOT?.trim() || DEFAULT_OPENJAWS_ROOT;
-  const asgardRoot = process.env.ASGARD_ROOT?.trim() || DEFAULT_ASGARD_ROOT;
+  const openjawsRoot = resolveRoundtableRepoRoot(process.env.OPENJAWS_ROOT, DEFAULT_OPENJAWS_ROOTS);
+  const asgardRoot = resolveRoundtableRepoRoot(process.env.ASGARD_ROOT, DEFAULT_ASGARD_ROOTS);
   return [
     discoverRepo({
       repoId: "immaculate",
@@ -465,7 +481,7 @@ function getTrackedWorkspaceSnapshot(args: {
   return snapshot;
 }
 
-async function collectRoundtableRepoAuditFindings(args: {
+export async function collectRoundtableRepoAuditFindings(args: {
   repoId: string;
   repoRoot: string;
   repoSha?: string;
@@ -568,7 +584,17 @@ async function collectRoundtableRepoAuditFindings(args: {
       args.repoRoot,
       "internal/cortex/orchestrator.go"
     );
+    const auditClientSource = await readRepoFileIfPresent(
+      args.repoRoot,
+      "internal/cortex/audit/ledger_client.go"
+    );
     const nysusSource = await readRepoFileIfPresent(args.repoRoot, "cmd/nysus/main.go");
+    const hasLaneAwareAuditRecordClient = Boolean(
+      auditClientSource?.includes("/api/v1/audit/record") &&
+        auditClientSource.includes("toBoundedAuditMetadata") &&
+        auditClientSource.includes("Lane") &&
+        auditClientSource.includes("Metadata")
+    );
     pushFinding(
       findings,
       fabricSource?.includes("GetPublicChainData") && fabricSource.includes("GetPrivateChainData")
@@ -582,12 +608,26 @@ async function collectRoundtableRepoAuditFindings(args: {
     );
     pushFinding(
       findings,
-      orchestratorSource?.includes("PublicChain: false")
+      hasLaneAwareAuditRecordClient
+        ? {
+            id: "arobi-audit-record-lane-metadata",
+            severity: "info",
+            summary:
+              "Asgard Cortex audit writes now target the current Arobi audit route with explicit public/private/zero-zero lane metadata.",
+            file: "internal/cortex/audit/ledger_client.go",
+            evidence: "/api/v1/audit/record + toBoundedAuditMetadata"
+          }
+        : undefined
+    );
+    pushFinding(
+      findings,
+      orchestratorSource?.includes("PublicChain: false") &&
+        !orchestratorSource.includes("o.ledger.Log(event)")
         ? {
             id: "single-ledger-write-path",
             severity: "warning",
             summary:
-              "Asgard still routes accountability through a single ledger write path instead of a live dual public/private write path.",
+              "Asgard still routes defense accountability through a local ChainAudit mirror instead of the live lane-aware audit client.",
             file: "internal/cortex/orchestrator.go",
             evidence: "PublicChain: false"
           }
