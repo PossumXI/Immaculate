@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-14T13:58:29.792Z",
+  "generatedAt": "2026-05-14T17:49:59.544Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "daf005eab7a324a08d9cb9bab56454c95c4cb805",
-    "gitShortSha": "daf005e",
+    "gitSha": "b71d328eeef646b307645b19979408b2399d3dcc",
+    "gitShortSha": "b71d328",
     "gitBranch": "main",
-    "buildId": "0.1.0+daf005e",
+    "buildId": "0.1.0+b71d328",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -78,7 +78,7 @@
       "label": "Q readiness gate",
       "path": "docs\\wiki\\Q-Readiness-Gate.json",
       "required": true,
-      "generatedAt": "2026-05-14T13:58:29.792Z",
+      "generatedAt": "2026-05-14T16:04:36.009Z",
       "healthStatus": "healthy",
       "healthReason": "no failed receipt signals detected"
     },
@@ -110,7 +110,7 @@
       "label": "Arobi audit integrity",
       "path": "docs\\wiki\\Arobi-Audit-Integrity.json",
       "required": true,
-      "generatedAt": "2026-05-12T18:09:17.101Z",
+      "generatedAt": "2026-05-14T17:32:24.048Z",
       "healthStatus": "healthy",
       "healthReason": "no failed receipt signals detected"
     },
@@ -155,7 +155,7 @@
       "path": "docs\\wiki\\Cross-Project-Workflow-Health.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-05-13T18:23:07.770Z",
+      "generatedAt": "2026-05-14T17:49:59.544Z",
       "healthStatus": "healthy",
       "healthReason": "no failed receipt signals detected"
     },
@@ -172,7 +172,7 @@
       "path": "docs\\wiki\\Roundtable-Actionability.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-05-14T02:52:18.318Z",
+      "generatedAt": "2026-05-14T16:07:42.698Z",
       "healthStatus": "healthy",
       "healthReason": "no failed receipt signals detected"
     },
@@ -181,7 +181,7 @@
       "path": "docs\\wiki\\Roundtable-Runtime.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-05-14T13:58:11.861Z",
+      "generatedAt": "2026-05-14T13:59:28.295Z",
       "healthStatus": "healthy",
       "healthReason": "no failed receipt signals detected"
     },
@@ -254,6 +254,14 @@
       "path": "docs\\wiki\\OCI-Region-Capacity.json",
       "required": false,
       "generatedAt": "2026-04-17T02:02:24Z",
+      "healthStatus": "healthy",
+      "healthReason": "no failed receipt signals detected"
+    },
+    {
+      "label": "Q failure corpus",
+      "path": "docs\\wiki\\Q-Failure-Corpus.json",
+      "required": true,
+      "generatedAt": "2026-05-14T17:47:58Z",
       "healthStatus": "healthy",
       "healthReason": "no failed receipt signals detected"
     },
@@ -343,9 +351,9 @@
     "status": "ready",
     "maxAgeMs": 604800000,
     "counts": {
-      "total": 35,
-      "required": 20,
-      "fresh": 21,
+      "total": 36,
+      "required": 21,
+      "fresh": 22,
       "stale": 14,
       "missing": 0,
       "invalid": 0,
@@ -353,7 +361,7 @@
       "optional": 0,
       "blocking": 0
     },
-    "summary": "all 20 required release evidence receipt(s) are fresh",
+    "summary": "all 21 required release evidence receipt(s) are fresh",
     "surfaces": [
       {
         "label": "BridgeBench",
@@ -396,7 +404,7 @@
         "path": "docs\\wiki\\Q-Readiness-Gate.json",
         "required": true,
         "maxAgeMs": 604800000,
-        "generatedAt": "2026-05-14T13:58:29.792Z",
+        "generatedAt": "2026-05-14T16:04:36.009Z",
         "healthStatus": "healthy",
         "healthReason": "no failed receipt signals detected",
         "status": "fresh",
@@ -444,7 +452,7 @@
         "path": "docs\\wiki\\Arobi-Audit-Integrity.json",
         "required": true,
         "maxAgeMs": 604800000,
-        "generatedAt": "2026-05-12T18:09:17.101Z",
+        "generatedAt": "2026-05-14T17:32:24.048Z",
         "healthStatus": "healthy",
         "healthReason": "no failed receipt signals detected",
         "status": "fresh",
@@ -504,7 +512,7 @@
         "path": "docs\\wiki\\Cross-Project-Workflow-Health.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-05-13T18:23:07.770Z",
+        "generatedAt": "2026-05-14T17:49:59.544Z",
         "healthStatus": "healthy",
         "healthReason": "no failed receipt signals detected",
         "status": "fresh",
@@ -528,7 +536,7 @@
         "path": "docs\\wiki\\Roundtable-Actionability.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-05-14T02:52:18.318Z",
+        "generatedAt": "2026-05-14T16:07:42.698Z",
         "healthStatus": "healthy",
         "healthReason": "no failed receipt signals detected",
         "status": "fresh",
@@ -540,7 +548,7 @@
         "path": "docs\\wiki\\Roundtable-Runtime.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-05-14T13:58:11.861Z",
+        "generatedAt": "2026-05-14T13:59:28.295Z",
         "healthStatus": "healthy",
         "healthReason": "no failed receipt signals detected",
         "status": "fresh",
@@ -654,6 +662,18 @@
         "status": "stale",
         "blocking": false,
         "reason": "stale outside 7d budget"
+      },
+      {
+        "label": "Q failure corpus",
+        "path": "docs\\wiki\\Q-Failure-Corpus.json",
+        "required": true,
+        "maxAgeMs": 604800000,
+        "generatedAt": "2026-05-14T17:47:58Z",
+        "healthStatus": "healthy",
+        "healthReason": "no failed receipt signals detected",
+        "status": "fresh",
+        "blocking": false,
+        "reason": "fresh within 7d budget"
       },
       {
         "label": "Q benchmark corpus",

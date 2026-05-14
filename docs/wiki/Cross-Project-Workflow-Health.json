@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-13T18:23:07.770Z",
+  "generatedAt": "2026-05-14T18:11:23.010Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "b6d30a1ee4dd2d2123d8d785787a8f05484fa9e8",
-    "gitShortSha": "b6d30a1",
+    "gitSha": "b71d328eeef646b307645b19979408b2399d3dcc",
+    "gitShortSha": "b71d328",
     "gitBranch": "main",
-    "buildId": "0.1.0+b6d30a1",
+    "buildId": "0.1.0+b71d328",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -54,7 +54,7 @@
     "fullyHealthyRepoCount": 3,
     "allObservedWorkflowRunsSuccessful": false,
     "allActionableWorkflowRunsHealthy": true,
-    "detail": "Immaculate (public repo, github-rest-token): latest actionable runs green; observed 6/8 active workflows, 2 not recently observed, 1 non-actionable dynamic workflow(s) | OpenJaws (public repo, github-rest-token): latest actionable runs green; observed 4/6 active workflows, 2 not recently observed | Asgard_Arobi (private repo, github-rest-token): latest actionable runs green; observed 10/10 active workflows"
+    "detail": "Immaculate (public repo, gh-auth): latest actionable runs green; observed 6/8 active workflows, 2 not recently observed, 1 non-actionable dynamic workflow(s) | OpenJaws (public repo, gh-auth): latest actionable runs green; observed 4/6 active workflows, 2 not recently observed | Asgard_Arobi (private repo, gh-auth): latest actionable runs green; observed 10/10 active workflows"
   },
   "repos": [
     {
@@ -64,7 +64,7 @@
       "visibility": "public",
       "defaultBranch": "main",
       "access": {
-        "source": "github-rest-token",
+        "source": "gh-auth",
         "detail": "public repo verified through GitHub Actions REST surfaces"
       },
       "verification": {
@@ -74,7 +74,7 @@
         "nonActionableWorkflowCount": 1,
         "allObservedRunsSuccessful": false,
         "allActionableRunsHealthy": true,
-        "latestObservedRunAt": "2026-05-13T10:07:05Z"
+        "latestObservedRunAt": "2026-05-14T10:00:01Z"
       },
       "workflows": {
         "active": [
@@ -131,42 +131,42 @@
           {
             "name": "Benchmark Credibility",
             "workflowPath": ".github/workflows/benchmark-credibility.yml",
-            "runNumber": 32,
+            "runNumber": 33,
             "event": "schedule",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-13T10:05:55Z",
-            "updatedAt": "2026-05-13T10:07:05Z",
-            "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25792361142",
-            "headSha": "d06acb6d11e0d6ac9446b331eaf363fc7a894b37",
+            "createdAt": "2026-05-14T09:59:06Z",
+            "updatedAt": "2026-05-14T10:00:01Z",
+            "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25853909851",
+            "headSha": "9a10ea8715982d872675ab80fd2a153c48ee31fc",
             "classification": "success",
             "classificationReason": "workflow concluded success"
           },
           {
             "name": "Benchmark Publication",
             "workflowPath": ".github/workflows/benchmark-publication.yml",
-            "runNumber": 268,
+            "runNumber": 290,
             "event": "push",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-13T18:07:56Z",
-            "updatedAt": "2026-05-13T18:09:22Z",
-            "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25817460627",
-            "headSha": "d4ba2de448111bc87ce427c4d358b597f5f11b93",
+            "createdAt": "2026-05-14T16:05:33Z",
+            "updatedAt": "2026-05-14T16:07:14Z",
+            "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25870801560",
+            "headSha": "61c83c4473da3c908273fd972988b4cf77222acc",
             "classification": "success",
             "classificationReason": "workflow concluded success"
           },
           {
             "name": "CI",
             "workflowPath": ".github/workflows/benchmark-gate.yml",
-            "runNumber": 333,
+            "runNumber": 374,
             "event": "push",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-13T18:19:37Z",
-            "updatedAt": "2026-05-13T18:21:06Z",
-            "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25818049230",
-            "headSha": "b6d30a1ee4dd2d2123d8d785787a8f05484fa9e8",
+            "createdAt": "2026-05-14T16:12:38Z",
+            "updatedAt": "2026-05-14T16:14:10Z",
+            "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25871155074",
+            "headSha": "b71d328eeef646b307645b19979408b2399d3dcc",
             "classification": "success",
             "classificationReason": "workflow concluded success"
           },
@@ -187,28 +187,28 @@
           {
             "name": "GitGuardian",
             "workflowPath": ".github/workflows/gitguardian.yml",
-            "runNumber": 327,
+            "runNumber": 368,
             "event": "push",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-13T18:19:37Z",
-            "updatedAt": "2026-05-13T18:19:55Z",
-            "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25818049222",
-            "headSha": "b6d30a1ee4dd2d2123d8d785787a8f05484fa9e8",
+            "createdAt": "2026-05-14T16:12:38Z",
+            "updatedAt": "2026-05-14T16:12:56Z",
+            "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25871155059",
+            "headSha": "b71d328eeef646b307645b19979408b2399d3dcc",
             "classification": "success",
             "classificationReason": "workflow concluded success"
           },
           {
             "name": "Security",
             "workflowPath": ".github/workflows/security.yml",
-            "runNumber": 333,
+            "runNumber": 374,
             "event": "push",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-13T18:19:37Z",
-            "updatedAt": "2026-05-13T18:22:14Z",
-            "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25818049208",
-            "headSha": "b6d30a1ee4dd2d2123d8d785787a8f05484fa9e8",
+            "createdAt": "2026-05-14T16:12:38Z",
+            "updatedAt": "2026-05-14T16:15:25Z",
+            "htmlUrl": "https://github.com/PossumXI/Immaculate/actions/runs/25871154753",
+            "headSha": "b71d328eeef646b307645b19979408b2399d3dcc",
             "classification": "success",
             "classificationReason": "workflow concluded success"
           }
@@ -226,7 +226,7 @@
       "visibility": "public",
       "defaultBranch": "main",
       "access": {
-        "source": "github-rest-token",
+        "source": "gh-auth",
         "detail": "public repo verified through GitHub Actions REST surfaces"
       },
       "verification": {
@@ -236,7 +236,7 @@
         "nonActionableWorkflowCount": 0,
         "allObservedRunsSuccessful": true,
         "allActionableRunsHealthy": true,
-        "latestObservedRunAt": "2026-05-13T17:44:23Z"
+        "latestObservedRunAt": "2026-05-14T15:27:48Z"
       },
       "workflows": {
         "active": [
@@ -281,56 +281,56 @@
           {
             "name": "CI",
             "workflowPath": ".github/workflows/ci.yml",
-            "runNumber": 560,
+            "runNumber": 599,
             "event": "push",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-13T17:37:44Z",
-            "updatedAt": "2026-05-13T17:44:23Z",
-            "htmlUrl": "https://github.com/PossumXI/OpenJaws/actions/runs/25815891842",
-            "headSha": "7823854b24f56924b268e642878c2f6007674799",
+            "createdAt": "2026-05-14T15:21:24Z",
+            "updatedAt": "2026-05-14T15:27:48Z",
+            "htmlUrl": "https://github.com/PossumXI/OpenJaws/actions/runs/25868513148",
+            "headSha": "b674d82c7ecf2802e58cb6daa2a648abdd95d7c3",
             "classification": "success",
             "classificationReason": "workflow concluded success"
           },
           {
             "name": "Q Benchmark Soak",
             "workflowPath": ".github/workflows/q-benchmark-soak.yml",
-            "runNumber": 33,
+            "runNumber": 34,
             "event": "schedule",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-13T08:19:37Z",
-            "updatedAt": "2026-05-13T08:22:02Z",
-            "htmlUrl": "https://github.com/PossumXI/OpenJaws/actions/runs/25787206327",
-            "headSha": "1fa0ea537eb804398679ac16c6f17df073fd1944",
+            "createdAt": "2026-05-14T08:17:24Z",
+            "updatedAt": "2026-05-14T08:19:12Z",
+            "htmlUrl": "https://github.com/PossumXI/OpenJaws/actions/runs/25849659909",
+            "headSha": "25503efca9c8f8c5a0f1c018628e383f8da3c133",
             "classification": "success",
             "classificationReason": "workflow concluded success"
           },
           {
             "name": "Security",
             "workflowPath": ".github/workflows/security.yml",
-            "runNumber": 572,
+            "runNumber": 611,
             "event": "push",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-13T17:37:44Z",
-            "updatedAt": "2026-05-13T17:38:00Z",
-            "htmlUrl": "https://github.com/PossumXI/OpenJaws/actions/runs/25815891817",
-            "headSha": "7823854b24f56924b268e642878c2f6007674799",
+            "createdAt": "2026-05-14T15:21:24Z",
+            "updatedAt": "2026-05-14T15:21:42Z",
+            "htmlUrl": "https://github.com/PossumXI/OpenJaws/actions/runs/25868513206",
+            "headSha": "b674d82c7ecf2802e58cb6daa2a648abdd95d7c3",
             "classification": "success",
             "classificationReason": "workflow concluded success"
           },
           {
             "name": "System Check",
             "workflowPath": ".github/workflows/system-check.yml",
-            "runNumber": 561,
+            "runNumber": 600,
             "event": "push",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-13T17:37:44Z",
-            "updatedAt": "2026-05-13T17:44:39Z",
-            "htmlUrl": "https://github.com/PossumXI/OpenJaws/actions/runs/25815892504",
-            "headSha": "7823854b24f56924b268e642878c2f6007674799",
+            "createdAt": "2026-05-14T15:21:24Z",
+            "updatedAt": "2026-05-14T15:27:18Z",
+            "htmlUrl": "https://github.com/PossumXI/OpenJaws/actions/runs/25868513179",
+            "headSha": "b674d82c7ecf2802e58cb6daa2a648abdd95d7c3",
             "classification": "success",
             "classificationReason": "workflow concluded success"
           }
@@ -348,7 +348,7 @@
       "visibility": "private",
       "defaultBranch": "main",
       "access": {
-        "source": "github-rest-token",
+        "source": "gh-auth",
         "detail": "private repo required authenticated GitHub access; private workflow run URLs are withheld on this public receipt"
       },
       "verification": {
@@ -358,7 +358,7 @@
         "nonActionableWorkflowCount": 0,
         "allObservedRunsSuccessful": true,
         "allActionableRunsHealthy": true,
-        "latestObservedRunAt": "2026-05-13T13:05:36Z"
+        "latestObservedRunAt": "2026-05-14T12:59:03Z"
       },
       "workflows": {
         "active": [
@@ -427,52 +427,52 @@
           {
             "name": "apexos-production-smoke",
             "workflowPath": ".github/workflows/apexos-production-smoke.yml",
-            "runNumber": 356,
+            "runNumber": 360,
             "event": "schedule",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-13T13:04:16Z",
-            "updatedAt": "2026-05-13T13:05:36Z",
-            "headSha": "4cec22d78b2485a453b7036ae38dfe9faac9885a",
+            "createdAt": "2026-05-14T12:57:50Z",
+            "updatedAt": "2026-05-14T12:59:03Z",
+            "headSha": "01e33a3cce255d0c0a7f57917d98b3433a3ce5dc",
             "classification": "success",
             "classificationReason": "workflow concluded success"
           },
           {
             "name": "ARIA Heartbeat",
             "workflowPath": ".github/workflows/agent_aria_heartbeat.yml",
-            "runNumber": 1321,
+            "runNumber": 1343,
             "event": "schedule",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-13T17:39:18Z",
-            "updatedAt": "2026-05-13T17:39:35Z",
-            "headSha": "fca02a075cfea6eada06b4fd28d789570dc1c0cb",
+            "createdAt": "2026-05-14T17:31:35Z",
+            "updatedAt": "2026-05-14T17:31:54Z",
+            "headSha": "01e33a3cce255d0c0a7f57917d98b3433a3ce5dc",
             "classification": "success",
             "classificationReason": "workflow concluded success"
           },
           {
             "name": "asgard-ci",
             "workflowPath": ".github/workflows/ci.yml",
-            "runNumber": 491,
+            "runNumber": 515,
             "event": "push",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-13T14:48:41Z",
-            "updatedAt": "2026-05-13T15:01:33Z",
-            "headSha": "fca02a075cfea6eada06b4fd28d789570dc1c0cb",
+            "createdAt": "2026-05-14T12:39:40Z",
+            "updatedAt": "2026-05-14T12:47:08Z",
+            "headSha": "01e33a3cce255d0c0a7f57917d98b3433a3ce5dc",
             "classification": "success",
             "classificationReason": "workflow concluded success"
           },
           {
             "name": "billing-production-smoke",
             "workflowPath": ".github/workflows/billing-production-smoke.yml",
-            "runNumber": 196,
+            "runNumber": 208,
             "event": "schedule",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-13T16:59:32Z",
-            "updatedAt": "2026-05-13T17:00:30Z",
-            "headSha": "fca02a075cfea6eada06b4fd28d789570dc1c0cb",
+            "createdAt": "2026-05-14T16:51:57Z",
+            "updatedAt": "2026-05-14T16:52:38Z",
+            "headSha": "01e33a3cce255d0c0a7f57917d98b3433a3ce5dc",
             "classification": "success",
             "classificationReason": "workflow concluded success"
           },
@@ -505,52 +505,52 @@
           {
             "name": "GitGuardian Secret Detection",
             "workflowPath": ".github/workflows/gitguardian.yml",
-            "runNumber": 426,
+            "runNumber": 450,
             "event": "push",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-13T14:48:41Z",
-            "updatedAt": "2026-05-13T14:49:15Z",
-            "headSha": "fca02a075cfea6eada06b4fd28d789570dc1c0cb",
+            "createdAt": "2026-05-14T12:39:40Z",
+            "updatedAt": "2026-05-14T12:40:04Z",
+            "headSha": "01e33a3cce255d0c0a7f57917d98b3433a3ce5dc",
             "classification": "success",
             "classificationReason": "workflow concluded success"
           },
           {
             "name": "public-status-production-smoke",
             "workflowPath": ".github/workflows/public-status-production-smoke.yml",
-            "runNumber": 199,
+            "runNumber": 212,
             "event": "schedule",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-13T17:14:18Z",
-            "updatedAt": "2026-05-13T17:16:46Z",
-            "headSha": "fca02a075cfea6eada06b4fd28d789570dc1c0cb",
+            "createdAt": "2026-05-14T17:07:55Z",
+            "updatedAt": "2026-05-14T17:09:30Z",
+            "headSha": "01e33a3cce255d0c0a7f57917d98b3433a3ce5dc",
             "classification": "success",
             "classificationReason": "workflow concluded success"
           },
           {
             "name": "SENTINEL Heartbeat",
             "workflowPath": ".github/workflows/agent_sentinel_heartbeat.yml",
-            "runNumber": 2364,
+            "runNumber": 2391,
             "event": "schedule",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-13T18:12:26Z",
-            "updatedAt": "2026-05-13T18:12:53Z",
-            "headSha": "fca02a075cfea6eada06b4fd28d789570dc1c0cb",
+            "createdAt": "2026-05-14T17:57:17Z",
+            "updatedAt": "2026-05-14T17:57:36Z",
+            "headSha": "01e33a3cce255d0c0a7f57917d98b3433a3ce5dc",
             "classification": "success",
             "classificationReason": "workflow concluded success"
           },
           {
             "name": "stripe-webhook-production-smoke",
             "workflowPath": ".github/workflows/stripe-webhook-production-smoke.yml",
-            "runNumber": 398,
+            "runNumber": 410,
             "event": "schedule",
             "status": "completed",
             "conclusion": "success",
-            "createdAt": "2026-05-13T17:22:05Z",
-            "updatedAt": "2026-05-13T17:22:31Z",
-            "headSha": "fca02a075cfea6eada06b4fd28d789570dc1c0cb",
+            "createdAt": "2026-05-14T17:14:56Z",
+            "updatedAt": "2026-05-14T17:15:32Z",
+            "headSha": "01e33a3cce255d0c0a7f57917d98b3433a3ce5dc",
             "classification": "success",
             "classificationReason": "workflow concluded success"
           }
