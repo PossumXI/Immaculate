@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-14T16:04:47.243Z",
+  "generatedAt": "2026-05-14T16:07:46.384Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "050aae47be07471f7562ebd15c6238971c7248a8",
-    "gitShortSha": "050aae4",
+    "gitSha": "61c83c4473da3c908273fd972988b4cf77222acc",
+    "gitShortSha": "61c83c4",
     "gitBranch": "main",
-    "buildId": "0.1.0+050aae4",
+    "buildId": "0.1.0+61c83c4",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -51,8 +51,8 @@
     }
   },
   "benchmark": {
-    "suiteId": "immaculate-benchmark-2026-05-14T15-55-01-540Z",
-    "generatedAt": "2026-05-14T15:55:01.540Z",
+    "suiteId": "immaculate-benchmark-2026-05-14T16-02-16-215Z",
+    "generatedAt": "2026-05-14T16:02:16.215Z",
     "packId": "arobi-audit-integrity",
     "packLabel": "Arobi Audit Integrity",
     "scenarioCount": 3,
@@ -61,14 +61,14 @@
     "sourceCoverageP50": 5,
     "selfEvaluationsP50": 5,
     "completenessP50": 1,
-    "latencyP95Ms": 141677.8,
+    "latencyP95Ms": 91161.05,
     "hardware": "knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics"
   },
   "diagnostics": [
     {
       "id": "defense-non-contested-review",
       "label": "Defense non-contested review path",
-      "sessionId": "arobi-audit-defense-non-contested-review-mp5o7cwc",
+      "sessionId": "arobi-audit-defense-non-contested-review-mp5ofr1i",
       "qAccepted": true,
       "mediationAccepted": true,
       "ledgerLinked": true,
@@ -91,12 +91,12 @@
       "latestReviewStatus": "completed",
       "governancePressure": "elevated",
       "auditCompletenessScore": 1,
-      "latestEventHash": "97a46bb6e768bbb5db32e72ea8c5ee0f46fac809c3e16ece6271978112386882"
+      "latestEventHash": "df1ef94e2ca93eb151979f5503df255a8fea5946e41087dcd1ff1cefec78003e"
     },
     {
       "id": "healthcare-escalation-review",
       "label": "Healthcare escalation review path",
-      "sessionId": "arobi-audit-healthcare-escalation-review-mp5obem0",
+      "sessionId": "arobi-audit-healthcare-escalation-review-mp5ohulc",
       "qAccepted": true,
       "mediationAccepted": true,
       "ledgerLinked": true,
@@ -119,12 +119,12 @@
       "latestReviewStatus": "completed",
       "governancePressure": "elevated",
       "auditCompletenessScore": 1,
-      "latestEventHash": "4b45895a4daf74205311e23ea6aaaaef61b42cc145fda50df33f7408d34a9b4f"
+      "latestEventHash": "dab2ca33e59f2e5ffef223204d3c6aa648d812ff3ed175a43dd6addf33f19b1e"
     },
     {
       "id": "critical-integrity-hold",
       "label": "Critical integrity hold",
-      "sessionId": "arobi-audit-critical-integrity-hold-mp5odkji",
+      "sessionId": "arobi-audit-critical-integrity-hold-mp5ok32q",
       "qAccepted": true,
       "mediationAccepted": true,
       "ledgerLinked": true,
@@ -147,7 +147,7 @@
       "latestReviewStatus": "completed",
       "governancePressure": "elevated",
       "auditCompletenessScore": 1,
-      "latestEventHash": "a982c7b4fc0bb6e68d2a6982332909fb8c55694c48eb081c68935191aa7bbc88"
+      "latestEventHash": "cedc70f41bb7e681e6d72a8743f2066c658e94db8ba22f466ed3b43b87502fac"
     }
   ],
   "assertions": [

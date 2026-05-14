@@ -2,14 +2,14 @@
 
 This page is generated from the `arobi-audit-integrity` benchmark pack. It proves the real harness can run governed Q requests, mediate them through Immaculate, and preserve a reviewable Arobi ledger trail with enough context for audit and insurance review without exposing hidden chain-of-thought.
 
-- Generated: 2026-05-14T16:04:47.243Z
-- Release: `0.1.0+050aae4`
-- Repo commit: `050aae4`
+- Generated: 2026-05-14T16:07:46.384Z
+- Release: `0.1.0+61c83c4`
+- Repo commit: `61c83c4`
 - Q training bundle: `q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3`
 
 ## Benchmark
 
-- Suite: `immaculate-benchmark-2026-05-14T15-55-01-540Z`
+- Suite: `immaculate-benchmark-2026-05-14T16-02-16-215Z`
 - Pack: `Arobi Audit Integrity (arobi-audit-integrity)`
 - Scenario count: `3`
 - Failed assertions: `0`
@@ -17,14 +17,14 @@ This page is generated from the `arobi-audit-integrity` benchmark pack. It prove
 - Source coverage P50: `5`
 - Self-evaluations P50: `5`
 - Audit completeness P50: `1`
-- End-to-end latency P95: `141677.8 ms`
+- End-to-end latency P95: `91161.05 ms`
 - Hardware: knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics
 
 ## Scenario Diagnostics
 
 ### Defense non-contested review path
 
-- Session: `arobi-audit-defense-non-contested-review-mp5o7cwc`
+- Session: `arobi-audit-defense-non-contested-review-mp5ofr1i`
 - Q accepted: `true`
 - Mediation accepted: `true`
 - Ledger linked: `true`
@@ -35,12 +35,12 @@ This page is generated from the `arobi-audit-integrity` benchmark pack. It prove
 - Latest review status: `completed`
 - Governance pressure: `elevated`
 - Completeness score: `1.00`
-- Latest event hash: `97a46bb6e768bbb5db32e72ea8c5ee0f46fac809c3e16ece6271978112386882`
+- Latest event hash: `df1ef94e2ca93eb151979f5503df255a8fea5946e41087dcd1ff1cefec78003e`
 - Failure class: `none`
 
 ### Healthcare escalation review path
 
-- Session: `arobi-audit-healthcare-escalation-review-mp5obem0`
+- Session: `arobi-audit-healthcare-escalation-review-mp5ohulc`
 - Q accepted: `true`
 - Mediation accepted: `true`
 - Ledger linked: `true`
@@ -51,12 +51,12 @@ This page is generated from the `arobi-audit-integrity` benchmark pack. It prove
 - Latest review status: `completed`
 - Governance pressure: `elevated`
 - Completeness score: `1.00`
-- Latest event hash: `4b45895a4daf74205311e23ea6aaaaef61b42cc145fda50df33f7408d34a9b4f`
+- Latest event hash: `dab2ca33e59f2e5ffef223204d3c6aa648d812ff3ed175a43dd6addf33f19b1e`
 - Failure class: `none`
 
 ### Critical integrity hold
 
-- Session: `arobi-audit-critical-integrity-hold-mp5odkji`
+- Session: `arobi-audit-critical-integrity-hold-mp5ok32q`
 - Q accepted: `true`
 - Mediation accepted: `true`
 - Ledger linked: `true`
@@ -67,7 +67,7 @@ This page is generated from the `arobi-audit-integrity` benchmark pack. It prove
 - Latest review status: `completed`
 - Governance pressure: `elevated`
 - Completeness score: `1.00`
-- Latest event hash: `a982c7b4fc0bb6e68d2a6982332909fb8c55694c48eb081c68935191aa7bbc88`
+- Latest event hash: `cedc70f41bb7e681e6d72a8743f2066c658e94db8ba22f466ed3b43b87502fac`
 - Failure class: `none`
 
 
