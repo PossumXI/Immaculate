@@ -121,6 +121,13 @@ const MODULE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(MODULE_ROOT, "../../..");
 const WIKI_ROOT = path.join(REPO_ROOT, "docs", "wiki");
 export const DEFAULT_Q_READINESS_MAX_SOURCE_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+export const DEFAULT_Q_READINESS_MODEL_COMPARISON_MAX_SOURCE_AGE_MS = 10 * 24 * 60 * 60 * 1000;
+
+export type QReadinessSourceAgeBudgets = {
+  modelComparisonMs: number;
+  bridgeBenchMs: number;
+  qGatewayValidationMs: number;
+};
 
 async function readJson<T>(filePath: string): Promise<T | undefined> {
   try {
@@ -147,12 +154,43 @@ function generatedAtTime(value: { generatedAt?: string } | undefined): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-export function resolveQReadinessMaxSourceAgeMs(value: string | undefined): number {
+function parseQReadinessMaxSourceAgeMs(value: string | undefined): number | undefined {
   const parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed <= 0) {
-    return DEFAULT_Q_READINESS_MAX_SOURCE_AGE_MS;
+    return undefined;
   }
   return Math.max(60_000, Math.round(parsed));
+}
+
+export function resolveQReadinessMaxSourceAgeMs(
+  value: string | undefined,
+  fallbackMs = DEFAULT_Q_READINESS_MAX_SOURCE_AGE_MS
+): number {
+  return parseQReadinessMaxSourceAgeMs(value) ?? fallbackMs;
+}
+
+export function resolveQReadinessSourceAgeBudgets(
+  env: Record<string, string | undefined> = process.env
+): QReadinessSourceAgeBudgets {
+  const sharedOverrideMs = parseQReadinessMaxSourceAgeMs(
+    env.IMMACULATE_Q_READINESS_MAX_SOURCE_AGE_MS
+  );
+  const sharedMs = sharedOverrideMs ?? DEFAULT_Q_READINESS_MAX_SOURCE_AGE_MS;
+
+  return {
+    modelComparisonMs:
+      parseQReadinessMaxSourceAgeMs(
+        env.IMMACULATE_Q_READINESS_MODEL_COMPARISON_MAX_SOURCE_AGE_MS
+      ) ??
+      sharedOverrideMs ??
+      DEFAULT_Q_READINESS_MODEL_COMPARISON_MAX_SOURCE_AGE_MS,
+    bridgeBenchMs:
+      parseQReadinessMaxSourceAgeMs(env.IMMACULATE_Q_READINESS_BRIDGEBENCH_MAX_SOURCE_AGE_MS) ??
+      sharedMs,
+    qGatewayValidationMs:
+      parseQReadinessMaxSourceAgeMs(env.IMMACULATE_Q_READINESS_GATEWAY_MAX_SOURCE_AGE_MS) ??
+      sharedMs
+  };
 }
 
 export function describeSourceFreshnessReason(options: {
@@ -320,9 +358,7 @@ export function describeQGatewayContractReasons(
 
 async function main(): Promise<void> {
   const threshold = Number(process.env.IMMACULATE_Q_READINESS_THRESHOLD ?? 0.75);
-  const maxSourceAgeMs = resolveQReadinessMaxSourceAgeMs(
-    process.env.IMMACULATE_Q_READINESS_MAX_SOURCE_AGE_MS
-  );
+  const sourceAgeBudgets = resolveQReadinessSourceAgeBudgets();
   const nowMs = Date.now();
   const comparisonPath = path.join(WIKI_ROOT, "Model-Benchmark-Comparison.json");
   const bridgeBenchPath = path.join(WIKI_ROOT, "BridgeBench.json");
@@ -366,19 +402,19 @@ async function main(): Promise<void> {
       label: "Model comparison",
       generatedAt: modelComparison?.generatedAt,
       nowMs,
-      maxAgeMs: maxSourceAgeMs
+      maxAgeMs: sourceAgeBudgets.modelComparisonMs
     }),
     describeSourceFreshnessReason({
       label: "BridgeBench",
       generatedAt: bridgeBench?.generatedAt,
       nowMs,
-      maxAgeMs: maxSourceAgeMs
+      maxAgeMs: sourceAgeBudgets.bridgeBenchMs
     }),
     describeSourceFreshnessReason({
       label: "Q gateway validation",
       generatedAt: qGatewayValidation?.generatedAt,
       nowMs,
-      maxAgeMs: maxSourceAgeMs
+      maxAgeMs: sourceAgeBudgets.qGatewayValidationMs
     })
   ]) {
     if (reason) {

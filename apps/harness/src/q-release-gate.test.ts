@@ -7,7 +7,9 @@ import { test } from "node:test";
 import {
   describeSourceFreshnessReason,
   describeQGatewayContractReasons,
+  DEFAULT_Q_READINESS_MODEL_COMPARISON_MAX_SOURCE_AGE_MS,
   DEFAULT_Q_READINESS_MAX_SOURCE_AGE_MS,
+  resolveQReadinessSourceAgeBudgets,
   resolveQReadinessMaxSourceAgeMs,
   selectLatestQGatewayValidationReport,
   summarizeQGatewayContract,
@@ -108,6 +110,36 @@ test("Q readiness source freshness rejects stale proof receipts", () => {
       generatedAt: "2026-04-19T00:00:00.000Z",
       nowMs,
       maxAgeMs: DEFAULT_Q_READINESS_MAX_SOURCE_AGE_MS
+    }) ?? "",
+    /source is stale/
+  );
+});
+
+test("Q readiness uses a bounded wider freshness budget for local model comparison receipts", () => {
+  const nowMs = Date.parse("2026-05-14T12:00:00.000Z");
+  const budgets = resolveQReadinessSourceAgeBudgets({});
+
+  assert.equal(
+    budgets.modelComparisonMs,
+    DEFAULT_Q_READINESS_MODEL_COMPARISON_MAX_SOURCE_AGE_MS
+  );
+  assert.equal(budgets.bridgeBenchMs, DEFAULT_Q_READINESS_MAX_SOURCE_AGE_MS);
+  assert.equal(budgets.qGatewayValidationMs, DEFAULT_Q_READINESS_MAX_SOURCE_AGE_MS);
+  assert.equal(
+    describeSourceFreshnessReason({
+      label: "Model comparison",
+      generatedAt: "2026-05-07T06:03:07.620Z",
+      nowMs,
+      maxAgeMs: budgets.modelComparisonMs
+    }),
+    undefined
+  );
+  assert.match(
+    describeSourceFreshnessReason({
+      label: "Q gateway validation",
+      generatedAt: "2026-05-07T06:03:07.620Z",
+      nowMs,
+      maxAgeMs: budgets.qGatewayValidationMs
     }) ?? "",
     /source is stale/
   );
