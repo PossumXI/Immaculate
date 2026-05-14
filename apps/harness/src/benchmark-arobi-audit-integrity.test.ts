@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { evaluateRealWorldEngagement } from "./real-world-engagement.js";
+import { evaluateLiveGovernedRouteAdmission } from "./governance.js";
 import { buildArobiAuditMediationHeaders } from "./benchmark-arobi-audit-integrity.js";
 
 test("Arobi audit benchmark mediation headers satisfy engagement evidence", () => {
@@ -19,7 +20,18 @@ test("Arobi audit benchmark mediation headers satisfy engagement evidence", () =
   });
 
   assert.equal(decision.allowed, true);
+  const governance = evaluateLiveGovernedRouteAdmission({
+    action: "actuation-dispatch",
+    route: "/api/orchestration/mediate",
+    actor: headers["x-immaculate-actor"],
+    purpose: headers["x-immaculate-purpose"].split(","),
+    consentScope: headers["x-immaculate-consent-scope"],
+    approvalRef: headers["x-immaculate-approval-ref"]
+  });
+
+  assert.equal(governance.allowed, true);
   assert.equal(headers["x-immaculate-actor"], "benchmark:arobi-audit-integrity");
+  assert.match(headers["x-immaculate-approval-ref"], /^operator:benchmark-arobi-audit-integrity:/u);
   assert.match(headers["x-immaculate-operator-summary"], /review-only/u);
   assert.match(headers["x-immaculate-rollback-plan"], /dispatchOnApproval=false/u);
 });

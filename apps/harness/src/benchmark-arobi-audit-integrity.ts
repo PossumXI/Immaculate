@@ -140,6 +140,7 @@ export function buildArobiAuditMediationHeaders(options: ArobiAuditMediationHead
     "x-immaculate-purpose": "actuation-dispatch,cognitive-execution",
     "x-immaculate-consent-scope": sessionScope,
     "x-immaculate-actor": "benchmark:arobi-audit-integrity",
+    "x-immaculate-approval-ref": `operator:benchmark-arobi-audit-integrity:${scenarioId}`,
     "x-immaculate-receipt-target": `arobi-audit-integrity:${scenarioId}`,
     "x-immaculate-operator-summary": `review-only Arobi audit integrity mediation for ${scenarioId}; outward dispatch remains held for operator review.`,
     "x-immaculate-operator-confirmed": "true",
