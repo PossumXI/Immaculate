@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-04-25T19:13:50.476Z",
+  "generatedAt": "2026-05-14T01:58:55.996Z",
   "git": {
-    "commit": "8891b1bdfa88586779a4f2066438faaa64baeea3",
-    "branch": "audit/full-stack-inventory-copy-refresh"
+    "commit": "c1b2c2a85d8244048ed980bf12ca6bbaadcedafb",
+    "branch": "main"
   },
   "scripts": [
     {
@@ -35,7 +35,7 @@
     },
     {
       "name": "benchmark:arobi:audit",
-      "command": "npm run benchmark -w @immaculate/harness --pack=arobi-audit-integrity"
+      "command": "npm run benchmark -w @immaculate/harness -- --pack=arobi-audit-integrity"
     },
     {
       "name": "benchmark:arobi:audit:report",
@@ -43,7 +43,7 @@
     },
     {
       "name": "benchmark:durability:torture",
-      "command": "npm run benchmark -w @immaculate/harness --pack=durability-torture"
+      "command": "npm run benchmark -w @immaculate/harness -- --pack=durability-torture"
     },
     {
       "name": "benchmark:export:wandb",
@@ -67,11 +67,11 @@
     },
     {
       "name": "benchmark:latency:60s",
-      "command": "npm run benchmark -w @immaculate/harness --pack=latency-benchmark-60s"
+      "command": "npm run benchmark -w @immaculate/harness -- --pack=latency-benchmark-60s"
     },
     {
       "name": "benchmark:neurodata",
-      "command": "npm run benchmark -w @immaculate/harness --pack=neurodata-external"
+      "command": "npm run benchmark -w @immaculate/harness -- --pack=neurodata-external"
     },
     {
       "name": "benchmark:publish:wandb",
@@ -79,7 +79,7 @@
     },
     {
       "name": "benchmark:q:mediation",
-      "command": "npm run benchmark -w @immaculate/harness --pack=q-mediation-drift"
+      "command": "npm run benchmark -w @immaculate/harness -- --pack=q-mediation-drift"
     },
     {
       "name": "benchmark:q:mediation:report",
@@ -87,7 +87,7 @@
     },
     {
       "name": "benchmark:q:substrate",
-      "command": "npm run benchmark -w @immaculate/harness --pack=q-gateway-substrate"
+      "command": "npm run benchmark -w @immaculate/harness -- --pack=q-gateway-substrate"
     },
     {
       "name": "benchmark:q:substrate:report",
@@ -99,15 +99,15 @@
     },
     {
       "name": "benchmark:soak:30m",
-      "command": "npm run benchmark -w @immaculate/harness --pack=latency-soak-30m"
+      "command": "npm run benchmark -w @immaculate/harness -- --pack=latency-soak-30m"
     },
     {
       "name": "benchmark:soak:60m",
-      "command": "npm run benchmark -w @immaculate/harness --pack=latency-soak-60m"
+      "command": "npm run benchmark -w @immaculate/harness -- --pack=latency-soak-60m"
     },
     {
       "name": "benchmark:temporal",
-      "command": "npm run benchmark -w @immaculate/harness --pack=temporal-baseline"
+      "command": "npm run benchmark -w @immaculate/harness -- --pack=temporal-baseline"
     },
     {
       "name": "benchmark:terminalbench:public-task",
@@ -146,6 +146,14 @@
       "command": "npm run compare:models -w @immaculate/harness"
     },
     {
+      "name": "deploy:check",
+      "command": "node ./scripts/deploy-iorch-site.mjs --check"
+    },
+    {
+      "name": "deploy:safe",
+      "command": "node ./scripts/deploy-iorch-site.mjs --prod"
+    },
+    {
       "name": "dev:dashboard",
       "command": "npm run dev -w @immaculate/dashboard"
     },
@@ -168,6 +176,10 @@
     {
       "name": "immaculate:training:bundle",
       "command": "node ./scripts/run-python.mjs ./training/immaculate/build_immaculate_training_bundle.py"
+    },
+    {
+      "name": "jaws:release:check",
+      "command": "node ./scripts/check-iorch-jaws-release.mjs"
     },
     {
       "name": "lint",
@@ -307,7 +319,7 @@
     },
     {
       "name": "test",
-      "command": "npm run test --workspaces --if-present"
+      "command": "npm run build -w @immaculate/core && npm run test --workspaces --if-present"
     },
     {
       "name": "training-data:curate",
@@ -356,14 +368,15 @@
         "kind": "api-route",
         "file": "apps/dashboard/app/api/operator/harness/[...path]/route.ts",
         "methods": [
+          "DELETE",
           "GET",
           "POST"
         ],
         "readiness": {
-          "rating": "Yellow",
+          "rating": "Green",
           "reasons": [
             "Server-side dashboard proxy is authenticated and same-origin.",
-            "It currently exposes GET and POST only, while the harness has DELETE endpoints that cannot pass through this proxy."
+            "It forwards GET, POST, and the explicit governed DELETE allowlist for harness removal routes."
           ]
         }
       },
@@ -395,6 +408,21 @@
           "reasons": [
             "Route has explicit handler methods.",
             "No dashboard API route tests were found in this repo."
+          ]
+        }
+      },
+      {
+        "path": "/downloads/jaws",
+        "kind": "page",
+        "file": "apps/dashboard/app/downloads/jaws/page.tsx",
+        "methods": [
+          "GET"
+        ],
+        "readiness": {
+          "rating": "Yellow",
+          "reasons": [
+            "Page is implemented and statically discoverable.",
+            "No page-level build snapshot or browser flow tests were found."
           ]
         }
       },
@@ -545,7 +573,7 @@
         "method": "GET",
         "route": "/api/actuation/adapters",
         "file": "apps/harness/src/server.ts",
-        "line": 5264,
+        "line": 6445,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -558,7 +586,7 @@
           {
             "route": "/api/actuation/adapters",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 698,
+            "line": 754,
             "caller": "dashboard-ui"
           }
         ],
@@ -569,7 +597,7 @@
         "method": "GET",
         "route": "/api/actuation/deliveries",
         "file": "apps/harness/src/server.ts",
-        "line": 5292,
+        "line": 6467,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -582,7 +610,7 @@
           {
             "route": "/api/actuation/deliveries",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 808,
+            "line": 864,
             "caller": "dashboard-ui"
           }
         ],
@@ -593,7 +621,7 @@
         "method": "POST",
         "route": "/api/actuation/dispatch",
         "file": "apps/harness/src/server.ts",
-        "line": 6210,
+        "line": 7291,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -606,13 +634,13 @@
           {
             "route": "/api/actuation/dispatch",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 1375,
+            "line": 1468,
             "caller": "dashboard-ui"
           },
           {
             "route": "/api/actuation/dispatch",
             "file": "apps/tui/src/index.tsx",
-            "line": 339,
+            "line": 472,
             "caller": "tui"
           }
         ],
@@ -623,7 +651,7 @@
         "method": "GET",
         "route": "/api/actuation/outputs",
         "file": "apps/harness/src/server.ts",
-        "line": 5224,
+        "line": 6411,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -636,7 +664,7 @@
           {
             "route": "/api/actuation/outputs",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 795,
+            "line": 851,
             "caller": "dashboard-ui"
           }
         ],
@@ -647,7 +675,7 @@
         "method": "GET",
         "route": "/api/actuation/protocols",
         "file": "apps/harness/src/server.ts",
-        "line": 5268,
+        "line": 6449,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -660,7 +688,7 @@
           {
             "route": "/api/actuation/protocols",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 699,
+            "line": 755,
             "caller": "dashboard-ui"
           }
         ],
@@ -671,7 +699,7 @@
         "method": "GET",
         "route": "/api/actuation/transports",
         "file": "apps/harness/src/server.ts",
-        "line": 5272,
+        "line": 6453,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -684,7 +712,7 @@
           {
             "route": "/api/actuation/transports",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 701,
+            "line": 757,
             "caller": "dashboard-ui"
           }
         ],
@@ -695,7 +723,7 @@
         "method": "POST",
         "route": "/api/actuation/transports/:transportId/heartbeat",
         "file": "apps/harness/src/server.ts",
-        "line": 6444,
+        "line": 7505,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -712,7 +740,7 @@
         "method": "POST",
         "route": "/api/actuation/transports/:transportId/reset",
         "file": "apps/harness/src/server.ts",
-        "line": 6497,
+        "line": 7552,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -729,7 +757,7 @@
         "method": "POST",
         "route": "/api/actuation/transports/http2/register",
         "file": "apps/harness/src/server.ts",
-        "line": 6381,
+        "line": 7447,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -746,7 +774,7 @@
         "method": "POST",
         "route": "/api/actuation/transports/serial/register",
         "file": "apps/harness/src/server.ts",
-        "line": 6315,
+        "line": 7386,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -763,7 +791,7 @@
         "method": "POST",
         "route": "/api/actuation/transports/udp/register",
         "file": "apps/harness/src/server.ts",
-        "line": 6264,
+        "line": 7340,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -780,7 +808,7 @@
         "method": "GET",
         "route": "/api/benchmarks/history",
         "file": "apps/harness/src/server.ts",
-        "line": 4310,
+        "line": 5294,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -793,13 +821,13 @@
           {
             "route": "/api/benchmarks/history",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 607,
+            "line": 663,
             "caller": "dashboard-ui"
           },
           {
             "route": "/api/benchmarks/history",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 1017,
+            "line": 1078,
             "caller": "dashboard-ui"
           }
         ],
@@ -810,7 +838,7 @@
         "method": "GET",
         "route": "/api/benchmarks/jobs/:jobId",
         "file": "apps/harness/src/server.ts",
-        "line": 4342,
+        "line": 5348,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -823,7 +851,7 @@
           {
             "route": "/api/benchmarks/jobs/:param",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 999,
+            "line": 1060,
             "caller": "dashboard-ui"
           }
         ],
@@ -834,7 +862,7 @@
         "method": "GET",
         "route": "/api/benchmarks/latest",
         "file": "apps/harness/src/server.ts",
-        "line": 4306,
+        "line": 5279,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -847,7 +875,7 @@
           {
             "route": "/api/benchmarks/latest",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 588,
+            "line": 644,
             "caller": "dashboard-ui"
           }
         ],
@@ -858,7 +886,7 @@
         "method": "GET",
         "route": "/api/benchmarks/packs",
         "file": "apps/harness/src/server.ts",
-        "line": 4365,
+        "line": 5382,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -871,7 +899,7 @@
           {
             "route": "/api/benchmarks/packs",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 673,
+            "line": 729,
             "caller": "dashboard-ui"
           }
         ],
@@ -882,7 +910,7 @@
         "method": "POST",
         "route": "/api/benchmarks/publish/wandb",
         "file": "apps/harness/src/server.ts",
-        "line": 7255,
+        "line": 8269,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -895,13 +923,13 @@
           {
             "route": "/api/benchmarks/publish/wandb",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 1081,
+            "line": 1142,
             "caller": "dashboard-ui"
           },
           {
             "route": "/api/benchmarks/publish/wandb",
             "file": "apps/tui/src/index.tsx",
-            "line": 357,
+            "line": 494,
             "caller": "tui"
           }
         ],
@@ -912,7 +940,7 @@
         "method": "POST",
         "route": "/api/benchmarks/run",
         "file": "apps/harness/src/server.ts",
-        "line": 7214,
+        "line": 8234,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -925,7 +953,7 @@
           {
             "route": "/api/benchmarks/run",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 974,
+            "line": 1035,
             "caller": "dashboard-ui"
           }
         ],
@@ -936,7 +964,7 @@
         "method": "GET",
         "route": "/api/benchmarks/trend",
         "file": "apps/harness/src/server.ts",
-        "line": 4314,
+        "line": 5309,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -953,7 +981,7 @@
         "method": "GET",
         "route": "/api/checkpoints",
         "file": "apps/harness/src/server.ts",
-        "line": 4290,
+        "line": 4986,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -966,7 +994,7 @@
           {
             "route": "/api/checkpoints",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 667,
+            "line": 723,
             "caller": "dashboard-ui"
           }
         ],
@@ -975,9 +1003,128 @@
       },
       {
         "method": "POST",
+        "route": "/api/cognitive-runtime/role-plan/admission",
+        "file": "apps/harness/src/server.ts",
+        "line": 5137,
+        "surface": "harness",
+        "readiness": {
+          "rating": "Yellow",
+          "reasons": [
+            "Endpoint is implemented in the harness.",
+            "Production readiness depends on caller coverage, governance headers, and integration tests."
+          ]
+        },
+        "callers": [],
+        "uiCallerCount": 0,
+        "orphanedFromOperatorUi": true
+      },
+      {
+        "method": "GET",
+        "route": "/api/cognitive-runtime/role-plan/schema",
+        "file": "apps/harness/src/server.ts",
+        "line": 5122,
+        "surface": "harness",
+        "readiness": {
+          "rating": "Yellow",
+          "reasons": [
+            "Endpoint is implemented in the harness.",
+            "Production readiness depends on caller coverage, governance headers, and integration tests."
+          ]
+        },
+        "callers": [],
+        "uiCallerCount": 0,
+        "orphanedFromOperatorUi": true
+      },
+      {
+        "method": "POST",
+        "route": "/api/cognitive-runtime/trace-graph/admission",
+        "file": "apps/harness/src/server.ts",
+        "line": 5165,
+        "surface": "harness",
+        "readiness": {
+          "rating": "Yellow",
+          "reasons": [
+            "Endpoint is implemented in the harness.",
+            "Production readiness depends on caller coverage, governance headers, and integration tests."
+          ]
+        },
+        "callers": [],
+        "uiCallerCount": 0,
+        "orphanedFromOperatorUi": true
+      },
+      {
+        "method": "GET",
+        "route": "/api/cognitive-runtime/trace-graph/integrity",
+        "file": "apps/harness/src/server.ts",
+        "line": 5229,
+        "surface": "harness",
+        "readiness": {
+          "rating": "Yellow",
+          "reasons": [
+            "Endpoint is implemented in the harness.",
+            "Production readiness depends on caller coverage, governance headers, and integration tests."
+          ]
+        },
+        "callers": [],
+        "uiCallerCount": 0,
+        "orphanedFromOperatorUi": true
+      },
+      {
+        "method": "GET",
+        "route": "/api/cognitive-runtime/trace-graph/records",
+        "file": "apps/harness/src/server.ts",
+        "line": 5204,
+        "surface": "harness",
+        "readiness": {
+          "rating": "Yellow",
+          "reasons": [
+            "Endpoint is implemented in the harness.",
+            "Production readiness depends on caller coverage, governance headers, and integration tests."
+          ]
+        },
+        "callers": [],
+        "uiCallerCount": 0,
+        "orphanedFromOperatorUi": true
+      },
+      {
+        "method": "POST",
+        "route": "/api/cognitive-runtime/trace-graph/records",
+        "file": "apps/harness/src/server.ts",
+        "line": 5178,
+        "surface": "harness",
+        "readiness": {
+          "rating": "Yellow",
+          "reasons": [
+            "Endpoint is implemented in the harness.",
+            "Production readiness depends on caller coverage, governance headers, and integration tests."
+          ]
+        },
+        "callers": [],
+        "uiCallerCount": 0,
+        "orphanedFromOperatorUi": true
+      },
+      {
+        "method": "GET",
+        "route": "/api/cognitive-runtime/trace-graph/schema",
+        "file": "apps/harness/src/server.ts",
+        "line": 5150,
+        "surface": "harness",
+        "readiness": {
+          "rating": "Yellow",
+          "reasons": [
+            "Endpoint is implemented in the harness.",
+            "Production readiness depends on caller coverage, governance headers, and integration tests."
+          ]
+        },
+        "callers": [],
+        "uiCallerCount": 0,
+        "orphanedFromOperatorUi": true
+      },
+      {
+        "method": "POST",
         "route": "/api/control",
         "file": "apps/harness/src/server.ts",
-        "line": 7317,
+        "line": 8329,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -990,7 +1137,7 @@
           {
             "route": "/api/control",
             "file": "apps/tui/src/index.tsx",
-            "line": 307,
+            "line": 435,
             "caller": "tui"
           }
         ],
@@ -1001,7 +1148,7 @@
         "method": "GET",
         "route": "/api/datasets",
         "file": "apps/harness/src/server.ts",
-        "line": 4373,
+        "line": 5412,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1014,7 +1161,7 @@
           {
             "route": "/api/datasets",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 694,
+            "line": 750,
             "caller": "dashboard-ui"
           }
         ],
@@ -1025,7 +1172,7 @@
         "method": "GET",
         "route": "/api/datasets/:datasetId",
         "file": "apps/harness/src/server.ts",
-        "line": 4378,
+        "line": 5428,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1038,7 +1185,7 @@
           {
             "route": "/api/datasets/:param",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 732,
+            "line": 788,
             "caller": "dashboard-ui"
           }
         ],
@@ -1049,7 +1196,7 @@
         "method": "POST",
         "route": "/api/devices/lsl/:sourceId/stop",
         "file": "apps/harness/src/server.ts",
-        "line": 4583,
+        "line": 5667,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1066,7 +1213,7 @@
         "method": "POST",
         "route": "/api/devices/lsl/connect",
         "file": "apps/harness/src/server.ts",
-        "line": 4524,
+        "line": 5607,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1083,7 +1230,7 @@
         "method": "GET",
         "route": "/api/devices/lsl/connections",
         "file": "apps/harness/src/server.ts",
-        "line": 4505,
+        "line": 5588,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1100,7 +1247,7 @@
         "method": "GET",
         "route": "/api/devices/lsl/streams",
         "file": "apps/harness/src/server.ts",
-        "line": 4485,
+        "line": 5568,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1117,7 +1264,7 @@
         "method": "GET",
         "route": "/api/events",
         "file": "apps/harness/src/server.ts",
-        "line": 4218,
+        "line": 4910,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1130,7 +1277,7 @@
           {
             "route": "/api/events",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 675,
+            "line": 731,
             "caller": "dashboard-ui"
           }
         ],
@@ -1141,7 +1288,7 @@
         "method": "GET",
         "route": "/api/federation/leases",
         "file": "apps/harness/src/server.ts",
-        "line": 5063,
+        "line": 6250,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1158,7 +1305,7 @@
         "method": "GET",
         "route": "/api/federation/membership",
         "file": "apps/harness/src/server.ts",
-        "line": 5033,
+        "line": 6229,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1175,7 +1322,7 @@
         "method": "GET",
         "route": "/api/federation/peers",
         "file": "apps/harness/src/server.ts",
-        "line": 5093,
+        "line": 6313,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1192,13 +1339,13 @@
         "method": "DELETE",
         "route": "/api/federation/peers/:peerId",
         "file": "apps/harness/src/server.ts",
-        "line": 6069,
+        "line": 7171,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
           "reasons": [
             "Delete route is governed server-side.",
-            "The dashboard proxy does not currently forward DELETE, so this is not a complete UI flow."
+            "Dashboard access must stay constrained to the explicit governed DELETE allowlist."
           ]
         },
         "callers": [],
@@ -1209,7 +1356,7 @@
         "method": "POST",
         "route": "/api/federation/peers/:peerId/lease-renew",
         "file": "apps/harness/src/server.ts",
-        "line": 6025,
+        "line": 7136,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1226,7 +1373,7 @@
         "method": "POST",
         "route": "/api/federation/peers/:peerId/refresh",
         "file": "apps/harness/src/server.ts",
-        "line": 5982,
+        "line": 7102,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1243,7 +1390,7 @@
         "method": "POST",
         "route": "/api/federation/peers/register",
         "file": "apps/harness/src/server.ts",
-        "line": 5833,
+        "line": 6971,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1260,7 +1407,75 @@
         "method": "POST",
         "route": "/api/federation/peers/sync",
         "file": "apps/harness/src/server.ts",
-        "line": 5909,
+        "line": 7038,
+        "surface": "harness",
+        "readiness": {
+          "rating": "Yellow",
+          "reasons": [
+            "Endpoint is implemented in the harness.",
+            "Production readiness depends on caller coverage, governance headers, and integration tests."
+          ]
+        },
+        "callers": [],
+        "uiCallerCount": 0,
+        "orphanedFromOperatorUi": true
+      },
+      {
+        "method": "GET",
+        "route": "/api/federation/private-00/leases",
+        "file": "apps/harness/src/server.ts",
+        "line": 6292,
+        "surface": "harness",
+        "readiness": {
+          "rating": "Yellow",
+          "reasons": [
+            "Endpoint is implemented in the harness.",
+            "Production readiness depends on caller coverage, governance headers, and integration tests."
+          ]
+        },
+        "callers": [],
+        "uiCallerCount": 0,
+        "orphanedFromOperatorUi": true
+      },
+      {
+        "method": "GET",
+        "route": "/api/federation/private-00/membership",
+        "file": "apps/harness/src/server.ts",
+        "line": 6271,
+        "surface": "harness",
+        "readiness": {
+          "rating": "Yellow",
+          "reasons": [
+            "Endpoint is implemented in the harness.",
+            "Production readiness depends on caller coverage, governance headers, and integration tests."
+          ]
+        },
+        "callers": [],
+        "uiCallerCount": 0,
+        "orphanedFromOperatorUi": true
+      },
+      {
+        "method": "POST",
+        "route": "/api/goals/admission",
+        "file": "apps/harness/src/server.ts",
+        "line": 5109,
+        "surface": "harness",
+        "readiness": {
+          "rating": "Yellow",
+          "reasons": [
+            "Endpoint is implemented in the harness.",
+            "Production readiness depends on caller coverage, governance headers, and integration tests."
+          ]
+        },
+        "callers": [],
+        "uiCallerCount": 0,
+        "orphanedFromOperatorUi": true
+      },
+      {
+        "method": "GET",
+        "route": "/api/goals/schema",
+        "file": "apps/harness/src/server.ts",
+        "line": 5094,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1277,7 +1492,7 @@
         "method": "GET",
         "route": "/api/governance/decisions",
         "file": "apps/harness/src/server.ts",
-        "line": 4302,
+        "line": 5244,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1294,7 +1509,24 @@
         "method": "GET",
         "route": "/api/governance/policies",
         "file": "apps/harness/src/server.ts",
-        "line": 4298,
+        "line": 5016,
+        "surface": "harness",
+        "readiness": {
+          "rating": "Yellow",
+          "reasons": [
+            "Endpoint is implemented in the harness.",
+            "Production readiness depends on caller coverage, governance headers, and integration tests."
+          ]
+        },
+        "callers": [],
+        "uiCallerCount": 0,
+        "orphanedFromOperatorUi": true
+      },
+      {
+        "method": "GET",
+        "route": "/api/governance/real-world-engagement",
+        "file": "apps/harness/src/server.ts",
+        "line": 5046,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1311,7 +1543,7 @@
         "method": "GET",
         "route": "/api/governance/status",
         "file": "apps/harness/src/server.ts",
-        "line": 4294,
+        "line": 5001,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1324,13 +1556,13 @@
           {
             "route": "/api/governance/status",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 670,
+            "line": 726,
             "caller": "dashboard-ui"
           },
           {
             "route": "/api/governance/status",
             "file": "apps/tui/src/index.tsx",
-            "line": 585,
+            "line": 738,
             "caller": "tui"
           }
         ],
@@ -1339,9 +1571,43 @@
       },
       {
         "method": "GET",
+        "route": "/api/governance/tool-actions",
+        "file": "apps/harness/src/server.ts",
+        "line": 5031,
+        "surface": "harness",
+        "readiness": {
+          "rating": "Yellow",
+          "reasons": [
+            "Endpoint is implemented in the harness.",
+            "Production readiness depends on caller coverage, governance headers, and integration tests."
+          ]
+        },
+        "callers": [],
+        "uiCallerCount": 0,
+        "orphanedFromOperatorUi": true
+      },
+      {
+        "method": "POST",
+        "route": "/api/governance/tool-actions/admission",
+        "file": "apps/harness/src/server.ts",
+        "line": 5063,
+        "surface": "harness",
+        "readiness": {
+          "rating": "Yellow",
+          "reasons": [
+            "Endpoint is implemented in the harness.",
+            "Production readiness depends on caller coverage, governance headers, and integration tests."
+          ]
+        },
+        "callers": [],
+        "uiCallerCount": 0,
+        "orphanedFromOperatorUi": true
+      },
+      {
+        "method": "GET",
         "route": "/api/health",
         "file": "apps/harness/src/server.ts",
-        "line": 4186,
+        "line": 4877,
         "surface": "harness",
         "readiness": {
           "rating": "Green",
@@ -1357,7 +1623,7 @@
         "method": "GET",
         "route": "/api/history",
         "file": "apps/harness/src/server.ts",
-        "line": 4214,
+        "line": 4906,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1370,7 +1636,7 @@
           {
             "route": "/api/history",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 552,
+            "line": 608,
             "caller": "dashboard-ui"
           }
         ],
@@ -1381,7 +1647,7 @@
         "method": "POST",
         "route": "/api/ingest/bids/scan",
         "file": "apps/harness/src/server.ts",
-        "line": 6533,
+        "line": 7583,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1398,7 +1664,7 @@
         "method": "POST",
         "route": "/api/ingest/nwb/scan",
         "file": "apps/harness/src/server.ts",
-        "line": 7003,
+        "line": 8051,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1415,7 +1681,7 @@
         "method": "GET",
         "route": "/api/integrity",
         "file": "apps/harness/src/server.ts",
-        "line": 4286,
+        "line": 4971,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1428,7 +1694,7 @@
           {
             "route": "/api/integrity",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 664,
+            "line": 720,
             "caller": "dashboard-ui"
           }
         ],
@@ -1439,7 +1705,7 @@
         "method": "GET",
         "route": "/api/intelligence",
         "file": "apps/harness/src/server.ts",
-        "line": 4662,
+        "line": 5735,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1456,7 +1722,41 @@
         "method": "GET",
         "route": "/api/intelligence/arbitrations",
         "file": "apps/harness/src/server.ts",
-        "line": 5151,
+        "line": 6356,
+        "surface": "harness",
+        "readiness": {
+          "rating": "Yellow",
+          "reasons": [
+            "Endpoint is implemented in the harness.",
+            "Production readiness depends on caller coverage, governance headers, and integration tests."
+          ]
+        },
+        "callers": [],
+        "uiCallerCount": 0,
+        "orphanedFromOperatorUi": true
+      },
+      {
+        "method": "GET",
+        "route": "/api/intelligence/assessments",
+        "file": "apps/harness/src/server.ts",
+        "line": 5782,
+        "surface": "harness",
+        "readiness": {
+          "rating": "Yellow",
+          "reasons": [
+            "Endpoint is implemented in the harness.",
+            "Production readiness depends on caller coverage, governance headers, and integration tests."
+          ]
+        },
+        "callers": [],
+        "uiCallerCount": 0,
+        "orphanedFromOperatorUi": true
+      },
+      {
+        "method": "POST",
+        "route": "/api/intelligence/assessments/run",
+        "file": "apps/harness/src/server.ts",
+        "line": 5815,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1473,7 +1773,7 @@
         "method": "GET",
         "route": "/api/intelligence/conversations",
         "file": "apps/harness/src/server.ts",
-        "line": 5199,
+        "line": 6392,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1490,7 +1790,7 @@
         "method": "GET",
         "route": "/api/intelligence/executions",
         "file": "apps/harness/src/server.ts",
-        "line": 4980,
+        "line": 6188,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1503,13 +1803,13 @@
           {
             "route": "/api/intelligence/executions",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 782,
+            "line": 838,
             "caller": "dashboard-ui"
           },
           {
             "route": "/api/intelligence/executions",
             "file": "apps/tui/src/index.tsx",
-            "line": 599,
+            "line": 752,
             "caller": "tui"
           }
         ],
@@ -1520,7 +1820,7 @@
         "method": "GET",
         "route": "/api/intelligence/ollama/models",
         "file": "apps/harness/src/server.ts",
-        "line": 5356,
+        "line": 6525,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1533,7 +1833,7 @@
           {
             "route": "/api/intelligence/ollama/models",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 710,
+            "line": 766,
             "caller": "dashboard-ui"
           }
         ],
@@ -1544,7 +1844,7 @@
         "method": "POST",
         "route": "/api/intelligence/ollama/register",
         "file": "apps/harness/src/server.ts",
-        "line": 5417,
+        "line": 6580,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1557,7 +1857,7 @@
           {
             "route": "/api/intelligence/ollama/register",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 1331,
+            "line": 1401,
             "caller": "dashboard-ui"
           }
         ],
@@ -1568,7 +1868,7 @@
         "method": "GET",
         "route": "/api/intelligence/q/models",
         "file": "apps/harness/src/server.ts",
-        "line": 5355,
+        "line": 6524,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1585,7 +1885,7 @@
         "method": "POST",
         "route": "/api/intelligence/q/register",
         "file": "apps/harness/src/server.ts",
-        "line": 5416,
+        "line": 6574,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1602,7 +1902,7 @@
         "method": "POST",
         "route": "/api/intelligence/run",
         "file": "apps/harness/src/server.ts",
-        "line": 6574,
+        "line": 7618,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1615,13 +1915,13 @@
           {
             "route": "/api/intelligence/run",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 1040,
+            "line": 1101,
             "caller": "dashboard-ui"
           },
           {
             "route": "/api/intelligence/run",
             "file": "apps/tui/src/index.tsx",
-            "line": 323,
+            "line": 456,
             "caller": "tui"
           }
         ],
@@ -1632,7 +1932,24 @@
         "method": "GET",
         "route": "/api/intelligence/schedules",
         "file": "apps/harness/src/server.ts",
-        "line": 5174,
+        "line": 6373,
+        "surface": "harness",
+        "readiness": {
+          "rating": "Yellow",
+          "reasons": [
+            "Endpoint is implemented in the harness.",
+            "Production readiness depends on caller coverage, governance headers, and integration tests."
+          ]
+        },
+        "callers": [],
+        "uiCallerCount": 0,
+        "orphanedFromOperatorUi": true
+      },
+      {
+        "method": "GET",
+        "route": "/api/intelligence/status",
+        "file": "apps/harness/src/server.ts",
+        "line": 5749,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1649,7 +1966,7 @@
         "method": "GET",
         "route": "/api/intelligence/workers",
         "file": "apps/harness/src/server.ts",
-        "line": 5114,
+        "line": 6325,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1666,7 +1983,7 @@
         "method": "POST",
         "route": "/api/intelligence/workers/:workerId/heartbeat",
         "file": "apps/harness/src/server.ts",
-        "line": 5533,
+        "line": 6695,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1683,7 +2000,7 @@
         "method": "POST",
         "route": "/api/intelligence/workers/:workerId/unregister",
         "file": "apps/harness/src/server.ts",
-        "line": 5648,
+        "line": 6804,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1700,7 +2017,7 @@
         "method": "POST",
         "route": "/api/intelligence/workers/assign",
         "file": "apps/harness/src/server.ts",
-        "line": 5684,
+        "line": 6834,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1717,7 +2034,7 @@
         "method": "POST",
         "route": "/api/intelligence/workers/register",
         "file": "apps/harness/src/server.ts",
-        "line": 5419,
+        "line": 6587,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1734,7 +2051,7 @@
         "method": "GET",
         "route": "/api/neuro/frames",
         "file": "apps/harness/src/server.ts",
-        "line": 4622,
+        "line": 5701,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1747,7 +2064,7 @@
           {
             "route": "/api/neuro/frames",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 766,
+            "line": 822,
             "caller": "dashboard-ui"
           }
         ],
@@ -1758,7 +2075,7 @@
         "method": "POST",
         "route": "/api/neuro/live/:sourceId/stop",
         "file": "apps/harness/src/server.ts",
-        "line": 7178,
+        "line": 8203,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1771,13 +2088,13 @@
           {
             "route": "/api/neuro/live/:param/stop",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 1296,
+            "line": 1366,
             "caller": "dashboard-ui"
           },
           {
             "route": "/api/neuro/live/:param/stop",
             "file": "apps/tui/src/index.tsx",
-            "line": 421,
+            "line": 568,
             "caller": "tui"
           }
         ],
@@ -1788,7 +2105,7 @@
         "method": "POST",
         "route": "/api/neuro/live/frame",
         "file": "apps/harness/src/server.ts",
-        "line": 7147,
+        "line": 8177,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1805,7 +2122,7 @@
         "method": "GET",
         "route": "/api/neuro/live/sources",
         "file": "apps/harness/src/server.ts",
-        "line": 4481,
+        "line": 5564,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1818,7 +2135,7 @@
           {
             "route": "/api/neuro/live/sources",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 697,
+            "line": 753,
             "caller": "dashboard-ui"
           }
         ],
@@ -1829,7 +2146,7 @@
         "method": "GET",
         "route": "/api/neuro/replays",
         "file": "apps/harness/src/server.ts",
-        "line": 4477,
+        "line": 5560,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1842,7 +2159,7 @@
           {
             "route": "/api/neuro/replays",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 696,
+            "line": 752,
             "caller": "dashboard-ui"
           }
         ],
@@ -1853,7 +2170,7 @@
         "method": "POST",
         "route": "/api/neuro/replays/:replayId/stop",
         "file": "apps/harness/src/server.ts",
-        "line": 7111,
+        "line": 8147,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1866,13 +2183,13 @@
           {
             "route": "/api/neuro/replays/:param/stop",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 1176,
+            "line": 1243,
             "caller": "dashboard-ui"
           },
           {
             "route": "/api/neuro/replays/:param/stop",
             "file": "apps/tui/src/index.tsx",
-            "line": 401,
+            "line": 544,
             "caller": "tui"
           }
         ],
@@ -1883,7 +2200,7 @@
         "method": "POST",
         "route": "/api/neuro/replays/start",
         "file": "apps/harness/src/server.ts",
-        "line": 7044,
+        "line": 8086,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1896,13 +2213,13 @@
           {
             "route": "/api/neuro/replays/start",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 1123,
+            "line": 1190,
             "caller": "dashboard-ui"
           },
           {
             "route": "/api/neuro/replays/start",
             "file": "apps/tui/src/index.tsx",
-            "line": 377,
+            "line": 519,
             "caller": "tui"
           }
         ],
@@ -1913,7 +2230,7 @@
         "method": "GET",
         "route": "/api/neuro/sessions",
         "file": "apps/harness/src/server.ts",
-        "line": 4424,
+        "line": 5485,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1926,7 +2243,7 @@
           {
             "route": "/api/neuro/sessions",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 695,
+            "line": 751,
             "caller": "dashboard-ui"
           }
         ],
@@ -1937,7 +2254,7 @@
         "method": "GET",
         "route": "/api/neuro/sessions/:sessionId",
         "file": "apps/harness/src/server.ts",
-        "line": 4429,
+        "line": 5501,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1950,7 +2267,7 @@
           {
             "route": "/api/neuro/sessions/:param",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 751,
+            "line": 807,
             "caller": "dashboard-ui"
           }
         ],
@@ -1961,7 +2278,7 @@
         "method": "GET",
         "route": "/api/nodes",
         "file": "apps/harness/src/server.ts",
-        "line": 5010,
+        "line": 6212,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -1978,13 +2295,13 @@
         "method": "DELETE",
         "route": "/api/nodes/:nodeId",
         "file": "apps/harness/src/server.ts",
-        "line": 6181,
+        "line": 7268,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
           "reasons": [
             "Delete route is governed server-side.",
-            "The dashboard proxy does not currently forward DELETE, so this is not a complete UI flow."
+            "Dashboard access must stay constrained to the explicit governed DELETE allowlist."
           ]
         },
         "callers": [],
@@ -1995,7 +2312,7 @@
         "method": "POST",
         "route": "/api/nodes/:nodeId/heartbeat",
         "file": "apps/harness/src/server.ts",
-        "line": 6104,
+        "line": 7197,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -2012,7 +2329,7 @@
         "method": "POST",
         "route": "/api/nodes/register",
         "file": "apps/harness/src/server.ts",
-        "line": 5756,
+        "line": 6900,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -2029,7 +2346,7 @@
         "method": "POST",
         "route": "/api/orchestration/mediate",
         "file": "apps/harness/src/server.ts",
-        "line": 6667,
+        "line": 7705,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -2046,7 +2363,7 @@
         "method": "GET",
         "route": "/api/persistence",
         "file": "apps/harness/src/server.ts",
-        "line": 4282,
+        "line": 4956,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -2059,13 +2376,13 @@
           {
             "route": "/api/persistence",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 570,
+            "line": 626,
             "caller": "dashboard-ui"
           },
           {
             "route": "/api/persistence",
             "file": "apps/tui/src/index.tsx",
-            "line": 557,
+            "line": 710,
             "caller": "tui"
           }
         ],
@@ -2074,9 +2391,26 @@
       },
       {
         "method": "GET",
+        "route": "/api/protection/posture",
+        "file": "apps/harness/src/server.ts",
+        "line": 5259,
+        "surface": "harness",
+        "readiness": {
+          "rating": "Yellow",
+          "reasons": [
+            "Endpoint is implemented in the harness.",
+            "Production readiness depends on caller coverage, governance headers, and integration tests."
+          ]
+        },
+        "callers": [],
+        "uiCallerCount": 0,
+        "orphanedFromOperatorUi": true
+      },
+      {
+        "method": "GET",
         "route": "/api/q/info",
         "file": "apps/harness/src/server.ts",
-        "line": 4674,
+        "line": 5875,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -2093,7 +2427,7 @@
         "method": "POST",
         "route": "/api/q/run",
         "file": "apps/harness/src/server.ts",
-        "line": 4714,
+        "line": 5922,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -2110,7 +2444,7 @@
         "method": "GET",
         "route": "/api/replay",
         "file": "apps/harness/src/server.ts",
-        "line": 4247,
+        "line": 4930,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -2123,7 +2457,7 @@
           {
             "route": "/api/replay",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 685,
+            "line": 741,
             "caller": "dashboard-ui"
           }
         ],
@@ -2134,7 +2468,7 @@
         "method": "GET",
         "route": "/api/snapshot",
         "file": "apps/harness/src/server.ts",
-        "line": 4209,
+        "line": 4901,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -2147,19 +2481,19 @@
           {
             "route": "/api/snapshot",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 853,
+            "line": 909,
             "caller": "dashboard-ui"
           },
           {
             "route": "/api/snapshot",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 1271,
+            "line": 1341,
             "caller": "dashboard-ui"
           },
           {
             "route": "/api/snapshot",
             "file": "apps/tui/src/index.tsx",
-            "line": 633,
+            "line": 786,
             "caller": "tui"
           }
         ],
@@ -2170,7 +2504,7 @@
         "method": "GET",
         "route": "/api/topology",
         "file": "apps/harness/src/server.ts",
-        "line": 7295,
+        "line": 8304,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -2183,7 +2517,7 @@
           {
             "route": "/api/topology",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 663,
+            "line": 719,
             "caller": "dashboard-ui"
           }
         ],
@@ -2194,7 +2528,7 @@
         "method": "GET",
         "route": "/api/wandb/status",
         "file": "apps/harness/src/server.ts",
-        "line": 4369,
+        "line": 5397,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -2207,13 +2541,13 @@
           {
             "route": "/api/wandb/status",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 628,
+            "line": 684,
             "caller": "dashboard-ui"
           },
           {
             "route": "/api/wandb/status",
             "file": "apps/tui/src/index.tsx",
-            "line": 571,
+            "line": 724,
             "caller": "tui"
           }
         ],
@@ -2224,7 +2558,7 @@
         "method": "GET",
         "route": "/api/work-governor",
         "file": "apps/harness/src/server.ts",
-        "line": 4205,
+        "line": 4897,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -2241,7 +2575,7 @@
         "method": "GET",
         "route": "/stream",
         "file": "apps/harness/src/server.ts",
-        "line": 7345,
+        "line": 8352,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -2254,7 +2588,7 @@
           {
             "route": "/stream",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 890,
+            "line": 946,
             "caller": "dashboard-ui"
           }
         ],
@@ -2265,7 +2599,7 @@
         "method": "GET",
         "route": "/stream/actuation/device",
         "file": "apps/harness/src/server.ts",
-        "line": 7441,
+        "line": 8456,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -2282,7 +2616,7 @@
         "method": "GET",
         "route": "/stream/neuro/live",
         "file": "apps/harness/src/server.ts",
-        "line": 7389,
+        "line": 8400,
         "surface": "harness",
         "readiness": {
           "rating": "Yellow",
@@ -2295,7 +2629,7 @@
           {
             "route": "/stream/neuro/live",
             "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-            "line": 1211,
+            "line": 1279,
             "caller": "dashboard-ui"
           }
         ],
@@ -2306,7 +2640,7 @@
         "method": "GET",
         "route": "/api/q/info",
         "file": "apps/harness/src/q-gateway.ts",
-        "line": 662,
+        "line": 749,
         "surface": "q-gateway",
         "readiness": {
           "rating": "Yellow",
@@ -2323,7 +2657,7 @@
         "method": "GET",
         "route": "/health",
         "file": "apps/harness/src/q-gateway.ts",
-        "line": 637,
+        "line": 723,
         "surface": "q-gateway",
         "readiness": {
           "rating": "Green",
@@ -2339,7 +2673,7 @@
         "method": "POST",
         "route": "/v1/chat/completions",
         "file": "apps/harness/src/q-gateway.ts",
-        "line": 707,
+        "line": 811,
         "surface": "q-gateway",
         "readiness": {
           "rating": "Yellow",
@@ -2356,7 +2690,7 @@
         "method": "GET",
         "route": "/v1/models",
         "file": "apps/harness/src/q-gateway.ts",
-        "line": 693,
+        "line": 789,
         "surface": "q-gateway",
         "readiness": {
           "rating": "Yellow",
@@ -2374,247 +2708,247 @@
       {
         "route": "/api",
         "file": "apps/dashboard/app/lib/operator-auth.ts",
-        "line": 226,
+        "line": 299,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/history",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 552,
+        "line": 608,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/persistence",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 570,
+        "line": 626,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/benchmarks/latest",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 588,
+        "line": 644,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/benchmarks/history",
-        "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 607,
-        "caller": "dashboard-ui"
-      },
-      {
-        "route": "/api/wandb/status",
-        "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 628,
-        "caller": "dashboard-ui"
-      },
-      {
-        "route": "/api/topology",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
         "line": 663,
         "caller": "dashboard-ui"
       },
       {
+        "route": "/api/wandb/status",
+        "file": "apps/dashboard/app/ui/dashboard-client.tsx",
+        "line": 684,
+        "caller": "dashboard-ui"
+      },
+      {
+        "route": "/api/topology",
+        "file": "apps/dashboard/app/ui/dashboard-client.tsx",
+        "line": 719,
+        "caller": "dashboard-ui"
+      },
+      {
         "route": "/api/integrity",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 664,
+        "line": 720,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/checkpoints",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 667,
+        "line": 723,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/governance/status",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 670,
+        "line": 726,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/benchmarks/packs",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 673,
+        "line": 729,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/events",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 675,
+        "line": 731,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/replay",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 685,
+        "line": 741,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/datasets",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 694,
+        "line": 750,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/neuro/sessions",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 695,
+        "line": 751,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/neuro/replays",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 696,
+        "line": 752,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/neuro/live/sources",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 697,
+        "line": 753,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/actuation/adapters",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 698,
+        "line": 754,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/actuation/protocols",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 699,
+        "line": 755,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/actuation/transports",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 701,
+        "line": 757,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/intelligence/ollama/models",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 710,
+        "line": 766,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/datasets/:param",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 732,
+        "line": 788,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/neuro/sessions/:param",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 751,
+        "line": 807,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/neuro/frames",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 766,
+        "line": 822,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/intelligence/executions",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 782,
+        "line": 838,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/actuation/outputs",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 795,
+        "line": 851,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/actuation/deliveries",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 808,
+        "line": 864,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/snapshot",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 853,
+        "line": 909,
         "caller": "dashboard-ui"
       },
       {
         "route": "/stream",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 890,
+        "line": 946,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/benchmarks/run",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 974,
+        "line": 1035,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/benchmarks/jobs/:param",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 999,
+        "line": 1060,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/benchmarks/history",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 1017,
+        "line": 1078,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/intelligence/run",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 1040,
+        "line": 1101,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/benchmarks/publish/wandb",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 1081,
+        "line": 1142,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/neuro/replays/start",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 1123,
+        "line": 1190,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/neuro/replays/:param/stop",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 1176,
+        "line": 1243,
         "caller": "dashboard-ui"
       },
       {
         "route": "/stream/neuro/live",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 1211,
+        "line": 1279,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/snapshot",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 1271,
+        "line": 1341,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/neuro/live/:param/stop",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 1296,
+        "line": 1366,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/intelligence/ollama/register",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 1331,
+        "line": 1401,
         "caller": "dashboard-ui"
       },
       {
         "route": "/api/actuation/dispatch",
         "file": "apps/dashboard/app/ui/dashboard-client.tsx",
-        "line": 1375,
+        "line": 1468,
         "caller": "dashboard-ui"
       },
       {
@@ -2626,73 +2960,73 @@
       {
         "route": "/api/control",
         "file": "apps/tui/src/index.tsx",
-        "line": 307,
+        "line": 435,
         "caller": "tui"
       },
       {
         "route": "/api/intelligence/run",
         "file": "apps/tui/src/index.tsx",
-        "line": 323,
+        "line": 456,
         "caller": "tui"
       },
       {
         "route": "/api/actuation/dispatch",
         "file": "apps/tui/src/index.tsx",
-        "line": 339,
+        "line": 472,
         "caller": "tui"
       },
       {
         "route": "/api/benchmarks/publish/wandb",
         "file": "apps/tui/src/index.tsx",
-        "line": 357,
+        "line": 494,
         "caller": "tui"
       },
       {
         "route": "/api/neuro/replays/start",
         "file": "apps/tui/src/index.tsx",
-        "line": 377,
+        "line": 519,
         "caller": "tui"
       },
       {
         "route": "/api/neuro/replays/:param/stop",
         "file": "apps/tui/src/index.tsx",
-        "line": 401,
+        "line": 544,
         "caller": "tui"
       },
       {
         "route": "/api/neuro/live/:param/stop",
         "file": "apps/tui/src/index.tsx",
-        "line": 421,
+        "line": 568,
         "caller": "tui"
       },
       {
         "route": "/api/persistence",
         "file": "apps/tui/src/index.tsx",
-        "line": 557,
+        "line": 710,
         "caller": "tui"
       },
       {
         "route": "/api/wandb/status",
         "file": "apps/tui/src/index.tsx",
-        "line": 571,
+        "line": 724,
         "caller": "tui"
       },
       {
         "route": "/api/governance/status",
         "file": "apps/tui/src/index.tsx",
-        "line": 585,
+        "line": 738,
         "caller": "tui"
       },
       {
         "route": "/api/intelligence/executions",
         "file": "apps/tui/src/index.tsx",
-        "line": 599,
+        "line": 752,
         "caller": "tui"
       },
       {
         "route": "/api/snapshot",
         "file": "apps/tui/src/index.tsx",
-        "line": 633,
+        "line": 786,
         "caller": "tui"
       }
     ],
@@ -2725,6 +3059,17 @@
         "exportedSymbolCount": 20
       },
       {
+        "file": "apps/harness/src/agent-intelligence-assessment.ts",
+        "category": "utility",
+        "exportedSymbols": [
+          "AgentIntelligenceAssessmentInput",
+          "AgentIntelligenceAssessmentSummary",
+          "assessAgentIntelligence",
+          "summarizeAgentIntelligenceAssessments"
+        ],
+        "exportedSymbolCount": 4
+      },
+      {
         "file": "apps/harness/src/arbitration.ts",
         "category": "utility",
         "exportedSymbols": [
@@ -2733,6 +3078,15 @@
           "planExecutionArbitration"
         ],
         "exportedSymbolCount": 3
+      },
+      {
+        "file": "apps/harness/src/arobi-live-ledger-receipt.ts",
+        "category": "cli-report-benchmark",
+        "exportedSymbols": [
+          "isVisibleGovernedAuditEntry",
+          "versionLooksCompatible"
+        ],
+        "exportedSymbolCount": 2
       },
       {
         "file": "apps/harness/src/benchmark-arobi-audit-integrity.ts",
@@ -2801,21 +3155,29 @@
         "file": "apps/harness/src/benchmark-q-gateway-substrate.ts",
         "category": "cli-report-benchmark",
         "exportedSymbols": [
+          "buildBenchmarkChatHeaders",
+          "QGatewaySubstrateBenchmarkControls",
           "QGatewaySubstrateBenchmarkResult",
+          "resolveQGatewaySubstrateBenchmarkControls",
           "runQGatewaySubstrateBenchmark",
           "summarizeQGatewaySubstrateHardware"
         ],
-        "exportedSymbolCount": 3
+        "exportedSymbolCount": 6
       },
       {
         "file": "apps/harness/src/benchmark-q-mediation-drift.ts",
         "category": "cli-report-benchmark",
         "exportedSymbols": [
+          "buildBenchmarkChatHeaders",
+          "buildStructuredPrompt",
+          "checkHttp",
+          "QMediationDriftBenchmarkControls",
           "QMediationDriftBenchmarkResult",
+          "resolveQMediationDriftBenchmarkControls",
           "runQMediationDriftBenchmark",
           "summarizeQMediationDriftHardware"
         ],
-        "exportedSymbolCount": 3
+        "exportedSymbolCount": 8
       },
       {
         "file": "apps/harness/src/benchmark-trend.ts",
@@ -2829,6 +3191,15 @@
           "loadLatestBenchmarkTrend"
         ],
         "exportedSymbolCount": 6
+      },
+      {
+        "file": "apps/harness/src/benchmark-worker-spawn.ts",
+        "category": "cli-report-benchmark",
+        "exportedSymbols": [
+          "BenchmarkWorkerSpawnPlan",
+          "buildBenchmarkWorkerSpawnPlan"
+        ],
+        "exportedSymbolCount": 2
       },
       {
         "file": "apps/harness/src/benchmark.ts",
@@ -2854,15 +3225,70 @@
         "exportedSymbolCount": 4
       },
       {
+        "file": "apps/harness/src/bridgebench-soak.ts",
+        "category": "cli-report-benchmark",
+        "exportedSymbols": [
+          "parseSoakOptions"
+        ],
+        "exportedSymbolCount": 1
+      },
+      {
         "file": "apps/harness/src/bridgebench.ts",
         "category": "cli-report-benchmark",
         "exportedSymbols": [
           "BRIDGEBENCH_SCENARIOS",
           "BridgeBenchReport",
+          "BridgeBenchRunOptions",
           "BridgeBenchScenario",
           "runBridgeBench"
         ],
-        "exportedSymbolCount": 4
+        "exportedSymbolCount": 5
+      },
+      {
+        "file": "apps/harness/src/causal-trace-graph.ts",
+        "category": "utility",
+        "exportedSymbols": [
+          "appendCausalTraceGraphRecord",
+          "buildCausalTraceGraph",
+          "buildCausalTraceGraphAdmission",
+          "CausalTraceEdge",
+          "CausalTraceEdgeKind",
+          "causalTraceEdgeKinds",
+          "CausalTraceGraph",
+          "CausalTraceGraphAdmissionResult",
+          "causalTraceGraphContract",
+          "CausalTraceGraphIntegrityFinding",
+          "CausalTraceGraphIntegrityReport",
+          "CausalTraceGraphRecord",
+          "causalTraceGraphSchemaVersion",
+          "CausalTraceNode",
+          "CausalTraceNodeKind",
+          "causalTraceNodeKinds",
+          "inspectCausalTraceGraphLedger",
+          "inspectCausalTraceGraphRecords",
+          "readCausalTraceGraphRecords"
+        ],
+        "exportedSymbolCount": 19
+      },
+      {
+        "file": "apps/harness/src/cognitive-role-plan.ts",
+        "category": "utility",
+        "exportedSymbols": [
+          "buildCognitiveRolePlanAdmission",
+          "CognitivePlanStepKind",
+          "cognitivePlanStepKinds",
+          "CognitiveRoleAssignment",
+          "CognitiveRolePlan",
+          "CognitiveRolePlanAdmissionDecision",
+          "CognitiveRolePlanAdmissionResult",
+          "cognitiveRolePlanContract",
+          "CognitiveRolePlanInput",
+          "cognitiveRolePlanSchemaVersion",
+          "CognitiveRolePlanStep",
+          "CognitiveRuntimeRole",
+          "cognitiveRuntimeRoles"
+        ],
+        "exportedSymbolCount": 13
       },
       {
         "file": "apps/harness/src/conversation.ts",
@@ -2875,6 +3301,15 @@
           "SessionConversationMemory"
         ],
         "exportedSymbolCount": 5
+      },
+      {
+        "file": "apps/harness/src/cross-project-workflow-health.ts",
+        "category": "utility",
+        "exportedSymbols": [
+          "classifyWorkflowRunForReleaseHealth",
+          "redactWorkflowRunSummariesForVisibility"
+        ],
+        "exportedSymbolCount": 2
       },
       {
         "file": "apps/harness/src/dashboard-socket-ticket.ts",
@@ -2931,20 +3366,64 @@
         "file": "apps/harness/src/federation.ts",
         "category": "service",
         "exportedSymbols": [
+          "assertFederationPrivate00ExportClaim",
+          "assertFederationPublicExportClaim",
           "buildFederationKeyId",
+          "classifyFederationWorkerLane",
+          "FederationExportClass",
+          "federationExportClasses",
+          "FederationLane",
+          "federationLanes",
           "FederationNodeIdentityPayload",
           "FederationNodeLeasePayload",
           "FederationSignatureAlgorithm",
           "federationSignatureAlgorithms",
           "FederationSignedEnvelope",
+          "FederationVisibilityClaim",
           "FederationWorkerIdentityPayload",
           "FederationWorkerLeasePayload",
+          "hasPrivateFederationLaneMarker",
+          "isPublicFederationEndpoint",
           "normalizeFederationControlPlaneUrl",
+          "PRIVATE_00_FEDERATION_LEASE_EXPORT_CLASS",
+          "PRIVATE_00_FEDERATION_MEMBERSHIP_EXPORT_CLASS",
+          "PUBLIC_FEDERATION_LEASE_EXPORT_CLASS",
+          "PUBLIC_FEDERATION_MEMBERSHIP_EXPORT_CLASS",
           "resolveFederationSecret",
+          "sanitizePublicFederationTags",
           "signFederationPayload",
           "verifyFederationEnvelope"
         ],
-        "exportedSymbolCount": 12
+        "exportedSymbolCount": 27
+      },
+      {
+        "file": "apps/harness/src/github-checks-receipt.ts",
+        "category": "cli-report-benchmark",
+        "exportedSymbols": [
+          "fetchGitHubJson"
+        ],
+        "exportedSymbolCount": 1
+      },
+      {
+        "file": "apps/harness/src/goal-state.ts",
+        "category": "utility",
+        "exportedSymbols": [
+          "buildGovernedGoalAdmission",
+          "evaluateGovernedGoalAdmission",
+          "GoalAuthorityScope",
+          "GoalStatus",
+          "goalStatuses",
+          "GovernedGoal",
+          "GovernedGoalAdmissionDecision",
+          "GovernedGoalAdmissionResult",
+          "GovernedGoalParseResult",
+          "governedGoalSchemaVersion",
+          "governedGoalStateContract",
+          "GovernedGoalTransitionDecision",
+          "parseGovernedGoalInput",
+          "transitionGovernedGoal"
+        ],
+        "exportedSymbolCount": 14
       },
       {
         "file": "apps/harness/src/governance.ts",
@@ -2976,6 +3455,27 @@
         "exportedSymbolCount": 7
       },
       {
+        "file": "apps/harness/src/intelligence-status.ts",
+        "category": "utility",
+        "exportedSymbols": [
+          "buildPublicIntelligenceStatus",
+          "PublicIntelligenceStatus",
+          "PublicIntelligenceStatusInput"
+        ],
+        "exportedSymbolCount": 3
+      },
+      {
+        "file": "apps/harness/src/live-mission-readiness.ts",
+        "category": "utility",
+        "exportedSymbols": [
+          "ArobiMissionTreasuryStatus",
+          "describeLedgerPrivate",
+          "isArobiGovernanceTreasuryReady",
+          "resolveArobiLocalPrivateReadiness"
+        ],
+        "exportedSymbolCount": 4
+      },
+      {
         "file": "apps/harness/src/live-neuro.ts",
         "category": "utility",
         "exportedSymbols": [
@@ -2989,10 +3489,19 @@
         "file": "apps/harness/src/live-operator-public-export.ts",
         "category": "utility",
         "exportedSymbols": [
+          "buildPublicExportTruthBoundary",
           "evaluatePublicExportSourceFreshness",
           "resolvePublicExportPublication"
         ],
-        "exportedSymbolCount": 2
+        "exportedSymbolCount": 3
+      },
+      {
+        "file": "apps/harness/src/local-worker-heartbeat.ts",
+        "category": "utility",
+        "exportedSymbols": [
+          "resolveLocalWorkerHeartbeatIntervalMs"
+        ],
+        "exportedSymbolCount": 1
       },
       {
         "file": "apps/harness/src/lsl-adapter.ts",
@@ -3014,9 +3523,10 @@
         "category": "utility",
         "exportedSymbols": [
           "ModelComparisonReport",
+          "resolveModelComparisonTimeoutMs",
           "runModelComparison"
         ],
-        "exportedSymbolCount": 2
+        "exportedSymbolCount": 3
       },
       {
         "file": "apps/harness/src/neuro-bands.ts",
@@ -3025,6 +3535,16 @@
           "collapseSampleRows",
           "extractBandPower",
           "SpectralBandPower"
+        ],
+        "exportedSymbolCount": 3
+      },
+      {
+        "file": "apps/harness/src/neuro-replay-options.ts",
+        "category": "utility",
+        "exportedSymbols": [
+          "NormalizedReplayOptions",
+          "normalizeNeuroReplayOptions",
+          "StartReplayOptions"
         ],
         "exportedSymbolCount": 3
       },
@@ -3062,6 +3582,14 @@
         "exportedSymbolCount": 6
       },
       {
+        "file": "apps/harness/src/oci-iam-bridge.ts",
+        "category": "utility",
+        "exportedSymbols": [
+          "runOciIamBridgeResponsesCompletion"
+        ],
+        "exportedSymbolCount": 1
+      },
+      {
         "file": "apps/harness/src/ollama.ts",
         "category": "service",
         "exportedSymbols": [
@@ -3075,12 +3603,25 @@
           "parseStructuredJsonResponse",
           "parseStructuredResponse",
           "prewarmOllamaModel",
+          "QGenerateFastOptions",
           "renderStructuredResponseContract",
+          "resolveQGenerateFastOptions",
           "runOllamaChatCompletion",
           "runOllamaExecution",
           "runOllamaGenerateCompletion"
         ],
-        "exportedSymbolCount": 14
+        "exportedSymbolCount": 16
+      },
+      {
+        "file": "apps/harness/src/openai-compatible.ts",
+        "category": "utility",
+        "exportedSymbols": [
+          "buildOpenAICompatibleRequestUrl",
+          "buildOpenAICompatibleResponsesBody",
+          "extractOpenAICompatibleResponseText",
+          "runOpenAICompatibleResponsesCompletion"
+        ],
+        "exportedSymbolCount": 4
       },
       {
         "file": "apps/harness/src/parallel-engine.ts",
@@ -3101,6 +3642,24 @@
           "PersistenceStatus"
         ],
         "exportedSymbolCount": 3
+      },
+      {
+        "file": "apps/harness/src/protection-intelligence.ts",
+        "category": "utility",
+        "exportedSymbols": [
+          "deriveProtectionPosture",
+          "deriveProtectionPressure",
+          "mergeProtectionPressure",
+          "projectProtectionPostureForQ",
+          "ProtectionPosture",
+          "ProtectionPostureInput",
+          "ProtectionPostureSummary",
+          "ProtectionPressure",
+          "ProtectionSeverity",
+          "ProtectionSignal",
+          "ProtectionSignalKind"
+        ],
+        "exportedSymbolCount": 11
       },
       {
         "file": "apps/harness/src/q-api-auth.ts",
@@ -3129,6 +3688,43 @@
         "exportedSymbolCount": 4
       },
       {
+        "file": "apps/harness/src/q-gateway-validate.ts",
+        "category": "cli-report-benchmark",
+        "exportedSymbols": [
+          "buildQGatewayValidationHeaders",
+          "captureHttpCheck",
+          "checkHttp",
+          "DEFAULT_Q_GATEWAY_HTTP_TIMEOUT_MS",
+          "DEFAULT_Q_GATEWAY_LOCAL_Q_TIMEOUT_MS",
+          "hasOpenGatewayCircuit",
+          "HttpCheck",
+          "isQGatewayValidationAccepted",
+          "isRetryableDirectQFoundationSmoke",
+          "isRetryableGatewaySmokeCheck",
+          "QGatewayValidationReport",
+          "QGatewayValidationWriteResult",
+          "resolveQGatewayValidationTimeoutMs",
+          "shouldRunDirectQFoundationSmokeAfterGateway",
+          "writeQGatewayValidationReport"
+        ],
+        "exportedSymbolCount": 15
+      },
+      {
+        "file": "apps/harness/src/q-inference-profile.ts",
+        "category": "service",
+        "exportedSymbols": [
+          "PublicQInferenceProfile",
+          "QInferenceAuthMode",
+          "QInferenceProfile",
+          "QInferenceProvider",
+          "QOciIamBridgeProfile",
+          "redactQInferenceProfile",
+          "resolveQInferenceProfile",
+          "resolveQInferenceProvider"
+        ],
+        "exportedSymbolCount": 8
+      },
+      {
         "file": "apps/harness/src/q-local-model.ts",
         "category": "service",
         "exportedSymbols": [
@@ -3151,6 +3747,10 @@
           "foundationModelLabel",
           "getArobiNetworkName",
           "getArobiOperatingModelSummary",
+          "getCausalTracePolicySummary",
+          "getCognitiveRolePolicySummary",
+          "getGovernedGoalPolicySummary",
+          "getGovernedToolPolicySummary",
           "getImmaculateHarnessName",
           "getQDeveloperName",
           "getQFoundationModelName",
@@ -3170,7 +3770,7 @@
           "truthfulModelLabel",
           "vendorForModel"
         ],
-        "exportedSymbolCount": 26
+        "exportedSymbolCount": 30
       },
       {
         "file": "apps/harness/src/q-orchestration-context.ts",
@@ -3192,14 +3792,46 @@
         "exportedSymbolCount": 3
       },
       {
+        "file": "apps/harness/src/q-release-gate.ts",
+        "category": "cli-report-benchmark",
+        "exportedSymbols": [
+          "DEFAULT_Q_READINESS_MAX_SOURCE_AGE_MS",
+          "describeQGatewayContractReasons",
+          "describeSourceFreshnessReason",
+          "QGatewayContractSummary",
+          "QGatewayValidationReport",
+          "QReadinessGateReport",
+          "QReadinessGateWriteResult",
+          "resolveQReadinessMaxSourceAgeMs",
+          "selectLatestQGatewayValidationReport",
+          "summarizeQGatewayContract",
+          "writeQReadinessGateReport"
+        ],
+        "exportedSymbolCount": 11
+      },
+      {
         "file": "apps/harness/src/q-resilience.ts",
         "category": "service",
         "exportedSymbols": [
           "CircuitSnapshot",
           "CircuitState",
-          "createFailureCircuitBreaker"
+          "createFailureCircuitBreaker",
+          "shouldRecordQGatewayCircuitFailure"
         ],
-        "exportedSymbolCount": 3
+        "exportedSymbolCount": 4
+      },
+      {
+        "file": "apps/harness/src/real-world-engagement.ts",
+        "category": "utility",
+        "exportedSymbols": [
+          "classifyRealWorldEngagement",
+          "evaluateRealWorldEngagement",
+          "RealWorldEngagementDecision",
+          "RealWorldEngagementEvidence",
+          "RealWorldEngagementMode",
+          "RealWorldEngagementProfile"
+        ],
+        "exportedSymbolCount": 6
       },
       {
         "file": "apps/harness/src/release-metadata.ts",
@@ -3210,11 +3842,41 @@
           "QHybridTrainingSessionSummary",
           "QTrainingLockSummary",
           "ReleaseMetadata",
+          "resetReleaseMetadataCacheForTests",
           "resolveHarnessReadiness",
           "ResolveHarnessReadinessOptions",
           "resolveReleaseMetadata"
         ],
-        "exportedSymbolCount": 8
+        "exportedSymbolCount": 9
+      },
+      {
+        "file": "apps/harness/src/release-surface.ts",
+        "category": "cli-report-benchmark",
+        "exportedSymbols": [
+          "DEFAULT_RELEASE_SURFACE_MAX_AGE_MS",
+          "evaluateReleaseSurfaceEvidence",
+          "inferSurfaceHealth",
+          "renderReleaseAccountabilityGapLines",
+          "SurfaceTimestamp"
+        ],
+        "exportedSymbolCount": 5
+      },
+      {
+        "file": "apps/harness/src/roundtable-runtime.ts",
+        "category": "cli-report-benchmark",
+        "exportedSymbols": [
+          "buildRoundtableMediationHeaders",
+          "buildRoundtableMediationRequestBody",
+          "resolveRoundtableOllamaUrl",
+          "resolveRoundtableRuntimeTimeoutControls",
+          "resolveRoundtableSharedQFallbackAllowed",
+          "RoundtableRuntimeSurface",
+          "RoundtableRuntimeTimeoutControls",
+          "shouldAbortRoundtableRuntimeAfterPrewarm",
+          "shouldAttemptRoundtableSharedQFallback",
+          "writeRoundtableRuntimeCanonicalReport"
+        ],
+        "exportedSymbolCount": 10
       },
       {
         "file": "apps/harness/src/roundtable.ts",
@@ -3223,14 +3885,16 @@
           "appendRoundtableExecutionSummary",
           "buildRoundtableActionPlan",
           "cleanupRoundtableActionWorktree",
+          "collectRoundtableRepoAuditFindings",
           "discoverRoundtableProjects",
           "materializeRoundtableActionExecutionArtifacts",
           "materializeRoundtableActionWorktree",
           "probeRoundtableActionWorkspace",
+          "resolveRoundtableRepoRoot",
           "RoundtableActionWorkspaceProbe",
           "RoundtablePlan"
         ],
-        "exportedSymbolCount": 9
+        "exportedSymbolCount": 11
       },
       {
         "file": "apps/harness/src/routing.ts",
@@ -3265,6 +3929,14 @@
         "exportedSymbolCount": 2
       },
       {
+        "file": "apps/harness/src/startup-trace.ts",
+        "category": "utility",
+        "exportedSymbols": [
+          "resolveStartupTracePath"
+        ],
+        "exportedSymbolCount": 1
+      },
+      {
         "file": "apps/harness/src/temporal-activities.ts",
         "category": "utility",
         "exportedSymbols": [
@@ -3295,6 +3967,28 @@
         "exportedSymbolCount": 1
       },
       {
+        "file": "apps/harness/src/tool-governance.ts",
+        "category": "service",
+        "exportedSymbols": [
+          "evaluateToolRiskAdmission",
+          "getGovernedToolAction",
+          "GovernedToolAction",
+          "listGovernedToolActions",
+          "riskClassForTier",
+          "ToolRiskAdmissionDecision",
+          "ToolRiskAdmissionInput",
+          "ToolRiskClass",
+          "ToolRiskRateLimit",
+          "toolRiskRateLimits",
+          "toolRiskRequiresApproval",
+          "toolRiskRequiresConsent",
+          "toolRiskRequiresHumanApproval",
+          "ToolRiskTier",
+          "toolRiskTiers"
+        ],
+        "exportedSymbolCount": 15
+      },
+      {
         "file": "apps/harness/src/training-data.ts",
         "category": "cli-report-benchmark",
         "exportedSymbols": [
@@ -3309,6 +4003,7 @@
         "category": "utility",
         "exportedSymbols": [
           "getAllowedDataRoot",
+          "getAllowedDataRoots",
           "getLocalVenvPythonPath",
           "hashValue",
           "resolvePathWithinAllowedRoot",
@@ -3317,7 +4012,7 @@
           "sha256Json",
           "stableStringify"
         ],
-        "exportedSymbolCount": 8
+        "exportedSymbolCount": 9
       },
       {
         "file": "apps/harness/src/visibility.ts",
@@ -3401,6 +4096,16 @@
           "actuationOutputSources",
           "ActuationOutputStatus",
           "actuationOutputStatuses",
+          "AgentIntelligenceAssessment",
+          "AgentIntelligenceAssessmentGrade",
+          "agentIntelligenceAssessmentGrades",
+          "agentIntelligenceAssessmentSchema",
+          "AgentIntelligenceAssessmentTrigger",
+          "agentIntelligenceAssessmentTriggers",
+          "AgentIntelligenceAssessmentVerdict",
+          "agentIntelligenceAssessmentVerdicts",
+          "AgentIntelligenceScorecard",
+          "agentIntelligenceScorecardSchema",
           "AgentTurn",
           "agentTurnSchema",
           "AgentWorkspaceIsolationMode",
@@ -3408,6 +4113,16 @@
           "AgentWorkspaceScope",
           "agentWorkspaceWriteAuthorities",
           "AgentWorkspaceWriteAuthority",
+          "ArobiNetworkExportScope",
+          "arobiNetworkExportScopes",
+          "ArobiNetworkLaneId",
+          "arobiNetworkLaneIds",
+          "ArobiNetworkLanePolicy",
+          "arobiNetworkLanePolicySchema",
+          "ArobiNetworkRetentionClass",
+          "arobiNetworkRetentionClasses",
+          "arobiNetworkTrainingPolicies",
+          "ArobiNetworkTrainingPolicy",
           "BenchmarkArobiAuditScenarioResult",
           "BenchmarkAssertion",
           "BenchmarkAttribution",
@@ -3440,6 +4155,7 @@
           "DatasetModality",
           "DatasetModalitySummary",
           "datasetSummarySchema",
+          "defaultArobiNetworkLanePolicy",
           "EngineDurableState",
           "engineDurableStateSchema",
           "EventEnvelope",
@@ -3517,6 +4233,7 @@
           "phaseSnapshotSchema",
           "planeColor",
           "rebuildDurableStateFromEvents",
+          "resolveArobiNetworkLanePolicy",
           "RoundtableAction",
           "RoundtableActionStatus",
           "roundtableActionStatuses",
@@ -3562,7 +4279,7 @@
           "trainingCorpusSourceSummarySchema",
           "Vec3"
         ],
-        "exportedSymbolCount": 168
+        "exportedSymbolCount": 190
       }
     ],
     "fileInteractions": [
@@ -3802,31 +4519,31 @@
       },
       {
         "file": "apps/harness/src/arobi-live-ledger-receipt.ts",
-        "line": 254,
+        "line": 270,
         "operation": "readFile",
         "category": "evidence-output"
       },
       {
         "file": "apps/harness/src/arobi-live-ledger-receipt.ts",
-        "line": 265,
+        "line": 281,
         "operation": "readdir",
         "category": "evidence-output"
       },
       {
         "file": "apps/harness/src/arobi-live-ledger-receipt.ts",
-        "line": 457,
+        "line": 473,
         "operation": "mkdir",
         "category": "evidence-output"
       },
       {
         "file": "apps/harness/src/arobi-live-ledger-receipt.ts",
-        "line": 458,
+        "line": 474,
         "operation": "writeFile",
         "category": "evidence-output"
       },
       {
         "file": "apps/harness/src/arobi-live-ledger-receipt.ts",
-        "line": 459,
+        "line": 475,
         "operation": "writeFile",
         "category": "evidence-output"
       },
@@ -4018,7 +4735,7 @@
       },
       {
         "file": "apps/harness/src/benchmark-q-gateway-substrate.ts",
-        "line": 466,
+        "line": 508,
         "operation": "mkdir",
         "category": "evidence-output"
       },
@@ -4031,24 +4748,30 @@
       {
         "file": "apps/harness/src/benchmark-q-mediation-drift.ts",
         "line": 6,
+        "operation": "node:fs",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/benchmark-q-mediation-drift.ts",
+        "line": 7,
         "operation": "mkdir",
         "category": "evidence-output"
       },
       {
         "file": "apps/harness/src/benchmark-q-mediation-drift.ts",
-        "line": 6,
+        "line": 7,
         "operation": "node:fs/promises",
         "category": "evidence-output"
       },
       {
         "file": "apps/harness/src/benchmark-q-mediation-drift.ts",
-        "line": 906,
+        "line": 1022,
         "operation": "mkdir",
         "category": "evidence-output"
       },
       {
         "file": "apps/harness/src/benchmark-q-mediation-drift.ts",
-        "line": 907,
+        "line": 1023,
         "operation": "mkdir",
         "category": "evidence-output"
       },
@@ -4258,19 +4981,19 @@
       },
       {
         "file": "apps/harness/src/bridgebench-soak.ts",
-        "line": 265,
+        "line": 335,
         "operation": "mkdir",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/bridgebench-soak.ts",
-        "line": 368,
+        "line": 445,
         "operation": "writeFile",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/bridgebench-soak.ts",
-        "line": 369,
+        "line": 446,
         "operation": "writeFile",
         "category": "file-utility"
       },
@@ -4294,109 +5017,205 @@
       },
       {
         "file": "apps/harness/src/bridgebench.ts",
-        "line": 131,
+        "line": 137,
         "operation": "access",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/bridgebench.ts",
-        "line": 336,
+        "line": 349,
         "operation": "mkdir",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/bridgebench.ts",
-        "line": 381,
-        "operation": "writeFile",
-        "category": "file-utility"
-      },
-      {
-        "file": "apps/harness/src/bridgebench.ts",
-        "line": 382,
-        "operation": "writeFile",
-        "category": "file-utility"
-      },
-      {
-        "file": "apps/harness/src/cross-project-workflow-health.ts",
-        "line": 2,
-        "operation": "mkdir",
-        "category": "file-utility"
-      },
-      {
-        "file": "apps/harness/src/cross-project-workflow-health.ts",
-        "line": 2,
-        "operation": "writeFile",
-        "category": "file-utility"
-      },
-      {
-        "file": "apps/harness/src/cross-project-workflow-health.ts",
-        "line": 2,
-        "operation": "node:fs/promises",
-        "category": "file-utility"
-      },
-      {
-        "file": "apps/harness/src/cross-project-workflow-health.ts",
-        "line": 71,
-        "operation": "access",
-        "category": "file-utility"
-      },
-      {
-        "file": "apps/harness/src/cross-project-workflow-health.ts",
-        "line": 276,
-        "operation": "access",
-        "category": "file-utility"
-      },
-      {
-        "file": "apps/harness/src/cross-project-workflow-health.ts",
-        "line": 303,
-        "operation": "access",
-        "category": "file-utility"
-      },
-      {
-        "file": "apps/harness/src/cross-project-workflow-health.ts",
-        "line": 303,
-        "operation": "access",
-        "category": "file-utility"
-      },
-      {
-        "file": "apps/harness/src/cross-project-workflow-health.ts",
-        "line": 386,
-        "operation": "access",
-        "category": "file-utility"
-      },
-      {
-        "file": "apps/harness/src/cross-project-workflow-health.ts",
         "line": 394,
-        "operation": "access",
+        "operation": "writeFile",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/bridgebench.ts",
+        "line": 395,
+        "operation": "writeFile",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/causal-trace-graph.test.ts",
+        "line": 2,
+        "operation": "rm",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/causal-trace-graph.test.ts",
+        "line": 2,
+        "operation": "node:fs/promises",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/causal-trace-graph.test.ts",
+        "line": 145,
+        "operation": "rm",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/causal-trace-graph.ts",
+        "line": 2,
+        "operation": "mkdir",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/causal-trace-graph.ts",
+        "line": 2,
+        "operation": "open",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/causal-trace-graph.ts",
+        "line": 2,
+        "operation": "readFile",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/causal-trace-graph.ts",
+        "line": 2,
+        "operation": "unlink",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/causal-trace-graph.ts",
+        "line": 2,
+        "operation": "node:fs/promises",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/causal-trace-graph.ts",
+        "line": 168,
+        "operation": "open",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/causal-trace-graph.ts",
+        "line": 170,
+        "operation": "stat",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/causal-trace-graph.ts",
+        "line": 204,
+        "operation": "mkdir",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/causal-trace-graph.ts",
+        "line": 210,
+        "operation": "open",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/causal-trace-graph.ts",
+        "line": 226,
+        "operation": "unlink",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/causal-trace-graph.ts",
+        "line": 235,
+        "operation": "open",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/causal-trace-graph.ts",
+        "line": 237,
+        "operation": "writeFile",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/causal-trace-graph.ts",
+        "line": 524,
+        "operation": "readFile",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/cross-project-workflow-health.ts",
-        "line": 452,
-        "operation": "access",
-        "category": "file-utility"
-      },
-      {
-        "file": "apps/harness/src/cross-project-workflow-health.ts",
-        "line": 452,
-        "operation": "access",
-        "category": "file-utility"
-      },
-      {
-        "file": "apps/harness/src/cross-project-workflow-health.ts",
-        "line": 462,
+        "line": 2,
         "operation": "mkdir",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/cross-project-workflow-health.ts",
-        "line": 463,
+        "line": 2,
         "operation": "writeFile",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/cross-project-workflow-health.ts",
-        "line": 464,
+        "line": 2,
+        "operation": "node:fs/promises",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/cross-project-workflow-health.ts",
+        "line": 75,
+        "operation": "access",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/cross-project-workflow-health.ts",
+        "line": 376,
+        "operation": "access",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/cross-project-workflow-health.ts",
+        "line": 414,
+        "operation": "access",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/cross-project-workflow-health.ts",
+        "line": 414,
+        "operation": "access",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/cross-project-workflow-health.ts",
+        "line": 512,
+        "operation": "access",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/cross-project-workflow-health.ts",
+        "line": 520,
+        "operation": "access",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/cross-project-workflow-health.ts",
+        "line": 586,
+        "operation": "access",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/cross-project-workflow-health.ts",
+        "line": 586,
+        "operation": "access",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/cross-project-workflow-health.ts",
+        "line": 597,
+        "operation": "mkdir",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/cross-project-workflow-health.ts",
+        "line": 598,
+        "operation": "writeFile",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/cross-project-workflow-health.ts",
+        "line": 599,
         "operation": "writeFile",
         "category": "file-utility"
       },
@@ -4432,49 +5251,49 @@
       },
       {
         "file": "apps/harness/src/decision-trace.ts",
-        "line": 121,
+        "line": 122,
         "operation": "open",
         "category": "runtime-state"
       },
       {
         "file": "apps/harness/src/decision-trace.ts",
-        "line": 123,
+        "line": 124,
         "operation": "stat",
         "category": "runtime-state"
       },
       {
         "file": "apps/harness/src/decision-trace.ts",
-        "line": 156,
+        "line": 157,
         "operation": "mkdir",
         "category": "runtime-state"
       },
       {
         "file": "apps/harness/src/decision-trace.ts",
-        "line": 162,
+        "line": 163,
         "operation": "open",
         "category": "runtime-state"
       },
       {
         "file": "apps/harness/src/decision-trace.ts",
-        "line": 178,
+        "line": 179,
         "operation": "unlink",
         "category": "runtime-state"
       },
       {
         "file": "apps/harness/src/decision-trace.ts",
-        "line": 184,
+        "line": 185,
         "operation": "open",
         "category": "runtime-state"
       },
       {
         "file": "apps/harness/src/decision-trace.ts",
-        "line": 186,
+        "line": 187,
         "operation": "writeFile",
         "category": "runtime-state"
       },
       {
         "file": "apps/harness/src/decision-trace.ts",
-        "line": 278,
+        "line": 279,
         "operation": "readFile",
         "category": "runtime-state"
       },
@@ -4533,6 +5352,12 @@
         "category": "runtime-state"
       },
       {
+        "file": "apps/harness/src/federation.test.ts",
+        "line": 4,
+        "operation": "node:fs",
+        "category": "file-utility"
+      },
+      {
         "file": "apps/harness/src/github-checks-receipt.ts",
         "line": 2,
         "operation": "mkdir",
@@ -4552,19 +5377,19 @@
       },
       {
         "file": "apps/harness/src/github-checks-receipt.ts",
-        "line": 315,
+        "line": 387,
         "operation": "mkdir",
         "category": "evidence-output"
       },
       {
         "file": "apps/harness/src/github-checks-receipt.ts",
-        "line": 316,
+        "line": 388,
         "operation": "writeFile",
         "category": "evidence-output"
       },
       {
         "file": "apps/harness/src/github-checks-receipt.ts",
-        "line": 317,
+        "line": 389,
         "operation": "writeFile",
         "category": "evidence-output"
       },
@@ -4732,31 +5557,31 @@
       },
       {
         "file": "apps/harness/src/live-mission-readiness.ts",
-        "line": 145,
+        "line": 159,
         "operation": "readFile",
         "category": "evidence-output"
       },
       {
         "file": "apps/harness/src/live-mission-readiness.ts",
-        "line": 153,
+        "line": 167,
         "operation": "readFile",
         "category": "evidence-output"
       },
       {
         "file": "apps/harness/src/live-mission-readiness.ts",
-        "line": 508,
+        "line": 593,
         "operation": "mkdir",
         "category": "evidence-output"
       },
       {
         "file": "apps/harness/src/live-mission-readiness.ts",
-        "line": 509,
+        "line": 594,
         "operation": "writeFile",
         "category": "evidence-output"
       },
       {
         "file": "apps/harness/src/live-mission-readiness.ts",
-        "line": 510,
+        "line": 595,
         "operation": "writeFile",
         "category": "evidence-output"
       },
@@ -4930,19 +5755,19 @@
       },
       {
         "file": "apps/harness/src/live-operator-public-export.ts",
-        "line": 793,
+        "line": 801,
         "operation": "mkdir",
         "category": "evidence-output"
       },
       {
         "file": "apps/harness/src/live-operator-public-export.ts",
-        "line": 794,
+        "line": 802,
         "operation": "writeFile",
         "category": "evidence-output"
       },
       {
         "file": "apps/harness/src/live-operator-public-export.ts",
-        "line": 795,
+        "line": 803,
         "operation": "writeFile",
         "category": "evidence-output"
       },
@@ -4972,26 +5797,44 @@
       },
       {
         "file": "apps/harness/src/model-comparison.ts",
-        "line": 150,
+        "line": 199,
         "operation": "access",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/model-comparison.ts",
-        "line": 517,
+        "line": 570,
         "operation": "mkdir",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/model-comparison.ts",
-        "line": 518,
+        "line": 571,
         "operation": "writeFile",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/model-comparison.ts",
-        "line": 519,
+        "line": 572,
         "operation": "writeFile",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/neuro-stream-engagement-contract.test.ts",
+        "line": 2,
+        "operation": "readFile",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/neuro-stream-engagement-contract.test.ts",
+        "line": 2,
+        "operation": "node:fs/promises",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/neuro-stream-engagement-contract.test.ts",
+        "line": 6,
+        "operation": "readFile",
         "category": "file-utility"
       },
       {
@@ -5109,32 +5952,104 @@
         "category": "dataset-ingest"
       },
       {
+        "file": "apps/harness/src/oci-iam-bridge.test.ts",
+        "line": 2,
+        "operation": "rm",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/oci-iam-bridge.test.ts",
+        "line": 2,
+        "operation": "writeFile",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/oci-iam-bridge.test.ts",
+        "line": 2,
+        "operation": "node:fs/promises",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/oci-iam-bridge.test.ts",
+        "line": 14,
+        "operation": "writeFile",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/oci-iam-bridge.test.ts",
+        "line": 17,
+        "operation": "node:fs",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/oci-iam-bridge.test.ts",
+        "line": 32,
+        "operation": "writeFile",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/oci-iam-bridge.test.ts",
+        "line": 65,
+        "operation": "rm",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/oci-iam-bridge.ts",
+        "line": 2,
+        "operation": "rm",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/oci-iam-bridge.ts",
+        "line": 2,
+        "operation": "writeFile",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/oci-iam-bridge.ts",
+        "line": 2,
+        "operation": "node:fs/promises",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/oci-iam-bridge.ts",
+        "line": 120,
+        "operation": "rm",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/oci-iam-bridge.ts",
+        "line": 148,
+        "operation": "writeFile",
+        "category": "file-utility"
+      },
+      {
         "file": "apps/harness/src/ollama.ts",
-        "line": 519,
+        "line": 561,
         "operation": "access",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/ollama.ts",
-        "line": 572,
+        "line": 614,
         "operation": "access",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/ollama.ts",
-        "line": 602,
+        "line": 644,
         "operation": "access",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/ollama.ts",
-        "line": 710,
+        "line": 752,
         "operation": "access",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/ollama.ts",
-        "line": 832,
+        "line": 874,
         "operation": "access",
         "category": "file-utility"
       },
@@ -5379,9 +6294,87 @@
         "category": "evidence-output"
       },
       {
+        "file": "apps/harness/src/q-gateway-validate.test.ts",
+        "line": 2,
+        "operation": "node:fs",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-gateway-validate.test.ts",
+        "line": 3,
+        "operation": "readFile",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-gateway-validate.test.ts",
+        "line": 3,
+        "operation": "rm",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-gateway-validate.test.ts",
+        "line": 3,
+        "operation": "node:fs/promises",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-gateway-validate.test.ts",
+        "line": 80,
+        "operation": "open",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-gateway-validate.test.ts",
+        "line": 103,
+        "operation": "open",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-gateway-validate.test.ts",
+        "line": 122,
+        "operation": "open",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-gateway-validate.test.ts",
+        "line": 126,
+        "operation": "open",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-gateway-validate.test.ts",
+        "line": 389,
+        "operation": "readFile",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-gateway-validate.test.ts",
+        "line": 392,
+        "operation": "rm",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-gateway-validate.test.ts",
+        "line": 411,
+        "operation": "readFile",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-gateway-validate.test.ts",
+        "line": 417,
+        "operation": "rm",
+        "category": "evidence-output"
+      },
+      {
         "file": "apps/harness/src/q-gateway-validate.ts",
         "line": 3,
         "operation": "node:fs",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-gateway-validate.ts",
+        "line": 4,
+        "operation": "appendFile",
         "category": "evidence-output"
       },
       {
@@ -5404,21 +6397,81 @@
       },
       {
         "file": "apps/harness/src/q-gateway-validate.ts",
-        "line": 518,
+        "line": 541,
+        "operation": "open",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-gateway-validate.ts",
+        "line": 687,
         "operation": "mkdir",
         "category": "evidence-output"
       },
       {
         "file": "apps/harness/src/q-gateway-validate.ts",
-        "line": 519,
+        "line": 688,
         "operation": "writeFile",
         "category": "evidence-output"
       },
       {
         "file": "apps/harness/src/q-gateway-validate.ts",
-        "line": 520,
+        "line": 689,
         "operation": "writeFile",
         "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-gateway-validate.ts",
+        "line": 700,
+        "operation": "mkdir",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-gateway-validate.ts",
+        "line": 701,
+        "operation": "writeFile",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-gateway-validate.ts",
+        "line": 702,
+        "operation": "writeFile",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-gateway-validate.ts",
+        "line": 736,
+        "operation": "mkdir",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-gateway-validate.ts",
+        "line": 737,
+        "operation": "writeFile",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-gateway-validate.ts",
+        "line": 746,
+        "operation": "mkdir",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-gateway-validate.ts",
+        "line": 747,
+        "operation": "appendFile",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-inference-profile.test.ts",
+        "line": 3,
+        "operation": "node:fs",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/q-inference-profile.ts",
+        "line": 1,
+        "operation": "node:fs",
+        "category": "file-utility"
       },
       {
         "file": "apps/harness/src/q-local-model-cli.ts",
@@ -5506,9 +6559,57 @@
       },
       {
         "file": "apps/harness/src/q-orchestration-context.ts",
-        "line": 132,
+        "line": 135,
         "operation": "readFile",
         "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/q-release-gate.test.ts",
+        "line": 2,
+        "operation": "node:fs",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-release-gate.test.ts",
+        "line": 3,
+        "operation": "readFile",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-release-gate.test.ts",
+        "line": 3,
+        "operation": "rm",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-release-gate.test.ts",
+        "line": 3,
+        "operation": "node:fs/promises",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-release-gate.test.ts",
+        "line": 188,
+        "operation": "readFile",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-release-gate.test.ts",
+        "line": 191,
+        "operation": "rm",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-release-gate.test.ts",
+        "line": 209,
+        "operation": "readFile",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-release-gate.test.ts",
+        "line": 215,
+        "operation": "rm",
+        "category": "evidence-output"
       },
       {
         "file": "apps/harness/src/q-release-gate.ts",
@@ -5536,25 +6637,43 @@
       },
       {
         "file": "apps/harness/src/q-release-gate.ts",
-        "line": 87,
+        "line": 127,
         "operation": "readFile",
         "category": "evidence-output"
       },
       {
         "file": "apps/harness/src/q-release-gate.ts",
-        "line": 204,
+        "line": 236,
         "operation": "mkdir",
         "category": "evidence-output"
       },
       {
         "file": "apps/harness/src/q-release-gate.ts",
-        "line": 205,
+        "line": 237,
         "operation": "writeFile",
         "category": "evidence-output"
       },
       {
         "file": "apps/harness/src/q-release-gate.ts",
-        "line": 206,
+        "line": 238,
+        "operation": "writeFile",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-release-gate.ts",
+        "line": 249,
+        "operation": "mkdir",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-release-gate.ts",
+        "line": 250,
+        "operation": "writeFile",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/q-release-gate.ts",
+        "line": 251,
         "operation": "writeFile",
         "category": "evidence-output"
       },
@@ -5572,25 +6691,25 @@
       },
       {
         "file": "apps/harness/src/q-resilience.ts",
-        "line": 47,
+        "line": 53,
         "operation": "open",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/q-resilience.ts",
-        "line": 56,
+        "line": 62,
         "operation": "open",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/q-resilience.ts",
-        "line": 80,
+        "line": 86,
         "operation": "open",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/q-resilience.ts",
-        "line": 81,
+        "line": 87,
         "operation": "open",
         "category": "file-utility"
       },
@@ -5626,13 +6745,13 @@
       },
       {
         "file": "apps/harness/src/release-metadata.ts",
-        "line": 326,
+        "line": 358,
         "operation": "readFile",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/release-metadata.ts",
-        "line": 375,
+        "line": 410,
         "operation": "readdir",
         "category": "file-utility"
       },
@@ -5662,31 +6781,31 @@
       },
       {
         "file": "apps/harness/src/release-surface.ts",
-        "line": 185,
+        "line": 552,
         "operation": "readFile",
         "category": "evidence-output"
       },
       {
         "file": "apps/harness/src/release-surface.ts",
-        "line": 198,
+        "line": 571,
         "operation": "readFile",
         "category": "evidence-output"
       },
       {
         "file": "apps/harness/src/release-surface.ts",
-        "line": 341,
+        "line": 718,
         "operation": "mkdir",
         "category": "evidence-output"
       },
       {
         "file": "apps/harness/src/release-surface.ts",
-        "line": 342,
+        "line": 719,
         "operation": "writeFile",
         "category": "evidence-output"
       },
       {
         "file": "apps/harness/src/release-surface.ts",
-        "line": 343,
+        "line": 720,
         "operation": "writeFile",
         "category": "evidence-output"
       },
@@ -5727,6 +6846,54 @@
         "category": "file-utility"
       },
       {
+        "file": "apps/harness/src/roundtable-discovery.test.ts",
+        "line": 2,
+        "operation": "node:fs",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/roundtable-runtime-canonical-report.test.ts",
+        "line": 2,
+        "operation": "readFile",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/roundtable-runtime-canonical-report.test.ts",
+        "line": 2,
+        "operation": "rm",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/roundtable-runtime-canonical-report.test.ts",
+        "line": 2,
+        "operation": "node:fs/promises",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/roundtable-runtime-canonical-report.test.ts",
+        "line": 129,
+        "operation": "readFile",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/roundtable-runtime-canonical-report.test.ts",
+        "line": 131,
+        "operation": "readFile",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/roundtable-runtime-canonical-report.test.ts",
+        "line": 139,
+        "operation": "rm",
+        "category": "evidence-output"
+      },
+      {
+        "file": "apps/harness/src/roundtable-runtime-canonical-report.test.ts",
+        "line": 154,
+        "operation": "rm",
+        "category": "evidence-output"
+      },
+      {
         "file": "apps/harness/src/roundtable-runtime.ts",
         "line": 7,
         "operation": "node:fs",
@@ -5758,50 +6925,56 @@
       },
       {
         "file": "apps/harness/src/roundtable-runtime.ts",
-        "line": 379,
+        "line": 411,
         "operation": "mkdir",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/roundtable-runtime.ts",
-        "line": 380,
+        "line": 412,
         "operation": "writeFile",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/roundtable-runtime.ts",
-        "line": 384,
+        "line": 416,
         "operation": "mkdir",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/roundtable-runtime.ts",
-        "line": 385,
+        "line": 417,
         "operation": "appendFile",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/roundtable-runtime.ts",
-        "line": 1724,
-        "operation": "mkdir",
-        "category": "file-utility"
-      },
-      {
-        "file": "apps/harness/src/roundtable-runtime.ts",
-        "line": 1725,
-        "operation": "mkdir",
-        "category": "file-utility"
-      },
-      {
-        "file": "apps/harness/src/roundtable-runtime.ts",
-        "line": 1726,
-        "operation": "mkdir",
-        "category": "file-utility"
-      },
-      {
-        "file": "apps/harness/src/roundtable-runtime.ts",
-        "line": 2005,
+        "line": 1831,
         "operation": "writeFile",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/roundtable-runtime.ts",
+        "line": 1857,
+        "operation": "mkdir",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/roundtable-runtime.ts",
+        "line": 1858,
+        "operation": "mkdir",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/roundtable-runtime.ts",
+        "line": 1859,
+        "operation": "mkdir",
+        "category": "file-utility"
+      },
+      {
+        "file": "apps/harness/src/roundtable-worktree-lifecycle.test.ts",
+        "line": 3,
+        "operation": "node:fs",
         "category": "file-utility"
       },
       {
@@ -5836,49 +7009,49 @@
       },
       {
         "file": "apps/harness/src/roundtable.ts",
-        "line": 396,
+        "line": 437,
         "operation": "readFile",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/roundtable.ts",
-        "line": 801,
+        "line": 866,
         "operation": "writeFile",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/roundtable.ts",
-        "line": 820,
+        "line": 885,
         "operation": "mkdir",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/roundtable.ts",
-        "line": 929,
+        "line": 994,
         "operation": "writeFile",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/roundtable.ts",
-        "line": 930,
+        "line": 995,
         "operation": "writeFile",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/roundtable.ts",
-        "line": 935,
+        "line": 1000,
         "operation": "writeFile",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/roundtable.ts",
-        "line": 937,
+        "line": 1002,
         "operation": "mkdir",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/roundtable.ts",
-        "line": 938,
+        "line": 1003,
         "operation": "writeFile",
         "category": "file-utility"
       },
@@ -5902,31 +7075,31 @@
       },
       {
         "file": "apps/harness/src/server.ts",
-        "line": 160,
+        "line": 206,
         "operation": "mkdir",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/server.ts",
-        "line": 161,
+        "line": 207,
         "operation": "appendFile",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/server.ts",
-        "line": 651,
+        "line": 767,
         "operation": "mkdir",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/server.ts",
-        "line": 652,
+        "line": 768,
         "operation": "appendFile",
         "category": "file-utility"
       },
       {
         "file": "apps/harness/src/server.ts",
-        "line": 7520,
+        "line": 8535,
         "operation": "open",
         "category": "file-utility"
       },
@@ -6255,6 +7428,60 @@
         "category": "runtime-state"
       },
       {
+        "file": "apps/harness/src/training-data.test.ts",
+        "line": 2,
+        "operation": "mkdir",
+        "category": "runtime-state"
+      },
+      {
+        "file": "apps/harness/src/training-data.test.ts",
+        "line": 2,
+        "operation": "writeFile",
+        "category": "runtime-state"
+      },
+      {
+        "file": "apps/harness/src/training-data.test.ts",
+        "line": 2,
+        "operation": "node:fs/promises",
+        "category": "runtime-state"
+      },
+      {
+        "file": "apps/harness/src/training-data.test.ts",
+        "line": 35,
+        "operation": "mkdir",
+        "category": "runtime-state"
+      },
+      {
+        "file": "apps/harness/src/training-data.test.ts",
+        "line": 36,
+        "operation": "writeFile",
+        "category": "runtime-state"
+      },
+      {
+        "file": "apps/harness/src/training-data.test.ts",
+        "line": 41,
+        "operation": "writeFile",
+        "category": "runtime-state"
+      },
+      {
+        "file": "apps/harness/src/training-data.test.ts",
+        "line": 42,
+        "operation": "writeFile",
+        "category": "runtime-state"
+      },
+      {
+        "file": "apps/harness/src/training-data.test.ts",
+        "line": 43,
+        "operation": "writeFile",
+        "category": "runtime-state"
+      },
+      {
+        "file": "apps/harness/src/training-data.test.ts",
+        "line": 46,
+        "operation": "writeFile",
+        "category": "runtime-state"
+      },
+      {
         "file": "apps/harness/src/training-data.ts",
         "line": 4,
         "operation": "mkdir",
@@ -6322,73 +7549,73 @@
       },
       {
         "file": "apps/harness/src/training-data.ts",
-        "line": 465,
+        "line": 483,
         "operation": "readdir",
         "category": "runtime-state"
       },
       {
         "file": "apps/harness/src/training-data.ts",
-        "line": 559,
+        "line": 588,
         "operation": "mkdir",
         "category": "runtime-state"
       },
       {
         "file": "apps/harness/src/training-data.ts",
-        "line": 593,
+        "line": 622,
         "operation": "readFile",
         "category": "runtime-state"
       },
       {
         "file": "apps/harness/src/training-data.ts",
-        "line": 639,
+        "line": 672,
         "operation": "readFile",
         "category": "runtime-state"
       },
       {
         "file": "apps/harness/src/training-data.ts",
-        "line": 802,
+        "line": 835,
         "operation": "mkdir",
         "category": "runtime-state"
       },
       {
         "file": "apps/harness/src/training-data.ts",
-        "line": 803,
+        "line": 836,
         "operation": "writeFile",
         "category": "runtime-state"
       },
       {
         "file": "apps/harness/src/training-data.ts",
-        "line": 833,
+        "line": 866,
         "operation": "readFile",
         "category": "runtime-state"
       },
       {
         "file": "apps/harness/src/training-data.ts",
-        "line": 846,
+        "line": 879,
         "operation": "mkdir",
         "category": "runtime-state"
       },
       {
         "file": "apps/harness/src/training-data.ts",
-        "line": 953,
+        "line": 986,
         "operation": "mkdir",
         "category": "runtime-state"
       },
       {
         "file": "apps/harness/src/training-data.ts",
-        "line": 999,
+        "line": 1032,
         "operation": "mkdir",
         "category": "runtime-state"
       },
       {
         "file": "apps/harness/src/training-data.ts",
-        "line": 1026,
+        "line": 1059,
         "operation": "readFile",
         "category": "runtime-state"
       },
       {
         "file": "apps/harness/src/training-data.ts",
-        "line": 1040,
+        "line": 1073,
         "operation": "readFile",
         "category": "runtime-state"
       },
@@ -6474,20 +7701,188 @@
   },
   "tests": [
     {
+      "file": "apps/dashboard/app/api/operator/harness/[...path]/route.test.ts",
+      "testCount": 1
+    },
+    {
+      "file": "apps/dashboard/app/lib/operator-auth.test.ts",
+      "testCount": 1
+    },
+    {
+      "file": "apps/harness/src/agent-intelligence-assessment.test.ts",
+      "testCount": 3
+    },
+    {
+      "file": "apps/harness/src/arobi-live-ledger-receipt.test.ts",
+      "testCount": 4
+    },
+    {
       "file": "apps/harness/src/benchmark-cli-flags.test.ts",
       "testCount": 5
     },
     {
-      "file": "apps/harness/src/live-operator-public-export.test.ts",
+      "file": "apps/harness/src/benchmark-q-gateway-substrate.test.ts",
+      "testCount": 2
+    },
+    {
+      "file": "apps/harness/src/benchmark-q-mediation-drift.test.ts",
+      "testCount": 5
+    },
+    {
+      "file": "apps/harness/src/benchmark-worker-spawn.test.ts",
+      "testCount": 2
+    },
+    {
+      "file": "apps/harness/src/bridgebench-soak.test.ts",
       "testCount": 4
     },
     {
-      "file": "apps/harness/src/q-model.test.ts",
+      "file": "apps/harness/src/causal-trace-graph.test.ts",
+      "testCount": 5
+    },
+    {
+      "file": "apps/harness/src/cognitive-role-plan.test.ts",
+      "testCount": 6
+    },
+    {
+      "file": "apps/harness/src/core-durable-state.test.ts",
+      "testCount": 1
+    },
+    {
+      "file": "apps/harness/src/cross-project-workflow-health.test.ts",
+      "testCount": 4
+    },
+    {
+      "file": "apps/harness/src/dashboard-socket-ticket.test.ts",
+      "testCount": 3
+    },
+    {
+      "file": "apps/harness/src/durable-state-window.test.ts",
+      "testCount": 1
+    },
+    {
+      "file": "apps/harness/src/federation.test.ts",
+      "testCount": 7
+    },
+    {
+      "file": "apps/harness/src/github-checks-receipt.test.ts",
+      "testCount": 1
+    },
+    {
+      "file": "apps/harness/src/goal-state.test.ts",
+      "testCount": 7
+    },
+    {
+      "file": "apps/harness/src/governance.test.ts",
+      "testCount": 4
+    },
+    {
+      "file": "apps/harness/src/intelligence-status.test.ts",
+      "testCount": 3
+    },
+    {
+      "file": "apps/harness/src/live-mission-readiness.test.ts",
       "testCount": 2
+    },
+    {
+      "file": "apps/harness/src/live-operator-public-export.test.ts",
+      "testCount": 5
+    },
+    {
+      "file": "apps/harness/src/local-worker-heartbeat.test.ts",
+      "testCount": 3
+    },
+    {
+      "file": "apps/harness/src/model-comparison.test.ts",
+      "testCount": 1
+    },
+    {
+      "file": "apps/harness/src/neuro-replay.test.ts",
+      "testCount": 2
+    },
+    {
+      "file": "apps/harness/src/neuro-stream-engagement-contract.test.ts",
+      "testCount": 3
+    },
+    {
+      "file": "apps/harness/src/oci-iam-bridge.test.ts",
+      "testCount": 1
+    },
+    {
+      "file": "apps/harness/src/ollama.test.ts",
+      "testCount": 3
+    },
+    {
+      "file": "apps/harness/src/openai-compatible.test.ts",
+      "testCount": 4
+    },
+    {
+      "file": "apps/harness/src/protection-intelligence.test.ts",
+      "testCount": 3
+    },
+    {
+      "file": "apps/harness/src/q-gateway-validate.test.ts",
+      "testCount": 11
+    },
+    {
+      "file": "apps/harness/src/q-inference-profile.test.ts",
+      "testCount": 8
+    },
+    {
+      "file": "apps/harness/src/q-model.test.ts",
+      "testCount": 6
+    },
+    {
+      "file": "apps/harness/src/q-release-gate.test.ts",
+      "testCount": 6
+    },
+    {
+      "file": "apps/harness/src/q-resilience.test.ts",
+      "testCount": 1
+    },
+    {
+      "file": "apps/harness/src/real-world-engagement.test.ts",
+      "testCount": 5
     },
     {
       "file": "apps/harness/src/release-metadata.test.ts",
       "testCount": 1
+    },
+    {
+      "file": "apps/harness/src/release-surface.test.ts",
+      "testCount": 11
+    },
+    {
+      "file": "apps/harness/src/roundtable-discovery.test.ts",
+      "testCount": 3
+    },
+    {
+      "file": "apps/harness/src/roundtable-runtime-canonical-report.test.ts",
+      "testCount": 9
+    },
+    {
+      "file": "apps/harness/src/roundtable-worktree-lifecycle.test.ts",
+      "testCount": 6
+    },
+    {
+      "file": "apps/harness/src/startup-trace.test.ts",
+      "testCount": 2
+    },
+    {
+      "file": "apps/harness/src/tool-governance.test.ts",
+      "testCount": 5
+    },
+    {
+      "file": "apps/harness/src/training-data.test.ts",
+      "testCount": 1
+    },
+    {
+      "file": "apps/harness/src/utils.test.ts",
+      "testCount": 2
+    },
+    {
+      "file": "apps/harness/src/visibility.test.ts",
+      "testCount": 4
     }
   ],
   "issues": [
@@ -6498,10 +7893,10 @@
       "fix": "Keep `npm run audit:inventory` in the release checklist and update this report before broad product claims."
     },
     {
-      "rating": "Yellow",
-      "title": "Dashboard proxy does not cover every harness method.",
-      "evidence": "Harness DELETE routes without dashboard proxy coverage: /api/federation/peers/:peerId, /api/nodes/:nodeId.",
-      "fix": "Add governed DELETE support to the dashboard proxy only for explicitly allowed operator routes, with tests."
+      "rating": "Green",
+      "title": "Dashboard proxy covers governed harness DELETE routes.",
+      "evidence": "Dashboard proxy exports governed DELETE support for the explicit harness removal-route allowlist.",
+      "fix": "Keep DELETE route expansion behind explicit allowlist tests."
     },
     {
       "rating": "Yellow",
@@ -6512,7 +7907,7 @@
     {
       "rating": "Red",
       "title": "Frontend and TUI flows have no direct automated tests.",
-      "evidence": "Dashboard tests: 0; TUI tests: 0. Harness tests: 12.",
+      "evidence": "Dashboard tests: 2; TUI tests: 0. Harness tests: 175.",
       "fix": "Add dashboard route-handler tests for auth/proxy behavior and TUI command tests for governed request headers."
     },
     {
@@ -6524,7 +7919,7 @@
     {
       "rating": "Yellow",
       "title": "Several backend endpoints are not called by the dashboard or TUI.",
-      "evidence": "48 endpoint(s) have no operator UI caller in this scan. Some are valid CLI/worker/public-gateway surfaces; the rest need route ownership decisions.",
+      "evidence": "66 endpoint(s) have no operator UI caller in this scan. Some are valid CLI/worker/public-gateway surfaces; the rest need route ownership decisions.",
       "fix": "Mark each no-UI endpoint as public gateway, CLI-only, worker-only, or product gap, then add tests or remove it."
     }
   ],

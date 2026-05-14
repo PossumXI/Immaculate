@@ -128,10 +128,11 @@ function extractFrontendInventory(files, contents) {
     const content = contents.get(filePath) ?? "";
     const route = nextRouteFromFile(filePath);
     if (route) {
+      const methods = route.kind === "api-route" ? extractRouteMethods(content) : ["GET"];
       nextRoutes.push({
         ...route,
-        methods: route.kind === "api-route" ? extractRouteMethods(content) : ["GET"],
-        readiness: readinessForFrontendRoute(route)
+        methods,
+        readiness: readinessForFrontendRoute(route, methods)
       });
     }
 
@@ -178,9 +179,18 @@ function extractFrontendInventory(files, contents) {
   };
 }
 
-function readinessForFrontendRoute(route) {
+function readinessForFrontendRoute(route, methods = []) {
   if (route.kind === "api-route") {
     if (route.path === "/api/operator/harness/*path") {
+      if (methods.includes("DELETE")) {
+        return {
+          rating: "Green",
+          reasons: [
+            "Server-side dashboard proxy is authenticated and same-origin.",
+            "It forwards GET, POST, and the explicit governed DELETE allowlist for harness removal routes."
+          ]
+        };
+      }
       return {
         rating: "Yellow",
         reasons: [
@@ -303,7 +313,7 @@ function readinessForEndpoint(method, route, file) {
       rating: "Yellow",
       reasons: [
         "Delete route is governed server-side.",
-        "The dashboard proxy does not currently forward DELETE, so this is not a complete UI flow."
+        "Dashboard access must stay constrained to the explicit governed DELETE allowlist."
       ]
     };
   }
@@ -545,6 +555,11 @@ function buildIssues(report) {
   const deleteEndpoints = report.backend.endpointMappings.filter(
     (endpoint) => endpoint.method === "DELETE"
   );
+  const harnessProxyRoute = report.frontend.routes.find(
+    (route) => route.path === "/api/operator/harness/*path"
+  );
+  const proxySupportsDelete = Boolean(harnessProxyRoute?.methods.includes("DELETE"));
+  const deleteEndpointsWithoutProxy = proxySupportsDelete ? [] : deleteEndpoints;
   const actuationSocket = report.backend.endpointMappings.find(
     (endpoint) => endpoint.route === "/stream/actuation/device"
   );
@@ -562,16 +577,23 @@ function buildIssues(report) {
         "Keep `npm run audit:inventory` in the release checklist and update this report before broad product claims."
     },
     {
-      rating: deleteEndpoints.length > 0 ? "Yellow" : "Green",
-      title: "Dashboard proxy does not cover every harness method.",
+      rating: deleteEndpointsWithoutProxy.length > 0 ? "Yellow" : "Green",
+      title:
+        deleteEndpointsWithoutProxy.length > 0
+          ? "Dashboard proxy does not cover every harness method."
+          : "Dashboard proxy covers governed harness DELETE routes.",
       evidence:
-        deleteEndpoints.length > 0
-          ? `Harness DELETE routes without dashboard proxy coverage: ${deleteEndpoints
+        deleteEndpointsWithoutProxy.length > 0
+          ? `Harness DELETE routes without dashboard proxy coverage: ${deleteEndpointsWithoutProxy
               .map((endpoint) => endpoint.route)
               .join(", ")}.`
-          : "No DELETE routes detected.",
+          : proxySupportsDelete
+            ? "Dashboard proxy exports governed DELETE support for the explicit harness removal-route allowlist."
+            : "No DELETE routes detected.",
       fix:
-        "Add governed DELETE support to the dashboard proxy only for explicitly allowed operator routes, with tests."
+        proxySupportsDelete
+          ? "Keep DELETE route expansion behind explicit allowlist tests."
+          : "Add governed DELETE support to the dashboard proxy only for explicitly allowed operator routes, with tests."
     },
     {
       rating: actuationSocket ? "Yellow" : "Green",

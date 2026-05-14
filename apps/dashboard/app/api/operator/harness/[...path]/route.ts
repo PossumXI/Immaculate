@@ -13,6 +13,15 @@ type HarnessRouteContext = {
   }>;
 };
 
+const DASHBOARD_HARNESS_DELETE_PATHS = [
+  /^\/api\/federation\/peers\/[^/]+$/,
+  /^\/api\/nodes\/[^/]+$/
+] as const;
+
+export function isAllowedDashboardHarnessDeletePath(pathname: string): boolean {
+  return DASHBOARD_HARNESS_DELETE_PATHS.some((pattern) => pattern.test(pathname));
+}
+
 async function proxyHarnessRequest(request: Request, context: HarnessRouteContext): Promise<Response> {
   if (!(await isDashboardSessionActive())) {
     return NextResponse.json(
@@ -33,6 +42,21 @@ async function proxyHarnessRequest(request: Request, context: HarnessRouteContex
         message: `Refusing to proxy ${pathname}.`
       },
       { status: 400 }
+    );
+  }
+
+  if (request.method === "DELETE" && !isAllowedDashboardHarnessDeletePath(pathname)) {
+    return NextResponse.json(
+      {
+        error: "dashboard_proxy_delete_not_allowed",
+        message: `Refusing to proxy DELETE ${pathname}.`
+      },
+      {
+        status: 405,
+        headers: {
+          allow: "GET, POST"
+        }
+      }
     );
   }
 
@@ -65,5 +89,9 @@ export async function GET(request: Request, context: HarnessRouteContext): Promi
 }
 
 export async function POST(request: Request, context: HarnessRouteContext): Promise<Response> {
+  return proxyHarnessRequest(request, context);
+}
+
+export async function DELETE(request: Request, context: HarnessRouteContext): Promise<Response> {
   return proxyHarnessRequest(request, context);
 }
