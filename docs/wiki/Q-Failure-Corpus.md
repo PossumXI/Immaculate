@@ -2,7 +2,7 @@
 
 This page is generated from the tracked direct-Q report surfaces and the live Q API audit spool. It turns current failures into eval seeds first and keeps them separate from the resolved-success training path.
 
-- Generated: 2026-05-13T01:11:29Z
+- Generated: 2026-05-14T18:10:09Z
 - Records: `3`
 - Eval seeds: `3`
 - Resolved successes excluded: `8`

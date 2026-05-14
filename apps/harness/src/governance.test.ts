@@ -86,8 +86,8 @@ test("live governed route admission requires approval refs for selected high-ris
   assert.equal(operatorApproved.approvalRef, "operator:gaetano");
 });
 
-test("live governed route admission does not globally gate every tier three route yet", () => {
-  const neuroStreaming = evaluateLiveGovernedRouteAdmission({
+test("live governed route admission requires approval refs for live neuro streaming", () => {
+  const missingApproval = evaluateLiveGovernedRouteAdmission({
     action: "neuro-streaming",
     route: "/stream/neuro/live",
     actor: "operator:test",
@@ -95,9 +95,22 @@ test("live governed route admission does not globally gate every tier three rout
     consentScope: "live-source:dashboard"
   });
 
-  assert.equal(neuroStreaming.allowed, true);
-  assert.equal(neuroStreaming.approvalRequired, true);
-  assert.equal(neuroStreaming.approvalRef, undefined);
+  assert.equal(missingApproval.allowed, false);
+  assert.equal(missingApproval.reason, "tool_admission_missing_approval_ref");
+  assert.equal(missingApproval.approvalRequired, true);
+
+  const approved = evaluateLiveGovernedRouteAdmission({
+    action: "neuro-streaming",
+    route: "/stream/neuro/live",
+    actor: "operator:test",
+    purpose: ["neuro-streaming"],
+    consentScope: "live-source:dashboard",
+    approvalRef: "operator:gaetano"
+  });
+
+  assert.equal(approved.allowed, true);
+  assert.equal(approved.approvalRequired, true);
+  assert.equal(approved.approvalRef, "operator:gaetano");
 });
 
 test("protection posture reads require founder, operator, audit, or intelligence scope", () => {

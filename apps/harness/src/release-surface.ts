@@ -144,6 +144,7 @@ const SURFACE_FILES: SurfaceTimestamp[] = [
   surface("Cloudflare Q inference", "Cloudflare-Q-Inference.json"),
   surface("OCI GPU advisor", "OCI-GPU-Advisor.json"),
   surface("OCI region capacity", "OCI-Region-Capacity.json"),
+  surface("Q failure corpus", "Q-Failure-Corpus.json", { required: true }),
   surface("Q benchmark corpus", "Q-Benchmark-Corpus.json", { required: true }),
   surface("Q benchmark promotion", "Q-Benchmark-Promotion.json", { required: true }),
   surface("W&B benchmark export", "Benchmark-Wandb-Export.json", { required: true }),
@@ -158,6 +159,10 @@ const SURFACE_FILES: SurfaceTimestamp[] = [
   surface("Harbor terminal bench soak", "Harbor-Terminal-Bench-Soak.json"),
   surface("Q benchmark sweep (60m)", "Q-Benchmark-Sweep-60m.json")
 ];
+
+export function listReleaseSurfaceDefinitions(): SurfaceTimestamp[] {
+  return SURFACE_FILES.map((surface) => ({ ...surface }));
+}
 
 function parseIsoMs(value: string | undefined): number | undefined {
   if (!value) {

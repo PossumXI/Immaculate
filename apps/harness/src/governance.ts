@@ -96,6 +96,7 @@ const GOVERNANCE_HISTORY_LIMIT = 128;
 
 const liveApprovalRefEnforcedActions = new Set<GovernanceAction>([
   "operator-control",
+  "neuro-streaming",
   "actuation-dispatch",
   "actuation-device-link",
   "benchmark-publication"

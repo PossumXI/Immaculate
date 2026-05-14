@@ -2,9 +2,9 @@
 
 This page is generated from the `arobi-audit-integrity` benchmark pack. It proves the real harness can run governed Q requests, mediate them through Immaculate, and preserve a reviewable Arobi ledger trail with enough context for audit and insurance review without exposing hidden chain-of-thought.
 
-- Generated: 2026-05-14T16:07:46.384Z
-- Release: `0.1.0+61c83c4`
-- Repo commit: `61c83c4`
+- Generated: 2026-05-14T17:32:24.048Z
+- Release: `0.1.0+b71d328`
+- Repo commit: `b71d328`
 - Q training bundle: `q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3`
 
 ## Benchmark

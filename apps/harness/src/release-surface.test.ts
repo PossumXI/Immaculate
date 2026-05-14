@@ -4,9 +4,25 @@ import {
   DEFAULT_RELEASE_SURFACE_MAX_AGE_MS,
   evaluateReleaseSurfaceEvidence,
   inferSurfaceHealth,
+  listReleaseSurfaceDefinitions,
   renderReleaseAccountabilityGapLines,
   type SurfaceTimestamp
 } from "./release-surface.js";
+
+test("release surface requires the strict Q failure corpus", () => {
+  const surfaces = listReleaseSurfaceDefinitions();
+  const byPath = new Map(
+    surfaces.map((surface) => [surface.path.replaceAll("\\", "/"), surface])
+  );
+  const failureCorpus = byPath.get("docs/wiki/Q-Failure-Corpus.json");
+  const benchmarkCorpus = byPath.get("docs/wiki/Q-Benchmark-Corpus.json");
+
+  assert.ok(failureCorpus);
+  assert.equal(failureCorpus.label, "Q failure corpus");
+  assert.equal(failureCorpus.required, true);
+  assert.ok(benchmarkCorpus);
+  assert.equal(benchmarkCorpus.required, true);
+});
 
 test("release surface evidence marks stale required receipts as blocking", () => {
   const nowMs = Date.parse("2026-05-13T12:00:00.000Z");
