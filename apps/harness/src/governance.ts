@@ -1,5 +1,6 @@
 import { hashValue } from "./utils.js";
 import {
+  evaluateToolRiskAdmission,
   getGovernedToolAction,
   listGovernedToolActions,
   type GovernedToolAction,
@@ -66,6 +67,7 @@ export type GovernanceDecision = {
   policyId: string;
   purpose: string[];
   consentScope?: string;
+  approvalRef?: string;
   actor: string;
   reason: string;
 };
@@ -87,9 +89,17 @@ export type GovernanceBinding = {
   policyId?: string;
   purpose?: string[];
   consentScope?: string;
+  approvalRef?: string;
 };
 
 const GOVERNANCE_HISTORY_LIMIT = 128;
+
+const liveApprovalRefEnforcedActions = new Set<GovernanceAction>([
+  "operator-control",
+  "actuation-dispatch",
+  "actuation-device-link",
+  "benchmark-publication"
+]);
 
 const policies: GovernancePolicyDefinition[] = [
   {
@@ -319,6 +329,7 @@ function buildDecision(
     policyId: policy?.id ?? binding.policyId ?? "unresolved",
     purpose: normalizePurpose(binding.purpose),
     consentScope: binding.consentScope,
+    approvalRef: binding.approvalRef,
     actor: binding.actor,
     reason
   };
@@ -350,6 +361,31 @@ export function evaluateGovernance(
   }
 
   return buildDecision(true, { ...binding, purpose: normalizedPurpose }, policy, "allowed");
+}
+
+export function evaluateLiveGovernedRouteAdmission(
+  binding: GovernanceBinding
+): GovernanceDecision {
+  const baseDecision = evaluateGovernance(binding);
+  if (!baseDecision.allowed || !liveApprovalRefEnforcedActions.has(binding.action)) {
+    return baseDecision;
+  }
+
+  const admission = evaluateToolRiskAdmission({
+    action: binding.action,
+    consentScope: binding.consentScope,
+    approvalRef: binding.approvalRef
+  });
+  if (!admission.allowed) {
+    return buildDecision(
+      false,
+      binding,
+      getPolicy(binding.action, binding.policyId),
+      `tool_admission_${admission.reason}`
+    );
+  }
+
+  return baseDecision;
 }
 
 export function createGovernanceRegistry() {

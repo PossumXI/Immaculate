@@ -116,6 +116,7 @@ import { listBenchmarkPacks } from "./benchmark-packs.js";
 import {
   createGovernanceRegistry,
   evaluateGovernance,
+  evaluateLiveGovernedRouteAdmission,
   type GovernanceAction,
   type GovernanceBinding
 } from "./governance.js";
@@ -1183,6 +1184,12 @@ function getGovernanceBinding(
       getHeaderValue(request.headers["x-immaculate-consent-scope"]) ??
       searchParams.get("consentScope") ??
       searchParams.get("x-immaculate-consent-scope") ??
+      undefined,
+    approvalRef:
+      getHeaderValue(request.headers["x-immaculate-approval-ref"]) ??
+      searchParams.get("approvalRef") ??
+      searchParams.get("approval_ref") ??
+      searchParams.get("x-immaculate-approval-ref") ??
       undefined
   };
 }
@@ -2561,7 +2568,7 @@ function authorizeGovernedAction(
   }
 ): boolean {
   const binding = getGovernanceBinding(action, route, request, options);
-  const preview = evaluateGovernance(binding);
+  const preview = evaluateLiveGovernedRouteAdmission(binding);
   if (!preview.allowed) {
     const decision = governance.record(binding, false, preview.reason);
     reply.code(403).send({
@@ -2701,7 +2708,7 @@ function evaluateGovernedSocketAction(
   }
 ) {
   const binding = getGovernanceBinding(action, route, request);
-  const preview = evaluateGovernance(binding);
+  const preview = evaluateLiveGovernedRouteAdmission(binding);
   if (!preview.allowed) {
     return governance.record(binding, false, preview.reason);
   }
@@ -8459,7 +8466,7 @@ app.get("/stream/actuation/device", { websocket: true }, (socket, request) => {
   const adapterId = params.get("adapterId")?.trim();
   const requestedSessionId = params.get("sessionId")?.trim();
   const binding = getGovernanceBinding("actuation-device-link", route, request);
-  const preview = evaluateGovernance(binding);
+  const preview = evaluateLiveGovernedRouteAdmission(binding);
   const decision = governance.record(binding, preview.allowed, preview.reason);
 
   if (!decision.allowed) {

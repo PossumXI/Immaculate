@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   createGovernanceRegistry,
-  evaluateGovernance
+  evaluateGovernance,
+  evaluateLiveGovernedRouteAdmission
 } from "./governance.js";
 
 test("governance decisions carry risk-tier metadata", () => {
@@ -49,6 +50,54 @@ test("governance decisions still fail closed on policy mismatches", () => {
   assert.equal(decision.reason, "purpose_not_allowed");
   assert.equal(decision.riskTier, 3);
   assert.equal(decision.approvalRequired, true);
+});
+
+test("live governed route admission requires approval refs for selected high-risk execution routes", () => {
+  const missingApproval = evaluateLiveGovernedRouteAdmission({
+    action: "actuation-dispatch",
+    route: "/api/actuation/dispatch",
+    actor: "operator:test",
+    purpose: ["actuation-dispatch"],
+    consentScope: "system:actuation"
+  });
+  assert.equal(missingApproval.allowed, false);
+  assert.equal(missingApproval.reason, "tool_admission_missing_approval_ref");
+
+  const automatedApproval = evaluateLiveGovernedRouteAdmission({
+    action: "actuation-device-link",
+    route: "/api/actuation/transports/udp/register",
+    actor: "operator:test",
+    purpose: ["actuation-device-link"],
+    consentScope: "system:actuation",
+    approvalRef: "auto:planner"
+  });
+  assert.equal(automatedApproval.allowed, false);
+  assert.equal(automatedApproval.reason, "tool_admission_human_approval_required");
+
+  const operatorApproved = evaluateLiveGovernedRouteAdmission({
+    action: "actuation-dispatch",
+    route: "/api/actuation/dispatch",
+    actor: "operator:test",
+    purpose: ["actuation-dispatch"],
+    consentScope: "system:actuation",
+    approvalRef: "operator:gaetano"
+  });
+  assert.equal(operatorApproved.allowed, true);
+  assert.equal(operatorApproved.approvalRef, "operator:gaetano");
+});
+
+test("live governed route admission does not globally gate every tier three route yet", () => {
+  const neuroStreaming = evaluateLiveGovernedRouteAdmission({
+    action: "neuro-streaming",
+    route: "/stream/neuro/live",
+    actor: "operator:test",
+    purpose: ["neuro-streaming"],
+    consentScope: "live-source:dashboard"
+  });
+
+  assert.equal(neuroStreaming.allowed, true);
+  assert.equal(neuroStreaming.approvalRequired, true);
+  assert.equal(neuroStreaming.approvalRef, undefined);
 });
 
 test("protection posture reads require founder, operator, audit, or intelligence scope", () => {
