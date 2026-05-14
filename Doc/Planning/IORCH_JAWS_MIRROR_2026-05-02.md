@@ -21,6 +21,11 @@ Fourth follow-up pass: OpenJaws published `jaws-v0.2.2` at 2026-05-10 02:44:49 U
 mirror contract was advanced again from the single release source of truth in `jaws-release.json`,
 using the published GitHub release asset names, sizes, and SHA-256 digests.
 
+Fifth follow-up pass: OpenJaws published `jaws-v0.2.3` at 2026-05-14 15:43:00 UTC. The iorch
+mirror contract was advanced from the same single release source of truth so the public download
+buttons, Netlify redirects, signed updater manifest, and OpenJaws mirror validator all point at the
+same 0.2.3 release that carries the JAWS native browser fix.
+
 ## Changes
 
 - Hardened `scripts/deploy-iorch-site.mjs` so it:
@@ -41,6 +46,8 @@ using the published GitHub release asset names, sizes, and SHA-256 digests.
   audited JAWS release contract.
 - Updated iorch redirects and the download page to `jaws-v0.1.8`.
 - Advanced the iorch JAWS mirror contract to `jaws-v0.1.9` with the published desktop artifact
+  names, sizes, and SHA-256 digests.
+- Advanced the iorch JAWS mirror contract to `jaws-v0.2.3` with the published desktop artifact
   names, sizes, and SHA-256 digests.
 - Hardened the deploy script to inspect the Netlify deploy metadata and fail unless the `jaws`
   function is present in the deploy bundle. This directly guards against the functionless production
