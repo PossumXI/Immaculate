@@ -2,9 +2,9 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-05-13T23:11:29.913Z
-- Immaculate release: `0.1.0+cec62b6`
-- Repo commit: `cec62b6e2c7bfd8f13a34ba6b4db4c827e5bbebe`
+- Generated: 2026-05-14T13:21:02.216Z
+- Immaculate release: `0.1.0+5073e5d`
+- Repo commit: `5073e5d4251f18c7fa328ecb04a04d793589401a`
 - Branch: `main`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+cec62b6` is the current repo build stamp.
+- Immaculate build `0.1.0+5073e5d` is the current repo build stamp.
 - Arobi Network is the ledger-backed private and public operator network and audit substrate. Immaculate is the governed harness and orchestrator inside it. Q is the reasoning brain inside that governed stack.
 - Q is the only public model name used across the repo, and it is built on `Gemma 4`.
 - The latest tracked Q training bundle is `q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3`, tied to dataset `.training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
@@ -27,8 +27,8 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 - BridgeBench: `2026-05-13T22:36:02.136Z` via `docs/wiki/BridgeBench.json`
 - BridgeBench soak: `2026-05-13T22:36:02.143Z` via `docs/wiki/BridgeBench-Soak.json`
-- Q structured contract benchmark: `2026-05-07T06:03:07.620Z` via `docs/wiki/Model-Benchmark-Comparison.json`
-- Q readiness gate: `2026-05-13T21:02:52.833Z` via `docs/wiki/Q-Readiness-Gate.json`
+- Q structured contract benchmark: `2026-05-14T13:16:52.681Z` via `docs/wiki/Model-Benchmark-Comparison.json`
+- Q readiness gate: `2026-05-14T13:21:02.216Z` via `docs/wiki/Q-Readiness-Gate.json`
 - Q gateway validation: `2026-05-13T19:56:21.252Z` via `docs/wiki/Q-Gateway-Validation.json`
 - Q gateway substrate: `2026-05-13T18:30:35.581Z` via `docs/wiki/Q-Gateway-Substrate.json`
 - Q mediation drift: `2026-05-13T19:56:56.189Z` via `docs/wiki/Q-Mediation-Drift.json`
@@ -39,7 +39,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Live operator public export: `2026-05-13T21:03:01.982Z` via `docs/wiki/Live-Operator-Public-Export.json`
 - Cross-project workflow health: `2026-05-13T18:23:07.770Z` via `docs/wiki/Cross-Project-Workflow-Health.json`
 - Supervised mission showcase: `2026-04-22T01:20:45.053Z` via `docs/wiki/Supervised-Mission-Showcase.json`
-- Roundtable actionability: `2026-05-13T17:06:06.500Z` via `docs/wiki/Roundtable-Actionability.json`
+- Roundtable actionability: `2026-05-14T02:52:18.318Z` via `docs/wiki/Roundtable-Actionability.json`
 - Roundtable runtime: `2026-05-13T22:01:54.879Z` via `docs/wiki/Roundtable-Runtime.json`
 - Q API audit: `2026-04-19T22:47:48Z` via `docs/wiki/Q-API-Audit.json`
 - Arobi decision review: `2026-04-19T22:47:51.678Z` via `docs/wiki/Arobi-Decision-Review.json`
@@ -52,7 +52,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - OCI region capacity: `2026-04-17T02:02:24Z` via `docs/wiki/OCI-Region-Capacity.json`
 - Q benchmark corpus: `2026-05-13T01:11:30Z` via `docs/wiki/Q-Benchmark-Corpus.json`
 - Q benchmark promotion: `2026-05-12T19:01:08Z` via `docs/wiki/Q-Benchmark-Promotion.json`
-- W&B benchmark export: `2026-05-13T10:06:59.572421+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
+- W&B benchmark export: `2026-05-14T09:59:56.948294+00:00` via `docs/wiki/Benchmark-Wandb-Export.json`
 - Harbor terminal bench: `2026-04-19T07:43:17.831Z` via `docs/wiki/Harbor-Terminal-Bench.json`
 - Terminal-Bench public task: `2026-04-19T14:31:45.217Z` via `docs/wiki/Terminal-Bench-Public-Task.json`
 - Terminal-Bench leaderboard status: `2026-04-19T14:31:45.545Z` via `docs/wiki/Terminal-Bench-Receipt.json`

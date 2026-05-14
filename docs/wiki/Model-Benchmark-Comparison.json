@@ -1,39 +1,54 @@
 {
-  "generatedAt": "2026-05-07T06:03:07.620Z",
+  "generatedAt": "2026-05-14T13:16:52.681Z",
   "surface": "direct-q-structured-contract",
   "qRuntimeBaseUrl": "http://127.0.0.1:11434",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "af0899fcd3a7283aeeddf17d2f4b31a036c949c7",
-    "gitShortSha": "af0899f",
-    "gitBranch": "codex/q-gateway-fast-smoke-validation-20260507",
-    "buildId": "0.1.0+af0899f",
+    "gitSha": "18af0fd992df700fccaef7ad2e577905d8cae138",
+    "gitShortSha": "18af0fd",
+    "gitBranch": "main",
+    "buildId": "0.1.0+18af0fd",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
       "truthfulLabel": "Q",
       "trainingLock": {
-        "generatedAt": "2026-04-19T07:46:03Z",
-        "bundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
-        "runName": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23",
+        "generatedAt": "2026-05-12T18:26:42Z",
+        "lockVersion": 1,
+        "bundleId": "q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3",
+        "runName": "q-arobi-main-roots-20260512-bench-v1",
         "modelName": "Q",
-        "trainDatasetPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.jsonl",
-        "trainDatasetRowCount": 117,
-        "mixManifestPath": ".training-output/q/q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23.manifest.json",
+        "trainDatasetPath": ".training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.jsonl",
+        "trainDatasetSha256": "22043bf3cea9501688346d62e992bc221d9fcc809cb423c19d02075dae13404f",
+        "trainDatasetRowCount": 2053,
+        "mixManifestPath": ".training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.manifest.json",
+        "mixManifestSha256": "0c73421b39dc3d77cc96df918bafb911f303c63add430deb58815eca3f89e940",
+        "mixSupplementalCount": 7,
+        "mixSupplementalPaths": [
+          "training/q/q_harness_identity_seed.json",
+          "training/q/q_immaculate_reasoning_seed.json",
+          "training/q/terminal_bench_semantic_seed.json",
+          "training/q/bridgebench_seed.json",
+          "training/q/coding_long_context_seed.json",
+          ".training-output/q/q-benchmark-corpus.jsonl",
+          ".training-output/q/q-failure-corpus.jsonl"
+        ],
+        "curationRunPath": ".training-output/training-data/runs/cur-fnv1a-6e3f6fdf/run.json",
+        "curationRunId": "cur-fnv1a-6e3f6fdf",
         "lockPath": ".training-output/q/latest-training-lock.json"
       },
       "hybridSession": {
-        "generatedAt": "2026-04-19T07:46:17Z",
-        "sessionId": "q-hybrid-harbor-opt-2384cf5-bench-v23",
-        "sessionPath": ".training-output/q/sessions/q-hybrid-harbor-opt-2384cf5-bench-v23/hybrid-session.json",
-        "localStatus": "ready",
-        "cloudStatus": "ready",
-        "cloudProvider": "hf_jobs",
-        "trainingBundleId": "q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce",
-        "immaculateBundleId": "immaculate-orchestration-5ed19b9-cd094c28",
-        "immaculateBundlePath": ".training-output/immaculate/immaculate-training-bundle-q-hybrid-harbor-opt-2384cf5-bench-v23.json"
+        "generatedAt": "2026-05-13T01:11:39Z",
+        "sessionId": "q-arobi-main-roots-20260512-bench-v1",
+        "sessionPath": ".training-output/q/sessions/q-arobi-main-roots-20260512-bench-v1/hybrid-session.json",
+        "localStatus": "skipped",
+        "cloudStatus": "skipped",
+        "cloudProvider": "manual",
+        "trainingBundleId": "q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3",
+        "immaculateBundleId": "immaculate-orchestration-9b85dbc-e68f2160",
+        "immaculateBundlePath": ".training-output/immaculate/latest-training-bundle.json"
       }
     }
   },
@@ -65,16 +80,16 @@
       "completedTaskCount": 4,
       "parseSuccessCount": 4,
       "parseSuccessRate": 1,
-      "averageLatencyMs": 23900.66,
-      "p95LatencyMs": 24496.84,
-      "averageWallLatencyMs": 54977.23,
+      "averageLatencyMs": 42410.73,
+      "p95LatencyMs": 45005.82,
+      "averageWallLatencyMs": 42495.23,
       "averageStructuredFields": 3,
       "tasks": [
         {
           "taskId": "security-triage",
           "label": "Security triage",
-          "latencyMs": 23154.93,
-          "wallLatencyMs": 53871.52,
+          "latencyMs": 38415.07,
+          "wallLatencyMs": 38698.33,
           "structuredFieldCount": 3,
           "parseSuccess": true,
           "status": "completed",
@@ -87,36 +102,36 @@
         {
           "taskId": "ops-recovery",
           "label": "Ops recovery",
-          "latencyMs": 24114.01,
-          "wallLatencyMs": 54165.65,
+          "latencyMs": 41781.73,
+          "wallLatencyMs": 41808.95,
           "structuredFieldCount": 3,
           "parseSuccess": true,
           "status": "completed",
           "thinkingDetected": false,
           "routeSuggestion": "cognitive",
-          "reasonSummary": "Lease jitter and failed execution necessitate cognitive processing for stabilization.",
-          "commitStatement": "Initiate stabilization sequence for the federated peer immediately.",
-          "responsePreview": "ROUTE: cognitive REASON: Lease jitter and failed execution necessitate cognitive processing for stabilization. COMMIT: Initiate stabilization sequence for the federated peer immediately."
+          "reasonSummary": "Lease jitter and failed execution necessitate a cognitive assessment of the peer state.",
+          "commitStatement": "Initiate repair window action to stabilize the federated peer.",
+          "responsePreview": "ROUTE: cognitive REASON: Lease jitter and failed execution necessitate a cognitive assessment of the peer state. COMMIT: Initiate repair window action to stabilize the federated peer."
         },
         {
           "taskId": "coding-fix",
           "label": "Coding fix",
-          "latencyMs": 23836.85,
-          "wallLatencyMs": 56670.7,
+          "latencyMs": 45005.82,
+          "wallLatencyMs": 45019.59,
           "structuredFieldCount": 3,
           "parseSuccess": true,
           "status": "completed",
           "thinkingDetected": false,
           "routeSuggestion": "cognitive",
-          "reasonSummary": "Same-origin operator access requires keeping bearer tokens out of browser-visible URLs.",
-          "commitStatement": "Implement same-origin operator access while ensuring bearer tokens remain out of URLs.",
-          "responsePreview": "ROUTE: cognitive REASON: Same-origin operator access requires keeping bearer tokens out of browser-visible URLs. COMMIT: Implement same-origin operator access while ensuring bearer tokens remain out of URLs."
+          "reasonSummary": "Same-origin access requires token removal from URLs for security.",
+          "commitStatement": "Implement same-origin operator access without exposing bearer tokens in URLs.",
+          "responsePreview": "ROUTE: cognitive REASON: Same-origin access requires token removal from URLs for security. COMMIT: Implement same-origin operator access without exposing bearer tokens in URLs."
         },
         {
           "taskId": "orchestration-route",
           "label": "Orchestration route",
-          "latencyMs": 24496.84,
-          "wallLatencyMs": 55201.04,
+          "latencyMs": 44440.3,
+          "wallLatencyMs": 44454.05,
           "structuredFieldCount": 3,
           "parseSuccess": true,
           "status": "completed",
@@ -129,30 +144,6 @@
       ]
     }
   ],
-  "orchestrators": {
-    "generatedFrom": {
-      "temporalSuiteId": "immaculate-benchmark-2026-04-29T01-57-42-865Z"
-    },
-    "temporal": {
-      "failedAssertions": 0,
-      "immaculateWorkflowWallClockP95Ms": 28.57,
-      "temporalWorkflowWallClockP95Ms": 464.75,
-      "immaculateRssPeakMiB": 742.59,
-      "temporalRssPeakMiB": 351.84,
-      "hardware": {
-        "host": "knightly",
-        "platform": "win32",
-        "arch": "x64",
-        "osVersion": "Windows 11 Pro",
-        "cpuModel": "AMD Ryzen 7 7735HS with Radeon Graphics",
-        "cpuCount": 16,
-        "memoryGiB": 23.28,
-        "diskKind": "SSD",
-        "nodeVersion": "v22.13.1"
-      }
-    },
-    "interpretation": "Immaculate matched or beat Temporal on the simple workflow wall clock on this machine, while still carrying the heavier governed execution semantics."
-  },
   "output": {
     "jsonPath": "docs\\wiki\\Model-Benchmark-Comparison.json",
     "markdownPath": "docs\\wiki\\Model-Benchmark-Comparison.md"

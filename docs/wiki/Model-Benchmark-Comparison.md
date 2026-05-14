@@ -3,14 +3,14 @@
 This page is generated from direct local Q structured-contract runs plus the latest published Immaculate orchestrator benchmark packs that exist on this machine.
 It does not measure the served Q gateway edge. It measures the direct Q execution lane that the gateway depends on.
 
-- Generated: 2026-05-07T06:03:07.620Z
-- Release: 0.1.0+af0899f
-- Repo commit: af0899f
+- Generated: 2026-05-14T13:16:52.681Z
+- Release: 0.1.0+18af0fd
+- Repo commit: 18af0fd
 - Surface: direct-q-structured-contract
 - Q runtime endpoint: http://127.0.0.1:11434
 - Q model name: Q
 - Q foundation model: Gemma 4
-- Q training bundle: q-defsec-code-longctx-harbor-opt-2384cf5-bench-v23-5ed19b9-286326ce
+- Q training bundle: q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3
 - Hardware: {"host":"knightly","platform":"win32","arch":"x64","osVersion":"Windows 11 Pro","cpuModel":"AMD Ryzen 7 7735HS with Radeon Graphics","cpuCount":16,"memoryGiB":23.28,"nodeVersion":"v22.13.1"}
 
 ## Live Q Results
@@ -20,16 +20,16 @@ It does not measure the served Q gateway edge. It measures the direct Q executio
 - Vendor: Arobi Technology Alliance
 - Completed tasks: `4/4`
 - Structured parse success: `4/4` (1)
-- Average model latency: `23900.66` ms
-- P95 model latency: `24496.84` ms
-- Average wall latency: `54977.23` ms
+- Average model latency: `42410.73` ms
+- P95 model latency: `45005.82` ms
+- Average wall latency: `42495.23` ms
 - Average structured fields: `3` / 3
 
 #### Security triage
 
 - Status: `completed`
-- Model latency: `23154.93` ms
-- Wall latency: `53871.52` ms
+- Model latency: `38415.07` ms
+- Wall latency: `38698.33` ms
 - Structured fields: `3/3`
 - Thinking detected: `false`
 - Failure class: `none`
@@ -40,45 +40,36 @@ It does not measure the served Q gateway edge. It measures the direct Q executio
 #### Ops recovery
 
 - Status: `completed`
-- Model latency: `24114.01` ms
-- Wall latency: `54165.65` ms
+- Model latency: `41781.73` ms
+- Wall latency: `41808.95` ms
 - Structured fields: `3/3`
 - Thinking detected: `false`
 - Failure class: `none`
 - Route: cognitive
-- Reason: Lease jitter and failed execution necessitate cognitive processing for stabilization.
-- Commit: Initiate stabilization sequence for the federated peer immediately.
+- Reason: Lease jitter and failed execution necessitate a cognitive assessment of the peer state.
+- Commit: Initiate repair window action to stabilize the federated peer.
 
 #### Coding fix
 
 - Status: `completed`
-- Model latency: `23836.85` ms
-- Wall latency: `56670.7` ms
+- Model latency: `45005.82` ms
+- Wall latency: `45019.59` ms
 - Structured fields: `3/3`
 - Thinking detected: `false`
 - Failure class: `none`
 - Route: cognitive
-- Reason: Same-origin operator access requires keeping bearer tokens out of browser-visible URLs.
-- Commit: Implement same-origin operator access while ensuring bearer tokens remain out of URLs.
+- Reason: Same-origin access requires token removal from URLs for security.
+- Commit: Implement same-origin operator access without exposing bearer tokens in URLs.
 
 #### Orchestration route
 
 - Status: `completed`
-- Model latency: `24496.84` ms
-- Wall latency: `55201.04` ms
+- Model latency: `44440.3` ms
+- Wall latency: `44454.05` ms
 - Structured fields: `3/3`
 - Thinking detected: `false`
 - Failure class: `none`
 - Route: cognitive
 - Reason: Mixed transport health requires cognitive arbitration before acting.
 - Commit: Arbitrate the mixed health signal to determine the next orchestration move.
-
-## Orchestrator Baseline
-
-- Temporal failed assertions: `0`
-- Immaculate workflow wall clock P95 in Temporal pack: `28.57` ms
-- Temporal workflow wall clock P95: `464.75` ms
-- Immaculate RSS peak P95: `742.59` MiB
-- Temporal RSS peak P95: `351.84` MiB
-- Interpretation: Immaculate matched or beat Temporal on the simple workflow wall clock on this machine, while still carrying the heavier governed execution semantics.
 
