@@ -2,14 +2,14 @@
 
 This page is generated from a live harness pass. It proves the roundtable planner is not just text: Immaculate runs a governed mediation route, records repo-scoped roundtable actions, and binds those actions to isolated agent worktrees across Immaculate, OpenJaws, and Asgard. The direct seed step is a best-effort warm-up signal; the governed mediation path is the authoritative route.
 
-- Generated: 2026-05-13T22:01:54.879Z
-- Release: `0.1.0+be4e37d`
-- Repo commit: `be4e37d`
+- Generated: 2026-05-14T13:58:11.861Z
+- Release: `0.1.0+daf005e`
+- Repo commit: `daf005e`
 - Q training bundle: `q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3`
 
 ## Benchmark
 
-- Harness URL: `http://127.0.0.1:60477`
+- Harness URL: `http://127.0.0.1:49290`
 - Scenario count: `3`
 - Failed assertions: `0`
 - Seed accepted scenarios: `3/3`
@@ -25,16 +25,16 @@ This page is generated from a live harness pass. It proves the roundtable planne
 - Execution receipts P50: `3`
 - Recorded roundtable actions P50: `3`
 - Workspace-scoped turns P50: `0`
-- Tracked files P50: `369`
-- Seed latency P95: `43348.67` ms
-- Mediation latency P95: `7202.12` ms
-- Runner path latency P95: `48404.03` ms
+- Tracked files P50: `2241`
+- Seed latency P95: `59551.03` ms
+- Mediation latency P95: `5663.95` ms
+- Runner path latency P95: `65215.56` ms
 - Hardware: knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics / 16 cores / Q foundation Gemma 4
 - Execution integrity digest: `db946fabef62c50a`
 - Decision trace ledger: `verified`
 - Decision trace events: `1`
 - Decision trace findings: `0`
-- Decision trace head hash: `704a6b6afd269c3c`
+- Decision trace head hash: `56430eda735bbedc`
 
 ## Shared Readiness
 
@@ -66,7 +66,7 @@ This page is generated from a live harness pass. It proves the roundtable planne
 - Execution receipts: `3`
 - Recorded roundtable actions: `3`
 - Workspace-scoped turns: `0`
-- Tracked files P50: `369`
+- Tracked files P50: `2241`
 - Schedule roundtable counts: actions `3` / repos `3`
 - Session scope preserved: `true`
 - Sample files: `Doc/Planning/README.md`, `README.md`, `apps/dashboard/package.json`, `apps/dashboard/tsconfig.json`, `apps/harness/package.json`, `apps/harness/src/server.ts`
@@ -90,7 +90,7 @@ This page is generated from a live harness pass. It proves the roundtable planne
 - Execution receipts: `3`
 - Recorded roundtable actions: `3`
 - Workspace-scoped turns: `0`
-- Tracked files P50: `369`
+- Tracked files P50: `2241`
 - Schedule roundtable counts: actions `3` / repos `3`
 - Session scope preserved: `true`
 - Sample files: `Doc/Planning/README.md`, `README.md`, `apps/dashboard/package.json`, `apps/dashboard/tsconfig.json`, `apps/harness/package.json`, `apps/harness/src/server.ts`
@@ -114,7 +114,7 @@ This page is generated from a live harness pass. It proves the roundtable planne
 - Execution receipts: `3`
 - Recorded roundtable actions: `3`
 - Workspace-scoped turns: `0`
-- Tracked files P50: `363`
+- Tracked files P50: `2235`
 - Schedule roundtable counts: actions `3` / repos `3`
 - Session scope preserved: `true`
 - Sample files: `Doc/Planning/README.md`, `README.md`, `apps/dashboard/package.json`, `apps/dashboard/tsconfig.json`, `apps/harness/package.json`, `apps/harness/src/server.ts`

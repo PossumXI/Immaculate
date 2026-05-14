@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-14T13:21:02.216Z",
+  "generatedAt": "2026-05-14T13:58:29.792Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "5073e5d4251f18c7fa328ecb04a04d793589401a",
-    "gitShortSha": "5073e5d",
+    "gitSha": "daf005eab7a324a08d9cb9bab56454c95c4cb805",
+    "gitShortSha": "daf005e",
     "gitBranch": "main",
-    "buildId": "0.1.0+5073e5d",
+    "buildId": "0.1.0+daf005e",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -78,7 +78,7 @@
       "label": "Q readiness gate",
       "path": "docs\\wiki\\Q-Readiness-Gate.json",
       "required": true,
-      "generatedAt": "2026-05-14T13:21:02.216Z",
+      "generatedAt": "2026-05-14T13:58:29.792Z",
       "healthStatus": "healthy",
       "healthReason": "no failed receipt signals detected"
     },
@@ -181,7 +181,7 @@
       "path": "docs\\wiki\\Roundtable-Runtime.json",
       "required": true,
       "maxAgeMs": 86400000,
-      "generatedAt": "2026-05-13T22:01:54.879Z",
+      "generatedAt": "2026-05-14T13:58:11.861Z",
       "healthStatus": "healthy",
       "healthReason": "no failed receipt signals detected"
     },
@@ -396,7 +396,7 @@
         "path": "docs\\wiki\\Q-Readiness-Gate.json",
         "required": true,
         "maxAgeMs": 604800000,
-        "generatedAt": "2026-05-14T13:21:02.216Z",
+        "generatedAt": "2026-05-14T13:58:29.792Z",
         "healthStatus": "healthy",
         "healthReason": "no failed receipt signals detected",
         "status": "fresh",
@@ -540,7 +540,7 @@
         "path": "docs\\wiki\\Roundtable-Runtime.json",
         "required": true,
         "maxAgeMs": 86400000,
-        "generatedAt": "2026-05-13T22:01:54.879Z",
+        "generatedAt": "2026-05-14T13:58:11.861Z",
         "healthStatus": "healthy",
         "healthReason": "no failed receipt signals detected",
         "status": "fresh",

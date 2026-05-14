@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-13T22:01:54.879Z",
+  "generatedAt": "2026-05-14T13:58:11.861Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "be4e37d537a4c83a739cac24a7c1a14d270f15b3",
-    "gitShortSha": "be4e37d",
+    "gitSha": "daf005eab7a324a08d9cb9bab56454c95c4cb805",
+    "gitShortSha": "daf005e",
     "gitBranch": "main",
-    "buildId": "0.1.0+be4e37d",
+    "buildId": "0.1.0+daf005e",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -51,7 +51,7 @@
     }
   },
   "benchmark": {
-    "harnessUrl": "http://127.0.0.1:60477",
+    "harnessUrl": "http://127.0.0.1:49290",
     "scenarioCount": 3,
     "failedAssertions": 0,
     "seedAcceptedCount": 3,
@@ -67,16 +67,16 @@
     "executionReceiptsP50": 3,
     "workspaceScopedTurnsP50": 0,
     "recordedActionsP50": 3,
-    "trackedFilesP50": 369,
-    "runnerPathP95Ms": 48404.03,
-    "seedLatencyP95Ms": 43348.67,
-    "mediationLatencyP95Ms": 7202.12,
+    "trackedFilesP50": 2241,
+    "runnerPathP95Ms": 65215.56,
+    "seedLatencyP95Ms": 59551.03,
+    "mediationLatencyP95Ms": 5663.95,
     "hardware": "knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics / 16 cores / Q foundation Gemma 4",
     "executionIntegrityDigest": "db946fabef62c50a417bcff14a6424545143aac5d24bcb59cf928dcac868a579",
     "decisionTraceStatus": "verified",
     "decisionTraceEventCount": 1,
     "decisionTraceFindingCount": 0,
-    "decisionTraceHeadHash": "704a6b6afd269c3c52dfa88053152fa66f4ae136359c05c648d6f153426c6db9"
+    "decisionTraceHeadHash": "56430eda735bbedcb2747a4e9b5c5e9e7f74ae1930606bc2671e7441a3509cd6"
   },
   "scenarios": [
     {
@@ -103,7 +103,7 @@
       "scheduleRoundtableActionCount": 3,
       "scheduleRoundtableRepoCount": 3,
       "sessionScopePreserved": true,
-      "trackedFileCountP50": 369,
+      "trackedFileCountP50": 2241,
       "sampleFiles": [
         "Doc/Planning/README.md",
         "README.md",
@@ -138,7 +138,7 @@
       "scheduleRoundtableActionCount": 3,
       "scheduleRoundtableRepoCount": 3,
       "sessionScopePreserved": true,
-      "trackedFileCountP50": 369,
+      "trackedFileCountP50": 2241,
       "sampleFiles": [
         "Doc/Planning/README.md",
         "README.md",
@@ -173,7 +173,7 @@
       "scheduleRoundtableActionCount": 3,
       "scheduleRoundtableRepoCount": 3,
       "sessionScopePreserved": true,
-      "trackedFileCountP50": 363,
+      "trackedFileCountP50": 2235,
       "sampleFiles": [
         "Doc/Planning/README.md",
         "README.md",

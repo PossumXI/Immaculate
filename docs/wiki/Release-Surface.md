@@ -2,9 +2,9 @@
 
 This page is generated from repo state. It is the plain-English answer to a simple question: what exact build and training bundle do the current Immaculate and Q docs describe?
 
-- Generated: 2026-05-14T13:21:02.216Z
-- Immaculate release: `0.1.0+5073e5d`
-- Repo commit: `5073e5d4251f18c7fa328ecb04a04d793589401a`
+- Generated: 2026-05-14T13:58:29.792Z
+- Immaculate release: `0.1.0+daf005e`
+- Repo commit: `daf005eab7a324a08d9cb9bab56454c95c4cb805`
 - Branch: `main`
 - Root package version: `0.1.0`
 - Harness package version: `0.1.0`
@@ -16,7 +16,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 
 ## What This Means In Plain English
 
-- Immaculate build `0.1.0+5073e5d` is the current repo build stamp.
+- Immaculate build `0.1.0+daf005e` is the current repo build stamp.
 - Arobi Network is the ledger-backed private and public operator network and audit substrate. Immaculate is the governed harness and orchestrator inside it. Q is the reasoning brain inside that governed stack.
 - Q is the only public model name used across the repo, and it is built on `Gemma 4`.
 - The latest tracked Q training bundle is `q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3`, tied to dataset `.training-output/q/q-mix-arobi-main-roots-20260512-bench-v1.jsonl` and config/provenance captured in `.training-output/q/latest-training-lock.json`.
@@ -28,7 +28,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - BridgeBench: `2026-05-13T22:36:02.136Z` via `docs/wiki/BridgeBench.json`
 - BridgeBench soak: `2026-05-13T22:36:02.143Z` via `docs/wiki/BridgeBench-Soak.json`
 - Q structured contract benchmark: `2026-05-14T13:16:52.681Z` via `docs/wiki/Model-Benchmark-Comparison.json`
-- Q readiness gate: `2026-05-14T13:21:02.216Z` via `docs/wiki/Q-Readiness-Gate.json`
+- Q readiness gate: `2026-05-14T13:58:29.792Z` via `docs/wiki/Q-Readiness-Gate.json`
 - Q gateway validation: `2026-05-13T19:56:21.252Z` via `docs/wiki/Q-Gateway-Validation.json`
 - Q gateway substrate: `2026-05-13T18:30:35.581Z` via `docs/wiki/Q-Gateway-Substrate.json`
 - Q mediation drift: `2026-05-13T19:56:56.189Z` via `docs/wiki/Q-Mediation-Drift.json`
@@ -40,7 +40,7 @@ This page is generated from repo state. It is the plain-English answer to a simp
 - Cross-project workflow health: `2026-05-13T18:23:07.770Z` via `docs/wiki/Cross-Project-Workflow-Health.json`
 - Supervised mission showcase: `2026-04-22T01:20:45.053Z` via `docs/wiki/Supervised-Mission-Showcase.json`
 - Roundtable actionability: `2026-05-14T02:52:18.318Z` via `docs/wiki/Roundtable-Actionability.json`
-- Roundtable runtime: `2026-05-13T22:01:54.879Z` via `docs/wiki/Roundtable-Runtime.json`
+- Roundtable runtime: `2026-05-14T13:58:11.861Z` via `docs/wiki/Roundtable-Runtime.json`
 - Q API audit: `2026-04-19T22:47:48Z` via `docs/wiki/Q-API-Audit.json`
 - Arobi decision review: `2026-04-19T22:47:51.678Z` via `docs/wiki/Arobi-Decision-Review.json`
 - Q hybrid training: `2026-05-13T01:11:39Z` via `docs/wiki/Q-Hybrid-Training.json`
