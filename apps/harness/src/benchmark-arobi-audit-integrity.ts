@@ -43,7 +43,7 @@ type QApiAuditRecord = {
   failureClass?: string;
 };
 
-type LedgerRecord = {
+export type LedgerRecord = {
   generatedAt?: string;
   source?: string;
   sessionId?: string;
@@ -146,6 +146,50 @@ export function buildArobiAuditMediationHeaders(options: ArobiAuditMediationHead
     "x-immaculate-operator-confirmed": "true",
     "x-immaculate-rollback-plan": `dispatchOnApproval=false; keep ${scenarioId} in review-only ledger state and discard transient mediation state on failure.`
   };
+}
+
+const AROBI_AUDIT_REVIEW_ROUTE_SOURCES = new Set(["cognitive-execution", "conversation"]);
+const AROBI_AUDIT_GOVERNED_LOCAL_REVIEW_ROUTES = new Set(["cognitive", "guarded", "cognitive-assisted"]);
+const AROBI_AUDIT_ASSESSMENT_SOURCE = "agent-intelligence-assessment";
+
+function normalizeArobiAuditRouteFamily(routeSuggestion?: string): string | undefined {
+  const route = routeSuggestion?.trim().toLowerCase();
+  if (!route) {
+    return undefined;
+  }
+  return AROBI_AUDIT_GOVERNED_LOCAL_REVIEW_ROUTES.has(route) ? "governed-local-review" : route;
+}
+
+export function areArobiAuditRoutesContinuous(
+  qRouteSuggestion?: string,
+  latestRouteSuggestion?: string
+): boolean {
+  const qRouteFamily = normalizeArobiAuditRouteFamily(qRouteSuggestion);
+  const latestRouteFamily = normalizeArobiAuditRouteFamily(latestRouteSuggestion);
+  return Boolean(qRouteFamily && latestRouteFamily && qRouteFamily === latestRouteFamily);
+}
+
+export function selectArobiAuditLatestReviewRouteRecord(records: readonly LedgerRecord[]): LedgerRecord | undefined {
+  return records
+    .filter((record) => {
+      const source = String(record.source ?? "").trim();
+      const routeFamily = normalizeArobiAuditRouteFamily(record.decisionSummary?.routeSuggestion);
+      return (
+        AROBI_AUDIT_REVIEW_ROUTE_SOURCES.has(source) &&
+        routeFamily === "governed-local-review"
+      );
+    })
+    .slice()
+    .sort((left, right) => (left.ledger?.eventSeq ?? 0) - (right.ledger?.eventSeq ?? 0))
+    .at(-1);
+}
+
+export function hasArobiAuditOperationalDrift(records: readonly LedgerRecord[]): boolean {
+  return records.some(
+    (record) =>
+      String(record.source ?? "").trim() !== AROBI_AUDIT_ASSESSMENT_SOURCE &&
+      record.selfEvaluation?.driftDetected === true
+  );
 }
 
 const DEFAULT_OLLAMA_URL = resolveQLocalOllamaUrl();
@@ -513,9 +557,11 @@ async function runScenario(options: {
     .slice()
     .sort((left, right) => (left.ledger?.eventSeq ?? 0) - (right.ledger?.eventSeq ?? 0))
     .at(-1);
-  const latestRouteSuggestion = latestRecord?.decisionSummary?.routeSuggestion;
-  const latestReviewStatus = latestRecord?.selfEvaluation?.status;
-  const latestGovernancePressure = latestRecord?.policy?.governancePressure;
+  const latestReviewRouteRecord = selectArobiAuditLatestReviewRouteRecord(sessionLedgerRecords);
+  const latestRouteSuggestion = latestReviewRouteRecord?.decisionSummary?.routeSuggestion;
+  const latestReviewStatus = latestReviewRouteRecord?.selfEvaluation?.status ?? latestRecord?.selfEvaluation?.status;
+  const latestGovernancePressure =
+    latestReviewRouteRecord?.policy?.governancePressure ?? latestRecord?.policy?.governancePressure;
   const latestEventHash = latestRecord?.ledger?.eventHash;
   const qAuditRecord = auditRecords
     .slice()
@@ -535,11 +581,8 @@ async function runScenario(options: {
           Boolean(record.decisionSummary?.reasonSummary) || Boolean(record.decisionSummary?.commitStatement)
       )
   );
-  const routeContinuous = Boolean(
-    qRunResult.routeSuggestion &&
-      latestRouteSuggestion &&
-      qRunResult.routeSuggestion === latestRouteSuggestion
-  );
+  const routeContinuous = areArobiAuditRoutesContinuous(qRunResult.routeSuggestion, latestRouteSuggestion);
+  const operationalDriftDetected = hasArobiAuditOperationalDrift(sessionLedgerRecords);
   const requiredCoverage = [
     qRunResult.accepted,
     mediationResult.accepted,
@@ -556,7 +599,7 @@ async function runScenario(options: {
     evidenceDigestCount >= 2,
     contextFingerprintCount >= 1,
     routeContinuous,
-    !sessionLedgerRecords.some((record) => record.selfEvaluation?.driftDetected === true),
+    !operationalDriftDetected,
     !sessionLedgerRecords.some((record) => record.policy?.failureClass)
   ];
   const auditCompletenessScore = scoreBooleanSet(requiredCoverage);
@@ -583,7 +626,7 @@ async function runScenario(options: {
                       ? "context_fingerprint_missing"
                       : !routeContinuous
                         ? "route_continuity_lost"
-                        : sessionLedgerRecords.some((record) => record.selfEvaluation?.driftDetected === true)
+                        : operationalDriftDetected
                           ? "drift_detected"
                           : sessionLedgerRecords.some((record) => record.policy?.failureClass)
                             ? "policy_failure_recorded"
