@@ -127,6 +127,26 @@ type ScenarioDefinition = {
   mediationObjective: string;
 };
 
+export type ArobiAuditMediationHeaderOptions = {
+  scenarioId: string;
+  sessionScope: string;
+};
+
+export function buildArobiAuditMediationHeaders(options: ArobiAuditMediationHeaderOptions): Record<string, string> {
+  const scenarioId = options.scenarioId.trim() || "unknown-scenario";
+  const sessionScope = options.sessionScope.trim();
+  return {
+    "content-type": "application/json",
+    "x-immaculate-purpose": "actuation-dispatch,cognitive-execution",
+    "x-immaculate-consent-scope": sessionScope,
+    "x-immaculate-actor": "benchmark:arobi-audit-integrity",
+    "x-immaculate-receipt-target": `arobi-audit-integrity:${scenarioId}`,
+    "x-immaculate-operator-summary": `review-only Arobi audit integrity mediation for ${scenarioId}; outward dispatch remains held for operator review.`,
+    "x-immaculate-operator-confirmed": "true",
+    "x-immaculate-rollback-plan": `dispatchOnApproval=false; keep ${scenarioId} in review-only ledger state and discard transient mediation state on failure.`
+  };
+}
+
 const DEFAULT_OLLAMA_URL = resolveQLocalOllamaUrl();
 const HARNESS_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const REPO_ROOT = path.resolve(HARNESS_ROOT, "../..");
@@ -448,15 +468,17 @@ async function runScenario(options: {
   const mediate = await checkHttpWithRetry(`${options.harnessUrl}/api/orchestration/mediate`, {
     method: "POST",
     headers: {
-      "content-type": "application/json",
-      "x-immaculate-purpose": "actuation-dispatch,cognitive-execution",
-      "x-immaculate-consent-scope": sessionScope,
-      "x-immaculate-actor": "benchmark:arobi-audit-integrity"
+      ...buildArobiAuditMediationHeaders({
+        scenarioId: options.scenario.id,
+        sessionScope
+      }),
+      Authorization: options.authorization
     },
     body: JSON.stringify({
       sessionId,
       objective: options.scenario.mediationObjective,
-      forceCognition: true
+      forceCognition: true,
+      dispatchOnApproval: false
     })
   });
   const mediationResult = parseMediationResponse(mediate);
