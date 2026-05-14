@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-14T13:59:28.295Z",
+  "generatedAt": "2026-05-14T18:51:32.315Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "daf005eab7a324a08d9cb9bab56454c95c4cb805",
-    "gitShortSha": "daf005e",
-    "gitBranch": "main",
-    "buildId": "0.1.0+daf005e",
+    "gitSha": "11a61750aa430fa338cfa81da7d23d77ff5a3ff8",
+    "gitShortSha": "11a6175",
+    "gitBranch": "fix/immaculate-governance-release-gate",
+    "buildId": "0.1.0+11a6175",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -51,7 +51,7 @@
     }
   },
   "benchmark": {
-    "harnessUrl": "http://127.0.0.1:49387",
+    "harnessUrl": "http://127.0.0.1:62204",
     "scenarioCount": 3,
     "failedAssertions": 0,
     "seedAcceptedCount": 3,
@@ -68,15 +68,15 @@
     "workspaceScopedTurnsP50": 0,
     "recordedActionsP50": 3,
     "trackedFilesP50": 2241,
-    "runnerPathP95Ms": 63283.75,
-    "seedLatencyP95Ms": 44593.98,
-    "mediationLatencyP95Ms": 18688.39,
+    "runnerPathP95Ms": 88766.33,
+    "seedLatencyP95Ms": 67404.06,
+    "mediationLatencyP95Ms": 22003.66,
     "hardware": "knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics / 16 cores / Q foundation Gemma 4",
     "executionIntegrityDigest": "db946fabef62c50a417bcff14a6424545143aac5d24bcb59cf928dcac868a579",
     "decisionTraceStatus": "verified",
     "decisionTraceEventCount": 1,
     "decisionTraceFindingCount": 0,
-    "decisionTraceHeadHash": "c65bf20f86d671ab58809f69fe5bf16449fb88ac69bd6f578de61d733ec1fc1e"
+    "decisionTraceHeadHash": "2ce18199bcce4caf5e2b039e87f7bb2e510d27c456ee48f4d3bcf4fd30164fb6"
   },
   "scenarios": [
     {
