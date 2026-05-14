@@ -36,6 +36,19 @@ python training/q/build_q_mixture.py --base .training-output/q/q-train-<run-id>.
 
 When `.training-output/q/q-benchmark-corpus.jsonl` exists, treat it as another tracked `--supplemental` on the next mixture pass so benchmark-derived Q decision rows enter through the same manifest-recorded seam.
 
+When an Arobi Network node is exposing the governed LaaS training-corpus routes, build the receipt-verified audit supplement before the mixture pass:
+
+```powershell
+npm run q:laas:audit-corpus -- --base-url http://127.0.0.1:<arobi-port>
+```
+
+Use `--include-internal` only for local/operator-controlled training jobs that are allowed to consume private `allowed-internal` evidence. The importer verifies the Arobi receipt hash, rejects any `zero-zero` or blocked lane records, fails closed on sensitive metadata, and writes:
+
+- `.training-output/q/q-laas-audit-corpus.jsonl`
+- `.training-output/q/q-laas-audit-corpus.manifest.json`
+
+Add `.training-output/q/q-laas-audit-corpus.jsonl` as another `--supplemental` when its manifest receipt changes. This gives Q governed LaaS lessons without moving sealed evidence into the training lane.
+
 4. Generate the tracked training lock so the future fine-tune can be replayed exactly:
 
 ```powershell

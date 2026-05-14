@@ -40,6 +40,7 @@
     "q:benchmark:corpus": "node ./scripts/run-python.mjs ./training/q/build_q_benchmark_corpus.py",
     "q:training:promote-benchmark": "node ./scripts/run-python.mjs ./training/q/promote_q_benchmark_lineage.py",
     "q:api:audit": "node ./scripts/run-python.mjs ./training/q/build_q_api_audit_surface.py",
+    "q:laas:audit-corpus": "node ./scripts/run-python.mjs ./training/q/build_q_laas_audit_corpus.py",
     "arobi:decision:review": "npm run arobi:decision:review -w @immaculate/harness",
     "arobi:live:ledger": "tsx ./apps/harness/src/arobi-live-ledger-receipt.ts",
     "live:mission:readiness": "tsx ./apps/harness/src/live-mission-readiness.ts",
