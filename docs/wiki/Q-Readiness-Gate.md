@@ -2,9 +2,9 @@
 
 This page is generated from the tracked direct-Q and gateway report surfaces. It fails closed when the model benchmarks pass but the live gateway contract cannot complete authenticated chat.
 
-- Generated: 2026-05-14T15:32:36.804Z
-- Release: `0.1.0+d5906b8`
-- Repo commit: `d5906b8`
+- Generated: 2026-05-14T16:04:36.009Z
+- Release: `0.1.0+050aae4`
+- Repo commit: `050aae4`
 - Ready: `true`
 - Threshold: `0.75`
 - Q training bundle: `q-arobi-main-roots-20260512-bench-v1-a7e67ff-22043bf3`

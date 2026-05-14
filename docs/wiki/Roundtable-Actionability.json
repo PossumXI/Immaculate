@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-05-14T02:52:18.318Z",
+  "generatedAt": "2026-05-14T16:04:42.814Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
     "coreVersion": "0.1.0",
-    "gitSha": "dd7eeac66de05eb004e831760510899b3e89c3ed",
-    "gitShortSha": "dd7eeac",
+    "gitSha": "050aae47be07471f7562ebd15c6238971c7248a8",
+    "gitShortSha": "050aae4",
     "gitBranch": "main",
-    "buildId": "0.1.0+dd7eeac",
+    "buildId": "0.1.0+050aae4",
     "q": {
       "modelName": "Q",
       "foundationModel": "Gemma 4",
@@ -66,19 +66,19 @@
       "repoId": "immaculate",
       "repoLabel": "Immaculate",
       "gitBranch": "main",
-      "repoSha": "dd7eeac"
+      "repoSha": "050aae4"
     },
     {
       "repoId": "openjaws",
       "repoLabel": "OpenJaws",
       "gitBranch": "main",
-      "repoSha": "903e750"
+      "repoSha": "b674d82"
     },
     {
       "repoId": "asgard",
       "repoLabel": "Asgard",
       "gitBranch": "main",
-      "repoSha": "cf4ff45"
+      "repoSha": "01e33a3"
     }
   ],
   "actions": [
