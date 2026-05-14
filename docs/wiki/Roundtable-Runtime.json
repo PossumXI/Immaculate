@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-14T13:58:11.861Z",
+  "generatedAt": "2026-05-14T13:59:28.295Z",
   "release": {
     "packageVersion": "0.1.0",
     "harnessVersion": "0.1.0",
@@ -51,7 +51,7 @@
     }
   },
   "benchmark": {
-    "harnessUrl": "http://127.0.0.1:49290",
+    "harnessUrl": "http://127.0.0.1:49387",
     "scenarioCount": 3,
     "failedAssertions": 0,
     "seedAcceptedCount": 3,
@@ -68,15 +68,15 @@
     "workspaceScopedTurnsP50": 0,
     "recordedActionsP50": 3,
     "trackedFilesP50": 2241,
-    "runnerPathP95Ms": 65215.56,
-    "seedLatencyP95Ms": 59551.03,
-    "mediationLatencyP95Ms": 5663.95,
+    "runnerPathP95Ms": 63283.75,
+    "seedLatencyP95Ms": 44593.98,
+    "mediationLatencyP95Ms": 18688.39,
     "hardware": "knightly / win32-x64 / AMD Ryzen 7 7735HS with Radeon Graphics / 16 cores / Q foundation Gemma 4",
     "executionIntegrityDigest": "db946fabef62c50a417bcff14a6424545143aac5d24bcb59cf928dcac868a579",
     "decisionTraceStatus": "verified",
     "decisionTraceEventCount": 1,
     "decisionTraceFindingCount": 0,
-    "decisionTraceHeadHash": "56430eda735bbedcb2747a4e9b5c5e9e7f74ae1930606bc2671e7441a3509cd6"
+    "decisionTraceHeadHash": "c65bf20f86d671ab58809f69fe5bf16449fb88ac69bd6f578de61d733ec1fc1e"
   },
   "scenarios": [
     {
