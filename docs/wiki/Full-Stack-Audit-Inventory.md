@@ -2,8 +2,8 @@
 
 Generated from repo source. This is the operator handoff surface for route, endpoint, component, service, file-backed state, and readiness drift.
 
-- Generated: 2026-05-14T01:58:55.996Z
-- Commit: `c1b2c2a85d8244048ed980bf12ca6bbaadcedafb`
+- Generated: 2026-05-14T02:01:13.885Z
+- Commit: `a3f776dd6e018dcd3fb0432ad63077e996963bc4`
 - Branch: `main`
 - Frontend routes: `8`
 - Frontend components: `5`
