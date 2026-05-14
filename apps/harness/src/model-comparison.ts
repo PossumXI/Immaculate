@@ -126,6 +126,13 @@ const DEFAULT_MODEL_COMPARISON_RETRY_TIMEOUT_MS = 180_000;
 const DEFAULT_MODEL_COMPARISON_PREWARM_TIMEOUT_MS = 120_000;
 const MIN_MODEL_COMPARISON_TIMEOUT_MS = 1_000;
 const MAX_MODEL_COMPARISON_TIMEOUT_MS = 600_000;
+const MAX_MODEL_COMPARISON_RUNTIME_RETRY_ATTEMPTS = 2;
+
+type ModelComparisonRuntimeFailureProbe = {
+  failureClass?: string;
+  responsePreview?: string;
+  error?: string;
+};
 
 export function resolveModelComparisonTimeoutMs(
   value: string | number | undefined,
@@ -144,6 +151,31 @@ export function resolveModelComparisonTimeoutMs(
       Math.max(MIN_MODEL_COMPARISON_TIMEOUT_MS, resolved)
     )
   );
+}
+
+export function isRetryableModelComparisonRuntimeFailure(
+  result: ModelComparisonRuntimeFailureProbe
+): boolean {
+  if (result.failureClass !== "http_error" && result.failureClass !== "transport_timeout") {
+    return false;
+  }
+  const diagnostic = `${result.responsePreview ?? ""} ${result.error ?? ""}`.toLowerCase();
+  return (
+    diagnostic.includes("econnrefused") ||
+    diagnostic.includes("econnreset") ||
+    diagnostic.includes("connection refused") ||
+    diagnostic.includes("fetch failed") ||
+    diagnostic.includes("loading model") ||
+    diagnostic.includes("model is loading") ||
+    diagnostic.includes("unexpected server status") ||
+    diagnostic.includes("timed out")
+  );
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }
 
 function resolveModelComparisonRuntimeOptions(): {
@@ -297,70 +329,91 @@ async function runModelComparisonTasks(
   });
 
   for (const task of COMPARISON_TASKS) {
-    const engine = createEngine({
-      bootstrap: true,
-      recordEvents: false
-    });
-    for (let index = 0; index < 8; index += 1) {
-      engine.tick();
-    }
+    const runTask = async (): Promise<ModelTaskResult> => {
+      const engine = createEngine({
+        bootstrap: true,
+        recordEvents: false
+      });
+      for (let index = 0; index < 8; index += 1) {
+        engine.tick();
+      }
 
-    const started = performance.now();
-    try {
-      const result = await runOllamaExecution({
-        snapshot: engine.getSnapshot(),
-        layer: {
-          id: `comparison-${task.role}-${actualModel.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`,
-          name: `${displayModelName(actualModel)} ${task.role} comparison layer`,
-          backend: "ollama",
-          model: actualModel,
-          role: task.role,
-          status: "ready",
-          endpoint: qRuntimeBaseUrl,
-          registeredAt: new Date().toISOString()
-        },
-        objective: task.objective,
-        governancePressure: task.governancePressure,
-        context: task.context,
-        timeoutMs: runtimeOptions.taskTimeoutMs,
-        retryTimeoutMs: runtimeOptions.retryTimeoutMs
+      const started = performance.now();
+      try {
+        const result = await runOllamaExecution({
+          snapshot: engine.getSnapshot(),
+          layer: {
+            id: `comparison-${task.role}-${actualModel.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`,
+            name: `${displayModelName(actualModel)} ${task.role} comparison layer`,
+            backend: "ollama",
+            model: actualModel,
+            role: task.role,
+            status: "ready",
+            endpoint: qRuntimeBaseUrl,
+            registeredAt: new Date().toISOString()
+          },
+          objective: task.objective,
+          governancePressure: task.governancePressure,
+          context: task.context,
+          timeoutMs: runtimeOptions.taskTimeoutMs,
+          retryTimeoutMs: runtimeOptions.retryTimeoutMs
+        });
+        const structuredFieldCount =
+          result.structuredFieldCount ||
+          [
+            result.execution.routeSuggestion,
+            result.execution.reasonSummary,
+            result.execution.commitStatement
+          ].filter(Boolean).length;
+        return {
+          taskId: task.id,
+          label: task.label,
+          latencyMs: result.execution.latencyMs,
+          wallLatencyMs: Number((performance.now() - started).toFixed(2)),
+          structuredFieldCount,
+          parseSuccess: structuredFieldCount === 3 && result.execution.status === "completed",
+          status: result.execution.status,
+          failureClass: result.failureClass,
+          thinkingDetected: result.thinkingDetected,
+          routeSuggestion: result.execution.routeSuggestion,
+          reasonSummary: result.execution.reasonSummary,
+          commitStatement: result.execution.commitStatement,
+          responsePreview: result.execution.responsePreview
+        };
+      } catch (error) {
+        return {
+          taskId: task.id,
+          label: task.label,
+          latencyMs: 0,
+          wallLatencyMs: Number((performance.now() - started).toFixed(2)),
+          structuredFieldCount: 0,
+          parseSuccess: false,
+          status: "failed",
+          failureClass: "http_error",
+          thinkingDetected: false,
+          responsePreview: "",
+          error: error instanceof Error ? error.message : "model comparison failed"
+        };
+      }
+    };
+
+    let taskResult = await runTask();
+    for (
+      let attempt = 1;
+      attempt <= MAX_MODEL_COMPARISON_RUNTIME_RETRY_ATTEMPTS &&
+      isRetryableModelComparisonRuntimeFailure(taskResult);
+      attempt += 1
+    ) {
+      const retryDelayMs = Math.min(15_000, Math.max(2_000, Math.floor(runtimeOptions.prewarmTimeoutMs / 8)));
+      await delay(retryDelayMs);
+      await prewarmOllamaModel({
+        endpoint: qRuntimeBaseUrl,
+        model: actualModel,
+        timeoutMs: runtimeOptions.prewarmTimeoutMs
       });
-      const structuredFieldCount =
-        result.structuredFieldCount ||
-        [
-          result.execution.routeSuggestion,
-          result.execution.reasonSummary,
-          result.execution.commitStatement
-        ].filter(Boolean).length;
-      tasks.push({
-        taskId: task.id,
-        label: task.label,
-        latencyMs: result.execution.latencyMs,
-        wallLatencyMs: Number((performance.now() - started).toFixed(2)),
-        structuredFieldCount,
-        parseSuccess: structuredFieldCount === 3 && result.execution.status === "completed",
-        status: result.execution.status,
-        failureClass: result.failureClass,
-        thinkingDetected: result.thinkingDetected,
-        routeSuggestion: result.execution.routeSuggestion,
-        reasonSummary: result.execution.reasonSummary,
-        commitStatement: result.execution.commitStatement,
-        responsePreview: result.execution.responsePreview
-      });
-    } catch (error) {
-      tasks.push({
-        taskId: task.id,
-        label: task.label,
-        latencyMs: 0,
-        wallLatencyMs: Number((performance.now() - started).toFixed(2)),
-        structuredFieldCount: 0,
-        parseSuccess: false,
-        status: "failed",
-        thinkingDetected: false,
-        responsePreview: "",
-        error: error instanceof Error ? error.message : "model comparison failed"
-      });
+      taskResult = await runTask();
     }
+    tasks.push(taskResult);
   }
 
   return buildTaskResultsSummary(requestedModel, actualModel, "reasoner", tasks);
