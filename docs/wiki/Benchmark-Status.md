@@ -6,7 +6,7 @@ This page is the tracked public benchmark surface for Immaculate.
 - Owner: Gaetano Comparcola (PossumX)
 - Role: Program Originator, Systems Architect, and Engineering Lead
 - Website: https://PossumX.dev
-- Updated: 2026-05-15T10:04:22.155946+00:00
+- Updated: 2026-05-16T09:49:37.419983+00:00
 
 Raw benchmark ledgers remain generated runtime artifacts under `benchmarks/` and stay out of git.
 This page only carries the public summary and links for the latest published run per pack.
@@ -15,18 +15,18 @@ This page only carries the public summary and links for the latest published run
 
 ### Durability Recovery
 
-- Suite: `immaculate-benchmark-2026-05-15T10-04-18-702Z`
-- Generated: `2026-05-15T10:04:18.702Z`
-- Published: `2026-05-15T10:04:22.155929+00:00`
+- Suite: `immaculate-benchmark-2026-05-16T09-49-33-500Z`
+- Generated: `2026-05-16T09:49:33.500Z`
+- Published: `2026-05-16T09:49:37.419965+00:00`
 - Assertions: `122/122` passed
 - Run kind: `smoke`
 - Integrity: `verified`
 - Recovery mode: `checkpoint`
 - Planned duration: `20800` ms
-- Wall-clock duration: `830.03` ms
-- Hardware: `{"host":"runnervmrw5os","platform":"linux","arch":"x64","osVersion":"#13~24.04.1-Ubuntu SMP Wed Apr 15 16:52:17 UTC 2026","cpuModel":"Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz","cpuCount":4,"memoryGiB":15.61,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
-- W&B run: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/500xtgha
-- W&B artifact: `immaculate-immaculate-benchmark-2026-05-15T10-04-18-702Z` (`benchmark-report`)
+- Wall-clock duration: `832.53` ms
+- Hardware: `{"host":"runnervmrw5os","platform":"linux","arch":"x64","osVersion":"#13~24.04.1-Ubuntu SMP Wed Apr 15 16:52:17 UTC 2026","cpuModel":"AMD EPYC 7763 64-Core Processor","cpuCount":4,"memoryGiB":15.61,"diskKind":"HDD (Virtual Disk)","nodeVersion":"v22.22.2"}`
+- W&B run: https://wandb.ai/arobi-arobi-technology-alliance/Immaculate/runs/oj4nlb4f
+- W&B artifact: `immaculate-immaculate-benchmark-2026-05-16T09-49-33-500Z` (`benchmark-report`)
 
 ### Latency Smoke
 
