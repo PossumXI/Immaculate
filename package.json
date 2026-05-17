@@ -103,6 +103,9 @@
     "@temporalio/proto@1.17.1": {
       "protobufjs": "7.5.8"
     },
+    "@temporalio/proto@1.17.2": {
+      "protobufjs": "7.5.8"
+    },
     "@temporalio/worker": {
       "protobufjs": "7.5.8"
     },
