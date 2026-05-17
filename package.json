@@ -114,7 +114,7 @@
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
-    "postcss": "^8.5.13",
+    "postcss": "^8.5.14",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3"
   }
