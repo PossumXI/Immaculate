@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@immaculate/core": "file:../../packages/core",
-    "ink": "^7.0.2",
+    "ink": "^7.0.3",
     "react": "^19.2.6"
   },
   "devDependencies": {
