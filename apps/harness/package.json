@@ -57,9 +57,9 @@
     "@fastify/websocket": "^11.2.0",
     "@immaculate/core": "file:../../packages/core",
     "@temporalio/client": "^1.17.2",
-    "@temporalio/testing": "^1.17.1",
-    "@temporalio/worker": "^1.17.1",
-    "@temporalio/workflow": "^1.17.1",
+    "@temporalio/testing": "^1.17.2",
+    "@temporalio/worker": "^1.17.2",
+    "@temporalio/workflow": "^1.17.2",
     "fastify": "^5.8.5",
     "h5wasm": "^0.10.1",
     "zod": "^4.4.3"
